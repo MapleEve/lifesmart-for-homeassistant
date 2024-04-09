@@ -152,3 +152,16 @@ lifesmart:
 - [@skyzhishui 提供的 custom_components](https://github.com/skyzhishui/custom_components)
 - [@Blankdlh 提供的 hass-lifesmart](https://github.com/Blankdlh/hass-lifesmart)
 - [@likso 提供的 hass-lifesmart](https://github.com/likso/hass-lifesmart)
+
+如何获取 User Token 和 User ID
+---
+通过iLifeSmart后台的小工具拼接appkey,apptoken,回调地址、时间戳、did（可以为空）并在页面里面生成sign来访问用户页面进行授权
+[访问小工具页面](http://www.ilifesmart.com/open/login#/open/document/tool)
+点击“获取用户授权签名验证”
+
+```
+
+通过回调地址里面得到用户id和usertoken即可按照配置使用
+```
+
+后面会考虑用用户名和密码模式，不过用户名和密码模式不是很稳定
