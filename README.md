@@ -160,7 +160,7 @@ lifesmart:
 点击“获取用户授权签名验证”
 
 ```
-
+拼接地址为 https://api.cn0.ilifesmart.com/app/app/auth.authorize?id=001&
 通过回调地址里面得到用户id和usertoken即可按照配置使用
 ```
 
