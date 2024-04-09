@@ -3,14 +3,8 @@ import logging
 import time
 from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_DRY,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    HVAC_MODE_OFF,
+    ClimateEntityFeature,
+    HVACMode,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -29,15 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_TYPE = "climate"
 
 LIFESMART_STATE_LIST = [
-    HVAC_MODE_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_DRY,
+    HVACMode,
 ]
 
-LIFESMART_STATE_LIST2 = [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+LIFESMART_STATE_LIST2 = [HVACMode.OFF, HVACMode.HEAT]
 
 FAN_MODES = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 GET_FAN_SPEED = {FAN_LOW: 15, FAN_MEDIUM: 45, FAN_HIGH: 76}
@@ -159,10 +148,10 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         if self._devtype in AIR_TYPES:
-            if hvac_mode == HVAC_MODE_OFF:
+            if hvac_mode == HVACMode.OFF:
                 await super().async_lifesmart_epset("0x80", 0, "O")
                 return
-            if self._mode == HVAC_MODE_OFF:
+            if self._mode == HVACMode.OFF:
                 if await super().async_lifesmart_epset("0x81", 1, "O") == 0:
                     time.sleep(2)
                 else:
@@ -171,7 +160,7 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
                 "0xCE", LIFESMART_STATE_LIST.index(hvac_mode), "MODE"
             )
         else:
-            if hvac_mode == HVAC_MODE_OFF:
+            if hvac_mode == HVACMode.OFF:
                 await super().async_lifesmart_epset("0x80", 0, "P1")
                 time.sleep(1)
                 await super().async_lifesmart_epset("0x80", 0, "P2")
@@ -186,6 +175,6 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self._devtype in AIR_TYPES:
-            return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+            return ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
         else:
-            return SUPPORT_TARGET_TEMPERATURE
+            return ClimateEntityFeature.TARGET_TEMPERATURE

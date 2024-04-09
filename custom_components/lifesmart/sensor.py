@@ -3,7 +3,16 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfTemperature,
+    UnitOfPower,
+    UnitOfEnergy,
+    UnitOfPrecipitationDepth,
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    LIGHT_LUX,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from .const import (
@@ -145,17 +154,18 @@ class LifeSmartSensor(SensorEntity):
         self._client = client
 
         # devtype = raw_device_data["devtype"]
+        
         if device_type in GAS_SENSOR_TYPES:
             self._device_class = SensorDeviceClass.GAS
             self._unit = "None"
             self._state = sub_device_data["val"]
         elif device_type in SMART_PLUG_TYPES and sub_device_key == "P2":
             self._device_class = SensorDeviceClass.ENERGY
-            self._unit = "kWh"
+            self._unit = UnitOfEnergy.KILO_WATT_HOUR
             self._state = sub_device_data["v"]
         elif device_type in SMART_PLUG_TYPES and sub_device_key == "P3":
             self._device_class = SensorDeviceClass.POWER
-            self._unit = "W"
+            self._unit = UnitOfPower.WATT
             self._state = sub_device_data["v"]
         else:
             if sub_device_key == "T" or sub_device_key == "P1":
@@ -163,22 +173,22 @@ class LifeSmartSensor(SensorEntity):
                 self._unit = UnitOfTemperature.CELSIUS
             elif sub_device_key == "H" or sub_device_key == "P2":
                 self._device_class = SensorDeviceClass.HUMIDITY
-                self._unit = "%"
+                self._unit = PERCENTAGE
             elif sub_device_key == "Z":
                 self._device_class = SensorDeviceClass.ILLUMINANCE
-                self._unit = "lx"
+                self._unit = LIGHT_LUX
             elif sub_device_key == "V":
                 self._device_class = SensorDeviceClass.BATTERY
-                self._unit = "%"
+                self._unit = PERCENTAGE
             elif sub_device_key == "P3":
                 self._device_class = "None"
-                self._unit = "ppm"
+                self._unit = CONCENTRATION_PARTS_PER_MILLION
             elif sub_device_key == "P4":
                 self._device_class = "None"
-                self._unit = "mg/m3"
+                self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
             elif sub_device_key == "BAT":
                 self._device_class = SensorDeviceClass.BATTERY
-                self._unit = "%"
+                self._unit = PERCENTAGE
             else:
                 self._unit = "None"
                 self._device_class = "None"

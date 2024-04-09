@@ -235,14 +235,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         nstat = attrs["last_mode"]
                         hass.states.set(entity_id, nstat, attrs)
                     else:
-                        nstat = climate.const.HVAC_MODE_OFF
+                        nstat = climate.const.HVACMode.OFF
                         hass.states.set(entity_id, nstat, attrs)
                 if _idx == "P1":
                     if data["type"] % 2 == 1:
-                        nstat = climate.const.HVAC_MODE_HEAT
+                        nstat = climate.const.HVACMode.HEAT
                         hass.states.set(entity_id, nstat, attrs)
                     else:
-                        nstat = climate.const.HVAC_MODE_OFF
+                        nstat = climate.const.HVACMode.OFF
                         hass.states.set(entity_id, nstat, attrs)
                 if _idx == "P2":
                     if data["type"] % 2 == 1:
@@ -253,7 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         hass.states.set(entity_id, nstat, attrs)
                 elif _idx == "MODE":
                     if data["type"] == 206:
-                        if nstat != climate.const.HVAC_MODE_OFF:
+                        if nstat != climate.const.HVACMode.OFF:
                             nstat = LIFESMART_HVAC_STATE_LIST[data["val"]]
                         attrs["last_mode"] = nstat
                         hass.states.set(entity_id, nstat, attrs)

@@ -127,12 +127,7 @@ GENERIC_CONTROLLER_TYPES = ["SL_P"]
 SMART_PLUG_TYPES = ["SL_OE_DE"]
 
 LIFESMART_HVAC_STATE_LIST = [
-    climate.const.HVAC_MODE_OFF,
-    climate.const.HVAC_MODE_AUTO,
-    climate.const.HVAC_MODE_FAN_ONLY,
-    climate.const.HVAC_MODE_COOL,
-    climate.const.HVAC_MODE_HEAT,
-    climate.const.HVAC_MODE_DRY,
+    climate.const.HVACMode,
 ]
 
 SUPPORTED_PLATFORMS = [
