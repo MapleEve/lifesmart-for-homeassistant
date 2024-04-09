@@ -30,7 +30,6 @@ from .const import (
     SMART_PLUG_TYPES,
 )
 
-
 # DOMAIN = "sensor"
 # ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -48,14 +47,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensor_devices = []
     for device in devices:
         if (
-            device[DEVICE_ID_KEY] in exclude_devices
-            or device[HUB_ID_KEY] in exclude_hubs
+                device[DEVICE_ID_KEY] in exclude_devices
+                or device[HUB_ID_KEY] in exclude_hubs
         ):
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
         supported_sensors = (
-            OT_SENSOR_TYPES + GAS_SENSOR_TYPES + LOCK_TYPES + SMART_PLUG_TYPES
+                OT_SENSOR_TYPES + GAS_SENSOR_TYPES + LOCK_TYPES + SMART_PLUG_TYPES
         )
 
         if device_type not in supported_sensors:
@@ -120,7 +119,7 @@ class LifeSmartSensor(SensorEntity):
 
     # def __init__(self, dev, idx, val, param) -> None:
     def __init__(
-        self, device, raw_device_data, sub_device_key, sub_device_data, client
+            self, device, raw_device_data, sub_device_key, sub_device_data, client
     ) -> None:
         """Initialize the LifeSmartSensor."""
 
@@ -132,8 +131,8 @@ class LifeSmartSensor(SensorEntity):
         device_id = raw_device_data[DEVICE_ID_KEY]
 
         if (
-            DEVICE_NAME_KEY in sub_device_data
-            and sub_device_data[DEVICE_NAME_KEY] != "none"
+                DEVICE_NAME_KEY in sub_device_data
+                and sub_device_data[DEVICE_NAME_KEY] != "none"
         ):
             device_name = sub_device_data[DEVICE_NAME_KEY]
         else:
@@ -154,7 +153,7 @@ class LifeSmartSensor(SensorEntity):
         self._client = client
 
         # devtype = raw_device_data["devtype"]
-        
+
         if device_type in GAS_SENSOR_TYPES:
             self._device_class = SensorDeviceClass.GAS
             self._unit = "None"

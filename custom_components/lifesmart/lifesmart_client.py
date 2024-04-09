@@ -12,12 +12,12 @@ class LifeSmartClient:
     """A class for manage LifeSmart API."""
 
     def __init__(
-        self,
-        baseurl,
-        appkey,
-        apptoken,
-        usertoken,
-        userid,
+            self,
+            baseurl,
+            appkey,
+            apptoken,
+            usertoken,
+            userid,
     ) -> None:
         self._baseurl = baseurl
         self._appkey = appkey
@@ -50,10 +50,10 @@ class LifeSmartClient:
         url = self.get_api_url() + "/api.SceneGet"
         tick = int(time.time())
         sdata = (
-            "method:SceneGet,agt:"
-            + agt
-            + ","
-            + self.generate_time_and_credential_data(tick)
+                "method:SceneGet,agt:"
+                + agt
+                + ","
+                + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 1,
@@ -76,12 +76,12 @@ class LifeSmartClient:
         tick = int(time.time())
         # keys = str(keys)
         sdata = (
-            "method:SceneSet,agt:"
-            + agt
-            + ",id:"
-            + id
-            + ","
-            + self.generate_time_and_credential_data(tick)
+                "method:SceneSet,agt:"
+                + agt
+                + ",id:"
+                + id
+                + ","
+                + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 101,
@@ -104,20 +104,20 @@ class LifeSmartClient:
         tick = int(time.time())
         # keys = str(keys)
         sdata = (
-            "method:SendKeys,agt:"
-            + agt
-            + ",ai:"
-            + ai
-            + ",brand:"
-            + brand
-            + ",category:"
-            + category
-            + ",keys:"
-            + keys
-            + ",me:"
-            + me
-            + ","
-            + self.generate_time_and_credential_data(tick)
+                "method:SendKeys,agt:"
+                + agt
+                + ",ai:"
+                + ai
+                + ",brand:"
+                + brand
+                + ",category:"
+                + category
+                + ",keys:"
+                + keys
+                + ",me:"
+                + me
+                + ","
+                + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 1,
@@ -139,49 +139,49 @@ class LifeSmartClient:
         return response
 
     async def send_ir_ackey_async(
-        self,
-        agt,
-        ai,
-        me,
-        category,
-        brand,
-        key,
-        power,
-        mode,
-        temp,
-        wind,
-        swing,
+            self,
+            agt,
+            ai,
+            me,
+            category,
+            brand,
+            key,
+            power,
+            mode,
+            temp,
+            wind,
+            swing,
     ):
         """Send an IR AIR Conditioner Key to a specific device."""
         url = self.get_api_url() + "/irapi.SendACKeys"
         tick = int(time.time())
         # keys = str(keys)
         sdata = (
-            "method:SendACKeys"
-            + ",agt:"
-            + agt
-            + ",ai:"
-            + ai
-            + ",brand:"
-            + brand
-            + ",category:"
-            + category
-            + ",key:"
-            + key
-            + ",me:"
-            + me
-            + ",mode:"
-            + str(mode)
-            + ",power:"
-            + str(power)
-            + ",swing:"
-            + str(swing)
-            + ",temp:"
-            + str(temp)
-            + ",wind:"
-            + str(wind)
-            + ","
-            + self.generate_time_and_credential_data(tick)
+                "method:SendACKeys"
+                + ",agt:"
+                + agt
+                + ",ai:"
+                + ai
+                + ",brand:"
+                + brand
+                + ",category:"
+                + category
+                + ",key:"
+                + key
+                + ",me:"
+                + me
+                + ",mode:"
+                + str(mode)
+                + ",power:"
+                + str(power)
+                + ",swing:"
+                + str(swing)
+                + ",temp:"
+                + str(temp)
+                + ",wind:"
+                + str(wind)
+                + ","
+                + self.generate_time_and_credential_data(tick)
         )
         _LOGGER.debug("sendackey: %s", str(sdata))
         send_values = {
@@ -220,19 +220,19 @@ class LifeSmartClient:
         url = self.get_api_url() + "/api.EpSet"
         tick = int(time.time())
         sdata = (
-            "method:EpSet"
-            + ",agt:"
-            + agt
-            + ",idx:"
-            + idx
-            + ",me:"
-            + me
-            + ",type:"
-            + type
-            + ",val:"
-            + str(val)
-            + ","
-            + self.generate_time_and_credential_data(tick)
+                "method:EpSet"
+                + ",agt:"
+                + agt
+                + ",idx:"
+                + idx
+                + ",me:"
+                + me
+                + ",type:"
+                + type
+                + ",val:"
+                + str(val)
+                + ","
+                + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 1,
@@ -253,12 +253,12 @@ class LifeSmartClient:
         url = self.get_api_url() + "/api.EpGet"
         tick = int(time.time())
         sdata = (
-            "method:EpGet,agt:"
-            + agt
-            + ",me:"
-            + me
-            + ","
-            + self.generate_time_and_credential_data(tick)
+                "method:EpGet,agt:"
+                + agt
+                + ",me:"
+                + me
+                + ","
+                + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 1,
@@ -279,10 +279,10 @@ class LifeSmartClient:
 
         tick = int(time.time())
         sdata = (
-            "method:GetRemoteList,agt:"
-            + agt
-            + ","
-            + self.generate_time_and_credential_data(tick)
+                "method:GetRemoteList,agt:"
+                + agt
+                + ","
+                + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 1,
@@ -303,13 +303,13 @@ class LifeSmartClient:
 
         tick = int(time.time())
         sdata = (
-            "method:GetRemote,agt:"
-            + agt
-            + ",ai:"
-            + ai
-            + ",needKeys:2"
-            + ","
-            + self.generate_time_and_credential_data(tick)
+                "method:GetRemote,agt:"
+                + agt
+                + ",ai:"
+                + ai
+                + ",needKeys:2"
+                + ","
+                + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 1,
@@ -358,16 +358,16 @@ class LifeSmartClient:
         """Generate default parameter required in body"""
 
         return (
-            "time:"
-            + str(tick)
-            + ",userid:"
-            + self._userid
-            + ",usertoken:"
-            + self._usertoken
-            + ",appkey:"
-            + self._appkey
-            + ",apptoken:"
-            + self._apptoken
+                "time:"
+                + str(tick)
+                + ",userid:"
+                + self._userid
+                + ",usertoken:"
+                + self._usertoken
+                + ",appkey:"
+                + self._appkey
+                + ",apptoken:"
+                + self._apptoken
         )
 
     def generate_header(self):

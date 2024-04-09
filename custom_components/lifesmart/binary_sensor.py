@@ -40,8 +40,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensor_devices = []
     for device in devices:
         if (
-            device[DEVICE_ID_KEY] in exclude_devices
-            or device[HUB_ID_KEY] in exclude_hubs
+                device[DEVICE_ID_KEY] in exclude_devices
+                or device[HUB_ID_KEY] in exclude_hubs
         ):
             continue
 
@@ -104,7 +104,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     """Representation of LifeSmartBinarySensor."""
 
     def __init__(
-        self, device, raw_device_data, sub_device_key, sub_device_data, client
+            self, device, raw_device_data, sub_device_key, sub_device_data, client
     ) -> None:
         super().__init__()
         device_name = raw_device_data[DEVICE_NAME_KEY]
@@ -113,8 +113,8 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         device_id = raw_device_data[DEVICE_ID_KEY]
 
         if (
-            DEVICE_NAME_KEY in sub_device_data
-            and sub_device_data[DEVICE_NAME_KEY] != "none"
+                DEVICE_NAME_KEY in sub_device_data
+                and sub_device_data[DEVICE_NAME_KEY] != "none"
         ):
             device_name = sub_device_data[DEVICE_NAME_KEY]
         else:
@@ -168,9 +168,9 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             unlock_user = val & 0xFFF
             is_unlock_success = False
             if (
-                sub_device_data["type"] % 2 == 1
-                and unlock_user != 0
-                and unlock_method != 15
+                    sub_device_data["type"] % 2 == 1
+                    and unlock_user != 0
+                    and unlock_method != 15
             ):
                 is_unlock_success = True
             if sub_device_data["type"] % 2 == 1:

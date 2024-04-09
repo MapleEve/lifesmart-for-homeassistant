@@ -84,7 +84,6 @@ import sys
 
 sys.setrecursionlimit(100000)
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -147,24 +146,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         sub_device_key = data[SUBDEVICE_INDEX_KEY]
 
         if (
-            sub_device_key != "s"
-            and device_id not in exclude_devices
-            and hub_id not in exclude_hubs
+                sub_device_key != "s"
+                and device_id not in exclude_devices
+                and hub_id not in exclude_hubs
         ):
             entity_id = generate_entity_id(
                 device_type, hub_id, device_id, sub_device_key
             )
 
             if (
-                device_type in SUPPORTED_SWTICH_TYPES
-                and sub_device_key in SUPPORTED_SUB_SWITCH_TYPES
+                    device_type in SUPPORTED_SWTICH_TYPES
+                    and sub_device_key in SUPPORTED_SUB_SWITCH_TYPES
             ):
                 dispatcher_send(
                     hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                 )
             elif (
-                device_type in BINARY_SENSOR_TYPES
-                and sub_device_key in SUPPORTED_SUB_BINARY_SENSORS
+                    device_type in BINARY_SENSOR_TYPES
+                    and sub_device_key in SUPPORTED_SUB_BINARY_SENSORS
             ):
                 dispatcher_send(
                     hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
@@ -195,9 +194,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 attrs = hass.states.get(entity_id).attributes
                 hass.states.set(entity_id, data["val"], attrs)
             elif device_type in SPOT_TYPES or device_type in LIGHT_SWITCH_TYPES:
-                #attrs = dict(hass.states.get(entity_id).attributes)
+                # attrs = dict(hass.states.get(entity_id).attributes)
                 _LOGGER.debug("websocket_light_msg: %s ", str(msg))
-                #_LOGGER.debug("websocket_light_attrs: %s", str(attrs))
+                # _LOGGER.debug("websocket_light_attrs: %s", str(attrs))
                 value = data["val"]
                 idx = sub_device_key
 
@@ -221,8 +220,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 elif idx in ["P2"]:
                     ratio = 1 - (value / 255)
                     attrs[ATTR_COLOR_TEMP] = (
-                        int((attrs[ATTR_MAX_MIREDS] - attrs[ATTR_MIN_MIREDS]) * ratio)
-                        + attrs[ATTR_MIN_MIREDS]
+                            int((attrs[ATTR_MAX_MIREDS] - attrs[ATTR_MIN_MIREDS]) * ratio)
+                            + attrs[ATTR_MIN_MIREDS]
                     )
                     hass.states.set(entity_id, state, attrs)
 
@@ -292,9 +291,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     unlock_user = val & 0xFFF
                     is_unlock_success = False
                     if (
-                        data["type"] % 2 == 1
-                        and unlock_user != 0
-                        and unlock_method != 15
+                            data["type"] % 2 == 1
+                            and unlock_user != 0
+                            and unlock_method != 15
                     ):
                         is_unlock_success = True
                     attrs = {
@@ -333,18 +332,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
         # AI event
         if (
-            sub_device_key == "s"
-            and device_id in ai_include_items
-            and data[HUB_ID_KEY] in ai_include_hubs
+                sub_device_key == "s"
+                and device_id in ai_include_items
+                and data[HUB_ID_KEY] in ai_include_hubs
         ):
             _LOGGER.info("AI Event: %s", str(msg))
             device_type = data["devtype"]
             hub_id = data[HUB_ID_KEY]
             entity_id = (
-                "switch."
-                + (
-                    device_type + "_" + hub_id + "_" + device_id + "_" + sub_device_key
-                ).lower()
+                    "switch."
+                    + (
+                            device_type + "_" + hub_id + "_" + device_id + "_" + sub_device_key
+                    ).lower()
             )
 
     def on_message(ws, message):
@@ -612,36 +611,36 @@ def generate_entity_id(device_type, hub_id, device_id, idx=None):
     ]:
         if sub_device:
             return (
-                get_platform_by_device(device_type, sub_device)
-                + (
-                    "."
-                    + device_type
-                    + "_"
-                    + hub_id
-                    + "_"
-                    + device_id
-                    + "_"
-                    + sub_device
-                ).lower()
+                    get_platform_by_device(device_type, sub_device)
+                    + (
+                            "."
+                            + device_type
+                            + "_"
+                            + hub_id
+                            + "_"
+                            + device_id
+                            + "_"
+                            + sub_device
+                    ).lower()
             )
         else:
             return (
                 # no sub device (idx)
-                get_platform_by_device(device_type)
-                + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
+                    get_platform_by_device(device_type)
+                    + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
             )
 
     elif device_type in COVER_TYPES:
         return (
-            Platform.COVER
-            + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
+                Platform.COVER
+                + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
         )
     elif device_type in LIGHT_DIMMER_TYPES:
         return (
-            Platform.LIGHT
-            + ("." + device_type + "_" + hub_id + "_" + device_id + "_P1P2").lower()
+                Platform.LIGHT
+                + ("." + device_type + "_" + hub_id + "_" + device_id + "_P1P2").lower()
         )
     elif device_type in CLIMATE_TYPES:
         return Platform.CLIMATE + (
-            "." + device_type + "_" + hub_id + "_" + device_id
+                "." + device_type + "_" + hub_id + "_" + device_id
         ).lower().replace(":", "_").replace("@", "_")

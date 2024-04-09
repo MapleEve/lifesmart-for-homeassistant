@@ -140,7 +140,6 @@ SUPPORTED_PLATFORMS = [
 ]
 CLIMATE_TYPES = ["V_AIR_P", "SL_CP_DN"]
 
-
 ENTITYID = "entity_id"
 DOMAIN = "lifesmart"
 
