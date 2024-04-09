@@ -1,0 +1,10 @@
+custom_components/lifesmart/__pycache__/*
+*/.idea
+.idea/*
+
+*.iws
+*.iml
+
+/out/
+
+.idea_modules/
