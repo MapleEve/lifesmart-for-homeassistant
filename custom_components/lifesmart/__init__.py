@@ -153,6 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             entity_id = generate_entity_id(
                 device_type, hub_id, device_id, sub_device_key
             )
+            _LOGGER.debug("已生成实体id - 设备号：%s 中枢：%s 设备类型：%s IDX:%s ", str(device_id), str(hub_id), str(device_type), str(sub_device_key))
 
             if (
                     device_type in SUPPORTED_SWTICH_TYPES
@@ -309,6 +310,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                     )
+                    _LOGGER.debug("已推送 %s - 设备编号：%s -门锁更新数据:%s ", str(LIFESMART_SIGNAL_UPDATE_ENTITY), str(entity_id), str(data))
+
             elif device_type in OT_SENSOR_TYPES and sub_device_key in [
                 "Z",
                 "V",
