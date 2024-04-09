@@ -8,18 +8,18 @@
         "data": {
           "appkey": "应用密钥 App Key",
           "apptoken": "应用令牌 App Token",
-          "usertoken": "用户令牌User Token",
+          "usertoken": "用户令牌 User Token",
           "userid": "User Id",
           "url": "LifeSmart 区域域名",
           "exclude": "不希望集成的设备列表",
-          "exclude_agt": "不希望集成的Hub终端列表",
-          "ai_include_agt": "希望在场景中包含的Hub终端列表",
+          "exclude_agt": "不希望集成的中枢列表",
+          "ai_include_agt": "希望在场景中包含的中枢列表",
           "ai_include_me": "希望在场景中包含的设备列表"
         }
       }
     },
     "abort": {
-      "already_in_progress": "当前配置流程已经在进行中。",
+      "already_in_progress": "当前配置流程已经在进行中",
       "already_configured": "该设备已经完成配置。"
     },
     "error": {
@@ -29,7 +29,7 @@
     "step": {
       "init": {
         "title": "LifeSmart 设备集成配置",
-        "description": "选择您需要编辑的配置选项。",
+        "description": "选择您需要编辑的配置选项",
         "menu_options": {
           "main_params": "主要配置参数"
         }
@@ -44,8 +44,8 @@
           "userid": "User Id",
           "url": "LifeSmart 区域域名",
           "exclude": "不希望集成的设备列表",
-          "exclude_agt": "不希望集成的Hub终端列表",
-          "ai_include_agt": "希望在场景中包含的Hub终端列表",
+          "exclude_agt": "不希望集成的中枢列表",
+          "ai_include_agt": "希望在场景中包含的中枢列表",
           "ai_include_me": "希望在场景中包含的设备列表"
         }
       }
@@ -58,15 +58,15 @@
       "fields": {
         "me": {
           "name": "Me",
-          "description": "子设备 ID。"
+          "description": "子设备 ID"
         },
         "agt": {
           "name": "AGT",
-          "description": "Hub 设备 Id."
+          "description": "中枢设备 ID"
         },
         "ai": {
           "name": "Remote Id",
-          "description": "远程设备 Id."
+          "description": "远程设备 ID"
         },
         "category": {
           "name": "Category",
@@ -92,11 +92,11 @@
         },
         "agt": {
           "name": "AGT",
-          "description": "Hub 设备 Id"
+          "description": "中枢设备 ID"
         },
         "ai": {
           "name": "Remote Id",
-          "description": "远程设备 Id"
+          "description": "远程设备 ID"
         },
         "category": {
           "name": "Category",
@@ -138,11 +138,11 @@
       "fields": {
         "agt": {
           "name": "AGT",
-          "description": "Hub 设备 Id"
+          "description": "中枢设备 ID"
         },
         "id": {
           "name": "Scene Id",
-          "description": "远程场景 Id"
+          "description": "远程场景 ID"
         }
       }
     }
