@@ -348,12 +348,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     def on_message(ws, message):
         _LOGGER.debug("websocket_msg: %s", str(message))
-        msg = json.loads(message)
-        if "type" not in msg:
-            return
-        if msg["type"] != "io":
-            return
-        asyncio.run(data_update_handler(msg))
+        if message:  # Check if the message is not empty
+            try:
+                msg = json.loads(message)
+                if "type" not in msg:
+                    return
+                if msg["type"] != "io":
+                    return
+                asyncio.run(data_update_handler(msg))
+            except json.JSONDecodeError:
+                _LOGGER.error("Invalid JSON received: %s", str(message))
 
     def on_error(ws, error):
         _LOGGER.error("Websocket_error: %s", str(error))
@@ -535,7 +539,7 @@ class LifeSmartStatesManager(threading.Thread):
     def run(self):
         while self._run:
             _LOGGER.debug("Lifesmart HACS: starting wss")
-            if not self._ws.sock or self._ws.sock.closed:
+            if not self._ws.sock or not self._ws.sock.connected:
                 try:
                     self._ws.run_forever()
                 except websocket._exceptions.WebSocketException as e:
