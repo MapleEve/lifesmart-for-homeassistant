@@ -535,9 +535,12 @@ class LifeSmartStatesManager(threading.Thread):
 
     def run(self):
         while self._run:
-            _LOGGER.debug("lifesmart: starting wss")
-            self._ws.run_forever()
-            _LOGGER.debug("lifesmart: restart wss")
+            _LOGGER.debug("Lifesmart HACS: starting wss")
+            try:
+                self._ws.run_forever()
+            except websocket._exceptions.WebSocketException as e:
+                _LOGGER.error("Lifesmart HACS WebSocket error: %s", str(e))
+            _LOGGER.debug("Lifesmart HACS: restart wss")
             time.sleep(10)
 
     def start_keep_alive(self):
