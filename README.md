@@ -157,11 +157,29 @@ lifesmart:
 ---
 通过iLifeSmart后台的小工具拼接appkey,apptoken,回调地址、时间戳、did（可以为空）并在页面里面生成sign来访问用户页面进行授权
 [访问小工具页面](http://www.ilifesmart.com/open/login#/open/document/tool)
-点击“获取用户授权签名验证”
+点击“获取用户授权签名验证”然后参考下面 Python 脚本拼接，或者直接执行 Python 脚本
 
+``` python
+import time
+import hashlib
+tick = int(time.time())
+appkey = " 你的应用 APPKEY"
+callbackurl = "http://localhost"
+apptoken = "你的应用 APPK TOKEN"
+sdata = "appkey=" + appkey
+sdata += "&auth_callback=" + callbackurl
+sdata += "&time=" + str(tick)
+sdata += "&apptoken=" + apptoken
+sign = hashlib.md5(sdata.encode(encoding='UTF-8')).hexdigest()
+url = "https://api.ilifesmart.com/app/auth.authorize?id=001&"
+url += "&appkey=" + appkey
+url += "&time=" + str(tick)
+url += "&auth_callback=" + callbackurl
+url += "&sign=" + sign
+url += "&lang=zh"
+print(url)
 ```
-拼接地址为 https://api.cn0.ilifesmart.com/app/app/auth.authorize?id=001&
-通过回调地址里面得到用户id和usertoken即可按照配置使用
-```
+
+脚本运行之后会打印一个地址，浏览器访问这个地址，用你的 Lifesmart APP 帐号密码登录即可从浏览器跳转到空页面 URI 中获取到 User ID、User Token、Token 过期时间、和优选的 API 域名地址
 
 后面会考虑用用户名和密码模式，不过用户名和密码模式不是很稳定
