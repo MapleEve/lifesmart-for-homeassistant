@@ -1,4 +1,5 @@
-### 使用说明
+
+使用说明
 ====
 让 Home Assistant 支持 Lifesmart 设备的 HACS 插件
 
