@@ -33,8 +33,8 @@ lifesmart:
   appkey: # 你应用的 appkey
   apptoken: # 你应用的 apptoken
   usertoken: # 你获取到的 usertoken
-  userid: # 你的的  userid
-  url:  # 你使用的 api 地址，建议使用 api.cn0.ilifesmart.com
+  userid: # 你获取到的 userid
+  url:  # 你使用的 api 地址，建议使用 api.cn0.ilifesmart.com 或者 api.cn2.ilifesmart.com
 ```
 
 ### 推荐使用 HACS 安装自定义仓库
