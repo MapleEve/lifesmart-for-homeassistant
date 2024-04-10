@@ -1,3 +1,4 @@
+"""HACS implementation of LifeSmart by @MapleEve"""
 from typing import Final
 from homeassistant.components.climate import FAN_HIGH, FAN_LOW, FAN_MEDIUM
 from homeassistant.config_entries import ConfigEntry
@@ -79,7 +80,6 @@ from .const import (
     UPDATE_LISTENER,
 )
 
-import voluptuous as vol
 import sys
 
 sys.setrecursionlimit(100000)
@@ -95,20 +95,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     user_token = config_entry.data.get(CONF_LIFESMART_USERTOKEN)
     user_id = config_entry.data.get(CONF_LIFESMART_USERID)
     baseurl = config_entry.data.get(CONF_URL)
-    exclude_devices = config_entry.data.get(CONF_EXCLUDE_ITEMS)
-    exclude_hubs = config_entry.data.get(CONF_EXCLUDE_AGTS)
-    ai_include_hubs = config_entry.data.get(CONF_AI_INCLUDE_AGTS)
-    ai_include_items = config_entry.data.get(CONF_AI_INCLUDE_ITEMS)
-
-    # default data
-    if exclude_devices is None:
-        exclude_devices = []
-    if exclude_hubs is None:
-        exclude_hubs = []
-    if ai_include_hubs is None:
-        ai_include_hubs = []
-    if ai_include_items is None:
-        ai_include_items = []
+    exclude_devices = config_entry.data.get(CONF_EXCLUDE_ITEMS, [])
+    exclude_hubs = config_entry.data.get(CONF_EXCLUDE_AGTS, [])
+    ai_include_hubs = config_entry.data.get(CONF_AI_INCLUDE_AGTS, [])
+    ai_include_items = config_entry.data.get(CONF_AI_INCLUDE_ITEMS, [])
 
     # Update listener for config option changes
     update_listener = config_entry.add_update_listener(_async_update_listener)
@@ -153,19 +143,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             entity_id = generate_entity_id(
                 device_type, hub_id, device_id, sub_device_key
             )
-            _LOGGER.debug("已生成实体id - 设备号：%s 中枢：%s 设备类型：%s IDX:%s ", str(device_id), str(hub_id), str(device_type), str(sub_device_key))
+            _LOGGER.debug("已生成实体id - 设备号：%s 中枢：%s 设备类型：%s IDX:%s ", str(device_id), str(hub_id),
+                          str(device_type), str(sub_device_key))
 
-            if (
-                    device_type in SUPPORTED_SWTICH_TYPES
-                    and sub_device_key in SUPPORTED_SUB_SWITCH_TYPES
-            ):
-                dispatcher_send(
-                    hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-                )
-            elif (
-                    device_type in BINARY_SENSOR_TYPES
-                    and sub_device_key in SUPPORTED_SUB_BINARY_SENSORS
-            ):
+            _SUPPORTED_DEVICES = {
+                SUPPORTED_SWTICH_TYPES: SUPPORTED_SUB_SWITCH_TYPES,
+                BINARY_SENSOR_TYPES: SUPPORTED_SUB_BINARY_SENSORS,
+            }
+
+            if device_type in _SUPPORTED_DEVICES and sub_device_key in _SUPPORTED_DEVICES[device_type]:
                 dispatcher_send(
                     hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                 )
@@ -270,11 +256,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         attrs["current_temperature"] = data["v"]
                         hass.states.set(entity_id, nstat, attrs)
             elif device_type in LOCK_TYPES:
-                if sub_device_key == "BAT":
+                _idx = sub_device_key
+                nstat = hass.states.get(entity_id).state
+                if _idx == "BAT":
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                     )
-                elif sub_device_key == "EVTLO":
+                elif _idx == "EVTLO":
                     """
                     type%2==1 表示开启；
                     type%2==0 表示关闭；
@@ -307,10 +295,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         ).strftime("%Y-%m-%d %H:%M:%S"),
                     }
 
+                    hass.states.set(entity_id, nstat, attrs)
+
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                     )
-                    _LOGGER.debug("已推送 %s - 设备编号：%s -门锁更新数据:%s ", str(LIFESMART_SIGNAL_UPDATE_ENTITY), str(entity_id), str(data))
+                    _LOGGER.debug("设备状态更新已推送 %s - 设备编号：%s -门锁更新数据:%s ",
+                                  str(LIFESMART_SIGNAL_UPDATE_ENTITY),
+                                  str(entity_id), str(data))
 
             elif device_type in OT_SENSOR_TYPES and sub_device_key in [
                 "Z",
@@ -350,17 +342,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             )
 
     def on_message(ws, message):
-        _LOGGER.debug("websocket_msg: %s", str(message))
-        if message:  # Check if the message is not empty
-            try:
-                msg = json.loads(message)
-                if "type" not in msg:
-                    return
-                if msg["type"] != "io":
-                    return
-                asyncio.run(data_update_handler(msg))
-            except json.JSONDecodeError:
-                _LOGGER.error("Invalid JSON received: %s", str(message))
+        _LOGGER.debug("Lifesmart WS message: %s", str(message))
+        if not message:  # Check if the message is empty
+            return
+
+        try:
+            msg = json.loads(message)
+        except json.JSONDecodeError:
+            _LOGGER.error("Invalid JSON received: %s", str(message))
+            return
+
+        if msg.get("type") == "io":  # Check if the "type" field is "io"
+            asyncio.run(data_update_handler(msg))
+        else:
+            _LOGGER.debug("Ignored message: %s", str(message))
 
     def on_error(ws, error):
         _LOGGER.error("Websocket_error: %s", str(error))
