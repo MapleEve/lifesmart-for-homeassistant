@@ -19,6 +19,8 @@
 
 **特别提示：LifeSmart 开放平台的默认应用不会包含锁设备的类型信息。如需此功能，需联系 LifeSmart 官方获取授权。**
 
+获取锁授权的方式写在本说明的最底部
+
 ### 插件如何运作：
 ---
 
@@ -199,3 +201,23 @@ User ID、User Token、Token 过期时间、和优选的 API 域名地址
 ## 请注意：每次通过这个方法授权得到的 User Token 有效期为一年，你需要在到期前重新构建方法获取新的 Token
 
 后面会考虑用用户名和密码模式，不过用户名和密码模式不是很稳定
+
+
+如何获取门锁设备的授权
+---
+
+1. 请使用应用的注册邮箱相同发邮件联系 LifeSmart 的官方邮箱 service(at)ilifesmart.com
+2. 注明需要修改的应用名称，应用 AppKey，或者在应用详情的 URI 地址内提供应用的 AppID
+3. 说明需要增加的权限 `DoorLock` 和 `DoorLock Control`
+
+你就可以在近期收到回复，回复中会告诉你应用增加了权限
+
+```text
+亲爱的用户:
+开发平台于 XXXX-XX-XX XX:XX:XX 收到消息:
+您的应用(XXXXXXXXX)于 XXXX-XX-XX XX:XX:XX：Basic；DoorLock；DoorLock Control；通过
+请及时前往平台进行处理。
+
+此致
+LifeSmart研发团队
+```
