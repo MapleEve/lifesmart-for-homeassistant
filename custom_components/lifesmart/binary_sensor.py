@@ -1,7 +1,6 @@
 """Support for LifeSmart binary sensors."""
 import datetime
 import logging
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from homeassistant.helpers.entity import DeviceInfo
