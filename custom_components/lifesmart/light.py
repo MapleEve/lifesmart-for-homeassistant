@@ -41,7 +41,7 @@ MAX_MIREDS = int(1000000 / 2700)
 MIN_MIREDS = int(1000000 / 6500)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for LifeSmart devices."""
     if discovery_info is None:
         return

@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
 from . import LifeSmartDevice
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
     """Set up lifesmart dooya cover devices."""
     if discovery_info is None:
         return

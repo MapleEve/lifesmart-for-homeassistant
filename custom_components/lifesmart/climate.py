@@ -10,11 +10,11 @@ from homeassistant.components.climate.const import (
     FAN_MEDIUM,
 )
 
+
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_WHOLE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 
 from . import LifeSmartDevice
@@ -47,7 +47,7 @@ THER_TYPES = ["SL_CP_DN"]
 LIFESMART_STATE_LIST
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
     """Set up LifeSmart Climate devices."""
     if discovery_info is None:
         return
@@ -117,7 +117,7 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def target_temperature_step(self):
