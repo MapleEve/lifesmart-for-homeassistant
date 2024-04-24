@@ -295,10 +295,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         ).strftime("%Y-%m-%d %H:%M:%S"),
                     }
 
-                    hass.states.set(entity_id, nstat, attrs)
+                    #hass.states.set(entity_id, nstat, attrs)
 
                     dispatcher_send(
-                        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
+                        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", attrs
                     )
                     _LOGGER.debug("设备状态更新已推送 %s - 设备编号：%s -门锁更新数据:%s ",
                                   str(LIFESMART_SIGNAL_UPDATE_ENTITY),
