@@ -166,18 +166,12 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             val = sub_device_data["val"]
             unlock_method = val >> 12
             unlock_user = val & 0xFFF
-            is_unlock_success = True
-            if (
-                    unlock_user == 0
-                    or sub_device_data['type'] == 1
-                    # type是1的情况一般都是异常，所以不能算成功解锁
-                    #如果门锁开启后自动关闭会返回一个解锁0的val，此时代表门锁已经关闭
-            ):
+            if val == 0:
                 is_unlock_success = False
-            if is_unlock_success:
-                self._state = True
-            else:
                 self._state = False
+            else:
+                is_unlock_success = True
+                self._state = True
             unlock_method = UNLOCK_METHOD.get(unlock_method, "Unknown")
             self._attrs = {
                 "unlocking_method": unlock_method,
@@ -193,9 +187,9 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
             if sub_device_data["val"] == 0:
-                self._state = True
-            else:
                 self._state = False
+            else:
+                self._state = True
         else:
             self._device_class = BinarySensorDeviceClass.SMOKE
             if sub_device_data["val"] == 0:
