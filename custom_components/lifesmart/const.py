@@ -114,6 +114,19 @@ GAS_SENSOR_TYPES = ["SL_SC_WA ", "SL_SC_CH", "SL_SC_CP", "ELIQ_EM"]
 EV_SENSOR_TYPES = ["SL_SC_THL", "SL_SC_BE", "SL_SC_CQ"]
 OT_SENSOR_TYPES = ["SL_SC_MHW", "SL_SC_BM", "SL_SC_G", "SL_SC_BG"]
 LOCK_TYPES = ["SL_LK_LS", "SL_LK_GTM", "SL_LK_AG", "SL_LK_SG", "SL_LK_YL","SL_P_BDLK","OD_JIUWANLI_LOCK1"]
+UNLOCK_METHOD = {
+    0: "None",
+    1: "Password",
+    2: "Fingerprint",
+    3: "NFC",
+    4: "Keys",
+    5: "Remote",
+    6: "12V Signal",
+    7: "App",
+    8: "Bluuetooh",
+    9: "Manual",
+    15: "Error",
+}
 GUARD_SENSOR_TYPES = ["SL_SC_G", "SL_SC_BG"]
 DEVICE_WITHOUT_IDXNAME = [
     "SL_NATURE",

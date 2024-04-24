@@ -16,6 +16,7 @@ from .const import (
     HUB_ID_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     LOCK_TYPES,
+    UNLOCK_METHOD,
     MANUFACTURER,
     MOTION_SENSOR_TYPES,
 )
@@ -176,13 +177,17 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 self._state = True
             else:
                 self._state = False
+            unlock_method = UNLOCK_METHOD.get(unlock_method, "Unknown")
             self._attrs = {
                 "unlocking_method": unlock_method,
                 "unlocking_user": unlock_user,
                 "device_type": device_type,
                 "unlocking_success": is_unlock_success,
+                "last_updated": datetime.datetime.fromtimestamp(
+                    sub_device_data["ts"] / 1000
+                ).strftime("%Y-%m-%d %H:%M:%S"),
             }
-            _LOGGER.debug("Adding lock device: %s", self._attrs)  # Log the lock device information
+            _LOGGER.debug("Updating lock device: %s", self._attrs)  # Log the lock device information
         elif device_type in GENERIC_CONTROLLER_TYPES:
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
@@ -251,4 +256,4 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             else:
                 self._state = False
             self.schedule_update_ha_state()
-            _LOGGER.debug("Updated state for device: %s", self.device_name)  # 设备更新状态时打印日志
+            _LOGGER.debug("Updated state for device: %s", self.device_id)  # 设备更新状态时打印日志

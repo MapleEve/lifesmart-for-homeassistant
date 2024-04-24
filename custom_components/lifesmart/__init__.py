@@ -69,6 +69,7 @@ from .const import (
     LIGHT_DIMMER_TYPES,
     LIGHT_SWITCH_TYPES,
     LOCK_TYPES,
+    UNLOCK_METHOD,
     OT_SENSOR_TYPES,
     SMART_PLUG_TYPES,
     SPOT_TYPES,
@@ -179,12 +180,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     else:
                         nstat = "closing"
                 hass.states.set(entity_id, nstat, attrs)
+                dispatcher_send(
+                    hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
+                )
             elif device_type in EV_SENSOR_TYPES:
                 attrs = hass.states.get(entity_id).attributes
                 hass.states.set(entity_id, data["v"], attrs)
+                dispatcher_send(
+                    hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
+                )
             elif device_type in GAS_SENSOR_TYPES and data["val"] > 0:
                 attrs = hass.states.get(entity_id).attributes
                 hass.states.set(entity_id, data["val"], attrs)
+                dispatcher_send(
+                    hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
+                )
             elif device_type in SPOT_TYPES or device_type in LIGHT_SWITCH_TYPES:
                 # attrs = dict(hass.states.get(entity_id).attributes)
                 _LOGGER.debug("websocket_light_msg: %s ", str(msg))
@@ -216,6 +226,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                             + attrs[ATTR_MIN_MIREDS]
                     )
                     hass.states.set(entity_id, state, attrs)
+                    dispatcher_send(
+                        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
+                    )
 
             elif device_type in CLIMATE_TYPES:
                 _idx = sub_device_key
@@ -260,6 +273,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     if data["type"] == 8 or data["type"] == 9:
                         attrs["current_temperature"] = data["v"]
                         hass.states.set(entity_id, nstat, attrs)
+                dispatcher_send(
+                    hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
+                )
             elif device_type in LOCK_TYPES:
                 if sub_device_key == "BAT":
                     dispatcher_send(
@@ -288,6 +304,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                             and unlock_method != 15
                     ):
                         is_unlock_success = True
+
+                    unlock_method = UNLOCK_METHOD.get(unlock_method, "Unknown")
                     attrs = {
                         "unlocking_method": unlock_method,
                         "unlocking_user": unlock_user,
@@ -301,7 +319,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                     )
-                    _LOGGER.debug("设备状态更新已推送 %s - 设备编号：%s -门锁更新数据:%s ",
+                    _LOGGER.debug("状态更新已推送 %s - 设备编号：%s -门锁更新数据:%s ",
                                   str(LIFESMART_SIGNAL_UPDATE_ENTITY),
                                   str(entity_id), str(data))
 
@@ -313,6 +331,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             ]:
                 attrs = hass.states.get(entity_id).attributes
                 hass.states.set(entity_id, data["v"], attrs)
+                dispatcher_send(
+                    hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
+                )
             elif device_type in SMART_PLUG_TYPES:
                 if sub_device_key == "P1":
                     attrs = hass.states.get(entity_id).attributes
@@ -323,6 +344,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 elif sub_device_key in ["P2", "P3"]:
                     attrs = hass.states.get(entity_id).attributes
                     hass.states.set(entity_id, data["v"], attrs)
+                dispatcher_send(
+                    hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
+                )
             else:
                 _LOGGER.debug("Event is not supported")
 
