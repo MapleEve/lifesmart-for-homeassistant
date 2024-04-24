@@ -183,6 +183,9 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 "unlocking_user": unlock_user,
                 "device_type": device_type,
                 "unlocking_success": is_unlock_success,
+                "last_updated": datetime.datetime.fromtimestamp(
+                    sub_device_data["valts"] / 1000
+                ).strftime("%Y-%m-%d %H:%M:%S"),
             }
             _LOGGER.debug("Updating lock device: %s", self._attrs)  # Log the lock device information
         elif device_type in GENERIC_CONTROLLER_TYPES:
