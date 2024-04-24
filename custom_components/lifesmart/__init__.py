@@ -295,16 +295,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     其他位是0；当双开时，位0 ~15和位16~31分别是相应的解锁信息
                     """
                     val = data["val"]
-                    unlock_method = val >> 12
+                    unlock_method = UNLOCK_METHOD.get(val >> 12, "Unknown")
                     unlock_user = val & 0xFFF
-                    is_unlock_success = True
-                    if (
-                            unlock_user == 0
-                            or data['type'] == 1
-                    ):
+                    if val == 0:
                         is_unlock_success = False
+                    else:
+                        is_unlock_success = True
 
-                    unlock_method = UNLOCK_METHOD.get(unlock_method, "Unknown")
                     attrs = {
                         "unlocking_method": unlock_method,
                         "unlocking_user": unlock_user,

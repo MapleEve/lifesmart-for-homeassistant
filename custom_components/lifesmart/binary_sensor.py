@@ -164,15 +164,16 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
             val = sub_device_data["val"]
-            unlock_method = val >> 12
+            unlock_method = UNLOCK_METHOD.get(val >> 12, "Unknown")
             unlock_user = val & 0xFFF
+
             if val == 0:
                 is_unlock_success = False
                 self._state = False
             else:
                 is_unlock_success = True
                 self._state = True
-            unlock_method = UNLOCK_METHOD.get(unlock_method, "Unknown")
+
             self._attrs = {
                 "unlocking_method": unlock_method,
                 "unlocking_user": unlock_user,
