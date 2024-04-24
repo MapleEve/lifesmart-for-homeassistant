@@ -297,13 +297,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     val = data["val"]
                     unlock_method = val >> 12
                     unlock_user = val & 0xFFF
-                    is_unlock_success = False
+                    is_unlock_success = True
                     if (
-                            data["type"] % 2 == 1
-                            and unlock_user != 0
-                            and unlock_method != 15
+                            unlock_user == 0
+                            or data['type'] == 1
                     ):
-                        is_unlock_success = True
+                        is_unlock_success = False
 
                     unlock_method = UNLOCK_METHOD.get(unlock_method, "Unknown")
                     attrs = {
