@@ -79,7 +79,7 @@ from .const import (
     SUPPORTED_SWTICH_TYPES,
     UPDATE_LISTENER,
 )
-
+import voluptuous as vol
 import sys
 
 sys.setrecursionlimit(100000)
@@ -146,12 +146,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             _LOGGER.debug("已生成实体id - 设备号：%s 中枢：%s 设备类型：%s IDX:%s ", str(device_id), str(hub_id),
                           str(device_type), str(sub_device_key))
 
-            _SUPPORTED_DEVICES = {
-                SUPPORTED_SWTICH_TYPES: SUPPORTED_SUB_SWITCH_TYPES,
-                BINARY_SENSOR_TYPES: SUPPORTED_SUB_BINARY_SENSORS,
-            }
-
-            if device_type in _SUPPORTED_DEVICES and sub_device_key in _SUPPORTED_DEVICES[device_type]:
+            if (
+                    device_type in SUPPORTED_SWTICH_TYPES
+                    and sub_device_key in SUPPORTED_SUB_SWITCH_TYPES
+            ):
+                dispatcher_send(
+                    hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
+                )
+            elif (
+                    device_type in BINARY_SENSOR_TYPES
+                    and sub_device_key in SUPPORTED_SUB_BINARY_SENSORS
+            ):
                 dispatcher_send(
                     hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                 )
@@ -256,13 +261,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         attrs["current_temperature"] = data["v"]
                         hass.states.set(entity_id, nstat, attrs)
             elif device_type in LOCK_TYPES:
-                _idx = sub_device_key
-                nstat = hass.states.get(entity_id).state
-                if _idx == "BAT":
+                if sub_device_key == "BAT":
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                     )
-                elif _idx == "EVTLO":
+                elif sub_device_key == "EVTLO":
                     """
                     type%2==1 表示开启；
                     type%2==0 表示关闭；
@@ -298,7 +301,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                     )
-                    # hass.states.set(entity_id, nstat, attrs)
                     _LOGGER.debug("设备状态更新已推送 %s - 设备编号：%s -门锁更新数据:%s ",
                                   str(LIFESMART_SIGNAL_UPDATE_ENTITY),
                                   str(entity_id), str(data))

@@ -36,37 +36,66 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     exclude_devices = hass.data[DOMAIN][config_entry.entry_id]["exclude_devices"]
     exclude_hubs = hass.data[DOMAIN][config_entry.entry_id]["exclude_hubs"]
     client = hass.data[DOMAIN][config_entry.entry_id]["client"]
-
     sensor_devices = []
     for device in devices:
-        device_id = device[DEVICE_ID_KEY]
-        hub_id = device[HUB_ID_KEY]
-        device_type = device[DEVICE_TYPE_KEY]
-
-        # 剔除不需要的中枢和设备
-        if device_id in exclude_devices or hub_id in exclude_hubs:
+        if (
+                device[DEVICE_ID_KEY] in exclude_devices
+                or device[HUB_ID_KEY] in exclude_hubs
+        ):
             continue
 
-        # 只处理的类型
+        device_type = device[DEVICE_TYPE_KEY]
+
         if device_type not in BINARY_SENSOR_TYPES + LOCK_TYPES:
             continue
 
-        ha_device = LifeSmartDevice(device, client)
-
-        for sub_device_key, sub_device_data in device[DEVICE_DATA_KEY].items():
-            if device_type in GENERIC_CONTROLLER_TYPES and sub_device_key in ["P5", "P6", "P7"]:
-                sensor = LifeSmartBinarySensor(ha_device, device, sub_device_key, sub_device_data, client)
-                sensor_devices.append(sensor)
-                _LOGGER.debug("Adding Hub device: %s", device)  # 打印增加的设备信息
-            elif device_type == LOCK_TYPES and sub_device_key == "EVTLO":
-                sensor = LifeSmartBinarySensor(ha_device, device, sub_device_key, sub_device_data, client)
-                sensor_devices.append(sensor)
-                _LOGGER.debug("Adding Lock device: %s", device)  # 打印增加的设备信息
-            elif device_type in BINARY_SENSOR_TYPES and sub_device_key in ["M", "G", "B", "AXS", "P1"]:
-                sensor = LifeSmartBinarySensor(ha_device, device, sub_device_key, sub_device_data, client)
-                sensor_devices.append(sensor)
-                _LOGGER.debug("Adding Other Binary device: %s", device)  # 打印增加的设备信息
-
+        ha_device = LifeSmartDevice(
+            device,
+            client,
+        )
+        for sub_device_key in device[DEVICE_DATA_KEY]:
+            sub_device_data = device[DEVICE_DATA_KEY][sub_device_key]
+            if device_type in GENERIC_CONTROLLER_TYPES:
+                if sub_device_key in [
+                    "P5",
+                    "P6",
+                    "P7",
+                ]:
+                    sensor_devices.append(
+                        LifeSmartBinarySensor(
+                            ha_device,
+                            device,
+                            sub_device_key,
+                            sub_device_data,
+                            client,
+                        )
+                    )
+            elif device_type in LOCK_TYPES and sub_device_key == "EVTLO":
+                sensor_devices.append(
+                    LifeSmartBinarySensor(
+                        ha_device,
+                        device,
+                        sub_device_key,
+                        sub_device_data,
+                        client,
+                    )
+                )
+            elif device_type in BINARY_SENSOR_TYPES and sub_device_key in [
+                "M",
+                "G",
+                "B",
+                "AXS",
+                "P1",
+            ]:
+                sensor_devices.append(
+                    LifeSmartBinarySensor(
+                        ha_device,
+                        device,
+                        sub_device_key,
+                        sub_device_data,
+                        client,
+                    )
+                )
     async_add_entities(sensor_devices)
 
 
@@ -152,9 +181,6 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 "unlocking_user": unlock_user,
                 "device_type": device_type,
                 "unlocking_success": is_unlock_success,
-                "last_updated": datetime.datetime.fromtimestamp(
-                    sub_device_data["ts"] / 1000
-                ).strftime("%Y-%m-%d %H:%M:%S"),
             }
             _LOGGER.debug("Adding lock device: %s", self._attrs)  # Log the lock device information
         elif device_type in GENERIC_CONTROLLER_TYPES:
