@@ -174,9 +174,9 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             ):
                 is_unlock_success = True
             if is_unlock_success:
-                self._state = True
-            else:
                 self._state = False
+            else:
+                self._state = True
             unlock_method = UNLOCK_METHOD.get(unlock_method, "Unknown")
             self._attrs = {
                 "unlocking_method": unlock_method,
