@@ -500,6 +500,7 @@ class LifeSmartStatesManager:
                     _LOGGER.error("Lifesmart HACS: WebSocket handshake failed: %s", str(e))
                 except Exception as e:
                     _LOGGER.error("Lifesmart HACS: WebSocket connection error: %s", str(e))
+                    self._ws = None
 
     async def disconnect(self):
         async with self._lock:
@@ -510,20 +511,31 @@ class LifeSmartStatesManager:
 
     async def _keep_alive(self):
         while True:
+            await self.connect()
+            if self._ws is None:
+                _LOGGER.warning("Lifesmart HACS: WebSocket is not connected, waiting for next retry")
+                await asyncio.sleep(10)
+                continue
+
             try:
                 await self.connect()
                 async for message in self._ws:
                     # 处理接收到的消息
-                    msg = json.loads(message)
-                    if msg.get("type") == "io":
-                        asyncio.create_task(data_update_handler(self._hass, self._config_entry, msg))
-                    else:
-                        _LOGGER.debug("Ignored message: %s", str(message))
+                        msg = json.loads(message)
+                        if msg.get("type") == "io":
+                            _LOGGER.warning("Lifesmart HACS: Received message: %s", str(msg))
+                            asyncio.create_task(data_update_handler(self._hass, self._config_entry, msg))
+                        else:
+                            _LOGGER.warning("Lifesmart HACS: Received unknown message type: %s", str(msg))
+            except json.JSONDecodeError as e:
+                _LOGGER.error("Lifesmart HACS: Failed to parse WebSocket message as JSON: %s", str(e))
+            except Exception as e:
+                _LOGGER.error("Lifesmart HACS: Error handling WebSocket message: %s", str(e))
             except websockets.exceptions.ConnectionClosed:
                 _LOGGER.warning("Lifesmart HACS: WebSocket connection closed")
             finally:
                 await self.disconnect()
-                _LOGGER.warning("Lifesmart HACS: Restarting WebSocket in 10 seconds")
+                _LOGGER.info("Lifesmart HACS: WebSocket disconnected, reconnecting in 10 seconds")
                 await asyncio.sleep(10)
 
     def start(self):
