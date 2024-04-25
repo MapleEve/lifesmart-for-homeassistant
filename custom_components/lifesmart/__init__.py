@@ -177,7 +177,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     hass.services.async_register(DOMAIN, "scene_set", scene_set_async)
 
     ws_url = lifesmart_client.get_wss_url()
-    hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = LifeSmartStatesManager(ws_url=ws_url)
+    hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = LifeSmartStatesManager(hass, config_entry, ws_url=ws_url)
     hass.data[DOMAIN][LIFESMART_STATE_MANAGER].start()
 
     return True
