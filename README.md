@@ -6,7 +6,8 @@
 ---
 
 1. 请根据您所在的国家，确认您所在区域对应的 LifeSmart
-   服务器，默认建议使用 `api.cn0.ilifesmart.com`。[查看详细的区域服务器列表](./docs/api-regions.md)。
+   服务器，必须使用 ` API 授权后返回的地址`。[查看详细的区域服务器列表](./docs/api-regions.md)。 WebSocket
+   URL地址的选择，必须根据⽤户授权成功后返回的 svrrgnid 保持⼀致，否则不会 正常⼯作，WebSocket 不⽀持跨区使⽤。
 
 2. 在 LifeSmart 开放平台上创建一个新应用，以便获取应用密钥（`app key`
    ）和应用令牌（`app token`）。[访问申请页面](http://www.ilifesmart.com/open/login)（注意：该链接不是 HTTS 连接，请检查浏览器地址栏是否使用
@@ -196,9 +197,9 @@ print(url)
 ```
 
 脚本运行之后会打印一个地址，浏览器访问这个地址，用你的 Lifesmart APP 帐号密码登录即可从浏览器跳转到空页面 URI 中获取到
-User ID、User Token、Token 过期时间、和优选的 API 域名地址
+User ID、User Token、Token 过期时间、和优选的 API 域名地址 ** 必须使用这个区域，否则 Websocket 请求有问题 **
 
-## 请注意：每次通过这个方法授权得到的 User Token 有效期为一年，你需要在到期前重新构建方法获取新的 Token
+## 注意：每次通过这个方法授权得到的 User Token 有效期为一年，你需要在到期前重新构建方法获取新的 Token
 
 后面会考虑用用户名和密码模式，不过用户名和密码模式不是很稳定
 
