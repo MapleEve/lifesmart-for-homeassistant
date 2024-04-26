@@ -182,7 +182,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                     sub_device_data["valts"] / 1000
                 ).strftime("%Y-%m-%d %H:%M:%S"),
             }
-            _LOGGER.debug("Updating lock device: %s state: %s", self._attrs,
+            _LOGGER.debug("Init lock device: %s state: %s", self._attrs,
                           self._state)  # Log the lock device information
         elif device_type in GENERIC_CONTROLLER_TYPES:
             self._device_class = BinarySensorDeviceClass.LOCK
@@ -249,4 +249,4 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         if data is not None:
             self.schedule_update_ha_state()
             _LOGGER.debug("Updated binary state for device: %s , raw: %s state: %s", self.device_id,
-                          self.raw_device_data, self._state)  # 设备更新状态时打印日志
+                          data, self._state)  # 设备更新状态时打印日志
