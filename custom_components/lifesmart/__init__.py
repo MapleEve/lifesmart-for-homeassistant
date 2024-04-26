@@ -494,6 +494,11 @@ class LifeSmartStatesManager:
                 try:
                     self._ws = await websockets.connect(self._ws_url)
                     _LOGGER.warning("Lifesmart HACS: WebSocket connected")
+                    # 发送验证数据
+                    client = self._hass.data[DOMAIN][self._config_entry.entry_id]["client"]
+                    send_data = client.generate_wss_auth()
+                    await self._ws.send(send_data)
+                    _LOGGER.debug("LifeSmart WebSocket sending auth data")
                 except websockets.exceptions.InvalidURI as e:
                     _LOGGER.error("Lifesmart HACS: Invalid WebSocket URL: %s", str(e))
                 except websockets.exceptions.InvalidHandshake as e:
@@ -532,8 +537,9 @@ class LifeSmartStatesManager:
                 _LOGGER.error("Lifesmart HACS: Failed to parse WebSocket message as JSON: %s", str(e))
             except Exception as e:
                 _LOGGER.error("Lifesmart HACS: Error handling WebSocket message: %s", str(e))
-            except websockets.exceptions.ConnectionClosed:
-                _LOGGER.warning("Lifesmart HACS: WebSocket connection closed")
+            except websockets.exceptions.ConnectionClosed as e:
+                _LOGGER.warning(
+                    f"Lifesmart HACS: WebSocket connection closed unexpectedly by server: code={e.code}, reason={e.reason}")
             finally:
                 await self.disconnect()
                 _LOGGER.info("Lifesmart HACS: WebSocket disconnected, reconnecting in 10 seconds")
