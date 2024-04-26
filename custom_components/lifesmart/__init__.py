@@ -3,6 +3,7 @@ import asyncio
 import datetime
 import json
 import logging
+import time
 
 import websockets
 from homeassistant.components import climate
@@ -492,13 +493,15 @@ class LifeSmartStatesManager:
         async with self._lock:
             if self._ws is None:
                 try:
-                    self._ws = await websockets.connect(self._ws_url)
-                    _LOGGER.warning("Lifesmart HACS: WebSocket connected")
+                    self._ws = await websockets.connect(self._ws_url, ping_interval=None)
+                    _LOGGER.debug("Lifesmart HACS: WebSocket connected")
+
                     # 发送验证数据
                     client = self._hass.data[DOMAIN][self._config_entry.entry_id]["client"]
                     send_data = client.generate_wss_auth()
                     await self._ws.send(send_data)
                     _LOGGER.debug("LifeSmart WebSocket sending auth data")
+
                 except websockets.exceptions.InvalidURI as e:
                     _LOGGER.error("Lifesmart HACS: Invalid WebSocket URL: %s", str(e))
                 except websockets.exceptions.InvalidHandshake as e:
@@ -518,32 +521,61 @@ class LifeSmartStatesManager:
         while True:
             await self.connect()
             if self._ws is None:
-                _LOGGER.warning("Lifesmart HACS: WebSocket is not connected, waiting for next retry")
+                _LOGGER.warning("Lifesmart HACS: WebSocket is not connected, waiting 10s for next retry")
                 await asyncio.sleep(10)
                 continue
 
-            try:
-                await self.connect()
-                async for message in self._ws:
-                    _LOGGER.debug("Lifesmart HACS: Received raw message: %s", message)
-                    # 处理接收到的消息
+        try:
+            last_auth_time = time.time()
+            async for message in self._ws:
+                _LOGGER.debug("Lifesmart HACS: Received raw message: %s", message)
+                if message == "wb closed":
+                    _LOGGER.error(
+                        "Lifesmart HACS: WebSocket closed without authentication. Check if the authentication process is working correctly.")
+                    break
+
+                try:
                     msg = json.loads(message)
-                    if msg.get("type") == "io":
-                        _LOGGER.warning("Lifesmart HACS: Received message: %s", str(msg))
+                    if msg.get("message") == "success" and msg.get("code") == 0:
+                        _LOGGER.info("Lifesmart HACS: WebSocket authentication successful")
+                        last_auth_time = time.time()
+                    elif msg.get("type") == "io":
+                        _LOGGER.debug("Lifesmart HACS: Received IO message: %s", str(msg))
                         asyncio.create_task(data_update_handler(self._hass, self._config_entry, msg))
                     else:
                         _LOGGER.warning("Lifesmart HACS: Received unknown message type: %s", str(msg))
-            except json.JSONDecodeError as e:
-                _LOGGER.error("Lifesmart HACS: Failed to parse WebSocket message as JSON: %s", str(e))
-            except Exception as e:
-                _LOGGER.error("Lifesmart HACS: Error handling WebSocket message: %s", str(e))
-            except websockets.exceptions.ConnectionClosed as e:
-                _LOGGER.warning(
-                    f"Lifesmart HACS: WebSocket connection closed unexpectedly by server: code={e.code}, reason={e.reason}")
-            finally:
-                await self.disconnect()
-                _LOGGER.info("Lifesmart HACS: WebSocket disconnected, reconnecting in 10 seconds")
-                await asyncio.sleep(10)
+                except json.JSONDecodeError as e:
+                    _LOGGER.error("Lifesmart HACS: Failed to parse WebSocket message as JSON: %s", str(e))
+
+                # 每小时重新发送一次验证数据
+                if time.time() - last_auth_time > 3600:
+                    client = self._hass.data[DOMAIN][self._config_entry.entry_id]["client"]
+                    send_data = client.generate_wss_auth()
+                    await self._ws.send(send_data)
+                    _LOGGER.debug("LifeSmart WebSocket re-sending auth data")
+
+                    try:
+                        response = await asyncio.wait_for(self._ws.recv(), timeout=10)
+                        msg = json.loads(response)
+                        if msg.get("message") == "success" and msg.get("code") == 0:
+                            _LOGGER.info("Lifesmart HACS: WebSocket re-authentication successful")
+                            last_auth_time = time.time()
+                        else:
+                            _LOGGER.warning("Lifesmart HACS: Unexpected response to re-auth message: %s", response)
+                            break
+                    except (asyncio.TimeoutError, json.JSONDecodeError):
+                        _LOGGER.warning(
+                            "Lifesmart HACS: No valid response to re-auth message within 10 seconds, disconnecting")
+                        break
+
+        except websockets.exceptions.ConnectionClosed as e:
+            _LOGGER.warning(f"Lifesmart HACS: WebSocket connection closed: code={e.code}, reason={e.reason}")
+        except Exception as e:
+            _LOGGER.error("Lifesmart HACS: Error in WebSocket communication: %s", str(e))
+        finally:
+            await self.disconnect()
+            _LOGGER.info("Lifesmart HACS: WebSocket disconnected, reconnecting in 10 seconds")
+            await asyncio.sleep(10)
 
     def start(self):
         self._task = asyncio.create_task(self._keep_alive())
