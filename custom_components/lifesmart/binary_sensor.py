@@ -250,5 +250,5 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     async def _update_state(self, data) -> None:
         if data is not None:
             self.schedule_update_ha_state()
-            _LOGGER.debug("Updated binary state for device: %s , raw: %s state: %s", self.device_id,
+            _LOGGER.debug("Updated binary state for device: %s , data: %s state: %s", self.device_id,
                           data, self._state)  # 设备更新状态时打印日志
