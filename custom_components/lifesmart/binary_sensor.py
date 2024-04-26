@@ -1,9 +1,15 @@
 """Support for LifeSmart binary sensors."""
 import datetime
 import logging
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+
+from . import LifeSmartDevice, generate_entity_id
 from .const import (
     BINARY_SENSOR_TYPES,
     DEVICE_DATA_KEY,
@@ -20,13 +26,6 @@ from .const import (
     MANUFACTURER,
     MOTION_SENSOR_TYPES,
 )
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-    ENTITY_ID_FORMAT,
-)
-
-from . import LifeSmartDevice, generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,9 +187,9 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
             if sub_device_data["val"] == 0:
-                self._state = False
-            else:
                 self._state = True
+            else:
+                self._state = False
         else:
             self._device_class = BinarySensorDeviceClass.SMOKE
             if sub_device_data["val"] == 0:
@@ -247,9 +246,5 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
     async def _update_state(self, data) -> None:
         if data is not None:
-            if data["val"] == 0:
-                self._state = True
-            else:
-                self._state = False
             self.schedule_update_ha_state()
-            _LOGGER.debug("Updated state for device: %s", self.device_id)  # 设备更新状态时打印日志
+            _LOGGER.debug("Updated binary state for device: %s , state: %s", self.device_id, self._state)  # 设备更新状态时打印日志
