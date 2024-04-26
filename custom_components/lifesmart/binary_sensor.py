@@ -251,10 +251,36 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
     async def _update_state(self, data) -> None:
         if data is not None:
-            if data["val"] == 0:
-                self._state = False
+            if self.device_type in LOCK_TYPES:
+                val = data["val"]
+
+                if val == 0:
+                    self._state = False  # 当val为0时,表示门锁关闭
+                else:
+                    if data["type"] % 2 == 1:
+                        self._state = True  # 当type为奇数时,表示门锁打开
+                    else:
+                        self._state = False  # 当type为偶数时,表示门锁关闭
+
+                self._attrs.update({
+                    "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
+                    "unlocking_user": val & 0xFFF,
+                    "device_type": self.device_type,
+                    "unlocking_success": self._state,
+                    "last_updated": datetime.datetime.fromtimestamp(
+                        data["valts"] / 1000
+                    ).strftime("%Y-%m-%d %H:%M:%S"),
+                })
+            elif self.device_type in MOTION_SENSOR_TYPES:
+                self._state = data["val"] != 0
+            elif self.device_type in GUARD_SENSOR_TYPES:
+                if self.sub_device_key == "G":
+                    self._state = data["val"] == 0
+                else:
+                    self._state = data["val"] != 0
             else:
-                self._state = True
-            self.schedule_update_ha_state()
-            _LOGGER.debug("Updated binary state for device: %s , data: %s state: %s", self.device_id,
+                self._state = data["val"] != 0
+
+            self.schedule_update_ha_state()  # 通知HA更新状态
+            _LOGGER.debug("Updated binary state for device: %s , raw: %s state: %s", self.device_id,
                           data, self._state)  # 设备更新状态时打印日志
