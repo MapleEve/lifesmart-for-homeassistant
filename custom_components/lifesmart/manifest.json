@@ -1,6 +1,6 @@
 {
-  "domain": "lifesmart-iot",
-  "name": "iLifeSmart Devices Integration",
+  "domain": "lifesmart",
+  "name": "LifeSmart Devices Integration",
   "codeowners": [
     "@MapleEve"
   ],
