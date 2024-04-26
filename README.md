@@ -1,3 +1,7 @@
+# # LifeSmart IoT for Home Assistant
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
+
 使用说明
 ====
 让 Home Assistant 支持 Lifesmart 设备的 HACS 插件
