@@ -179,7 +179,7 @@ lifesmart:
 import time
 import hashlib
 tick = int(time.time())
-appkey = " 你的应用 APPKEY"
+appkey = "你的应用 APPKEY"
 callbackurl = "http://localhost"
 apptoken = "你的应用 APPK TOKEN"
 sdata = "appkey=" + appkey

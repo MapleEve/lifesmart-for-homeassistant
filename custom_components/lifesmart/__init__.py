@@ -520,13 +520,14 @@ class LifeSmartStatesManager:
             try:
                 await self.connect()
                 async for message in self._ws:
+                    _LOGGER.debug("Lifesmart HACS: Received raw message: %s", message)
                     # 处理接收到的消息
-                        msg = json.loads(message)
-                        if msg.get("type") == "io":
-                            _LOGGER.warning("Lifesmart HACS: Received message: %s", str(msg))
-                            asyncio.create_task(data_update_handler(self._hass, self._config_entry, msg))
-                        else:
-                            _LOGGER.warning("Lifesmart HACS: Received unknown message type: %s", str(msg))
+                    msg = json.loads(message)
+                    if msg.get("type") == "io":
+                        _LOGGER.warning("Lifesmart HACS: Received message: %s", str(msg))
+                        asyncio.create_task(data_update_handler(self._hass, self._config_entry, msg))
+                    else:
+                        _LOGGER.warning("Lifesmart HACS: Received unknown message type: %s", str(msg))
             except json.JSONDecodeError as e:
                 _LOGGER.error("Lifesmart HACS: Failed to parse WebSocket message as JSON: %s", str(e))
             except Exception as e:
