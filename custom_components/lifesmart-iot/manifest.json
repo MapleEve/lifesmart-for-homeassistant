@@ -1,0 +1,17 @@
+{
+  "domain": "lifesmart-iot",
+  "name": "iLifeSmart Devices Integration",
+  "codeowners": [
+    "@MapleEve"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/MapleEve/lifesmart-HACS-for-hass",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/MapleEve/lifesmart-HACS-for-hass/issues",
+  "requirements": [
+    "websockets"
+  ],
+  "version": "24.05.01"
+}

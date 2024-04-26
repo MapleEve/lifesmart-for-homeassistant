@@ -1,0 +1,150 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "LifeSmart 设备集成配置",
+        "description": "请输入您的 LifeSmart 平台凭证以及个人用户信息。",
+        "data": {
+          "appkey": "应用密钥 App Key",
+          "apptoken": "应用令牌 App Token",
+          "usertoken": "用户令牌 User Token",
+          "userid": "User Id",
+          "url": "LifeSmart 区域域名",
+          "exclude": "不希望集成的设备列表",
+          "exclude_agt": "不希望集成的中枢列表",
+          "ai_include_agt": "希望在场景中包含的中枢列表",
+          "ai_include_me": "希望在场景中包含的设备列表"
+        }
+      }
+    },
+    "abort": {
+      "already_in_progress": "当前配置流程已经在进行中",
+      "already_configured": "该设备已经完成配置。"
+    },
+    "error": {
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LifeSmart 设备集成配置",
+        "description": "选择您需要编辑的配置选项",
+        "menu_options": {
+          "main_params": "主要配置参数"
+        }
+      },
+      "main_params": {
+        "title": "LifeSmart 设备集成选项",
+        "description": "请输入您的 LifeSmart 平台凭证以及个人用户信息",
+        "data": {
+          "appkey": "应用密钥 App Key",
+          "apptoken": "应用令牌 App Token",
+          "usertoken": "用户令牌User Token",
+          "userid": "User Id",
+          "url": "LifeSmart 区域域名",
+          "exclude": "不希望集成的设备列表",
+          "exclude_agt": "不希望集成的中枢列表",
+          "ai_include_agt": "希望在场景中包含的中枢列表",
+          "ai_include_me": "希望在场景中包含的设备列表"
+        }
+      }
+    }
+  },
+  "services": {
+    "send_keys": {
+      "name": "发送设备红外按键",
+      "description": "向远程设备发送指定的红外按键。",
+      "fields": {
+        "me": {
+          "name": "Me",
+          "description": "子设备 ID"
+        },
+        "agt": {
+          "name": "AGT",
+          "description": "中枢设备 ID"
+        },
+        "ai": {
+          "name": "Remote Id",
+          "description": "远程设备 ID"
+        },
+        "category": {
+          "name": "Category",
+          "description": "目标设备类型"
+        },
+        "brand": {
+          "name": "Brand",
+          "description": "目标设备品牌"
+        },
+        "keys": {
+          "name": "Keys",
+          "description": "要发送的按键命令"
+        }
+      }
+    },
+    "send_ackeys": {
+      "name": "发送空调按键",
+      "description": "发送空调红外按键",
+      "fields": {
+        "me": {
+          "name": "Me",
+          "description": "子设备 ID"
+        },
+        "agt": {
+          "name": "AGT",
+          "description": "中枢设备 ID"
+        },
+        "ai": {
+          "name": "Remote Id",
+          "description": "远程设备 ID"
+        },
+        "category": {
+          "name": "Category",
+          "description": "目标设备类型"
+        },
+        "brand": {
+          "name": "Brand",
+          "description": "目标设备品牌"
+        },
+        "keys": {
+          "name": "Keys",
+          "description": "要发送的按键命令"
+        },
+        "power": {
+          "name": "Power On/Off",
+          "description": "开 = 1, 关 = 0"
+        },
+        "mode": {
+          "name": "Mode",
+          "description": "模式"
+        },
+        "temp": {
+          "name": "Temperature",
+          "description": "设置温度"
+        },
+        "wind": {
+          "name": "Wind Level",
+          "description": "风速"
+        },
+        "swing": {
+          "name": "Swing Mode",
+          "description": "扫风模式"
+        }
+      }
+    },
+    "scene_set": {
+      "name": "Scene Set",
+      "description": "设置场景",
+      "fields": {
+        "agt": {
+          "name": "AGT",
+          "description": "中枢设备 ID"
+        },
+        "id": {
+          "name": "Scene Id",
+          "description": "远程场景 ID"
+        }
+      }
+    }
+  }
+}
