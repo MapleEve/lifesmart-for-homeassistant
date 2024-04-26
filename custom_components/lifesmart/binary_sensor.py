@@ -170,7 +170,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             if (
                     unlock_type % 2 == 1
                     and unlock_user != 0
-                    and unlock_method != 15
+                    and val >> 12 != 15
             ):
                 is_unlock_success = True
                 self._state = True
@@ -255,12 +255,16 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 val = data["val"]
 
                 if val == 0:
-                    self._state = False  # 当val为0时,表示门锁关闭
+                    self._state = False  # 当val为0时,表示门锁肯定关闭
                 else:
-                    if data["type"] % 2 == 1:
-                        self._state = True  # 当type为奇数时,表示门锁打开
+                    if (
+                            data["type"] % 2 == 1
+                            and val & 0xFFF != 0
+                            and val >> 12 != 15
+                    ):
+                        self._state = True
                     else:
-                        self._state = False  # 当type为偶数时,表示门锁关闭
+                        self._state = False
 
                 self._attrs.update({
                     "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
@@ -268,7 +272,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                     "device_type": self.device_type,
                     "unlocking_success": self._state,
                     "last_updated": datetime.datetime.fromtimestamp(
-                        data["valts"] / 1000
+                        data["ts"] / 1000
                     ).strftime("%Y-%m-%d %H:%M:%S"),
                 })
             elif self.device_type in MOTION_SENSOR_TYPES:
