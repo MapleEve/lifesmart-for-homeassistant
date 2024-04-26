@@ -1,6 +1,6 @@
 {
-  "domain": "lifesmart",
-  "name": "LifeSmart",
+  "domain": "lifesmart-iot",
+  "name": "iLifeSmart",
   "codeowners": [
     "@MapleEve"
   ],
@@ -11,7 +11,7 @@
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/MapleEve/lifesmart-HACS-for-hass/issues",
   "requirements": [
-    "websocket-client"
+    "websockets"
   ],
-  "version": "24.04.10"
+  "version": "24.05.01"
 }

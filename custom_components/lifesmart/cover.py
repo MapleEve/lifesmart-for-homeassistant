@@ -1,4 +1,5 @@
 """Support for LifeSmart covers."""
+
 from homeassistant.components.cover import (
     ENTITY_ID_FORMAT,
     ATTR_POSITION,

@@ -1,24 +1,15 @@
 """HACS implementation of LifeSmart by @MapleEve"""
+
 import asyncio
-import datetime
 import json
 import logging
 
 import websockets
-from homeassistant.components import climate
 from homeassistant.components.climate import FAN_HIGH, FAN_LOW, FAN_MEDIUM
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_URL,
     Platform,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -177,7 +168,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     hass.services.async_register(DOMAIN, "scene_set", scene_set_async)
 
     ws_url = lifesmart_client.get_wss_url()
-    hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = LifeSmartStatesManager(hass, config_entry, ws_url=ws_url)
+    hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = LifeSmartStatesManager(
+        hass, config_entry, ws_url=ws_url
+    )
     hass.data[DOMAIN][LIFESMART_STATE_MANAGER].start()
 
     return True
@@ -195,175 +188,60 @@ async def data_update_handler(hass, config_entry, msg):
     ai_include_items = config_entry.data.get(CONF_AI_INCLUDE_ITEMS, [])
 
     if (
-            sub_device_key != "s"
-            and device_id not in exclude_devices
-            and hub_id not in exclude_hubs
+        sub_device_key != "s"
+        and device_id not in exclude_devices
+        and hub_id not in exclude_hubs
     ):
-        entity_id = generate_entity_id(
-            device_type, hub_id, device_id, sub_device_key
+        entity_id = generate_entity_id(device_type, hub_id, device_id, sub_device_key)
+        _LOGGER.debug(
+            "已生成实体id - 设备号：%s 中枢：%s 设备类型：%s IDX:%s ",
+            str(device_id),
+            str(hub_id),
+            str(device_type),
+            str(sub_device_key),
         )
-        _LOGGER.debug("已生成实体id - 设备号：%s 中枢：%s 设备类型：%s IDX:%s ", str(device_id), str(hub_id),
-                      str(device_type), str(sub_device_key))
 
         if (
-                device_type in SUPPORTED_SWTICH_TYPES
-                and sub_device_key in SUPPORTED_SUB_SWITCH_TYPES
+            device_type in SUPPORTED_SWTICH_TYPES
+            and sub_device_key in SUPPORTED_SUB_SWITCH_TYPES
         ):
-            dispatcher_send(
-                hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-            )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
         elif (
-                device_type in BINARY_SENSOR_TYPES
-                and sub_device_key in SUPPORTED_SUB_BINARY_SENSORS
+            device_type in BINARY_SENSOR_TYPES
+            and sub_device_key in SUPPORTED_SUB_BINARY_SENSORS
         ):
-            dispatcher_send(
-                hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-            )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
 
         elif device_type in COVER_TYPES and sub_device_key == "P1":
-            attrs = dict(hass.states.get(entity_id).attributes)
-            nval = data["val"]
-            ntype = data["type"]
-            attrs["current_position"] = nval & 0x7F
-            nstat = None
-            if ntype % 2 == 0:
-                if nval > 0:
-                    nstat = "open"
-                else:
-                    nstat = "closed"
-            else:
-                if nval & 0x80 == 0x80:
-                    nstat = "opening"
-                else:
-                    nstat = "closing"
-            hass.states.set(entity_id, nstat, attrs)
-            dispatcher_send(
-                hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-            )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
         elif device_type in EV_SENSOR_TYPES:
-            attrs = hass.states.get(entity_id).attributes
-            hass.states.set(entity_id, data["v"], attrs)
-            dispatcher_send(
-                hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-            )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
         elif device_type in GAS_SENSOR_TYPES and data["val"] > 0:
-            attrs = hass.states.get(entity_id).attributes
-            hass.states.set(entity_id, data["val"], attrs)
-            dispatcher_send(
-                hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-            )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
         elif device_type in SPOT_TYPES or device_type in LIGHT_SWITCH_TYPES:
             _LOGGER.debug("websocket_light_msg: %s ", str(msg))
-            value = data["val"]
-            idx = sub_device_key
-
-            dispatcher_send(
-                hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-            )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
 
         elif device_type in LIGHT_DIMMER_TYPES:
-            attrs = dict(hass.states.get(entity_id).attributes)
-            state = hass.states.get(entity_id).state
-            _LOGGER.debug("websocket_light_msg: %s ", str(msg))
-            _LOGGER.debug("websocket_light_attrs: %s", str(attrs))
-            value = data["val"]
-            idx = sub_device_key
-            if idx in ["P1"]:
-                if data["type"] % 2 == 1:
-                    attrs[ATTR_BRIGHTNESS] = value
-                    hass.states.set(entity_id, STATE_ON, attrs)
-                else:
-                    hass.states.set(entity_id, STATE_OFF, attrs)
-            elif idx in ["P2"]:
-                ratio = 1 - (value / 255)
-                attrs[ATTR_COLOR_TEMP] = (
-                        int((attrs[ATTR_MAX_MIREDS] - attrs[ATTR_MIN_MIREDS]) * ratio)
-                        + attrs[ATTR_MIN_MIREDS]
-                )
-                hass.states.set(entity_id, state, attrs)
-                dispatcher_send(
-                    hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-                )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
 
         elif device_type in CLIMATE_TYPES:
-            _idx = sub_device_key
-            attrs = dict(hass.states.get(entity_id).attributes)
-            nstat = hass.states.get(entity_id).state
-            if _idx == "O":
-                if data["type"] % 2 == 1:
-                    nstat = attrs["last_mode"]
-                    hass.states.set(entity_id, nstat, attrs)
-                else:
-                    nstat = climate.const.HVACMode.OFF
-                    hass.states.set(entity_id, nstat, attrs)
-            if _idx == "P1":
-                if data["type"] % 2 == 1:
-                    nstat = climate.const.HVACMode.HEAT
-                    hass.states.set(entity_id, nstat, attrs)
-                else:
-                    nstat = climate.const.HVACMode.OFF
-                    hass.states.set(entity_id, nstat, attrs)
-            if _idx == "P2":
-                if data["type"] % 2 == 1:
-                    attrs["Heating"] = "true"
-                    hass.states.set(entity_id, nstat, attrs)
-                else:
-                    attrs["Heating"] = "false"
-                    hass.states.set(entity_id, nstat, attrs)
-            elif _idx == "MODE":
-                if data["type"] == 206:
-                    if nstat != climate.const.HVACMode.OFF:
-                        nstat = LIFESMART_HVAC_STATE_LIST[data["val"]]
-                    attrs["last_mode"] = nstat
-                    hass.states.set(entity_id, nstat, attrs)
-            elif _idx == "F":
-                if data["type"] == 206:
-                    attrs["fan_mode"] = get_fan_mode(data["val"])
-                    hass.states.set(entity_id, nstat, attrs)
-            elif _idx == "tT" or _idx == "P3":
-                if data["type"] == 136:
-                    attrs["temperature"] = data["v"]
-                    hass.states.set(entity_id, nstat, attrs)
-            elif _idx == "T" or _idx == "P4":
-                if data["type"] == 8 or data["type"] == 9:
-                    attrs["current_temperature"] = data["v"]
-                    hass.states.set(entity_id, nstat, attrs)
-            dispatcher_send(
-                hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-            )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
         elif device_type in LOCK_TYPES:
             if sub_device_key == "BAT":
                 dispatcher_send(
                     hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                 )
             elif sub_device_key == "EVTLO":
-                val = data["val"]
-                unlock_method = UNLOCK_METHOD.get(val >> 12, "Unknown")
-                unlock_user = val & 0xFFF
-                is_unlock_success = False
-                if (
-                        data["type"] % 2 == 1
-                        and unlock_user != 0
-                        and unlock_method != 15
-                ):
-                    is_unlock_success = True
-
-                attrs = {
-                    "unlocking_method": unlock_method,
-                    "unlocking_user": unlock_user,
-                    "device_type": device_type,
-                    "unlocking_success": is_unlock_success,
-                    "last_updated": datetime.datetime.fromtimestamp(
-                        data["ts"] / 1000
-                    ).strftime("%Y-%m-%d %H:%M:%S"),
-                }
-
                 dispatcher_send(
                     hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                 )
-                _LOGGER.debug("状态更新已推送 %s - 设备编号：%s -门锁更新数据:%s ",
-                              str(LIFESMART_SIGNAL_UPDATE_ENTITY),
-                              str(entity_id), str(data))
+                _LOGGER.debug(
+                    "状态更新已推送 %s - 设备编号：%s -门锁更新数据:%s ",
+                    str(LIFESMART_SIGNAL_UPDATE_ENTITY),
+                    str(entity_id),
+                    str(data),
+                )
 
         elif device_type in OT_SENSOR_TYPES and sub_device_key in [
             "Z",
@@ -371,42 +249,27 @@ async def data_update_handler(hass, config_entry, msg):
             "P3",
             "P4",
         ]:
-            attrs = hass.states.get(entity_id).attributes
-            hass.states.set(entity_id, data["v"], attrs)
-            dispatcher_send(
-                hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-            )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
         elif device_type in SMART_PLUG_TYPES:
-            if sub_device_key == "P1":
-                attrs = hass.states.get(entity_id).attributes
-                if data["type"] % 2 == 1:
-                    hass.states.set(entity_id, STATE_ON, attrs)
-                else:
-                    hass.states.set(entity_id, STATE_OFF, attrs)
-            elif sub_device_key in ["P2", "P3"]:
-                attrs = hass.states.get(entity_id).attributes
-                hass.states.set(entity_id, data["v"], attrs)
-            dispatcher_send(
-                hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-            )
+            dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
         else:
             _LOGGER.debug("Event is not supported")
 
     # AI event
     if (
-            sub_device_key == "s"
-            and device_id in ai_include_items
-            and data[HUB_ID_KEY] in ai_include_hubs
+        sub_device_key == "s"
+        and device_id in ai_include_items
+        and data[HUB_ID_KEY] in ai_include_hubs
     ):
         _LOGGER.info("AI Event: %s", str(msg))
-        device_type = data["devtype"]
-        hub_id = data[HUB_ID_KEY]
-        entity_id = (
-                "switch."
-                + (
-                        device_type + "_" + hub_id + "_" + device_id + "_" + sub_device_key
-                ).lower()
-        )
+        # device_type = data["devtype"]
+        # hub_id = data[HUB_ID_KEY]
+        # entity_id = (
+        #     "switch."
+        #     + (
+        #         device_type + "_" + hub_id + "_" + device_id + "_" + sub_device_key
+        #     ).lower()
+        # )
 
 
 async def _async_update_listener(hass, config_entry):
@@ -495,11 +358,15 @@ class LifeSmartStatesManager:
         async with self._lock:
             if self._ws is None:
                 try:
-                    self._ws = await websockets.connect(self._ws_url, ping_interval=None)
+                    self._ws = await websockets.connect(
+                        self._ws_url, ping_interval=None
+                    )
                     _LOGGER.debug("Lifesmart HACS: WebSocket connected")
 
                     # 发送验证数据
-                    client = self._hass.data[DOMAIN][self._config_entry.entry_id]["client"]
+                    client = self._hass.data[DOMAIN][self._config_entry.entry_id][
+                        "client"
+                    ]
                     send_data = client.generate_wss_auth()
                     await self._ws.send(send_data)
                     _LOGGER.debug("LifeSmart WebSocket sending auth data")
@@ -507,9 +374,13 @@ class LifeSmartStatesManager:
                 except websockets.exceptions.InvalidURI as e:
                     _LOGGER.error("Lifesmart HACS: Invalid WebSocket URL: %s", str(e))
                 except websockets.exceptions.InvalidHandshake as e:
-                    _LOGGER.error("Lifesmart HACS: WebSocket handshake failed: %s", str(e))
+                    _LOGGER.error(
+                        "Lifesmart HACS: WebSocket handshake failed: %s", str(e)
+                    )
                 except Exception as e:
-                    _LOGGER.error("Lifesmart HACS: WebSocket connection error: %s", str(e))
+                    _LOGGER.error(
+                        "Lifesmart HACS: WebSocket connection error: %s", str(e)
+                    )
                     self._ws = None
 
     async def disconnect(self):
@@ -523,7 +394,9 @@ class LifeSmartStatesManager:
         while True:
             await self.connect()
             if self._ws is None:
-                _LOGGER.warning("Lifesmart HACS: WebSocket is not connected, waiting for next retry")
+                _LOGGER.warning(
+                    "Lifesmart HACS: WebSocket is not connected, waiting for next retry"
+                )
                 await asyncio.sleep(10)
                 continue
 
@@ -532,28 +405,47 @@ class LifeSmartStatesManager:
                     _LOGGER.debug("Lifesmart HACS: Received raw message: %s", message)
                     if message == "wb closed":
                         _LOGGER.error(
-                            "Lifesmart HACS: WebSocket closed without authentication. Check if the authentication process is working correctly.")
+                            "Lifesmart HACS: WebSocket closed without authentication. Check if the authentication process is working correctly."
+                        )
                         await asyncio.sleep(3600)  # 等待3600秒再重试
                         break
 
                     try:
                         msg = json.loads(message)
                         if msg.get("message") == "success" and msg.get("code") == 0:
-                            _LOGGER.info("Lifesmart HACS: WebSocket authentication successful")
+                            _LOGGER.info(
+                                "Lifesmart HACS: WebSocket authentication successful"
+                            )
                         elif msg.get("type") == "io":
-                            _LOGGER.debug("Lifesmart HACS: Received IO message: %s", str(msg))
-                            asyncio.create_task(data_update_handler(self._hass, self._config_entry, msg))
+                            _LOGGER.debug(
+                                "Lifesmart HACS: Received IO message: %s", str(msg)
+                            )
+                            asyncio.create_task(
+                                data_update_handler(self._hass, self._config_entry, msg)
+                            )
                         else:
-                            _LOGGER.warning("Lifesmart HACS: Received unknown message type: %s", str(msg))
+                            _LOGGER.warning(
+                                "Lifesmart HACS: Received unknown message type: %s",
+                                str(msg),
+                            )
                     except json.JSONDecodeError as e:
-                        _LOGGER.error("Lifesmart HACS: Failed to parse WebSocket message as JSON: %s", str(e))
+                        _LOGGER.error(
+                            "Lifesmart HACS: Failed to parse WebSocket message as JSON: %s",
+                            str(e),
+                        )
             except websockets.exceptions.ConnectionClosed as e:
-                _LOGGER.warning(f"Lifesmart HACS: WebSocket connection closed: code={e.code}, reason={e.reason}")
+                _LOGGER.warning(
+                    f"Lifesmart HACS: WebSocket connection closed: code={e.code}, reason={e.reason}"
+                )
             except Exception as e:
-                _LOGGER.error("Lifesmart HACS: Error in WebSocket communication: %s", str(e))
+                _LOGGER.error(
+                    "Lifesmart HACS: Error in WebSocket communication: %s", str(e)
+                )
             finally:
                 await self.disconnect()
-                _LOGGER.info("Lifesmart HACS: WebSocket disconnected, reconnecting in 10 seconds")
+                _LOGGER.info(
+                    "Lifesmart HACS: WebSocket disconnected, reconnecting in 10 seconds"
+                )
                 await asyncio.sleep(10)
 
     def start(self):
@@ -620,36 +512,36 @@ def generate_entity_id(device_type, hub_id, device_id, idx=None):
     ]:
         if sub_device:
             return (
-                    get_platform_by_device(device_type, sub_device)
-                    + (
-                            "."
-                            + device_type
-                            + "_"
-                            + hub_id
-                            + "_"
-                            + device_id
-                            + "_"
-                            + sub_device
-                    ).lower()
+                get_platform_by_device(device_type, sub_device)
+                + (
+                    "."
+                    + device_type
+                    + "_"
+                    + hub_id
+                    + "_"
+                    + device_id
+                    + "_"
+                    + sub_device
+                ).lower()
             )
         else:
             return (
                 # no sub device (idx)
-                    get_platform_by_device(device_type)
-                    + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
+                get_platform_by_device(device_type)
+                + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
             )
 
     elif device_type in COVER_TYPES:
         return (
-                Platform.COVER
-                + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
+            Platform.COVER
+            + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
         )
     elif device_type in LIGHT_DIMMER_TYPES:
         return (
-                Platform.LIGHT
-                + ("." + device_type + "_" + hub_id + "_" + device_id + "_P1P2").lower()
+            Platform.LIGHT
+            + ("." + device_type + "_" + hub_id + "_" + device_id + "_P1P2").lower()
         )
     elif device_type in CLIMATE_TYPES:
         return Platform.CLIMATE + (
-                "." + device_type + "_" + hub_id + "_" + device_id
+            "." + device_type + "_" + hub_id + "_" + device_id
         ).lower().replace(":", "_").replace("@", "_")

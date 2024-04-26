@@ -1,17 +1,13 @@
-import subprocess
-import urllib.request
-import json
-import time
-import hashlib
 import logging
 
-from homeassistant.core import HomeAssistant
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from . import LifeSmartDevice, generate_entity_id
 
+from . import LifeSmartDevice, generate_entity_id
 from .const import (
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
@@ -25,12 +21,6 @@ from .const import (
     SPOT_TYPES,
     SUPPORTED_SUB_SWITCH_TYPES,
     SUPPORTED_SWTICH_TYPES,
-)
-
-from homeassistant.components.switch import (
-    SwitchDeviceClass,
-    SwitchEntity,
-    ENTITY_ID_FORMAT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,8 +45,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     switch_devices = []
     for device in devices:
         if (
-                device[DEVICE_ID_KEY] in exclude_devices
-                or device[HUB_ID_KEY] in exclude_hubs
+            device[DEVICE_ID_KEY] in exclude_devices
+            or device[HUB_ID_KEY] in exclude_hubs
         ):
             continue
 
@@ -99,7 +89,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class LifeSmartSwitch(SwitchEntity):
     def __init__(
-            self, device, raw_device_data, sub_device_key, sub_device_data, client
+        self, device, raw_device_data, sub_device_key, sub_device_data, client
     ) -> None:
         """Initialize the switch."""
 
@@ -182,10 +172,10 @@ class LifeSmartSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         if (
-                await self._client.turn_on_light_swith_async(
-                    self.sub_device_key, self.hub_id, self.device_id
-                )
-                == 0
+            await self._client.turn_on_light_swith_async(
+                self.sub_device_key, self.hub_id, self.device_id
+            )
+            == 0
         ):
             self._state = True
             self.async_schedule_update_ha_state()
@@ -195,10 +185,10 @@ class LifeSmartSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if (
-                await self._client.turn_off_light_swith_async(
-                    self.sub_device_key, self.hub_id, self.device_id
-                )
-                == 0
+            await self._client.turn_off_light_swith_async(
+                self.sub_device_key, self.hub_id, self.device_id
+            )
+            == 0
         ):
             self._state = False
             self.async_schedule_update_ha_state()

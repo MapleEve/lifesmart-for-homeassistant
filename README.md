@@ -26,7 +26,7 @@
 ---
 
 - 该插件需要联网。在首次加载插件时，它会调用 LifeSmart API 来获取所有设备信息，并在 Home Assistant 中进行设置。之后，插件将通过
-  websocket 从 LifeSmart 获取设备更新信息。目前，Home Assistant 与 LifeSmart 集线器之间没有直接通信。
+  websocket 从 LifeSmart 获取设备更新信息。目前，Home Assistant 与 LifeSmart 中枢之间没有直接通信。
 
 ### 安装指南：
 ---
