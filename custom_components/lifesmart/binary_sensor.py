@@ -166,20 +166,23 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             unlock_type = sub_device_data["type"]
             unlock_method = UNLOCK_METHOD.get(val >> 12, "Unknown")
             unlock_user = val & 0xFFF
-
-            if unlock_type == 1 or unlock_user == 0:
-                self._state = False  # 当unlock_type == 1 or unlock_user == 0时,表示门锁关闭
+            is_unlock_success = False
+            if (
+                    unlock_type % 2 == 1
+                    and unlock_user != 0
+                    and unlock_method != 15
+            ):
+                is_unlock_success = True
+            if unlock_type % 2 == 1:
+                self._state = True
             else:
-                if unlock_type % 2 == 1:
-                    self._state = True  # 当type为奇数时,表示门锁打开
-                else:
-                    self._state = False  # 当type为偶数时,表示门锁关闭
+                self._state = False
 
             self._attrs = {
                 "unlocking_method": unlock_method,
                 "unlocking_user": unlock_user,
                 "device_type": device_type,
-                "unlocking_success": self._state,
+                "unlocking_success": is_unlock_success,
                 "last_updated": datetime.datetime.fromtimestamp(
                     sub_device_data["valts"] / 1000
                 ).strftime("%Y-%m-%d %H:%M:%S"),

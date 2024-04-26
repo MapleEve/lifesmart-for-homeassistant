@@ -340,9 +340,12 @@ async def data_update_handler(hass, config_entry, msg):
                 val = data["val"]
                 unlock_method = UNLOCK_METHOD.get(val >> 12, "Unknown")
                 unlock_user = val & 0xFFF
-                if val == 0:
-                    is_unlock_success = False
-                else:
+                is_unlock_success = False
+                if (
+                        data["type"] % 2 == 1
+                        and unlock_user != 0
+                        and unlock_method != 15
+                ):
                     is_unlock_success = True
 
                 attrs = {
