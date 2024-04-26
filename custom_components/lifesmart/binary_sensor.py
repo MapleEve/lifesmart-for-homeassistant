@@ -182,7 +182,8 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                     sub_device_data["valts"] / 1000
                 ).strftime("%Y-%m-%d %H:%M:%S"),
             }
-            _LOGGER.debug("Updating lock device: %s", self._attrs)  # Log the lock device information
+            _LOGGER.debug("Updating lock device: %s state: %s", self._attrs,
+                          self._state)  # Log the lock device information
         elif device_type in GENERIC_CONTROLLER_TYPES:
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
