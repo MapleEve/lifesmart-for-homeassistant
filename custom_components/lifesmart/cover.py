@@ -3,7 +3,6 @@
 import asyncio
 
 from homeassistant.components.cover import (
-    ENTITY_ID_FORMAT,
     ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
@@ -11,7 +10,7 @@ from homeassistant.components.cover import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 
-from . import LifeSmartDevice
+from . import LifeSmartDevice, generate_entity_id
 from .const import (
     DOMAIN,
     DEVICE_ID_KEY,
@@ -84,9 +83,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
         self.device_type = device_type
         self.raw_device_data = raw_device_data
         self._device = device
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            (device_type + "_" + hub_id[:-3] + "_" + device_id).lower()
-        )
+        self.entity_id = generate_entity_id(device_type, hub_id, device_id, idx)
         self._client = client
 
         self._device_class = "curtain"
@@ -113,6 +110,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
                 self._open_cmd = {"type": "0x81", "val": 1, "idx": "P2"}
                 self._close_cmd = {"type": "0x81", "val": 1, "idx": "P3"}
                 self._stop_cmd = {"type": "0x81", "val": 1, "idx": "P4"}
+                self._attr_battery_level = val["P8"]["v"]
             elif device_type == "SL_SW_WIN":
                 self._open_cmd = {"type": "0x81", "val": 1, "idx": "OP"}
                 self._close_cmd = {"type": "0x81", "val": 1, "idx": "CL"}
@@ -194,6 +192,15 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
         self._is_opening = False
         self.schedule_update_ha_state()
 
+    async def async_toggle(self, **kwargs):
+        """Toggle the entity."""
+        if self.is_opening or self.is_closing:
+            await self.async_stop_cover()
+        elif self.is_closed:
+            await self.async_open_cover()
+        else:
+            await self.async_close_cover()
+
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if not self._supported_features & CoverEntityFeature.SET_POSITION:
@@ -250,6 +257,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
             elif self.device_type == "SL_P_V2":
                 for idx in self._idx:
                     self._pos[idx] = data[idx]["val"]
+                self._attr_battery_level = data["P8"]["v"]
                 self._state = self._pos["P2"]
                 if data["P2"]["type"] & 0x01 == 1:
                     self._is_opening = True

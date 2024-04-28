@@ -2,8 +2,7 @@
 
 import logging
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
@@ -18,6 +17,7 @@ from homeassistant.helpers.entity import DeviceInfo
 
 from . import LifeSmartDevice, generate_entity_id
 from .const import (
+    COVER_TYPES,
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
@@ -148,8 +148,6 @@ class LifeSmartSensor(SensorEntity):
         )
         self._client = client
 
-        # devtype = raw_device_data["devtype"]
-
         if device_type in GAS_SENSOR_TYPES:
             self._device_class = SensorDeviceClass.GAS
             self._unit = "None"
@@ -172,7 +170,11 @@ class LifeSmartSensor(SensorEntity):
             elif sub_device_key == "Z":
                 self._device_class = SensorDeviceClass.ILLUMINANCE
                 self._unit = LIGHT_LUX
-            elif sub_device_key == "V":
+            elif (
+                sub_device_key == "V"
+                or sub_device_key == "BAT"
+                or (sub_device_key == "P8" and device_type in COVER_TYPES)
+            ):
                 self._device_class = SensorDeviceClass.BATTERY
                 self._unit = PERCENTAGE
             elif sub_device_key == "P3":
@@ -181,9 +183,6 @@ class LifeSmartSensor(SensorEntity):
             elif sub_device_key == "P4":
                 self._device_class = "None"
                 self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
-            elif sub_device_key == "BAT":
-                self._device_class = SensorDeviceClass.BATTERY
-                self._unit = PERCENTAGE
             else:
                 self._unit = "None"
                 self._device_class = "None"
