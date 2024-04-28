@@ -1,17 +1,17 @@
 {
   "domain": "lifesmart",
-  "name": "LifeSmart",
+  "name": "LifeSmart IoT Integration",
   "codeowners": [
     "@MapleEve"
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/MapleEve/lifesmart-HACS-for-hass",
+  "documentation": "https://github.com/MapleEve/lifesmart-for-homeassistant",
   "integration_type": "hub",
   "iot_class": "cloud_push",
-  "issue_tracker": "https://github.com/MapleEve/lifesmart-HACS-for-hass/issues",
+  "issue_tracker": "https://github.com/MapleEve/lifesmart-for-homeassistant/issues",
   "requirements": [
     "websocket-client"
   ],
-  "version": "24.04.10"
+  "version": "v24.04.27"
 }

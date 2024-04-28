@@ -18,7 +18,8 @@
 
 **第 3 步的 Python代码在本说明的最底部**
 
-**特别提示：LifeSmart 开放平台的默认应用不会包含锁设备的类型信息。如需此功能，需联系 LifeSmart 官方获取授权。**
+**特别提示：LifeSmart 开放平台的默认应用不会包含锁设备的类型信息，若无实体权限则无法生成门锁实体，而只会在门锁有开关动作后生成二元传感器。如需门锁实体功能，需联系
+LifeSmart 官方获取授权。**
 
 获取锁授权的方式写在本说明的最底部
 
@@ -50,7 +51,7 @@ lifesmart:
 
 2. 在自定义仓库对话框中输入以下信息：
 
-仓库地址：`https://github.com/MapleEve/lifesmart-HACS-for-hass`
+仓库地址：`https://github.com/MapleEve/lifesmart-for-homeassistant`
 
 类别选择：`集成`
 
