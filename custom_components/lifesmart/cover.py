@@ -146,7 +146,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
     @property
     def device_class(self):
         """Return the class of binary sensor."""
-        return self._device_class
+        return self._attr_device_class
 
     @property
     def unique_id(self):
