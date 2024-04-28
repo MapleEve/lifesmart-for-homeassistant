@@ -131,7 +131,7 @@ UNLOCK_METHOD = {
     5: "Remote",
     6: "12V Signal",
     7: "App",
-    8: "Bluuetooh",
+    8: "Bluetooth",
     9: "Manual",
     15: "Error",
 }

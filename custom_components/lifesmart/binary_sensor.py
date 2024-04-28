@@ -184,7 +184,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 ).strftime("%Y-%m-%d %H:%M:%S"),
             }
             _LOGGER.debug(
-                "Init lock device: %s state: %s", self._attrs, self._state
+                "API lock device: %s state: %s", self._attrs, self._state
             )  # Log the lock device information
         elif device_type in GENERIC_CONTROLLER_TYPES:
             self._device_class = BinarySensorDeviceClass.LOCK
@@ -283,8 +283,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
             self.schedule_update_ha_state()  # 通知HA更新状态
             _LOGGER.debug(
-                "Updated binary state for device: %s , raw: %s state: %s",
+                "WS Updated binary state for device: %s state: %s",
                 self.device_id,
-                data,
                 self._state,
             )  # 设备更新状态时打印日志

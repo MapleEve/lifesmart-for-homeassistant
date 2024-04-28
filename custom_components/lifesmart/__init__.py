@@ -411,9 +411,7 @@ class LifeSmartStatesManager:
                                 "Lifesmart HACS: WebSocket authentication successful"
                             )
                         elif msg.get("type") == "io":
-                            _LOGGER.debug(
-                                "Lifesmart HACS: Received IO message: %s", str(msg)
-                            )
+                            _LOGGER.debug("Lifesmart HACS: Received IO message")
                             asyncio.create_task(
                                 data_update_handler(self._hass, self._config_entry, msg)
                             )
