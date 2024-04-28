@@ -434,7 +434,7 @@ class LifeSmartStatesManager:
                 )
             finally:
                 await self.disconnect()
-                _LOGGER.info(
+                _LOGGER.warning(
                     "Lifesmart HACS: WebSocket disconnected, reconnecting in 10 seconds"
                 )
                 await asyncio.sleep(10)
