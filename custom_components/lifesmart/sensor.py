@@ -32,9 +32,6 @@ from .const import (
     SMART_PLUG_TYPES,
 )
 
-# DOMAIN = "sensor"
-# ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -117,7 +114,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LifeSmartSensor(SensorEntity):
     """Representation of a LifeSmartSensor."""
 
-    # def __init__(self, dev, idx, val, param) -> None:
     def __init__(
         self, device, raw_device_data, sub_device_key, sub_device_data, client
     ) -> None:
@@ -237,5 +233,35 @@ class LifeSmartSensor(SensorEntity):
 
     async def _update_value(self, data) -> None:
         if data is not None:
-            self._state = data["v"]
+            if self.device_type in GAS_SENSOR_TYPES:
+                self._state = data["val"]
+            elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P2":
+                self._state = data["v"]
+            elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P3":
+                self._state = data["v"]
+            else:
+                self._state = data["v"]
+
+                if self.sub_device_key in ["T", "P1"]:
+                    self._device_class = SensorDeviceClass.TEMPERATURE
+                    self._unit = UnitOfTemperature.CELSIUS
+                elif self.sub_device_key in ["H", "P2"]:
+                    self._device_class = SensorDeviceClass.HUMIDITY
+                    self._unit = PERCENTAGE
+                elif self.sub_device_key == "Z":
+                    self._device_class = SensorDeviceClass.ILLUMINANCE
+                    self._unit = LIGHT_LUX
+                elif self.sub_device_key == "V":
+                    self._device_class = SensorDeviceClass.BATTERY
+                    self._unit = PERCENTAGE
+                elif self.sub_device_key == "P3":
+                    self._device_class = "None"
+                    self._unit = CONCENTRATION_PARTS_PER_MILLION
+                elif self.sub_device_key == "P4":
+                    self._device_class = "None"
+                    self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+                elif self.sub_device_key == "BAT":
+                    self._device_class = SensorDeviceClass.BATTERY
+                    self._unit = PERCENTAGE
+
             self.schedule_update_ha_state()
