@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 idx = ["P1", "P2", "P3"]
                 val = {i: device[DEVICE_DATA_KEY][i] for i in idx}
             elif device_type == "SL_P_V2":
-                idx = ["P2", "P3", "P4"]
+                idx = ["P2", "P3", "P4", "P8"]  # 增加了P8电量属性
                 val = {i: device[DEVICE_DATA_KEY][i] for i in idx}
             elif device_type == "SL_SW_WIN":
                 idx = ["OP", "CL", "ST"]
@@ -127,10 +127,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
     def current_cover_position(self):
         """Return the current position of the cover."""
         if CoverEntityFeature.SET_POSITION:
-            if isinstance(self._pos, dict):
-                return self._pos["P2"]
-            else:
-                return self._pos
+            return self._pos
         else:
             return None
 
@@ -169,7 +166,6 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
         await super().async_lifesmart_epset(
             self._close_cmd["type"], self._close_cmd["val"], self._close_cmd["idx"]
         )
-        self._is_opening = True
         self.schedule_update_ha_state()
         await self.async_poll_status()
 
@@ -178,7 +174,6 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
         await super().async_lifesmart_epset(
             self._open_cmd["type"], self._open_cmd["val"], self._open_cmd["idx"]
         )
-        self._is_closing = True
         self.schedule_update_ha_state()
         await self.async_poll_status()
 
@@ -189,8 +184,6 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
         await super().async_lifesmart_epset(
             self._stop_cmd["type"], self._stop_cmd["val"], self._stop_cmd["idx"]
         )
-        self._is_closing = False
-        self._is_opening = False
         self.schedule_update_ha_state()
 
     async def async_toggle(self, **kwargs):
@@ -215,11 +208,15 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
 
     async def async_poll_status(self):
         """Poll cover status until it stops moving."""
-        while self._is_opening or self._is_closing:
-            await asyncio.sleep(1)  # 每隔1秒获取一次状态
+        max_polls = 40  # 最大轮询次数40
+        poll_interval = 0.8  # 轮询间隔0.5秒
+
+        for _ in range(max_polls):
+            if not self._is_opening and not self._is_closing:
+                break  # 如果已停止,跳出循环
+            await asyncio.sleep(poll_interval)
             await self.async_lifesmart_epget()
-        self.schedule_update_ha_state()
-        await self.async_poll_status()
+            self.schedule_update_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -235,70 +232,92 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
         """Update cover state."""
         if data is not None:
             if self.device_type == "SL_DOOYA":
-                self._pos = data["val"]
-                self._state = self._pos
-                if self._pos == 100:
-                    self._is_opening = False
-                    self._is_closing = False
-                    self._is_closed = False
-                elif self._pos == 0:
-                    self._is_opening = False
-                    self._is_closing = False
-                    self._is_closed = True
-                elif data["type"] & 0x01 == 1:
-                    if data["val"] & 0x80 == 0x80:
-                        self._is_opening = True
-                        self._is_closing = False
-                        self._is_closed = False
+                if isinstance(data, dict):  # 判断data是否为字典类型
+                    pos = data["val"] & 0x7F
+                    if pos <= 100:
+                        self._pos = pos
+                        self._state = self._pos
                     else:
+                        self._pos = None
+                        self._state = None
+
+                    if data["type"] & 0x01 == 1:  # 正在运行
+                        if data["val"] & 0x80 == 0x80:
+                            self._is_opening = True
+                            self._is_closing = False
+                        else:
+                            self._is_opening = False
+                            self._is_closing = True
+                    else:  # 没有运行
                         self._is_opening = False
-                        self._is_closing = True
-                        self._is_closed = False
+                        self._is_closing = False
+                        if self._pos == 100:
+                            self._is_closed = False
+                        elif self._pos == 0:
+                            self._is_closed = True
+                else:
+                    self._pos = None
+                    self._state = None
+                    self._is_opening = False
+                    self._is_closing = False
+                    self._is_closed = None  # 无法判断窗帘状态
 
             elif self.device_type == "SL_P_V2":
-                for idx in self._idx:
-                    self._pos[idx] = data[idx]["val"]
+                for idx in ["P2", "P3", "P4"]:
+                    if data[idx]["type"] & 0x01 == 1:  # 正在运行
+                        if idx == "P2":
+                            self._is_opening = True
+                        elif idx == "P3":
+                            self._is_closing = True
+                        elif idx == "P4":
+                            self._is_opening = False
+                            self._is_closing = False
+                    else:
+                        if idx == "P2":
+                            self._is_opening = False
+                        elif idx == "P3":
+                            self._is_closing = False
+                            self._is_closed = True
+                        elif idx == "P4":
+                            self._is_closed = self._is_closing
                 self._attr_battery_level = data["P8"]["v"]
-                self._state = self._pos["P2"]
-                if data["P2"]["type"] & 0x01 == 1:
-                    self._is_opening = True
-                    self._is_closing = False
-                    self._is_closed = False
-                elif data["P3"]["type"] & 0x01 == 1:
-                    self._is_opening = False
-                    self._is_closing = True
-                    self._is_closed = False
-                elif data["P4"]["type"] & 0x01 == 1:
-                    self._is_opening = False
-                    self._is_closing = False
-                    self._is_closed = self._state <= 0
 
-            elif self.device_type in ["SL_SW_WIN"]:
-                if data["OP"]["type"] & 0x01 == 1:
-                    self._is_opening = True
-                    self._is_closing = False
-                    self._is_closed = False
-                elif data["CL"]["type"] & 0x01 == 1:
-                    self._is_opening = False
-                    self._is_closing = True
-                    self._is_closed = False
-                elif data["ST"]["type"] & 0x01 == 1:
-                    self._is_opening = False
-                    self._is_closing = False
-                    self._is_closed = False
+            elif self.device_type == "SL_SW_WIN":
+                for idx in ["OP", "CL", "ST"]:
+                    if data[idx]["type"] & 0x01 == 1:  # 正在运行
+                        if idx == "OP":
+                            self._is_opening = True
+                        elif idx == "CL":
+                            self._is_closing = True
+                        elif idx == "ST":
+                            self._is_opening = False
+                            self._is_closing = False
+                    else:
+                        if idx == "OP":
+                            self._is_opening = False
+                        elif idx == "CL":
+                            self._is_closing = False
+                            self._is_closed = True
+                        elif idx == "ST":
+                            self._is_closed = self._is_closing
 
             elif self.device_type in ["SL_CN_IF", "SL_CN_FE"]:
-                if data["P1"]["type"] & 0x01 == 1:
-                    self._is_opening = True
-                    self._is_closing = False
-                    self._is_closed = False
-                elif data["P2"]["type"] & 0x01 == 1:
-                    self._is_opening = False
-                    self._is_closing = True
-                    self._is_closed = False
-                elif data["P3"]["type"] & 0x01 == 1:
-                    self._is_opening = False
-                    self._is_closing = False
-                    self._is_closed = True
+                for idx in ["P1", "P2", "P3"]:
+                    if data[idx]["type"] & 0x01 == 1:  # 正在运行
+                        if idx == "P1":
+                            self._is_opening = True
+                        elif idx == "P2":
+                            self._is_opening = False
+                            self._is_closing = False
+                        elif idx == "P3":
+                            self._is_closing = True
+                    else:
+                        if idx == "P1":
+                            self._is_opening = False
+                        elif idx == "P2":
+                            self._is_closed = self._is_closing
+                        elif idx == "P3":
+                            self._is_closing = False
+                            self._is_closed = True
 
             self.schedule_update_ha_state()
