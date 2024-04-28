@@ -98,6 +98,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         client,
                     )
                 )
+            elif device_type in COVER_TYPES and sub_device_key in ["P8"]:
+                sensor_devices.append(
+                    LifeSmartSensor(
+                        ha_device,
+                        device,
+                        sub_device_key,
+                        sub_device_data["v"],
+                        client,
+                    )
+                )
             elif device_type in SMART_PLUG_TYPES and sub_device_key in ["P2", "P3"]:
                 sensor_devices.append(
                     LifeSmartSensor(
