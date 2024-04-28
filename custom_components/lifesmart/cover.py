@@ -2,7 +2,6 @@
 
 import asyncio
 
-from homeassistant.components.binary_sensor import BatteryEntity
 from homeassistant.components.cover import (
     ENTITY_ID_FORMAT,
     ATTR_POSITION,
@@ -65,7 +64,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(cover_devices)
 
 
-class LifeSmartCover(LifeSmartDevice, CoverEntity, BatteryEntity):
+class LifeSmartCover(LifeSmartDevice, CoverEntity):
     """LifeSmart cover devices."""
 
     def __init__(self, device, raw_device_data, idx, val, client):
@@ -78,7 +77,6 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity, BatteryEntity):
         device_id = raw_device_data[DEVICE_ID_KEY]
 
         self._attr_has_entity_name = True
-        self._attr_battery_level = None
         self.device_name = device_name
         self.sensor_device_name = raw_device_data[DEVICE_NAME_KEY]
         self.device_id = device_id
@@ -115,7 +113,6 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity, BatteryEntity):
                 self._open_cmd = {"type": "0x81", "val": 1, "idx": "P2"}
                 self._close_cmd = {"type": "0x81", "val": 1, "idx": "P3"}
                 self._stop_cmd = {"type": "0x81", "val": 1, "idx": "P4"}
-                self._attr_battery_level = raw_device_data["P8"]["v"]
             elif device_type == "SL_SW_WIN":
                 self._open_cmd = {"type": "0x81", "val": 1, "idx": "OP"}
                 self._close_cmd = {"type": "0x81", "val": 1, "idx": "CL"}
@@ -254,7 +251,6 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity, BatteryEntity):
                 for idx in self._idx:
                     self._pos[idx] = data[idx]["val"]
                 self._state = self._pos["P2"]
-                self._attr_battery_level = data["P8"]["v"]
                 if data["P2"]["type"] & 0x01 == 1:
                     self._is_opening = True
                     self._is_closing = False
