@@ -1,4 +1,4 @@
-name: hassfest 验证
+name: HassFest验证
 
 on:
   push:
