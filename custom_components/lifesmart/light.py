@@ -86,7 +86,7 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
             for data_idx in val:
                 if data_idx == "P1":
                     # set on/off
-                    if val[data_idx]["type"] % 2 == 1:
+                    if val[data_idx]["type"] & 0x01 == 1:
                         self._state = True
                     else:
                         self._state = False
@@ -101,7 +101,7 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                     )
         else:
             # _LOGGER.info("light: param: %s ", str(param))
-            if val["type"] % 2 == 1:
+            if val["type"] & 0x01 == 1:
                 self._state = True
             else:
                 self._state = False

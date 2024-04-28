@@ -75,7 +75,7 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
         )
         if dev["devtype"] in AIR_TYPES:
             self._modes = LIFESMART_STATE_LIST
-            if cdata["O"]["type"] % 2 == 0:
+            if cdata["O"]["type"] & 0x01 == 0:
                 self._mode = LIFESMART_STATE_LIST[0]
             else:
                 self._mode = LIFESMART_STATE_LIST[cdata["MODE"]["val"]]
@@ -89,11 +89,11 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
             self._fanspeed = cdata["F"]["val"]
         else:
             self._modes = LIFESMART_STATE_LIST2
-            if cdata["P1"]["type"] % 2 == 0:
+            if cdata["P1"]["type"] & 0x01 == 0:
                 self._mode = LIFESMART_STATE_LIST2[0]
             else:
                 self._mode = LIFESMART_STATE_LIST2[1]
-            if cdata["P2"]["type"] % 2 == 0:
+            if cdata["P2"]["type"] & 0x01 == 0:
                 self._attributes.setdefault("Heating", "false")
             else:
                 self._attributes.setdefault("Heating", "true")

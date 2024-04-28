@@ -1,4 +1,4 @@
-"""Support for LifeSmart binary sensors."""
+"""Support for LifeSmart binary sensors.  by @MapleEve"""
 
 import datetime
 import logging
@@ -168,7 +168,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             unlock_method = UNLOCK_METHOD.get(val >> 12, "Unknown")
             unlock_user = val & 0xFFF
             is_unlock_success = False
-            if unlock_type % 2 == 1 and unlock_user != 0 and val >> 12 != 15:
+            if unlock_type & 0x01 == 1 and unlock_user != 0 and val >> 12 != 15:
                 is_unlock_success = True
                 self._state = True
             else:
@@ -255,7 +255,11 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 if val == 0:
                     self._state = False  # 当val为0时,表示门锁肯定关闭
                 else:
-                    if data["type"] % 2 == 1 and val & 0xFFF != 0 and val >> 12 != 15:
+                    if (
+                        data["type"] & 0x01 == 1
+                        and val & 0xFFF != 0
+                        and val >> 12 != 15
+                    ):
                         self._state = True
                     else:
                         self._state = False

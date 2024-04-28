@@ -82,13 +82,13 @@ lifesmart:
 - 开关
 - 智能门锁信息反馈
 - 智能插座
-- 动态传感器、门传感器、环境传感器、甲醛/气体传感器
+- 动态传感器、门禁传感器、环境传感器、甲醛/气体传感器
 - 照明：目前仅支持超级碗夜灯
 - 通用遥控器
-- 窗帘电机（目前仅支持 Duya 电机）
+- 窗帘电机和窗帘电机的更新状态
 - 空调控制面板
 
-支持设备详细列表
+### 支持设备详细列表
 
 开关：
 | 型号 | 备注 |
@@ -165,10 +165,20 @@ lifesmart:
 | ~~SL_OL_3C~~ | |
 | ~~SL_O~~L | |
 
-该项目是基于以下项目整合而来：
----
+窗帘电机：
+| 型号 | 备注 |
+| ------ | ------ |
+| SL_SW_WIN | 窗帘控制开关 |
+| SL_CN_IF | 窗帘控制开关 |
+| SL_CN_FE | 窗帘控制开关 |
+| SL_DOOYA | DOOYA 电机|
+| SL_P_V2 | 智界窗帘电机 |
 
-- [@MapleEve 我本人的重构原始项目](https://github.com/MapleEve/hass-lifesmart)
+感谢以下项目：
+---
+该项目参考了以下项目的数据和结构
+
+- [@MapleEve 本人的重构 LifeSmart 的原始项目](https://github.com/MapleEve/hass-lifesmart)
 - [@skyzhishui 提供的 custom_components](https://github.com/skyzhishui/custom_components)
 - [@Blankdlh 提供的 hass-lifesmart](https://github.com/Blankdlh/hass-lifesmart)
 - [@iKew 的重构](https://github.com/iKaew)

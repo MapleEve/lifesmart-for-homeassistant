@@ -118,7 +118,7 @@ class LifeSmartSwitch(SwitchEntity):
         )
         self._client = client
 
-        if sub_device_data["type"] % 2 == 1:
+        if sub_device_data["type"] & 0x01 == 1:
             self._state = True
         else:
             self._state = False
@@ -159,7 +159,7 @@ class LifeSmartSwitch(SwitchEntity):
 
     async def _update_state(self, data) -> None:
         if data is not None:
-            if data["type"] % 2 == 1:
+            if data["type"] & 0x01 == 1:
                 self._state = True
             else:
                 self._state = False
