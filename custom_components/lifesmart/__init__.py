@@ -5,7 +5,6 @@ import json
 import logging
 
 import websockets
-from homeassistant.components.climate import FAN_HIGH, FAN_LOW, FAN_MEDIUM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_URL,
@@ -447,17 +446,6 @@ class LifeSmartStatesManager:
         if self._task is not None:
             self._task.cancel()
             self._task = None
-
-
-def get_fan_mode(_fanspeed):
-    fanmode = None
-    if _fanspeed < 30:
-        fanmode = FAN_LOW
-    elif _fanspeed < 65 and _fanspeed >= 30:
-        fanmode = FAN_MEDIUM
-    elif _fanspeed >= 65:
-        fanmode = FAN_HIGH
-    return fanmode
 
 
 def get_platform_by_device(device_type, sub_device=None):
