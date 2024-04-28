@@ -1,10 +1,13 @@
 # LifeSmart IoT Integration for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
+![GitHub License](https://img.shields.io/github/license/MapleEve/lifesmart-for-homeassistant)
 [![releases](https://img.shields.io/github/downloads/MapleEve/lifesmart-for-homeassistant/total)](https://github.com/MapleEve/lifesmart-for-homeassistant/releases)
 [![version](https://img.shields.io/github/manifest-json/v/MapleEve/lifesmart-for-homeassistant?filename=custom_components%2Flifesmart%2Fmanifest.json)](https://github.com/MapleEve/lifesmart-for-homeassistant/releases/latest)
 [![stars](https://img.shields.io/github/stars/MapleEve/lifesmart-for-homeassistant)](https://github.com/MapleEve/lifesmart-for-homeassistant/stargazers)
 [![issues](https://img.shields.io/github/issues/MapleEve/lifesmart-for-homeassistant)](https://github.com/MapleEve/lifesmart-for-homeassistant/issues)
+![haasfestworkflow](https://github.com/MapleEve/lifesmart-for-homeassistant/actions/workflows/haas-vali.yml/badge.svg)
+![hacsworkflow](https://github.com/MapleEve/lifesmart-for-homeassistant/actions/workflows/hacs-vali.yml/badge.svg)
 
 使用说明 Instructions
 ====
