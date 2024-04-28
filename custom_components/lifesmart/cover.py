@@ -6,6 +6,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverEntity,
     CoverEntityFeature,
+    CoverDeviceClass,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -86,7 +87,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
         self.entity_id = generate_entity_id(device_type, hub_id, device_id, idx)
         self._client = client
 
-        self._device_class = "curtain"
+        self._attr_device_class = CoverDeviceClass.CURTAIN
         self._supported_features = (
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
