@@ -2,7 +2,6 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
 ![GitHub License](https://img.shields.io/github/license/MapleEve/lifesmart-for-homeassistant)
-[![releases](https://img.shields.io/github/downloads/MapleEve/lifesmart-for-homeassistant/total)](https://github.com/MapleEve/lifesmart-for-homeassistant/releases)
 [![version](https://img.shields.io/github/manifest-json/v/MapleEve/lifesmart-for-homeassistant?filename=custom_components%2Flifesmart%2Fmanifest.json)](https://github.com/MapleEve/lifesmart-for-homeassistant/releases/latest)
 [![stars](https://img.shields.io/github/stars/MapleEve/lifesmart-for-homeassistant)](https://github.com/MapleEve/lifesmart-for-homeassistant/stargazers)
 [![issues](https://img.shields.io/github/issues/MapleEve/lifesmart-for-homeassistant)](https://github.com/MapleEve/lifesmart-for-homeassistant/issues)
@@ -48,6 +47,31 @@ contact them to get it granted to your application.**
 安装指南 How to install：
 ---
 
+### 推荐使用 HACS 安装自定义仓库
+
+1. 进入 HACS > 集成 > 点击右上角的三个点 > 选择自定义仓库。Go to HACS > Integration > 3 dots menu at the top right >
+   choose Custom Repository
+   已经安装了HACS，可以点击按钮快速安装
+
+[![通过HACS添加集成](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MapleEve&repository=lifesmart-for-homeassistant&category=integration)
+
+2. 在自定义仓库对话框中输入以下信息 In custom repository dialog enter ：
+
+仓库地址：`https://github.com/MapleEve/lifesmart-for-homeassistant`
+
+类别选择：`集成` Category: `Integration`
+
+3. 点击添加按钮。
+
+4. 添加完成后，通过右下角添加集成进行安装，再进入集成页面添加集成，搜索`Lifesmart`就可以添加集成并进行设置。
+
+[![添加集成](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=lifesmart)
+
+使用 HACS 可以方便您在新版本发布后及时更新。 2024 年内，我将把它加入 HACS 默认仓库列表，并计划将来将其纳入 Home Assistant
+官方集成。Via HACS should allow you to get new version when it ready. I plan to add it to HACS default repository list in
+2024 and
+plan to include it in Home Assistant official integration in future.
+
 ### 手动安装方法 Manual
 
 不建议使用手动安装方法，因为它需要手动更新插件，且可能与最新的 Home Assistant 版本不兼容。NOT RECOMMENDED！
@@ -60,26 +84,6 @@ lifesmart:
   userid: # 你获取到的 userid
   url:  # 你使用的 api 地址，建议使用 api.cn0.ilifesmart.com 或者 api.cn2.ilifesmart.com
 ```
-
-### 推荐使用 HACS 安装自定义仓库
-
-1. 进入 HACS > 集成 > 点击右上角的三个点 > 选择自定义仓库。Go to HACS > Integration > 3 dots menu at the top right >
-   choose Custom Repository
-
-2. 在自定义仓库对话框中输入以下信息 In custom repository dialog enter ：
-
-仓库地址：`https://github.com/MapleEve/lifesmart-for-homeassistant`
-
-类别选择：`集成` Category: `Integration`
-
-3. 点击添加按钮。
-
-4. 添加完成后，通过右下角添加集成进行安装，再进入集成页面添加集成，搜索`Lifesmart`就可以添加集成并进行设置。
-
-使用 HACS 可以方便您在新版本发布后及时更新。 2024 年内，我将把它加入 HACS 默认仓库列表，并计划将来将其纳入 Home Assistant
-官方集成。Via HACS should allow you to get new version when it ready. I plan to add it to HACS default repository list in
-2024 and
-plan to include it in Home Assistant official integration in future.
 
 示例配置 Example：
 ---
