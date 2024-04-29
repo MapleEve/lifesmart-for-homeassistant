@@ -199,11 +199,6 @@ class LifeSmartSensor(SensorEntity):
             self._state = sub_device_data["v"]
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
@@ -219,11 +214,6 @@ class LifeSmartSensor(SensorEntity):
     def device_class(self):
         """Return the device class of this entity."""
         return self._device_class
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
 
     @property
     def unique_id(self):
@@ -260,7 +250,11 @@ class LifeSmartSensor(SensorEntity):
                 elif self.sub_device_key == "Z":
                     self._device_class = SensorDeviceClass.ILLUMINANCE
                     self._unit = LIGHT_LUX
-                elif self.sub_device_key == "V":
+                elif (
+                    self.sub_device_key == "V"
+                    or self.sub_device_key == "BAT"
+                    or (self.sub_device_key == "P8" and self.device_type in COVER_TYPES)
+                ):
                     self._device_class = SensorDeviceClass.BATTERY
                     self._unit = PERCENTAGE
                 elif self.sub_device_key == "P3":
@@ -269,8 +263,5 @@ class LifeSmartSensor(SensorEntity):
                 elif self.sub_device_key == "P4":
                     self._device_class = "None"
                     self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
-                elif self.sub_device_key == "BAT":
-                    self._device_class = SensorDeviceClass.BATTERY
-                    self._unit = PERCENTAGE
 
             self.schedule_update_ha_state()
