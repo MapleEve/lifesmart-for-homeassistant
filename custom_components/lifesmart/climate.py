@@ -42,8 +42,6 @@ AIR_TYPES = ["V_AIR_P"]
 
 THER_TYPES = ["SL_CP_DN"]
 
-LIFESMART_STATE_LIST
-
 
 async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
     """Set up LifeSmart Climate devices."""
@@ -128,7 +126,7 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
         fanmode = None
         if self._fanspeed < 30:
             fanmode = FAN_LOW
-        elif self._fanspeed < 65 and self._fanspeed >= 30:
+        elif 65 > self._fanspeed >= 30:
             fanmode = FAN_MEDIUM
         elif self._fanspeed >= 65:
             fanmode = FAN_HIGH
