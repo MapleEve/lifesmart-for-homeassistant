@@ -170,6 +170,10 @@ class LifeSmartSensor(SensorEntity):
             self._device_class = SensorDeviceClass.POWER
             self._unit = UnitOfPower.WATT
             self._state = sub_device_data["v"]
+        elif device_type in SMART_PLUG_TYPES and sub_device_key == "P4":
+            self._device_class = SensorDeviceClass.POWER
+            self._unit = UnitOfPower.WATT
+            self._state = sub_device_data["val"]
         else:
             if sub_device_key == "T" or sub_device_key == "P1":
                 self._device_class = SensorDeviceClass.TEMPERATURE
@@ -238,6 +242,8 @@ class LifeSmartSensor(SensorEntity):
                 self._state = data["v"]
             elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P3":
                 self._state = data["v"]
+            elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P4":
+                self._state = data["val"]
             else:
                 self._state = data["v"]
 
