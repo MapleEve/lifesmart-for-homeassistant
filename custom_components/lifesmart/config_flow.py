@@ -1,15 +1,11 @@
-from typing import Any
-import voluptuous as vol
-from .lifesmart_client import LifeSmartClient
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import logging
 
-from homeassistant import config_entries, exceptions
+import voluptuous as vol
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_NAME,
     CONF_URL,
 )
-
-import logging
 
 from .const import (
     CONF_AI_INCLUDE_AGTS,
@@ -22,6 +18,7 @@ from .const import (
     DOMAIN,
     CONF_LIFESMART_APPKEY,
 )
+from .lifesmart_client import LifeSmartClient
 
 _LOGGER = logging.getLogger(__name__)
 

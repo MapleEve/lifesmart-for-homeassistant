@@ -6,5 +6,6 @@ custom_components/lifesmart/__pycache__/*
 *.iml
 
 /out/
+/venv
 
 .idea_modules/

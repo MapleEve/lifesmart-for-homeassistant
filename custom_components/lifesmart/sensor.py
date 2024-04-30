@@ -1,21 +1,23 @@
 """Support for lifesmart sensors."""
+
 import logging
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
     UnitOfPower,
     UnitOfEnergy,
-    UnitOfPrecipitationDepth,
     CONCENTRATION_PARTS_PER_MILLION,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+
+from . import LifeSmartDevice, generate_entity_id
 from .const import (
+    COVER_TYPES,
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
@@ -30,11 +32,6 @@ from .const import (
     SMART_PLUG_TYPES,
 )
 
-# DOMAIN = "sensor"
-# ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-from . import LifeSmartDevice, generate_entity_id
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -47,14 +44,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensor_devices = []
     for device in devices:
         if (
-                device[DEVICE_ID_KEY] in exclude_devices
-                or device[HUB_ID_KEY] in exclude_hubs
+            device[DEVICE_ID_KEY] in exclude_devices
+            or device[HUB_ID_KEY] in exclude_hubs
         ):
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
         supported_sensors = (
-                OT_SENSOR_TYPES + GAS_SENSOR_TYPES + LOCK_TYPES + SMART_PLUG_TYPES
+            OT_SENSOR_TYPES + GAS_SENSOR_TYPES + LOCK_TYPES + SMART_PLUG_TYPES
         )
 
         if device_type not in supported_sensors:
@@ -101,6 +98,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         client,
                     )
                 )
+            elif device_type in COVER_TYPES and sub_device_key in ["P8"]:
+                sensor_devices.append(
+                    LifeSmartSensor(
+                        ha_device,
+                        device,
+                        sub_device_key,
+                        sub_device_data["v"],
+                        client,
+                    )
+                )
             elif device_type in SMART_PLUG_TYPES and sub_device_key in ["P2", "P3"]:
                 sensor_devices.append(
                     LifeSmartSensor(
@@ -117,9 +124,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LifeSmartSensor(SensorEntity):
     """Representation of a LifeSmartSensor."""
 
-    # def __init__(self, dev, idx, val, param) -> None:
     def __init__(
-            self, device, raw_device_data, sub_device_key, sub_device_data, client
+        self, device, raw_device_data, sub_device_key, sub_device_data, client
     ) -> None:
         """Initialize the LifeSmartSensor."""
 
@@ -131,8 +137,8 @@ class LifeSmartSensor(SensorEntity):
         device_id = raw_device_data[DEVICE_ID_KEY]
 
         if (
-                DEVICE_NAME_KEY in sub_device_data
-                and sub_device_data[DEVICE_NAME_KEY] != "none"
+            DEVICE_NAME_KEY in sub_device_data
+            and sub_device_data[DEVICE_NAME_KEY] != "none"
         ):
             device_name = sub_device_data[DEVICE_NAME_KEY]
         else:
@@ -152,8 +158,6 @@ class LifeSmartSensor(SensorEntity):
         )
         self._client = client
 
-        # devtype = raw_device_data["devtype"]
-
         if device_type in GAS_SENSOR_TYPES:
             self._device_class = SensorDeviceClass.GAS
             self._unit = "None"
@@ -166,6 +170,10 @@ class LifeSmartSensor(SensorEntity):
             self._device_class = SensorDeviceClass.POWER
             self._unit = UnitOfPower.WATT
             self._state = sub_device_data["v"]
+        elif device_type in SMART_PLUG_TYPES and sub_device_key == "P4":
+            self._device_class = SensorDeviceClass.POWER
+            self._unit = UnitOfPower.WATT
+            self._state = sub_device_data["val"]
         else:
             if sub_device_key == "T" or sub_device_key == "P1":
                 self._device_class = SensorDeviceClass.TEMPERATURE
@@ -176,7 +184,11 @@ class LifeSmartSensor(SensorEntity):
             elif sub_device_key == "Z":
                 self._device_class = SensorDeviceClass.ILLUMINANCE
                 self._unit = LIGHT_LUX
-            elif sub_device_key == "V":
+            elif (
+                sub_device_key == "V"
+                or sub_device_key == "BAT"
+                or (sub_device_key == "P8" and device_type in COVER_TYPES)
+            ):
                 self._device_class = SensorDeviceClass.BATTERY
                 self._unit = PERCENTAGE
             elif sub_device_key == "P3":
@@ -185,18 +197,10 @@ class LifeSmartSensor(SensorEntity):
             elif sub_device_key == "P4":
                 self._device_class = "None"
                 self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
-            elif sub_device_key == "BAT":
-                self._device_class = SensorDeviceClass.BATTERY
-                self._unit = PERCENTAGE
             else:
                 self._unit = "None"
                 self._device_class = "None"
             self._state = sub_device_data["v"]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -216,11 +220,6 @@ class LifeSmartSensor(SensorEntity):
         return self._device_class
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def unique_id(self):
         """A unique identifier for this entity."""
         return self.entity_id
@@ -237,5 +236,38 @@ class LifeSmartSensor(SensorEntity):
 
     async def _update_value(self, data) -> None:
         if data is not None:
-            self._state = data["v"]
+            if self.device_type in GAS_SENSOR_TYPES:
+                self._state = data["val"]
+            elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P2":
+                self._state = data["v"]
+            elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P3":
+                self._state = data["v"]
+            elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P4":
+                self._state = data["val"]
+            else:
+                self._state = data["v"]
+
+                if self.sub_device_key in ["T", "P1"]:
+                    self._device_class = SensorDeviceClass.TEMPERATURE
+                    self._unit = UnitOfTemperature.CELSIUS
+                elif self.sub_device_key in ["H", "P2"]:
+                    self._device_class = SensorDeviceClass.HUMIDITY
+                    self._unit = PERCENTAGE
+                elif self.sub_device_key == "Z":
+                    self._device_class = SensorDeviceClass.ILLUMINANCE
+                    self._unit = LIGHT_LUX
+                elif (
+                    self.sub_device_key == "V"
+                    or self.sub_device_key == "BAT"
+                    or (self.sub_device_key == "P8" and self.device_type in COVER_TYPES)
+                ):
+                    self._device_class = SensorDeviceClass.BATTERY
+                    self._unit = PERCENTAGE
+                elif self.sub_device_key == "P3":
+                    self._device_class = "None"
+                    self._unit = CONCENTRATION_PARTS_PER_MILLION
+                elif self.sub_device_key == "P4":
+                    self._device_class = "None"
+                    self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+
             self.schedule_update_ha_state()

@@ -109,11 +109,19 @@ BINARY_SENSOR_TYPES = [
     "SL_P_A",
     "SL_P",
 ]
-COVER_TYPES = ["SL_DOOYA"]
+COVER_TYPES = ["SL_DOOYA", "SL_P_V2", "SL_SW_WIN", "SL_CN_IF", "SL_CN_FE"]
 GAS_SENSOR_TYPES = ["SL_SC_WA ", "SL_SC_CH", "SL_SC_CP", "ELIQ_EM"]
 EV_SENSOR_TYPES = ["SL_SC_THL", "SL_SC_BE", "SL_SC_CQ"]
 OT_SENSOR_TYPES = ["SL_SC_MHW", "SL_SC_BM", "SL_SC_G", "SL_SC_BG"]
-LOCK_TYPES = ["SL_LK_LS", "SL_LK_GTM", "SL_LK_AG", "SL_LK_SG", "SL_LK_YL","SL_P_BDLK","OD_JIUWANLI_LOCK1"]
+LOCK_TYPES = [
+    "SL_LK_LS",
+    "SL_LK_GTM",
+    "SL_LK_AG",
+    "SL_LK_SG",
+    "SL_LK_YL",
+    "SL_P_BDLK",
+    "OD_JIUWANLI_LOCK1",
+]
 UNLOCK_METHOD = {
     0: "None",
     1: "Password",
@@ -123,7 +131,7 @@ UNLOCK_METHOD = {
     5: "Remote",
     6: "12V Signal",
     7: "App",
-    8: "Bluuetooh",
+    8: "Bluetooth",
     9: "Manual",
     15: "Error",
 }
@@ -137,7 +145,7 @@ DEVICE_WITHOUT_IDXNAME = [
     "SL_SW_MJ2",
 ]
 GENERIC_CONTROLLER_TYPES = ["SL_P", "SL_P_IR"]
-SMART_PLUG_TYPES = ["SL_OE_DE"]
+SMART_PLUG_TYPES = ["SL_OE_DE", "SL_OE_3C", "SL_OE_W", "OD_WE_OT1"]
 
 LIFESMART_HVAC_STATE_LIST = [
     climate.const.HVACMode.OFF,

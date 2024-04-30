@@ -1,27 +1,21 @@
 """Support for LifeSmart Gateway Light."""
+
 import binascii
 import logging
 import struct
-import urllib.request
-import json
-import time
-import hashlib
-import aiohttp
+
+import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ColorMode,
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGB_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
     ATTR_COLOR_TEMP,
     # SUPPORT_BRIGHTNESS,
     # SUPPORT_COLOR,
     LightEntity,
-    ENTITY_ID_FORMAT,
 )
-import homeassistant.util.color as color_util
 
 from . import LifeSmartDevice, generate_entity_id
 
@@ -92,7 +86,7 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
             for data_idx in val:
                 if data_idx == "P1":
                     # set on/off
-                    if val[data_idx]["type"] % 2 == 1:
+                    if val[data_idx]["type"] & 0x01 == 1:
                         self._state = True
                     else:
                         self._state = False
@@ -102,12 +96,12 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                     # set color temp
                     ratio = 1 - (val[data_idx]["val"] / 255)
                     self._color_temp = (
-                            int((self._max_mireds - self._min_mireds) * ratio)
-                            + self._min_mireds
+                        int((self._max_mireds - self._min_mireds) * ratio)
+                        + self._min_mireds
                     )
         else:
             # _LOGGER.info("light: param: %s ", str(param))
-            if val["type"] % 2 == 1:
+            if val["type"] & 0x01 == 1:
                 self._state = True
             else:
                 self._state = False
@@ -228,16 +222,16 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
         if self._devtype in LIGHT_DIMMER_TYPES:
             if ATTR_BRIGHTNESS in kwargs:
                 if (
-                        await super().async_lifesmart_epset(
-                            "0xcf", kwargs[ATTR_BRIGHTNESS], "P1"
-                        )
-                        == 0
+                    await super().async_lifesmart_epset(
+                        "0xcf", kwargs[ATTR_BRIGHTNESS], "P1"
+                    )
+                    == 0
                 ):
                     self._brightness = kwargs[ATTR_BRIGHTNESS]
                     self.async_schedule_update_ha_state()
             if ATTR_COLOR_TEMP in kwargs:
                 ratio = (kwargs[ATTR_COLOR_TEMP] - self._min_mireds) / (
-                        self._max_mireds - self._min_mireds
+                    self._max_mireds - self._min_mireds
                 )
                 val = int((-ratio + 1) * 255)
                 if await super().async_lifesmart_epset("0xcf", val, "P2") == 0:
@@ -284,8 +278,8 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                     rgbhex = int(rgbhex, 16)
 
                     if (
-                            await super().async_lifesmart_epset("0xff", rgbhex, self._idx)
-                            == 0
+                        await super().async_lifesmart_epset("0xff", rgbhex, self._idx)
+                        == 0
                     ):
                         self._state = True
                         self.async_schedule_update_ha_state()

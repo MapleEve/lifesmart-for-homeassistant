@@ -90,6 +90,8 @@ lifesmart:
 示例配置 Example：
 ---
 ![示例配置屏幕截图](./docs/example-configuration.png)
+![示例配置屏幕截图 2](https://private-user-images.githubusercontent.com/1845053/326725027-7d23f8bb-8810-43fa-95e7-6d373d576821.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MTQ0NjU1MzUsIm5iZiI6MTcxNDQ2NTIzNSwicGF0aCI6Ii8xODQ1MDUzLzMyNjcyNTAyNy03ZDIzZjhiYi04ODEwLTQzZmEtOTVlNy02ZDM3M2Q1NzY4MjEucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI0MDQzMCUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNDA0MzBUMDgyMDM1WiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9N2U0NGFjOTkzYzgxMzlmMWZkNDgzYjc2NjkxOTkwNGFjN2RjYTA3ODczOWIyNjEyMzQyNDhiZTY0NWM1OGNjYiZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QmYWN0b3JfaWQ9MCZrZXlfaWQ9MCZyZXBvX2lkPTAifQ.K2jjcmycDoBrTJRRT9MoWLoEXDZ1D8YrsJ8y4JB0yLk
+)
 ![示例图片](./docs/example-image.png)
 ![示例图片 4](./docs/example-image-4.png)
 ![示例图片 2](./docs/example-image-2.png)
@@ -113,92 +115,126 @@ lifesmart:
 
 #### 开关类：
 
-| 型号        | 备注       |
-|-----------|----------|
-| OD_WE_OT1 |          |
-| SL_MC_ND1 |          |
-| SL_MC_ND2 |          |
-| SL_MC_ND3 |          |
-| SL_NATURE |          |
-| SL_OL     |          |
-| SL_OL_3C  |          |
-| SL_OL_DE  |          |
-| SL_OL_UK  |          |
-| SL_OL_UL  |          |
-| SL_OL_W   |          |
-| SL_P_SW   |          |
-| SL_S      |          |
-| SL_SF_IF1 |          |
-| SL_SF_IF2 |          |
-| SL_SF_IF3 |          |
-| SL_SF_RC  |          |
-| SL_SPWM   |          |
-| SL_SW_CP1 |          |
-| SL_SW_CP2 |          |
-| SL_SW_CP3 |          |
-| SL_SW_DM1 |          |
-| SL_SW_FE1 |          |
-| SL_SW_FE2 |          |
-| SL_SW_IF1 |          |
-| SL_SW_IF2 |          |
-| SL_SW_IF3 |          |
-| SL_SW_MJ1 | 经过真实设备测试 |
-| SL_SW_MJ2 | 经过真实设备测试 |
-| SL_SW_MJ3 |          |
-| SL_SW_ND1 |          |
-| SL_SW_ND2 |          |
-| SL_SW_ND3 |          |
-| SL_SW_NS3 |          |
-| SL_SW_RC  |          |
-| SL_SW_RC1 |          |
-| SL_SW_RC2 |          |
-| SL_SW_RC3 |          |
-| SL_SW_NS1 |          |
-| SL_SW_NS2 |          |
-| SL_SW_NS3 |          |
-| V_IND_S   |          |
+| 型号        | App 内设备名称      | 备注                  |
+|-----------|----------------|---------------------|
+| SL_MC_ND1 | 恒星/⾠星/极星开关伴侣   |                     |
+| SL_MC_ND2 | 恒星/⾠星/极星开关伴侣   |                     |
+| SL_MC_ND3 | 恒星/⾠星/极星开关伴侣   |                     |
+| SL_NATURE | 超能面板           |                     |
+| SL_P_SW   | 九路开关控制器        | 目前可能只支持3路，请提供详细设备日志 |
+| SL_S      | 开关智控器          |                     |
+| SL_SF_IF1 | 单火流光开关         |                     |
+| SL_SF_IF2 | 单火流光开关         |                     |
+| SL_SF_IF3 | 单火流光开关         |                     |
+| SL_SF_RC  | 单火触摸开关         |                     |
+| SL_SPWM   | 可调亮度开关智控器      |                     |
+| SL_SW_CP1 | 橙朴流光开关         |                     |
+| SL_SW_CP2 | 橙朴流光开关         |                     |
+| SL_SW_CP3 | 橙朴流光开关         |                     |
+| SL_SW_DM1 | 动态调光开关         | 可能有问题，请提供详细设备日志     |
+| SL_SW_FE1 | 格致/塞纳开关        |                     |
+| SL_SW_FE2 | 格致/塞纳开关        |                     |
+| SL_SW_IF1 | 流光开关           |                     |
+| SL_SW_IF2 | 流光开关           |                     |
+| SL_SW_IF3 | 流光开关           |                     |
+| SL_SW_MJ1 | 奇点开关模块         | 经过真实设备测试            |
+| SL_SW_MJ2 | 奇点开关模块         | 经过真实设备测试            |
+| SL_SW_MJ3 | 奇点开关模块         |                     |
+| SL_SW_ND1 | 恒星/⾠星/极星开关伴侣   |                     |
+| SL_SW_ND2 | 恒星/⾠星/极星开关伴侣   |                     |
+| SL_SW_ND3 | 恒星/⾠星/极星开关伴侣   |                     |
+| SL_SW_RC  | 触摸开关，极星开关(零⽕版) |                     |
+| SL_SW_RC1 | ⽩⽟/墨⽟流光开关      |                     |
+| SL_SW_RC2 | ⽩⽟/墨⽟流光开关      |                     |
+| SL_SW_RC3 | ⽩⽟/墨⽟流光开关      |                     |
+| SL_SW_NS1 | 视界触摸开关⼀键       |                     |
+| SL_SW_NS2 | 视界触摸开关⼀键       |                     |
+| SL_SW_NS3 | 视界触摸开关⼀键       |                     |
+| M_APL_E   |                |                     |
 
 #### 门锁类：
 
-| 型号                | 备注       |
-|-------------------|----------|
-| SL_LK_LS          | 经过真实设备测试 |
-| SL_LK_GTM         |          |
-| SL_LK_AG          |          |
-| SL_LK_SG          |          |
-| SL_LK_YL          | 经过真实设备测试 |
-| SL_P_BDLK         |          |
-| OD_JIUWANLI_LOCK1 |          |
+| 型号                | App 内设备名称 | 备注       |
+|-------------------|-----------|----------|
+| SL_LK_LS          | 智能⻔锁      | 经过真实设备测试 |
+| SL_LK_GTM         | 盖特曼智能⻔锁   |          |
+| SL_LK_AG          | 西勒奇智能⻔锁   |          |
+| SL_LK_SG          | 思哥智能⻔锁    |          |
+| SL_LK_YL          | 耶鲁智能门锁    | 经过真实设备测试 |
+| SL_P_BDLK         | 必达智能门锁    |          |
+| OD_JIUWANLI_LOCK1 | 九万⾥智能门锁   |          |
 
 #### 中枢控制器：
 
-| 型号   | 备注       |
-|------|----------|
-| SL_P | 经过真实设备测试 |
+| 型号   | App 内设备名称 | 备注       |
+|------|-----------|----------|
+| SL_P | 通用控制器     | 经过真实设备测试 |
 
 #### 智能插座类：
 
-| 型号            | 备注            |
-|---------------|---------------|
-| SL_OE_DE      | 支持计量，经过真实设备测试 |
-| SL_OE_3C      | 支持计量          |
-| SL_OL_W       | 支持计量          |
-| OD_WE_OT1     |               |
-| ~~SL_OL_UL~~  |               |
-| ~~SL_OL_UK~~  |               |
-| ~~SL_OL_THE~~ |               |
-| ~~SL_OL_3C~~  |               |
-| ~~SL_O~~L     |               |
+| 型号        | App 内设备名称 | 备注            |
+|-----------|-----------|---------------|
+| SL_OE_DE  | 计量插座（德标）  | 支持计量，经过真实设备测试 |
+| SL_OE_3C  | 计量插座（国标）  | 支持计量          |
+| SL_OL_W   | 入墙插座      | 支持计量          |
+| OD_WE_OT1 | Wi-Fi插座   | 此设备只有开关       |
+| SL_OL     | 智慧插座      |               |
+| SL_OL_3C  | 智慧插座（国标）  |               |
+| SL_OL_DE  | 智慧插座（德标）  |               |
+| SL_OL_UK  | 智慧插座（英标）  |               |
+| SL_OL_UL  | 智慧插座（美标）  |               |
 
 #### 窗帘电机类：
 
-| 型号        | 备注       |
-|-----------|----------|
-| SL_SW_WIN | 窗帘控制开关   |
-| SL_CN_IF  | 窗帘控制开关   |
-| SL_CN_FE  | 窗帘控制开关   |
-| SL_DOOYA  | DOOYA 电机 |
-| SL_P_V2   | 智界窗帘电机   |
+| 型号        | App 内设备名称    | 备注 |
+|-----------|--------------|----|
+| SL_SW_WIN | 窗帘控制器        |    |
+| SL_CN_IF  | 格致/塞纳三键窗帘控制器 |    |
+| SL_CN_FE  | 窗帘控制开关       |    |
+| SL_DOOYA  | 窗帘电机/速接窗帘电机  |    |
+| SL_P_V2   | 智界窗帘电机智控器    |    |
+
+#### 灯光类：
+
+| 型号          | App 内设备名称    | 备注 |
+|-------------|--------------|----|
+| SL_LI_RGBW  | 胶囊灯泡         |    |
+| SL_CT_RGBW  | 幻彩灯带         |    |
+| SL_SC_RGB   | 幻彩灯带（不带⽩光）   |    |
+| OD_WE_QUAN  | 量⼦灯          |    |
+| SL_LI_WW    | 调光调⾊控制器      |    |
+| SL_LI_GD1   | 调光壁灯         |    |
+| SL_LI_UG1   | 花园地灯         |    |
+| MSL_IRCTL   | 超级碗（基础版,蓝⽛版） |    |
+| OD_WE_IRCTL | 超级碗（闪联版）     |    |
+| SL_SPOT     | 超级碗（CoSS版）   |    |
+| SL_P_IR     | 红外模块         |    |
+
+#### 传感器类：
+
+| 型号           | App 内设备名称                  | 备注 |
+|--------------|----------------------------|----|
+| SL_SC_G      | ⻔禁感应器                      |    |
+| SL_SC_BG     | 多功能(CUBE)⻔禁感应器             |    |
+| SL_SC_MHW    | 动态感应器                      |    |
+| SL_SC_CM     | 动态感应器（7号电池版）               |    |
+| SL_SC_BM     | 多功能(CUBE)动态感应器             |    |
+| SL_P_RM      | ⼈体存在感应器                    |    |
+| SL_SC_THL    | 环境感应器                      |    |
+| SL_SC_BE     | 多功能(CUBE)环境感应器             |    |
+| SL_SC_CQ     | 环境感应器(CO2+TVOC)            |    |
+| SL_SC_CA     | 环境感应器(CO2)                 |    |
+| SL_SC_WA     | ⽔浸感应器                      |    |
+| SL_SC_CH     | ⽓体感应器(甲醛)                  |    |
+| SL_SC_CP     | ⽓体感应器(燃⽓)                  |    |
+| ELIQ_EM      | ELIQ电量计量器                  |    |
+| ~~SL_SC_CV~~ | 语⾳⼩Q                       |    |
+| SL_P_A       | 烟雾感应器                      |    |
+| SL_DF_GG     | 云防⻔窗感应器（DEFED Window/Door） |    |
+| SL_DF_MM     | 云防动态感应器（DEFED Motion）      |    |
+| SL_DF_SR     | 云防室内警铃（DEFED Indoor Siren） |    |
+| SL_DF_BB     | 云防遥控器（DEFED Key Fob）       |    |
+| SL_SC_CN     | 噪⾳感应器(Noise Sensor)        |    |
 
 感谢以下项目 Thanks：
 ---

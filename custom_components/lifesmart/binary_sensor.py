@@ -1,4 +1,5 @@
-"""Support for LifeSmart binary sensors."""
+"""Support for LifeSmart binary sensors.  by @MapleEve"""
+
 import datetime
 import logging
 
@@ -39,8 +40,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensor_devices = []
     for device in devices:
         if (
-                device[DEVICE_ID_KEY] in exclude_devices
-                or device[HUB_ID_KEY] in exclude_hubs
+            device[DEVICE_ID_KEY] in exclude_devices
+            or device[HUB_ID_KEY] in exclude_hubs
         ):
             continue
 
@@ -103,7 +104,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     """Representation of LifeSmartBinarySensor."""
 
     def __init__(
-            self, device, raw_device_data, sub_device_key, sub_device_data, client
+        self, device, raw_device_data, sub_device_key, sub_device_data, client
     ) -> None:
         super().__init__()
         device_name = raw_device_data[DEVICE_NAME_KEY]
@@ -112,8 +113,8 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         device_id = raw_device_data[DEVICE_ID_KEY]
 
         if (
-                DEVICE_NAME_KEY in sub_device_data
-                and sub_device_data[DEVICE_NAME_KEY] != "none"
+            DEVICE_NAME_KEY in sub_device_data
+            and sub_device_data[DEVICE_NAME_KEY] != "none"
         ):
             device_name = sub_device_data[DEVICE_NAME_KEY]
         else:
@@ -167,11 +168,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             unlock_method = UNLOCK_METHOD.get(val >> 12, "Unknown")
             unlock_user = val & 0xFFF
             is_unlock_success = False
-            if (
-                    unlock_type % 2 == 1
-                    and unlock_user != 0
-                    and val >> 12 != 15
-            ):
+            if unlock_type & 0x01 == 1 and unlock_user != 0 and val >> 12 != 15:
                 is_unlock_success = True
                 self._state = True
             else:
@@ -186,8 +183,9 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                     sub_device_data["valts"] / 1000
                 ).strftime("%Y-%m-%d %H:%M:%S"),
             }
-            _LOGGER.debug("Init lock device: %s state: %s", self._attrs,
-                          self._state)  # Log the lock device information
+            _LOGGER.debug(
+                "API lock device: %s state: %s", self._attrs, self._state
+            )  # Log the lock device information
         elif device_type in GENERIC_CONTROLLER_TYPES:
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
@@ -258,23 +256,25 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                     self._state = False  # 当val为0时,表示门锁肯定关闭
                 else:
                     if (
-                            data["type"] % 2 == 1
-                            and val & 0xFFF != 0
-                            and val >> 12 != 15
+                        data["type"] & 0x01 == 1
+                        and val & 0xFFF != 0
+                        and val >> 12 != 15
                     ):
                         self._state = True
                     else:
                         self._state = False
 
-                self._attrs.update({
-                    "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
-                    "unlocking_user": val & 0xFFF,
-                    "device_type": self.device_type,
-                    "unlocking_success": self._state,
-                    "last_updated": datetime.datetime.fromtimestamp(
-                        data["ts"] / 1000
-                    ).strftime("%Y-%m-%d %H:%M:%S"),
-                })
+                self._attrs.update(
+                    {
+                        "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
+                        "unlocking_user": val & 0xFFF,
+                        "device_type": self.device_type,
+                        "unlocking_success": self._state,
+                        "last_updated": datetime.datetime.fromtimestamp(
+                            data["ts"] / 1000
+                        ).strftime("%Y-%m-%d %H:%M:%S"),
+                    }
+                )
             elif self.device_type in MOTION_SENSOR_TYPES:
                 self._state = data["val"] != 0
             elif self.device_type in GUARD_SENSOR_TYPES:
@@ -286,5 +286,8 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 self._state = data["val"] != 0
 
             self.schedule_update_ha_state()  # 通知HA更新状态
-            _LOGGER.debug("Updated binary state for device: %s , raw: %s state: %s", self.device_id,
-                          data, self._state)  # 设备更新状态时打印日志
+            _LOGGER.debug(
+                "WS Updated binary state for device: %s state: %s",
+                self.device_id,
+                self._state,
+            )  # 设备更新状态时打印日志
