@@ -1,4 +1,4 @@
-name: HACS 验证
+name: HACS验证
 
 on:
   push:
