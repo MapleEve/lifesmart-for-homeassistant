@@ -71,7 +71,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             client,
                         )
                     )
-            elif device_type in LOCK_TYPES and sub_device_key == "EVTLO":
+            elif device_type in LOCK_TYPES and sub_device_key in ["EVTLO", "ALM"]:
                 sensor_devices.append(
                     LifeSmartBinarySensor(
                         ha_device,
@@ -160,7 +160,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 self._state = False
             else:
                 self._state = True
-        elif device_type in LOCK_TYPES:
+        elif device_type in LOCK_TYPES and sub_device_key == "EVTLO":
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
             val = sub_device_data["val"]
@@ -186,6 +186,14 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             _LOGGER.debug(
                 "API lock device: %s state: %s", self._attrs, self._state
             )  # Log the lock device information
+        elif device_type in LOCK_TYPES and sub_device_key == "ALM":
+            self._device_class = BinarySensorDeviceClass.PROBLEM
+            val = sub_device_data["val"]
+            if val > 0:
+                self._state = True
+            else:
+                self._state = False
+            self._attrs = {"raw": val}
         elif device_type in GENERIC_CONTROLLER_TYPES:
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
@@ -249,7 +257,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
     async def _update_state(self, data) -> None:
         if data is not None:
-            if self.device_type in LOCK_TYPES:
+            if self.device_type in LOCK_TYPES and self.sub_device_key == "EVTLO":
                 val = data["val"]
 
                 if val == 0:

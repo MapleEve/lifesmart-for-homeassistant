@@ -7,7 +7,7 @@ import logging
 import websockets
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_URL,
+    CONF_REGION,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     app_token = config_entry.data.get(CONF_LIFESMART_APPTOKEN)
     user_token = config_entry.data.get(CONF_LIFESMART_USERTOKEN)
     user_id = config_entry.data.get(CONF_LIFESMART_USERID)
-    baseurl = config_entry.data.get(CONF_URL)
+    region = config_entry.data.get(CONF_REGION)
     exclude_devices = config_entry.data.get(CONF_EXCLUDE_ITEMS, [])
     exclude_hubs = config_entry.data.get(CONF_EXCLUDE_AGTS, [])
     ai_include_hubs = config_entry.data.get(CONF_AI_INCLUDE_AGTS, [])
@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     update_listener = config_entry.add_update_listener(_async_update_listener)
 
     lifesmart_client = LifeSmartClient(
-        baseurl,
+        region,
         app_key,
         app_token,
         user_token,
@@ -147,12 +147,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     async def scene_set_async(call):
         """Handle the service call."""
         agt = call.data[HUB_ID_KEY]
-        id = call.data["id"]
+        sceneid = call.data["id"]
         restkey = await hass.data[DOMAIN][config_entry.entry_id][
             "client"
         ].set_scene_async(
             agt,
-            id,
+            sceneid,
         )
         _LOGGER.debug("scene_set: %s", str(restkey))
 
@@ -221,7 +221,7 @@ async def data_update_handler(hass, config_entry, msg):
         elif device_type in CLIMATE_TYPES:
             dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
         elif device_type in LOCK_TYPES:
-            if sub_device_key == "BAT":
+            if sub_device_key in ["BAT", "ALM"]:
                 dispatcher_send(
                     hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                 )
@@ -463,7 +463,7 @@ def get_platform_by_device(device_type, sub_device=None):
         return Platform.CLIMATE
     elif device_type in LOCK_TYPES and sub_device == "BAT":
         return Platform.SENSOR
-    elif device_type in LOCK_TYPES and sub_device == "EVTLO":
+    elif device_type in LOCK_TYPES and sub_device in ["EVTLO", "ALM"]:
         return Platform.BINARY_SENSOR
     elif device_type in SMART_PLUG_TYPES and sub_device == "P1":
         return Platform.SWITCH
