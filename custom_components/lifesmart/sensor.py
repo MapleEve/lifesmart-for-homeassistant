@@ -245,8 +245,6 @@ class LifeSmartSensor(SensorEntity):
             elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P4":
                 self._state = data["val"]
             else:
-                self._state = data["v"]
-
                 if self.sub_device_key in ["T", "P1"]:
                     self._device_class = SensorDeviceClass.TEMPERATURE
                     self._unit = UnitOfTemperature.CELSIUS
@@ -270,4 +268,5 @@ class LifeSmartSensor(SensorEntity):
                     self._device_class = "None"
                     self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
 
+                self._state = data["v"]
             self.schedule_update_ha_state()
