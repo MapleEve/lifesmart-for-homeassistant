@@ -88,7 +88,7 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 validated = await validate_input(self.hass, user_input)
-            except:
+            except Exception:
                 _LOGGER.warning("Input validation error")
 
             if "base" not in errors:
