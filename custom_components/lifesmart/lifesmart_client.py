@@ -13,13 +13,14 @@ class LifeSmartClient:
 
     def __init__(
         self,
+        region,
         baseurl,
         appkey,
         apptoken,
         usertoken,
         userid,
     ) -> None:
-        self._baseurl = baseurl
+        self._region = region
         self._appkey = appkey
         self._apptoken = apptoken
         self._usertoken = usertoken
@@ -210,9 +211,11 @@ class LifeSmartClient:
         return response
 
     async def turn_on_light_swith_async(self, idx, agt, me):
+        """Turn on the light switch."""
         return await self.send_epset_async("0x81", 1, idx, agt, me)
 
     async def turn_off_light_swith_async(self, idx, agt, me):
+        """Turn off the light switch."""
         return await self.send_epset_async("0x80", 0, idx, agt, me)
 
     async def send_epset_async(self, type, val, idx, agt, me):
@@ -274,7 +277,7 @@ class LifeSmartClient:
         return response["message"]["data"]
 
     async def get_ir_remote_list_async(self, agt):
-        """Get remote list for a specific station"""
+        """Get all remote settings for specific device."""
         url = self.get_api_url() + "/irapi.GetRemoteList"
 
         tick = int(time.time())
@@ -298,7 +301,7 @@ class LifeSmartClient:
         return response["message"]
 
     async def get_ir_remote_async(self, agt, ai):
-        """Get a remote setting for sepcific device."""
+        """Get a remote setting for specific device."""
         url = self.get_api_url() + "/irapi.GetRemote"
 
         tick = int(time.time())
@@ -337,11 +340,17 @@ class LifeSmartClient:
 
     def get_api_url(self):
         """Generate api URL"""
-        return "https://" + self._baseurl + "/app"
+        if self._region == "":
+            return "https://api.ilifesmart.com/app"
+        else:
+            return "https://api." + self._region + ".ilifesmart.com/app"
 
     def get_wss_url(self):
         """Generate websocket (wss) URL"""
-        return "wss://" + self._baseurl + ":8443/wsapp/"
+        if self._region == "":
+            return "wss://api.ilifesmart.com:8443/wsapp/"
+        else:
+            return "wss://api." + self._region + ".ilifesmart.com:8443/wsapp/"
 
     def generate_system_request_body(self, tick, data):
         """Generate system node in request body which contain credential and signature"""
