@@ -186,6 +186,6 @@ LIFESMART_SIGNAL_UPDATE_ENTITY = "lifesmart_updated"
 
 LIFESMART_REGION_OPTIONS = {
     "select": {
-        "options": ["", "cn0", "cn1", "cn2", "us", "eur", "jp", "apz"],
+        "options": ["cn0", "cn1", "cn2", "us", "eur", "jp", "apz"],
     }
 }

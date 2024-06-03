@@ -195,6 +195,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 self._state = False
             self._attrs = {"raw": val}
         elif device_type in GENERIC_CONTROLLER_TYPES:
+            self._attrs = sub_device_data
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
             if sub_device_data["val"] == 0:
