@@ -949,7 +949,6 @@ class LifeSmartLocalClient(LifeSmart):
                                     dev_meta.update(dev)
                                     del dev_meta['_chd']
                                     self.devices[devid] = dev_meta
-                                    pprint(dev_meta)
 
                                 stage = 'loaded'
                             else:
