@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_PASSWORD
 )
-from pygments.lexer import default
 
 from .const import (
     CONF_AI_INCLUDE_AGTS,
