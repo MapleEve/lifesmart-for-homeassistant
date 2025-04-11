@@ -957,7 +957,7 @@ class LifeSmartLocalClient(LifeSmart):
                                             if schg_key.endswith("/s"):
                                                 continue
                                             schg_key = schg_key[len(self.dev.node_agt) + len("/ep/"):].split("/")
-                                            if schg_key[1] == 'm':
+                                            if len(sch_key) > 2 and schg_key[1] == 'm':
                                                 if schg_key[0] in self.devices:
                                                     self.devices[schg_key[0]]['data'].setdefault(schg_key[2], {})
                                                     self.devices[schg_key[0]]['data'][schg_key[2]].update(schg['chg'])
@@ -974,6 +974,8 @@ class LifeSmartLocalClient(LifeSmart):
                                                         })
                                                 else:
                                                     _LOGGER.warning("Device invalid, TODO")
+                                            else:
+                                                _LOGGER.warning("Device property changed, TODO reload")
                                 elif len(decoded[1].get("_sdel", {}).values()) > 0:
                                     _LOGGER.warning("Device Deleted, TODO")
                         except EOFError:
