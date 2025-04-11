@@ -11,7 +11,8 @@
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/MapleEve/lifesmart-for-homeassistant/issues",
   "requirements": [
-    "websocket-client"
+    "websocket-client",
+    "websockets"
   ],
   "version": "v24.05.01"
 }

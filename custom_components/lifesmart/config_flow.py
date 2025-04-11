@@ -27,7 +27,6 @@ from .const import (
     DOMAIN,
     CONF_LIFESMART_APPKEY
 )
-from homeassistant.components.transmission import AuthenticationError
 from . import lifesmart_protocol
 import asyncio
 
@@ -140,7 +139,7 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data = await validate_local_input(self.hass, user_input)
         except (asyncio.TimeoutError, ConnectionRefusedError):
             errors["base"] = "cannot_connect"
-        except AuthenticationError:
+        except asyncio.InvalidStateError:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")

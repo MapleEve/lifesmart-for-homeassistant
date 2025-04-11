@@ -7,7 +7,6 @@ import gzip
 from dataclasses import dataclass
 from typing import Callable
 
-from homeassistant.components.transmission import AuthenticationError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
@@ -876,7 +875,7 @@ class LifeSmartLocalClient(LifeSmart):
 
                     if decoded[1].get("ret", None) is None:
                         _LOGGER.error("Login Failed -> ", decoded[1].get("err"))
-                        raise AuthenticationError
+                        raise asyncio.InvalidStateError
                     else:
                         break
                 except EOFError:
