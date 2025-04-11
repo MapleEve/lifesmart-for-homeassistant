@@ -98,8 +98,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 EVENT_HOMEASSISTANT_STOP, lifesmart_client.async_disconnect
             )
         )
+        def callback(msg):
+            if msg.get("msg"):
+                _LOGGER.debug("Received message: %s", msg)
+                asyncio.create_task(data_update_handler(hass, config_entry, msg))
+            elif msg.get("reload"):
+                asyncio.create_task(hass.config_entries.async_reload(config_entry.entry_id))
+
         hass.async_create_background_task(
-            lifesmart_client.async_connect(lambda msg: asyncio.create_task(data_update_handler(hass, config_entry, msg))), "lifesmart-connect"
+            lifesmart_client.async_connect(callback), "lifesmart-connect"
         )
 
     # 监听配置选项更新

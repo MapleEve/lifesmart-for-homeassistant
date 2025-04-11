@@ -973,11 +973,23 @@ class LifeSmartLocalClient(LifeSmart):
                                                             "msg": msg
                                                         })
                                                 else:
-                                                    _LOGGER.warning("Device invalid, TODO")
+                                                    if callback is not None and callable(callback):
+                                                        callback({
+                                                            "reload": True
+                                                        })
+                                                    _LOGGER.warning("Device invalid, reload")
                                             else:
-                                                _LOGGER.warning("Device property changed, TODO reload")
+                                                if callback is not None and callable(callback):
+                                                    callback({
+                                                        "reload": True
+                                                    })
+                                                _LOGGER.warning("Device property changed, reload")
                                 elif len(decoded[1].get("_sdel", {}).values()) > 0:
-                                    _LOGGER.warning("Device Deleted, TODO")
+                                    if callback is not None and callable(callback):
+                                        callback({
+                                            "reload": True
+                                        })
+                                    _LOGGER.warning("Device deleted, reload")
                         except EOFError:
                             pass
                 self.writer.close()
