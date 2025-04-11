@@ -957,7 +957,7 @@ class LifeSmartLocalClient(LifeSmart):
                                             if schg_key.endswith("/s"):
                                                 continue
                                             schg_key = schg_key[len(self.dev.node_agt) + len("/ep/"):].split("/")
-                                            if len(sch_key) > 2 and schg_key[1] == 'm':
+                                            if len(schg_key) > 2 and schg_key[1] == 'm':
                                                 if schg_key[0] in self.devices:
                                                     self.devices[schg_key[0]]['data'].setdefault(schg_key[2], {})
                                                     self.devices[schg_key[0]]['data'][schg_key[2]].update(schg['chg'])
