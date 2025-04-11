@@ -109,6 +109,7 @@ class LifeSmartSwitch(SwitchEntity):
         self.device_id = device_id
         self.hub_id = hub_id
         self.sub_device_key = sub_device_key
+        self._attr_translation_key = sub_device_key
         self.device_type = device_type
         self.raw_device_data = raw_device_data
         self._device = device
