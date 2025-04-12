@@ -11,7 +11,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGB_COLOR,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     # SUPPORT_BRIGHTNESS,
     # SUPPORT_COLOR,
     LightEntity,
@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info=Non
     param = discovery_info.get("param")
     devices = []
 
-    # P1,P2,P3 info packed into one data for one entity
+    # P1,P2,P3 info packed into one data for one entity.py
     if dev["devtype"] in LIGHT_DIMMER_TYPES:
         devices.append(LifeSmartLight(dev, "P1P2", dev["data"], param))
     else:
@@ -229,13 +229,13 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                 ):
                     self._brightness = kwargs[ATTR_BRIGHTNESS]
                     self.async_schedule_update_ha_state()
-            if ATTR_COLOR_TEMP in kwargs:
-                ratio = (kwargs[ATTR_COLOR_TEMP] - self._min_mireds) / (
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                ratio = (kwargs[ATTR_COLOR_TEMP_KELVIN] - self._min_mireds) / (
                     self._max_mireds - self._min_mireds
                 )
                 val = int((-ratio + 1) * 255)
                 if await super().async_lifesmart_epset("0xcf", val, "P2") == 0:
-                    self._color_temp = kwargs[ATTR_COLOR_TEMP]
+                    self._color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
                     self.async_schedule_update_ha_state()
             if await super().async_lifesmart_epset("0x81", 1, "P1") == 0:
                 self._state = True
@@ -318,5 +318,5 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
 
     @property
     def unique_id(self):
-        """A unique identifier for this entity."""
+        """A unique identifier for this entity.py."""
         return self.entity_id
