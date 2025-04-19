@@ -128,7 +128,7 @@ class LifeSmartSwitch(SwitchEntity):
 
     @property
     def name(self):
-        """Name of the entity."""
+        """Name of the entity.py."""
         return self.device_name
 
     @property
@@ -145,7 +145,7 @@ class LifeSmartSwitch(SwitchEntity):
             manufacturer=MANUFACTURER,
             model=self.device_type,
             sw_version=self.raw_device_data["ver"],
-            via_device=(DOMAIN, self.hub_id),
+            # via_device=(DOMAIN, self.hub_id),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -198,7 +198,7 @@ class LifeSmartSwitch(SwitchEntity):
 
     @property
     def unique_id(self):
-        """A unique identifier for this entity."""
+        """A unique identifier for this entity.py."""
         return self.entity_id
 
 
@@ -241,7 +241,7 @@ class LifeSmartSceneSwitch(LifeSmartDevice, SwitchEntity):
         )
 
     async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
+        """Call when entity.py is added to hass."""
 
     def _get_state(self):
         """get lifesmart switch state."""
@@ -260,5 +260,5 @@ class LifeSmartSceneSwitch(LifeSmartDevice, SwitchEntity):
 
     @property
     def unique_id(self):
-        """A unique identifier for this entity."""
+        """A unique identifier for this entity.py."""
         return self.entity_id

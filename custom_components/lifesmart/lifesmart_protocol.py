@@ -838,12 +838,13 @@ class LifeSmart:
         ])
 
 class LifeSmartLocalClient(LifeSmart):
-    def __init__(self, host, port, username, password) -> None:
+    def __init__(self, host, port, username, password, config_agt) -> None:
         super().__init__()
         self.host = host
         self.port = port
         self.username = username
         self.password = password
+        self.config_agt = config_agt
         self.reader, self.writer = None, None
         self.dev = LifeSmart()
         self.disconnected = False
@@ -994,9 +995,14 @@ class LifeSmartLocalClient(LifeSmart):
                             pass
                 self.writer.close()
                 await self.writer.wait_closed()
+            except ConnectionResetError as e:
+                _LOGGER.warning("%s: %s" % (e.__class__.__name__, str(e)))
+                self.writer.close()
+                await asyncio.sleep(1.0)
             except (asyncio.TimeoutError, ConnectionRefusedError, OSError) as e:
-                _LOGGER.error("Connection failed: %s", str(e))
-                raise e
+                _LOGGER.error("Connection failed %s: %s", e.__class__.__name__, str(e))
+                # raise e
+                await asyncio.sleep(1.0)
 
 
     async def async_disconnect(self, call: Event | ServiceCall):

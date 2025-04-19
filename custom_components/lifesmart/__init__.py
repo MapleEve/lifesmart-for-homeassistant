@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         port = config_entry.data.get(CONF_PORT)
         username = config_entry.data.get(CONF_USERNAME)
         password = config_entry.data.get(CONF_PASSWORD)
-        lifesmart_client = lifesmart_protocol.LifeSmartLocalClient(host, port, username, password)
+        lifesmart_client = lifesmart_protocol.LifeSmartLocalClient(host, port, username, password, config_entry.entry_id)
 
         config_entry.async_on_unload(
             hass.bus.async_listen_once(
@@ -124,10 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         UPDATE_LISTENER: update_listener,
     }
 
-    for platform in SUPPORTED_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.async_create_task(hass.config_entries.async_forward_entry_setups(config_entry, SUPPORTED_PLATFORMS))
 
     async def send_keys(call):
         """Handle the service call."""
@@ -357,7 +354,7 @@ class LifeSmartDevice(Entity):
 
     @property
     def should_poll(self):
-        """check with the entity for an updated state."""
+        """check with the entity.py for an updated state."""
         return False
 
     async def async_lifesmart_epset(self, type, val, idx):
