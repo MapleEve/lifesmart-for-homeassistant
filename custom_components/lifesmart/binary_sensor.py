@@ -211,7 +211,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
     @property
     def name(self):
-        """Name of the entity."""
+        """Name of the entity.py."""
         return self.device_name
 
     @property
@@ -238,7 +238,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
     @property
     def unique_id(self):
-        """A unique identifier for this entity."""
+        """A unique identifier for this entity.py."""
         return self.entity_id
 
     @property

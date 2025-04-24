@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info=Non
     param = discovery_info.get("param")
     devices = []
 
-    # P1,P2,P3 info packed into one data for one entity
+    # P1,P2,P3 info packed into one data for one entity.py
     if dev["devtype"] in LIGHT_DIMMER_TYPES:
         devices.append(LifeSmartLight(dev, "P1P2", dev["data"], param))
     else:
@@ -318,5 +318,5 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
 
     @property
     def unique_id(self):
-        """A unique identifier for this entity."""
+        """A unique identifier for this entity.py."""
         return self.entity_id

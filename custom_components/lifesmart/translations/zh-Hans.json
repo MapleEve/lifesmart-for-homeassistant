@@ -4,6 +4,27 @@
     "step": {
       "user": {
         "title": "LifeSmart 设备集成配置",
+        "description": "请选择连接方式：",
+        "protocol_selector": {
+          "label": "连接方式",
+          "options": {
+            "local": "本地",
+            "cloud": "云端"
+          }
+        }
+      },
+      "local": {
+        "title": "LifeSmart 设备集成配置",
+        "description": "请输入您的 LifeSmart Hub本地登陆信息。",
+        "data": {
+          "host": "IP",
+          "port": "Port (Default 8888)",
+          "username": "本地账号",
+          "password": "本地密码"
+        }
+      },
+      "cloud": {
+        "title": "LifeSmart 设备集成配置",
         "description": "请输入您的 LifeSmart 平台凭证以及个人用户信息。",
         "data": {
           "appkey": "应用密钥 App Key",
@@ -23,6 +44,8 @@
       "already_configured": "该设备已经完成配置。"
     },
     "error": {
+      "cannot_connect": "连接失败",
+      "invalid_auth": "验证失败"
     }
   },
   "options": {

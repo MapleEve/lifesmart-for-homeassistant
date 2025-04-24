@@ -4,6 +4,27 @@
     "step": {
       "user": {
         "title": "LifeSmart Integration Setup",
+        "description": "Connect method：",
+        "protocol_selector": {
+          "label": "Connect method",
+          "options": {
+            "local": "Local",
+            "cloud": "Cloud"
+          }
+        }
+      },
+      "local": {
+        "title": "LifeSmart Integration Setup",
+        "description": "Enter LifeSmart Hub local credential。",
+        "data": {
+          "host": "IP",
+          "port": "Port (Default 8888)",
+          "username": "Local User",
+          "password": "Local Password"
+        }
+      },
+      "cloud": {
+        "title": "LifeSmart Integration Setup",
         "description": "Enter LifeSmart Platform credential and User details.",
         "data": {
           "appkey": "App Key",

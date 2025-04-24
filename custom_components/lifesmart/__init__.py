@@ -5,12 +5,19 @@ import json
 import logging
 
 import websockets
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH, CONN_CLASS_LOCAL_PUSH
 from homeassistant.const import (
-    CONF_REGION,
+    CONF_URL,
+    CONF_TYPE,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, Event, ServiceCall
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 
@@ -49,6 +56,9 @@ from .const import (
     UPDATE_LISTENER,
 )
 from .lifesmart_client import LifeSmartClient
+from importlib import reload
+from . import lifesmart_protocol
+# from .lifesmart_protocol import LifeSmartLocalClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,26 +66,51 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
 
-    app_key = config_entry.data.get(CONF_LIFESMART_APPKEY)
-    app_token = config_entry.data.get(CONF_LIFESMART_APPTOKEN)
-    user_token = config_entry.data.get(CONF_LIFESMART_USERTOKEN)
-    user_id = config_entry.data.get(CONF_LIFESMART_USERID)
-    region = config_entry.data.get(CONF_REGION)
     exclude_devices = config_entry.data.get(CONF_EXCLUDE_ITEMS, [])
     exclude_hubs = config_entry.data.get(CONF_EXCLUDE_AGTS, [])
     ai_include_hubs = config_entry.data.get(CONF_AI_INCLUDE_AGTS, [])
     ai_include_items = config_entry.data.get(CONF_AI_INCLUDE_ITEMS, [])
 
+    if config_entry.data.get(CONF_TYPE, CONN_CLASS_CLOUD_PUSH) == CONN_CLASS_CLOUD_PUSH:
+        app_key = config_entry.data.get(CONF_LIFESMART_APPKEY)
+        app_token = config_entry.data.get(CONF_LIFESMART_APPTOKEN)
+        user_token = config_entry.data.get(CONF_LIFESMART_USERTOKEN)
+        user_id = config_entry.data.get(CONF_LIFESMART_USERID)
+        baseurl = config_entry.data.get(CONF_URL)
+
+        lifesmart_client = LifeSmartClient(
+            baseurl,
+            app_key,
+            app_token,
+            user_token,
+            user_id,
+        )
+    else:
+        reload(lifesmart_protocol)
+        host = config_entry.data.get(CONF_HOST)
+        port = config_entry.data.get(CONF_PORT)
+        username = config_entry.data.get(CONF_USERNAME)
+        password = config_entry.data.get(CONF_PASSWORD)
+        lifesmart_client = lifesmart_protocol.LifeSmartLocalClient(host, port, username, password, config_entry.entry_id)
+
+        config_entry.async_on_unload(
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, lifesmart_client.async_disconnect
+            )
+        )
+        def callback(msg):
+            if msg.get("msg"):
+                _LOGGER.debug("Received message: %s", msg)
+                asyncio.create_task(data_update_handler(hass, config_entry, msg))
+            elif msg.get("reload"):
+                asyncio.create_task(hass.config_entries.async_reload(config_entry.entry_id))
+
+        hass.async_create_background_task(
+            lifesmart_client.async_connect(callback), "lifesmart-connect"
+        )
+
     # 监听配置选项更新
     update_listener = config_entry.add_update_listener(_async_update_listener)
-
-    lifesmart_client = LifeSmartClient(
-        region,
-        app_key,
-        app_token,
-        user_token,
-        user_id,
-    )
 
     devices = await lifesmart_client.get_all_device_async()
 
@@ -89,9 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         UPDATE_LISTENER: update_listener,
     }
 
-    await hass.config_entries.async_forward_entry_setups(
-        config_entry, SUPPORTED_PLATFORMS
-    )
+    hass.async_create_task(hass.config_entries.async_forward_entry_setups(config_entry, SUPPORTED_PLATFORMS))
 
     async def send_keys(call):
         """Handle the service call."""
@@ -159,13 +192,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     hass.services.async_register(DOMAIN, "send_ackeys", send_ackeys)
     hass.services.async_register(DOMAIN, "scene_set", scene_set_async)
 
-    ws_url = lifesmart_client.get_wss_url()
-    hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = LifeSmartStatesManager(
-        hass, config_entry, ws_url=ws_url
-    )
-    hass.data[DOMAIN][LIFESMART_STATE_MANAGER].start()
+    if isinstance(lifesmart_client, LifeSmartClient):
+        ws_url = lifesmart_client.get_wss_url()
+        hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = LifeSmartStatesManager(
+            hass, config_entry, ws_url=ws_url
+        )
+        hass.data[DOMAIN][LIFESMART_STATE_MANAGER].start()
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, SUPPORTED_PLATFORMS
+    )
+    if isinstance(hass.data[DOMAIN][entry.entry_id]['client'], lifesmart_protocol.LifeSmartLocalClient):
+        await hass.data[DOMAIN][entry.entry_id]['client'].async_disconnect(None)
+    return unload_ok
 
 
 async def data_update_handler(hass, config_entry, msg):
@@ -266,6 +309,7 @@ async def data_update_handler(hass, config_entry, msg):
 
 async def _async_update_listener(hass, config_entry):
     """Handle options update."""
+    print("reload")
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
@@ -310,7 +354,7 @@ class LifeSmartDevice(Entity):
 
     @property
     def should_poll(self):
-        """check with the entity for an updated state."""
+        """check with the entity.py for an updated state."""
         return False
 
     async def async_lifesmart_epset(self, type, val, idx):
@@ -472,7 +516,7 @@ def get_platform_by_device(device_type, sub_device=None):
 
 
 def generate_entity_id(device_type, hub_id, device_id, idx=None):
-    hub_id = hub_id.replace("__", "_").replace("-", "_")
+    hub_id = hub_id.replace("__", "_").replace("-", "_").replace("/", "_")
     if idx:
         sub_device = idx
     else:
