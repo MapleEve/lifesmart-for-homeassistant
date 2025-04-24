@@ -139,12 +139,15 @@ class LifeSmartSwitch(SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        sw_version = self.raw_device_data.get(
+            "ver", "unknown"
+        )  # 使用 get 方法提供默认版本号
         return DeviceInfo(
             identifiers={(DOMAIN, self.hub_id, self.device_id)},
             name=self.switch_name,
             manufacturer=MANUFACTURER,
             model=self.device_type,
-            sw_version=self.raw_device_data["ver"],
+            sw_version=sw_version,
             # via_device=(DOMAIN, self.hub_id),
         )
 
