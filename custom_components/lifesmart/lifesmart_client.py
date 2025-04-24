@@ -331,8 +331,8 @@ class LifeSmartClient:
         """Async method to make a POST api call"""
         async with aiohttp.ClientSession() as session:
             async with session.post(url, data=data, headers=headers) as response:
-                response_text = await response.text()
-                return response_text
+                response.raise_for_status()  # 自动抛出HTTP错误
+                return await response.text()
 
     def get_signature(self, data):
         """Generate signature required by LifeSmart API"""
