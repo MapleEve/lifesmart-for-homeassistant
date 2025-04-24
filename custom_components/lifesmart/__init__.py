@@ -3,9 +3,10 @@
 import asyncio
 import json
 import logging
+from importlib import reload
 
 import websockets
-from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH, CONN_CLASS_LOCAL_PUSH
+from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH
 from homeassistant.const import (
     CONF_URL,
     CONF_TYPE,
@@ -14,13 +15,14 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
     Platform,
 )
-from homeassistant.core import HomeAssistant, Event, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.ssl import get_default_context
 
+from . import lifesmart_protocol
 from .const import (
     BINARY_SENSOR_TYPES,
     CLIMATE_TYPES,
@@ -56,8 +58,7 @@ from .const import (
     UPDATE_LISTENER,
 )
 from .lifesmart_client import LifeSmartClient
-from importlib import reload
-from . import lifesmart_protocol
+
 # from .lifesmart_protocol import LifeSmartLocalClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,19 +92,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         port = config_entry.data.get(CONF_PORT)
         username = config_entry.data.get(CONF_USERNAME)
         password = config_entry.data.get(CONF_PASSWORD)
-        lifesmart_client = lifesmart_protocol.LifeSmartLocalClient(host, port, username, password, config_entry.entry_id)
+        lifesmart_client = lifesmart_protocol.LifeSmartLocalClient(
+            host, port, username, password, config_entry.entry_id
+        )
 
         config_entry.async_on_unload(
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, lifesmart_client.async_disconnect
             )
         )
+
         def callback(msg):
             if msg.get("msg"):
                 _LOGGER.debug("Received message: %s", msg)
                 asyncio.create_task(data_update_handler(hass, config_entry, msg))
             elif msg.get("reload"):
-                asyncio.create_task(hass.config_entries.async_reload(config_entry.entry_id))
+                asyncio.create_task(
+                    hass.config_entries.async_reload(config_entry.entry_id)
+                )
 
         hass.async_create_background_task(
             lifesmart_client.async_connect(callback), "lifesmart-connect"
@@ -124,7 +130,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         UPDATE_LISTENER: update_listener,
     }
 
-    hass.async_create_task(hass.config_entries.async_forward_entry_setups(config_entry, SUPPORTED_PLATFORMS))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setups(
+            config_entry, SUPPORTED_PLATFORMS
+        )
+    )
 
     async def send_keys(call):
         """Handle the service call."""
@@ -206,8 +216,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, SUPPORTED_PLATFORMS
     )
-    if isinstance(hass.data[DOMAIN][entry.entry_id]['client'], lifesmart_protocol.LifeSmartLocalClient):
-        await hass.data[DOMAIN][entry.entry_id]['client'].async_disconnect(None)
+    if isinstance(
+        hass.data[DOMAIN][entry.entry_id]["client"],
+        lifesmart_protocol.LifeSmartLocalClient,
+    ):
+        await hass.data[DOMAIN][entry.entry_id]["client"].async_disconnect(None)
     return unload_ok
 
 
@@ -394,8 +407,12 @@ class LifeSmartStatesManager:
         async with self._lock:
             if self._ws is None:
                 try:
+                    # 使用HA提供的SSL上下文
+                    ssl_context = get_default_context()
                     self._ws = await websockets.connect(
-                        self._ws_url, ping_interval=None
+                        self._ws_url,
+                        ping_interval=None,
+                        ssl=ssl_context,  # 添加SSL上下文参数
                     )
                     _LOGGER.debug("Lifesmart HACS: WebSocket connected")
 
