@@ -216,12 +216,12 @@ class LifeSmartSensor(SensorEntity):
 
     @property
     def device_class(self):
-        """Return the device class of this entity."""
+        """Return the device class of this entity.py."""
         return self._device_class
 
     @property
     def unique_id(self):
-        """A unique identifier for this entity."""
+        """A unique identifier for this entity.py."""
         return self.entity_id
 
     async def async_added_to_hass(self) -> None:

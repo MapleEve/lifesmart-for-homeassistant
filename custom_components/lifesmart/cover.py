@@ -150,7 +150,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
 
     @property
     def unique_id(self):
-        """A unique identifier for this entity."""
+        """A unique identifier for this entity.py."""
         return self.entity_id
 
     @property
@@ -187,7 +187,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
         self.schedule_update_ha_state()
 
     async def async_toggle(self, **kwargs):
-        """Toggle the entity."""
+        """Toggle the entity.py."""
         if self.is_opening or self.is_closing:
             await self.async_stop_cover()
         elif self.is_closed:

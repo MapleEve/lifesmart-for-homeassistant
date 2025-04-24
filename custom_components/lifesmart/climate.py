@@ -102,7 +102,7 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
 
     @property
     def unique_id(self):
-        """A unique identifier for this entity."""
+        """A unique identifier for this entity.py."""
         return self.entity_id
 
     @property
