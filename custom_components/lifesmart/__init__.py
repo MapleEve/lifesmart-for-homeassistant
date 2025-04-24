@@ -124,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     # ========== 新增设备注册逻辑 ==========
     device_registry = dr.async_get(hass)
-    hubs = set()
+    hubs = {device[HUB_ID_KEY] for device in devices if HUB_ID_KEY in device}
 
     # 收集所有中枢ID
     for device in devices:
