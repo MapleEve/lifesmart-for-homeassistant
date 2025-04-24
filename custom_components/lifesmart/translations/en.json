@@ -31,7 +31,7 @@
           "apptoken": "App Token",
           "usertoken": "User Token ",
           "userid": "User Id",
-          "url": "LifeSmart regional domain",
+          "region": "LifeSmart API region",
           "exclude": "List of device to be excluded",
           "exclude_agt": "List of hub to be excluded",
           "ai_include_agt": "List of hub to be included in Scene",

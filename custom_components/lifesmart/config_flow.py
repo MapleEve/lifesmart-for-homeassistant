@@ -53,21 +53,21 @@ async def validate_input(hass, data):
     app_token = data[CONF_LIFESMART_APPTOKEN]
     user_token = data[CONF_LIFESMART_USERTOKEN]
     user_id = data[CONF_LIFESMART_USERID]
-    baseurl = data[CONF_URL]
+    region = data[CONF_REGION]
     # exclude_devices = data[CONF_EXCLUDE_ITEMS]
     # exclude_hubs = data[CONF_EXCLUDE_AGTS]
     # ai_include_hubs = data[CONF_AI_INCLUDE_AGTS]
     # ai_include_items = data[CONF_AI_INCLUDE_ITEMS]
 
     lifesmart_client = LifeSmartClient(
-        baseurl,
+        region,
         app_key,
         app_token,
         user_token,
         user_id,
     )
 
-    devices = await lifesmart_client.get_all_device_async()
+    await lifesmart_client.get_all_device_async()
 
     return {"title": f"User Id {user_id}", "unique_id": app_key}
 
@@ -87,14 +87,13 @@ async def validate_local_input(hass: HomeAssistant, data: dict[str, Any]) -> dic
 
 
 def get_unique_id(wiser_id: str):
+    """Generate a unique id."""
     return str(f"{DOMAIN}-{wiser_id}")
 
 
 @config_entries.HANDLERS.register(DOMAIN)
 class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """
-    LifeSmartConfigFlowHandler configuration method.
-    """
+    """Handle a config flow"""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
@@ -103,10 +102,16 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.discovery_info = {}
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Create the options flow."""
+        return LifeSmartOptionsFlowHandler(config_entry)
+
     async def async_step_user(self, user_input=None):
-        """
-        Handle a config flow.
-        """
+        """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
             if user_input[CONF_TYPE] == config_entries.CONN_CLASS_LOCAL_PUSH:
@@ -156,7 +161,7 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 validated = await validate_input(self.hass, user_input)
-            except:
+            except Exception:
                 _LOGGER.warning("Input validation error")
 
             if "base" not in errors:
@@ -193,39 +198,113 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_main_params(self, user_input=None):
-        """Handle options flow."""
-        """
+    async def async_step_user(self, user_input=None) -> FlowResult:
+        """Handle a config flow."""
+        errors = {}
         if user_input is not None:
-            if user_input[CONF_HOST]:
-                data = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PASSWORD: self.config_entry.data[CONF_PASSWORD],
-                    CONF_NAME: self.config_entry.data[CONF_NAME],
-                }
-                user_input.pop(CONF_HOST)
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=data
-                )
-            options = self.config_entry.options | user_input
-            return self.async_create_entry(title="", data=options)
-        """
+            try:
+                validated = await validate_input(self.hass, user_input)
+            except Exception:
+                _LOGGER.warning("Input validation error")
 
-        data_schema = {
-            vol.Required(CONF_LIFESMART_APPKEY): str,
-            vol.Required(CONF_LIFESMART_APPTOKEN): str,
-            vol.Required(CONF_LIFESMART_USERTOKEN): str,
-            vol.Required(CONF_LIFESMART_USERID): str,
-            vol.Required(CONF_URL): str,
-            vol.Optional(CONF_EXCLUDE_ITEMS): str,
-            vol.Optional(CONF_EXCLUDE_AGTS): str,
-            vol.Optional(CONF_AI_INCLUDE_AGTS): str,
-            vol.Optional(CONF_AI_INCLUDE_ITEMS): str,
+            if "base" not in errors:
+                # Add hub name to config
+                user_input[CONF_NAME] = validated["title"]
+
+                return self.async_create_entry(
+                    title=validated["title"], data=user_input
+                )
+        schema = {
+            vol.Required(
+                CONF_LIFESMART_APPKEY,
+                default=self.config_entry.data.get(CONF_LIFESMART_APPKEY),
+            ): str,
+            vol.Required(
+                CONF_LIFESMART_APPTOKEN,
+                default=self.config_entry.data.get(CONF_LIFESMART_APPTOKEN),
+            ): str,
+            vol.Required(
+                CONF_LIFESMART_USERID,
+                default=self.config_entry.data.get(CONF_LIFESMART_USERID),
+            ): str,
+            vol.Required(
+                CONF_LIFESMART_USERTOKEN,
+                default=self.config_entry.data.get(CONF_LIFESMART_USERTOKEN),
+            ): str,
+            vol.Required(
+                CONF_REGION,
+                default=self.config_entry.data.get(CONF_REGION),
+            ): selector(LIFESMART_REGION_OPTIONS),
+            vol.Optional(
+                CONF_EXCLUDE_ITEMS,
+                default=self.config_entry.data.get(CONF_EXCLUDE_ITEMS, ""),
+            ): str,
+            vol.Optional(
+                CONF_EXCLUDE_AGTS,
+                default=self.config_entry.data.get(CONF_EXCLUDE_AGTS, ""),
+            ): str,
+            vol.Optional(
+                CONF_AI_INCLUDE_AGTS,
+                default=self.config_entry.data.get(CONF_AI_INCLUDE_AGTS, ""),
+            ): str,
+            vol.Optional(
+                CONF_AI_INCLUDE_ITEMS,
+                default=self.config_entry.data.get(CONF_AI_INCLUDE_ITEMS, ""),
+            ): str,
         }
+
         return self.async_show_form(
-            step_id="main_params", data_schema=vol.Schema(data_schema)
+            step_id="user",
+            data_schema=vol.Schema(schema),
+            errors=errors,
         )
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
-        return self.async_show_menu(step_id="init", menu_options=["main_params"])
+        if user_input is not None:
+            options = self.config_entry.options | user_input
+            return self.async_create_entry(title="", data=options)
+
+        schema = {
+            vol.Required(
+                CONF_LIFESMART_APPKEY,
+                default=self.config_entry.data.get(CONF_LIFESMART_APPKEY),
+            ): str,
+            vol.Required(
+                CONF_LIFESMART_APPTOKEN,
+                default=self.config_entry.data.get(CONF_LIFESMART_APPTOKEN),
+            ): str,
+            vol.Required(
+                CONF_LIFESMART_USERID,
+                default=self.config_entry.data.get(CONF_LIFESMART_USERID),
+            ): str,
+            vol.Required(
+                CONF_LIFESMART_USERTOKEN,
+                default=self.config_entry.data.get(CONF_LIFESMART_USERTOKEN),
+            ): str,
+            vol.Required(
+                CONF_REGION,
+                default=self.config_entry.data.get(CONF_REGION),
+            ): selector(LIFESMART_REGION_OPTIONS),
+            vol.Optional(
+                CONF_EXCLUDE_ITEMS,
+                default=self.config_entry.data.get(CONF_EXCLUDE_ITEMS, ""),
+            ): str,
+            vol.Optional(
+                CONF_EXCLUDE_AGTS,
+                default=self.config_entry.data.get(CONF_EXCLUDE_AGTS, ""),
+            ): str,
+            vol.Optional(
+                CONF_AI_INCLUDE_AGTS,
+                default=self.config_entry.data.get(CONF_AI_INCLUDE_AGTS, ""),
+            ): str,
+            vol.Optional(
+                CONF_AI_INCLUDE_ITEMS,
+                default=self.config_entry.data.get(CONF_AI_INCLUDE_ITEMS, ""),
+            ): str,
+        }
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(schema),
+        )

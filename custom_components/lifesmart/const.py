@@ -4,6 +4,7 @@ from homeassistant.const import Platform
 CONF_LIFESMART_APPKEY = "appkey"
 CONF_LIFESMART_APPTOKEN = "apptoken"
 CONF_LIFESMART_USERTOKEN = "usertoken"
+CONF_LIFESMART_USERTOKEN = "usertoken"
 CONF_LIFESMART_USERID = "userid"
 CONF_EXCLUDE_ITEMS = "exclude"
 CONF_EXCLUDE_AGTS = "exclude_agt"
@@ -49,6 +50,7 @@ SUPPORTED_SWTICH_TYPES = [
     "SL_SW_IF3",
     "SL_SW_MJ1",
     "SL_SW_MJ2",
+    "SL_SW_MJ3",
     "SL_SW_ND1",
     "SL_SW_ND2",
     "SL_SW_ND3",
@@ -143,6 +145,7 @@ DEVICE_WITHOUT_IDXNAME = [
     "SL_SW_ND3",
     "SL_SW_MJ1",
     "SL_SW_MJ2",
+    "SL_SW_MJ3",
 ]
 GENERIC_CONTROLLER_TYPES = ["SL_P", "SL_P_IR"]
 SMART_PLUG_TYPES = ["SL_OE_DE", "SL_OE_3C", "SL_OE_W", "OD_WE_OT1"]
@@ -177,8 +180,15 @@ DEVICE_TYPE_KEY = "devtype"
 HUB_ID_KEY = "agt"
 DEVICE_NAME_KEY = "name"
 DEVICE_DATA_KEY = "data"
+DEVICE_VERSION_KEY = "ver"
 
 LIFESMART_STATE_MANAGER = "lifesmart_wss"
 UPDATE_LISTENER = "update_listener"
 
 LIFESMART_SIGNAL_UPDATE_ENTITY = "lifesmart_updated"
+
+LIFESMART_REGION_OPTIONS = {
+    "select": {
+        "options": ["cn0", "cn1", "cn2", "us", "eur", "jp", "apz"],
+    }
+}

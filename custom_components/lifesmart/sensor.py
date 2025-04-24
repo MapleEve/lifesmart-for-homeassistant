@@ -175,19 +175,17 @@ class LifeSmartSensor(SensorEntity):
             self._unit = UnitOfPower.WATT
             self._state = sub_device_data["val"]
         else:
-            if sub_device_key == "T" or sub_device_key == "P1":
+            if sub_device_key in ("T", "P1"):
                 self._device_class = SensorDeviceClass.TEMPERATURE
                 self._unit = UnitOfTemperature.CELSIUS
-            elif sub_device_key == "H" or sub_device_key == "P2":
+            elif sub_device_key in ("H", "P2"):
                 self._device_class = SensorDeviceClass.HUMIDITY
                 self._unit = PERCENTAGE
             elif sub_device_key == "Z":
                 self._device_class = SensorDeviceClass.ILLUMINANCE
                 self._unit = LIGHT_LUX
-            elif (
-                sub_device_key == "V"
-                or sub_device_key == "BAT"
-                or (sub_device_key == "P8" and device_type in COVER_TYPES)
+            elif sub_device_key in ("V", "BAT") or (
+                sub_device_key == "P8" and device_type in COVER_TYPES
             ):
                 self._device_class = SensorDeviceClass.BATTERY
                 self._unit = PERCENTAGE
@@ -245,8 +243,6 @@ class LifeSmartSensor(SensorEntity):
             elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P4":
                 self._state = data["val"]
             else:
-                self._state = data["v"]
-
                 if self.sub_device_key in ["T", "P1"]:
                     self._device_class = SensorDeviceClass.TEMPERATURE
                     self._unit = UnitOfTemperature.CELSIUS
@@ -270,4 +266,5 @@ class LifeSmartSensor(SensorEntity):
                     self._device_class = "None"
                     self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
 
+                self._state = data["v"]
             self.schedule_update_ha_state()
