@@ -18,6 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.ssl import get_default_context
@@ -55,6 +56,7 @@ from .const import (
     SUPPORTED_SUB_BINARY_SENSORS,
     SUPPORTED_SUB_SWITCH_TYPES,
     SUPPORTED_SWTICH_TYPES,
+    MANUFACTURER,
     UPDATE_LISTENER,
 )
 from .lifesmart_client import LifeSmartClient
@@ -119,6 +121,28 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     update_listener = config_entry.add_update_listener(_async_update_listener)
 
     devices = await lifesmart_client.get_all_device_async()
+
+    # ========== 新增设备注册逻辑 ==========
+    device_registry = dr.async_get(hass)
+    hubs = set()
+
+    # 收集所有中枢ID
+    for device in devices:
+        hub_id = device.get(HUB_ID_KEY)
+        if hub_id and hub_id not in hubs:
+            hubs.add(hub_id)
+
+    # 注册中枢设备
+    for hub_id in hubs:
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, hub_id)},
+            manufacturer=MANUFACTURER,
+            name=f"LifeSmart Hub ({hub_id[-6:]})",  # 显示后6位便于识别
+            model="LifeSmart Gateway",
+            sw_version="1.0.0",
+            configuration_url=config_entry.data.get(CONF_URL),
+        )
 
     hass.data[DOMAIN][config_entry.entry_id] = {
         "client": lifesmart_client,

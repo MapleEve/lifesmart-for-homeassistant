@@ -131,14 +131,14 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return the device info."""
+        # === 支持 Hub 的 Device info ===
         return DeviceInfo(
             identifiers={(DOMAIN, self.hub_id, self.device_id)},
             name=self.sensor_device_name,
             manufacturer=MANUFACTURER,
             model=self.device_type,
-            sw_version=self.raw_device_data["ver"],
-            via_device=(DOMAIN, self.hub_id),
+            sw_version=self.raw_device_data.get("ver", "unknown"),
+            via_device=(DOMAIN, self.hub_id) if self.hub_id else None,
         )
 
     @property

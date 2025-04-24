@@ -138,17 +138,14 @@ class LifeSmartSwitch(SwitchEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        sw_version = self.raw_device_data.get(
-            "ver", "unknown"
-        )  # 使用 get 方法提供默认版本号
+        # === 支持 Hub 的 Device info ===
         return DeviceInfo(
             identifiers={(DOMAIN, self.hub_id, self.device_id)},
             name=self.switch_name,
             manufacturer=MANUFACTURER,
             model=self.device_type,
-            sw_version=sw_version,
-            # via_device=(DOMAIN, self.hub_id),
+            sw_version=self.raw_device_data.get("ver", "unknown"),
+            via_device=(DOMAIN, self.hub_id) if self.hub_id else None,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -227,21 +224,6 @@ class LifeSmartSceneSwitch(LifeSmartDevice, SwitchEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._state
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.hub_id, self.device_id)
-            },
-            name=self.switch_name,
-            manufacturer=MANUFACTURER,
-            model=self.device_type,
-            # sw_version=self.light.swversion,
-            via_device=(DOMAIN, self.hub_id),
-        )
 
     async def async_added_to_hass(self):
         """Call when entity.py is added to hass."""
