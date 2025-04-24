@@ -89,10 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         UPDATE_LISTENER: update_listener,
     }
 
-    for platform in SUPPORTED_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, SUPPORTED_PLATFORMS
+    )
 
     async def send_keys(call):
         """Handle the service call."""
