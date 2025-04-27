@@ -17,11 +17,11 @@ from .const import (
     DEVICE_ID_KEY,
     DEVICE_TYPE_KEY,
     DEVICE_DATA_KEY,
+    DEVICE_NAME_KEY,
     HUB_ID_KEY,
     COVER_TYPES,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
-    DEVICE_NAME_KEY,
 )
 
 
@@ -69,7 +69,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
 
     def __init__(self, device, raw_device_data, idx, val, client):
         """Init LifeSmart cover device."""
-        super().__init__(device, raw_device_data, idx, val, client)
+        super().__init__(raw_device_data, client)
 
         device_name = raw_device_data[DEVICE_NAME_KEY]
         device_type = raw_device_data[DEVICE_TYPE_KEY]
@@ -121,8 +121,6 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
                 self._close_cmd = {"type": "0x81", "val": 1, "idx": "P2"}
                 self._stop_cmd = {"type": "0x81", "val": 1, "idx": "P3"}
 
-        self.async_schedule_update_ha_state(force_refresh=True)
-
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
@@ -133,14 +131,14 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return the device info."""
+        # === 支持 Hub 的 Device info ===
         return DeviceInfo(
             identifiers={(DOMAIN, self.hub_id, self.device_id)},
             name=self.sensor_device_name,
             manufacturer=MANUFACTURER,
             model=self.device_type,
-            sw_version=self.raw_device_data["ver"],
-            via_device=(DOMAIN, self.hub_id),
+            sw_version=self.raw_device_data.get("ver", "unknown"),
+            via_device=(DOMAIN, self.hub_id) if self.hub_id else None,
         )
 
     @property
@@ -220,6 +218,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        await super().async_added_to_hass()  # 添加父类调用
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -227,6 +226,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
                 self._update_state,
             )
         )
+        self.async_schedule_update_ha_state(force_refresh=True)  # 添加强制刷新
 
     async def _update_state(self, data) -> None:
         """Update cover state."""

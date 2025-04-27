@@ -3,9 +3,10 @@
 import asyncio
 import json
 import logging
+from importlib import reload
 
 import websockets
-from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH, CONN_CLASS_LOCAL_PUSH
+from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH
 from homeassistant.const import (
     CONF_URL,
     CONF_TYPE,
@@ -14,13 +15,15 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
     Platform,
 )
-from homeassistant.core import HomeAssistant, Event, ServiceCall
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.ssl import get_default_context
 
+from . import lifesmart_protocol
 from .const import (
     BINARY_SENSOR_TYPES,
     CLIMATE_TYPES,
@@ -53,11 +56,11 @@ from .const import (
     SUPPORTED_SUB_BINARY_SENSORS,
     SUPPORTED_SUB_SWITCH_TYPES,
     SUPPORTED_SWTICH_TYPES,
+    MANUFACTURER,
     UPDATE_LISTENER,
 )
 from .lifesmart_client import LifeSmartClient
-from importlib import reload
-from . import lifesmart_protocol
+
 # from .lifesmart_protocol import LifeSmartLocalClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,19 +94,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         port = config_entry.data.get(CONF_PORT)
         username = config_entry.data.get(CONF_USERNAME)
         password = config_entry.data.get(CONF_PASSWORD)
-        lifesmart_client = lifesmart_protocol.LifeSmartLocalClient(host, port, username, password, config_entry.entry_id)
+        lifesmart_client = lifesmart_protocol.LifeSmartLocalClient(
+            host, port, username, password, config_entry.entry_id
+        )
 
         config_entry.async_on_unload(
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, lifesmart_client.async_disconnect
             )
         )
+
         def callback(msg):
             if msg.get("msg"):
                 _LOGGER.debug("Received message: %s", msg)
                 asyncio.create_task(data_update_handler(hass, config_entry, msg))
             elif msg.get("reload"):
-                asyncio.create_task(hass.config_entries.async_reload(config_entry.entry_id))
+                asyncio.create_task(
+                    hass.config_entries.async_reload(config_entry.entry_id)
+                )
 
         hass.async_create_background_task(
             lifesmart_client.async_connect(callback), "lifesmart-connect"
@@ -113,6 +121,28 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     update_listener = config_entry.add_update_listener(_async_update_listener)
 
     devices = await lifesmart_client.get_all_device_async()
+
+    # ========== 新增设备注册逻辑 ==========
+    device_registry = dr.async_get(hass)
+    hubs = {device[HUB_ID_KEY] for device in devices if HUB_ID_KEY in device}
+
+    # 收集所有中枢ID
+    for device in devices:
+        hub_id = device.get(HUB_ID_KEY)
+        if hub_id and hub_id not in hubs:
+            hubs.add(hub_id)
+
+    # 注册中枢设备
+    for hub_id in hubs:
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, hub_id)},
+            manufacturer=MANUFACTURER,
+            name=f"LifeSmart Hub ({hub_id[-6:]})",  # 显示后6位便于识别
+            model="LifeSmart Gateway",
+            sw_version="1.0.0",
+            configuration_url=config_entry.data.get(CONF_URL),
+        )
 
     hass.data[DOMAIN][config_entry.entry_id] = {
         "client": lifesmart_client,
@@ -124,7 +154,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         UPDATE_LISTENER: update_listener,
     }
 
-    hass.async_create_task(hass.config_entries.async_forward_entry_setups(config_entry, SUPPORTED_PLATFORMS))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setups(
+            config_entry, SUPPORTED_PLATFORMS
+        )
+    )
 
     async def send_keys(call):
         """Handle the service call."""
@@ -206,8 +240,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, SUPPORTED_PLATFORMS
     )
-    if isinstance(hass.data[DOMAIN][entry.entry_id]['client'], lifesmart_protocol.LifeSmartLocalClient):
-        await hass.data[DOMAIN][entry.entry_id]['client'].async_disconnect(None)
+
+    # 停止WebSocket状态管理器
+    if state_manager := hass.data[DOMAIN].get(LIFESMART_STATE_MANAGER):
+        state_manager.stop()
+
+    if isinstance(
+        hass.data[DOMAIN][entry.entry_id]["client"],
+        lifesmart_protocol.LifeSmartLocalClient,
+    ):
+        await hass.data[DOMAIN][entry.entry_id]["client"].async_disconnect(None)
+
+    # 清理数据
+    if unload_ok and entry.entry_id in hass.data[DOMAIN]:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
     return unload_ok
 
 
@@ -394,8 +441,12 @@ class LifeSmartStatesManager:
         async with self._lock:
             if self._ws is None:
                 try:
+                    # 使用HA提供的SSL上下文
+                    ssl_context = get_default_context()
                     self._ws = await websockets.connect(
-                        self._ws_url, ping_interval=None
+                        self._ws_url,
+                        ping_interval=None,
+                        ssl=ssl_context,  # 添加SSL上下文参数
                     )
                     _LOGGER.debug("Lifesmart HACS: WebSocket connected")
 
