@@ -13,14 +13,13 @@ class LifeSmartClient:
 
     def __init__(
         self,
-        region,
         baseurl,
         appkey,
         apptoken,
         usertoken,
         userid,
     ) -> None:
-        self._region = region
+        self._baseurl = baseurl
         self._appkey = appkey
         self._apptoken = apptoken
         self._usertoken = usertoken
@@ -211,11 +210,9 @@ class LifeSmartClient:
         return response
 
     async def turn_on_light_swith_async(self, idx, agt, me):
-        """Turn on the light switch."""
         return await self.send_epset_async("0x81", 1, idx, agt, me)
 
     async def turn_off_light_swith_async(self, idx, agt, me):
-        """Turn off the light switch."""
         return await self.send_epset_async("0x80", 0, idx, agt, me)
 
     async def send_epset_async(self, type, val, idx, agt, me):
@@ -277,7 +274,7 @@ class LifeSmartClient:
         return response["message"]["data"]
 
     async def get_ir_remote_list_async(self, agt):
-        """Get all remote settings for specific device."""
+        """Get remote list for a specific station"""
         url = self.get_api_url() + "/irapi.GetRemoteList"
 
         tick = int(time.time())
@@ -301,7 +298,7 @@ class LifeSmartClient:
         return response["message"]
 
     async def get_ir_remote_async(self, agt, ai):
-        """Get a remote setting for specific device."""
+        """Get a remote setting for sepcific device."""
         url = self.get_api_url() + "/irapi.GetRemote"
 
         tick = int(time.time())
@@ -331,8 +328,8 @@ class LifeSmartClient:
         """Async method to make a POST api call"""
         async with aiohttp.ClientSession() as session:
             async with session.post(url, data=data, headers=headers) as response:
-                response.raise_for_status()  # 自动抛出HTTP错误
-                return await response.text()
+                response_text = await response.text()
+                return response_text
 
     def get_signature(self, data):
         """Generate signature required by LifeSmart API"""
@@ -340,17 +337,11 @@ class LifeSmartClient:
 
     def get_api_url(self):
         """Generate api URL"""
-        if self._region == "":
-            return "https://api.ilifesmart.com/app"
-        else:
-            return "https://api." + self._region + ".ilifesmart.com/app"
+        return "https://" + self._baseurl + "/app"
 
     def get_wss_url(self):
         """Generate websocket (wss) URL"""
-        if self._region == "":
-            return "wss://api.ilifesmart.com:8443/wsapp/"
-        else:
-            return "wss://api." + self._region + ".ilifesmart.com:8443/wsapp/"
+        return "wss://" + self._baseurl + ":8443/wsapp/"
 
     def generate_system_request_body(self, tick, data):
         """Generate system node in request body which contain credential and signature"""
@@ -395,3 +386,6 @@ class LifeSmartClient:
         }
         send_data = json.dumps(send_values)
         return send_data
+
+
+1
