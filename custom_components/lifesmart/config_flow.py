@@ -14,7 +14,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
+from homeassistant.util import aiohttp
 
 from . import lifesmart_protocol, LifeSmartClient
 from .const import (
@@ -52,27 +54,37 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass, data):
     """Validate the user input allows us to connect."""
 
-    app_key = data[CONF_LIFESMART_APPKEY]
-    app_token = data[CONF_LIFESMART_APPTOKEN]
-    user_token = data[CONF_LIFESMART_USERTOKEN]
-    user_id = data[CONF_LIFESMART_USERID]
-    baseurl = data[CONF_URL]
-    # exclude_devices = data[CONF_EXCLUDE_ITEMS]
-    # exclude_hubs = data[CONF_EXCLUDE_AGTS]
-    # ai_include_hubs = data[CONF_AI_INCLUDE_AGTS]
-    # ai_include_items = data[CONF_AI_INCLUDE_ITEMS]
+    try:
+        lifesmart_client = LifeSmartClient(
+            data[CONF_URL],
+            data[CONF_LIFESMART_APPKEY],
+            data[CONF_LIFESMART_APPTOKEN],
+            data[CONF_LIFESMART_USERTOKEN],
+            data[CONF_LIFESMART_USERID],
+        )
 
-    lifesmart_client = LifeSmartClient(
-        baseurl,
-        app_key,
-        app_token,
-        user_token,
-        user_id,
-    )
+        devices = await lifesmart_client.get_all_device_async()
 
-    devices = await lifesmart_client.get_all_device_async()
+        # 添加设备列表验证
+        if not isinstance(devices, list):
+            raise ValueError(f"Invalid API return: {type(devices)}")
+        if len(devices) == 0:
+            _LOGGER.warning("No devices found")
 
-    return {"title": f"User Id {user_id}", "unique_id": app_key}
+        return {
+            "title": f"User Id {data[CONF_LIFESMART_USERID]}",
+            "unique_id": data[CONF_LIFESMART_APPKEY],
+        }
+
+    except aiohttp.ClientError as e:
+        _LOGGER.error("Network error: %s", str(e))
+        raise ConfigEntryAuthFailed("Cannot connect to the server")
+    except ValueError as e:
+        _LOGGER.error("API Value validate error: %s", str(e))
+        raise ConfigEntryNotReady("Invalid API return")
+    except Exception as e:
+        _LOGGER.error("Unknown error: %s", str(e), exc_info=True)
+        raise ConfigEntryNotReady("Unknown error") from e
 
 
 async def validate_local_input(
@@ -144,13 +156,15 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             data = await validate_local_input(self.hass, user_input)
-        except (asyncio.TimeoutError, ConnectionRefusedError):
+        except (asyncio.TimeoutError, ConnectionRefusedError) as e:
             errors["base"] = "cannot_connect"
-        except asyncio.InvalidStateError:
+            _LOGGER.error("Local Connection error: %s", str(e))
+        except asyncio.InvalidStateError as e:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
+            _LOGGER.error("Local Auth error: %s", str(e))
+        except Exception as e:
             errors["base"] = "unknown"
+            _LOGGER.error("Local Unexpected exception: %s", str(e), exc_info=True)
         else:
             user_input[CONF_TYPE] = config_entries.CONN_CLASS_LOCAL_PUSH
             return self.async_create_entry(title=data[CONF_HOST], data=user_input)
@@ -165,8 +179,15 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 validated = await validate_input(self.hass, user_input)
-            except:
-                _LOGGER.warning("Input validation error")
+            except ConfigEntryAuthFailed as e:
+                errors["base"] = "invalid_auth"
+                _LOGGER.error("Cloud Auth error: %s", str(e))
+            except (asyncio.TimeoutError, ConnectionRefusedError) as e:
+                errors["base"] = "cannot_connect"
+                _LOGGER.error("Cloud Connection error: %s", str(e))
+            except Exception as e:
+                errors["base"] = "unknown"
+                _LOGGER.error("Cloud Unexpected exception: %s", str(e), exc_info=True)
 
             if "base" not in errors:
                 await self.async_set_unique_id(validated["unique_id"])
@@ -192,6 +213,7 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_URL): str,
                     vol.Optional(CONF_EXCLUDE_ITEMS): str,
                     vol.Optional(CONF_EXCLUDE_AGTS): str,
+                    vol.Optional(CONF_AI_INCLUDE_AGTS): str,
                     vol.Optional(CONF_AI_INCLUDE_AGTS): str,
                     vol.Optional(CONF_AI_INCLUDE_ITEMS): str,
                 }

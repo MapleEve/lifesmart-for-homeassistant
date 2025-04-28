@@ -15,12 +15,12 @@
       },
       "local": {
         "title": "LifeSmart 设备集成配置",
-        "description": "请输入您的 LifeSmart Hub本地登陆信息。",
+        "description": "请输入您的 LifeSmart Hub 本地控制登录信息。",
         "data": {
           "host": "IP",
-          "port": "Port (Default 8888)",
-          "username": "本地账号",
-          "password": "本地密码"
+          "port": "端口 (默认是 8888)",
+          "username": "本地控制账号",
+          "password": "本地控制密码"
         }
       },
       "cloud": {
