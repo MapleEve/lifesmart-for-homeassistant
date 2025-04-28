@@ -244,6 +244,7 @@ class LifeSmartClient:
         header = self.generate_header()
         send_data = json.dumps(send_values)
 
+        _LOGGER.debug("epset_req: %s", str(send_data))
         response = json.loads(await self.post_async(url, send_data, header))
         _LOGGER.debug("epset_res: %s", str(response))
         return response["code"]
