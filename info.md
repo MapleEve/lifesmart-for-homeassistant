@@ -15,7 +15,7 @@
    LifeSmart region for your country America, Europe, Asia Pacific, China.
 
 2. 在 LifeSmart 开放平台上创建一个新应用，以便获取应用密钥（`App Key`
-   ）和应用令牌（`App Token`）。[访问申请页面](http://www.ilifesmart.com/open/login)（注意：该链接不是 HTTS 连接，请检查浏览器地址栏是否使用
+   ）和应用令牌（`App Token`）。[访问申请页面](http://www.ilifesmart.com/open/login)（注意：该链接不是 SSL 连接，请检查浏览器地址栏是否使用
    HTTP 访问）。
    New Application from LifeSmart Open Platform to obtain `App Key` and `App Token`
 
