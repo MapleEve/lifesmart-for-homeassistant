@@ -173,7 +173,7 @@ class LifeSmartSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         if (
-            await self._client.turn_on_light_swith_async(
+            await self._client.turn_on_light_switch_async(
                 self.sub_device_key, self.hub_id, self.device_id
             )
             == 0
@@ -186,7 +186,7 @@ class LifeSmartSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if (
-            await self._client.turn_off_light_swith_async(
+            await self._client.turn_off_light_switch_async(
                 self.sub_device_key, self.hub_id, self.device_id
             )
             == 0
