@@ -234,6 +234,12 @@ class LifeSmartSensor(SensorEntity):
         )
 
     async def _update_value(self, data) -> None:
+        _LOGGER.debug(
+            "%s value update：%s",
+            self.entity_id,
+            str(data)[:300],  # 截取前300字符避免日志过长
+        )
+
         if data is not None:
             if self.device_type in GAS_SENSOR_TYPES:
                 self._state = data["val"]
@@ -243,6 +249,11 @@ class LifeSmartSensor(SensorEntity):
                 self._state = data["v"]
             elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P4":
                 self._state = data["val"]
+            elif self.device_type in LOCK_TYPES and self.sub_device_key == "BAT":
+                self._state = data.get(self._value_key, self._state)
+                self._state = min(max(int(self._state), 0), 100)  # 确保在0-100范围内
+                self._device_class = SensorDeviceClass.BATTERY
+                self._unit = PERCENTAGE
             else:
                 if self.sub_device_key in ["T", "P1"]:
                     self._device_class = SensorDeviceClass.TEMPERATURE
@@ -269,3 +280,4 @@ class LifeSmartSensor(SensorEntity):
 
                 self._state = data["v"]
             self.schedule_update_ha_state()
+            _LOGGER.debug("%s value updated to：%s", self.entity_id, self._state)
