@@ -141,7 +141,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             name=f"LifeSmart Hub ({hub_id[-6:]})",  # 显示后6位便于识别
             model="LifeSmart Gateway",
             sw_version="1.0.0",
-            configuration_url=config_entry.data.get(CONF_URL),
         )
 
     hass.data[DOMAIN][config_entry.entry_id] = {
