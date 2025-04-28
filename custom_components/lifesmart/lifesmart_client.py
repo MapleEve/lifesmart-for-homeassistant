@@ -209,14 +209,14 @@ class LifeSmartClient:
         _LOGGER.debug("sendackey_res: %s", str(response))
         return response
 
-    async def turn_on_light_swith_async(self, idx, agt, me):
+    async def turn_on_light_switch_async(self, idx, agt, me):
         return await self.send_epset_async("0x81", 1, idx, agt, me)
 
-    async def turn_off_light_swith_async(self, idx, agt, me):
+    async def turn_off_light_switch_async(self, idx, agt, me):
         return await self.send_epset_async("0x80", 0, idx, agt, me)
 
     async def send_epset_async(self, type, val, idx, agt, me):
-        """Send a command to sepcific device."""
+        """Send a command to specific device."""
         url = self.get_api_url() + "/api.EpSet"
         tick = int(time.time())
         sdata = (
@@ -298,7 +298,7 @@ class LifeSmartClient:
         return response["message"]
 
     async def get_ir_remote_async(self, agt, ai):
-        """Get a remote setting for sepcific device."""
+        """Get a remote setting for specific device."""
         url = self.get_api_url() + "/irapi.GetRemote"
 
         tick = int(time.time())
