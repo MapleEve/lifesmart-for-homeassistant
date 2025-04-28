@@ -4,7 +4,6 @@ from homeassistant.const import Platform
 CONF_LIFESMART_APPKEY = "appkey"
 CONF_LIFESMART_APPTOKEN = "apptoken"
 CONF_LIFESMART_USERTOKEN = "usertoken"
-CONF_LIFESMART_USERTOKEN = "usertoken"
 CONF_LIFESMART_USERID = "userid"
 CONF_EXCLUDE_ITEMS = "exclude"
 CONF_EXCLUDE_AGTS = "exclude_agt"
