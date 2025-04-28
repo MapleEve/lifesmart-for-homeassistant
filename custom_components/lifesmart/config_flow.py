@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(
-            CONF_TYPE, default=config_entries.CONN_CLASS_LOCAL_PUSH
+            CONF_TYPE, default=config_entries.CONN_CLASS_CLOUD_PUSH
         ): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[

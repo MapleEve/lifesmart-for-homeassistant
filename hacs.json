@@ -1,5 +1,5 @@
 {
   "name": "LifeSmart IoT HACS",
   "render_readme": true,
-  "homeassistant": "2024.4.2"
+  "homeassistant": "2025.4.4"
 }
