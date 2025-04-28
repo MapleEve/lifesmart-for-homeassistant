@@ -1,19 +1,17 @@
-import struct
-import json
-from collections import OrderedDict
-from io import BytesIO
-import logging
+import asyncio
 import gzip
+import json
+import logging
+import struct
+from collections import OrderedDict
 from dataclasses import dataclass
+from io import BytesIO
 from typing import Callable
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
-import asyncio
-from pprint import pprint
+from homeassistant.core import Event, ServiceCall
 
 _LOGGER = logging.getLogger(__name__)
+
 
 @dataclass
 class LSTimestamp:
@@ -29,10 +27,10 @@ class LSTimestamp:
     def as_dict(self) -> dict:
         """转换为字典格式（兼容旧代码）"""
         return {
-            'type': 'timestamp',
-            'index': self.index,
-            'value': self.value,
-            'raw': self.raw_data
+            "type": "timestamp",
+            "index": self.index,
+            "value": self.value,
+            "raw": self.raw_data,
         }
 
     def __str__(self) -> str:
@@ -41,14 +39,17 @@ class LSTimestamp:
     def __repr__(self) -> str:
         return self.__str__()
 
+
 class LSEncoder(json.JSONEncoder):
     """自定义JSON编码器"""
+
     def default(self, obj):
         if isinstance(obj, LSTimestamp):
             return str(obj)
         if isinstance(obj, bytes):
             return list(obj)
         return super().default(obj)
+
 
 class LifeSmartProtocol:
     KEY_MAPPING = {
@@ -119,14 +120,14 @@ class LifeSmartProtocol:
         return value
 
     def _string_to_bin(self, value):
-        data = b'\x11'
+        data = b"\x11"
         data += self._encode_varint(len(value))
-        data += value.encode('utf-8')
+        data += value.encode("utf-8")
         return data
 
     def _pack_value(self, value, isKey=False):
         if isinstance(value, bool):
-            return b'\x02' if value else b'\x03'
+            return b"\x02" if value else b"\x03"
 
         elif isinstance(value, int):
             if value >= 0x7FFFFFFF:
@@ -139,52 +140,52 @@ class LifeSmartProtocol:
                 value <<= 1
                 if sign == -1:
                     value = (value - 2) | 1
-            return b'\x04' + self._encode_varint(value)
+            return b"\x04" + self._encode_varint(value)
 
         elif isinstance(value, str):
             if value == "::NULL::":
-                return b'\x00'
+                return b"\x00"
             elif value.startswith("enum:"):
                 key = value[5:]
                 enum_id = int(self.REVERSE_KEY_MAPPING.get(key, key))
-                return struct.pack('BB', 0x13, enum_id)
+                return struct.pack("BB", 0x13, enum_id)
             elif isKey and self.REVERSE_KEY_MAPPING.get(value, None) is not None:
                 enum_id = self.REVERSE_KEY_MAPPING.get(value, None)
-                return struct.pack('BB', 0x13, enum_id)
+                return struct.pack("BB", 0x13, enum_id)
             else:
                 return self._string_to_bin(value)
 
         elif isinstance(value, list):
-            data = struct.pack('B', len(value))
+            data = struct.pack("B", len(value))
             for idx, item in enumerate(value):
                 data += self._pack_value(idx)
                 data += self._pack_value(item)
             return data
 
         elif isinstance(value, dict):
-            data = struct.pack('BB', 0x12, len(value))
+            data = struct.pack("BB", 0x12, len(value))
             for k, v in value.items():
                 data += self._pack_value(k, True)
                 data += self._pack_value(v)
             return data
 
         elif value is None:
-            return b'\x00'
+            return b"\x00"
 
         else:
             _LOGGER.warning("Unsupported type: %s", type(value))
-            return b''
+            return b""
 
     def encode(self, parts):
-        header = b'GL00\x00\x00'
+        header = b"GL00\x00\x00"
         data = b""
         for part in parts:
             data += self._pack_value(part)[1:]
-        pkt = header + struct.pack('>I', len(data)) + data
+        pkt = header + struct.pack(">I", len(data)) + data
 
         if len(pkt) >= 1000:
             compressed = gzip.compress(pkt)
-            return b'ZZ00\x00\x00' + struct.pack('>I', len(pkt)) + compressed
+            return b"ZZ00\x00\x00" + struct.pack(">I", len(pkt)) + compressed
 
         return pkt
 
@@ -220,7 +221,9 @@ class LifeSmartProtocol:
                 # 读取HEX数据
                 hex_data = stream.read(8)
                 if len(hex_data) < 8:
-                    raise EOFError(f"HEX data incomplete, need 8 bytes got {len(hex_data)}")
+                    raise EOFError(
+                        f"HEX data incomplete, need 8 bytes got {len(hex_data)}"
+                    )
 
                 # 调试输出
                 if self.debug:
@@ -230,18 +233,18 @@ class LifeSmartProtocol:
                     self._dump_decode_value(debug_data)
                     print(f"\033[31mpack index: 0x{index:02x}\033[0m hex (len: 8)")
                     if self.debug_level > 1:
-                        print(f"0x{start_pos+5:08x}: ", end='')
+                        print(f"0x{start_pos+5:08x}: ", end="")
                         self._dump_decode_value(hex_data[:4])
 
                 # 处理长度判断
                 return {
-                    'type': 'HEX',
-                    'index': index,
-                    'value': hex_data.hex(),
-                    'raw': hex_data
+                    "type": "HEX",
+                    "index": index,
+                    "value": hex_data.hex(),
+                    "raw": hex_data,
                 }
 
-            elif data_type == 0x06: # 时间戳类型处理
+            elif data_type == 0x06:  # 时间戳类型处理
                 start_pos = stream.tell()
 
                 # 读取索引字节
@@ -274,16 +277,24 @@ class LifeSmartProtocol:
                     debug_data = stream.read(7)
                     stream.seek(start_pos)
                     self._dump_decode_value(debug_data)
-                    print(f"\033[32mpack index: 0x{index:02x}\033[0m time value: {final_value} intlen = {intlen}")
+                    print(
+                        f"\033[32mpack index: 0x{index:02x}\033[0m time value: {final_value} intlen = {intlen}"
+                    )
 
-                return LSTimestamp(index = index, value=final_value, raw_data=int_value.to_bytes((int_value.bit_length() + 7) // 8, 'big'))
+                return LSTimestamp(
+                    index=index,
+                    value=final_value,
+                    raw_data=int_value.to_bytes(
+                        (int_value.bit_length() + 7) // 8, "big"
+                    ),
+                )
 
             elif data_type == 0x11:  # String
                 length = self._decode_varint(stream)
                 # 检查字符串长度有效性
                 if length < 0 or stream.tell() + length > len(stream.getvalue()):
                     raise ValueError("Invalid string length")
-                return stream.read(length).decode('utf-8', errors='replace')
+                return stream.read(length).decode("utf-8", errors="replace")
 
             elif data_type == 0x12:  # Array/Dict
                 if stream.tell() + 1 > len(stream.getvalue()):
@@ -298,13 +309,15 @@ class LifeSmartProtocol:
                     if stream.tell() + 1 > len(stream.getvalue()):
                         break
                     key_type = ord(stream.read(1))
-                    key = self._parse_value(stream, key_type, call_stack+".")
+                    key = self._parse_value(stream, key_type, call_stack + ".")
 
                     # 解析值
                     if stream.tell() + 1 > len(stream.getvalue()):
                         break
                     value_type = ord(stream.read(1))
-                    value = self._parse_value(stream, value_type, call_stack+".%s" % key)
+                    value = self._parse_value(
+                        stream, value_type, call_stack + ".%s" % key
+                    )
 
                     # 检查键是否为可哈希类型
                     if not isinstance(key, (str, int, float, bool)):
@@ -326,22 +339,30 @@ class LifeSmartProtocol:
                     raise EOFError("Unexpected end of data")
 
                 enum_id = ord(stream.read(1))
-                return "enum:"+self.KEY_MAPPING.get(enum_id, f"{enum_id}")
+                return "enum:" + self.KEY_MAPPING.get(enum_id, f"{enum_id}")
 
             else:
                 _LOGGER.warning("Unknown data type: 0x%02x", data_type)
                 return None
 
         except Exception as e:
-            _LOGGER.error("Parsing error at position %d: %s, Type[0x%x] %s", stream.tell(), str(e), data_type, call_stack)
+            _LOGGER.error(
+                "Parsing error at position %d: %s, Type[0x%x] %s",
+                stream.tell(),
+                str(e),
+                data_type,
+                call_stack,
+            )
             raise
 
     def _normalize_structure(self, data):
         """递归规范化数据结构"""
         if isinstance(data, dict):
             # 转换所有子元素
-            return {self._normalize_key(k): self._normalize_structure(v)
-                    for k, v in data.items()}
+            return {
+                self._normalize_key(k): self._normalize_structure(v)
+                for k, v in data.items()
+            }
         elif isinstance(data, list):
             return [self._normalize_structure(item) for item in data]
         return data
@@ -367,11 +388,11 @@ class LifeSmartProtocol:
             header = data[:4]
             remaining = data[4:]
 
-            if header == b'ZZ00':  # 压缩包处理
+            if header == b"ZZ00":  # 压缩包处理
                 if len(remaining) < 4:
                     raise EOFError("Compressed packet incomplete (need orig_len)")
 
-                orig_len = struct.unpack('>I', remaining[:4])[0]
+                orig_len = struct.unpack(">I", remaining[:4])[0]
                 compressed_data = remaining[4:]
 
                 try:
@@ -380,26 +401,35 @@ class LifeSmartProtocol:
                     raise ValueError(f"Decompression failed: {str(e)}") from e
 
                 if len(decompressed) != orig_len:
-                    raise ValueError(f"Decompressed size mismatch ({len(decompressed)} vs {orig_len})")
+                    raise ValueError(
+                        f"Decompressed size mismatch ({len(decompressed)} vs {orig_len})"
+                    )
 
                 # 递归解码解压后的数据
-                consumed_bytes = 4 + 4 + len(compressed_data)  # header + orig_len + compressed_data
+                consumed_bytes = (
+                    4 + 4 + len(compressed_data)
+                )  # header + orig_len + compressed_data
                 remaining_compressed, structure = self.decode(decompressed)
 
                 if remaining_compressed:
-                    _LOGGER.warning("Unprocessed data after decompression: %d bytes", len(remaining_compressed))
+                    _LOGGER.warning(
+                        "Unprocessed data after decompression: %d bytes",
+                        len(remaining_compressed),
+                    )
 
                 return original_data[consumed_bytes:], structure
 
-            elif header == b'GL00':  # 标准包处理
+            elif header == b"GL00":  # 标准包处理
                 if len(original_data) < 10:
                     raise EOFError("Packet incomplete (need at least 10 bytes)")
 
-                pkt_len = struct.unpack('>I', original_data[6:10])[0]
+                pkt_len = struct.unpack(">I", original_data[6:10])[0]
                 total_length = 10 + pkt_len
 
                 if len(original_data) < total_length:
-                    raise EOFError(f"Packet length mismatch (need {total_length} bytes)")
+                    raise EOFError(
+                        f"Packet length mismatch (need {total_length} bytes)"
+                    )
 
                 packet_data = original_data[10:total_length]
                 remaining_data = original_data[total_length:]
@@ -458,6 +488,7 @@ class LifeSmartProtocol:
                     current.append(op)
         return current
 
+
 class LifeSmart:
     _proto = None
     node = ""
@@ -476,7 +507,7 @@ class LifeSmart:
         "G": "gate",
         "OP": "OP",
         "ST": "ST",
-        "CL": "CL"
+        "CL": "CL",
     }
 
     def __init__(self):
@@ -484,301 +515,303 @@ class LifeSmart:
 
     def login(self, uid="admin", pwd="admin"):
         login_data = [
-            {'_sel': 1, 'sn': 1, 'req': False},
+            {"_sel": 1, "sn": 1, "req": False},
             {
-                'args': {
-                    'cid': '6D56899B-82DA-403D-8291-50B57EE05DBA',
-                    'cver': '1.0.48p1',
-                    'uid': uid,
-                    'nick': 'admin',
-                    'cname': "LifeSmart",
-                    'pwd': pwd
+                "args": {
+                    "cid": "6D56899B-82DA-403D-8291-50B57EE05DBA",
+                    "cver": "1.0.48p1",
+                    "uid": uid,
+                    "nick": "admin",
+                    "cname": "LifeSmart",
+                    "pwd": pwd,
                 },
-                'node': 'A3MAAABaAEkBRzQ0Mzc0OA/ac',
-                'act': 'Login'
-            }
+                "node": "A3MAAABaAEkBRzQ0Mzc0OA/ac",
+                "act": "Login",
+            },
         ]
         return self._proto.encode(login_data)
 
     def loginAsCamera(self, uid="admin", pwd="admin"):
         login_data = [
-            {'_sel': 1, 'sn': 1, 'req': False},
+            {"_sel": 1, "sn": 1, "req": False},
             {
-                'args': {
-                    'cid': 'A90306F9-BA3B-488A-952E-2FFF792D8553',
-                    'uid': uid,
-                    'pwd': pwd,
-                    'vchn': 2,
-                    'lsi_auth': {
-                        'lsid': 'apptable: 0x0113e95080',
-                        'lsid_t': 'A9IAAEJDMzQwMDJGMzIyQg',
-                        'tk': 'a582cd0b2ea1df5ad8e1767421d115b3',
-                        'aid': 10001,
-                        'ts': 16318742
+                "args": {
+                    "cid": "A90306F9-BA3B-488A-952E-2FFF792D8553",
+                    "uid": uid,
+                    "pwd": pwd,
+                    "vchn": 2,
+                    "lsi_auth": {
+                        "lsid": "apptable: 0x0113e95080",
+                        "lsid_t": "A9IAAEJDMzQwMDJGMzIyQg",
+                        "tk": "a582cd0b2ea1df5ad8e1767421d115b3",
+                        "aid": 10001,
+                        "ts": 16318742,
                     },
-                    'camera': 'A9IAAEJDMzQwMDJGMzIyQg:0001'
+                    "camera": "A9IAAEJDMzQwMDJGMzIyQg:0001",
                 },
-                'node': 'msv/ac',
-                'act': 'Login'
-            }
+                "node": "msv/ac",
+                "act": "Login",
+            },
         ]
         return self._proto.encode(login_data)
 
     def loginByToken(self, token):
         login_data = [
-            {'_sel': 1, 'sn': 1, 'req': False},
+            {"_sel": 1, "sn": 1, "req": False},
             {
-                'args': {
-                    'cver': '1.0.28p4',
-                    'uid': 'test',
+                "args": {
+                    "cver": "1.0.28p4",
+                    "uid": "test",
                     "uuid": "A3MAAABaAEkBRzQ0Mzc0OA",
-                    'pwd': 'test',
-                    'token': token,
+                    "pwd": "test",
+                    "token": token,
                 },
-                'node': 'msv/st',
-                'act': 'LoginA'
-            }
+                "node": "msv/st",
+                "act": "LoginA",
+            },
         ]
         return self._proto.encode(login_data)
 
     def switchControl(self, devid, state):
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'val': 1 if state else 0,
-                    'valtag': 'm',
-                    'enum:53': 'devid',
-                    'devid': devid,
-                    'key': 'O',
-                    'type': 128
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "val": 1 if state else 0,
+                        "valtag": "m",
+                        "enum:53": "devid",
+                        "devid": devid,
+                        "key": "O",
+                        "type": 128,
+                    },
+                    "node": f"{self.node_agt}/ep",
+                    "act": "rfSetA",
                 },
-                'node': f'{self.node_agt}/ep',
-                'act': "rfSetA",
-            }
-        ])
+            ]
+        )
 
     def lightControl(self, devid, button, state):
-        return self._proto.encode([
-            {'_sel': self._sel, 'timestamp': 10, 'req': False},
-            {
-                'args': {
-                    'valtag': 'm',
-                    'val': 1 if state else 0,
-                    'enum:53': 'enum:devid',
-                    'devid': devid,
-                    'key': button,
-                    'type': 128
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "timestamp": 10, "req": False},
+                {
+                    "args": {
+                        "valtag": "m",
+                        "val": 1 if state else 0,
+                        "enum:53": "enum:devid",
+                        "devid": devid,
+                        "key": button,
+                        "type": 128,
+                    },
+                    "node": f"{self.node_agt}/ep",
+                    "act": "rfSetA",
                 },
-                'node': f'{self.node_agt}/ep',
-                'act': "rfSetA",
-            }
-        ])
+            ]
+        )
 
     def curtainControl(self, devid, state, operate=True):
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'val': 1 if operate else 0,
-                    'valtag': 'm',
-                    'enum:53': 'devid',
-                    'devid': devid,
-                    'key': "OP" if state else "CL",
-                    'type': 128
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "val": 1 if operate else 0,
+                        "valtag": "m",
+                        "enum:53": "devid",
+                        "devid": devid,
+                        "key": "OP" if state else "CL",
+                        "type": 128,
+                    },
+                    "node": f"{self.node_agt}/ep",
+                    "act": "rfSetA",
                 },
-                'node': f'{self.node_agt}/ep',
-                'act': "rfSetA",
-            }
-        ])
+            ]
+        )
 
     def RGBWControl(self, devid, state):
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'val': 1 if state else 0,
-                    'valtag': 'm',
-                    'enum:53': 'devid',
-                    'devid': devid,
-                    'key': 'RGBW',
-                    'type': 128
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "val": 1 if state else 0,
+                        "valtag": "m",
+                        "enum:53": "devid",
+                        "devid": devid,
+                        "key": "RGBW",
+                        "type": 128,
+                    },
+                    "node": f"{self.node_agt}/ep",
+                    "act": "rfSetA",
                 },
-                'node': f'{self.node_agt}/ep',
-                'act': "rfSetA",
-            }
-        ])
+            ]
+        )
 
     def setRGBW(self, devid, r, g, b, white):
         rgbwVal = (white << 24) | (r << 16) | (g << 8) | b
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'devid': devid,
-                    'key': {
-                        1: {
-                            'type': 255,
-                            'key': 'RGBW',
-                            'val': rgbwVal
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "devid": devid,
+                        "key": {
+                            1: {"type": 255, "key": "RGBW", "val": rgbwVal},
+                            2: {"type": 128, "key": "DYN"},
                         },
-                        2: {
-                            'type': 128,
-                            'key': 'DYN'
-                        }
-                    }
+                    },
+                    "node": f"{self.node_agt}/ep",
+                    "act": "rfSetA",
                 },
-                'node': f'{self.node_agt}/ep',
-                'act': "rfSetA",
-            }
-        ])
+            ]
+        )
 
     def IRControl(self, devid, opt):
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'opt': opt,
-                    'cron_name': f'AI_IR_{devid}'
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {"opt": opt, "cron_name": f"AI_IR_{devid}"},
+                    "node": f"{self.node_agt}/ai",
+                    "act": "RunA",
                 },
-                'node': f'{self.node_agt}/ai',
-                'act': "RunA",
-            }
-        ])
+            ]
+        )
 
     def sendcode(self, devid, data):
         if isinstance(data, list):
             data.insert(0, "C*")
             data = bytes(data)
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'enum:args': {
-                    'ctrlcmd': 'sendcode',
-                    'enum:valtag': 'm',
-                    'cmd': 'ctrl',
-                    'enum:devid': devid,
-                    'param': {
-                        'enum:type': 1,
-                        'data': data
-                    }
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "enum:args": {
+                        "ctrlcmd": "sendcode",
+                        "enum:valtag": "m",
+                        "cmd": "ctrl",
+                        "enum:devid": devid,
+                        "param": {"enum:type": 1, "data": data},
+                    },
+                    "enum:node": f"{self.node_agt}/ep",
+                    "enum:act": "epCmdA",
                 },
-                'enum:node': f'{self.node_agt}/ep',
-                'enum:act': "epCmdA",
-            }
-        ])
+            ]
+        )
 
     def IRRAWControl(self, devid, datas):
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'data': json.loads(datas),
-                    'devid': devid,
-                    'key': '193',
-                    'cmd': 0
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "data": json.loads(datas),
+                        "devid": devid,
+                        "key": "193",
+                        "cmd": 0,
+                    },
+                    "node": f"{self.node_agt}/ep",
+                    "act": "rfSetVarA",
                 },
-                'node': f'{self.node_agt}/ep',
-                'act': "rfSetVarA",
-            }
-        ])
+            ]
+        )
 
     def setEEPRom(self, devid, key, val):
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'type': 255,
-                    'valtag': 'm',
-                    'devid': devid,
-                    'key': key,
-                    'val': val
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "type": 255,
+                        "valtag": "m",
+                        "devid": devid,
+                        "key": key,
+                        "val": val,
+                    },
+                    "node": f"{self.node_agt}/ep",
+                    "act": "rfSetEEPromA",
                 },
-                'node': f'{self.node_agt}/ep',
-                'act': "rfSetEEPromA",
-            }
-        ])
+            ]
+        )
 
     def addTimer(self, devid, croninfo, key):
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'cmdlist': f'SCHDEF({{pause=false;}},\'0 {croninfo} *\',SET,io,\'/ep/{devid}\',{{{key}}});',
-                    'enum:13': f'sys_sch_{devid}_CL',
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "cmdlist": f"SCHDEF({{pause=false;}},'0 {croninfo} *',SET,io,'/ep/{devid}',{{{key}}});",
+                        "enum:13": f"sys_sch_{devid}_CL",
+                    },
+                    "node": f"{self.node}/me/ai",
+                    "act": "SetA",
                 },
-                'node': f'{self.node}/me/ai',
-                'act': "SetA",
-            }
-        ])
+            ]
+        )
 
     def getver(self):
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'icon': False,
-                    'cls': False,
-                    'rfic': False,
-                    'enum:90': False,
-                    '_chd': 1,
-                    'enum:14': {
-                        's': False,
-                        'enum:106': 1
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "icon": False,
+                        "cls": False,
+                        "rfic": False,
+                        "enum:90": False,
+                        "_chd": 1,
+                        "enum:14": {"s": False, "enum:106": 1},
+                        "cgy": False,
+                        "tmzone": False,
+                        "nid": False,
+                        "enum:108": False,
+                        "agt_ver": False,
+                        "name": False,
+                        "enum:113": False,
                     },
-                    'cgy': False,
-                    'tmzone': False,
-                    'nid': False,
-                    'enum:108': False,
-                    'agt_ver': False,
-                    'name': False,
-                    'enum:113': False
+                    "node": f"{self.node}/me",
+                    "act": "enum:91",
                 },
-                'node': f'{self.node}/me',
-                'act': "enum:91",
-            }
-        ])
+            ]
+        )
 
     def getconfig(self):
-        return self._proto.encode([
-            {'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'enum:14': {
-                        "enum:98": {
-                            "uuid": False,
-                            "enum:114": False,
-                            "ver": False,
-                            "enum:14": {
-                                "m": 1,
-                                "s": False,
-                                "_chd": 1
-                            },
-                            "icon": False,
-                            "cls": False,
-                            "enum:56": False,
-                            "_": "eps",
-                            "P_Flip": False,
-                            "ptzmr": False,
-                            "enum:83": False,
-                            "nid": False,
-                            "devType": False,
-                            "cgy": False,
-                            "enum:108": False,
-                            "rfic": False,
-                            "name": False,
-                            "agtid": False,
-                        }
+        return self._proto.encode(
+            [
+                {"req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "enum:14": {
+                            "enum:98": {
+                                "uuid": False,
+                                "enum:114": False,
+                                "ver": False,
+                                "enum:14": {"m": 1, "s": False, "_chd": 1},
+                                "icon": False,
+                                "cls": False,
+                                "enum:56": False,
+                                "_": "eps",
+                                "P_Flip": False,
+                                "ptzmr": False,
+                                "enum:83": False,
+                                "nid": False,
+                                "devType": False,
+                                "cgy": False,
+                                "enum:108": False,
+                                "rfic": False,
+                                "name": False,
+                                "agtid": False,
+                            }
+                        },
+                        "enum:12": {"enum:13": False},
+                        "_chd": 1,
                     },
-                    'enum:12': {
-                        'enum:13': False
-                    },
-                    '_chd': 1
+                    "node": f"{self.node}/me/ep",
+                    "act": "enum:91",
                 },
-                'node': f'{self.node}/me/ep',
-                'act': "enum:91",
-            }
-        ])
+            ]
+        )
 
     def getAttrName(self, field):
         return self.attr_mapping.get(field, field)
@@ -788,54 +821,61 @@ class LifeSmart:
         for field, value in item.items():
             if field == "RGBW":
                 rc_key = f"{self.attr_mapping.get(field, field)}:TYPE"
-                rc[rc_key] = value['type']
+                rc[rc_key] = value["type"]
             rc_key = self.attr_mapping.get(field, field)
-            rc[rc_key] = value['val']
+            rc[rc_key] = value["val"]
         return rc
 
     def changeIcon(self, devid, icon):
-        return self._proto.encode([
-            {'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'icon': icon,
+        return self._proto.encode(
+            [
+                {"req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "icon": icon,
+                    },
+                    "node": f"{self.node}/me/ep/{devid}",
+                    "act": "enum:92",
                 },
-                'node': f'{self.node}/me/ep/{devid}',
-                'act': 'enum:92'
-            }
-        ])
+            ]
+        )
 
     def addTrigger(self, trigger_name, cmdlist):
-        return self._proto.encode([
-            {
-                "_sel": 1,
-                "req": False,
-                "timestamp": 11,
-            },
-            {
-                "args": {
-                    'cmdlist': cmdlist,
-                    "_": "trigger",
-                    "name": "enum:1",
-                    "enum:13": trigger_name
+        return self._proto.encode(
+            [
+                {
+                    "_sel": 1,
+                    "req": False,
+                    "timestamp": 11,
                 },
-                "node": f'{self.node}/me/ai',
-                'act': 'AddA',
-            }
-        ])
+                {
+                    "args": {
+                        "cmdlist": cmdlist,
+                        "_": "trigger",
+                        "name": "enum:1",
+                        "enum:13": trigger_name,
+                    },
+                    "node": f"{self.node}/me/ai",
+                    "act": "AddA",
+                },
+            ]
+        )
 
     def delAI(self, ai_name):
-        return self._proto.encode([
-            {'_sel': self._sel, 'req': False, 'timestamp': 10},
-            {
-                'args': {
-                    'cmdlist': 'enum:1',
-                    'enum:13': ai_name,
+        return self._proto.encode(
+            [
+                {"_sel": self._sel, "req": False, "timestamp": 10},
+                {
+                    "args": {
+                        "cmdlist": "enum:1",
+                        "enum:13": ai_name,
+                    },
+                    "node": f"{self.node}/me/ai",
+                    "act": "DelA",
                 },
-                'node': f'{self.node}/me/ai',
-                'act': "DelA",
-            }
-        ])
+            ]
+        )
+
 
 class LifeSmartLocalClient(LifeSmart):
     def __init__(self, host, port, username, password, config_agt) -> None:
@@ -853,8 +893,7 @@ class LifeSmartLocalClient(LifeSmart):
 
     async def check_login(self):
         self.reader, self.writer = await asyncio.wait_for(
-            asyncio.open_connection(self.host, self.port),
-            timeout=5  # 设置5秒超时
+            asyncio.open_connection(self.host, self.port), timeout=5  # 设置5秒超时
         )
 
         pkt = self.dev.login(self.username, self.password)
@@ -900,7 +939,7 @@ class LifeSmartLocalClient(LifeSmart):
             try:
                 self.reader, self.writer = await asyncio.wait_for(
                     asyncio.open_connection(self.host, self.port),
-                    timeout=5  # 设置5秒超时
+                    timeout=5,  # 设置5秒超时
                 )
 
                 pkt = self.dev.login(self.username, self.password)
@@ -923,73 +962,97 @@ class LifeSmartLocalClient(LifeSmart):
                         try:
                             response, decoded = self.dev._proto.decode(response)
 
-                            if stage == 'login':
+                            if stage == "login":
                                 if decoded[1].get("ret", None) is None:
-                                    _LOGGER.error("Login Failed -> ", decoded[1].get("err"))
+                                    _LOGGER.error(
+                                        "Login Failed -> ", decoded[1].get("err")
+                                    )
                                     self.disconnected = True
                                 else:
-                                    self.dev.node = decoded[1]['ret'][4]['base'][1]
-                                    self.dev.node_agt = decoded[1]['ret'][4]['agt'][1]
-                                    stage = 'loading'
+                                    self.dev.node = decoded[1]["ret"][4]["base"][1]
+                                    self.dev.node_agt = decoded[1]["ret"][4]["agt"][1]
+                                    stage = "loading"
                                     self.writer.write(self.dev.getconfig())
                                     await self.writer.drain()
-                            elif stage == 'loading':
-                                payload = decoded[1]['ret'][1]
-                                dev_ids = list(payload['eps_i'].values())
+                            elif stage == "loading":
+                                payload = decoded[1]["ret"][1]
+                                dev_ids = list(payload["eps_i"].values())
                                 self.devices = {}
                                 self.device_ready.set()
-                                for devid, dev in payload['eps'].items():
+                                for devid, dev in payload["eps"].items():
                                     dev_meta = {
                                         "me": devid,
-                                        "devtype": dev['cls'][:-3] if dev['cls'][-3:-1] == "_V" else dev['cls'],
+                                        "devtype": (
+                                            dev["cls"][:-3]
+                                            if dev["cls"][-3:-1] == "_V"
+                                            else dev["cls"]
+                                        ),
                                         "agt": self.dev.node_agt,
-                                        "name": dev['name'],
-                                        "data": dev['_chd']['m']['_chd']
+                                        "name": dev["name"],
+                                        "data": dev["_chd"]["m"]["_chd"],
                                     }
                                     dev_meta.update(dev)
-                                    del dev_meta['_chd']
+                                    del dev_meta["_chd"]
                                     self.devices[devid] = dev_meta
 
-                                stage = 'loaded'
+                                stage = "loaded"
                             else:
                                 if schg := decoded[1].get("_schg", None):
                                     for schg_key, schg in schg.items():
-                                        if schg_key.startswith(self.dev.node_agt+"/ep/"):
+                                        if schg_key.startswith(
+                                            self.dev.node_agt + "/ep/"
+                                        ):
                                             if schg_key.endswith("/s"):
                                                 continue
-                                            schg_key = schg_key[len(self.dev.node_agt) + len("/ep/"):].split("/")
-                                            if len(schg_key) > 2 and schg_key[1] == 'm':
+                                            schg_key = schg_key[
+                                                len(self.dev.node_agt) + len("/ep/") :
+                                            ].split("/")
+                                            if len(schg_key) > 2 and schg_key[1] == "m":
                                                 if schg_key[0] in self.devices:
-                                                    self.devices[schg_key[0]]['data'].setdefault(schg_key[2], {})
-                                                    self.devices[schg_key[0]]['data'][schg_key[2]].update(schg['chg'])
-                                                    if callback is not None and callable(callback):
+                                                    self.devices[schg_key[0]][
+                                                        "data"
+                                                    ].setdefault(schg_key[2], {})
+                                                    self.devices[schg_key[0]]["data"][
+                                                        schg_key[2]
+                                                    ].update(schg["chg"])
+                                                    if (
+                                                        callback is not None
+                                                        and callable(callback)
+                                                    ):
                                                         msg = {
-                                                                "me": schg_key[0],
-                                                                "idx": schg_key[-1],
-                                                                "agt": self.dev.node_agt,
-                                                                "devtype": self.devices[schg_key[0]]['devtype']
-                                                            }
-                                                        msg.update(self.devices[schg_key[0]]['data'][schg_key[2]])
-                                                        callback({
-                                                            "msg": msg
-                                                        })
+                                                            "me": schg_key[0],
+                                                            "idx": schg_key[-1],
+                                                            "agt": self.dev.node_agt,
+                                                            "devtype": self.devices[
+                                                                schg_key[0]
+                                                            ]["devtype"],
+                                                        }
+                                                        msg.update(
+                                                            self.devices[schg_key[0]][
+                                                                "data"
+                                                            ][schg_key[2]]
+                                                        )
+                                                        callback({"msg": msg})
                                                 else:
-                                                    if callback is not None and callable(callback):
-                                                        callback({
-                                                            "reload": True
-                                                        })
-                                                    _LOGGER.warning("Device invalid, reload")
+                                                    if (
+                                                        callback is not None
+                                                        and callable(callback)
+                                                    ):
+                                                        callback({"reload": True})
+                                                    _LOGGER.warning(
+                                                        "Device invalid, reload"
+                                                    )
                                             else:
-                                                if callback is not None and callable(callback):
-                                                    callback({
-                                                        "reload": True
-                                                    })
-                                                _LOGGER.warning("Device property changed, reload")
+                                                if callback is not None and callable(
+                                                    callback
+                                                ):
+                                                    callback({"reload": True})
+                                                _LOGGER.warning(
+                                                    "Device property changed, reload"
+                                                )
                                 elif len(decoded[1].get("_sdel", {}).values()) > 0:
                                     if callback is not None and callable(callback):
-                                        callback({
-                                            "reload": True
-                                        })
+                                        callback({"reload": True})
                                     _LOGGER.warning("Device deleted, reload")
                         except EOFError:
                             pass
@@ -1004,7 +1067,6 @@ class LifeSmartLocalClient(LifeSmart):
                 # raise e
                 await asyncio.sleep(1.0)
 
-
     async def async_disconnect(self, call: Event | ServiceCall):
         self.disconnected = True
         if self.writer is not None:
@@ -1012,13 +1074,13 @@ class LifeSmartLocalClient(LifeSmart):
             await self.writer.wait_closed()
             self.writer = None
 
-    async def turn_on_light_swith_async(self, idx, agt, me):
+    async def turn_on_light_switch_async(self, idx, agt, me):
         pkt = self.dev.lightControl(me, idx, True)
         self.writer.write(pkt)
         await self.writer.drain()
         return 0
 
-    async def turn_off_light_swith_async(self, idx, agt, me):
+    async def turn_off_light_switch_async(self, idx, agt, me):
         pkt = self.dev.lightControl(me, idx, False)
         self.writer.write(pkt)
         await self.writer.drain()
