@@ -17,6 +17,7 @@ from .const import (
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
+    DEVICE_VERSION_KEY,
     DOMAIN,
     GENERIC_CONTROLLER_TYPES,
     GUARD_SENSOR_TYPES,
@@ -222,7 +223,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             name=self.sensor_device_name,
             manufacturer=MANUFACTURER,
             model=self.device_type,
-            sw_version=self.raw_device_data.get("ver", "unknown"),
+            sw_version=self.raw_device_data.get(DEVICE_VERSION_KEY, "unknown"),
             via_device=(DOMAIN, self.hub_id) if self.hub_id else None,
         )
 
