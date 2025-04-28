@@ -194,7 +194,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 self._state = True
             else:
                 self._state = False
-            self._attrs = {"raw": val}
+            self._attrs = {"Alarm type": val}
         elif device_type in GENERIC_CONTROLLER_TYPES:
             self._attrs = sub_device_data
             self._device_class = BinarySensorDeviceClass.LOCK
