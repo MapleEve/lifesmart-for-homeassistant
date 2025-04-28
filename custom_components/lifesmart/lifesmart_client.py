@@ -386,6 +386,3 @@ class LifeSmartClient:
         }
         send_data = json.dumps(send_values)
         return send_data
-
-
-1
