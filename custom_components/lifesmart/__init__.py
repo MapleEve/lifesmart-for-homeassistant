@@ -407,15 +407,13 @@ class LifeSmartDevice(Entity):
         """Send command to lifesmart device"""
         agt = self._agt
         me = self._me
-        responsecode = await self._client.send_epset_async(type, val, idx, agt, me)
-        return responsecode
+        return await self._client.send_epset_async(type, val, idx, agt, me)
 
     async def async_lifesmart_epget(self):
         """Get lifesmart device info"""
         agt = self._agt
         me = self._me
-        response = await self._client.get_epget_async(agt, me)
-        return response
+        return await self._client.get_epget_async(agt, me)
 
     async def async_lifesmart_sceneset(self, type, rgbw):
         """Set the scene"""
