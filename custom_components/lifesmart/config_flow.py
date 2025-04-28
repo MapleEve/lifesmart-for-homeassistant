@@ -214,7 +214,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_EXCLUDE_ITEMS): str,
                     vol.Optional(CONF_EXCLUDE_AGTS): str,
                     vol.Optional(CONF_AI_INCLUDE_AGTS): str,
-                    vol.Optional(CONF_AI_INCLUDE_AGTS): str,
                     vol.Optional(CONF_AI_INCLUDE_ITEMS): str,
                 }
             ),
