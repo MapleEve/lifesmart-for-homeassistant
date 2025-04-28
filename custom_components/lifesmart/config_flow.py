@@ -6,10 +6,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_NAME,
-    CONF_URL,
     CONF_TYPE,
     CONF_HOST,
     CONF_PORT,
+    CONF_REGION,
     CONF_USERNAME,
     CONF_PASSWORD,
 )
@@ -29,6 +29,7 @@ from .const import (
     CONF_LIFESMART_USERTOKEN,
     DOMAIN,
     CONF_LIFESMART_APPKEY,
+    LIFESMART_REGION_OPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +57,7 @@ async def validate_input(hass, data):
 
     try:
         lifesmart_client = LifeSmartClient(
-            data[CONF_URL],
+            data[CONF_REGION],
             data[CONF_LIFESMART_APPKEY],
             data[CONF_LIFESMART_APPTOKEN],
             data[CONF_LIFESMART_USERTOKEN],
@@ -105,6 +106,7 @@ async def validate_local_input(
 
 
 def get_unique_id(wiser_id: str):
+    """Generate Unique ID for Hub."""
     return str(f"{DOMAIN}-{wiser_id}")
 
 
@@ -134,7 +136,7 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=self.discovery_info or vol.Schema(DATA_SCHEMA),
             errors=errors,
         )
 
@@ -201,22 +203,50 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=validated["title"], data=user_input
                 )
 
+            schema = {
+                vol.Required(
+                    CONF_LIFESMART_APPKEY,
+                    default=self.config_entry.data.get(CONF_LIFESMART_APPKEY),
+                ): str,
+                vol.Required(
+                    CONF_LIFESMART_APPTOKEN,
+                    default=self.config_entry.data.get(CONF_LIFESMART_APPTOKEN),
+                ): str,
+                vol.Required(
+                    CONF_LIFESMART_USERTOKEN,
+                    default=self.config_entry.data.get(CONF_LIFESMART_USERTOKEN),
+                ): str,
+                vol.Required(
+                    CONF_LIFESMART_USERID,
+                    default=self.config_entry.data.get(CONF_LIFESMART_USERID),
+                ): str,
+                vol.Required(
+                    CONF_REGION,
+                    default=self.config_entry.data.get(CONF_REGION),
+                ): str,
+                vol.Optional(
+                    CONF_EXCLUDE_ITEMS,
+                    default=self.config_entry.data.get(CONF_EXCLUDE_ITEMS, ""),
+                ): str,
+                vol.Optional(
+                    CONF_EXCLUDE_AGTS,
+                    default=self.config_entry.data.get(CONF_EXCLUDE_AGTS, ""),
+                ): str,
+                vol.Optional(
+                    CONF_AI_INCLUDE_AGTS,
+                    default=self.config_entry.data.get(CONF_AI_INCLUDE_AGTS, ""),
+                ): str,
+                vol.Optional(
+                    CONF_AI_INCLUDE_ITEMS,
+                    default=self.config_entry.data.get(CONF_AI_INCLUDE_ITEMS, ""),
+                ): str,
+            }
+
+        schema[CONF_REGION] = selector(LIFESMART_REGION_OPTIONS)
+
         return self.async_show_form(
             step_id="cloud",
-            data_schema=self.discovery_info
-            or vol.Schema(
-                {
-                    vol.Optional(CONF_LIFESMART_APPKEY): str,
-                    vol.Optional(CONF_LIFESMART_APPTOKEN): str,
-                    vol.Optional(CONF_LIFESMART_USERTOKEN): str,
-                    vol.Optional(CONF_LIFESMART_USERID): str,
-                    vol.Required(CONF_URL): str,
-                    vol.Optional(CONF_EXCLUDE_ITEMS): str,
-                    vol.Optional(CONF_EXCLUDE_AGTS): str,
-                    vol.Optional(CONF_AI_INCLUDE_AGTS): str,
-                    vol.Optional(CONF_AI_INCLUDE_ITEMS): str,
-                }
-            ),
+            data_schema=self.discovery_info or vol.Schema(schema),
         )
 
 
@@ -229,33 +259,46 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_main_params(self, user_input=None):
         """Handle options flow."""
-        """
-        if user_input is not None:
-            if user_input[CONF_HOST]:
-                data = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PASSWORD: self.config_entry.data[CONF_PASSWORD],
-                    CONF_NAME: self.config_entry.data[CONF_NAME],
-                }
-                user_input.pop(CONF_HOST)
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=data
-                )
-            options = self.config_entry.options | user_input
-            return self.async_create_entry(title="", data=options)
-        """
-
         data_schema = {
-            vol.Required(CONF_LIFESMART_APPKEY): str,
-            vol.Required(CONF_LIFESMART_APPTOKEN): str,
-            vol.Required(CONF_LIFESMART_USERTOKEN): str,
-            vol.Required(CONF_LIFESMART_USERID): str,
-            vol.Required(CONF_URL): str,
-            vol.Optional(CONF_EXCLUDE_ITEMS): str,
-            vol.Optional(CONF_EXCLUDE_AGTS): str,
-            vol.Optional(CONF_AI_INCLUDE_AGTS): str,
-            vol.Optional(CONF_AI_INCLUDE_ITEMS): str,
+            vol.Required(
+                CONF_LIFESMART_APPKEY,
+                default=self.config_entry.data.get(CONF_LIFESMART_APPKEY),
+            ): str,
+            vol.Required(
+                CONF_LIFESMART_APPTOKEN,
+                default=self.config_entry.data.get(CONF_LIFESMART_APPTOKEN),
+            ): str,
+            vol.Required(
+                CONF_LIFESMART_USERTOKEN,
+                default=self.config_entry.data.get(CONF_LIFESMART_USERTOKEN),
+            ): str,
+            vol.Required(
+                CONF_LIFESMART_USERID,
+                default=self.config_entry.data.get(CONF_LIFESMART_USERID),
+            ): str,
+            vol.Required(
+                CONF_REGION,
+                default=self.config_entry.data.get(CONF_REGION),
+            ): str,
+            vol.Optional(
+                CONF_EXCLUDE_ITEMS,
+                default=self.config_entry.data.get(CONF_EXCLUDE_ITEMS, ""),
+            ): str,
+            vol.Optional(
+                CONF_EXCLUDE_AGTS,
+                default=self.config_entry.data.get(CONF_EXCLUDE_AGTS, ""),
+            ): str,
+            vol.Optional(
+                CONF_AI_INCLUDE_AGTS,
+                default=self.config_entry.data.get(CONF_AI_INCLUDE_AGTS, ""),
+            ): str,
+            vol.Optional(
+                CONF_AI_INCLUDE_ITEMS,
+                default=self.config_entry.data.get(CONF_AI_INCLUDE_ITEMS, ""),
+            ): str,
         }
+
+        data_schema[CONF_REGION] = selector(LIFESMART_REGION_OPTIONS)
         return self.async_show_form(
             step_id="main_params", data_schema=vol.Schema(data_schema)
         )
