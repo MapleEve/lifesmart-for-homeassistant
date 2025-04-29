@@ -46,8 +46,9 @@ contact them to get it granted to your application.**
 插件如何运作 How it works：
 ---
 
-- 该插件需要联网。在首次加载插件时，它会调用 LifeSmart API 来获取所有设备信息，并在 Home Assistant 中进行设置。之后，插件将通过
-  websocket 从 LifeSmart 获取设备更新信息。目前，Home Assistant 与 LifeSmart 中枢之间没有直接通信。
+- 使用 Cloud 模式集成时，在首次加载插件时，它会调用 LifeSmart API 来获取所有设备信息，并在 Home Assistant 中进行设置。之后，插件将通过
+  Websocket 从 LifeSmart 获取设备更新信息。
+- 使用 Local 模式集成时，按照 Local 配置完成后，插件会通过 Websocket 从 本地 HUB 中枢获取设备更新信息。Local 模式集成不需要联网。
 
 安装指南 How to install：
 ---
@@ -69,10 +70,9 @@ contact them to get it granted to your application.**
 
 4. 添加完成后，通过右下角添加集成进行安装，再进入集成页面添加集成，搜索`Lifesmart`就可以添加集成并进行设置。
 
-使用 HACS 可以方便您在新版本发布后及时更新。 2024 年内，我将把它加入 HACS 默认仓库列表，并计划将来将其纳入 Home Assistant
-官方集成。Via HACS should allow you to get new version when it ready. I plan to add it to HACS default repository list in
-2024 and
-plan to include it in Home Assistant official integration in future.
+使用 HACS 可以方便您在新版本发布后及时更新。 目前插件已进入 HACS 默认仓库列表Via HACS should allow you to get new version
+when it ready. I plan to add it to HACS default repository list in
+2024 and plan to include it in Home Assistant official integration in future.
 
 ### 手动安装方法 Manual
 
