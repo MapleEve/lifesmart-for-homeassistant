@@ -134,7 +134,7 @@ class LifeSmartSwitch(SwitchEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        # === 支持 Hub 的 Device info ===
+        # 支持 Hub 的 Device info
         return DeviceInfo(
             identifiers={(DOMAIN, self.hub_id, self.device_id)},
             name=self.switch_name,

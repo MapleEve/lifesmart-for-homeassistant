@@ -195,7 +195,7 @@ class LifeSmartSensor(SensorEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        # === 支持 Hub 的 Device info ===
+        # 支持 Hub 的 Device info
         return DeviceInfo(
             identifiers={(DOMAIN, self.hub_id, self.device_id)},
             name=self.sensor_device_name,
@@ -242,8 +242,6 @@ class LifeSmartSensor(SensorEntity):
             elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P4":
                 self._state = data["val"]
             elif self.device_type in LOCK_TYPES and self.sub_device_key == "BAT":
-                self._state = data.get(self._value_key, self._state)
-                self._state = min(max(int(self._state), 0), 100)  # 确保在0-100范围内
                 self._device_class = SensorDeviceClass.BATTERY
                 self._unit = PERCENTAGE
             else:

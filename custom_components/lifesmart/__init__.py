@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     devices = await lifesmart_client.get_all_device_async()
 
-    # ========== 新增设备注册逻辑 ==========
+    # 新增设备注册逻辑
     device_registry = dr.async_get(hass)
     hubs = {device[HUB_ID_KEY] for device in devices if HUB_ID_KEY in device}
 
