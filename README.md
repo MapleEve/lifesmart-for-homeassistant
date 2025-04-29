@@ -84,7 +84,7 @@ lifesmart:
   apptoken: # 你应用的 apptoken
   usertoken: # 你获取到的 usertoken
   userid: # 你获取到的 userid
-  url:  # 你使用的 api 地址，建议使用 api.cn0.ilifesmart.com 或者 api.cn2.ilifesmart.com
+  region:  # 你使用的 api 地址，建议使用 cn0 或者 cn2
 ```
 
 示例配置 Example：
