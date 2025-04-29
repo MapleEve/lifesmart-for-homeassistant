@@ -112,7 +112,7 @@ BINARY_SENSOR_TYPES = [
 ]
 COVER_TYPES = ["SL_DOOYA", "SL_P_V2", "SL_SW_WIN", "SL_CN_IF", "SL_CN_FE"]
 GAS_SENSOR_TYPES = ["SL_SC_WA ", "SL_SC_CH", "SL_SC_CP", "ELIQ_EM"]
-EV_SENSOR_TYPES = ["SL_SC_THL", "SL_SC_BE", "SL_SC_CQ"]
+EV_SENSOR_TYPES = ["SL_SC_THL", "SL_SC_BE", "SL_SC_CQ", "SL_SC_B1_V1"]
 OT_SENSOR_TYPES = ["SL_SC_MHW", "SL_SC_BM", "SL_SC_G", "SL_SC_BG"]
 LOCK_TYPES = [
     "SL_LK_LS",
@@ -186,8 +186,13 @@ UPDATE_LISTENER = "update_listener"
 
 LIFESMART_SIGNAL_UPDATE_ENTITY = "lifesmart_updated"
 
-LIFESMART_REGION_OPTIONS = {
-    "select": {
-        "options": ["cn0", "cn1", "cn2", "us", "eur", "jp", "apz"],
-    }
-}
+LIFESMART_REGION_OPTIONS = [
+    {"label": "中国 1 (cn0)", "value": "cn0"},
+    {"label": "中国备用(cn1)", "value": "cn1"},
+    {"label": "中国 2 (cn2)", "value": "cn2"},
+    {"label": "北美服务器 (US/NA)", "value": "us"},
+    {"label": "欧洲服务器 (EUROPE)", "value": "eur"},
+    {"label": "日本服务器 (JAPAN)", "value": "jp"},
+    {"label": "亚太其他区 (APAC)", "value": "apz"},
+    {"label": "自动选择 Global", "value": "AUTO"},
+]

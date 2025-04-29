@@ -212,29 +212,30 @@ lifesmart:
 
 #### 传感器类：
 
-| 型号           | App 内设备名称                  | 备注 |
-|--------------|----------------------------|----|
-| SL_SC_G      | ⻔禁感应器                      |    |
-| SL_SC_BG     | 多功能(CUBE)⻔禁感应器             |    |
-| SL_SC_MHW    | 动态感应器                      |    |
-| SL_SC_CM     | 动态感应器（7号电池版）               |    |
-| SL_SC_BM     | 多功能(CUBE)动态感应器             |    |
-| SL_P_RM      | ⼈体存在感应器                    |    |
-| SL_SC_THL    | 环境感应器                      |    |
-| SL_SC_BE     | 多功能(CUBE)环境感应器             |    |
-| SL_SC_CQ     | 环境感应器(CO2+TVOC)            |    |
-| SL_SC_CA     | 环境感应器(CO2)                 |    |
-| SL_SC_WA     | ⽔浸感应器                      |    |
-| SL_SC_CH     | ⽓体感应器(甲醛)                  |    |
-| SL_SC_CP     | ⽓体感应器(燃⽓)                  |    |
-| ELIQ_EM      | ELIQ电量计量器                  |    |
-| ~~SL_SC_CV~~ | 语⾳⼩Q                       |    |
-| SL_P_A       | 烟雾感应器                      |    |
-| SL_DF_GG     | 云防⻔窗感应器（DEFED Window/Door） |    |
-| SL_DF_MM     | 云防动态感应器（DEFED Motion）      |    |
-| SL_DF_SR     | 云防室内警铃（DEFED Indoor Siren） |    |
-| SL_DF_BB     | 云防遥控器（DEFED Key Fob）       |    |
-| SL_SC_CN     | 噪⾳感应器(Noise Sensor)        |    |
+| 型号           | App 内设备名称                  | 备注           |
+|--------------|----------------------------|--------------|
+| SL_SC_G      | ⻔禁感应器                      |              |
+| SL_SC_BG     | 多功能(CUBE)⻔禁感应器             |              |
+| SL_SC_MHW    | 动态感应器                      |              |
+| SL_SC_CM     | 动态感应器（7号电池版）               |              |
+| SL_SC_BM     | 多功能(CUBE)动态感应器             |              |
+| SL_P_RM      | ⼈体存在感应器                    |              |
+| SL_SC_THL    | 环境感应器                      |              |
+| SL_SC_BE     | 多功能(CUBE)环境感应器             |              |
+| SL_SC_CQ     | 环境感应器(CO2+TVOC)            |              |
+| SL_SC_CA     | 环境感应器(CO2)                 |              |
+| SL_SC_B1_V1  | 环境感应器                      | #11 Issue 添加 |
+| SL_SC_WA     | ⽔浸感应器                      |              |
+| SL_SC_CH     | ⽓体感应器(甲醛)                  |              |
+| SL_SC_CP     | ⽓体感应器(燃⽓)                  |              |
+| ELIQ_EM      | ELIQ电量计量器                  |              |
+| ~~SL_SC_CV~~ | 语⾳⼩Q                       |              |
+| SL_P_A       | 烟雾感应器                      |              |
+| SL_DF_GG     | 云防⻔窗感应器（DEFED Window/Door） |              |
+| SL_DF_MM     | 云防动态感应器（DEFED Motion）      |              |
+| SL_DF_SR     | 云防室内警铃（DEFED Indoor Siren） |              |
+| SL_DF_BB     | 云防遥控器（DEFED Key Fob）       |              |
+| SL_SC_CN     | 噪⾳感应器(Noise Sensor)        |              |
 
 感谢以下项目 Thanks：
 ---

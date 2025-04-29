@@ -13,6 +13,7 @@ from .const import (
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
+    DEVICE_VERSION_KEY,
     DOMAIN,
     HUB_ID_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
@@ -97,11 +98,7 @@ class LifeSmartSwitch(SwitchEntity):
         device_type = raw_device_data[DEVICE_TYPE_KEY]
         hub_id = raw_device_data[HUB_ID_KEY]
         device_id = raw_device_data[DEVICE_ID_KEY]
-
-        if DEVICE_NAME_KEY in sub_device_data:
-            device_name = sub_device_data[DEVICE_NAME_KEY]
-        else:
-            device_name = ""
+        device_name = sub_device_data.get(DEVICE_NAME_KEY, "")
 
         self._attr_has_entity_name = True
         self.device_name = device_name
@@ -144,7 +141,7 @@ class LifeSmartSwitch(SwitchEntity):
             name=self.switch_name,
             manufacturer=MANUFACTURER,
             model=self.device_type,
-            sw_version=self.raw_device_data.get("ver", "unknown"),
+            sw_version=self.raw_device_data.get(DEVICE_VERSION_KEY, "unknown"),
             via_device=(DOMAIN, self.hub_id) if self.hub_id else None,
         )
 
@@ -167,7 +164,7 @@ class LifeSmartSwitch(SwitchEntity):
             self.schedule_update_ha_state()
 
     def _get_state(self):
-        """get lifesmart switch state."""
+        """Get lifesmart switch state."""
         return self._state
 
     async def async_turn_on(self, **kwargs):
@@ -229,7 +226,7 @@ class LifeSmartSceneSwitch(LifeSmartDevice, SwitchEntity):
         """Call when entity.py is added to hass."""
 
     def _get_state(self):
-        """get lifesmart switch state."""
+        """Get lifesmart switch state."""
         return self._state
 
     async def async_turn_on(self, **kwargs):

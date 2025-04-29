@@ -8,7 +8,7 @@ from importlib import reload
 import websockets
 from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH
 from homeassistant.const import (
-    CONF_URL,
+    CONF_REGION,
     CONF_TYPE,
     CONF_HOST,
     CONF_PORT,
@@ -79,10 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         app_token = config_entry.data.get(CONF_LIFESMART_APPTOKEN)
         user_token = config_entry.data.get(CONF_LIFESMART_USERTOKEN)
         user_id = config_entry.data.get(CONF_LIFESMART_USERID)
-        baseurl = config_entry.data.get(CONF_URL)
+        region = config_entry.data.get(CONF_REGION)
 
         lifesmart_client = LifeSmartClient(
-            baseurl,
+            region,
             app_key,
             app_token,
             user_token,
@@ -407,15 +407,13 @@ class LifeSmartDevice(Entity):
         """Send command to lifesmart device"""
         agt = self._agt
         me = self._me
-        responsecode = await self._client.send_epset_async(type, val, idx, agt, me)
-        return responsecode
+        return await self._client.send_epset_async(type, val, idx, agt, me)
 
     async def async_lifesmart_epget(self):
         """Get lifesmart device info"""
         agt = self._agt
         me = self._me
-        response = await self._client.get_epget_async(agt, me)
-        return response
+        return await self._client.get_epget_async(agt, me)
 
     async def async_lifesmart_sceneset(self, type, rgbw):
         """Set the scene"""

@@ -15,7 +15,7 @@
       },
       "local": {
         "title": "LifeSmart Integration Setup",
-        "description": "Enter LifeSmart Hub local credential。",
+        "description": "Enter LifeSmart Hub local credential",
         "data": {
           "host": "IP",
           "port": "Port (Default 8888)",
@@ -27,11 +27,11 @@
         "title": "LifeSmart Integration Setup",
         "description": "Enter LifeSmart Platform credential and User details.",
         "data": {
-          "appkey": "App Key",
-          "apptoken": "App Token",
-          "usertoken": "User Token ",
-          "userid": "User ID",
-          "url": "LifeSmart regional domain",
+          "appkey": "Web App Key",
+          "apptoken": "Web App Token",
+          "usertoken": "Auth User Token ",
+          "userid": "Mobile App User ID",
+          "region": "LifeSmart regional domain",
           "exclude": "List of device to be excluded",
           "exclude_agt": "List of hub to be excluded",
           "ai_include_agt": "List of hub to be included in Scene",
@@ -44,6 +44,9 @@
       "already_configured": "This device is already configured."
     },
     "error": {
+      "cannot_connect": "Cannot connect",
+      "invalid_auth": "Authentication failed",
+      "unknown": "Unknown error / Configuration error"
     }
   },
   "options": {
@@ -59,11 +62,11 @@
         "title": "LifeSmart Integration Options",
         "description": "Enter LifeSmart Platform credential and User details.",
         "data": {
-          "appkey": "App Key",
-          "apptoken": "App Token",
-          "usertoken": "User Token ",
-          "userid": "User ID",
-          "url": "LifeSmart regional domain",
+          "appkey": "Web App Key",
+          "apptoken": "Web App Token",
+          "usertoken": "Auth User Token ",
+          "userid": "Mobile App User ID",
+          "region": "LifeSmart regional domain",
           "exclude": "List of device to be excluded",
           "exclude_agt": "List of hub to be excluded",
           "ai_include_agt": "List of hub to be included in Scene",

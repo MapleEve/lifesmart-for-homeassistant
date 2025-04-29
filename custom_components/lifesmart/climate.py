@@ -164,17 +164,15 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
             await super().async_lifesmart_epset(
                 "0xCE", LIFESMART_STATE_LIST.index(hvac_mode), "MODE"
             )
+        elif hvac_mode == HVACMode.OFF:
+            await super().async_lifesmart_epset("0x80", 0, "P1")
+            time.sleep(1)
+            await super().async_lifesmart_epset("0x80", 0, "P2")
+            return
+        elif await super().async_lifesmart_epset("0x81", 1, "P1") == 0:
+            time.sleep(2)
         else:
-            if hvac_mode == HVACMode.OFF:
-                await super().async_lifesmart_epset("0x80", 0, "P1")
-                time.sleep(1)
-                await super().async_lifesmart_epset("0x80", 0, "P2")
-                return
-            else:
-                if await super().async_lifesmart_epset("0x81", 1, "P1") == 0:
-                    time.sleep(2)
-                else:
-                    return
+            return
 
     @property
     def supported_features(self):
