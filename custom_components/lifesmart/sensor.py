@@ -132,18 +132,10 @@ class LifeSmartSensor(SensorEntity):
 
         super().__init__()
 
-        device_name = raw_device_data[DEVICE_NAME_KEY]
         device_type = raw_device_data[DEVICE_TYPE_KEY]
         hub_id = raw_device_data[HUB_ID_KEY]
         device_id = raw_device_data[DEVICE_ID_KEY]
-
-        if (
-            DEVICE_NAME_KEY in sub_device_data
-            and sub_device_data[DEVICE_NAME_KEY] != "none"
-        ):
-            device_name = sub_device_data[DEVICE_NAME_KEY]
-        else:
-            device_name = ""
+        device_name = sub_device_data.get(DEVICE_NAME_KEY, "")
 
         self._attr_has_entity_name = True
         self.device_name = device_name

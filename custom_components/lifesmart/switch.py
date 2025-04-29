@@ -94,7 +94,6 @@ class LifeSmartSwitch(SwitchEntity):
     ) -> None:
         """Initialize the switch."""
 
-        device_name = raw_device_data[DEVICE_NAME_KEY]
         device_type = raw_device_data[DEVICE_TYPE_KEY]
         hub_id = raw_device_data[HUB_ID_KEY]
         device_id = raw_device_data[DEVICE_ID_KEY]
