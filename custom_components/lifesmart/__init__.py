@@ -5,7 +5,7 @@ import json
 import logging
 import traceback
 from importlib import reload
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple, Any
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH
@@ -225,24 +225,29 @@ async def data_update_handler(
         hub_id = data.get(HUB_ID_KEY, "").strip()
         device_id = data.get(DEVICE_ID_KEY, "").strip()
         sub_device_key = str(data.get(SUBDEVICE_INDEX_KEY, "")).strip()
-        device_value = data.get("val", None)
 
         # 获取配置参数
-        # exclude_devices = config_entry.data.get(CONF_EXCLUDE_ITEMS, [])
-        # exclude_hubs = config_entry.data.get(CONF_EXCLUDE_AGTS, [])
+        exclude_devices = config_entry.data.get(CONF_EXCLUDE_ITEMS, [])
+        exclude_hubs = config_entry.data.get(CONF_EXCLUDE_AGTS, [])
         ai_include_hubs = config_entry.data.get(CONF_AI_INCLUDE_AGTS, [])
         ai_include_items = config_entry.data.get(CONF_AI_INCLUDE_ITEMS, [])
 
         # ---------- 过滤器处理 ---------- #
-        # 中枢级过滤
-        # if hub_id in exclude_hubs:
-        #     _LOGGER.debug("中枢 %s 在排除列表中，忽略更新", hub_id)
-        #     return
+        # 转换为列表（处理空值和前后空格）
+        exclude_devices = [
+            dev.strip() for dev in exclude_devices.split(",") if dev.strip()
+        ]
+        exclude_hubs = [hub.strip() for hub in exclude_hubs.split(",") if hub.strip()]
 
-        # 设备级过滤
-        # if device_id in exclude_devices:
-        #     _LOGGER.debug("设备 %s 在排除列表中，忽略更新", device_id)
-        #     return
+        # ------ 过滤逻辑加强 ------ #
+        # 触发排除的详细日志
+        if device_id in exclude_devices:
+            _LOGGER.info("忽略设备 [%s | %s]（在排除列表中）", device_id, device_type)
+            return
+
+        if hub_id in exclude_hubs:
+            _LOGGER.info("忽略中枢 [%s] 下所有设备（在排除列表中）", hub_id)
+            return
 
         # ---------- 特殊子设备处理 ---------- #
         # AI事件过滤 (sub_device_key == 's' 表示AI事件)
@@ -252,33 +257,16 @@ async def data_update_handler(
                 # TODO: 这里可以扩展具体AI处理逻辑
             return
 
-        # 门锁报警状态处理
-        if device_type in LOCK_TYPES and sub_device_key == "ALM":
-            entity_id = generate_entity_id(
-                device_type, hub_id, device_id, sub_device_key
-            )
-            dispatcher_send(
-                hass,
-                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}",
-                {"state": device_value},
-            )
-            return
-
-        # 门锁电池状态处理
-        if device_type in LOCK_TYPES and sub_device_key == "BAT":
-            entity_id = generate_entity_id(
-                device_type, hub_id, device_id, sub_device_key
-            )
-            dispatcher_send(
-                hass,
-                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}",
-                {"battery": device_value},
-            )
-            return
-
         # ---------- 普通设备更新处理 ---------- #
         # 生成实体ID (自动处理特殊字符)
         entity_id = generate_entity_id(device_type, hub_id, device_id, sub_device_key)
+        _LOGGER.debug(
+            "生成实体ID -> device_type %s, hub: %s, dev: %s, sub: %s",
+            device_type,
+            hub_id,
+            device_id,
+            sub_device_key,
+        )
 
         # 通过dispatcher发送更新到具体实体
         dispatcher_send(
@@ -617,9 +605,7 @@ class LifeSmartStateManager:
             # 📨 转发设备状态更新
             if data.get("type") == "io":
                 try:
-                    await data_update_handler(
-                        self.hass, self.config_entry, {"msg": data}
-                    )
+                    await data_update_handler(self.hass, self.config_entry, data)
                 except Exception as e:
                     _LOGGER.error(
                         "状态更新分发失败: %s\n原始数据:\n%s",
@@ -734,50 +720,40 @@ def get_platform_by_device(device_type, sub_device=None):
 
 
 def generate_entity_id(
-    device_type: str,  # 主设备类型（例如："SmartPlug", "DoorLock"）
-    hub_id: str,  # 中枢/网关ID（例如："AG-ABCD12345"）
-    device_id: str,  # 设备唯一标识（例如："DEV_001"）
-    sub_device: Optional[str] = None,  # 子设备标识（例如："P1"）
+    device_type: str,
+    hub_id: str,
+    device_id: str,
+    sub_device: Optional[str] = None,
 ) -> str:
-    """生成符合Home Assistant规范的实体ID
-
-    格式: [platform].[清理后的设备类型]_[清理后的中枢ID]_[清理后的设备ID]_[清理后的子设备] (小写)
-    """
     import re
 
-    # ------ 1. 定义参数清理函数 ------ #
+    # 清理非法字符的函数
     def sanitize(input_str: str) -> str:
-        """清理非法字符，保留字母、数字和下划线，转为小写"""
         return re.sub(r"[^a-zA-Z0-9_]", "", input_str).lower()
 
-    # ------ 2. 标准化各参数格式 ------ #
-    safe_type = sanitize(device_type)  # 清理类型：例如 "SmartPlug/V2" → "smartsmugv2"
-    safe_hub = sanitize(hub_id)  # 清理中枢ID：例如 "AG-1122" → "ag1122"
-    safe_dev = sanitize(device_id)  # 清理设备ID：例如 "Bedroom_Light" → "bedroomlight"
+    # 标准化参数
+    safe_type = sanitize(device_type)
+    safe_hub = sanitize(hub_id)
+    safe_dev = sanitize(device_id)
     safe_sub = sanitize(sub_device) if sub_device else None
 
-    # ------ 3. 确定目标平台 ------ #
-    platform = get_platform_by_device(device_type, sub_device).value
+    # 获取平台枚举并正确处理
+    platform_enum = get_platform_by_device(device_type, sub_device)
+    platform_str = (
+        platform_enum.value if isinstance(platform_enum, Platform) else platform_enum
+    )
 
-    # ------ 4. 构建基础名称 ------ #
-    # 主设备前缀 = 类型_中枢ID_设备ID
+    # 构建实体ID基础部分
     base_parts = [safe_type, safe_hub, safe_dev]
-
-    # ------ 5. 处理子设备片段 ------ #
-    # 如果存在子设备，添加清理后的标识符（但需处理特殊情况）
     if safe_sub:
-        # 特殊处理：调光器可能需要保留原样（例如P1P2）
         if device_type in LIGHT_DIMMER_TYPES and safe_sub in {"p1", "p2"}:
-            base_parts.append(safe_sub.upper())  # 例如: ..._P1P2
+            base_parts.append(safe_sub.upper())
         else:
-            base_parts.append(safe_sub)  # 例如: ..._p1
+            base_parts.append(safe_sub)
 
-    # ------ 6. 最终组装 ------ #
     clean_entity = "_".join(base_parts)
-
-    # 确保长度不超过 Home Assistant 的 255 字符限制
-    max_length = 255 - (len(platform) + 1)  # 平台名称和点的开销
+    max_length = 255 - (len(platform_str) + 1)
     clean_entity = clean_entity[:max_length]
 
-    # 格式化为完整 entity_id (例如: switch.smartplug_ag1122_dev001_p1)
-    return f"{platform}.{clean_entity}"
+    # 返回修正后的实体ID格式
+    return f"{platform_str}.{clean_entity}"
