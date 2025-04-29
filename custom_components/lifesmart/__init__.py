@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import traceback
+from datetime import timedelta
 from importlib import reload
 from typing import Optional, Tuple, Any
 
@@ -24,6 +25,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.ssl import get_default_context
 
 from . import lifesmart_protocol
@@ -174,6 +176,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 EVENT_HOMEASSISTANT_STOP, client.async_disconnect
             )
         )
+
+    # 全局定时刷新任务（每10分钟）
+    async def _async_periodic_refresh(now=None):
+        try:
+            # 获取最新设备数据并更新状态
+            new_devices = await client.get_all_device_async()
+            hass.data[DOMAIN][config_entry.entry_id]["devices"] = new_devices
+
+            # 发送事件通知所有实体更新
+            dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
+            _LOGGER.debug("全局设备数据刷新完成")
+        except Exception as e:
+            _LOGGER.error("定时刷新失败: %s", e)
+
+    # 添加定时任务，每10分钟执行一次
+    cancel_refresh = async_track_time_interval(
+        hass, _async_periodic_refresh, timedelta(minutes=10)
+    )
+
+    # 确保在卸载时取消定时任务
+    config_entry.async_on_unload(cancel_refresh)
 
     return True
 
