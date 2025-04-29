@@ -287,6 +287,7 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                     if await super().async_lifesmart_epset("0x81", 1, self._idx) == 0:
                         self._state = True
                         self.async_schedule_update_ha_state()
+        self._state = True
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
@@ -315,6 +316,7 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
             if await super().async_lifesmart_epset("0x80", 0, self._idx) == 0:
                 self._state = False
                 self.async_schedule_update_ha_state()
+        self._state = False
 
     @property
     def unique_id(self):
