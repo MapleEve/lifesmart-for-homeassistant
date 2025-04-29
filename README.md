@@ -71,8 +71,7 @@ contact them to get it granted to your application.**
 4. 添加完成后，通过右下角添加集成进行安装，再进入集成页面添加集成，搜索`Lifesmart`就可以添加集成并进行设置。
 
 使用 HACS 可以方便您在新版本发布后及时更新。 目前插件已进入 HACS 默认仓库列表Via HACS should allow you to get new version
-when it ready. I plan to add it to HACS default repository list in
-2024 and plan to include it in Home Assistant official integration in future.
+when it ready.
 
 ### 手动安装方法 Manual
 
