@@ -228,7 +228,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     if isinstance(lifesmart_client, LifeSmartClient):
         ws_url = lifesmart_client.get_wss_url()
         hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = LifeSmartStatesManager(
-            hass, config_entry, ws_url=ws_url
+            hass,
+            config_entry,
+            ws_url=ws_url,
         )
         hass.data[DOMAIN][LIFESMART_STATE_MANAGER].start()
 
@@ -237,7 +239,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, SUPPORTED_PLATFORMS
+        entry,
+        SUPPORTED_PLATFORMS,
     )
 
     # 停止WebSocket状态管理器

@@ -49,7 +49,6 @@ class LifeSmartClient:
 
     async def login_async(self):
         """Login to LifeSmart service to get user token."""
-        # Get temporary token
         url = self.get_api_url() + "/auth.login"
         login_data = {
             "uid": self._userid,
@@ -62,7 +61,6 @@ class LifeSmartClient:
         if response["code"] != "success":
             return False
 
-        # Use temporary token to get usertoken
         url = self.get_api_url() + "/auth.do_auth"
         auth_data = {
             "userid": self._userid,
