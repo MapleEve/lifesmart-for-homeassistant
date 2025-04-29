@@ -108,11 +108,12 @@ def build_cloud_schema(config_data: dict = None) -> vol.Schema:
     return vol.Schema(schema_elements)
 
 
-async def validate_input(hass, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
     try:
         lifesmart_client = LifeSmartClient(
+            hass,
             data[CONF_REGION],
             data[CONF_LIFESMART_APPKEY],
             data[CONF_LIFESMART_APPTOKEN],

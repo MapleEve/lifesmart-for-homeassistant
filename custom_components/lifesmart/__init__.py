@@ -82,6 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         region = config_entry.data.get(CONF_REGION)
 
         lifesmart_client = LifeSmartClient(
+            hass,
             region,
             app_key,
             app_token,

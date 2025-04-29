@@ -3,7 +3,8 @@ import json
 import logging
 import time
 
-import aiohttp
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,6 +14,7 @@ class LifeSmartClient:
 
     def __init__(
         self,
+        hass: HomeAssistant,
         region,
         appkey,
         apptoken,
@@ -20,6 +22,7 @@ class LifeSmartClient:
         userid,
         # apppassword,
     ) -> None:
+        self.hass = hass
         self._region = region
         self._appkey = appkey
         self._apptoken = apptoken
@@ -355,12 +358,13 @@ class LifeSmartClient:
         _LOGGER.debug("get_ir_remote_res: %s", str(response))
         return response["message"]["codes"]
 
-    async def post_async(self, url, data, headers):
-        """Async method to make a POST api call"""
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=data, headers=headers) as response:
-                response_text = await response.text()
-                return response_text
+    async def post_async(self, url: str, data: str, headers: dict) -> str:
+        """使用 HA 的内置异步客户端发送请求，避免直接引入 aiohttp"""
+        session = async_get_clientsession(self.hass)  # 通过 HA 实例获取客户端
+
+        async with session.post(url, data=data, headers=headers) as response:
+            response.raise_for_status()  # 自动处理 HTTP 错误码
+            return await response.text()
 
     def get_signature(self, data):
         """Generate signature required by LifeSmart API"""
