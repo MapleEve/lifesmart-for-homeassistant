@@ -18,14 +18,14 @@ class LifeSmartClient:
         apptoken,
         usertoken,
         userid,
-        apppassword,
+        # apppassword,
     ) -> None:
         self._region = region
         self._appkey = appkey
         self._apptoken = apptoken
         self._usertoken = usertoken
         self._userid = userid
-        self._apppassword = apppassword
+        # self._apppassword = apppassword
 
     async def get_all_device_async(self):
         """Get all devices belong to current user."""
@@ -53,7 +53,7 @@ class LifeSmartClient:
         url = self.get_api_url() + "/auth.login"
         login_data = {
             "uid": self._userid,
-            "pwd": self._apppassword,
+            # "pwd": self._apppassword,
             "appkey": self._appkey,
         }
         header = self.generate_header()
@@ -370,17 +370,18 @@ class LifeSmartClient:
 
     def get_api_url(self):
         """Generate API URL."""
-        if self._region == "":
+        # 通用判断：如果_region不存在、空或None，使用默认域名
+        if not self._region or self._region == "AUTO":
             return "https://api.ilifesmart.com/app"
         else:
-            return "https://api." + self._region + ".ilifesmart.com/app"
+            return f"https://api.{self._region}.ilifesmart.com/app"
 
     def get_wss_url(self):
         """Generate websocket (wss) URL"""
-        if self._region == "":
+        if not self._region or self._region == "AUTO":
             return "wss://api.ilifesmart.com:8443/wsapp/"
         else:
-            return "wss://api." + self._region + ".ilifesmart.com:8443/wsapp/"
+            return f"wss://api.{self._region}.ilifesmart.com:8443/wsapp/"
 
     def generate_system_request_body(self, tick, data):
         """Generate system node in request body which contain credential and signature"""

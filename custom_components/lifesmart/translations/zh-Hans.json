@@ -4,9 +4,9 @@
     "step": {
       "user": {
         "title": "LifeSmart 设备集成配置",
-        "description": "请选择连接方式：",
+        "description": "请选择中枢连接方式：",
         "protocol_selector": {
-          "label": "连接方式",
+          "label": "中枢连接方式",
           "options": {
             "local": "本地",
             "cloud": "云端"
@@ -27,11 +27,11 @@
         "title": "LifeSmart 设备集成配置",
         "description": "请输入您的 LifeSmart 平台凭证以及个人用户信息。",
         "data": {
-          "appkey": "应用密钥 App Key",
-          "apptoken": "应用令牌 App Token",
-          "usertoken": "用户令牌 User Token",
-          "userid": "User ID",
-          "region": "LifeSmart 区域",
+          "appkey": "开放应用密钥 App Key",
+          "apptoken": "开放应用令牌 App Token",
+          "usertoken": "授权用户令牌 User Token",
+          "userid": "手机 APP User ID",
+          "region": "授权 LifeSmart 区域",
           "exclude": "不希望集成的设备列表",
           "exclude_agt": "不希望集成的中枢列表",
           "ai_include_agt": "希望在场景中包含的中枢列表",
@@ -45,7 +45,8 @@
     },
     "error": {
       "cannot_connect": "连接失败",
-      "invalid_auth": "验证失败"
+      "invalid_auth": "验证失败",
+      "unknown": "未知/配置错误"
     }
   },
   "options": {
@@ -61,11 +62,11 @@
         "title": "LifeSmart 设备集成选项",
         "description": "请输入您的 LifeSmart 平台凭证以及个人用户信息",
         "data": {
-          "appkey": "应用密钥 App Key",
-          "apptoken": "应用令牌 App Token",
-          "usertoken": "用户令牌User Token",
-          "userid": "User ID",
-          "region": "LifeSmart 区域",
+          "appkey": "开放应用密钥 App Key",
+          "apptoken": "开放应用令牌 App Token",
+          "usertoken": "授权用户令牌 User Token",
+          "userid": "手机 APP User ID",
+          "region": "授权 LifeSmart 区域",
           "exclude": "不希望集成的设备列表",
           "exclude_agt": "不希望集成的中枢列表",
           "ai_include_agt": "希望在场景中包含的中枢列表",

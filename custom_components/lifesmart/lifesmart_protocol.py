@@ -878,13 +878,13 @@ class LifeSmart:
 
 
 class LifeSmartLocalClient(LifeSmart):
-    def __init__(self, host, port, username, password, config_agt) -> None:
+    def __init__(self, host, port, username, password, config_agt=None) -> None:
         super().__init__()
         self.host = host
         self.port = port
         self.username = username
         self.password = password
-        self.config_agt = config_agt
+        self.config_agt = config_agt or "default_agt"  # 设置默认值或留空字符串 ""
         self.reader, self.writer = None, None
         self.dev = LifeSmart()
         self.disconnected = False
