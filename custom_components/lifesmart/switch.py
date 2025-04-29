@@ -177,7 +177,7 @@ class LifeSmartSwitch(SwitchEntity):
             self._state = True
             self.async_schedule_update_ha_state()
         else:
-            _LOGGER.warning("Switch {self._me} - {self._idx} status changed failed")
+            _LOGGER.warning(f"Switch {self._me} - {self._idx} status changed failed")
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
@@ -190,7 +190,7 @@ class LifeSmartSwitch(SwitchEntity):
             self._state = False
             self.async_schedule_update_ha_state()
         else:
-            _LOGGER.warning("Switch {self._me} - {self._idx} status changed failed")
+            _LOGGER.warning(f"Switch {self._me} - {self._idx} status changed failed")
 
     @property
     def unique_id(self):
