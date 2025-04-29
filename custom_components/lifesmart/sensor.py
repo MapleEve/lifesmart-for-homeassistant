@@ -1,19 +1,23 @@
-"""Support for lifesmart sensors."""
+"""Support for LifeSmart sensors."""
 
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfPower,
-    UnitOfEnergy,
     CONCENTRATION_PARTS_PER_MILLION,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
+    PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LifeSmartDevice, generate_entity_id
 from .const import (
@@ -22,7 +26,6 @@ from .const import (
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
-    DEVICE_VERSION_KEY,
     DOMAIN,
     GAS_SENSOR_TYPES,
     HUB_ID_KEY,
@@ -36,13 +39,19 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setup Switch entities."""
-    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
-    exclude_devices = hass.data[DOMAIN][config_entry.entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][config_entry.entry_id]["exclude_hubs"]
-    client = hass.data[DOMAIN][config_entry.entry_id]["client"]
-    sensor_devices = []
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up LifeSmart from a config entry."""
+    entry_id = config_entry.entry_id
+    devices = hass.data[DOMAIN][entry_id]["devices"]
+    client = hass.data[DOMAIN][entry_id]["client"]
+    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
+    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+
+    sensors = []
     for device in devices:
         if (
             device[DEVICE_ID_KEY] in exclude_devices
@@ -51,233 +60,209 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
-        supported_sensors = (
+        if device_type not in (
             OT_SENSOR_TYPES + GAS_SENSOR_TYPES + LOCK_TYPES + SMART_PLUG_TYPES
-        )
-
-        if device_type not in supported_sensors:
+        ):
             continue
 
-        ha_device = LifeSmartDevice(
-            device,
-            client,
-        )
-        for sub_device_key in device[DEVICE_DATA_KEY]:
-            sub_device_data = device[DEVICE_DATA_KEY][sub_device_key]
-            if device_type in OT_SENSOR_TYPES and sub_device_key in [
-                "Z",
-                "V",
-                "P3",
-                "P4",
-            ]:
-                sensor_devices.append(
-                    LifeSmartSensor(
-                        ha_device,
-                        device,
-                        sub_device_key,
-                        sub_device_data,
-                        client,
-                    )
+        ha_device = LifeSmartDevice(device, client)
+
+        for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
+            if not _is_sensor_subdevice(device_type, sub_key):
+                continue
+
+            sensors.append(
+                LifeSmartSensor(
+                    device=ha_device,
+                    raw_device=device,
+                    sub_device_key=sub_key,
+                    sub_device_data=sub_data,
+                    client=client,
+                    entry_id=entry_id,
                 )
-            elif device_type in GAS_SENSOR_TYPES:
-                sensor_devices.append(
-                    LifeSmartSensor(
-                        ha_device,
-                        device,
-                        sub_device_key,
-                        sub_device_data,
-                        client,
-                    )
-                )
-            elif device_type in LOCK_TYPES and sub_device_key in ["BAT"]:
-                sensor_devices.append(
-                    LifeSmartSensor(
-                        ha_device,
-                        device,
-                        sub_device_key,
-                        sub_device_data,
-                        client,
-                    )
-                )
-            elif device_type in COVER_TYPES and sub_device_key in ["P8"]:
-                sensor_devices.append(
-                    LifeSmartSensor(
-                        ha_device,
-                        device,
-                        sub_device_key,
-                        sub_device_data["v"],
-                        client,
-                    )
-                )
-            elif device_type in SMART_PLUG_TYPES and sub_device_key in ["P2", "P3"]:
-                sensor_devices.append(
-                    LifeSmartSensor(
-                        ha_device,
-                        device,
-                        sub_device_key,
-                        sub_device_data,
-                        client,
-                    )
-                )
-    async_add_entities(sensor_devices)
+            )
+
+    async_add_entities(sensors)
+
+
+def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
+    """Determine if a sub-device is a valid sensor."""
+    if device_type in OT_SENSOR_TYPES and sub_key in {"Z", "V", "P3", "P4"}:
+        return True
+    if device_type in GAS_SENSOR_TYPES:
+        return True
+    if device_type in LOCK_TYPES and sub_key == "BAT":
+        return True
+    if device_type in COVER_TYPES and sub_key == "P8":
+        return True
+    if device_type in SMART_PLUG_TYPES and sub_key in {"P2", "P3"}:
+        return True
+    return False
 
 
 class LifeSmartSensor(SensorEntity):
-    """Representation of a LifeSmartSensor."""
+    """LifeSmart sensor entity with enhanced compatibility."""
+
+    _attr_has_entity_name = True
 
     def __init__(
-        self, device, raw_device_data, sub_device_key, sub_device_data, client
+        self,
+        device: LifeSmartDevice,
+        raw_device: dict[str, Any],
+        sub_device_key: str,
+        sub_device_data: dict[str, Any],
+        client: Any,
+        entry_id: str,
     ) -> None:
-        """Initialize the LifeSmartSensor."""
-
-        super().__init__()
-
-        device_name = raw_device_data[DEVICE_NAME_KEY]
-        device_type = raw_device_data[DEVICE_TYPE_KEY]
-        hub_id = raw_device_data[HUB_ID_KEY]
-        device_id = raw_device_data[DEVICE_ID_KEY]
-
-        if (
-            DEVICE_NAME_KEY in sub_device_data
-            and sub_device_data[DEVICE_NAME_KEY] != "none"
-        ):
-            device_name = sub_device_data[DEVICE_NAME_KEY]
-        else:
-            device_name = ""
-
-        self._attr_has_entity_name = True
-        self.device_name = device_name
-        self.sensor_device_name = raw_device_data[DEVICE_NAME_KEY]
-        self.device_id = device_id
-        self.hub_id = hub_id
-        self.sub_device_key = sub_device_key
-        self.device_type = device_type
-        self.raw_device_data = raw_device_data
+        """Initialize the sensor."""
         self._device = device
-        self.entity_id = generate_entity_id(
-            device_type, hub_id, device_id, sub_device_key
-        )
+        self._raw_device = raw_device
+        self._sub_key = sub_device_key
+        self._sub_data = sub_device_data
         self._client = client
+        self._entry_id = entry_id
+        self._attr_unique_id = generate_entity_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            sub_device_key,
+        )
+        self._attr_name = self._generate_sensor_name()
+        self._attr_device_class = self._determine_device_class()
+        self._attr_native_unit_of_measurement = self._determine_unit()
+        self._attr_native_value = self._extract_initial_value()
+
+    @callback
+    def _generate_sensor_name(self) -> str | None:
+        """Generate user-friendly sensor name."""
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Device")
+        sub_key = self._sub_key.upper()
+        return f"{base_name} {sub_key}"  # 生成传感器名称
+
+    @callback
+    def _determine_device_class(self) -> SensorDeviceClass | None:
+        """Automatically determine device class based on sub-device."""
+        device_type = self._raw_device[DEVICE_TYPE_KEY]
+        sub_key = self._sub_key
 
         if device_type in GAS_SENSOR_TYPES:
-            self._device_class = SensorDeviceClass.GAS
-            self._unit = "None"
-            self._state = sub_device_data["val"]
-        elif device_type in SMART_PLUG_TYPES and sub_device_key == "P2":
-            self._device_class = SensorDeviceClass.ENERGY
-            self._unit = UnitOfEnergy.KILO_WATT_HOUR
-            self._state = sub_device_data["v"]
-        elif device_type in SMART_PLUG_TYPES and sub_device_key == "P3":
-            self._device_class = SensorDeviceClass.POWER
-            self._unit = UnitOfPower.WATT
-            self._state = sub_device_data["v"]
-        elif device_type in SMART_PLUG_TYPES and sub_device_key == "P4":
-            self._device_class = SensorDeviceClass.POWER
-            self._unit = UnitOfPower.WATT
-            self._state = sub_device_data["val"]
-        else:
-            if sub_device_key in ("T", "P1"):
-                self._device_class = SensorDeviceClass.TEMPERATURE
-                self._unit = UnitOfTemperature.CELSIUS
-            elif sub_device_key in ("H", "P2"):
-                self._device_class = SensorDeviceClass.HUMIDITY
-                self._unit = PERCENTAGE
-            elif sub_device_key == "Z":
-                self._device_class = SensorDeviceClass.ILLUMINANCE
-                self._unit = LIGHT_LUX
-            elif sub_device_key in ("V", "BAT") or (
-                sub_device_key == "P8" and device_type in COVER_TYPES
-            ):
-                self._device_class = SensorDeviceClass.BATTERY
-                self._unit = PERCENTAGE
-            elif sub_device_key == "P3":
-                self._device_class = "None"
-                self._unit = CONCENTRATION_PARTS_PER_MILLION
-            elif sub_device_key == "P4":
-                self._device_class = "None"
-                self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
-            else:
-                self._unit = "None"
-                self._device_class = "None"
-            self._state = sub_device_data["v"]
+            return SensorDeviceClass.GAS
+        if sub_key == "BAT":
+            return SensorDeviceClass.BATTERY
+        if sub_key == "T" or (device_type in SMART_PLUG_TYPES and sub_key == "P1"):
+            return SensorDeviceClass.TEMPERATURE
+        if sub_key == "H" or (device_type in SMART_PLUG_TYPES and sub_key == "P2"):
+            return SensorDeviceClass.HUMIDITY
+        if sub_key == "Z":
+            return SensorDeviceClass.ILLUMINANCE
+        if device_type in SMART_PLUG_TYPES and sub_key == "P3":
+            return SensorDeviceClass.POWER
+        if device_type in SMART_PLUG_TYPES and sub_key == "P4":
+            return SensorDeviceClass.ENERGY
+        return None
+
+    @callback
+    def _determine_unit(self) -> str | None:
+        """Map sub-device to unit."""
+        device_type = self._raw_device[DEVICE_TYPE_KEY]
+        sub_key = self._sub_key
+
+        if self.device_class == SensorDeviceClass.BATTERY:
+            return PERCENTAGE
+        if self.device_class == SensorDeviceClass.TEMPERATURE:
+            return UnitOfTemperature.CELSIUS
+        if self.device_class == SensorDeviceClass.HUMIDITY:
+            return PERCENTAGE
+        if self.device_class == SensorDeviceClass.ILLUMINANCE:
+            return LIGHT_LUX
+        if device_type in SMART_PLUG_TYPES:
+            if sub_key == "P2":
+                return UnitOfEnergy.KILO_WATT_HOUR
+            if sub_key == "P3":
+                return UnitOfPower.WATT
+        if sub_key == "P3":
+            return CONCENTRATION_PARTS_PER_MILLION
+        if sub_key == "P4":
+            return CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+        return None
+
+    @callback
+    def _extract_initial_value(self) -> float | int | None:
+        """Extract initial value from device data."""
+        return self._sub_data.get("v") or self._sub_data.get("val")
 
     @property
     def device_info(self) -> DeviceInfo:
-        # === 支持 Hub 的 Device info ===
+        """Return device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.hub_id, self.device_id)},
-            name=self.sensor_device_name,
+            identifiers={
+                (DOMAIN, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY])
+            },
+            name=self._raw_device[DEVICE_NAME_KEY],
             manufacturer=MANUFACTURER,
-            model=self.device_type,
-            sw_version=self.raw_device_data.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(DOMAIN, self.hub_id) if self.hub_id else None,
+            model=self._raw_device[DEVICE_TYPE_KEY],
+            via_device=(DOMAIN, self._raw_device[HUB_ID_KEY]),
         )
 
-    @property
-    def device_class(self):
-        """Return the device class of this entity.py."""
-        return self._device_class
-
-    @property
-    def unique_id(self):
-        """A unique identifier for this entity.py."""
-        return self.entity_id
-
     async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+        """Register update listeners."""
+        # 实时更新事件
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self.entity_id}",
-                self._update_value,
+                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self.unique_id}",
+                self._handle_update,
+            )
+        )
+        # 全局数据刷新事件
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                LIFESMART_SIGNAL_UPDATE_ENTITY,
+                self._handle_global_refresh,
             )
         )
 
-    async def _update_value(self, data) -> None:
-        _LOGGER.debug(
-            "%s value update：%s",
-            self.entity_id,
-            str(data)[:300],  # 截取前300字符避免日志过长
+    async def _handle_update(self, new_data: dict) -> None:
+        """Handle real-time updates."""
+        val = new_data.get("v") or new_data.get("val")
+        if val is not None:
+            self._attr_native_value = val
+            self.async_write_ha_state()
+
+    async def _handle_global_refresh(self) -> None:
+        """Handle periodic full data refresh."""
+        # 从hass.data获取最新设备列表
+        devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
+        # 查找当前设备
+        current_device = next(
+            (
+                d
+                for d in devices
+                if d[HUB_ID_KEY] == self._raw_device[HUB_ID_KEY]
+                and d[DEVICE_ID_KEY] == self._raw_device[DEVICE_ID_KEY]
+            ),
+            None,
         )
+        if current_device is None:
+            _LOGGER.warning(
+                "LifeSmartSensor: Device not found during global refresh: %s",
+                self.unique_id,
+            )
+            return
 
-        if data is not None:
-            if self.device_type in GAS_SENSOR_TYPES:
-                self._state = data["val"]
-            elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P2":
-                self._state = data["v"]
-            elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P3":
-                self._state = data["v"]
-            elif self.device_type in SMART_PLUG_TYPES and self.sub_device_key == "P4":
-                self._state = data["val"]
-            elif self.device_type in LOCK_TYPES and self.sub_device_key == "BAT":
-                self._state = data.get(self._value_key, self._state)
-                self._state = min(max(int(self._state), 0), 100)  # 确保在0-100范围内
-                self._device_class = SensorDeviceClass.BATTERY
-                self._unit = PERCENTAGE
-            else:
-                if self.sub_device_key in ["T", "P1"]:
-                    self._device_class = SensorDeviceClass.TEMPERATURE
-                    self._unit = UnitOfTemperature.CELSIUS
-                elif self.sub_device_key in ["H", "P2"]:
-                    self._device_class = SensorDeviceClass.HUMIDITY
-                    self._unit = PERCENTAGE
-                elif self.sub_device_key == "Z":
-                    self._device_class = SensorDeviceClass.ILLUMINANCE
-                    self._unit = LIGHT_LUX
-                elif (
-                    self.sub_device_key == "V"
-                    or self.sub_device_key == "BAT"
-                    or (self.sub_device_key == "P8" and self.device_type in COVER_TYPES)
-                ):
-                    self._device_class = SensorDeviceClass.BATTERY
-                    self._unit = PERCENTAGE
-                elif self.sub_device_key == "P3":
-                    self._device_class = "None"
-                    self._unit = CONCENTRATION_PARTS_PER_MILLION
-                elif self.sub_device_key == "P4":
-                    self._device_class = "None"
-                    self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
+        sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
+        val = sub_data.get("v") or sub_data.get("val")
+        if val is not None:
+            self._attr_native_value = val
+            self.async_write_ha_state()
+        else:
+            _LOGGER.debug(
+                "LifeSmartSensor: No value found for sub-device '%s' during global refresh",
+                self._sub_key,
+            )
 
-                self._state = data["v"]
-            self.schedule_update_ha_state()
-            _LOGGER.debug("%s value updated to：%s", self.entity_id, self._state)
+    @property
+    def native_value(self) -> Any:
+        """Return the state of the sensor."""
+        return self._attr_native_value

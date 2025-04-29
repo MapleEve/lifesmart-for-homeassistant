@@ -108,11 +108,12 @@ def build_cloud_schema(config_data: dict = None) -> vol.Schema:
     return vol.Schema(schema_elements)
 
 
-async def validate_input(hass, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
     try:
         lifesmart_client = LifeSmartClient(
+            hass,
             data[CONF_REGION],
             data[CONF_LIFESMART_APPKEY],
             data[CONF_LIFESMART_APPTOKEN],
@@ -218,13 +219,13 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except (asyncio.TimeoutError, ConnectionRefusedError) as e:
             errors["base"] = "cannot_connect"
-            _LOGGER.error("Local connection error: %s", e)
+            _LOGGER.error("Local connection error: %s", str(e))
         except asyncio.InvalidStateError as e:
             errors["base"] = "invalid_auth"
             _LOGGER.error("Local Auth error: %s", str(e))
         except Exception as e:
             errors["base"] = "unknown"
-            _LOGGER.error("Unexpected error: %s", e, exc_info=True)
+            _LOGGER.error("Unexpected error: %s", str(e), exc_info=True)
 
         return self.async_show_form(
             step_id="local",
@@ -277,13 +278,13 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         except ConfigEntryAuthFailed as e:
             errors["base"] = "invalid_auth"
-            _LOGGER.error("Cloud auth error: %s", e)
+            _LOGGER.error("Cloud auth error: %s", str(e))
         except (asyncio.TimeoutError, ConnectionRefusedError) as e:
             errors["base"] = "cannot_connect"
-            _LOGGER.error("Connection error: %s", e)
+            _LOGGER.error("Connection error: %s", str(e))
         except Exception as e:
             errors["base"] = "unknown"
-            _LOGGER.error("Unexpected error: %s", e, exc_info=True)
+            _LOGGER.error("Unexpected error: %s", str(e), exc_info=True)
 
         return self.async_show_form(
             step_id=current_step,

@@ -94,7 +94,6 @@ class LifeSmartSwitch(SwitchEntity):
     ) -> None:
         """Initialize the switch."""
 
-        device_name = raw_device_data[DEVICE_NAME_KEY]
         device_type = raw_device_data[DEVICE_TYPE_KEY]
         hub_id = raw_device_data[HUB_ID_KEY]
         device_id = raw_device_data[DEVICE_ID_KEY]
@@ -135,7 +134,7 @@ class LifeSmartSwitch(SwitchEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        # === 支持 Hub 的 Device info ===
+        # 支持 Hub 的 Device info
         return DeviceInfo(
             identifiers={(DOMAIN, self.hub_id, self.device_id)},
             name=self.switch_name,
@@ -178,7 +177,7 @@ class LifeSmartSwitch(SwitchEntity):
             self._state = True
             self.async_schedule_update_ha_state()
         else:
-            _LOGGER.warning("Switch {self._me} - {self._idx} status changed failed")
+            _LOGGER.warning(f"Switch {self._me} - {self._idx} status changed failed")
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
@@ -191,7 +190,7 @@ class LifeSmartSwitch(SwitchEntity):
             self._state = False
             self.async_schedule_update_ha_state()
         else:
-            _LOGGER.warning("Switch {self._me} - {self._idx} status changed failed")
+            _LOGGER.warning(f"Switch {self._me} - {self._idx} status changed failed")
 
     @property
     def unique_id(self):

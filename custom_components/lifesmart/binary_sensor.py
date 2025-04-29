@@ -108,18 +108,10 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         self, device, raw_device_data, sub_device_key, sub_device_data, client
     ) -> None:
         super().__init__()
-        device_name = raw_device_data[DEVICE_NAME_KEY]
         device_type = raw_device_data[DEVICE_TYPE_KEY]
         hub_id = raw_device_data[HUB_ID_KEY]
         device_id = raw_device_data[DEVICE_ID_KEY]
-
-        if (
-            DEVICE_NAME_KEY in sub_device_data
-            and sub_device_data[DEVICE_NAME_KEY] != "none"
-        ):
-            device_name = sub_device_data[DEVICE_NAME_KEY]
-        else:
-            device_name = ""
+        device_name = sub_device_data.get(DEVICE_NAME_KEY, "")
 
         self._attr_has_entity_name = True
         self.sensor_device_name = raw_device_data[DEVICE_NAME_KEY]
@@ -217,7 +209,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        # === 支持 Hub 的 Device info ===
+        # 支持 Hub 的 Device info
         return DeviceInfo(
             identifiers={(DOMAIN, self.hub_id, self.device_id)},
             name=self.sensor_device_name,

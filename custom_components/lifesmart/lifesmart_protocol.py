@@ -884,7 +884,7 @@ class LifeSmartLocalClient(LifeSmart):
         self.port = port
         self.username = username
         self.password = password
-        self.config_agt = config_agt or "default_agt"  # 设置默认值或留空字符串 ""
+        self.config_agt = config_agt
         self.reader, self.writer = None, None
         self.dev = LifeSmart()
         self.disconnected = False
