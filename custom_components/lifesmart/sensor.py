@@ -37,11 +37,11 @@ from .const import (
     OT_SENSOR_TYPES,
     SMART_PLUG_TYPES,
     WATER_SENSOR_TYPES,
-    SMOKE_SENSOR_TYPES,
     NOISE_SENSOR_TYPES,
     POWER_METER_TYPES,
-    RADAR_SENSOR_TYPES,
     DEFED_SENSOR_TYPES,
+    EV_SENSOR_TYPES,
+    ALL_SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,18 +68,7 @@ async def async_setup_entry(
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
-        if device_type not in (
-            OT_SENSOR_TYPES
-            + GAS_SENSOR_TYPES
-            + LOCK_TYPES
-            + SMART_PLUG_TYPES
-            + WATER_SENSOR_TYPES
-            + SMOKE_SENSOR_TYPES
-            + NOISE_SENSOR_TYPES
-            + POWER_METER_TYPES
-            + RADAR_SENSOR_TYPES
-            + DEFED_SENSOR_TYPES
-        ):
+        if device_type not in ALL_SENSOR_TYPES:
             continue
 
         ha_device = LifeSmartDevice(device, client)
@@ -138,6 +127,10 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
 
     # 水浸传感器（只保留电压）
     if device_type in WATER_SENSOR_TYPES and sub_key == "V":
+        return True
+
+    # 环境感应器（EV系列）
+    if device_type in EV_SENSOR_TYPES and sub_key in {"P1", "P2"}:
         return True
 
     return False
@@ -238,6 +231,13 @@ class LifeSmartSensor(SensorEntity):
         if device_type in DEFED_SENSOR_TYPES and sub_key == "T":
             return SensorDeviceClass.TEMPERATURE
 
+        # 环境感应器（EV系列）
+        if device_type in EV_SENSOR_TYPES:
+            if sub_key == "P1":
+                return SensorDeviceClass.TEMPERATURE
+            if sub_key == "P2":
+                return SensorDeviceClass.HUMIDITY
+
         return None
 
     @callback
@@ -320,7 +320,7 @@ class LifeSmartSensor(SensorEntity):
             return raw_value / 10.0
 
         # CO2传感器的P1(温度)和P2(湿度)也需要除以10
-        if device_type == "SL_SC_CA":
+        if device_type in EV_SENSOR_TYPES:
             if self._sub_key == "P1":  # 温度
                 return raw_value / 10.0
             if self._sub_key == "P2":  # 湿度

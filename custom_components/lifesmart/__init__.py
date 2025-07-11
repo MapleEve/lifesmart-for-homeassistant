@@ -54,6 +54,11 @@ from .const import (
     LIGHT_SWITCH_TYPES,
     LOCK_TYPES,
     OT_SENSOR_TYPES,
+    POWER_METER_TYPES,
+    RADAR_SENSOR_TYPES,
+    WATER_SENSOR_TYPES,
+    SMOKE_SENSOR_TYPES,
+    NOISE_SENSOR_TYPES,
     SMART_PLUG_TYPES,
     SPOT_TYPES,
     SUBDEVICE_INDEX_KEY,
@@ -63,6 +68,8 @@ from .const import (
     SUPPORTED_SWTICH_TYPES,
     MANUFACTURER,
     UPDATE_LISTENER,
+    ALL_SENSOR_TYPES,
+    ALL_LIGHT_TYPES,
 )
 from .lifesmart_client import LifeSmartClient
 
@@ -725,9 +732,9 @@ def get_platform_by_device(device_type, sub_device=None):
         return Platform.BINARY_SENSOR
     elif device_type in COVER_TYPES:
         return Platform.COVER
-    elif device_type in EV_SENSOR_TYPES + GAS_SENSOR_TYPES + OT_SENSOR_TYPES:
+    elif device_type in ALL_SENSOR_TYPES:
         return Platform.SENSOR
-    elif device_type in SPOT_TYPES + LIGHT_SWITCH_TYPES + LIGHT_DIMMER_TYPES:
+    elif device_type in ALL_LIGHT_TYPES:
         return Platform.LIGHT
     elif device_type in CLIMATE_TYPES:
         return Platform.CLIMATE
@@ -752,7 +759,7 @@ def generate_entity_id(
 
     # 清理非法字符的函数
     def sanitize(input_str: str) -> str:
-        return re.sub(r"[^a-zA-Z0-9_]", "", input_str).lower()
+        return re.sub(r"\w", "", input_str).lower()
 
     # 标准化参数
     safe_type = sanitize(device_type)

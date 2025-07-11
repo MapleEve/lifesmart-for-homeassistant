@@ -223,7 +223,7 @@ lifesmart:
 | SL_SC_BE     | 多功能(CUBE)环境感应器             |              |
 | SL_SC_CQ     | 环境感应器(CO2+TVOC)            |              |
 | SL_SC_CA     | 环境感应器(CO2)                 |              |
-| SL_SC_B1_V1  | 环境感应器                      | #11 Issue 添加 |
+| SL_SC_B1     | 环境感应器                      | #11 Issue 添加 |
 | SL_SC_WA     | ⽔浸感应器                      |              |
 | SL_SC_CH     | ⽓体感应器(甲醛)                  |              |
 | SL_SC_CP     | ⽓体感应器(燃⽓)                  |              |
