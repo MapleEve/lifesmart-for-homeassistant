@@ -19,6 +19,8 @@ CON_AI_TYPES = [
     CON_AI_TYPE_GROUP,
 ]
 AI_TYPES = ["ai"]
+
+# 支持的开关设备类型
 SUPPORTED_SWTICH_TYPES = [
     "OD_WE_OT1",
     "SL_MC_ND1",
@@ -64,6 +66,7 @@ SUPPORTED_SWTICH_TYPES = [
     "V_IND_S",
 ]
 
+# 支持的子设备开关类型
 SUPPORTED_SUB_SWITCH_TYPES = [
     "L1",
     "L2",
@@ -73,6 +76,7 @@ SUPPORTED_SUB_SWITCH_TYPES = [
     "P3",
 ]
 
+# 支持的子设备二进制传感器类型
 SUPPORTED_SUB_BINARY_SENSORS = [
     "M",
     "G",
@@ -84,6 +88,7 @@ SUPPORTED_SUB_BINARY_SENSORS = [
     "P7",
 ]
 
+# 灯光开关设备
 LIGHT_SWITCH_TYPES = [
     "SL_OL_W",
     "SL_SW_IF1",
@@ -91,29 +96,35 @@ LIGHT_SWITCH_TYPES = [
     "SL_SW_IF3",
     "SL_CT_RGBW",
 ]
+
+# 灯光调光设备
 LIGHT_DIMMER_TYPES = [
     "SL_LI_WW",
     "SL_LI_WW_V2",  # 新增：调光调色智控器(0-10V)
 ]
 
+# 量子灯光设备
 QUANTUM_TYPES = [
     "OD_WE_QUAN",
 ]
-# 新增的灯设备类型定义
+
+# 幻彩灯带（带白光）和RGBW灯光设备
 RGBW_LIGHT_TYPES = [
     "SL_CT_RGBW",  # 幻彩灯带（带白光）
     "SL_LI_RGBW",  # RGBW灯光设备
 ]
-
+# 幻彩灯带（不带白光）和RGBW灯光设备
 RGB_LIGHT_TYPES = [
     "SL_SC_RGB",  # 幻彩灯带（不带白光）
 ]
 
+# 户外灯设备
 OUTDOOR_LIGHT_TYPES = [
     "SL_LI_GD1",  # 调光壁灯（门廊壁灯）
     "SL_LI_UG1",  # 花园地灯
 ]
 
+# 灯设备
 SPOT_TYPES = [
     "MSL_IRCTL",
     "OD_WE_IRCTL",
@@ -121,31 +132,31 @@ SPOT_TYPES = [
     "SL_P_IR",  # 新增：SPOT MINI
 ]
 
-# 所有灯设备类型汇总
-ALL_LIGHT_TYPES = (
-    LIGHT_SWITCH_TYPES
-    + LIGHT_DIMMER_TYPES
-    + QUANTUM_TYPES
-    + SPOT_TYPES
-    + RGBW_LIGHT_TYPES
-    + RGB_LIGHT_TYPES
-    + OUTDOOR_LIGHT_TYPES
-)
-# 水浸传感器 SL_SC_WA
+# 水浸传感器
 WATER_SENSOR_TYPES = ["SL_SC_WA"]
+
+# 移动感应器
 MOTION_SENSOR_TYPES = ["SL_SC_MHW", "SL_SC_BM", "SL_SC_CM"]
-# 烟雾感应器 SL_P_A
+
+# 烟雾感应器
 SMOKE_SENSOR_TYPES = ["SL_P_A"]
-# 噪音感应器 SL_SC_CN
+
+# 噪音感应器
 NOISE_SENSOR_TYPES = ["SL_SC_CN"]
-# ELIQ电量计量器 ELIQ_EM
+
+# ELIQ电量计量器
 POWER_METER_TYPES = ["ELIQ_EM"]
+
 # 云防门窗感应器和动态感应器还有温度和电量数据
 DEFED_SENSOR_TYPES = ["SL_DF_GG", "SL_DF_MM"]
-# 人体存在感应器 SL_P_RM（雷达传感器）
+
+# 人体存在感应器 （雷达传感器）
 RADAR_SENSOR_TYPES = ["SL_P_RM"]
-# 语音小Q SL_SC_CV
+
+# 语音小Q
 VOICE_SENSOR_TYPES = ["SL_SC_CV"]
+
+# 基础二元传感器
 BINARY_SENSOR_TYPES = [
     "SL_SC_G",
     "SL_SC_BG",
@@ -155,23 +166,20 @@ BINARY_SENSOR_TYPES = [
     "SL_P_A",
     "SL_P",
 ]
+
+# 窗帘设备
 COVER_TYPES = ["SL_DOOYA", "SL_P_V2", "SL_SW_WIN", "SL_CN_IF", "SL_CN_FE"]
+
+# 气体传感器
 GAS_SENSOR_TYPES = ["SL_SC_WA ", "SL_SC_CH", "SL_SC_CP", "ELIQ_EM"]
+
+# 气候设备
 EV_SENSOR_TYPES = ["SL_SC_THL", "SL_SC_BE", "SL_SC_CQ", "SL_SC_B1", "SL_SC_CA"]
+
+# 户外传感器
 OT_SENSOR_TYPES = ["SL_SC_MHW", "SL_SC_BM", "SL_SC_G", "SL_SC_BG"]
-ALL_SENSOR_TYPES = (
-    WATER_SENSOR_TYPES
-    + MOTION_SENSOR_TYPES
-    + SMOKE_SENSOR_TYPES
-    + NOISE_SENSOR_TYPES
-    + POWER_METER_TYPES
-    + DEFED_SENSOR_TYPES
-    + RADAR_SENSOR_TYPES
-    + VOICE_SENSOR_TYPES
-    + GAS_SENSOR_TYPES
-    + EV_SENSOR_TYPES
-    + OT_SENSOR_TYPES
-)
+
+# 锁设备
 LOCK_TYPES = [
     "SL_LK_LS",
     "SL_LK_GTM",
@@ -181,6 +189,7 @@ LOCK_TYPES = [
     "SL_P_BDLK",
     "OD_JIUWANLI_LOCK1",
 ]
+# 锁的解锁方式
 UNLOCK_METHOD = {
     0: "None",
     1: "Password",
@@ -195,6 +204,8 @@ UNLOCK_METHOD = {
     15: "Error",
 }
 GUARD_SENSOR_TYPES = ["SL_SC_G", "SL_SC_BG"]
+
+# 没有名字设备类型列表
 DEVICE_WITHOUT_IDXNAME = [
     "SL_NATURE",
     "SL_SW_ND1",
@@ -204,9 +215,17 @@ DEVICE_WITHOUT_IDXNAME = [
     "SL_SW_MJ2",
     "SL_SW_MJ3",
 ]
+
+# 网关设备
 GENERIC_CONTROLLER_TYPES = ["SL_P", "SL_P_IR"]
+
+# 智能插座设备
 SMART_PLUG_TYPES = ["SL_OE_DE", "SL_OE_3C", "SL_OE_W", "OD_WE_OT1"]
 
+# 空调设备
+CLIMATE_TYPES = ["V_AIR_P", "SL_CP_DN"]
+
+# 空调状态列表
 LIFESMART_HVAC_STATE_LIST = [
     climate.const.HVACMode.OFF,
     climate.const.HVACMode.AUTO,
@@ -216,6 +235,7 @@ LIFESMART_HVAC_STATE_LIST = [
     climate.const.HVACMode.DRY,
 ]
 
+# 支持的平台列表
 SUPPORTED_PLATFORMS = [
     Platform.SWITCH,
     Platform.BINARY_SENSOR,
@@ -224,7 +244,39 @@ SUPPORTED_PLATFORMS = [
     Platform.LIGHT,
     Platform.CLIMATE,
 ]
-CLIMATE_TYPES = ["V_AIR_P", "SL_CP_DN"]
+
+ALL_SENSOR_TYPES = (
+    WATER_SENSOR_TYPES
+    + MOTION_SENSOR_TYPES
+    + SMOKE_SENSOR_TYPES
+    + NOISE_SENSOR_TYPES
+    + POWER_METER_TYPES
+    + DEFED_SENSOR_TYPES
+    + RADAR_SENSOR_TYPES
+    + VOICE_SENSOR_TYPES
+    + GAS_SENSOR_TYPES
+    + EV_SENSOR_TYPES
+    + OT_SENSOR_TYPES
+)
+
+ALL_BINARY_SENSOR_TYPES = (
+    BINARY_SENSOR_TYPES
+    + LOCK_TYPES
+    + WATER_SENSOR_TYPES
+    + SMOKE_SENSOR_TYPES
+    + RADAR_SENSOR_TYPES
+)
+
+# 所有灯设备类型汇总
+ALL_LIGHT_TYPES = (
+    LIGHT_SWITCH_TYPES
+    + LIGHT_DIMMER_TYPES
+    + QUANTUM_TYPES
+    + SPOT_TYPES
+    + RGBW_LIGHT_TYPES
+    + RGB_LIGHT_TYPES
+    + OUTDOOR_LIGHT_TYPES
+)
 
 ENTITYID = "entity_id"
 DOMAIN = "lifesmart"
@@ -244,6 +296,7 @@ UPDATE_LISTENER = "update_listener"
 
 LIFESMART_SIGNAL_UPDATE_ENTITY = "lifesmart_updated"
 
+# 服务器区域
 LIFESMART_REGION_OPTIONS = [
     {"label": "中国 1 (cn0)", "value": "cn0"},
     {"label": "中国备用(cn1)", "value": "cn1"},
