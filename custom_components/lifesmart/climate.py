@@ -1,4 +1,4 @@
-"""Support for the LifeSmart climate devices."""
+"""Support for the LifeSmart climate devices by @MapleEve"""
 
 import logging
 import time

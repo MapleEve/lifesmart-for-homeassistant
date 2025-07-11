@@ -1,4 +1,4 @@
-"""Support for LifeSmart binary sensors.  by @MapleEve"""
+"""Support for LifeSmart binary sensors by @MapleEve"""
 
 import datetime
 import logging

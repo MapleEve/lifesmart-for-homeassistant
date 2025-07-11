@@ -1,4 +1,4 @@
-"""Support for LifeSmart sensors."""
+"""Support for LifeSmart sensors by @MapleEve"""
 
 import logging
 from typing import Any
