@@ -70,6 +70,7 @@ from .const import (
     UPDATE_LISTENER,
     ALL_SENSOR_TYPES,
     ALL_LIGHT_TYPES,
+    ALL_BINARY_SENSOR_TYPES,
 )
 from .lifesmart_client import LifeSmartClient
 
@@ -728,7 +729,7 @@ def _get_error_advice(error_code: int) -> Tuple[str, str]:
 def get_platform_by_device(device_type, sub_device=None):
     if device_type in SUPPORTED_SWTICH_TYPES:
         return Platform.SWITCH
-    elif device_type in BINARY_SENSOR_TYPES:
+    elif device_type in ALL_BINARY_SENSOR_TYPES:
         return Platform.BINARY_SENSOR
     elif device_type in COVER_TYPES:
         return Platform.COVER
