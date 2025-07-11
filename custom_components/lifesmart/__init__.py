@@ -60,7 +60,6 @@ from .const import (
     CLIMATE_TYPES,
     LOCK_TYPES,
     CAMERA_TYPES,
-    ALARM_TYPES,
     SMART_PLUG_TYPES,
     SPOT_TYPES,
     # --- 平台列表 ---
@@ -672,7 +671,6 @@ class LifeSmartStateManager:
 
 
 # ======================== 辅助工具函数 ======================== #
-# 错误码到友好描述的映射（可根据文档扩展）
 ERROR_CODE_MAPPING = {
     10001: ("请求格式错误", "请校验JSON数据结构及字段类型"),
     10002: ("AppKey不存在", "检查集成配置中的APPKey是否正确"),
@@ -686,7 +684,6 @@ ERROR_CODE_MAPPING = {
     10019: ("对象不存在", "检查请求中的设备/用户ID是否正确", "资源定位"),
 }
 
-# 错误分类建议模板
 RECOMMENDATION_GROUP = {
     "用户授权": "请重新登录或刷新令牌",
     "安全策略": "检查网络安全配置或联系运维",
@@ -707,7 +704,7 @@ def _get_error_advice(error_code: int) -> Tuple[str, str]:
         advice_text = advice[0] if len(advice) > 0 else ""
         return desc, advice_text, category
 
-    # 动态生成未知错误描述（示例）
+    # 动态生成未知错误描述
     error_ranges = {
         (10000, 10100): "API请求错误",
         (10100, 10200): "设备操作错误",
@@ -732,8 +729,6 @@ def get_platform_by_device(device_type, sub_device=None):
         return Platform.CLIMATE
     elif device_type in CAMERA_TYPES:  # 摄像头平台
         return Platform.CAMERA
-    elif device_type in ALARM_TYPES:  # 报警器平台
-        return Platform.ALARM_CONTROL_PANEL
 
     # --- 对复合设备进行子设备判断 ---
     # 门锁设备

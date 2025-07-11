@@ -27,45 +27,47 @@ SUPPORTED_SWITCH_TYPES = [
     # --- 传统/通用开关 ---
     "SL_S",
     "SL_P_SW",
+    "SL_SPWM",
+    # --- 流光开关 ---
     "SL_SW_IF1",
     "SL_SW_IF2",
     "SL_SW_IF3",
     "SL_SW_FE1",
     "SL_SW_FE2",
     "SL_SW_RC",
-    "SL_SW_RC1",
-    "SL_SW_RC2",
-    "SL_SW_RC3",
-    "V_IND_S",
-    # --- 极星/辰星系列 (Nature/Star) ---
-    "SL_SW_ND1",
-    "SL_SW_ND2",
-    "SL_SW_ND3",
-    "SL_SW_NS1",
-    "SL_SW_NS2",
-    "SL_SW_NS3",
-    "SL_SW_NS1_L",
-    "SL_SW_NS2_L",
-    "SL_SW_NS3_L",  # 极星开关(零火)
-    # --- 奇点/CUBE系列 ---
-    "SL_SW_CP1",
-    "SL_SW_CP2",
-    "SL_SW_CP3",
-    "SL_SW_CUBE_B1",
-    "SL_SW_CUBE_B2",
-    "SL_SW_CUBE_B3",  # 奇点开关模块
-    "SL_SW_CUBE_S1",  # 随心开关
-    # --- 星玉/超能面板系列 (Nature/Mini) ---
-    "SL_NATURE",
-    "SL_SW_MINI_1",
-    "SL_SW_MINI_2",  # 超能面板
-    # --- 其他控制器 ---
     "SL_SF_IF1",
     "SL_SF_IF2",
     "SL_SF_IF3",
     "SL_SF_RC",
-    "SL_SPWM",
-    # --- 废弃或区域性 ---
+    # --- ⽩⽟/墨⽟流光开关 ---
+    "SL_SW_RC1",
+    "SL_SW_RC2",
+    "SL_SW_RC3",
+    # --- 恒星/⾠星/极星系列 (Nature/Star) ---
+    "SL_SW_ND1",
+    "SL_MC_ND1",
+    "SL_SW_ND2",
+    "SL_MC_ND2",
+    "SL_SW_ND3",
+    "SL_MC_ND3",
+    # --- 视界触摸开关 ---
+    "SL_SW_NS1",
+    "SL_SW_NS2",
+    "SL_SW_NS3",
+    # --- 橙补流光开关 ---
+    "SL_SW_CP1",
+    "SL_SW_CP2",
+    "SL_SW_CP3",
+    # --- 极星开关 ---
+    "SL_SW_BS1",
+    "SL_SW_BS2",
+    "SL_SW_BS3",
+    "SL_SC_BB",  # 随心开关
+    "SL_SC_BB_V2",  # 随心开关 V2
+    # --- 超能面板系列 ---
+    "SL_NATURE",  # 超能面板
+    "SL_FCU",  # 超能面板 星⽟
+    # --- 奇点开关模块 ---
     "SL_SW_MJ1",
     "SL_SW_MJ2",
     "SL_SW_MJ3",
@@ -75,32 +77,30 @@ SUPPORTED_SWITCH_TYPES = [
 # ================= 插座系列 (Outlet/Plug Series) =================
 SMART_PLUG_TYPES = [
     "SL_OL",
-    "SL_OL_3C",
-    "SL_OL_DE",
-    "SL_OL_UK",
-    "SL_OL_UL",
-    "OD_WE_OT1",
-    "SL_OE_DE",
-    "SL_OE_3C",
-    "SL_OE_W",  # 兼容旧版
+    "SL_OL_3C",  # 3C插座
+    "SL_OL_DE",  # 德标
+    "SL_OL_UK",  # 英标
+    "SL_OL_UL",  # 美标
+    "OD_WE_OT1",  # 智能插座（Wifi）
 ]
 
 # --- 计量插座 ---
 POWER_METER_PLUG_TYPES = [
-    "SL_OL_ME",
+    "SL_OE_DE",  # 德标插座
+    "SL_OE_3C",  # 3C插座
+    "SL_OE_W",  # 入墙插座
 ]
 
 # ================= 灯光系列 (Light Series) =================
 # --- 灯光开关 (作为light实体) ---
 LIGHT_SWITCH_TYPES = [
     "SL_OL_W",
-    "SL_LI_S",
 ]
 # --- 调光调色灯/控制器 ---
 LIGHT_DIMMER_TYPES = [
     "SL_LI_WW",
+    "SL_LI_WW_V1",
     "SL_LI_WW_V2",
-    "SL_LI_DIM",
 ]
 
 # --- 量子灯 ---
@@ -128,11 +128,13 @@ LIGHT_BULB_TYPES = [
 # ================= 窗帘系列 (Cover Series) =================
 COVER_TYPES = [
     "SL_DOOYA",
+    "SL_DOOYA_V2",
+    "SL_DOOYA_V3",  # 卷帘电机
+    "SL_DOOYA_V4",  # 卷帘电机电池
     "SL_P_V2",
     "SL_SW_WIN",
     "SL_CN_IF",
     "SL_CN_FE",
-    "SL_CU_SMART",  # 智界窗帘电机
 ]
 # 车库门
 GARAGE_DOOR_TYPES = [
@@ -154,8 +156,8 @@ RADAR_SENSOR_TYPES = ["SL_P_RM"]
 DEFED_SENSOR_TYPES = [
     "SL_DF_GG",  # 云防门窗
     "SL_DF_MM",  # 云防动态
-    "SL_DF_Siren",  # 云防警铃
-    "SL_DF_Fob",  # 云防遥控器
+    "SL_DF_SR",  # 云防警铃
+    "SL_DF_BB",  # 云防遥控器
 ]
 # --- 基础二元传感器 (通常是其他设备附带的) ---
 BINARY_SENSOR_TYPES = (
@@ -171,29 +173,28 @@ BINARY_SENSOR_TYPES = (
 EV_SENSOR_TYPES = ["SL_SC_THL", "SL_SC_BE", "SL_SC_CQ", "SL_SC_B1", "SL_SC_CA"]
 # TVOC/CO2/甲醛等
 ENVIRONMENT_SENSOR_TYPES = [
-    "SL_SC_TVOC",
-    "SL_SC_CO2",
+    "SL_SC_CQ",
+    "SL_SC_CA",
     "SL_SC_CH",
 ]
-# --- 气体感应器 ---
+# --- 燃气感应器 ---
 GAS_SENSOR_TYPES = ["SL_SC_CP"]  # 燃气
 # --- 噪音感应器 ---
 NOISE_SENSOR_TYPES = ["SL_SC_CN"]
 # --- 电量计量器 ---
-POWER_METER_TYPES = ["ELIQ_EM", "SL_DLT_M"]  # DLT 电量计量
+POWER_METER_TYPES = ["ELIQ_EM", "V_DLT645_P"]
 # --- 语音小Q ---
 VOICE_SENSOR_TYPES = ["SL_SC_CV"]
 
 # ================= 温控系列 (Climate Series) =================
 CLIMATE_TYPES = [
     "V_AIR_P",
-    "SL_CP_DN",
-    "SL_TH_P1",
-    "SL_TH_P2",  # 地暖温控器
-    "SL_TH_S1",
-    "SL_TH_S2",  # 温控阀门
-    "SL_FA_P1",  # 新风系统
-    "SL_FCU_P1",  # 风机盘管
+    "SL_CP_DN",  # 地暖温控器
+    "SL_UACCB",  # 空调控制器
+    "SL_CP_VL",  # 温控阀门
+    "SL_TR_ACIPM",  # 新风系统
+    "SL_CP_AIR",  # 风机盘管
+    "V_FRESH_P",  # 艾弗纳 KV11
 ]
 
 # ================= 门锁系列 (Lock Series) =================
@@ -222,25 +223,14 @@ UNLOCK_METHOD = {
 }
 
 # ================= 其他设备类型 =================
-# --- 红外伴侣 (SPOT) ---
-SPOT_TYPES = ["MSL_IRCTL", "OD_WE_IRCTL", "SL_SPOT", "SL_P_IR"]
+# --- 超级碗 (SPOT) ---
+SPOT_TYPES = ["MSL_IRCTL", "OD_WE_IRCTL", "SL_SPOT", "SL_P_IR", "SL_P_IR_V2"]
 # --- 通用控制器 ---
-GENERIC_CONTROLLER_TYPES = ["SL_P", "SL_P_IR", "SL_GC_HA", "SL_GC_485"]  # 新增
+GENERIC_CONTROLLER_TYPES = ["SL_P", "SL_JEMA"]
 # --- 摄像头 ---
-CAMERA_TYPES = ["SL_CAM_OD1", "SL_CAM_PT1"]  # 新增
-# --- 报警器 ---
-ALARM_TYPES = ["SL_P_ALARM"]  # 新增
+CAMERA_TYPES = ["LSCAM:LSICAMGOS1", "LSCAM:LSICAMEZ2"]  # 新增
 
 # --- 辅助常量 ---
-DEVICE_WITHOUT_IDXNAME = [
-    "SL_NATURE",
-    "SL_SW_ND1",
-    "SL_SW_ND2",
-    "SL_SW_ND3",
-    "SL_SW_MJ1",
-    "SL_SW_MJ2",
-    "SL_SW_MJ3",
-]
 SUPPORTED_SUB_SWITCH_TYPES = ["L1", "L2", "L3", "P1", "P2", "P3"]
 SUPPORTED_SUB_BINARY_SENSORS = ["M", "G", "B", "AXS", "P1", "P5", "P6", "P7"]
 
@@ -298,7 +288,6 @@ SUPPORTED_PLATFORMS = [
     Platform.CLIMATE,
     Platform.LOCK,
     Platform.CAMERA,
-    Platform.ALARM_CONTROL_PANEL,
 ]
 
 # ================= 其他常量 =================
