@@ -31,7 +31,7 @@ from .const import (
     UNLOCK_METHOD,
     MANUFACTURER,
     MOTION_SENSOR_TYPES,
-    # 新增的二元传感器类型
+    ALL_BINARY_SENSOR_TYPES,
     WATER_SENSOR_TYPES,
     SMOKE_SENSOR_TYPES,
     RADAR_SENSOR_TYPES,
@@ -62,16 +62,7 @@ async def async_setup_entry(
 
         device_type = device[DEVICE_TYPE_KEY]
 
-        # 扩展支持的二元传感器类型
-        supported_types = (
-            BINARY_SENSOR_TYPES
-            + LOCK_TYPES
-            + WATER_SENSOR_TYPES
-            + SMOKE_SENSOR_TYPES
-            + RADAR_SENSOR_TYPES
-        )
-
-        if device_type not in supported_types:
+        if device_type not in ALL_BINARY_SENSOR_TYPES:
             continue
 
         ha_device = LifeSmartDevice(device, client)
