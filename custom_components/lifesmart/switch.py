@@ -21,7 +21,7 @@ from .const import (
     SMART_PLUG_TYPES,
     SPOT_TYPES,
     SUPPORTED_SUB_SWITCH_TYPES,
-    SUPPORTED_SWTICH_TYPES,
+    SUPPORTED_SWITCH_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
-        if device_type in SUPPORTED_SWTICH_TYPES + SMART_PLUG_TYPES + SPOT_TYPES:
+        if device_type in SUPPORTED_SWITCH_TYPES + SMART_PLUG_TYPES + SPOT_TYPES:
             ha_device = LifeSmartDevice(
                 device,
                 client,

@@ -30,47 +30,40 @@ from homeassistant.util.ssl import get_default_context
 
 from . import lifesmart_protocol
 from .const import (
-    BINARY_SENSOR_TYPES,
-    CLIMATE_TYPES,
-    CONF_AI_INCLUDE_AGTS,
-    CONF_AI_INCLUDE_ITEMS,
-    CONF_EXCLUDE_AGTS,
-    CONF_EXCLUDE_ITEMS,
+    # --- 核心常量 ---
+    DOMAIN,
+    MANUFACTURER,
+    UPDATE_LISTENER,
+    DEVICE_ID_KEY,
+    DEVICE_NAME_KEY,
+    DEVICE_TYPE_KEY,
+    HUB_ID_KEY,
+    SUBDEVICE_INDEX_KEY,
+    LIFESMART_SIGNAL_UPDATE_ENTITY,
+    LIFESMART_STATE_MANAGER,
+    # --- 配置相关 ---
     CONF_LIFESMART_APPKEY,
     CONF_LIFESMART_APPTOKEN,
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERTOKEN,
-    COVER_TYPES,
-    DEVICE_ID_KEY,
-    DEVICE_NAME_KEY,
-    DEVICE_TYPE_KEY,
-    DOMAIN,
-    EV_SENSOR_TYPES,
-    GAS_SENSOR_TYPES,
-    HUB_ID_KEY,
-    LIFESMART_SIGNAL_UPDATE_ENTITY,
-    LIFESMART_STATE_MANAGER,
-    LIGHT_DIMMER_TYPES,
-    LIGHT_SWITCH_TYPES,
+    CONF_AI_INCLUDE_AGTS,
+    CONF_AI_INCLUDE_ITEMS,
+    CONF_EXCLUDE_AGTS,
+    CONF_EXCLUDE_ITEMS,
+    # --- 设备类型聚合列表 (大列表) ---
+    ALL_SWITCH_TYPES,
+    ALL_LIGHT_TYPES,
+    ALL_COVER_TYPES,
+    ALL_BINARY_SENSOR_TYPES,
+    ALL_SENSOR_TYPES,
+    CLIMATE_TYPES,
     LOCK_TYPES,
-    OT_SENSOR_TYPES,
-    POWER_METER_TYPES,
-    RADAR_SENSOR_TYPES,
-    WATER_SENSOR_TYPES,
-    SMOKE_SENSOR_TYPES,
-    NOISE_SENSOR_TYPES,
+    CAMERA_TYPES,
+    ALARM_TYPES,
     SMART_PLUG_TYPES,
     SPOT_TYPES,
-    SUBDEVICE_INDEX_KEY,
+    # --- 平台列表 ---
     SUPPORTED_PLATFORMS,
-    SUPPORTED_SUB_BINARY_SENSORS,
-    SUPPORTED_SUB_SWITCH_TYPES,
-    SUPPORTED_SWTICH_TYPES,
-    MANUFACTURER,
-    UPDATE_LISTENER,
-    ALL_SENSOR_TYPES,
-    ALL_LIGHT_TYPES,
-    ALL_BINARY_SENSOR_TYPES,
 )
 from .lifesmart_client import LifeSmartClient
 
@@ -727,26 +720,45 @@ def _get_error_advice(error_code: int) -> Tuple[str, str]:
 
 
 def get_platform_by_device(device_type, sub_device=None):
-    if device_type in SUPPORTED_SWTICH_TYPES:
+    """根据设备类型和子索引，决定其所属的Home Assistant平台。"""
+    if device_type in ALL_SWITCH_TYPES:
         return Platform.SWITCH
-    elif device_type in ALL_BINARY_SENSOR_TYPES:
-        return Platform.BINARY_SENSOR
-    elif device_type in COVER_TYPES:
-        return Platform.COVER
-    elif device_type in ALL_SENSOR_TYPES:
-        return Platform.SENSOR
     elif device_type in ALL_LIGHT_TYPES:
         return Platform.LIGHT
+    elif device_type in ALL_COVER_TYPES:
+        return Platform.COVER
     elif device_type in CLIMATE_TYPES:
         return Platform.CLIMATE
-    elif device_type in LOCK_TYPES and sub_device == "BAT":
-        return Platform.SENSOR
-    elif device_type in LOCK_TYPES and sub_device in ["EVTLO", "ALM"]:
+    elif device_type in CAMERA_TYPES:  # 摄像头平台
+        return Platform.CAMERA
+    elif device_type in ALARM_TYPES:  # 报警器平台
+        return Platform.ALARM_CONTROL_PANEL
+
+    # --- 对复合设备进行子设备判断 ---
+    # 门锁设备
+    if device_type in LOCK_TYPES:
+        if sub_device == "BAT":  # 门锁的电量是一个 sensor
+            return Platform.SENSOR
+        elif sub_device in ["EVTLO", "ALM"]:  # 门锁的事件/警报是 binary_sensor
+            return Platform.BINARY_SENSOR
+        else:  # 门锁本身是 lock 实体
+            return Platform.LOCK
+
+    # 智能插座 (某些型号的子索引是传感器)
+    if device_type in SMART_PLUG_TYPES:
+        if sub_device == "P1":
+            return Platform.SWITCH
+        elif sub_device in ["P2", "P3"]:  # 通常是功率、电流等传感器
+            return Platform.SENSOR
+
+    # --- 将剩余的各类传感器归类 ---
+    # 注意：这个判断应该在复合设备之后，避免错误分类
+    if device_type in ALL_BINARY_SENSOR_TYPES:
         return Platform.BINARY_SENSOR
-    elif device_type in SMART_PLUG_TYPES and sub_device == "P1":
-        return Platform.SWITCH
-    elif device_type in SMART_PLUG_TYPES and sub_device in ["P2", "P3"]:
+    if device_type in ALL_SENSOR_TYPES:
         return Platform.SENSOR
+
+    # 如果所有条件都不满足，返回空
     return ""
 
 
