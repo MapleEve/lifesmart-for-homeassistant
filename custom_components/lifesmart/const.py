@@ -114,6 +114,13 @@ OUTDOOR_LIGHT_TYPES = [
     "SL_LI_UG1",  # 花园地灯
 ]
 
+SPOT_TYPES = [
+    "MSL_IRCTL",
+    "OD_WE_IRCTL",
+    "SL_SPOT",
+    "SL_P_IR",  # 新增：SPOT MINI
+]
+
 # 所有灯设备类型汇总
 ALL_LIGHT_TYPES = (
     LIGHT_SWITCH_TYPES
@@ -126,12 +133,6 @@ ALL_LIGHT_TYPES = (
 )
 MOTION_SENSOR_TYPES = ["SL_SC_MHW", "SL_SC_BM", "SL_SC_CM"]
 SMOKE_SENSOR_TYPES = ["SL_P_A"]
-SPOT_TYPES = [
-    "MSL_IRCTL",
-    "OD_WE_IRCTL",
-    "SL_SPOT",
-    "SL_P_IR",  # 新增：SPOT MINI
-]
 BINARY_SENSOR_TYPES = [
     "SL_SC_G",
     "SL_SC_BG",
