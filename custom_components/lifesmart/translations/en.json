@@ -6,13 +6,7 @@
         "title": "LifeSmart Integration Setup",
         "description": "Choose the connection method for your LifeSmart Hub.",
         "data": {
-          "type": {
-            "name": "Connection Method",
-            "options": {
-              "local_push": "Local",
-              "cloud_push": "Cloud"
-            }
-          }
+          "type": "Connection Method"
         }
       },
       "local": {
@@ -33,13 +27,7 @@
           "apptoken": "Web App Token",
           "userid": "Mobile App User ID",
           "region": "Server Region",
-          "auth_method": {
-            "name": "Authentication Method",
-            "options": {
-              "token": "User Token",
-              "password": "App Password"
-            }
-          }
+          "auth_method": "Authentication Method"
         }
       },
       "cloud_token": {
@@ -92,13 +80,7 @@
         "title": "Authentication Settings",
         "description": "You can update your authentication method or credentials here. This will trigger a reload of the integration.",
         "data": {
-          "auth_method": {
-            "name": "Authentication Method",
-            "options": {
-              "token": "User Token",
-              "password": "App Password"
-            }
-          }
+          "auth_method": "Authentication Method"
         }
       }
     }
