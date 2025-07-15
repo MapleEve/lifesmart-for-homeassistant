@@ -433,9 +433,7 @@ class LifeSmartRGBWLight(LifeSmartBaseLight):
                 self._raw_device[DEVICE_ID_KEY],
             )
         else:
-            result = await self._client.send_epset_async(
-                "0x81",
-                1,
+            result = await self._client.turn_on_light_swith_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
@@ -458,9 +456,7 @@ class LifeSmartRGBWLight(LifeSmartBaseLight):
                 self._raw_device[DEVICE_ID_KEY],
             )
         else:
-            result = await self._client.send_epset_async(
-                "0x80",
-                0,
+            result = await self._client.turn_off_light_swith_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
@@ -528,9 +524,7 @@ class LifeSmartRGBLight(LifeSmartBaseLight):
                 self._raw_device[DEVICE_ID_KEY],
             )
         else:
-            result = await self._client.send_epset_async(
-                "0x81",
-                1,
+            result = await self._client.turn_on_light_swith_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
@@ -542,9 +536,7 @@ class LifeSmartRGBLight(LifeSmartBaseLight):
 
     async def async_turn_off(self, **kwargs) -> None:
         """关闭RGB灯."""
-        result = await self._client.send_epset_async(
-            "0x80",
-            0,
+        result = await self._client.turn_off_light_swith_async(
             self._sub_key,
             self._raw_device[HUB_ID_KEY],
             self._raw_device[DEVICE_ID_KEY],
@@ -597,9 +589,7 @@ class LifeSmartOutdoorLight(LifeSmartBaseLight):
             if result == 0:
                 self._attr_brightness = brightness
         else:
-            result = await self._client.send_epset_async(
-                "0x81",
-                1,
+            result = await self._client.turn_on_light_swith_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
@@ -611,9 +601,7 @@ class LifeSmartOutdoorLight(LifeSmartBaseLight):
 
     async def async_turn_off(self, **kwargs) -> None:
         """关闭户外灯."""
-        result = await self._client.send_epset_async(
-            "0x80",
-            0,
+        result = await self._client.turn_off_light_swith_async(
             self._sub_key,
             self._raw_device[HUB_ID_KEY],
             self._raw_device[DEVICE_ID_KEY],
@@ -960,17 +948,13 @@ class LifeSmartLight(LifeSmartBaseLight):
                     self._raw_device[DEVICE_ID_KEY],
                 )
             else:
-                result = await self._client.send_epset_async(
-                    "0x81",
-                    1,
+                result = await self._client.turn_on_light_swith_async(
                     self._sub_key,
                     self._raw_device[HUB_ID_KEY],
                     self._raw_device[DEVICE_ID_KEY],
                 )
         else:
-            result = await self._client.send_epset_async(
-                "0x81",
-                1,
+            result = await self._client.turn_on_light_swith_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
@@ -982,9 +966,7 @@ class LifeSmartLight(LifeSmartBaseLight):
 
     async def async_turn_off(self, **kwargs) -> None:
         """关闭通用灯."""
-        result = await self._client.send_epset_async(
-            "0x80",
-            0,
+        result = await self._client.turn_off_light_swith_async(
             self._sub_key,
             self._raw_device[HUB_ID_KEY],
             self._raw_device[DEVICE_ID_KEY],
