@@ -28,7 +28,7 @@ class LifeSmartClient:
         self._apptoken = apptoken
         self._usertoken = usertoken
         self._userid = userid
-        self._userpassword = user_password
+        self._apppassword = user_password
 
     # 获取所有设备
     async def get_all_device_async(self):
@@ -81,9 +81,7 @@ class LifeSmartClient:
 
         send_data = json.dumps(auth_data)
         response = json.loads(await self.post_async(url, send_data, header))
-        if (
-            response.get("code") == 0 and "usertoken" in response
-        ):  # <-- [修改] 增强成功判断
+        if response.get("code") == 0 and "usertoken" in response:
             self._usertoken = response["usertoken"]
             return True
 

@@ -111,15 +111,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             except Exception as e:
                 _LOGGER.error("An error occurred during startup login: %s", e)
 
-        # --- [修改] 使用更新后的 config_data 初始化主客户端 ---
         client = LifeSmartClient(
             hass,
             config_data.get(CONF_REGION),
             config_data.get(CONF_LIFESMART_APPKEY),
             config_data.get(CONF_LIFESMART_APPTOKEN),
-            config_data.get(CONF_LIFESMART_USERTOKEN),  # 使用最新的token
+            config_data.get(CONF_LIFESMART_USERTOKEN),
             config_data.get(CONF_LIFESMART_USERID),
-            config_data.get(CONF_LIFESMART_USERPASSWORD),  # 传递密码，尽管可能用不上
+            config_data.get(CONF_LIFESMART_USERPASSWORD),
         )
     else:
         reload(lifesmart_protocol)
