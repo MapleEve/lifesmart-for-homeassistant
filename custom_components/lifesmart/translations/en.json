@@ -1,41 +1,47 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "LifeSmart: {name}",
     "step": {
       "user": {
         "title": "LifeSmart Integration Setup",
-        "description": "Connect method：",
-        "protocol_selector": {
-          "label": "Connect method",
-          "options": {
-            "local": "Local",
-            "cloud": "Cloud"
-          }
+        "description": "Choose the connection method for your LifeSmart Hub.",
+        "data": {
+          "type": "Connection Method"
         }
       },
       "local": {
-        "title": "LifeSmart Integration Setup",
-        "description": "Enter LifeSmart Hub local credential",
+        "title": "Local Hub Setup",
+        "description": "Enter your LifeSmart Hub's local credentials.",
         "data": {
-          "host": "IP",
+          "host": "IP Address",
           "port": "Port (Default 8888)",
-          "username": "Local User",
-          "password": "Local Password"
+          "username": "Local Username (Default admin)",
+          "password": "Local Password (Default admin)"
         }
       },
       "cloud": {
-        "title": "LifeSmart Integration Setup",
-        "description": "Enter LifeSmart Platform credential and User details.",
+        "title": "Cloud Setup (Step 1 of 2)",
+        "description": "Enter your LifeSmart platform credentials and choose an authentication method.",
         "data": {
           "appkey": "Web App Key",
           "apptoken": "Web App Token",
-          "usertoken": "Auth User Token ",
           "userid": "Mobile App User ID",
-          "region": "LifeSmart regional domain",
-          "exclude": "List of device to be excluded",
-          "exclude_agt": "List of hub to be excluded",
-          "ai_include_agt": "List of hub to be included in Scene",
-          "ai_include_me": "List of device to be included in Scene"
+          "region": "Server Region",
+          "auth_method": "Authentication Method"
+        }
+      },
+      "cloud_token": {
+        "title": "Cloud Setup (Step 2 of 2)",
+        "description": "Please enter your User Token.",
+        "data": {
+          "usertoken": "User Token"
+        }
+      },
+      "cloud_password": {
+        "title": "Cloud Setup (Step 2 of 2)",
+        "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
+        "data": {
+          "userpassword": "User Password"
         }
       }
     },
@@ -44,33 +50,37 @@
       "already_configured": "This device is already configured."
     },
     "error": {
-      "cannot_connect": "Cannot connect",
-      "invalid_auth": "Authentication failed",
-      "unknown": "Unknown error / Configuration error"
+      "cannot_connect": "Failed to connect. Please check your network and IP address.",
+      "invalid_auth": "Authentication failed. Please check your credentials.",
+      "unknown": "An unknown error occurred. Please check the logs.",
+      "invalid_response": "The API returned an invalid response. Please check your credentials and network."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "LifeSmart Integration Setup",
-        "description": "Select configurations to edit",
+        "title": "LifeSmart Integration Options",
+        "description": "Select which settings you want to edit for {name}.",
         "menu_options": {
-          "main_params": "Main configurations"
+          "main_params": "General Settings",
+          "auth_params": "Authentication Settings"
         }
       },
       "main_params": {
-        "title": "LifeSmart Integration Options",
-        "description": "Enter LifeSmart Platform credential and User details.",
+        "title": "General Settings",
+        "description": "Configure exclusion lists for devices and hubs.",
         "data": {
-          "appkey": "Web App Key",
-          "apptoken": "Web App Token",
-          "usertoken": "Auth User Token ",
-          "userid": "Mobile App User ID",
-          "region": "LifeSmart regional domain",
-          "exclude": "List of device to be excluded",
-          "exclude_agt": "List of hub to be excluded",
-          "ai_include_agt": "List of hub to be included in Scene",
-          "ai_include_me": "List of device to be included in Scene"
+          "exclude": "List of devices to be excluded (comma-separated)",
+          "exclude_agt": "List of hubs to be excluded (comma-separated)",
+          "ai_include_agt": "List of hubs to be included in Scenes (comma-separated)",
+          "ai_include_me": "List of devices to be included in Scenes (comma-separated)"
+        }
+      },
+      "auth_params": {
+        "title": "Authentication Settings",
+        "description": "You can update your authentication method or credentials here. This will trigger a reload of the integration.",
+        "data": {
+          "auth_method": "Authentication Method"
         }
       }
     }
@@ -78,96 +88,122 @@
   "services": {
     "send_keys": {
       "name": "Send Keys",
-      "description": "Send IR keys to remote device",
+      "description": "Sends IR keys to a remote device.",
       "fields": {
         "me": {
-          "name": "Me",
-          "description": "Sub device Id."
+          "name": "Sub-device ID",
+          "description": "The 'me' identifier of the sub-device (e.g., the IR blaster)."
         },
         "agt": {
-          "name": "AGT",
-          "description": "Hub device Id."
+          "name": "Hub ID",
+          "description": "The 'agt' identifier of the hub."
         },
         "ai": {
-          "name": "Remote Id",
-          "description": "Remote device Id."
+          "name": "Remote ID",
+          "description": "The 'ai' identifier of the virtual remote."
         },
         "category": {
           "name": "Category",
-          "description": "Target device category."
+          "description": "The category of the target device (e.g., 'tv')."
         },
         "brand": {
           "name": "Brand",
-          "description": "Target device brand."
+          "description": "The brand of the target device."
         },
         "keys": {
           "name": "Keys",
-          "description": "Command key to be sent."
+          "description": "The command key to be sent (e.g., 'power')."
         }
       }
     },
     "send_ackeys": {
       "name": "Send A/C Keys",
-      "description": "Send IR keys to A/C device",
+      "description": "Sends IR keys to an A/C device.",
       "fields": {
         "me": {
-          "name": "Me",
-          "description": "Sub device Id."
+          "name": "Sub-device ID",
+          "description": "The 'me' identifier of the sub-device (e.g., the IR blaster)."
         },
         "agt": {
-          "name": "AGT",
-          "description": "Hub device Id."
+          "name": "Hub ID",
+          "description": "The 'agt' identifier of the hub."
         },
         "ai": {
-          "name": "Remote Id",
-          "description": "Remote device Id."
+          "name": "Remote ID",
+          "description": "The 'ai' identifier of the virtual remote."
         },
         "category": {
           "name": "Category",
-          "description": "Target device category."
+          "description": "The category of the target device ('ac')."
         },
         "brand": {
           "name": "Brand",
-          "description": "Target device brand."
+          "description": "The brand of the target A/C."
         },
         "keys": {
           "name": "Keys",
-          "description": "Command key to be sent."
+          "description": "The command key to be sent."
         },
         "power": {
-          "name": "Power On/Off",
-          "description": "Power on = 1, off = 0"
+          "name": "Power",
+          "description": "Power state (1 for on, 0 for off)."
         },
         "mode": {
           "name": "Mode",
-          "description": "Mode."
+          "description": "Operating mode (e.g., cool, heat)."
         },
         "temp": {
           "name": "Temperature",
-          "description": "Temperature to be set."
+          "description": "The temperature to set."
         },
         "wind": {
           "name": "Wind Level",
-          "description": "Wind Level."
+          "description": "The fan speed level."
         },
         "swing": {
           "name": "Swing Mode",
-          "description": "Swing mode."
+          "description": "The swing/louver mode."
         }
       }
     },
     "scene_set": {
-      "name": "Scene Set",
-      "description": "Set scene to remote device",
+      "name": "Trigger Scene",
+      "description": "Activates a LifeSmart scene.",
       "fields": {
         "agt": {
-          "name": "AGT",
-          "description": "Hub device Id."
+          "name": "Hub ID",
+          "description": "The 'agt' identifier of the hub where the scene is defined."
         },
         "id": {
-          "name": "Scene Id",
-          "description": "Remote Scene Id."
+          "name": "Scene ID",
+          "description": "The identifier of the scene to trigger."
         }
+      }
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "local_push": "Local LAN",
+        "cloud_push": "Internet Cloud"
+      }
+    },
+    "auth_method": {
+      "options": {
+        "token": "User Token",
+        "password": "App User Password"
+      }
+    },
+    "region": {
+      "options": {
+        "cn0": "China 1 (cn0)",
+        "cn1": "China Backup (cn1)",
+        "cn2": "China 2 (cn2)",
+        "us": "North America (US/NA)",
+        "eur": "Europe (EUROPE)",
+        "jp": "Japan (JAPAN)",
+        "apz": "Asia Pacific (APAC)",
+        "AUTO": "Global (Auto)"
       }
     }
   }

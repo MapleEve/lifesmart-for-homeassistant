@@ -1,4 +1,4 @@
-"""Support for LifeSmart covers. by @MapleEve"""
+"""Support for LifeSmart covers by @MapleEve"""
 
 import asyncio
 

@@ -30,39 +30,42 @@ from homeassistant.util.ssl import get_default_context
 
 from . import lifesmart_protocol
 from .const import (
-    BINARY_SENSOR_TYPES,
-    CLIMATE_TYPES,
-    CONF_AI_INCLUDE_AGTS,
-    CONF_AI_INCLUDE_ITEMS,
-    CONF_EXCLUDE_AGTS,
-    CONF_EXCLUDE_ITEMS,
+    # --- 核心常量 ---
+    DOMAIN,
+    MANUFACTURER,
+    UPDATE_LISTENER,
+    DEVICE_ID_KEY,
+    DEVICE_NAME_KEY,
+    DEVICE_TYPE_KEY,
+    HUB_ID_KEY,
+    SUBDEVICE_INDEX_KEY,
+    LIFESMART_SIGNAL_UPDATE_ENTITY,
+    LIFESMART_STATE_MANAGER,
+    # --- 配置相关 ---
     CONF_LIFESMART_APPKEY,
     CONF_LIFESMART_APPTOKEN,
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERTOKEN,
-    COVER_TYPES,
-    DEVICE_ID_KEY,
-    DEVICE_NAME_KEY,
-    DEVICE_TYPE_KEY,
-    DOMAIN,
-    EV_SENSOR_TYPES,
-    GAS_SENSOR_TYPES,
-    HUB_ID_KEY,
-    LIFESMART_SIGNAL_UPDATE_ENTITY,
-    LIFESMART_STATE_MANAGER,
+    CONF_LIFESMART_USERPASSWORD,
+    CONF_LIFESMART_AUTH_METHOD,
+    CONF_AI_INCLUDE_AGTS,
+    CONF_AI_INCLUDE_ITEMS,
+    CONF_EXCLUDE_AGTS,
+    CONF_EXCLUDE_ITEMS,
+    # --- 设备类型聚合列表 (大列表) ---
+    ALL_SWITCH_TYPES,
+    ALL_LIGHT_TYPES,
+    ALL_COVER_TYPES,
+    ALL_BINARY_SENSOR_TYPES,
+    ALL_SENSOR_TYPES,
     LIGHT_DIMMER_TYPES,
-    LIGHT_SWITCH_TYPES,
+    CLIMATE_TYPES,
     LOCK_TYPES,
-    OT_SENSOR_TYPES,
+    CAMERA_TYPES,
     SMART_PLUG_TYPES,
     SPOT_TYPES,
-    SUBDEVICE_INDEX_KEY,
+    # --- 平台列表 ---
     SUPPORTED_PLATFORMS,
-    SUPPORTED_SUB_BINARY_SENSORS,
-    SUPPORTED_SUB_SWITCH_TYPES,
-    SUPPORTED_SWTICH_TYPES,
-    MANUFACTURER,
-    UPDATE_LISTENER,
 )
 from .lifesmart_client import LifeSmartClient
 
@@ -72,22 +75,50 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up LifeSmart integration from config entry."""
     hass.data.setdefault(DOMAIN, {})
+    config_data = config_entry.data.copy()
 
     # Initialize client
     client = None
-    if config_entry.data.get(CONF_TYPE, CONN_CLASS_CLOUD_PUSH) == CONN_CLASS_CLOUD_PUSH:
-        app_key = config_entry.data.get(CONF_LIFESMART_APPKEY)
-        app_token = config_entry.data.get(CONF_LIFESMART_APPTOKEN)
-        user_token = config_entry.data.get(CONF_LIFESMART_USERTOKEN)
-        user_id = config_entry.data.get(CONF_LIFESMART_USERID)
-        region = config_entry.data.get(CONF_REGION)
+    if config_data.get(CONF_TYPE, CONN_CLASS_CLOUD_PUSH) == CONN_CLASS_CLOUD_PUSH:
+        # --- 启动时登录逻辑 ---
+        if config_data.get(CONF_LIFESMART_AUTH_METHOD) == "password":
+            _LOGGER.info(
+                "Password auth method detected, attempting to log in for a fresh token."
+            )
+            temp_client = LifeSmartClient(
+                hass,
+                config_data.get(CONF_REGION),
+                config_data.get(CONF_LIFESMART_APPKEY),
+                config_data.get(CONF_LIFESMART_APPTOKEN),
+                None,  # usertoken 初始为空
+                config_data.get(CONF_LIFESMART_USERID),
+                config_data.get(CONF_LIFESMART_USERPASSWORD),
+            )
+            try:
+                if await temp_client.login_async():
+                    _LOGGER.info("Login successful, updating the user token.")
+                    new_token = temp_client._usertoken
+                    # 更新正在使用的配置和存储的配置
+                    config_data[CONF_LIFESMART_USERTOKEN] = new_token
+                    hass.config_entries.async_update_entry(
+                        config_entry,
+                        data={**config_entry.data, CONF_LIFESMART_USERTOKEN: new_token},
+                    )
+                else:
+                    _LOGGER.error(
+                        "Failed to get a new token at startup. Using the old one if available."
+                    )
+            except Exception as e:
+                _LOGGER.error("An error occurred during startup login: %s", e)
+
         client = LifeSmartClient(
             hass,
-            region,
-            app_key,
-            app_token,
-            user_token,
-            user_id,
+            config_data.get(CONF_REGION),
+            config_data.get(CONF_LIFESMART_APPKEY),
+            config_data.get(CONF_LIFESMART_APPTOKEN),
+            config_data.get(CONF_LIFESMART_USERTOKEN),
+            config_data.get(CONF_LIFESMART_USERID),
+            config_data.get(CONF_LIFESMART_USERPASSWORD),
         )
     else:
         reload(lifesmart_protocol)
@@ -670,7 +701,6 @@ class LifeSmartStateManager:
 
 
 # ======================== 辅助工具函数 ======================== #
-# 错误码到友好描述的映射（可根据文档扩展）
 ERROR_CODE_MAPPING = {
     10001: ("请求格式错误", "请校验JSON数据结构及字段类型"),
     10002: ("AppKey不存在", "检查集成配置中的APPKey是否正确"),
@@ -684,7 +714,6 @@ ERROR_CODE_MAPPING = {
     10019: ("对象不存在", "检查请求中的设备/用户ID是否正确", "资源定位"),
 }
 
-# 错误分类建议模板
 RECOMMENDATION_GROUP = {
     "用户授权": "请重新登录或刷新令牌",
     "安全策略": "检查网络安全配置或联系运维",
@@ -705,7 +734,7 @@ def _get_error_advice(error_code: int) -> Tuple[str, str]:
         advice_text = advice[0] if len(advice) > 0 else ""
         return desc, advice_text, category
 
-    # 动态生成未知错误描述（示例）
+    # 动态生成未知错误描述
     error_ranges = {
         (10000, 10100): "API请求错误",
         (10100, 10200): "设备操作错误",
@@ -719,26 +748,41 @@ def _get_error_advice(error_code: int) -> Tuple[str, str]:
 
 
 def get_platform_by_device(device_type, sub_device=None):
-    if device_type in SUPPORTED_SWTICH_TYPES:
+    """根据设备类型和子索引，决定其所属的Home Assistant平台。"""
+    if device_type in ALL_SWITCH_TYPES:
         return Platform.SWITCH
-    elif device_type in BINARY_SENSOR_TYPES:
-        return Platform.BINARY_SENSOR
-    elif device_type in COVER_TYPES:
-        return Platform.COVER
-    elif device_type in EV_SENSOR_TYPES + GAS_SENSOR_TYPES + OT_SENSOR_TYPES:
-        return Platform.SENSOR
-    elif device_type in SPOT_TYPES + LIGHT_SWITCH_TYPES + LIGHT_DIMMER_TYPES:
+    elif device_type in ALL_LIGHT_TYPES:
         return Platform.LIGHT
+    elif device_type in ALL_COVER_TYPES:
+        return Platform.COVER
     elif device_type in CLIMATE_TYPES:
         return Platform.CLIMATE
-    elif device_type in LOCK_TYPES and sub_device == "BAT":
-        return Platform.SENSOR
-    elif device_type in LOCK_TYPES and sub_device in ["EVTLO", "ALM"]:
+    # elif device_type in CAMERA_TYPES:  # TODO:摄像头平台
+    #     return Platform.CAMERA
+
+    # --- 对复合设备进行子设备判断 ---
+    # 门锁设备
+    if device_type in LOCK_TYPES:
+        if sub_device == "BAT":  # 门锁的电量是一个 sensor
+            return Platform.SENSOR
+        elif sub_device in ["EVTLO", "ALM"]:  # 门锁的事件/警报是 binary_sensor
+            return Platform.BINARY_SENSOR
+
+    # 智能插座 (某些型号的子索引是传感器)
+    if device_type in SMART_PLUG_TYPES:
+        if sub_device == "P1":
+            return Platform.SWITCH
+        elif sub_device in ["P2", "P3"]:
+            return Platform.SENSOR
+
+    # --- 将剩余的各类传感器归类 ---
+    # 注意：这个判断应该在复合设备之后，避免错误分类
+    if device_type in ALL_BINARY_SENSOR_TYPES:
         return Platform.BINARY_SENSOR
-    elif device_type in SMART_PLUG_TYPES and sub_device == "P1":
-        return Platform.SWITCH
-    elif device_type in SMART_PLUG_TYPES and sub_device in ["P2", "P3"]:
+    if device_type in ALL_SENSOR_TYPES:
         return Platform.SENSOR
+
+    # 如果所有条件都不满足，返回空
     return ""
 
 
@@ -752,7 +796,7 @@ def generate_entity_id(
 
     # 清理非法字符的函数
     def sanitize(input_str: str) -> str:
-        return re.sub(r"[^a-zA-Z0-9_]", "", input_str).lower()
+        return re.sub(r"\W", "", input_str).lower()
 
     # 标准化参数
     safe_type = sanitize(device_type)
