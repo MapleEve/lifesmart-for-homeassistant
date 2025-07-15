@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "LifeSmart: {name}",
     "step": {
       "user": {
         "title": "LifeSmart 集成设置",

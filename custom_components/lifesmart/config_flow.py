@@ -38,7 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
-    """Validate the user input allows us to connect."""
     try:
         client = LifeSmartClient(
             hass,
@@ -67,16 +66,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
         if len(devices) == 0:
             _LOGGER.warning("No devices found for this user.")
 
-        # Clean up data before saving
         if data.get(CONF_LIFESMART_AUTH_METHOD) == "password":
             data.pop(CONF_LIFESMART_USERTOKEN, None)
         else:
             data.pop(CONF_LIFESMART_USERPASSWORD, None)
 
-        return {
-            "title": f"LifeSmart ({data.get(CONF_LIFESMART_USERID)})",
-            "data": data,
-        }
+        return {"title": f"LifeSmart ({data.get(CONF_LIFESMART_USERID)})", "data": data}
     except ConfigEntryAuthFailed:
         raise
     except Exception as e:
@@ -87,13 +82,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
 async def validate_local_input(
     hass: HomeAssistant, data: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate the user input for local connection."""
     try:
         dev = lifesmart_protocol.LifeSmartLocalClient(
-            data[CONF_HOST],
-            data[CONF_PORT],
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
+            data[CONF_HOST], data[CONF_PORT], data[CONF_USERNAME], data[CONF_PASSWORD]
         )
         await dev.check_login()
     except Exception as e:
@@ -104,20 +95,16 @@ async def validate_local_input(
 
 @config_entries.HANDLERS.register(DOMAIN)
 class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handles the LifeSmart configuration flow."""
-
     VERSION = 1
     _reauth_entry: config_entries.ConfigEntry | None = None
 
     def __init__(self) -> None:
-        """Initialize the config flow."""
         super().__init__()
         self.config_data = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the initial step."""
         if user_input is not None:
             if user_input[CONF_TYPE] == config_entries.CONN_CLASS_LOCAL_PUSH:
                 return await self.async_step_local()
@@ -143,7 +130,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_local(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the local connection setup."""
         errors = {}
         if user_input is not None:
             try:
@@ -159,7 +145,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except Exception:
                 errors["base"] = "invalid_auth"
-
         local_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST, default=""): str,
@@ -177,7 +162,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle cloud setup: Step 1 - Basic info and auth method."""
         config_data = self._reauth_entry.data.copy() if self._reauth_entry else {}
         self.config_data.update(config_data)
 
@@ -205,7 +189,7 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_REGION, default=self.config_data.get(CONF_REGION, "cn2")
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=[opt["value"] for opt in LIFESMART_REGION_OPTIONS],
+                        options=LIFESMART_REGION_OPTIONS,
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
@@ -225,7 +209,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_cloud_token(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle cloud setup: Step 2 - Enter User Token."""
         errors = {}
         if user_input is not None:
             self.config_data.update(user_input)
@@ -238,7 +221,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = str(e) or "invalid_auth"
             except Exception:
                 errors["base"] = "unknown"
-
         return self.async_show_form(
             step_id="cloud_token",
             data_schema=vol.Schema(
@@ -255,7 +237,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_cloud_password(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle cloud setup: Step 2 - Enter User Password."""
         errors = {}
         if user_input is not None:
             self.config_data.update(user_input)
@@ -268,7 +249,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = str(e) or "invalid_auth"
             except Exception:
                 errors["base"] = "unknown"
-
         return self.async_show_form(
             step_id="cloud_password",
             data_schema=vol.Schema(
@@ -282,7 +262,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
-        """Handle re-authentication."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
@@ -293,37 +272,30 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
-        """Get the options flow for this handler."""
         return LifeSmartOptionsFlowHandler(config_entry)
 
 
 class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handles the LifeSmart options flow."""
-
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
         self.config_entry = config_entry
         self.options_data = dict(config_entry.options)
-        # For multi-step, we need a place to store data between steps
         self.temp_data = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options menu."""
         return self.async_show_menu(
             step_id="init",
             menu_options=["main_params", "auth_params"],
+            description_placeholders={"name": self.config_entry.title},
         )
 
     async def async_step_main_params(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle general settings."""
         if user_input is not None:
             self.options_data.update(user_input)
             return self.async_create_entry(title="", data=self.options_data)
-
         schema = vol.Schema(
             {
                 vol.Optional(
@@ -349,16 +321,12 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_auth_params(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle authentication settings update (Step 1)."""
-        # Start with a clean slate for temp data
         self.temp_data = self.config_entry.data.copy()
-
         if user_input is not None:
             self.temp_data.update(user_input)
             if user_input[CONF_LIFESMART_AUTH_METHOD] == "token":
                 return await self.async_step_auth_token()
             return await self.async_step_auth_password()
-
         schema = vol.Schema(
             {
                 vol.Required(
@@ -366,8 +334,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.temp_data.get(CONF_LIFESMART_AUTH_METHOD, "token"),
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=["token", "password"],
-                        mode=SelectSelectorMode.DROPDOWN,
+                        options=["token", "password"], mode=SelectSelectorMode.DROPDOWN
                     )
                 )
             }
@@ -377,14 +344,11 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_auth_token(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle auth update: Step 2 - Enter User Token."""
         errors = {}
         if user_input is not None:
             self.temp_data.update(user_input)
             try:
-                # We only need to validate, not create a new entry
                 await validate_input(self.hass, self.temp_data)
-                # Update the main config entry data
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=self.temp_data
                 )
@@ -393,7 +357,6 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = str(e) or "invalid_auth"
             except Exception:
                 errors["base"] = "unknown"
-
         return self.async_show_form(
             step_id="auth_token",
             data_schema=vol.Schema({vol.Required(CONF_LIFESMART_USERTOKEN): str}),
@@ -403,7 +366,6 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_auth_password(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle auth update: Step 2 - Enter User Password."""
         errors = {}
         if user_input is not None:
             self.temp_data.update(user_input)
@@ -417,7 +379,6 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = str(e) or "invalid_auth"
             except Exception:
                 errors["base"] = "unknown"
-
         return self.async_show_form(
             step_id="auth_password",
             data_schema=vol.Schema(
