@@ -30,6 +30,7 @@ class LifeSmartClient:
         self._userid = userid
         # self._apppassword = apppassword
 
+    # 获取所有设备
     async def get_all_device_async(self):
         """Get all devices belong to current user."""
         url = self.get_api_url() + "/api.EpGetAll"
@@ -50,6 +51,7 @@ class LifeSmartClient:
             return response["message"]
         return False
 
+    # 登录到 LifeSmart 服务以获取用户令牌
     async def login_async(self):
         """Login to LifeSmart service to get user token."""
         url = self.get_api_url() + "/auth.login"
@@ -83,6 +85,7 @@ class LifeSmartClient:
 
         return response
 
+    # 获取所有场景
     async def get_all_scene_async(self, agt):
         """Get all scenes belong to current user."""
         url = self.get_api_url() + "/api.SceneGet"
@@ -108,6 +111,7 @@ class LifeSmartClient:
             return response["message"]
         return False
 
+    # 设置场景
     async def set_scene_async(self, agt, id):
         """Set the scene by scene id to LifeSmart"""
         url = self.get_api_url() + "/api.SceneSet"
@@ -136,6 +140,7 @@ class LifeSmartClient:
         response = json.loads(await self.post_async(url, send_data, header))
         return response
 
+    # 发送红外遥控指令
     async def send_ir_key_async(self, agt, ai, me, category, brand, keys):
         """Send an IR key to a specific device."""
         url = self.get_api_url() + "/irapi.SendKeys"
@@ -176,6 +181,7 @@ class LifeSmartClient:
         response = json.loads(await self.post_async(url, send_data, header))
         return response
 
+    # 发送空调遥控指令
     async def send_ir_ackey_async(
         self,
         agt,
@@ -247,12 +253,15 @@ class LifeSmartClient:
         _LOGGER.debug("sendackey_res: %s", str(response))
         return response
 
+    # 开灯
     async def turn_on_light_switch_async(self, idx, agt, me):
         return await self.send_epset_async("0x81", 1, idx, agt, me)
 
+    # 关灯
     async def turn_off_light_switch_async(self, idx, agt, me):
         return await self.send_epset_async("0x80", 0, idx, agt, me)
 
+    # 设置设备状态
     async def send_epset_async(self, type, val, idx, agt, me):
         """Send a command to specific device."""
         url = self.get_api_url() + "/api.EpSet"
@@ -287,6 +296,7 @@ class LifeSmartClient:
         _LOGGER.debug("epset_res: %s", str(response))
         return response["code"]
 
+    # 获取设备信息
     async def get_epget_async(self, agt, me):
         """Get device info."""
         url = self.get_api_url() + "/api.EpGet"
@@ -312,6 +322,7 @@ class LifeSmartClient:
         _LOGGER.debug("epget_res: %s", str(response))
         return response["message"]["data"]
 
+    # 获取红外遥控器列表
     async def get_ir_remote_list_async(self, agt):
         """Get remote list for a specific station"""
         url = self.get_api_url() + "/irapi.GetRemoteList"
@@ -336,6 +347,7 @@ class LifeSmartClient:
         _LOGGER.debug("GetRemoteList_res: %s", str(response))
         return response["message"]
 
+    # 获取红外遥控器设置
     async def get_ir_remote_async(self, agt, ai):
         """Get a remote setting for specific device."""
         url = self.get_api_url() + "/irapi.GetRemote"
@@ -363,6 +375,7 @@ class LifeSmartClient:
         _LOGGER.debug("get_ir_remote_res: %s", str(response))
         return response["message"]["codes"]
 
+    # 使用 HA 的内置异步客户端发送 POST 请求
     async def post_async(self, url: str, data: str, headers: dict) -> str:
         """使用 HA 的内置异步客户端发送请求，避免直接引入 aiohttp"""
         session = async_get_clientsession(self.hass)  # 通过 HA 实例获取客户端
