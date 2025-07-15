@@ -77,18 +77,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Initialize client
     client = None
     if config_entry.data.get(CONF_TYPE, CONN_CLASS_CLOUD_PUSH) == CONN_CLASS_CLOUD_PUSH:
-        app_key = config_entry.data.get(CONF_LIFESMART_APPKEY)
-        app_token = config_entry.data.get(CONF_LIFESMART_APPTOKEN)
-        user_token = config_entry.data.get(CONF_LIFESMART_USERTOKEN)
-        user_id = config_entry.data.get(CONF_LIFESMART_USERID)
-        region = config_entry.data.get(CONF_REGION)
         client = LifeSmartClient(
             hass,
-            region,
-            app_key,
-            app_token,
-            user_token,
-            user_id,
+            config_entry.data.get(CONF_REGION),
+            config_entry.data.get(CONF_LIFESMART_APPKEY),
+            config_entry.data.get(CONF_LIFESMART_APPTOKEN),
+            config_entry.data.get(CONF_LIFESMART_USERTOKEN),
+            config_entry.data.get(CONF_LIFESMART_USERID),
         )
     else:
         reload(lifesmart_protocol)

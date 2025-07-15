@@ -66,11 +66,16 @@ class LifeSmartClient:
 
         url = self.get_api_url() + "/auth.do_auth"
         auth_data = {
-            "userid": self._userid,
+            "userid": response["userid"],
             "token": response["token"],
             "appkey": self._appkey,
             "rgn": self._region,
         }
+
+        # Update userid if it has changed
+        if self._userid != response["userid"]:
+            self._userid = response["userid"]
+
         send_data = json.dumps(auth_data)
         response = json.loads(await self.post_async(url, send_data, header))
         if response["code"] == "success":
