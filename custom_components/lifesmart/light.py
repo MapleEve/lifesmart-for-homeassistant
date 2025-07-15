@@ -820,9 +820,7 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
             if result == 0:
                 self._attr_color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
-        result = await self._client.send_epset_async(
-            "0x81",
-            1,
+        result = await self._client.turn_on_light_switch_async(
             "P1",
             self._raw_device[HUB_ID_KEY],
             self._raw_device[DEVICE_ID_KEY],
@@ -833,9 +831,7 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
 
     async def async_turn_off(self, **kwargs) -> None:
         """关闭调光灯."""
-        result = await self._client.send_epset_async(
-            "0x80",
-            0,
+        result = await self._client.turn_off_light_switch_async(
             "P1",
             self._raw_device[HUB_ID_KEY],
             self._raw_device[DEVICE_ID_KEY],
