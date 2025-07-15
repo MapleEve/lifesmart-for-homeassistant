@@ -49,6 +49,28 @@ MAX_MIREDS = int(1000000 / 2700)
 MIN_MIREDS = int(1000000 / 6500)
 
 
+# 提取的公共颜色解析函数
+def _parse_color_value(value: int, has_white: bool) -> tuple:
+    """
+    Parses a 32-bit integer color value into an RGB or RGBW tuple.
+
+    The color format is assumed to be:
+    - bits 0-7: Blue
+    - bits 8-15: Green
+    - bits 16-23: Red
+    - bits 24-31: White (if has_white is True)
+    """
+    blue = value & 0xFF
+    green = (value >> 8) & 0xFF
+    red = (value >> 16) & 0xFF
+
+    if has_white:
+        white = (value >> 24) & 0xFF
+        return (red, green, blue, white)
+
+    return (red, green, blue)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -319,12 +341,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
 
     def _parse_quantum_color(self, value: int) -> tuple:
         """解析量子灯颜色值."""
-        # 根据文档：bit0~7:Blue, bit8~15:Green, bit16~23:Red, bit24~31:White
-        blue = value & 0xFF
-        green = (value >> 8) & 0xFF
-        red = (value >> 16) & 0xFF
-        white = (value >> 24) & 0xFF
-        return (red, green, blue, white)
+        return _parse_color_value(value, has_white=True)
 
     def _encode_quantum_color(self, rgbw: tuple) -> int:
         """编码量子灯颜色值."""
@@ -394,12 +411,7 @@ class LifeSmartRGBWLight(LifeSmartBaseLight):
 
     def _parse_rgbw_color(self, value: int) -> tuple:
         """解析RGBW颜色值."""
-        # bit0~7:Blue, bit8~15:Green, bit16~23:Red, bit24~31:White
-        blue = value & 0xFF
-        green = (value >> 8) & 0xFF
-        red = (value >> 16) & 0xFF
-        white = (value >> 24) & 0xFF
-        return (red, green, blue, white)
+        return _parse_color_value(value, has_white=True)
 
     def _encode_rgbw_color(self, rgbw: tuple) -> int:
         """编码RGBW颜色值."""
@@ -487,10 +499,7 @@ class LifeSmartRGBLight(LifeSmartBaseLight):
 
     def _parse_rgb_color(self, value: int) -> tuple:
         """解析RGB颜色值."""
-        blue = value & 0xFF
-        green = (value >> 8) & 0xFF
-        red = (value >> 16) & 0xFF
-        return (red, green, blue)
+        return _parse_color_value(value, has_white=False)
 
     def _encode_rgb_color(self, rgb: tuple) -> int:
         """编码RGB颜色值."""
