@@ -445,7 +445,7 @@ class LifeSmartRGBWLight(LifeSmartBaseLight):
                 self._raw_device[DEVICE_ID_KEY],
             )
         else:
-            result = await self._client.turn_on_light_swith_async(
+            result = await self._client.turn_on_light_switch_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
@@ -533,7 +533,7 @@ class LifeSmartRGBLight(LifeSmartBaseLight):
                 self._raw_device[DEVICE_ID_KEY],
             )
         else:
-            result = await self._client.turn_on_light_swith_async(
+            result = await self._client.turn_on_light_switch_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
@@ -598,7 +598,7 @@ class LifeSmartOutdoorLight(LifeSmartBaseLight):
             if result == 0:
                 self._attr_brightness = brightness
         else:
-            result = await self._client.turn_on_light_swith_async(
+            result = await self._client.turn_on_light_switch_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
@@ -706,7 +706,7 @@ class LifeSmartSPOTLight(LifeSmartBaseLight):
                 self._raw_device[DEVICE_ID_KEY],
             )
         else:
-            result = await self._client.turn_on_light_swith_async(
+            result = await self._client.turn_on_light_switch_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
@@ -957,13 +957,13 @@ class LifeSmartLight(LifeSmartBaseLight):
                     self._raw_device[DEVICE_ID_KEY],
                 )
             else:
-                result = await self._client.turn_on_light_swith_async(
+                result = await self._client.turn_on_light_switch_async(
                     self._sub_key,
                     self._raw_device[HUB_ID_KEY],
                     self._raw_device[DEVICE_ID_KEY],
                 )
         else:
-            result = await self._client.turn_on_light_swith_async(
+            result = await self._client.turn_on_light_switch_async(
                 self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
