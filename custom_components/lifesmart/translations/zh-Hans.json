@@ -3,24 +3,26 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "title": "LifeSmart 设备集成配置",
-        "description": "请选择您的 LifeSmart 中枢的连接方式：",
-        "protocol_selector": {
-          "label": "中枢连接方式",
-          "options": {
-            "local": "本地",
-            "cloud": "云端"
+        "title": "LifeSmart 集成设置",
+        "description": "请选择您的 LifeSmart 中枢的连接方式。",
+        "data": {
+          "connection_type": {
+            "name": "连接方式",
+            "options": {
+              "local_push": "本地中枢",
+              "cloud_push": "云端链接"
+            }
           }
         }
       },
       "local": {
-        "title": "LifeSmart 设备本地集成配置",
-        "description": "请输入您的 LifeSmart 网关本地控制登录信息。",
+        "title": "LifeSmart 本地中枢设置",
+        "description": "请输入您的 LifeSmart 中枢的本地登录凭据",
         "data": {
           "host": "网关局域网 IP",
-          "port": "端口 (默认是 8888)",
-          "username": "本地控制账号（默认 admin）",
-          "password": "本地控制密码（默认 admin）"
+          "port": "端口 (默认 8888)",
+          "username": "本地账号（默认 admin）",
+          "password": "本地密码（默认 admin）"
         }
       },
       "cloud": {
@@ -31,7 +33,13 @@
           "apptoken": "开放应用令牌 App Token",
           "userid": "手机 APP User ID",
           "region": "授权 LifeSmart 服务器区域",
-          "auth_method": "认证方式"
+          "auth_method": {
+            "name": "认证方式",
+            "options": {
+              "token": "用户令牌 (User Token)",
+              "password": "App 用户的密码"
+            }
+          }
         }
       },
       "cloud_token": {
@@ -84,14 +92,20 @@
         "title": "编辑 LifeSmart 认证参数",
         "description": "您可以在此处更新您的认证方式或凭据。此操作将导致集成重新加载。",
         "data": {
-          "auth_method": "认证方式"
+          "auth_method": {
+            "name": "认证方式",
+            "options": {
+              "token": "用户令牌 (User Token)",
+              "password": "App 用户的密码"
+            }
+          }
         }
       }
     }
   },
   "services": {
     "send_keys": {
-      "name": "发送设备红外按键",
+      "name": "发送红外按键",
       "description": "向远程设备发送指定的红外按键。",
       "fields": {
         "me": {

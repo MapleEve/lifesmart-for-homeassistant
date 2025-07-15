@@ -6,7 +6,13 @@
         "title": "LifeSmart Integration Setup",
         "description": "Choose the connection method for your LifeSmart Hub.",
         "data": {
-          "type": "Connection Method"
+          "connection_type": {
+            "name": "Connection Method",
+            "options": {
+              "local_push": "Local",
+              "cloud_push": "Cloud"
+            }
+          }
         }
       },
       "local": {
@@ -14,9 +20,9 @@
         "description": "Enter your LifeSmart Hub's local credentials.",
         "data": {
           "host": "IP Address",
-          "port": "Port (Default: 8888)",
-          "username": "Local Username (Default: admin)",
-          "password": "Local Password (Default: admin)"
+          "port": "Port",
+          "username": "Local Username",
+          "password": "Local Password"
         }
       },
       "cloud": {
@@ -26,8 +32,14 @@
           "appkey": "Web App Key",
           "apptoken": "Web App Token",
           "userid": "Mobile App User ID",
-          "region": "LifeSmart Regional Domain",
-          "auth_method": "Authentication Method"
+          "region": "Server Region",
+          "auth_method": {
+            "name": "Authentication Method",
+            "options": {
+              "token": "User Token",
+              "password": "App Password"
+            }
+          }
         }
       },
       "cloud_token": {
@@ -39,9 +51,9 @@
       },
       "cloud_password": {
         "title": "Cloud Setup (Step 2 of 2)",
-        "description": "Please enter your App account password. The password will be stored securely within Home Assistant to refresh the token.",
+        "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
         "data": {
-          "userpassword": "App User Password"
+          "userpassword": "User Password"
         }
       }
     },
@@ -80,7 +92,13 @@
         "title": "Authentication Settings",
         "description": "You can update your authentication method or credentials here. This will trigger a reload of the integration.",
         "data": {
-          "auth_method": "Authentication Method"
+          "auth_method": {
+            "name": "Authentication Method",
+            "options": {
+              "token": "User Token",
+              "password": "App Password"
+            }
+          }
         }
       }
     }
