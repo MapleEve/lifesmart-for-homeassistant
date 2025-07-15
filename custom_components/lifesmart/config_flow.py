@@ -133,7 +133,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             config_entries.CONN_CLASS_LOCAL_PUSH,
                             config_entries.CONN_CLASS_CLOUD_PUSH,
                         ],
-                        translation_key="connection_type",
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 )
@@ -216,7 +215,6 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=["token", "password"],
-                        translation_key="auth_method",
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
@@ -369,7 +367,6 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=["token", "password"],
-                        translation_key="auth_method",
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 )

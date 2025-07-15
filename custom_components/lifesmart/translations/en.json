@@ -6,7 +6,7 @@
         "title": "LifeSmart Integration Setup",
         "description": "Choose the connection method for your LifeSmart Hub.",
         "data": {
-          "connection_type": {
+          "type": {
             "name": "Connection Method",
             "options": {
               "local_push": "Local",
