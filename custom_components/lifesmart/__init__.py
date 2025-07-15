@@ -722,8 +722,8 @@ def get_platform_by_device(device_type, sub_device=None):
         return Platform.COVER
     elif device_type in CLIMATE_TYPES:
         return Platform.CLIMATE
-    elif device_type in CAMERA_TYPES:  # 摄像头平台
-        return Platform.CAMERA
+    # elif device_type in CAMERA_TYPES:  # TODO:摄像头平台
+    #     return Platform.CAMERA
 
     # --- 对复合设备进行子设备判断 ---
     # 门锁设备
@@ -732,14 +732,12 @@ def get_platform_by_device(device_type, sub_device=None):
             return Platform.SENSOR
         elif sub_device in ["EVTLO", "ALM"]:  # 门锁的事件/警报是 binary_sensor
             return Platform.BINARY_SENSOR
-        else:  # 门锁本身是 lock 实体
-            return Platform.LOCK
 
     # 智能插座 (某些型号的子索引是传感器)
     if device_type in SMART_PLUG_TYPES:
         if sub_device == "P1":
             return Platform.SWITCH
-        elif sub_device in ["P2", "P3"]:  # 通常是功率、电流等传感器
+        elif sub_device in ["P2", "P3"]:
             return Platform.SENSOR
 
     # --- 将剩余的各类传感器归类 ---
@@ -763,7 +761,7 @@ def generate_entity_id(
 
     # 清理非法字符的函数
     def sanitize(input_str: str) -> str:
-        return re.sub(r"\w", "", input_str).lower()
+        return re.sub(r"\W", "", input_str).lower()
 
     # 标准化参数
     safe_type = sanitize(device_type)

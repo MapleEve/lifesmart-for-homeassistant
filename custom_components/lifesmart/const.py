@@ -249,6 +249,15 @@ ALL_LIGHT_TYPES = (
     + OUTDOOR_LIGHT_TYPES
     + LIGHT_BULB_TYPES
 )
+# --- 总二元传感器列表 ---
+ALL_BINARY_SENSOR_TYPES = (
+    BINARY_SENSOR_TYPES
+    + WATER_SENSOR_TYPES
+    + SMOKE_SENSOR_TYPES
+    + RADAR_SENSOR_TYPES
+    + DEFED_SENSOR_TYPES
+    + LOCK_TYPES
+)
 
 # --- 总数值传感器列表 ---
 ALL_SENSOR_TYPES = (
@@ -260,21 +269,10 @@ ALL_SENSOR_TYPES = (
     + VOICE_SENSOR_TYPES
     +
     # 部分二元传感器也提供数值读数 (如电量、温度)
-    DEFED_SENSOR_TYPES
-    + WATER_SENSOR_TYPES
-    + SMOKE_SENSOR_TYPES
-    + RADAR_SENSOR_TYPES
+    ALL_BINARY_SENSOR_TYPES
+    + COVER_TYPES
 )
 
-# --- 总二元传感器列表 ---
-ALL_BINARY_SENSOR_TYPES = (
-    BINARY_SENSOR_TYPES
-    + WATER_SENSOR_TYPES
-    + SMOKE_SENSOR_TYPES
-    + RADAR_SENSOR_TYPES
-    + DEFED_SENSOR_TYPES
-    + LOCK_TYPES
-)
 
 # --- 总窗帘/覆盖物列表 ---
 ALL_COVER_TYPES = COVER_TYPES + GARAGE_DOOR_TYPES
@@ -287,8 +285,8 @@ SUPPORTED_PLATFORMS = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.CLIMATE,
-    Platform.LOCK,
-    Platform.CAMERA,
+    # Platform.LOCK,
+    # Platform.CAMERA,
 ]
 
 # ================= 其他常量 =================
