@@ -46,6 +46,8 @@ from .const import (
     CONF_LIFESMART_APPTOKEN,
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERTOKEN,
+    CONF_LIFESMART_USERPASSWORD,
+    CONF_LIFESMART_AUTH_METHOD,
     CONF_AI_INCLUDE_AGTS,
     CONF_AI_INCLUDE_ITEMS,
     CONF_EXCLUDE_AGTS,
@@ -73,17 +75,51 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up LifeSmart integration from config entry."""
     hass.data.setdefault(DOMAIN, {})
+    config_data = config_entry.data.copy()
 
     # Initialize client
     client = None
-    if config_entry.data.get(CONF_TYPE, CONN_CLASS_CLOUD_PUSH) == CONN_CLASS_CLOUD_PUSH:
+    if config_data.get(CONF_TYPE, CONN_CLASS_CLOUD_PUSH) == CONN_CLASS_CLOUD_PUSH:
+        # --- 启动时登录逻辑 ---
+        if config_data.get(CONF_LIFESMART_AUTH_METHOD) == "password":
+            _LOGGER.info(
+                "Password auth method detected, attempting to log in for a fresh token."
+            )
+            temp_client = LifeSmartClient(
+                hass,
+                config_data.get(CONF_REGION),
+                config_data.get(CONF_LIFESMART_APPKEY),
+                config_data.get(CONF_LIFESMART_APPTOKEN),
+                None,  # usertoken 初始为空
+                config_data.get(CONF_LIFESMART_USERID),
+                config_data.get(CONF_LIFESMART_USERPASSWORD),
+            )
+            try:
+                if await temp_client.login_async():
+                    _LOGGER.info("Login successful, updating the user token.")
+                    new_token = temp_client._usertoken
+                    # 更新正在使用的配置和存储的配置
+                    config_data[CONF_LIFESMART_USERTOKEN] = new_token
+                    hass.config_entries.async_update_entry(
+                        config_entry,
+                        data={**config_entry.data, CONF_LIFESMART_USERTOKEN: new_token},
+                    )
+                else:
+                    _LOGGER.error(
+                        "Failed to get a new token at startup. Using the old one if available."
+                    )
+            except Exception as e:
+                _LOGGER.error("An error occurred during startup login: %s", e)
+
+        # --- [修改] 使用更新后的 config_data 初始化主客户端 ---
         client = LifeSmartClient(
             hass,
-            config_entry.data.get(CONF_REGION),
-            config_entry.data.get(CONF_LIFESMART_APPKEY),
-            config_entry.data.get(CONF_LIFESMART_APPTOKEN),
-            config_entry.data.get(CONF_LIFESMART_USERTOKEN),
-            config_entry.data.get(CONF_LIFESMART_USERID),
+            config_data.get(CONF_REGION),
+            config_data.get(CONF_LIFESMART_APPKEY),
+            config_data.get(CONF_LIFESMART_APPTOKEN),
+            config_data.get(CONF_LIFESMART_USERTOKEN),  # 使用最新的token
+            config_data.get(CONF_LIFESMART_USERID),
+            config_data.get(CONF_LIFESMART_USERPASSWORD),  # 传递密码，尽管可能用不上
         )
     else:
         reload(lifesmart_protocol)

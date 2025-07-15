@@ -23,11 +23,13 @@ from .const import (
     CONF_AI_INCLUDE_ITEMS,
     CONF_EXCLUDE_AGTS,
     CONF_EXCLUDE_ITEMS,
+    CONF_LIFESMART_APPKEY,
     CONF_LIFESMART_APPTOKEN,
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERTOKEN,
+    CONF_LIFESMART_USERPASSWORD,
+    CONF_LIFESMART_AUTH_METHOD,
     DOMAIN,
-    CONF_LIFESMART_APPKEY,
     LIFESMART_REGION_OPTIONS,
 )
 
@@ -84,9 +86,13 @@ def build_cloud_schema(config_data: dict = None) -> vol.Schema:
             CONF_LIFESMART_APPTOKEN,
             default=config_data.get(CONF_LIFESMART_APPTOKEN, ""),
         ): str,
-        vol.Required(
+        vol.Optional(
             CONF_LIFESMART_USERTOKEN,
             default=config_data.get(CONF_LIFESMART_USERTOKEN, ""),
+        ): str,
+        vol.Required(
+            CONF_LIFESMART_USERPASSWORD,
+            default=config_data.get(CONF_LIFESMART_USERPASSWORD, ""),
         ): str,
         vol.Required(
             CONF_LIFESMART_USERID, default=config_data.get(CONF_LIFESMART_USERID, "")
@@ -108,38 +114,55 @@ def build_cloud_schema(config_data: dict = None) -> vol.Schema:
     return vol.Schema(schema_elements)
 
 
-async def validate_input(hass: HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect."""
-
     try:
         lifesmart_client = LifeSmartClient(
             hass,
-            data[CONF_REGION],
-            data[CONF_LIFESMART_APPKEY],
-            data[CONF_LIFESMART_APPTOKEN],
-            data[CONF_LIFESMART_USERTOKEN],
-            data[CONF_LIFESMART_USERID],
+            data.get(CONF_REGION),
+            data.get(CONF_LIFESMART_APPKEY),
+            data.get(CONF_LIFESMART_APPTOKEN),
+            data.get(CONF_LIFESMART_USERTOKEN),
+            data.get(CONF_LIFESMART_USERID),
+            user_password=data.get(CONF_LIFESMART_USERPASSWORD),
         )
+
+        # 如果提供了密码，则执行登录流程
+        if data.get(CONF_LIFESMART_USERPASSWORD):
+            _LOGGER.info("Attempting login with user password...")
+            login_success = await lifesmart_client.login_async()
+            if not login_success:
+                _LOGGER.error("Authentication failed with provided password.")
+                raise ConfigEntryAuthFailed("invalid_auth")
+            _LOGGER.info("Login successful, obtained user token.")
+            # 使用获取到的token更新data字典
+            data[CONF_LIFESMART_USERTOKEN] = lifesmart_client._usertoken
 
         devices = await lifesmart_client.get_all_device_async()
 
-        # 添加设备列表验证
         if not isinstance(devices, list):
-            raise ValueError(f"Invalid API return: {type(devices)}")
+            _LOGGER.error("API did not return a valid device list.")
+            raise ConfigEntryAuthFailed("invalid_response")
         if len(devices) == 0:
-            _LOGGER.warning("No devices found")
+            _LOGGER.warning("No devices found for this user.")
+
+        # 如果认证方式是密码，我们现在需要保存密码
+        # 但我们不应该保存临时的 token
+        if data.get(CONF_LIFESMART_AUTH_METHOD) == "password":
+            data.pop(CONF_LIFESMART_USERTOKEN, None)
+        else:
+            # 如果是token认证，则移除密码字段（即使它为空）
+            data.pop(CONF_LIFESMART_USERPASSWORD, None)
 
         return {
-            "title": f"User Id {data[CONF_LIFESMART_USERID]}",
-            "unique_id": data[CONF_LIFESMART_APPKEY],
+            "title": f"LifeSmart ({data[CONF_LIFESMART_USERID]})",
+            "data": data,
         }
-
-    except ValueError as e:
-        _LOGGER.error("API value validate error: %s", str(e))
-        raise ConfigEntryNotReady("Invalid API return")
+    except ConfigEntryAuthFailed:
+        raise
     except Exception as e:
-        _LOGGER.error("Unknown error: %s", str(e), exc_info=True)
-        raise ConfigEntryNotReady("Unknown error") from e
+        _LOGGER.error("Unknown error during validation: %s", str(e), exc_info=True)
+        raise ConfigEntryNotReady("Unknown error during validation") from e
 
 
 async def validate_local_input(
@@ -178,8 +201,7 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """初始化配置流"""
         super().__init__()
-        self.discovery_info = {}
-        self.config_entry: config_entries.ConfigEntry | None = None
+        self.config_data = {}
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """主入口步骤"""
@@ -234,61 +256,114 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_cloud(self, user_input: dict[str, Any] | None = None):
-        """云端连接配置步骤"""
+        """[第一步] 云端连接配置：基础信息和认证方式选择"""
         errors = {}
-        current_step = "cloud"
 
-        # 安全获取配置条目
-        config_entry = getattr(self, "config_entry", None)
-
-        # 处理重新认证流程的数据源 > 优先使用 reauth_entry
+        # 如果是从 reauth 或 options 流程过来，预填充数据
         config_data = {}
         if self._reauth_entry:
             config_data = self._reauth_entry.data.copy()
-        # 当正常编辑已存在条目时合并数据
-        elif isinstance(config_entry, config_entries.ConfigEntry):
-            config_data = {
-                **config_entry.data,
-                **config_entry.options,
+
+        if user_input is not None:
+            # 将用户输入暂存，并进入下一步
+            self.config_data.update(user_input)
+            auth_method = user_input.get(CONF_LIFESMART_AUTH_METHOD)
+            if auth_method == "token":
+                return await self.async_step_cloud_token()
+            elif auth_method == "password":
+                return await self.async_step_cloud_password()
+
+        # 定义第一步的表单
+        cloud_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_LIFESMART_APPKEY,
+                    default=config_data.get(CONF_LIFESMART_APPKEY, ""),
+                ): str,
+                vol.Required(
+                    CONF_LIFESMART_APPTOKEN,
+                    default=config_data.get(CONF_LIFESMART_APPTOKEN, ""),
+                ): str,
+                vol.Required(
+                    CONF_LIFESMART_USERID,
+                    default=config_data.get(CONF_LIFESMART_USERID, ""),
+                ): str,
+                **build_region_selector(config_data.get(CONF_REGION, "cn2")),
+                vol.Required(
+                    CONF_LIFESMART_AUTH_METHOD, default="token"
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            {"label": "User Token", "value": "token"},
+                            {"label": "User Password", "value": "password"},
+                        ],
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
             }
-
-        # 构建动态Schema
-        cloud_schema = build_cloud_schema(config_data)
-
-        if user_input is None:
-            return self.async_show_form(
-                step_id=current_step,
-                data_schema=cloud_schema,
-                errors=errors,
-            )
-
-        # 处理已提交的表单
-        try:
-            title = f"LifeSmart ({user_input[CONF_LIFESMART_USERID]})"
-            unique_id = user_input[CONF_LIFESMART_APPKEY]
-
-            if not self._reauth_entry:
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-
-            await validate_input(self.hass, user_input)
-            user_input.setdefault(CONF_TYPE, config_entries.CONN_CLASS_CLOUD_PUSH)
-
-            return self.async_create_entry(title=title, data=user_input)
-
-        except ConfigEntryAuthFailed as e:
-            errors["base"] = "invalid_auth"
-            _LOGGER.error("Cloud auth error: %s", str(e))
-        except (asyncio.TimeoutError, ConnectionRefusedError) as e:
-            errors["base"] = "cannot_connect"
-            _LOGGER.error("Connection error: %s", str(e))
-        except Exception as e:
-            errors["base"] = "unknown"
-            _LOGGER.error("Unexpected error: %s", str(e), exc_info=True)
+        )
 
         return self.async_show_form(
-            step_id=current_step,
+            step_id="cloud",
             data_schema=cloud_schema,
+            errors=errors,
+        )
+
+    async def async_step_cloud_token(self, user_input: dict[str, Any] | None = None):
+        """[第二步 - Token] 输入 User Token"""
+        errors = {}
+        if user_input is not None:
+            self.config_data.update(user_input)
+            try:
+                # 验证并创建条目
+                validation_result = await validate_input(self.hass, self.config_data)
+                return self.async_create_entry(
+                    title=validation_result["title"], data=validation_result["data"]
+                )
+            except ConfigEntryAuthFailed:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                errors["base"] = "unknown"
+
+        token_schema = vol.Schema(
+            {
+                vol.Required(CONF_LIFESMART_USERTOKEN): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="cloud_token",
+            data_schema=token_schema,
+            errors=errors,
+        )
+
+    async def async_step_cloud_password(self, user_input: dict[str, Any] | None = None):
+        """[第二步 - Password] 输入 User Password"""
+        errors = {}
+        if user_input is not None:
+            self.config_data.update(user_input)
+            try:
+                # 验证并创建条目
+                validation_result = await validate_input(self.hass, self.config_data)
+                return self.async_create_entry(
+                    title=validation_result["title"], data=validation_result["data"]
+                )
+            except ConfigEntryAuthFailed:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                errors["base"] = "unknown"
+
+        password_schema = vol.Schema(
+            {
+                vol.Required(CONF_LIFESMART_USERPASSWORD): selector.TextSelector(
+                    selector.TextSelectorConfig(type="password")
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="cloud_password",
+            data_schema=password_schema,
             errors=errors,
         )
 

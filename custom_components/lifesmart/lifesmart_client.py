@@ -20,7 +20,7 @@ class LifeSmartClient:
         apptoken,
         usertoken,
         userid,
-        # apppassword,
+        user_password: str | None = None,
     ) -> None:
         self.hass = hass
         self._region = region
@@ -28,7 +28,7 @@ class LifeSmartClient:
         self._apptoken = apptoken
         self._usertoken = usertoken
         self._userid = userid
-        # self._apppassword = apppassword
+        self._userpassword = user_password
 
     # 获取所有设备
     async def get_all_device_async(self):
@@ -57,13 +57,14 @@ class LifeSmartClient:
         url = self.get_api_url() + "/auth.login"
         login_data = {
             "uid": self._userid,
-            # "pwd": self._apppassword,
+            "pwd": self._apppassword,
             "appkey": self._appkey,
         }
         header = self.generate_header()
         send_data = json.dumps(login_data)
         response = json.loads(await self.post_async(url, send_data, header))
-        if response["code"] != "success":
+        if response.get("code") != 0 or "token" not in response:
+            _LOGGER.error("LifeSmart Login failed: %s", response)
             return False
 
         url = self.get_api_url() + "/auth.do_auth"
@@ -80,10 +81,13 @@ class LifeSmartClient:
 
         send_data = json.dumps(auth_data)
         response = json.loads(await self.post_async(url, send_data, header))
-        if response["code"] == "success":
+        if (
+            response.get("code") == 0 and "usertoken" in response
+        ):  # <-- [修改] 增强成功判断
             self._usertoken = response["usertoken"]
+            return True
 
-        return response
+        return False
 
     # 获取所有场景
     async def get_all_scene_async(self, agt):
