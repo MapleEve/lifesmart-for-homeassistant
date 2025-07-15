@@ -16,25 +16,28 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LifeSmartDevice, generate_entity_id
 from .const import (
-    BINARY_SENSOR_TYPES,
-    DEVICE_DATA_KEY,
-    DEVICE_ID_KEY,
-    DEVICE_NAME_KEY,
-    DEVICE_TYPE_KEY,
-    DEVICE_VERSION_KEY,
+    # --- 核心常量导入 ---
     DOMAIN,
+    MANUFACTURER,
+    HUB_ID_KEY,
+    DEVICE_ID_KEY,
+    DEVICE_TYPE_KEY,
+    DEVICE_NAME_KEY,
+    DEVICE_DATA_KEY,
+    DEVICE_VERSION_KEY,
+    LIFESMART_SIGNAL_UPDATE_ENTITY,
+    UNLOCK_METHOD,
+    # --- 设备类型常量导入 ---
+    ALL_BINARY_SENSOR_TYPES,
+    BINARY_SENSOR_TYPES,
     GENERIC_CONTROLLER_TYPES,
     GUARD_SENSOR_TYPES,
-    HUB_ID_KEY,
-    LIFESMART_SIGNAL_UPDATE_ENTITY,
-    LOCK_TYPES,
-    UNLOCK_METHOD,
-    MANUFACTURER,
     MOTION_SENSOR_TYPES,
-    ALL_BINARY_SENSOR_TYPES,
+    LOCK_TYPES,
     WATER_SENSOR_TYPES,
     SMOKE_SENSOR_TYPES,
     RADAR_SENSOR_TYPES,
+    DEFED_SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +93,14 @@ async def async_setup_entry(
 def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     """Determine if a sub-device is a valid binary sensor."""
     # 通用控制器
-    if device_type in GENERIC_CONTROLLER_TYPES and sub_key in {"P5", "P6", "P7"}:
+    if device_type in GENERIC_CONTROLLER_TYPES and sub_key in {
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+    }:
         return True
 
     # 门锁事件和报警
@@ -111,6 +121,20 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
 
     # 人体存在感应器
     if device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
+        return True
+
+    # 云防系列传感器判断
+    if device_type in DEFED_SENSOR_TYPES and sub_key in {
+        "A",
+        "A2",
+        "M",
+        "TR",
+        "SR",
+        "eB1",
+        "eB2",
+        "eB3",
+        "eB4",
+    }:
         return True
 
     return False
@@ -184,7 +208,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
         # 通用控制器
         if device_type in GENERIC_CONTROLLER_TYPES:
-            return BinarySensorDeviceClass.LOCK
+            return BinarySensorDeviceClass.OPENING
 
         # 水浸传感器
         if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
@@ -197,6 +221,17 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         # 人体存在感应器
         if device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
             return BinarySensorDeviceClass.OCCUPANCY
+
+        # 云防系列设备类别
+        if device_type in DEFED_SENSOR_TYPES:
+            if device_type == "SL_DF_GG":
+                return BinarySensorDeviceClass.DOOR
+            if device_type == "SL_DF_MM":
+                return BinarySensorDeviceClass.MOTION
+            if device_type == "SL_DF_SR":
+                return BinarySensorDeviceClass.SOUND
+            # 遥控器没有标准类别，作为通用触发器
+            return None
 
         return None
 
@@ -241,6 +276,10 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         # 人体存在感应器
         if device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
             return val != 0  # 非0表示检测到人体存在
+
+        # 云防门窗感应器
+        if device_type == "SL_DF_GG" and sub_key == "A":
+            return val == 0  # 云防门窗：0=开，1=关
 
         # 其他传感器默认处理
         return val != 0
@@ -371,11 +410,10 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             self._update_lock_event_state(data)
         elif device_type in MOTION_SENSOR_TYPES:
             self._attr_is_on = val != 0
-        elif device_type in GUARD_SENSOR_TYPES:
-            if sub_key == "G":
-                self._attr_is_on = val == 0
-            else:
-                self._attr_is_on = val != 0
+        elif (device_type in GUARD_SENSOR_TYPES and sub_key == "G") or (
+            device_type == "SL_DF_GG" and sub_key == "A"
+        ):
+            self._attr_is_on = val == 0
         elif device_type in WATER_SENSOR_TYPES and sub_key == "WA":
             self._attr_is_on = val != 0
             # 更新水浸传感器属性
