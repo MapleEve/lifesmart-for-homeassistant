@@ -3,11 +3,15 @@
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
     PERCENTAGE,
     UnitOfElectricPotential,
@@ -23,25 +27,27 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LifeSmartDevice, generate_entity_id
 from .const import (
-    COVER_TYPES,
-    DEVICE_DATA_KEY,
-    DEVICE_ID_KEY,
-    DEVICE_NAME_KEY,
-    DEVICE_TYPE_KEY,
+    # 核心常量
     DOMAIN,
-    GAS_SENSOR_TYPES,
-    HUB_ID_KEY,
-    LIFESMART_SIGNAL_UPDATE_ENTITY,
-    LOCK_TYPES,
     MANUFACTURER,
-    OT_SENSOR_TYPES,
-    SMART_PLUG_TYPES,
-    WATER_SENSOR_TYPES,
-    NOISE_SENSOR_TYPES,
-    POWER_METER_TYPES,
-    DEFED_SENSOR_TYPES,
-    EV_SENSOR_TYPES,
+    HUB_ID_KEY,
+    DEVICE_ID_KEY,
+    DEVICE_TYPE_KEY,
+    DEVICE_NAME_KEY,
+    DEVICE_DATA_KEY,
+    LIFESMART_SIGNAL_UPDATE_ENTITY,
+    # --- 设备类型常量导入 ---
     ALL_SENSOR_TYPES,
+    EV_SENSOR_TYPES,
+    ENVIRONMENT_SENSOR_TYPES,
+    GAS_SENSOR_TYPES,
+    NOISE_SENSOR_TYPES,
+    POWER_METER_PLUG_TYPES,
+    POWER_METER_TYPES,
+    LOCK_TYPES,
+    COVER_TYPES,
+    DEFED_SENSOR_TYPES,
+    WATER_SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -94,11 +100,25 @@ async def async_setup_entry(
 def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     """Determine if a sub-device is a valid sensor."""
     # 环境感应器（包括温度、湿度、光照、电压）
-    if device_type in OT_SENSOR_TYPES and sub_key in {"T", "H", "Z", "V", "P3", "P4"}:
+    if device_type in EV_SENSOR_TYPES and sub_key in {
+        "T",
+        "H",
+        "Z",
+        "V",
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+    }:
+        return True
+
+    # TVOC, CO2, CH2O 传感器
+    if device_type in ENVIRONMENT_SENSOR_TYPES and sub_key in {"P1", "P3", "P4"}:
         return True
 
     # 气体感应器
-    if device_type in GAS_SENSOR_TYPES:
+    if device_type in GAS_SENSOR_TYPES and sub_key in {"P1", "P2"}:
         return True
 
     # 门锁电量
@@ -110,7 +130,7 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
         return True
 
     # 智能插座
-    if device_type in SMART_PLUG_TYPES and sub_key in {"P1", "P2", "P3", "P4"}:
+    if device_type in POWER_METER_PLUG_TYPES and sub_key in {"P2", "P3", "P4"}:
         return True
 
     # 噪音感应器
@@ -118,7 +138,7 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
         return True
 
     # ELIQ电量计量器
-    if device_type in POWER_METER_TYPES and sub_key in {"P1", "P2", "P3", "P4"}:
+    if device_type in POWER_METER_TYPES and sub_key in {"EPA", "EE", "EP"}:
         return True
 
     # 云防系列传感器
@@ -127,10 +147,6 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
 
     # 水浸传感器（只保留电压）
     if device_type in WATER_SENSOR_TYPES and sub_key == "V":
-        return True
-
-    # 环境感应器（EV系列）
-    if device_type in EV_SENSOR_TYPES and sub_key in {"P1", "P2"}:
         return True
 
     return False
@@ -183,7 +199,7 @@ class LifeSmartSensor(SensorEntity):
         sub_key = self._sub_key
 
         # 气体传感器优先判断
-        if device_type in GAS_SENSOR_TYPES:
+        if device_type in GAS_SENSOR_TYPES and sub_key in {"P1", "P2"}:
             return SensorDeviceClass.GAS
 
         # 根据子设备键判断
@@ -198,33 +214,31 @@ class LifeSmartSensor(SensorEntity):
         if sub_key == "V":
             return SensorDeviceClass.VOLTAGE
 
+        # TVOC 传感器的设备
+        if device_type in ENVIRONMENT_SENSOR_TYPES:
+            if device_type == "SL_SC_CQ":
+                return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+            if device_type == "SL_SC_CA":
+                return SensorDeviceClass.CO2
+            if device_type == "SL_SC_CH":
+                return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS  # 甲醛也属于VOC
+
         # 智能插座特殊处理
-        if device_type in SMART_PLUG_TYPES:
-            if sub_key == "P1":
-                return SensorDeviceClass.TEMPERATURE
+        if device_type in POWER_METER_PLUG_TYPES:
             if sub_key == "P2":
-                return SensorDeviceClass.HUMIDITY
+                return SensorDeviceClass.ENERGY
             if sub_key == "P3":
                 return SensorDeviceClass.POWER
-            if sub_key == "P4":
-                return SensorDeviceClass.ENERGY
-
-        # OT传感器的P3/P4是气体浓度
-        if device_type in OT_SENSOR_TYPES and sub_key in {"P3", "P4"}:
-            return SensorDeviceClass.GAS
 
         # 噪音感应器
-        if device_type in NOISE_SENSOR_TYPES:
-            if sub_key == "P1":
-                return SensorDeviceClass.SOUND_PRESSURE  # 噪音等级
-            if sub_key == "P2":
-                return None  # 可能是其他数据
+        if device_type in NOISE_SENSOR_TYPES and sub_key == "P1":
+            return SensorDeviceClass.SOUND_PRESSURE  # 噪音等级
 
-        # ELIQ电量计量器
+        # 电量计量器
         if device_type in POWER_METER_TYPES:
-            if sub_key in {"P1", "P3"}:
+            if sub_key in {"EPA", "EP"}:
                 return SensorDeviceClass.POWER
-            if sub_key in {"P2", "P4"}:
+            if sub_key == "EE":
                 return SensorDeviceClass.ENERGY
 
         # 云防系列的温度传感器
@@ -233,10 +247,19 @@ class LifeSmartSensor(SensorEntity):
 
         # 环境感应器（EV系列）
         if device_type in EV_SENSOR_TYPES:
-            if sub_key == "P1":
+            if sub_key == "T":
                 return SensorDeviceClass.TEMPERATURE
-            if sub_key == "P2":
+            if sub_key == "H":
                 return SensorDeviceClass.HUMIDITY
+            if sub_key == "V":
+                return SensorDeviceClass.VOLTAGE
+            if sub_key == "Z":
+                return SensorDeviceClass.ILLUMINANCE
+            if device_type in ENVIRONMENT_SENSOR_TYPES and device_type != "SL_SC_CH":
+                if sub_key == "P1":
+                    return SensorDeviceClass.TEMPERATURE
+                if sub_key == "P2":
+                    return SensorDeviceClass.HUMIDITY
 
         return None
 
@@ -246,7 +269,6 @@ class LifeSmartSensor(SensorEntity):
         device_type = self._raw_device[DEVICE_TYPE_KEY]
         sub_key = self._sub_key
 
-        # 使用已确定的device_class来判断
         if self.device_class == SensorDeviceClass.BATTERY:
             return PERCENTAGE
         if self.device_class == SensorDeviceClass.TEMPERATURE:
@@ -257,32 +279,40 @@ class LifeSmartSensor(SensorEntity):
             return LIGHT_LUX
         if self.device_class == SensorDeviceClass.VOLTAGE:
             return UnitOfElectricPotential.VOLT
+        if self.device_class == SensorDeviceClass.POWER:
+            return UnitOfPower.WATT
+        if self.device_class == SensorDeviceClass.ENERGY:
+            return UnitOfEnergy.KILO_WATT_HOUR
 
-        # 特殊处理
-        if device_type in SMART_PLUG_TYPES:
-            if sub_key == "P3":
-                return UnitOfPower.WATT
-            if sub_key == "P4":
-                return UnitOfEnergy.KILO_WATT_HOUR
-
-        # OT传感器的气体浓度单位
-        if device_type in OT_SENSOR_TYPES:
-            if sub_key == "P3":
-                return CONCENTRATION_PARTS_PER_MILLION
-            if sub_key == "P4":
-                return CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
-
-        # 噪音传感器单位
-        if device_type in NOISE_SENSOR_TYPES and sub_key == "P1":
+        if self.device_class == SensorDeviceClass.CO2:
+            return CONCENTRATION_PARTS_PER_MILLION
+        if self.device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
+            return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        if self.device_class == SensorDeviceClass.SOUND_PRESSURE:
             return UnitOfSoundPressure.DECIBEL
 
-        # ELIQ电量计量器单位
-        if device_type in POWER_METER_TYPES:
-            if sub_key in {"P1", "P3"}:
-                return UnitOfPower.WATT
-            if sub_key in {"P2", "P4"}:
-                return UnitOfEnergy.KILO_WATT_HOUR
+        # 燃气浓度单位
+        if device_type in GAS_SENSOR_TYPES and sub_key == "P1":
+            return CONCENTRATION_PARTS_PER_MILLION  # 一般为甲烷等气体
 
+        return None
+
+    @callback
+    def _determine_state_class(self) -> SensorStateClass | None:
+        """Determine state class for long-term statistics."""
+        # 新增: 为传感器设置状态类别，以支持历史图表
+        if self.device_class in [
+            SensorDeviceClass.TEMPERATURE,
+            SensorDeviceClass.HUMIDITY,
+            SensorDeviceClass.ILLUMINANCE,
+            SensorDeviceClass.POWER,
+            SensorDeviceClass.CO2,
+            SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+            SensorDeviceClass.SOUND_PRESSURE,
+        ]:
+            return SensorStateClass.MEASUREMENT
+        if self.device_class == SensorDeviceClass.ENERGY:
+            return SensorStateClass.TOTAL_INCREASING
         return None
 
     @callback

@@ -175,6 +175,7 @@ EV_SENSOR_TYPES = ["SL_SC_THL", "SL_SC_BE", "SL_SC_CQ", "SL_SC_B1", "SL_SC_CA"]
 ENVIRONMENT_SENSOR_TYPES = [
     "SL_SC_CQ",
     "SL_SC_CA",
+    "SL_SC_B1",
     "SL_SC_CH",
 ]
 # --- 燃气感应器 ---
