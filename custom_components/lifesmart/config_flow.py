@@ -304,7 +304,6 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.options_data = dict(config_entry.options)
         self.temp_data = {}
 
