@@ -14,9 +14,9 @@
         "description": "Enter your LifeSmart Hub's local credentials.",
         "data": {
           "host": "IP Address",
-          "port": "Port",
-          "username": "Local Username",
-          "password": "Local Password"
+          "port": "Port (Default 8888)",
+          "username": "Local Username (Default admin)",
+          "password": "Local Password (Default admin)"
         }
       },
       "cloud": {
