@@ -181,6 +181,7 @@ class LifeSmartSensor(SensorEntity):
         )
         self._attr_name = self._generate_sensor_name()
         self._attr_device_class = self._determine_device_class()
+        self._attr_state_class = self._determine_state_class()
         self._attr_native_unit_of_measurement = self._determine_unit()
         self._attr_native_value = self._extract_initial_value()
         self._attr_extra_state_attributes = self._get_extra_attributes()
