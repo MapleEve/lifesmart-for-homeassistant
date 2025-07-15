@@ -129,16 +129,11 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=[
-                            {
-                                "label": "本地 (LAN IP)",
-                                "value": config_entries.CONN_CLASS_LOCAL_PUSH,
-                            },
-                            {
-                                "label": "云端 (Cloud)",
-                                "value": config_entries.CONN_CLASS_CLOUD_PUSH,
-                            },
+                            config_entries.CONN_CLASS_LOCAL_PUSH,
+                            config_entries.CONN_CLASS_CLOUD_PUSH,
                         ],
                         mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="connection_type",
                     )
                 )
             }
@@ -210,8 +205,9 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_REGION, default=self.config_data.get(CONF_REGION, "cn2")
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=LIFESMART_REGION_OPTIONS,  # 直接使用，因为它已经包含label和value
+                        options=LIFESMART_REGION_OPTIONS,
                         mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="region",
                     )
                 ),
                 vol.Required(
@@ -219,11 +215,9 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     default=self.config_data.get(CONF_LIFESMART_AUTH_METHOD, "token"),
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=[
-                            {"label": "用户令牌 (User Token)", "value": "token"},
-                            {"label": "APP 密码 (App Password)", "value": "password"},
-                        ],
+                        options=["token", "password"],
                         mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="auth_method",
                     )
                 ),
             }
@@ -317,10 +311,11 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options menu."""
+        """Manage the option menu."""
         return self.async_show_menu(
             step_id="init",
             menu_options=["main_params", "auth_params"],
+            description_placeholders={"name": self.config_entry.title},
         )
 
     async def async_step_main_params(
@@ -372,11 +367,9 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.temp_data.get(CONF_LIFESMART_AUTH_METHOD, "token"),
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=[
-                            {"label": "用户令牌 (User Token)", "value": "token"},
-                            {"label": "APP 密码 (App Password)", "value": "password"},
-                        ],
+                        options=["token", "password"],
                         mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="auth_method",
                     )
                 )
             }

@@ -180,5 +180,31 @@
         }
       }
     }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "local_push": "Local LAN",
+        "cloud_push": "Internet Cloud"
+      }
+    },
+    "auth_method": {
+      "options": {
+        "token": "User Token",
+        "password": "App User Password"
+      }
+    },
+    "region": {
+      "options": {
+        "cn0": "China 1 (cn0)",
+        "cn1": "China Backup (cn1)",
+        "cn2": "China 2 (cn2)",
+        "us": "North America (US/NA)",
+        "eur": "Europe (EUROPE)",
+        "jp": "Japan (JAPAN)",
+        "apz": "Asia Pacific (APAC)",
+        "AUTO": "Global (Auto)"
+      }
+    }
   }
 }

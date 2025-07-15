@@ -81,6 +81,7 @@
         "description": "您可以在此处更新您的认证方式或凭据。此操作将导致集成重新加载。",
         "data": {
           "auth_method": "认证方式"
+        }
       }
     }
   },
@@ -129,7 +130,7 @@
         },
         "ai": {
           "name": "遥控器 ID",
-          "description": "虚拟遥控器的 'ai' 标识符"
+          "description": "虚拟遥控器的 'ai' 标识符。"
         },
         "category": {
           "name": "类别",
@@ -177,6 +178,32 @@
           "name": "场景 ID",
           "description": "要触发的场景的标识符"
         }
+      }
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "local_push": "本地连接",
+        "cloud_push": "云端连接"
+      }
+    },
+    "auth_method": {
+      "options": {
+        "token": "用户令牌 (User Token)",
+        "password": " APP 的用户密码"
+      }
+    },
+    "region": {
+      "options": {
+        "cn0": "中国 1 (cn0)",
+        "cn1": "中国备用(cn1)",
+        "cn2": "中国 2 (cn2)",
+        "us": "北美服务器 (US/NA)",
+        "eur": "欧洲服务器 (EUROPE)",
+        "jp": "日本服务器 (JAPAN)",
+        "apz": "亚太其他区 (APAC)",
+        "AUTO": "自动选择 Global"
       }
     }
   }
