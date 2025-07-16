@@ -41,7 +41,21 @@
         "title": "Cloud Setup (Step 2 of 2)",
         "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
         "data": {
-          "userpassword": "User Password"
+          "userpassword": "Mobile App User Password"
+        }
+      },
+      "auth_token": {
+        "title": "Hub Setup",
+        "description": "Please enter your User Token.",
+        "data": {
+          "usertoken": "User Token"
+        }
+      },
+      "auth_password": {
+        "title": "Hub Setup",
+        "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
+        "data": {
+          "userpassword": "Mobile App User Password"
         }
       }
     },
@@ -196,14 +210,14 @@
     },
     "region": {
       "options": {
-        "cn0": "China 1 (cn0)",
+        "cn0": "China VIP (cn0)",
         "cn1": "China Backup (cn1)",
-        "cn2": "China 2 (cn2)",
+        "cn2": "China Main (cn2)",
         "us": "North America (US/NA)",
         "eur": "Europe (EUROPE)",
         "jp": "Japan (JAPAN)",
         "apz": "Asia Pacific (APAC)",
-        "AUTO": "Global (Auto)"
+        "AUTO": "Global Auto"
       }
     }
   }

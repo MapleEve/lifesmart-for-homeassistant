@@ -20,7 +20,7 @@ send_keys:
       description: 遥控器命令key
       example: '["key"]'
 
-scene_set:
+trigger_scene:
   description: 场景设置.
   fields:
     agt:

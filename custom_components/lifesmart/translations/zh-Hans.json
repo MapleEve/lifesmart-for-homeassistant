@@ -43,6 +43,20 @@
         "data": {
           "userpassword": "App 用户的密码"
         }
+      },
+      "auth_token": {
+        "title": "LifeSmart 设备中枢配置",
+        "description": "请输入您的用户令牌 (User Token)",
+        "data": {
+          "usertoken": "用户令牌"
+        }
+      },
+      "auth_password": {
+        "title": "LifeSmart 设备中枢配置",
+        "description": "请输入你 App 账号的密码，密码将被安全地存储在 Home Assistant 中，用于刷新令牌。",
+        "data": {
+          "userpassword": "App 用户的密码"
+        }
       }
     },
     "abort": {
@@ -191,19 +205,19 @@
     "auth_method": {
       "options": {
         "token": "用户令牌 (User Token)",
-        "password": " APP 的用户密码"
+        "password": "APP 的用户密码"
       }
     },
     "region": {
       "options": {
-        "cn0": "中国 1 (cn0)",
-        "cn1": "中国备用(cn1)",
-        "cn2": "中国 2 (cn2)",
-        "us": "北美服务器 (US/NA)",
+        "cn0": "中国专线服务器 (cn0)",
+        "cn1": "中国备用服务器 (cn1)",
+        "cn2": "中国主要服务器 (cn2)",
+        "us": "北美洲服务器 (US/NA)",
         "eur": "欧洲服务器 (EUROPE)",
         "jp": "日本服务器 (JAPAN)",
-        "apz": "亚太其他区 (APAC)",
-        "AUTO": "自动选择 Global"
+        "apz": "其他亚太区服务器 (APAC)",
+        "AUTO": "自动选择服务器 Global"
       }
     }
   }
