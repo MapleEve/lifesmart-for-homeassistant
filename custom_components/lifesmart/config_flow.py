@@ -314,7 +314,6 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_menu(
             step_id="init",
             menu_options=["main_params", "auth_params"],
-            description_placeholders={"name": self.config_entry.title},
         )
 
     async def async_step_main_params(
