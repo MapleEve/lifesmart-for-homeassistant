@@ -9,6 +9,7 @@ from typing import Any, Optional
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOOYA_TYPES, GARAGE_DOOR_TYPES
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 
 _LOGGER = logging.getLogger(__name__)
@@ -229,6 +230,61 @@ class LifeSmartClient:
             duration_ms,
         )
         return await self.send_epset_async(agt, me, idx, "0x89", val)
+
+    async def open_cover_async(self, agt: str, me: str, device_type: str) -> int:
+        """Open a cover/garage door."""
+        if device_type in GARAGE_DOOR_TYPES:
+            return await self.send_epset_async(agt, me, "P3", "0xCF", 100)
+        elif device_type in DOOYA_TYPES:
+            return await self.send_epset_async(agt, me, "P2", "0xCF", 100)
+        else:
+            # 适用于 SL_SW_WIN, SL_P_V2, SL_CN_* 等
+            cmd_idx = (
+                "OP"
+                if device_type == "SL_SW_WIN"
+                else "P1" if device_type in ["SL_CN_IF", "SL_CN_FE"] else "P2"
+            )
+            return await self.send_epset_async(agt, me, cmd_idx, "0x81", 1)
+
+    async def close_cover_async(self, agt: str, me: str, device_type: str) -> int:
+        """Close a cover/garage door."""
+        if device_type in GARAGE_DOOR_TYPES:
+            return await self.send_epset_async(agt, me, "P3", "0xCF", 0)
+        elif device_type in DOOYA_TYPES:
+            return await self.send_epset_async(agt, me, "P2", "0xCF", 0)
+        else:
+            cmd_idx = (
+                "CL"
+                if device_type == "SL_SW_WIN"
+                else "P2" if device_type in ["SL_CN_IF", "SL_CN_FE"] else "P3"
+            )
+            return await self.send_epset_async(agt, me, cmd_idx, "0x81", 1)
+
+    async def stop_cover_async(self, agt: str, me: str, device_type: str) -> int:
+        """Stop a cover/garage door."""
+        if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
+            cmd_idx = "P3" if device_type in GARAGE_DOOR_TYPES else "P2"
+            return await self.send_epset_async(agt, me, cmd_idx, "0xCE", 0x80)
+        else:
+            cmd_idx = (
+                "ST"
+                if device_type == "SL_SW_WIN"
+                else "P3" if device_type in ["SL_CN_IF", "SL_CN_FE"] else "P4"
+            )
+            return await self.send_epset_async(agt, me, cmd_idx, "0x81", 1)
+
+    async def set_cover_position_async(
+        self, agt: str, me: str, position: int, device_type: str
+    ) -> int:
+        """Set cover/garage door to a specific position."""
+        if device_type in GARAGE_DOOR_TYPES:
+            return await self.send_epset_async(agt, me, "P3", "0xCF", position)
+        elif device_type in DOOYA_TYPES:
+            return await self.send_epset_async(agt, me, "P2", "0xCF", position)
+        _LOGGER.warning(
+            "Device type %s does not support setting position.", device_type
+        )
+        return -1
 
     # --- Utility and Private Methods ---
 

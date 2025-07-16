@@ -41,6 +41,7 @@ from .const import (
     OUTDOOR_LIGHT_TYPES,
     BRIGHTNESS_LIGHT_TYPES,
     ALL_LIGHT_TYPES,
+    GARAGE_DOOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,6 +98,21 @@ async def async_setup_entry(
             continue
 
         ha_device = LifeSmartDevice(device, client)
+
+        if device_type in GARAGE_DOOR_TYPES:
+            for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
+                if sub_key == "P1":  # P1 是灯光控制
+                    lights.append(
+                        LifeSmartCoverLight(
+                            device=ha_device,
+                            raw_device=device,
+                            sub_device_key=sub_key,
+                            sub_device_data=sub_data,
+                            client=client,
+                            entry_id=entry_id,
+                        )
+                    )
+            continue  # 处理完后跳过，避免进入下面的通用逻辑
 
         # 根据设备类型创建对应的灯实体
         if device_type in LIGHT_DIMMER_TYPES:
@@ -259,10 +275,13 @@ class LifeSmartBaseLight(LightEntity):
     @callback
     def _generate_light_name(self) -> str:
         """生成灯名称."""
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Light")
-        if self._sub_key not in ["RGB", "RGBW", "P1", "P2"]:
-            return f"{base_name} {self._sub_key}"
-        return f"{base_name} Light"
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Switch")
+        # 如果子设备有自己的名字 (如多联开关的按键名)，则使用它
+        sub_name = self._sub_data.get(DEVICE_NAME_KEY)
+        if sub_name and sub_name != self._sub_key:
+            return f"{base_name} {sub_name}"
+        # 否则，使用基础名 + IO口索引
+        return f"{base_name} {self._sub_key.upper()}"
 
     @callback
     def _initialize_state(self) -> None:
@@ -980,6 +999,50 @@ class LifeSmartLight(LifeSmartBaseLight):
             self._sub_key,
             self._raw_device[HUB_ID_KEY],
             self._raw_device[DEVICE_ID_KEY],
+        )
+        if result == 0:
+            self._attr_is_on = False
+            self.async_write_ha_state()
+
+
+class LifeSmartCoverLight(LifeSmartBaseLight):
+    """Represents a light attached to a LifeSmart cover device (e.g., garage door light)."""
+
+    @callback
+    def _generate_light_name(self) -> str:
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Switch")
+        # 如果子设备有自己的名字 (如多联开关的按键名)，则使用它
+        sub_name = self._sub_data.get(DEVICE_NAME_KEY)
+        if sub_name and sub_name != self._sub_key:
+            return f"{base_name} {sub_name}"
+        # 否则，使用基础名 + IO口索引
+        return f"{base_name} {self._sub_key.upper()}"
+
+    @callback
+    def _initialize_state(self) -> None:
+        self._attr_is_on = self._sub_data.get("type", 0) % 2 == 1
+        self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {ColorMode.ONOFF}
+
+    async def _handle_update(self, new_data: dict) -> None:
+        if not new_data:
+            return
+        self._attr_is_on = new_data.get("type", 0) % 2 == 1
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        result = await self._client.turn_on_light_switch_async(
+            self._sub_key, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY]
+        )
+        if result == 0:
+            self._attr_is_on = True
+            self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        result = await self._client.turn_off_light_switch_async(
+            self._sub_key, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY]
         )
         if result == 0:
             self._attr_is_on = False

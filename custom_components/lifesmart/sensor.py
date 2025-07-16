@@ -49,6 +49,7 @@ from .const import (
     DEFED_SENSOR_TYPES,
     WATER_SENSOR_TYPES,
     SUPPORTED_SWITCH_TYPES,
+    GARAGE_DOOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,6 +159,9 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     if device_type == "SL_SC_BB_V2" and sub_key == "P2":
         return True
 
+    if device_type in GARAGE_DOOR_TYPES:
+        return False
+
     return False
 
 
@@ -198,9 +202,13 @@ class LifeSmartSensor(SensorEntity):
     @callback
     def _generate_sensor_name(self) -> str | None:
         """Generate user-friendly sensor name."""
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Device")
-        sub_key = self._sub_key.upper()
-        return f"{base_name} {sub_key}"  # 生成传感器名称
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Switch")
+        # 如果子设备有自己的名字 (如多联开关的按键名)，则使用它
+        sub_name = self._sub_data.get(DEVICE_NAME_KEY)
+        if sub_name and sub_name != self._sub_key:
+            return f"{base_name} {sub_name}"
+        # 否则，使用基础名 + IO口索引
+        return f"{base_name} {self._sub_key.upper()}"
 
     @callback
     def _determine_device_class(self) -> SensorDeviceClass | None:

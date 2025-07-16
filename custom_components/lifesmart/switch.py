@@ -27,6 +27,7 @@ from .const import (
     ALL_SWITCH_TYPES,
     SMART_PLUG_TYPES,
     POWER_METER_PLUG_TYPES,
+    GARAGE_DOOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,6 +109,9 @@ def _is_switch_subdevice(device_type: str, sub_key: str) -> bool:
     # 它们的开关 idx 通常是 L1-L3 或 P1-P3
     if sub_key_upper in {"L1", "L2", "L3", "P1", "P2", "P3"}:
         return True
+
+    if device_type in GARAGE_DOOR_TYPES:
+        return False
 
     return False
 
