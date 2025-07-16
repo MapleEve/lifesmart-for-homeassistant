@@ -241,6 +241,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         device_type = self.device_type
         sub_key = self._sub_key
         val = self._sub_data.get("val", 0)
+        type_val = self._sub_data.get("type", 0)
 
         # 门窗感应器特殊处理
         if device_type in GUARD_SENSOR_TYPES:
@@ -248,6 +249,11 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 return val == 0  # 门窗传感器：0=开，1=关
             else:
                 return val != 0  # 其他传感器：非0=触发
+
+        # 云防系列设备特殊处理
+        if device_type in DEFED_SENSOR_TYPES:
+            # 所有云防设备都应使用 type 判断
+            return type_val % 2 == 1
 
         # 动态感应器
         if device_type in MOTION_SENSOR_TYPES:
@@ -405,14 +411,16 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         device_type = self.device_type
         sub_key = self._sub_key
         val = data.get("val", 0)
+        type_val = data.get("type", 0)  # 获取 type 值
 
         if device_type in LOCK_TYPES and sub_key == "EVTLO":
             self._update_lock_event_state(data)
         elif device_type in MOTION_SENSOR_TYPES:
             self._attr_is_on = val != 0
-        elif (device_type in GUARD_SENSOR_TYPES and sub_key == "G") or (
-            device_type == "SL_DF_GG" and sub_key == "A"
-        ):
+        elif device_type in DEFED_SENSOR_TYPES:
+            # 所有云防设备都应使用 type 判断
+            self._attr_is_on = type_val % 2 == 1
+        elif device_type in GUARD_SENSOR_TYPES and sub_key == "G":
             self._attr_is_on = val == 0
         elif device_type in WATER_SENSOR_TYPES and sub_key == "WA":
             self._attr_is_on = val != 0
