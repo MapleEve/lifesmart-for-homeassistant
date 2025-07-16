@@ -394,7 +394,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="auth_token",
+            step_id="cloud_token",
             data_schema=vol.Schema({vol.Required(CONF_LIFESMART_USERTOKEN): str}),
             errors=errors,
         )
@@ -418,7 +418,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = "unknown"
 
         return self.async_show_form(
-            step_id="auth_password",
+            step_id="cloud_password",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_LIFESMART_USERPASSWORD): selector.TextSelector(
