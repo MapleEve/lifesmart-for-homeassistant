@@ -21,6 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -64,84 +65,101 @@ from .const import (
     CAMERA_TYPES,
     SMART_PLUG_TYPES,
     SPOT_TYPES,
-    # --- 平台列表 ---
+    # --- 所有支持的平台列表 ---
     SUPPORTED_PLATFORMS,
 )
+from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 from .lifesmart_client import LifeSmartClient
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Set up LifeSmart integration from config entry."""
+    """Set up LifeSmart integration from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     config_data = config_entry.data.copy()
 
     # Initialize client
     client = None
+    devices = None
+
     if config_data.get(CONF_TYPE, CONN_CLASS_CLOUD_PUSH) == CONN_CLASS_CLOUD_PUSH:
-        # --- 启动时登录逻辑 ---
-        if config_data.get(CONF_LIFESMART_AUTH_METHOD) == "password":
-            _LOGGER.info(
-                "Password auth method detected, attempting to log in for a fresh token."
-            )
-            temp_client = LifeSmartClient(
-                hass,
-                config_data.get(CONF_REGION),
-                config_data.get(CONF_LIFESMART_APPKEY),
-                config_data.get(CONF_LIFESMART_APPTOKEN),
-                None,  # usertoken 初始为空
-                config_data.get(CONF_LIFESMART_USERID),
-                config_data.get(CONF_LIFESMART_USERPASSWORD),
-            )
-            try:
+        # --- 云端模式 ---
+        try:
+            if config_data.get(CONF_LIFESMART_AUTH_METHOD) == "password":
+                _LOGGER.info(
+                    "Password auth method detected, logging in for a fresh token."
+                )
+                temp_client = LifeSmartClient(
+                    hass,
+                    config_data.get(CONF_REGION),
+                    config_data.get(CONF_LIFESMART_APPKEY),
+                    config_data.get(CONF_LIFESMART_APPTOKEN),
+                    None,  # usertoken 初始为空
+                    config_data.get(CONF_LIFESMART_USERID),
+                    config_data.get(CONF_LIFESMART_USERPASSWORD),
+                )
                 if await temp_client.login_async():
                     _LOGGER.info("Login successful, updating the user token.")
                     new_token = temp_client._usertoken
-                    # 更新正在使用的配置和存储的配置
                     config_data[CONF_LIFESMART_USERTOKEN] = new_token
                     hass.config_entries.async_update_entry(
                         config_entry,
                         data={**config_entry.data, CONF_LIFESMART_USERTOKEN: new_token},
                     )
-                else:
-                    _LOGGER.error(
-                        "Failed to get a new token at startup. Using the old one if available."
-                    )
-            except Exception as e:
-                _LOGGER.error("An error occurred during startup login: %s", e)
 
-        client = LifeSmartClient(
-            hass,
-            config_data.get(CONF_REGION),
-            config_data.get(CONF_LIFESMART_APPKEY),
-            config_data.get(CONF_LIFESMART_APPTOKEN),
-            config_data.get(CONF_LIFESMART_USERTOKEN),
-            config_data.get(CONF_LIFESMART_USERID),
-            config_data.get(CONF_LIFESMART_USERPASSWORD),
-        )
+            client = LifeSmartClient(
+                hass,
+                config_data.get(CONF_REGION),
+                config_data.get(CONF_LIFESMART_APPKEY),
+                config_data.get(CONF_LIFESMART_APPTOKEN),
+                config_data.get(CONF_LIFESMART_USERTOKEN),
+                config_data.get(CONF_LIFESMART_USERID),
+                config_data.get(CONF_LIFESMART_USERPASSWORD),
+            )
+            devices = await client.get_all_device_async()
+
+        except LifeSmartAuthError as e:
+            _LOGGER.critical(
+                "Authentication failed. Please check your configuration. Error: %s", e
+            )
+            return False
+        except (LifeSmartAPIError, aiohttp.ClientError, asyncio.TimeoutError) as e:
+            _LOGGER.error(
+                "Failed to connect to the LifeSmart cloud. The integration will retry. Error: %s",
+                e,
+            )
+            raise ConfigEntryNotReady from e
+        except Exception as e:
+            _LOGGER.error("An unexpected error occurred during setup: %s", e)
+            raise ConfigEntryNotReady from e
     else:
-        reload(lifesmart_protocol)
-        client = lifesmart_protocol.LifeSmartLocalClient(
-            config_entry.data[CONF_HOST],
-            config_entry.data[CONF_PORT],
-            config_entry.data[CONF_USERNAME],
-            config_entry.data[CONF_PASSWORD],
-            config_entry.entry_id,
+        # --- 本地模式 ---
+        try:
+            reload(lifesmart_protocol)
+            client = lifesmart_protocol.LifeSmartLocalClient(
+                config_entry.data[CONF_HOST],
+                config_entry.data[CONF_PORT],
+                config_entry.data[CONF_USERNAME],
+                config_entry.data[CONF_PASSWORD],
+                config_entry.entry_id,
+            )
+            devices = await client.get_all_device_async()
+            if not devices:
+                raise ConfigEntryNotReady("Failed to get devices from local gateway.")
+        except Exception as e:
+            _LOGGER.error("Failed to set up local connection to LifeSmart hub: %s", e)
+            raise ConfigEntryNotReady from e
+
+    # 将本地模式的断开连接处理逻辑
+    if not isinstance(client, LifeSmartClient):
+        config_entry.async_on_unload(
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, client.async_disconnect
+            )
         )
 
-    if not client:
-        _LOGGER.error("Failed to initialize client")
-        return False
-
-    # 获取设备数据
-    try:
-        devices = await client.get_all_device_async()
-    except Exception as e:
-        _LOGGER.error("Failed to fetch devices: %s", e)
-        return False
-
-    # 中枢设备注册
+    # 注册中枢 (Hub) 设备
     registry = dr.async_get(hass)
     hubs = {d[HUB_ID_KEY] for d in devices if HUB_ID_KEY in d}
     for hub_id in hubs:
@@ -154,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             sw_version="1.0",
         )
 
-    # 存储配置数据
+    # 将客户端实例和设备列表存入中央数据仓库，供各平台（sensor, switch等）使用
     hass.data[DOMAIN][config_entry.entry_id] = {
         "client": client,
         "devices": devices,
@@ -165,12 +183,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         UPDATE_LISTENER: config_entry.add_update_listener(_async_update_listener),
     }
 
-    # 加载平台组件
+    # 将设置转发给所有支持的平台
     await hass.config_entries.async_forward_entry_setups(
         config_entry, SUPPORTED_PLATFORMS
     )
 
-    # Register services
+    # 注册服务 (Service)
     async def send_ir_keys(call):
         """处理红外指令发送"""
         await client.send_ir_key_async(
@@ -192,7 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.services.async_register(DOMAIN, "send_ir_keys", send_ir_keys)
     hass.services.async_register(DOMAIN, "trigger_scene", trigger_scene)
 
-    # 云端实时状态监听
+    # 启动 WebSocket 状态管理器（仅限云端模式）
     if isinstance(client, LifeSmartClient):
         state_manager = LifeSmartStateManager(
             hass=hass, config_entry=config_entry, ws_url=client.get_wss_url()
@@ -200,35 +218,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         state_manager.start()
         hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = state_manager
 
-    # 本地模式断开连接处理
-    if not isinstance(client, LifeSmartClient):
-        config_entry.async_on_unload(
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, client.async_disconnect
-            )
-        )
-
-    # 全局定时刷新任务（每10分钟）
+    # 设置定时刷新任务（每10分钟）
     async def _async_periodic_refresh(now=None):
         try:
-            # 获取最新设备数据并更新状态
             new_devices = await client.get_all_device_async()
             hass.data[DOMAIN][config_entry.entry_id]["devices"] = new_devices
-
-            # 发送事件通知所有实体更新
             dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
-            _LOGGER.debug("全局设备数据刷新完成")
-        except Exception as e:
-            _LOGGER.error("定时刷新失败: %s", e)
+            _LOGGER.debug("Global device data refresh completed.")
+        except (LifeSmartAPIError, LifeSmartAuthError, Exception) as e:
+            _LOGGER.warning(
+                "Periodic refresh failed. This may be a temporary issue. Error: %s", e
+            )
 
-    # 添加定时任务，每10分钟执行一次
     cancel_refresh = async_track_time_interval(
         hass, _async_periodic_refresh, timedelta(minutes=10)
     )
-
-    # 确保在卸载时取消定时任务
+    # 注册卸载时的清理任务
     config_entry.async_on_unload(cancel_refresh)
 
+    # 所有步骤成功完成，返回 True
     return True
 
 

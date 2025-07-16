@@ -1,27 +1,38 @@
+"""Custom cloud client for the LifeSmart integration by @MapleEve"""
+
 import hashlib
 import json
 import logging
 import time
+from typing import Any, Optional
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .exceptions import LifeSmartAPIError, LifeSmartAuthError
+
 _LOGGER = logging.getLogger(__name__)
 
 
+# ====================================================================
+# 云端连接基类
+# ====================================================================
+
+
 class LifeSmartClient:
-    """A class for manage LifeSmart API."""
+    """A refactored class to manage LifeSmart API calls efficiently and robustly."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        region,
-        appkey,
-        apptoken,
-        usertoken,
-        userid,
-        user_password: str | None = None,
+        region: str,
+        appkey: str,
+        apptoken: str,
+        usertoken: str,
+        userid: str,
+        user_password: Optional[str] = None,
     ) -> None:
+        """Initialize the LifeSmart client."""
         self.hass = hass
         self._region = region
         self._appkey = appkey
@@ -30,30 +41,52 @@ class LifeSmartClient:
         self._userid = userid
         self._apppassword = user_password
 
-    # 获取所有设备
-    async def get_all_device_async(self):
-        """Get all devices belong to current user."""
-        url = self.get_api_url() + "/api.EpGetAll"
+    # ====================================================================
+    # 统一的API请求构建器
+    # ====================================================================
+    async def _async_call_api(
+        self, method: str, params: Optional[dict] = None, api_path: str = "/api"
+    ) -> dict[str, Any]:
+        """A centralized method to build, sign, and send API requests."""
+        url = f"{self.get_api_url()}{api_path}.{method}"
         tick = int(time.time())
-        sdata = "method:EpGetAll," + self.generate_time_and_credential_data(tick)
+        params = params or {}
+
+        param_list = [f"method:{method}"]
+        for key, value in sorted(params.items()):
+            param_list.append(f"{key}:{value}")
+        param_list.append(self.generate_time_and_credential_data(tick))
+        sdata = ",".join(param_list)
 
         send_values = {
             "id": 1,
-            "method": "EpGetAll",
+            "method": method,
             "system": self.generate_system_request_body(tick, sdata),
         }
+        if params:
+            send_values["params"] = params
+
         header = self.generate_header()
         send_data = json.dumps(send_values)
 
-        response = json.loads(await self.post_async(url, send_data, header))
-        _LOGGER.debug("EpGetAll_res: %s", response)
-        if response["code"] == 0:
-            return response["message"]
-        return False
+        _LOGGER.debug("API Request -> %s: %s", method, send_data)
+        response_text = await self.post_async(url, send_data, header)
+        response = json.loads(response_text)
+        _LOGGER.debug("API Response <- %s: %s", method, response)
+
+        if response.get("code") != 0:
+            error_msg = f"API call '{method}' failed with code {response.get('code')}: {response.get('message')}"
+            _LOGGER.error(error_msg)
+            raise LifeSmartAPIError(error_msg, response.get("code"))
+
+        return response.get("message", response)
+
+    # --- Public API Methods ---
 
     # 登录到 LifeSmart 服务以获取用户令牌
-    async def login_async(self):
-        """Login to LifeSmart service to get user token."""
+    async def login_async(self) -> bool:
+        """Login to LifeSmart service to get a user token."""
+        # 登录流程特殊，包含两步，不使用通用调用器
         url = self.get_api_url() + "/auth.login"
         login_data = {
             "uid": self._userid,
@@ -62,10 +95,19 @@ class LifeSmartClient:
         }
         header = self.generate_header()
         send_data = json.dumps(login_data)
-        response = json.loads(await self.post_async(url, send_data, header))
+        try:
+            response_text = await self.post_async(url, send_data, header)
+            response = json.loads(response_text)
+        except Exception as e:
+            raise LifeSmartAuthError(
+                f"Login request failed due to a network error: {e}"
+            ) from e
+
         if response.get("code") != 0 or "token" not in response:
-            _LOGGER.error("LifeSmart Login failed: %s", response)
-            return False
+            raise LifeSmartAuthError(
+                f"Login failed (step 1): {response.get('message', 'No message')}",
+                response.get("code"),
+            )
 
         url = self.get_api_url() + "/auth.do_auth"
         auth_data = {
@@ -80,333 +122,123 @@ class LifeSmartClient:
             self._userid = response["userid"]
 
         send_data = json.dumps(auth_data)
-        response = json.loads(await self.post_async(url, send_data, header))
+        try:
+            response_text = await self.post_async(url, send_data, header)
+            response = json.loads(response_text)
+        except Exception as e:
+            raise LifeSmartAuthError(
+                f"Auth request failed due to a network error: {e}"
+            ) from e
+
         if response.get("code") == 0 and "usertoken" in response:
             self._usertoken = response["usertoken"]
+            _LOGGER.info("Successfully logged in and obtained user token.")
             return True
 
-        return False
-
-    # 获取所有场景
-    async def get_all_scene_async(self, agt):
-        """Get all scenes belong to current user."""
-        url = self.get_api_url() + "/api.SceneGet"
-        tick = int(time.time())
-        sdata = (
-            "method:SceneGet,agt:"
-            + agt
-            + ","
-            + self.generate_time_and_credential_data(tick)
+        raise LifeSmartAuthError(
+            f"Auth failed (step 2): {response.get('message', 'No message')}",
+            response.get("code"),
         )
-        send_values = {
-            "id": 1,
-            "method": "SceneGet",
-            "params": {
-                "agt": agt,
-            },
-            "system": self.generate_system_request_body(tick, sdata),
-        }
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
-        response = json.loads(await self.post_async(url, send_data, header))
-        if response["code"] == 0:
-            return response["message"]
-        return False
 
-    # 设置场景
-    async def set_scene_async(self, agt, id):
-        """Set the scene by scene id to LifeSmart"""
-        url = self.get_api_url() + "/api.SceneSet"
-        tick = int(time.time())
-        # keys = str(keys)
-        sdata = (
-            "method:SceneSet,agt:"
-            + agt
-            + ",id:"
-            + id
-            + ","
-            + self.generate_time_and_credential_data(tick)
-        )
-        send_values = {
-            "id": 101,
-            "method": "SceneSet",
-            "params": {
-                "agt": agt,
-                "id": id,
-            },
-            "system": self.generate_system_request_body(tick, sdata),
-        }
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
+    # ====================================================================
+    # 接口：所有管理和查询接口
+    # ====================================================================
 
-        response = json.loads(await self.post_async(url, send_data, header))
+    async def get_agt_list_async(self) -> dict[str, Any]:
+        """Get a list of all hubs (gateways) for the user. (API: AgtGetList)"""
+        return await self._async_call_api("AgtGetList")
+
+    async def get_agt_details_async(self, agt: str) -> dict[str, Any]:
+        """Get detailed information for a single specified hub. (API: AgtGet)"""
+        return await self._async_call_api("AgtGet", {"agt": agt})
+
+    async def get_all_device_async(self) -> dict[str, Any]:
+        """Get all devices for the current user. (API: EpGetAll)"""
+        return await self._async_call_api("EpGetAll")
+
+    async def get_scene_list_async(self, agt: str) -> dict[str, Any]:
+        """Get all scenes for a specific hub. (API: SceneGet)"""
+        return await self._async_call_api("SceneGet", {"agt": agt})
+
+    async def get_room_list_async(self, agt: str) -> dict[str, Any]:
+        """Get the list of rooms configured in a specific hub. (API: RoomGet)"""
+        return await self._async_call_api("RoomGet", {"agt": agt})
+
+    async def set_scene_async(self, agt: str, scene_id: str) -> dict[str, Any]:
+        """Activate a scene. (API: SceneSet)"""
+        response = await self._async_call_api("SceneSet", {"agt": agt, "id": scene_id})
         return response
 
-    # 发送红外遥控指令
-    async def send_ir_key_async(self, agt, ai, me, category, brand, keys):
-        """Send an IR key to a specific device."""
-        url = self.get_api_url() + "/irapi.SendKeys"
-        tick = int(time.time())
-        # keys = str(keys)
-        sdata = (
-            "method:SendKeys,agt:"
-            + agt
-            + ",ai:"
-            + ai
-            + ",brand:"
-            + brand
-            + ",category:"
-            + category
-            + ",keys:"
-            + keys
-            + ",me:"
-            + me
-            + ","
-            + self.generate_time_and_credential_data(tick)
+    async def send_epset_async(
+        self, agt: str, me: str, idx: str, command_type: str, val: Any
+    ) -> int:
+        """Send a generic command to a device endpoint. (API: EpSet)"""
+        params = {"agt": agt, "me": me, "idx": idx, "type": command_type, "val": val}
+        response = await self._async_call_api("EpSet", params)
+        return response.get("code", -1)
+
+    async def get_epget_async(self, agt: str, me: str) -> dict[str, Any]:
+        """Get detailed information for a specific device. (API: EpGet)"""
+        response = await self._async_call_api("EpGet", {"agt": agt, "me": me})
+        return response.get("data", {})
+
+    # --- IR Control (uses /irapi path) ---
+    async def get_ir_remote_list_async(self, agt: str) -> dict[str, Any]:
+        """Get the list of IR remotes for a specific hub."""
+        return await self._async_call_api(
+            "GetRemoteList", {"agt": agt}, api_path="/irapi"
         )
-        send_values = {
-            "id": 1,
-            "method": "SendKeys",
-            "params": {
-                "agt": agt,
-                "me": me,
-                "category": category,
-                "brand": brand,
-                "ai": ai,
-                "keys": keys,
-            },
-            "system": self.generate_system_request_body(tick, sdata),
+
+    async def send_ir_key_async(
+        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+    ) -> dict[str, Any]:
+        """Send an IR key."""
+        params = {
+            "agt": agt,
+            "ai": ai,
+            "me": me,
+            "category": category,
+            "brand": brand,
+            "keys": keys,
         }
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
+        return await self._async_call_api("SendKeys", params, api_path="/irapi")
 
-        response = json.loads(await self.post_async(url, send_data, header))
-        return response
+    # --- Helper methods for direct control ---
+    async def turn_on_light_switch_async(self, idx: str, agt: str, me: str) -> int:
+        """Turn on a light switch."""
+        return await self.send_epset_async(agt, me, idx, "0x81", 1)
 
-    # 发送空调遥控指令
-    async def send_ir_ackey_async(
-        self,
-        agt,
-        ai,
-        me,
-        category,
-        brand,
-        key,
-        power,
-        mode,
-        temp,
-        wind,
-        swing,
-    ):
-        """Send an IR AIR Conditioner Key to a specific device."""
-        url = self.get_api_url() + "/irapi.SendACKeys"
-        tick = int(time.time())
-        # keys = str(keys)
-        sdata = (
-            "method:SendACKeys"
-            + ",agt:"
-            + agt
-            + ",ai:"
-            + ai
-            + ",brand:"
-            + brand
-            + ",category:"
-            + category
-            + ",key:"
-            + key
-            + ",me:"
-            + me
-            + ",mode:"
-            + str(mode)
-            + ",power:"
-            + str(power)
-            + ",swing:"
-            + str(swing)
-            + ",temp:"
-            + str(temp)
-            + ",wind:"
-            + str(wind)
-            + ","
-            + self.generate_time_and_credential_data(tick)
-        )
-        _LOGGER.debug("sendackey: %s", str(sdata))
-        send_values = {
-            "id": 1,
-            "method": "SendACKeys",
-            "params": {
-                "agt": agt,
-                "me": me,
-                "category": category,
-                "brand": brand,
-                "ai": ai,
-                "key": key,
-                "power": power,
-                "mode": mode,
-                "temp": temp,
-                "wind": wind,
-                "swing": swing,
-            },
-            "system": self.generate_system_request_body(tick, sdata),
-        }
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
+    async def turn_off_light_switch_async(self, idx: str, agt: str, me: str) -> int:
+        """Turn off a light switch."""
+        return await self.send_epset_async(agt, me, idx, "0x80", 0)
 
-        response = json.loads(await self.post_async(url, send_data, header))
-        _LOGGER.debug("sendackey_res: %s", str(response))
-        return response
+    # --- Utility and Private Methods ---
 
-    # 开灯
-    async def turn_on_light_switch_async(self, idx, agt, me):
-        return await self.send_epset_async("0x81", 1, idx, agt, me)
-
-    # 关灯
-    async def turn_off_light_switch_async(self, idx, agt, me):
-        return await self.send_epset_async("0x80", 0, idx, agt, me)
-
-    # 设置设备状态
-    async def send_epset_async(self, type, val, idx, agt, me):
-        """Send a command to specific device."""
-        url = self.get_api_url() + "/api.EpSet"
-        tick = int(time.time())
-        sdata = (
-            "method:EpSet"
-            + ",agt:"
-            + agt
-            + ",idx:"
-            + idx
-            + ",me:"
-            + me
-            + ",type:"
-            + type
-            + ",val:"
-            + str(val)
-            + ","
-            + self.generate_time_and_credential_data(tick)
-        )
-        send_values = {
-            "id": 1,
-            "method": "EpSet",
-            "system": self.generate_system_request_body(tick, sdata),
-            "params": {"agt": agt, "me": me, "idx": idx, "type": type, "val": val},
-        }
-
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
-
-        _LOGGER.debug("epset_req: %s", str(send_data))
-        response = json.loads(await self.post_async(url, send_data, header))
-        _LOGGER.debug("epset_res: %s", str(response))
-        return response["code"]
-
-    # 获取设备信息
-    async def get_epget_async(self, agt, me):
-        """Get device info."""
-        url = self.get_api_url() + "/api.EpGet"
-        tick = int(time.time())
-        sdata = (
-            "method:EpGet,agt:"
-            + agt
-            + ",me:"
-            + me
-            + ","
-            + self.generate_time_and_credential_data(tick)
-        )
-        send_values = {
-            "id": 1,
-            "method": "EpGet",
-            "system": self.generate_system_request_body(tick, sdata),
-            "params": {"agt": agt, "me": me},
-        }
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
-
-        response = json.loads(await self.post_async(url, send_data, header))
-        _LOGGER.debug("epget_res: %s", str(response))
-        return response["message"]["data"]
-
-    # 获取红外遥控器列表
-    async def get_ir_remote_list_async(self, agt):
-        """Get remote list for a specific station"""
-        url = self.get_api_url() + "/irapi.GetRemoteList"
-
-        tick = int(time.time())
-        sdata = (
-            "method:GetRemoteList,agt:"
-            + agt
-            + ","
-            + self.generate_time_and_credential_data(tick)
-        )
-        send_values = {
-            "id": 1,
-            "method": "GetRemoteList",
-            "params": {"agt": agt},
-            "system": self.generate_system_request_body(tick, sdata),
-        }
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
-
-        response = json.loads(await self.post_async(url, send_data, header))
-        _LOGGER.debug("GetRemoteList_res: %s", str(response))
-        return response["message"]
-
-    # 获取红外遥控器设置
-    async def get_ir_remote_async(self, agt, ai):
-        """Get a remote setting for specific device."""
-        url = self.get_api_url() + "/irapi.GetRemote"
-
-        tick = int(time.time())
-        sdata = (
-            "method:GetRemote,agt:"
-            + agt
-            + ",ai:"
-            + ai
-            + ",needKeys:2"
-            + ","
-            + self.generate_time_and_credential_data(tick)
-        )
-        send_values = {
-            "id": 1,
-            "method": "GetRemote",
-            "params": {"agt": agt, "ai": ai, "needKeys": 2},
-            "system": self.generate_system_request_body(tick, sdata),
-        }
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
-
-        response = json.loads(await self.post_async(url, send_data, header))
-        _LOGGER.debug("get_ir_remote_res: %s", str(response))
-        return response["message"]["codes"]
-
-    # 使用 HA 的内置异步客户端发送 POST 请求
     async def post_async(self, url: str, data: str, headers: dict) -> str:
-        """使用 HA 的内置异步客户端发送请求，避免直接引入 aiohttp"""
-        session = async_get_clientsession(self.hass)  # 通过 HA 实例获取客户端
-
+        """Send a POST request using Home Assistant's shared client session."""
+        session = async_get_clientsession(self.hass)
         async with session.post(url, data=data, headers=headers) as response:
-            response.raise_for_status()  # 自动处理 HTTP 错误码
+            response.raise_for_status()
             return await response.text()
 
-    def get_signature(self, data):
-        """Generate signature required by LifeSmart API"""
-        return hashlib.md5(data.encode(encoding="UTF-8")).hexdigest()
+    def get_signature(self, data: str) -> str:
+        """Generate the MD5 signature required by the LifeSmart API."""
+        return hashlib.md5(data.encode("utf-8")).hexdigest()
 
-    def get_api_url(self):
-        """Generate API URL."""
-        # 通用判断：如果_region不存在、空或None，使用默认域名
-        if not self._region or self._region == "AUTO":
+    def get_api_url(self) -> str:
+        """Generate the base API URL based on the selected region."""
+        if not self._region or self._region.upper() == "AUTO":
             return "https://api.ilifesmart.com/app"
-        else:
-            return f"https://api.{self._region}.ilifesmart.com/app"
+        return f"https://api.{self._region.lower()}.ilifesmart.com/app"
 
-    def get_wss_url(self):
-        """Generate websocket (wss) URL"""
-        if not self._region or self._region == "AUTO":
+    def get_wss_url(self) -> str:
+        """Generate the WebSocket (WSS) URL based on the selected region."""
+        if not self._region or self._region.upper() == "AUTO":
             return "wss://api.ilifesmart.com:8443/wsapp/"
-        else:
-            return f"wss://api.{self._region}.ilifesmart.com:8443/wsapp/"
+        return f"wss://api.{self._region.lower()}.ilifesmart.com:8443/wsapp/"
 
-    def generate_system_request_body(self, tick, data):
-        """Generate system node in request body which contain credential and signature"""
+    def generate_system_request_body(self, tick: int, data: str) -> dict[str, Any]:
+        """Generate the 'system' node for the request body."""
         return {
             "ver": "1.0",
             "lang": "en",
@@ -416,35 +248,24 @@ class LifeSmartClient:
             "sign": self.get_signature(data),
         }
 
-    def generate_time_and_credential_data(self, tick):
-        """Generate default parameter required in body"""
-
+    def generate_time_and_credential_data(self, tick: int) -> str:
+        """Generate the credential part of the signature string."""
         return (
-            "time:"
-            + str(tick)
-            + ",userid:"
-            + self._userid
-            + ",usertoken:"
-            + self._usertoken
-            + ",appkey:"
-            + self._appkey
-            + ",apptoken:"
-            + self._apptoken
+            f"time:{tick},userid:{self._userid},usertoken:{self._usertoken},"
+            f"appkey:{self._appkey},apptoken:{self._apptoken}"
         )
 
-    def generate_header(self):
-        """Generate default http header required by LifeSmart"""
+    def generate_header(self) -> dict[str, str]:
+        """Generate the default HTTP header."""
         return {"Content-Type": "application/json"}
 
-    def generate_wss_auth(self):
-        """Generate authentication message with signature for wss connection"""
+    def generate_wss_auth(self) -> str:
+        """Generate the authentication message for the WebSocket connection."""
         tick = int(time.time())
         sdata = "method:WbAuth," + self.generate_time_and_credential_data(tick)
-
         send_values = {
             "id": 1,
             "method": "WbAuth",
             "system": self.generate_system_request_body(tick, sdata),
         }
-        send_data = json.dumps(send_values)
-        return send_data
+        return json.dumps(send_values)
