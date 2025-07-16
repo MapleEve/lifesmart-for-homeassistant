@@ -1,4 +1,4 @@
-# /custom_components/lifesmart/cover.py
+"""Support for LifeSmart Covers by @MapleEve"""
 
 import logging
 from typing import Any
@@ -25,6 +25,7 @@ from .const import (
     DEVICE_NAME_KEY,
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
+    NON_POSITIONAL_COVER_CONFIG,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     ALL_COVER_TYPES,
     GARAGE_DOOR_TYPES,
@@ -55,11 +56,7 @@ async def async_setup_entry(
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
-        if device_type not in ALL_COVER_TYPES:
-            continue
-
-        # 对于 cover，一个设备通常只创建一个实体。
-        if _is_cover_device(device_type):
+        if device_type in ALL_COVER_TYPES:
             covers.append(
                 LifeSmartCover(
                     raw_device=device,
@@ -69,14 +66,6 @@ async def async_setup_entry(
             )
 
     async_add_entities(covers)
-
-
-def _is_cover_device(device_type: str) -> bool:
-    """
-    Determines if the device as a whole should be treated as a cover.
-    This ensures we only create one entity for each valid cover device.
-    """
-    return device_type in ALL_COVER_TYPES
 
 
 class LifeSmartCover(CoverEntity):
@@ -98,7 +87,6 @@ class LifeSmartCover(CoverEntity):
         self._hub_id = raw_device[HUB_ID_KEY]
         self._device_id = raw_device[DEVICE_ID_KEY]
 
-        # 使用固定的子设备键 "cover" 来确保 unique_id 的唯一性和稳定性
         self._attr_unique_id = generate_entity_id(
             self.device_type, self._hub_id, self._device_id, "cover"
         )
@@ -124,25 +112,49 @@ class LifeSmartCover(CoverEntity):
     @callback
     def _update_state(self, data: dict) -> None:
         """Parse and update the entity's state from device data."""
-        if self.device_type in GARAGE_DOOR_TYPES:
-            status_data = data.get("P2", {})
-        elif self.device_type in DOOYA_TYPES:
-            status_data = data.get("P1", {})
+        # --- 位置型设备 ---
+        if self.device_type in GARAGE_DOOR_TYPES or self.device_type in DOOYA_TYPES:
+            status_data = data.get(
+                "P2" if self.device_type in GARAGE_DOOR_TYPES else "P1", {}
+            )
+            val = status_data.get("val", 0)
+            self._attr_current_cover_position = val & 0x7F
+            is_moving = status_data.get("type", 0) % 2 == 1
+            is_opening_direction = val & 0x80 == 0x80
+
+            self._attr_is_opening = is_moving and is_opening_direction
+            self._attr_is_closing = is_moving and not is_opening_direction
+            self._attr_is_closed = self.current_cover_position == 0
+
+        # --- 命令型设备 ---
+        elif self.device_type in NON_POSITIONAL_COVER_CONFIG:
+            self._attr_current_cover_position = None
+            config = NON_POSITIONAL_COVER_CONFIG[self.device_type]
+
+            is_opening = data.get(config["open"], {}).get("type", 0) % 2 == 1
+            is_closing = data.get(config["close"], {}).get("type", 0) % 2 == 1
+
+            self._attr_is_opening = is_opening
+            self._attr_is_closing = is_closing
+
+            # 只有在明确收到“关闭”信号后停止，我们才乐观地认为它是关闭的。
+            # 在其他情况下（如打开后停止），我们认为它是打开的（is_closed = False）。
+            if not is_opening and not is_closing:
+                # 如果上一个动作是关闭，现在停止了，我们假设它关闭了
+                if self._attr_is_closing:
+                    self._attr_is_closed = True
+                else:  # 否则，我们假设它是打开的（或部分打开）
+                    self._attr_is_closed = False
+            else:
+                # 只要在移动，就不是关闭状态
+                self._attr_is_closed = False
         else:
+            # 未知设备类型，采取最保守的状态
             self._attr_is_opening = False
             self._attr_is_closing = False
-            self._attr_is_closed = True
-            self.async_write_ha_state()
-            return
+            self._attr_is_closed = None  # 状态未知
+            self._attr_current_cover_position = None
 
-        val = status_data.get("val", 0)
-        self._attr_current_cover_position = val & 0x7F
-        is_moving = status_data.get("type", 0) % 2 == 1
-        is_opening_direction = val & 0x80 == 0x80
-
-        self._attr_is_opening = is_moving and is_opening_direction
-        self._attr_is_closing = is_moving and not is_opening_direction
-        self._attr_is_closed = self.current_cover_position == 0
         self.async_write_ha_state()
 
     @property

@@ -1,3 +1,8 @@
+"""
+LifeSmart Integration by @MapleEve
+Provides constants and configurations for the LifeSmart home automation platform.
+"""
+
 from homeassistant.components import climate
 from homeassistant.const import Platform
 
@@ -239,10 +244,6 @@ GENERIC_CONTROLLER_TYPES = ["SL_P", "SL_JEMA"]
 # --- 摄像头 ---
 CAMERA_TYPES = ["LSCAM:LSICAMGOS1", "LSCAM:LSICAMEZ2"]
 
-# --- 辅助常量 ---
-SUPPORTED_SUB_SWITCH_TYPES = ["L1", "L2", "L3", "P1", "P2", "P3"]
-SUPPORTED_SUB_BINARY_SENSORS = ["M", "G", "B", "AXS", "P1", "P5", "P6", "P7"]
-
 # ================= 平台聚合 (Platform Aggregation) =================
 # --- 总开关列表 ---
 ALL_SWITCH_TYPES = SUPPORTED_SWITCH_TYPES + SMART_PLUG_TYPES + POWER_METER_PLUG_TYPES
@@ -307,8 +308,15 @@ LIFESMART_HVAC_STATE_LIST = [
     climate.const.HVACMode.DRY,
 ]
 
+# 无位置窗帘配置映射
+NON_POSITIONAL_COVER_CONFIG = {
+    "SL_SW_WIN": {"open": "OP", "close": "CL", "stop": "ST"},
+    "SL_P_V2": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_CN_IF": {"open": "P1", "close": "P2", "stop": "P3"},
+    "SL_CN_FE": {"open": "P1", "close": "P2", "stop": "P3"},
+}
+
 # 组件相关常量
-ENTITYID = "entity_id"
 DOMAIN = "lifesmart"
 MANUFACTURER = "LifeSmart"
 
