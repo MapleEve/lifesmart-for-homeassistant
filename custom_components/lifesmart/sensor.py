@@ -316,7 +316,7 @@ class LifeSmartSensor(SensorEntity):
     @callback
     def _determine_state_class(self) -> SensorStateClass | None:
         """Determine state class for long-term statistics."""
-        # 新增: 为传感器设置状态类别，以支持历史图表
+        # 为传感器设置状态类别，以支持历史图表
         if self.device_class in [
             SensorDeviceClass.TEMPERATURE,
             SensorDeviceClass.HUMIDITY,

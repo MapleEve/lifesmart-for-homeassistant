@@ -205,7 +205,7 @@ class LifeSmartSwitch(SwitchEntity):
                 self._handle_update,
             )
         )
-        # **新增**: 监听全局数据刷新，确保状态最终一致
+        # 监听全局数据刷新，确保状态最终一致
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

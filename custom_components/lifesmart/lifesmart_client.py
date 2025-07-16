@@ -17,10 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 # ====================================================================
 # 云端连接基类
 # ====================================================================
-
-
 class LifeSmartClient:
-    """A refactored class to manage LifeSmart API calls efficiently and robustly."""
+    """A class to manage LifeSmart API calls efficiently and robustly."""
 
     def __init__(
         self,
