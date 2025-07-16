@@ -60,7 +60,7 @@
     "step": {
       "init": {
         "title": "LifeSmart 设备集成配置",
-        "description": "为您名为 {name} 的集成选择要编辑的设置",
+        "description": "为您的 LifeSmart 集成选择要编辑的设置",
         "menu_options": {
           "main_params": "主要配置参数",
           "auth_params": "认证参数"

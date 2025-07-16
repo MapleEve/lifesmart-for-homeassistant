@@ -60,7 +60,7 @@
     "step": {
       "init": {
         "title": "LifeSmart Integration Options",
-        "description": "Select which settings you want to edit for {name}.",
+        "description": "Select which settings you want to edit for Hub.",
         "menu_options": {
           "main_params": "General Settings",
           "auth_params": "Authentication Settings"
