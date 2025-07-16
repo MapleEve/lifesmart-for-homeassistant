@@ -110,7 +110,7 @@ async def async_setup_entry(
                 )
             )
         elif device_type in SPOT_TYPES:
-            # SPOT设备专用处理
+            # SPOT超级碗设备专用处理
             for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
                 if sub_key == "RGB":
                     lights.append(
