@@ -39,6 +39,7 @@ from .const import (
     RGBW_LIGHT_TYPES,
     RGB_LIGHT_TYPES,
     OUTDOOR_LIGHT_TYPES,
+    BRIGHTNESS_LIGHT_TYPES,
     ALL_LIGHT_TYPES,
 )
 
@@ -165,12 +166,12 @@ async def async_setup_entry(
                             entry_id=entry_id,
                         )
                     )
-        elif device_type in OUTDOOR_LIGHT_TYPES:
-            # 户外灯光（调光壁灯、花园地灯）
+        elif device_type in OUTDOOR_LIGHT_TYPES + BRIGHTNESS_LIGHT_TYPES:
+            # 户外灯光（调光壁灯、花园地灯） 和 纯亮度调节灯
             for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
                 if sub_key == "P1":  # 主要控制口
                     lights.append(
-                        LifeSmartOutdoorLight(
+                        LifeSmartBrightnessLight(
                             device=ha_device,
                             raw_device=device,
                             sub_device_key=sub_key,
@@ -556,12 +557,12 @@ class LifeSmartRGBLight(LifeSmartBaseLight):
             self.async_write_ha_state()
 
 
-class LifeSmartOutdoorLight(LifeSmartBaseLight):
-    """LifeSmart户外灯光（调光壁灯、花园地灯）."""
+class LifeSmartBrightnessLight(LifeSmartBaseLight):
+    """LifeSmart户外灯光（调光壁灯、花园地灯）.亮度控制器"""
 
     @callback
     def _initialize_state(self) -> None:
-        """初始化户外灯状态."""
+        """初始化亮度灯状态."""
         if self._sub_data.get("type", 0) & 0x01 == 1:
             self._attr_is_on = True
         else:
@@ -572,7 +573,7 @@ class LifeSmartOutdoorLight(LifeSmartBaseLight):
         self._attr_brightness = self._sub_data.get("val", 0)
 
     async def _handle_update(self, new_data: dict) -> None:
-        """处理户外灯状态更新."""
+        """处理亮度灯状态更新."""
         if not new_data:
             return
 
@@ -585,7 +586,7 @@ class LifeSmartOutdoorLight(LifeSmartBaseLight):
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
-        """开启户外灯."""
+        """开启亮度灯."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             result = await self._client.send_epset_async(
@@ -609,7 +610,7 @@ class LifeSmartOutdoorLight(LifeSmartBaseLight):
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
-        """关闭户外灯."""
+        """关闭亮度灯."""
         result = await self._client.turn_off_light_switch_async(
             self._sub_key,
             self._raw_device[HUB_ID_KEY],

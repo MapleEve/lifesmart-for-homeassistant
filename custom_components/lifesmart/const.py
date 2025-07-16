@@ -26,10 +26,9 @@ AI_TYPES = ["ai"]
 # ================= 开关系列 (Switch Series) =================
 # 涵盖所有单火、零火、调光、场景、窗帘等开关面板
 SUPPORTED_SWITCH_TYPES = [
-    # --- 传统/通用开关 ---
+    # --- 传统/通用开关控制器 ---
     "SL_S",
     "SL_P_SW",
-    "SL_SPWM",
     # --- 流光开关 ---
     "SL_SW_IF1",
     "SL_SW_IF2",
@@ -104,7 +103,10 @@ LIGHT_DIMMER_TYPES = [
     "SL_LI_WW_V1",
     "SL_LI_WW_V2",
 ]
-
+# --- 亮度调节控制器 ---
+BRIGHTNESS_LIGHT_TYPES = [
+    "SL_SPWM",
+]
 # --- 量子灯 ---
 QUANTUM_TYPES = [
     "OD_WE_QUAN",
