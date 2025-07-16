@@ -232,9 +232,23 @@ def _async_register_services(hass: HomeAssistant, client: any):
             call.data["keys"],
         )
 
+    # services.yaml 中 scene_set 的后端实现
     async def trigger_scene(call):
-        """Handle triggering a scene."""
-        await client.set_scene_async(call.data[HUB_ID_KEY], call.data["id"])
+        """处理场景触发的服务调用."""
+        # 从服务调用中获取前端传入的参数
+        # call.data['agt'] 对应 services.yaml 中的 'agt' 字段
+        # call.data['id'] 对应 services.yaml 中的 'id' 字段
+        agt = call.data.get(HUB_ID_KEY)  # 使用常量 HUB_ID_KEY 更佳
+        scene_id = call.data.get("id")
+
+        if not agt or not scene_id:
+            _LOGGER.error("触发场景失败：'agt' 和 'id' 参数不能为空。")
+            return
+
+        _LOGGER.info("正在通过服务调用触发场景: Hub=%s, SceneID=%s", agt, scene_id)
+
+        # 调用 client 方法，与 LifeSmart API 通信
+        await client.set_scene_async(agt, scene_id)
 
     hass.services.async_register(DOMAIN, "send_ir_keys", send_ir_keys)
     hass.services.async_register(DOMAIN, "trigger_scene", trigger_scene)
