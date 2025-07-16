@@ -287,7 +287,6 @@ SUPPORTED_PLATFORMS = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.CLIMATE,
-    # Platform.LOCK,
     # Platform.CAMERA,
 ]
 
