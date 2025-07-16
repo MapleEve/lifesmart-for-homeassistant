@@ -130,16 +130,20 @@ LIGHT_BULB_TYPES = [
 ]
 
 # ================= 窗帘系列 (Cover Series) =================
-COVER_TYPES = [
+DOOYA_TYPES = [
     "SL_DOOYA",
     "SL_DOOYA_V2",
     "SL_DOOYA_V3",  # 卷帘电机
     "SL_DOOYA_V4",  # 卷帘电机电池
+]
+
+COVER_TYPES = [
     "SL_P_V2",
     "SL_SW_WIN",
     "SL_CN_IF",
     "SL_CN_FE",
 ]
+
 # 车库门
 GARAGE_DOOR_TYPES = [
     "SL_ETDOOR",
@@ -279,7 +283,7 @@ ALL_SENSOR_TYPES = (
 
 
 # --- 总窗帘/覆盖物列表 ---
-ALL_COVER_TYPES = COVER_TYPES + GARAGE_DOOR_TYPES
+ALL_COVER_TYPES = COVER_TYPES + DOOYA_TYPES + GARAGE_DOOR_TYPES
 
 # --- 支持的平台列表 ---
 SUPPORTED_PLATFORMS = [
