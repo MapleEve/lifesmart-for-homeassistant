@@ -250,6 +250,38 @@ def _async_register_services(hass: HomeAssistant, client: any):
         # 调用 client 方法，与 LifeSmart API 通信
         await client.set_scene_async(agt, scene_id)
 
+    # 注册点动开关服务
+    async def press_switch(call):
+        """Handle the press_switch service call."""
+        entity_id = call.data.get("entity_id")
+        duration = call.data.get("duration", 1000)  # 默认1秒
+
+        entity = hass.states.get(entity_id)
+        if not entity:
+            _LOGGER.error("Entity not found: %s", entity_id)
+            return
+
+        # 从实体属性中获取设备信息
+        agt = entity.attributes.get(HUB_ID_KEY)
+        me = entity.attributes.get(DEVICE_ID_KEY)
+
+        # 从 unique_id 中解析出 idx
+        # 假设 unique_id 格式为 'switch.sl_p_sw_..._p1'
+        try:
+            idx = entity.unique_id.split("_")[-1]
+        except (IndexError, AttributeError):
+            _LOGGER.error("Could not determine idx for entity: %s", entity_id)
+            return
+
+        if not all([agt, me, idx]):
+            _LOGGER.error(
+                "Missing required attributes (agt, me, idx) for entity: %s", entity_id
+            )
+            return
+
+        await client.press_switch_async(idx, agt, me, duration)
+
+    hass.services.async_register(DOMAIN, "press_switch", press_switch)
     hass.services.async_register(DOMAIN, "send_ir_keys", send_ir_keys)
     hass.services.async_register(DOMAIN, "trigger_scene", trigger_scene)
 

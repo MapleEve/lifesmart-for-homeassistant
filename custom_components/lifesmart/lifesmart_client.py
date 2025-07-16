@@ -212,6 +212,26 @@ class LifeSmartClient:
         """Turn off a light switch."""
         return await self.send_epset_async(agt, me, idx, "0x80", 0)
 
+    # 点动开关方法
+    async def press_switch_async(
+        self, idx: str, agt: str, me: str, duration_ms: int
+    ) -> int:
+        """
+        Press a switch to turn it on for a specified duration, then automatically off.
+        (For devices like SL_P_SW)
+        """
+        # 将毫秒转换为设备需要的 100ms 单位
+        val = max(1, round(duration_ms / 100))
+        _LOGGER.debug(
+            "Sending press command to %s-%s-%s: type=0x89, val=%d (duration: %dms)",
+            agt,
+            me,
+            idx,
+            val,
+            duration_ms,
+        )
+        return await self.send_epset_async(agt, me, idx, "0x89", val)
+
     # --- Utility and Private Methods ---
 
     async def post_async(self, url: str, data: str, headers: dict) -> str:

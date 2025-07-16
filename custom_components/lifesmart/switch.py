@@ -23,6 +23,7 @@ from .const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     # --- 设备类型常量 ---
+    SUPPORTED_SWITCH_TYPES,
     ALL_SWITCH_TYPES,
     SMART_PLUG_TYPES,
     POWER_METER_PLUG_TYPES,
@@ -82,6 +83,18 @@ def _is_switch_subdevice(device_type: str, sub_key: str) -> bool:
     """
     sub_key_upper = sub_key.upper()
 
+    # SL_P_SW (九路开关控制器) 的 P1-P9 都是开关
+    if device_type == "SL_P_SW":
+        return sub_key_upper in {f"P{i}" for i in range(1, 10)}
+
+    # SL_SW* 和 SL_MC* 系列, P4 是电量, 明确排除
+    if device_type in SUPPORTED_SWITCH_TYPES and sub_key_upper == "P4":
+        return False
+
+    # SL_SC_BB_V2 (随心按键) 的 P1 是事件触发器, 不是开关
+    if device_type == "SL_SC_BB_V2":
+        return False
+
     # 处理 SL_OL* 系列智慧插座，它们的开关 idx 是 'O'
     if device_type in {"SL_OL", "SL_OL_3C", "SL_OL_DE", "SL_OL_UK", "SL_OL_UL"}:
         return sub_key_upper == "O"
@@ -130,6 +143,10 @@ class LifeSmartSwitch(SwitchEntity):
         )
         self._attr_name = self._generate_switch_name()
         self._attr_device_class = self._determine_device_class()
+        self._attr_extra_state_attributes = {
+            HUB_ID_KEY: raw_device[HUB_ID_KEY],
+            DEVICE_ID_KEY: raw_device[DEVICE_ID_KEY],
+        }
 
         # --- 初始化状态 ---
         self._attr_is_on = self._parse_state(sub_device_data)

@@ -1,5 +1,6 @@
 """Support for LifeSmart binary sensors by @MapleEve"""
 
+import asyncio
 import datetime
 import logging
 from typing import Any
@@ -13,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import LifeSmartDevice, generate_entity_id
 from .const import (
@@ -135,6 +137,10 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
         "eB3",
         "eB4",
     }:
+        return True
+
+    # SL_SC_BB_V2 的 P1 是按钮事件触发器
+    if device_type == "SL_SC_BB_V2" and sub_key == "P1":
         return True
 
     return False
@@ -287,6 +293,10 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         if device_type == "SL_DF_GG" and sub_key == "A":
             return val == 0  # 云防门窗：0=开，1=关
 
+        # SL_SC_BB_V2 的状态是瞬时的, 默认为 off
+        if self.device_type == "SL_SC_BB_V2":
+            return False  # 初始状态总是 off
+
         # 其他传感器默认处理
         return val != 0
 
@@ -332,6 +342,13 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
             val = self._sub_data.get("val", 0)
             return {"conductivity_level": val, "water_detected": val != 0}
+
+        # SL_SC_BB_V2 初始化事件属性
+        if self.device_type == "SL_SC_BB_V2":
+            return {
+                "last_event": None,
+                "last_event_time": None,
+            }
 
         # 默认返回原始数据
         return dict(self._sub_data)
@@ -430,6 +447,26 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             self._attr_is_on = val != 0
         elif device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
             self._attr_is_on = val != 0
+        elif self.device_type == "SL_SC_BB_V2":  # 特殊处理 SL_SC_BB_V2 的事件更新
+            type_val = data.get("type", 0)
+            if type_val % 2 == 1:  # 事件发生
+                self._attr_is_on = True
+                val = data.get("val", 0)
+                event_map = {1: "single_click", 2: "double_click", 255: "long_press"}
+                event = event_map.get(val, "unknown")
+
+                self._attrs["last_event"] = event
+                self._attrs["last_event_time"] = dt_util.utcnow().isoformat()
+
+                # 触发后立即安排一个任务来将其状态重置为 off
+                async def reset_state():
+                    await asyncio.sleep(0.5)  # 保持 on 状态 0.5 秒
+                    self._attr_is_on = False
+                    self.async_write_ha_state()
+
+                self.hass.loop.create_task(reset_state())
+            else:  # 事件消失
+                self._attr_is_on = False
         else:
             self._attr_is_on = val != 0
 

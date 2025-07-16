@@ -48,6 +48,7 @@ from .const import (
     COVER_TYPES,
     DEFED_SENSOR_TYPES,
     WATER_SENSOR_TYPES,
+    SUPPORTED_SWITCH_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,6 +148,14 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
 
     # 水浸传感器（只保留电压）
     if device_type in WATER_SENSOR_TYPES and sub_key == "V":
+        return True
+
+    # SL_SW* 和 SL_MC* 系列的 P4 是电量传感器
+    if device_type in SUPPORTED_SWITCH_TYPES and sub_key == "P4":
+        return True
+
+    # SL_SC_BB_V2 的 P2 是电量传感器
+    if device_type == "SL_SC_BB_V2" and sub_key == "P2":
         return True
 
     return False
@@ -261,6 +270,12 @@ class LifeSmartSensor(SensorEntity):
                     return SensorDeviceClass.TEMPERATURE
                 if sub_key == "P2":
                     return SensorDeviceClass.HUMIDITY
+
+        # 插座开关等电量传感器
+        if (device_type in SUPPORTED_SWITCH_TYPES and sub_key == "P4") or (
+            device_type == "SL_SC_BB_V2" and sub_key == "P2"
+        ):
+            return SensorDeviceClass.BATTERY
 
         return None
 
