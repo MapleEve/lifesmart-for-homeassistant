@@ -55,6 +55,13 @@ async def async_setup_entry(
 
         device_type = device[DEVICE_TYPE_KEY]
 
+        # 增加对 SL_NATURE 的特殊处理
+        if device_type == "SL_NATURE":
+            # 只处理开关版 SL_NATURE
+            p5_val = device.get(DEVICE_DATA_KEY, {}).get("P5", {}).get("val", 1) & 0xFF
+            if p5_val != 1:
+                continue
+
         # 使用聚合列表判断是否为开关设备
         if device_type not in ALL_SWITCH_TYPES:
             continue

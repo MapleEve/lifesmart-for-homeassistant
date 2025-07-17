@@ -4,6 +4,14 @@ Provides constants and configurations for the LifeSmart home automation platform
 """
 
 from homeassistant.components import climate
+from homeassistant.components.climate.const import (
+    HVACMode,
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_OFF,
+)
 from homeassistant.const import Platform
 
 # ================= 常量定义 (Constants Definition) =================
@@ -71,8 +79,7 @@ SUPPORTED_SWITCH_TYPES = [
     "SL_SC_BB",  # 随心开关
     "SL_SC_BB_V2",  # 随心开关 V2
     # --- 超能面板系列 ---
-    "SL_NATURE",  # 超能面板
-    "SL_FCU",  # 超能面板 星⽟
+    "SL_NATURE",  # 超能面板开关
     # --- 奇点开关模块 ---
     "SL_SW_MJ1",
     "SL_SW_MJ2",
@@ -202,14 +209,92 @@ VOICE_SENSOR_TYPES = ["SL_SC_CV"]
 
 # ================= 温控系列 (Climate Series) =================
 CLIMATE_TYPES = [
-    "V_AIR_P",
+    "V_AIR_P",  # 智控器空调⾯板
     "SL_CP_DN",  # 地暖温控器
     "SL_UACCB",  # 空调控制器
     "SL_CP_VL",  # 温控阀门
     "SL_TR_ACIPM",  # 新风系统
     "SL_CP_AIR",  # 风机盘管
     "V_FRESH_P",  # 艾弗纳 KV11
+    "SL_NATURE",  # 超能面板 Pro
+    "SL_FCU",  # 超能面板 星⽟
 ]
+# ================= 温控器映射 (Climate Mappings) =================
+# SL_UACCB, SL_NATURE, SL_FCU 等设备的模式映射
+LIFESMART_HVAC_MODE_MAP = {
+    1: HVACMode.AUTO,
+    2: HVACMode.FAN_ONLY,
+    3: HVACMode.COOL,
+    4: HVACMode.HEAT,
+    5: HVACMode.DRY,
+    7: HVACMode.HEAT,  # SL_NATURE/FCU 地暖
+    8: HVACMode.HEAT_COOL,  # SL_NATURE/FCU 地暖+空调
+}
+REVERSE_LIFESMART_HVAC_MODE_MAP = {v: k for k, v in LIFESMART_HVAC_MODE_MAP.items()}
+
+# --- V_AIR_P / SL_UACCB 风速映射 ---
+LIFESMART_F_FAN_MODE_MAP = {
+    FAN_LOW: 15,
+    FAN_MEDIUM: 45,
+    FAN_HIGH: 75,
+}
+
+
+def get_f_fan_mode(val: int) -> str:
+    """根据 F 口的 val 值获取风扇模式。"""
+    if val < 30:
+        return FAN_LOW
+    if val < 65:
+        return FAN_MEDIUM
+    return FAN_HIGH
+
+
+# --- SL_TR_ACIPM (新风) 风速映射 ---
+LIFESMART_ACIPM_FAN_MAP = {
+    FAN_LOW: 1,
+    FAN_MEDIUM: 2,
+    FAN_HIGH: 3,
+}
+REVERSE_LIFESMART_ACIPM_FAN_MAP = {v: k for k, v in LIFESMART_ACIPM_FAN_MAP.items()}
+
+# --- SL_CP_AIR (风机盘管) 模式与风速映射 (来自P1 bitmask) ---
+LIFESMART_CP_AIR_MODE_MAP = {
+    0: HVACMode.COOL,
+    1: HVACMode.HEAT,
+    2: HVACMode.FAN_ONLY,
+}
+REVERSE_LIFESMART_CP_AIR_MODE_MAP = {v: k for k, v in LIFESMART_CP_AIR_MODE_MAP.items()}
+
+LIFESMART_CP_AIR_FAN_MAP = {
+    0: FAN_AUTO,
+    1: FAN_LOW,
+    2: FAN_MEDIUM,
+    3: FAN_HIGH,
+}
+REVERSE_LIFESMART_CP_AIR_FAN_MAP = {v: k for k, v in LIFESMART_CP_AIR_FAN_MAP.items()}
+
+# --- SL_NATURE / SL_FCU (超能面板) 风速映射 (tF) ---
+LIFESMART_TF_FAN_MODE_MAP = {
+    FAN_AUTO: 101,
+    FAN_LOW: 15,
+    FAN_MEDIUM: 45,
+    FAN_HIGH: 75,
+}
+REVERSE_LIFESMART_TF_FAN_MODE_MAP = {v: k for k, v in LIFESMART_TF_FAN_MODE_MAP.items()}
+
+
+def get_tf_fan_mode(val: int) -> str:
+    """根据 tF/F 口的 val 值获取风扇模式。"""
+    if 30 >= val > 0:
+        return FAN_LOW
+    if val <= 65:
+        return FAN_MEDIUM
+    if val <= 100:
+        return FAN_HIGH
+    if val == 101:
+        return FAN_AUTO
+    return FAN_OFF  # 风扇停止时返回 None ?
+
 
 # ================= 门锁系列 (Lock Series) =================
 LOCK_TYPES = [

@@ -50,6 +50,7 @@ from .const import (
     WATER_SENSOR_TYPES,
     SUPPORTED_SWITCH_TYPES,
     GARAGE_DOOR_TYPES,
+    CLIMATE_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,6 +77,25 @@ async def async_setup_entry(
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
+
+        if device_type == "SL_NATURE":
+            p5_val = device.get(DEVICE_DATA_KEY, {}).get("P5", {}).get("val", 1) & 0xFF
+            if p5_val == 3:  # 是温控面板
+                ha_device = LifeSmartDevice(device, client)
+                # P4 是当前温度
+                if "P4" in device[DEVICE_DATA_KEY]:
+                    sensors.append(
+                        LifeSmartSensor(
+                            device=ha_device,
+                            raw_device=device,
+                            sub_device_key="P4",
+                            sub_device_data=device[DEVICE_DATA_KEY]["P4"],
+                            client=client,
+                            entry_id=entry_id,
+                        )
+                    )
+            continue  # 处理完 SL_NATURE，跳过
+
         if device_type not in ALL_SENSOR_TYPES:
             continue
 
@@ -100,7 +120,17 @@ async def async_setup_entry(
 
 
 def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
-    """Determine if a sub-device is a valid sensor."""
+    """判断一个子设备是否为有效的数值传感器。"""
+    if device_type in CLIMATE_TYPES:
+        # 温控设备的温度/阀门等状态由 climate 实体内部管理
+        if device_type == "SL_CP_DN" and sub_key == "P5":
+            return True
+        if device_type == "SL_CP_VL" and sub_key == "P6":
+            return True
+        if device_type == "SL_TR_ACIPM" and sub_key in ["P4", "P5"]:
+            return True
+        return False
+
     # 环境感应器（包括温度、湿度、光照、电压）
     if device_type in EV_SENSOR_TYPES and sub_key in {
         "T",
@@ -220,6 +250,20 @@ class LifeSmartSensor(SensorEntity):
         if device_type in GAS_SENSOR_TYPES and sub_key in {"P1", "P2"}:
             return SensorDeviceClass.GAS
 
+        # 温控设备特殊处理
+        if device_type in CLIMATE_TYPES:
+            if sub_key == "P5":
+                return (
+                    SensorDeviceClass.TEMPERATURE
+                    if device_type == "SL_CP_DN"
+                    else SensorDeviceClass.PM25
+                )
+            if sub_key == "P6":
+                return SensorDeviceClass.BATTERY
+            if sub_key == "P4":
+                return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+            return None
+
         # 根据子设备键判断
         if sub_key == "BAT":
             return SensorDeviceClass.BATTERY
@@ -307,7 +351,8 @@ class LifeSmartSensor(SensorEntity):
             return UnitOfPower.WATT
         if self.device_class == SensorDeviceClass.ENERGY:
             return UnitOfEnergy.KILO_WATT_HOUR
-
+        if self.device_class == SensorDeviceClass.PM25:
+            return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
         if self.device_class == SensorDeviceClass.CO2:
             return CONCENTRATION_PARTS_PER_MILLION
         if self.device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
@@ -331,6 +376,7 @@ class LifeSmartSensor(SensorEntity):
             SensorDeviceClass.ILLUMINANCE,
             SensorDeviceClass.POWER,
             SensorDeviceClass.CO2,
+            SensorDeviceClass.PM25,
             SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             SensorDeviceClass.SOUND_PRESSURE,
         ]:
@@ -379,6 +425,15 @@ class LifeSmartSensor(SensorEntity):
                 return raw_value / 10.0
             if self._sub_key == "P2":  # 湿度
                 return raw_value / 10.0
+
+        if device_type in CLIMATE_TYPES:
+            # 地暖底板温度和新风VOC都需要除以10
+            if (device_type == "SL_CP_DN" and self._sub_key == "P5") or (
+                device_type == "SL_TR_ACIPM" and self._sub_key == "P4"
+            ):
+                return raw_value / 10.0
+            # 其他值（如电量、PM2.5）直接使用
+            return raw_value
 
         # 电量百分比值直接使用
         if self._sub_key in {"BAT", "V", "P4", "P5"}:

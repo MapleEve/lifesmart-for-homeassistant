@@ -40,6 +40,7 @@ from .const import (
     SMOKE_SENSOR_TYPES,
     RADAR_SENSOR_TYPES,
     DEFED_SENSOR_TYPES,
+    CLIMATE_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +94,19 @@ async def async_setup_entry(
 
 
 def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
-    """Determine if a sub-device is a valid binary sensor."""
+    """判断一个子设备是否为有效的二元传感器。"""
+    if device_type in CLIMATE_TYPES:
+        # 为特定温控器的附属功能创建实体
+        if device_type == "SL_CP_DN" and sub_key == "P2":
+            return True
+        if device_type == "SL_CP_AIR" and sub_key == "P2":
+            return True
+        if device_type == "SL_CP_VL" and sub_key == "P5":
+            return True
+        if device_type in ["SL_NATURE", "SL_FCU"] and sub_key in ["P2", "P3"]:
+            return True
+        return False  # 默认不为温控设备创建其他二元传感器
+
     # 通用控制器
     if device_type in GENERIC_CONTROLLER_TYPES and sub_key in {
         "P2",
@@ -191,6 +204,20 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         """Determine device class based on device type and sub-device key."""
         device_type = self.device_type
         sub_key = self._sub_key
+
+        if device_type in CLIMATE_TYPES:
+            if sub_key == "P2":  # 地暖继电器, 风机盘管阀门
+                return (
+                    BinarySensorDeviceClass.POWER
+                    if device_type == "SL_CP_DN"
+                    else BinarySensorDeviceClass.OPENING
+                )
+            if sub_key == "P5":  # 温控阀门告警
+                return BinarySensorDeviceClass.PROBLEM
+            if sub_key in ["P2", "P3"]:  # 超能面板阀门
+                return BinarySensorDeviceClass.OPENING
+
+            return None
 
         # 门窗感应器
         if device_type in GUARD_SENSOR_TYPES:
@@ -294,8 +321,14 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             return val == 0  # 云防门窗：0=开，1=关
 
         # SL_SC_BB_V2 的状态是瞬时的, 默认为 off
-        if self.device_type == "SL_SC_BB_V2":
+        if device_type == "SL_SC_BB_V2":
             return False  # 初始状态总是 off
+
+        if device_type in CLIMATE_TYPES:
+            if sub_key == "P5":  # 温控阀门告警 (val 是 bitmask)
+                return val > 0
+            # 其他所有温控器的附属开关/阀门都遵循 type%2==1 为开启的规则
+            return type_val % 2 == 1
 
         # 其他传感器默认处理
         return val != 0
@@ -344,12 +377,23 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             return {"conductivity_level": val, "water_detected": val != 0}
 
         # SL_SC_BB_V2 初始化事件属性
-        if self.device_type == "SL_SC_BB_V2":
+        if device_type == "SL_SC_BB_V2":
             return {
                 "last_event": None,
                 "last_event_time": None,
             }
 
+        # 为温控阀门的告警传感器添加详细属性
+        if device_type == "SL_CP_VL" and sub_key == "P5":
+            val = self._sub_data.get("val", 0)
+            return {
+                "high_temp_protection": bool(val & 0b1),
+                "low_temp_protection": bool(val & 0b10),
+                "internal_sensor_fault": bool(val & 0b100),
+                "external_sensor_fault": bool(val & 0b1000),
+                "low_battery": bool(val & 0b10000),
+                "device_offline": bool(val & 0b100000),
+            }
         # 默认返回原始数据
         return dict(self._sub_data)
 
@@ -447,7 +491,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             self._attr_is_on = val != 0
         elif device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
             self._attr_is_on = val != 0
-        elif self.device_type == "SL_SC_BB_V2":  # 特殊处理 SL_SC_BB_V2 的事件更新
+        elif device_type == "SL_SC_BB_V2":  # 特殊处理 SL_SC_BB_V2 的事件更新
             type_val = data.get("type", 0)
             if type_val % 2 == 1:  # 事件发生
                 self._attr_is_on = True
@@ -467,6 +511,11 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 self.hass.loop.create_task(reset_state())
             else:  # 事件消失
                 self._attr_is_on = False
+        elif device_type in CLIMATE_TYPES:
+            self._attr_is_on = self._parse_initial_state(data)  # 使用完整数据重新解析
+            if device_type == "SL_CP_VL" and sub_key == "P5":
+                self._attrs = self._get_initial_attributes(data)  # 更新详细告警属性
+            self.async_write_ha_state()
         else:
             self._attr_is_on = val != 0
 

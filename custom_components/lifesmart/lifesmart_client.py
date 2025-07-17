@@ -6,10 +6,20 @@ import logging
 import time
 from typing import Any, Optional
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOOYA_TYPES, GARAGE_DOOR_TYPES
+from .const import (
+    DOOYA_TYPES,
+    GARAGE_DOOR_TYPES,
+    REVERSE_LIFESMART_HVAC_MODE_MAP,
+    REVERSE_LIFESMART_TF_FAN_MODE_MAP,
+    LIFESMART_F_FAN_MODE_MAP,
+    REVERSE_LIFESMART_ACIPM_FAN_MAP,
+    REVERSE_LIFESMART_CP_AIR_FAN_MAP,
+    REVERSE_LIFESMART_CP_AIR_MODE_MAP,
+)
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 
 _LOGGER = logging.getLogger(__name__)
@@ -203,10 +213,13 @@ class LifeSmartClient:
         return await self._async_call_api("SendKeys", params, api_path="/irapi")
 
     # --- Helper methods for direct control ---
+
+    # 通用开启开关/灯
     async def turn_on_light_switch_async(self, idx: str, agt: str, me: str) -> int:
         """Turn on a light switch."""
         return await self.send_epset_async(agt, me, idx, "0x81", 1)
 
+    # 通用关闭开关/灯
     async def turn_off_light_switch_async(self, idx: str, agt: str, me: str) -> int:
         """Turn off a light switch."""
         return await self.send_epset_async(agt, me, idx, "0x80", 0)
@@ -231,6 +244,7 @@ class LifeSmartClient:
         )
         return await self.send_epset_async(agt, me, idx, "0x89", val)
 
+    # 开启窗帘或车库门的异步方法
     async def open_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """Open a cover/garage door."""
         if device_type in GARAGE_DOOR_TYPES:
@@ -246,6 +260,7 @@ class LifeSmartClient:
             )
             return await self.send_epset_async(agt, me, cmd_idx, "0x81", 1)
 
+    # 关闭窗帘或车库门的异步方法
     async def close_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """Close a cover/garage door."""
         if device_type in GARAGE_DOOR_TYPES:
@@ -260,6 +275,7 @@ class LifeSmartClient:
             )
             return await self.send_epset_async(agt, me, cmd_idx, "0x81", 1)
 
+    # 停止窗帘或车库门的异步方法
     async def stop_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """Stop a cover/garage door."""
         if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
@@ -273,6 +289,7 @@ class LifeSmartClient:
             )
             return await self.send_epset_async(agt, me, cmd_idx, "0x81", 1)
 
+    # 设置窗帘或车库门到特定位置的异步方法
     async def set_cover_position_async(
         self, agt: str, me: str, position: int, device_type: str
     ) -> int:
@@ -284,6 +301,83 @@ class LifeSmartClient:
         _LOGGER.warning(
             "Device type %s does not support setting position.", device_type
         )
+        return -1
+
+    # 设置空调设备的异步方法
+    async def async_set_climate_hvac_mode(
+        self,
+        agt: str,
+        me: str,
+        device_type: str,
+        hvac_mode: HVACMode,
+        current_val: int = 0,
+    ) -> int:
+        """Set HVAC mode for a climate device."""
+        if hvac_mode == HVACMode.OFF:
+            return await self.send_epset_async(agt, me, "P1", "0x80", 0)
+
+        await self.send_epset_async(agt, me, "P1", "0x81", 1)
+
+        mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
+        if mode_val is not None and device_type in [
+            "SL_UACCB",
+            "SL_NATURE",
+            "SL_FCU",
+            "V_AIR_P",
+        ]:
+            idx = "MODE" if device_type == "V_AIR_P" else "P7"
+            return await self.send_epset_async(agt, me, idx, "0xCE", mode_val)
+
+        if device_type == "SL_CP_AIR":
+            mode_val = REVERSE_LIFESMART_CP_AIR_MODE_MAP.get(hvac_mode)
+            if mode_val is not None:
+                # 更新 P1 的 bit 13-14
+                new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
+                return await self.send_epset_async(agt, me, "P1", "0xFF", new_val)
+
+        return 0
+
+    # 设置空调温度的异步方法
+    async def async_set_climate_temperature(
+        self, agt: str, me: str, device_type: str, temp: float
+    ) -> int:
+        """Set target temperature for a climate device."""
+        temp_val = int(temp * 10)
+        idx_map = {
+            "V_AIR_P": ("tT", "0x88"),
+            "SL_UACCB": ("P3", "0x88"),
+            "SL_CP_DN": ("P3", "0xFF"),
+            "SL_CP_AIR": ("P4", "0xFF"),
+            "SL_NATURE": ("P8", "0x88"),
+            "SL_FCU": ("P8", "0x89"),
+            "SL_CP_VL": ("P3", "0xFF"),
+        }
+        if device_type in idx_map:
+            idx, cmd_type = idx_map[device_type]
+            return await self.send_epset_async(agt, me, idx, cmd_type, temp_val)
+        return -1
+
+    # 设置空调风速的异步方法
+    async def async_set_climate_fan_mode(
+        self, agt: str, me: str, device_type: str, fan_mode: str, current_val: int = 0
+    ) -> int:
+        """Set fan mode for a climate device."""
+        if device_type == "V_AIR_P":
+            fan_val = LIFESMART_F_FAN_MODE_MAP.get(fan_mode)
+            return await self.send_epset_async(agt, me, "F", "0xCE", fan_val)
+        elif device_type == "SL_TR_ACIPM":
+            fan_val = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
+            return await self.send_epset_async(agt, me, "P2", "0xFF", fan_val)
+        elif device_type in ["SL_NATURE", "SL_FCU"]:
+            fan_val = REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)
+            return await self.send_epset_async(agt, me, "P9", "0xCE", fan_val)
+        elif device_type == "SL_CP_AIR":
+            fan_val = REVERSE_LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)
+            if fan_val is not None:
+                # 更新 P1 的 bit 15-16
+                new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
+                return await self.send_epset_async(agt, me, "P1", "0xFF", new_val)
+
         return -1
 
     # --- Utility and Private Methods ---
