@@ -330,19 +330,3 @@ class LifeSmartClimate(ClimateEntity):
             _LOGGER.warning(
                 "Could not find device %s during global refresh.", self.unique_id
             )
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        await self._client.async_set_climate_hvac_mode(
-            self._hub_id, self._device_id, self.device_type, hvac_mode
-        )
-
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self._client.async_set_climate_temperature(
-                self._hub_id, self._device_id, self.device_type, temp
-            )
-
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        await self._client.async_set_climate_fan_mode(
-            self._hub_id, self._device_id, self.device_type, fan_mode
-        )
