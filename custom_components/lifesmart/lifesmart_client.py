@@ -104,32 +104,41 @@ class LifeSmartClient:
         tick = int(time.time())
         params = params or {}
 
-        # 1. 构造签名原始串 (严格模仿旧版拼接逻辑)
-        sdata_parts = [f"method:{method}"]
-        # 注意：这里参数的顺序可能很重要，我们按字母顺序添加以保持一致性
-        for key, value in sorted(params.items()):
-            sdata_parts.append(f"{key}:{value}")
+        # 1. 构造签名原始串
+        sdata_parts = []
 
-        credential_data = (
-            f"time:{tick},userid:{self._userid},usertoken:{self._usertoken or ''},"  # 确保 usertoken 为空时也包含
-            f"appkey:{self._appkey},apptoken:{self._apptoken}"
-        )
-        sdata_parts.append(credential_data)
+        sdata_parts.append(f"method:{method}")
+
+        if params:
+            for key, value in sorted(params.items()):
+                sdata_parts.append(f"{key}:{value}")
+
+        sdata_parts.append(f"time:{tick}")
+        sdata_parts.append(f"userid:{self._userid}")
+        sdata_parts.append(f"usertoken:{self._usertoken or ''}")
+        sdata_parts.append(f"appkey:{self._appkey}")
+        sdata_parts.append(f"apptoken:{self._apptoken}")
+
+        # 拼接成最终的签名原始串
         sdata = ",".join(sdata_parts)
         signature = self.get_signature(sdata)
+        _LOGGER.debug("签名原始串 (sdata): %s", sdata)
+        _LOGGER.debug("生成签名 (sign): %s", signature)
 
         # 2. 构造请求体
+        system_node = {
+            "ver": "1.0",
+            "lang": "en",
+            "userid": self._userid,
+            "appkey": self._appkey,
+            "time": tick,
+            "sign": signature,
+        }
+
         send_values = {
             "id": tick,
             "method": method,
-            "system": {
-                "ver": "1.0",
-                "lang": "en",
-                "userid": self._userid,
-                "appkey": self._appkey,
-                "time": tick,
-                "sign": signature,
-            },
+            "system": system_node,
         }
         if params:
             send_values["params"] = params
@@ -189,7 +198,7 @@ class LifeSmartClient:
         response1 = await self._post_and_parse(url_step1, body_step1, header)
         _LOGGER.debug("登录响应 (步骤1) <- %s", response1)
 
-        if response1.get("code") != 0 or "token" not in response1:
+        if response1.get("code") == "success" or "token" not in response1:
             raise LifeSmartAuthError(
                 f"登录失败 (步骤1): {response1.get('message', '无消息')}",
                 response1.get("code"),
@@ -207,7 +216,7 @@ class LifeSmartClient:
         response2 = await self._post_and_parse(url_step2, body_step2, header)
         _LOGGER.debug("认证响应 (步骤2) <- %s", response2)
 
-        if response2.get("code") == 0 and "usertoken" in response2:
+        if response2.get("code") == "success" and "usertoken" in response2:
             self._usertoken = response2["usertoken"]
             if self._userid != response2["userid"]:
                 self._userid = response2["userid"]
@@ -238,6 +247,8 @@ class LifeSmartClient:
         sdata = "&".join([f"{k}={v}" for k, v in sorted(sdata_params.items())])
         sdata += f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
         signature = self.get_signature(sdata)
+        _LOGGER.debug("刷新令牌签名原始串 (sdata): %s", sdata)
+        _LOGGER.debug("生成刷新令牌签名 (sign): %s", signature)
 
         # 2. 构造扁平化的请求体
         send_values = {
