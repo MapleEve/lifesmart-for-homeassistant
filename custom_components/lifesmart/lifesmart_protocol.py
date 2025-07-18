@@ -30,6 +30,7 @@ from .const import (
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_RAW,
     CMD_TYPE_SET_TEMP_FCU,
+    CMD_TYPE_PRESS,
     # --- 设备类型和映射 ---
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
@@ -807,6 +808,41 @@ class LifeSmartPacketFactory:
         node_suffix = f"{self.node}/me/ai"
         return self._build_packet(args, act="SetA", node_suffix=node_suffix)
 
+    def build_press_switch_packet(
+        self, devid: str, idx: str, duration_val: int
+    ) -> bytes:
+        """构建点动开关指令包。"""
+        args = {
+            "val": duration_val,
+            "valtag": "m",
+            "devid": devid,
+            "key": idx,
+            "type": CMD_TYPE_PRESS,
+        }
+        return self._build_packet(args)
+
+    def build_scene_trigger_packet(self, scene_id: str) -> bytes:
+        """构建触发场景的指令包。"""
+        args = {"id": scene_id}
+        return self._build_packet(args, act="SceneSet", node_suffix="")
+
+    def build_send_ir_keys_packet(
+        self, ai: str, devid: str, category: str, brand: str, keys: str
+    ) -> bytes:
+        """构建发送红外按键的指令包。"""
+        # 注意：本地协议的红外控制与云端API不同，通常通过运行AI场景实现
+        # 此处我们模拟云端API的行为，通过运行一个预定义的AI场景来发送按键
+        # AI名称格式通常为 AI_IR_{me}_{key}
+        # 为简化，本地模式下我们直接使用 RunA
+        args = {
+            "opt": {"keys": json.loads(keys)},
+            "cron_name": ai,
+            "devid": devid,
+            "category": category,
+            "brand": brand,
+        }
+        return self._build_packet(args, act="RunA", node_suffix="/ai")
+
 
 class LifeSmartLocalClient:
     """LifeSmart 本地客户端，负责与中枢进行 TCP 通信。"""
@@ -1171,4 +1207,26 @@ class LifeSmartLocalClient:
         pkt = self._factory.build_climate_fan_mode_packet(
             me, fan_mode, current_val, device_type
         )
+        return await self._send_packet(pkt)
+
+    async def press_switch_async(
+        self, idx: str, agt: str, me: str, duration_ms: int
+    ) -> int:
+        """执行本地模式的点动操作。"""
+        val = max(1, round(duration_ms / 100))
+        pkt = self._factory.build_press_switch_packet(me, idx, val)
+        return await self._send_packet(pkt)
+
+    async def set_scene_async(self, agt: str, scene_id: str) -> int:
+        """激活一个本地场景。"""
+        # agt 在此方法中未使用，但为保持签名一致而保留
+        pkt = self._factory.build_scene_trigger_packet(scene_id)
+        return await self._send_packet(pkt)
+
+    async def send_ir_key_async(
+        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+    ) -> int:
+        """发送一个本地红外按键命令。"""
+        # agt 在此方法中未使用，但为保持签名一致而保留
+        pkt = self._factory.build_send_ir_keys_packet(ai, me, category, brand, keys)
         return await self._send_packet(pkt)
