@@ -195,28 +195,22 @@ async def _async_create_client_and_get_devices(
                     _LOGGER.error("令牌已失效，需要重新认证: %s", e)
                     # 在HA中触发重新认证流程
                     config_entry.async_start_reauth(hass)
-                    raise LifeSmartAuthError("令牌已失效，请重新认证。", e.code) from e
-                else:
-                    # 如果是密码登录后刷新失败，这是一个更严重的问题
-                    raise LifeSmartAuthError(
-                        "获取初始令牌后立即刷新失败，请检查API。"
-                    ) from e
+                    raise ConfigEntryNotReady("令牌已失效，请重新认证。", e.code) from e
 
             # 3. 获取设备列表
             devices = await client.get_all_device_async()
             return client, devices, auth_response
 
         except LifeSmartAuthError as e:
-            _LOGGER.critical("认证失败，请检查您的配置。错误: %s", e)
-            raise  # 重新引发认证错误，这将导致设置失败
-        except (
-            LifeSmartAPIError,
-            aiohttp.ClientError,
-            asyncio.TimeoutError,
-            Exception,
-        ) as e:
-            _LOGGER.error("连接到 LifeSmart 云失败，集成将稍后重试。错误: %s", e)
-            raise ConfigEntryNotReady from e  # 引发此异常以触发重试
+            # 这个块现在只会在初始登录（如果需要）时触发，详细日志已在 client 中记录
+            _LOGGER.error("在集成启动期间发生认证错误，无法继续。")
+            raise ConfigEntryNotReady(f"认证失败: {e}") from e
+        except LifeSmartAPIError as e:
+            _LOGGER.error("在集成启动期间发生API错误，无法获取设备。")
+            raise ConfigEntryNotReady(f"API错误: {e}") from e
+        except Exception as e:
+            _LOGGER.error("在集成启动期间发生未知错误: %s", e, exc_info=True)
+            raise ConfigEntryNotReady(f"未知错误: {e}") from e
 
     else:
         # --- 本地模式 ---
@@ -239,7 +233,7 @@ async def _async_create_client_and_get_devices(
                     EVENT_HOMEASSISTANT_STOP, client.async_disconnect
                 )
             )
-            return client, devices
+            return client, devices, None
         except Exception as e:
             _LOGGER.error("设置与 LifeSmart 中枢的本地连接失败: %s", e)
             raise ConfigEntryNotReady from e

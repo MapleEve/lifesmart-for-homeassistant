@@ -43,24 +43,11 @@
         "data": {
           "userpassword": "Mobile App User Password"
         }
-      },
-      "auth_token": {
-        "title": "Hub Setup",
-        "description": "Please enter your User Token.",
-        "data": {
-          "usertoken": "User Token"
-        }
-      },
-      "auth_password": {
-        "title": "Hub Setup",
-        "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
-        "data": {
-          "userpassword": "Mobile App User Password"
-        }
       }
     },
     "abort": {
       "already_in_progress": "Configuration is already in progress.",
+      "reauth_successful": "Re-authentication successful. Please reload the integration.",
       "already_configured": "This device is already configured."
     },
     "error": {
@@ -95,6 +82,20 @@
         "description": "You can update your authentication method or credentials here. This will trigger a reload of the integration.",
         "data": {
           "auth_method": "Authentication Method"
+        }
+      },
+      "auth_token": {
+        "title": "Hub Setup",
+        "description": "Please enter your User Token.",
+        "data": {
+          "usertoken": "User Token"
+        }
+      },
+      "auth_password": {
+        "title": "Hub Setup",
+        "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
+        "data": {
+          "userpassword": "Mobile App User Password"
         }
       }
     }
