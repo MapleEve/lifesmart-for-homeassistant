@@ -7,6 +7,9 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature, PRECISION_TENTHS
@@ -191,6 +194,12 @@ class LifeSmartClimate(ClimateEntity):
         self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
         self._attr_min_temp, self._attr_max_temp = 5, 35
 
+    def _init_sl_cp_vl(self):
+        """初始化 SL_CP_VL 温控阀门。"""
+        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT]  # 假设模式
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_min_temp, self._attr_max_temp = 5, 35
+
     def _init_sl_tr_acipm(self):
         """初始化 SL_TR_ACIPM 新风系统。"""
         self._attr_supported_features = ClimateEntityFeature.FAN_MODE
@@ -199,6 +208,12 @@ class LifeSmartClimate(ClimateEntity):
             HVACMode.FAN_ONLY,
         ]  # 简化模式，主要控制风速
         self._attr_fan_modes = list(LIFESMART_ACIPM_FAN_MAP.keys())
+
+    def _init_v_fresh_p(self):
+        """初始化 V_FRESH_P 新风系统。"""
+        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
+        self.fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
     # --- 设备专属状态更新方法 ---
     def _update_default(self, data: dict):
@@ -226,6 +241,24 @@ class LifeSmartClimate(ClimateEntity):
         self._attr_current_temperature = data.get("P6", {}).get("v")
         self._attr_target_temperature = data.get("P3", {}).get("v")
         self._attr_fan_mode = get_f_fan_mode(data.get("P4", {}).get("val", 0))
+
+    def _update_sl_cp_vl(self, data: dict):
+        """更新 SL_CP_VL 温控阀门状态。"""
+        p1_data = data.get("P1", {})
+        self._attr_is_on = p1_data.get("type", 0) % 2 == 1
+        if self._attr_is_on:
+            mode_val = p1_data.get("val", 0) & 0b110  # 假设模式在 bit 1-2
+            self._attr_hvac_mode = {
+                0: HVACMode.HEAT,
+                1: HVACMode.COOL,
+                2: HVACMode.AUTO,
+            }.get(
+                mode_val, HVACMode.HEAT
+            )  # 假设模式
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
+        self._attr_current_temperature = data.get("P4", {}).get("v")
+        self._attr_target_temperature = data.get("P3", {}).get("v")
 
     def _update_sl_nature(self, data: dict):
         is_on = data.get("P1", {}).get("type", 0) % 2 == 1
@@ -264,6 +297,14 @@ class LifeSmartClimate(ClimateEntity):
         self._attr_current_temperature = data.get("P5", {}).get("v")
         self._attr_target_temperature = data.get("P4", {}).get("v")
         self._p1_val = p1_data.get("val", 0)
+
+    def _update_v_fresh_p(self, data: dict):
+        """更新 V_FRESH_P 新风系统状态。"""
+        is_on = data.get("O", {}).get("type", 0) % 2 == 1
+        self._attr_hvac_mode = HVACMode.FAN_ONLY if is_on else HVACMode.OFF
+        # 该设备有送风(F1)和排风(F2)，这里简化为取送风风速
+        self._attr_fan_mode = get_f_fan_mode(data.get("F1", {}).get("val", 0))
+        self._attr_current_temperature = data.get("T", {}).get("v")
 
     # --- 控制方法 ---
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
