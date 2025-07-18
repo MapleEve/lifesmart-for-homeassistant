@@ -43,20 +43,6 @@
         "data": {
           "userpassword": "App 用户的密码"
         }
-      },
-      "auth_token": {
-        "title": "LifeSmart 设备中枢配置",
-        "description": "请输入您的用户令牌 (User Token)",
-        "data": {
-          "usertoken": "用户令牌"
-        }
-      },
-      "auth_password": {
-        "title": "LifeSmart 设备中枢配置",
-        "description": "请输入你 App 账号的密码，密码将被安全地存储在 Home Assistant 中，用于刷新令牌。",
-        "data": {
-          "userpassword": "App 用户的密码"
-        }
       }
     },
     "abort": {
@@ -96,6 +82,20 @@
         "description": "您可以在此处更新您的认证方式或凭据。此操作将导致集成重新加载。",
         "data": {
           "auth_method": "认证方式"
+        }
+      },
+      "auth_token": {
+        "title": "LifeSmart 设备中枢配置",
+        "description": "请输入您的用户令牌 (User Token)",
+        "data": {
+          "usertoken": "用户令牌"
+        }
+      },
+      "auth_password": {
+        "title": "LifeSmart 设备中枢配置",
+        "description": "请输入你 App 账号的密码，密码将被安全地存储在 Home Assistant 中，用于刷新令牌。",
+        "data": {
+          "userpassword": "App 用户的密码"
         }
       }
     }
