@@ -300,13 +300,7 @@ def _async_register_services(hass: HomeAssistant, client: Any):
         # 从实体属性中获取设备信息
         agt = entity.attributes.get(HUB_ID_KEY)
         me = entity.attributes.get(DEVICE_ID_KEY)
-
-        # 从 unique_id 中解析出子设备索引 (idx)
-        try:
-            idx = entity.unique_id.split("_")[-1]
-        except (IndexError, AttributeError):
-            _LOGGER.error("无法为实体 %s 确定子设备索引 (idx)。", entity_id)
-            return
+        idx = entity.attributes.get(SUBDEVICE_INDEX_KEY)
 
         if not all([agt, me, idx]):
             _LOGGER.error("实体 %s 缺少必要的属性 (agt, me, idx)。", entity_id)

@@ -100,13 +100,13 @@
     }
   },
   "services": {
-    "send_keys": {
-      "name": "Send Keys",
+    "send_ir_keys": {
+      "name": "Send IR Keys",
       "description": "Sends IR keys to a remote device.",
       "fields": {
         "me": {
-          "name": "Sub-device ID",
-          "description": "The 'me' identifier of the sub-device (e.g., the IR blaster)."
+          "name": "Device ID",
+          "description": "The 'me' identifier of the device containing the IR blaster."
         },
         "agt": {
           "name": "Hub ID",
@@ -135,8 +135,8 @@
       "description": "Sends IR keys to an A/C device.",
       "fields": {
         "me": {
-          "name": "Sub-device ID",
-          "description": "The 'me' identifier of the sub-device (e.g., the IR blaster)."
+          "name": "Device ID",
+          "description": "The 'me' identifier of the device containing the IR blaster."
         },
         "agt": {
           "name": "Hub ID",
@@ -180,7 +180,7 @@
         }
       }
     },
-    "scene_set": {
+    "trigger_scene": {
       "name": "Trigger Scene",
       "description": "Activates a LifeSmart scene.",
       "fields": {
@@ -191,6 +191,20 @@
         "id": {
           "name": "Scene ID",
           "description": "The identifier of the scene to trigger."
+        }
+      }
+    },
+    "press_switch": {
+      "name": "Press Switch",
+      "description": "Performs a momentary press on a switch entity (turns on, then off after a duration).",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "The entity_id of the switch entity to press."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Duration of the press in milliseconds. Defaults to 1000ms (1 second)."
         }
       }
     }

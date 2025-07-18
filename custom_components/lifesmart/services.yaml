@@ -1,31 +1,41 @@
-send_keys:
-  description: 红外遥控设备.
+send_ir_keys:
+  description: "发送红外按键命令到指定的遥控设备。(Send IR keys to a remote device.)"
   fields:
-    me:
-      description: 设备me值
-      example: '0010'
     agt:
-      description: 智慧中心agt
-      example: '_xXXXXXXXXXXXXXXXXX'
+      description: "智慧中心 (网关) 的 agt 标识符。"
+      example: "_xXXXXXXXXXXXXXXXXX"
+    me:
+      description: "红外发射器所属设备的 me 标识符。"
+      example: "sl_spot_xxxxxxxx"
     ai:
-      description: 遥控器AI
-      example: 'AI_IR_xxxx_xxxxxxxx'
+      description: "虚拟遥控器的 ai 标识符。"
+      example: "AI_IR_xxxx_xxxxxxxx"
     category:
-      description: 遥控设备类别
-      example: 'custom'
+      description: "遥控设备的类别，例如 'tv', 'ac', 'custom'。"
+      example: "custom"
     brand:
-      description: 遥控器品牌
-      example: 'custom'
+      description: "遥控器的品牌，例如 'custom'。"
+      example: "custom"
     keys:
-      description: 遥控器命令key
-      example: '["key"]'
+      description: "要发送的命令按键，JSON数组格式。例如 '[\"power\"]'。"
+      example: '["power"]'
 
 trigger_scene:
-  description: 场景设置.
+  description: "激活一个 LifeSmart 场景。(Activates a LifeSmart scene.)"
   fields:
     agt:
-      description: 智慧中心agt
+      description: "定义了该场景的中枢的 'agt' 标识符。"
       example: "_xXXXXXXXXXXXXXXXXX"
     id:
-      description: 消息id号
+      description: "要触发的场景的标识符。"
       example: "AIxxxxxxxxxxxx"
+
+press_switch:
+  description: "对一个开关实体执行点动操作（按下后在指定时间后自动关闭）。(Performs a momentary press on a switch entity.)"
+  fields:
+    entity_id:
+      description: "要执行点动操作的开关实体的 entity_id。"
+      example: "switch.my_button_p1"
+    duration:
+      description: "点动持续时间（毫秒）。默认为1000毫秒（1秒）。"
+      example: 500

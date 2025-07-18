@@ -355,6 +355,25 @@ class LifeSmartBaseLight(LightEntity):
 class LifeSmartQuantumLight(LifeSmartBaseLight):
     """LifeSmart量子灯 (OD_WE_QUAN)."""
 
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        device: LifeSmartDevice,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+    ) -> None:
+        """初始化量子灯."""
+        # --- 修正: 调用父类构造函数 ---
+        super().__init__(device, raw_device, client, entry_id)
+
+        self._attr_unique_id = generate_entity_id(
+            self._devtype, self._agt, self._me, "quantum"
+        )
+        self._attr_name = self._raw_device.get(DEVICE_NAME_KEY, "Quantum Light")
+        self._initialize_state()
+
     @callback
     def _initialize_state(self) -> None:
         """初始化量子灯状态."""
@@ -536,6 +555,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
         )
         self._attr_supported_color_modes = {ColorMode.RGBW}
         self._attr_effect_list = DYN_EFFECT_LIST
+        self._initialize_state()
 
     @callback
     def _initialize_state(self) -> None:
@@ -624,6 +644,11 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         self._effect_io = effect_io
         self._attr_supported_color_modes = {ColorMode.RGBW}
         self._attr_effect_list = DYN_EFFECT_LIST
+        self._attr_unique_id = generate_entity_id(
+            self._devtype, self._agt, self._me, "rgbw_dual"
+        )
+        self._attr_name = self._raw_device.get(DEVICE_NAME_KEY, "RGBW Light")
+        self._initialize_state()
 
     @callback
     def _initialize_state(self) -> None:
@@ -870,7 +895,7 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
         )
 
 
-class LifeSmartDimmerLight(LightEntity):
+class LifeSmartDimmerLight(LifeSmartBaseLight):
     """LifeSmart调光灯 (复合实体)."""
 
     _attr_has_entity_name = True
@@ -883,10 +908,7 @@ class LifeSmartDimmerLight(LightEntity):
         entry_id: str,
     ) -> None:
         """初始化调光灯."""
-        self._device = device
-        self._raw_device = raw_device
-        self._client = client
-        self._entry_id = entry_id
+        super().__init__(device, raw_device, client, entry_id)
 
         self._attr_unique_id = generate_entity_id(
             raw_device[DEVICE_TYPE_KEY],
@@ -920,41 +942,6 @@ class LifeSmartDimmerLight(LightEntity):
             + self._attr_min_mireds
         )
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """返回设备信息."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY])
-            },
-            name=self._raw_device[DEVICE_NAME_KEY],
-            manufacturer=MANUFACTURER,
-            model=self._raw_device[DEVICE_TYPE_KEY],
-            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(
-                (DOMAIN, self._raw_device[HUB_ID_KEY])
-                if self._raw_device[HUB_ID_KEY]
-                else None
-            ),
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """注册更新监听器."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self.unique_id}",
-                self._handle_update,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                LIFESMART_SIGNAL_UPDATE_ENTITY,
-                self._handle_global_refresh,
-            )
-        )
-
     async def _handle_update(self, new_data: dict) -> None:
         """处理实时更新."""
         # 这种复合实体的更新需要刷新整个设备对象
@@ -967,10 +954,6 @@ class LifeSmartDimmerLight(LightEntity):
             self._raw_device = current_device
             self._initialize_state()
             self.async_write_ha_state()
-
-    async def _handle_global_refresh(self) -> None:
-        """处理全局刷新."""
-        await self._handle_update({})  # 逻辑与实时更新相同
 
     async def async_turn_on(self, **kwargs) -> None:
         """开启调光灯."""

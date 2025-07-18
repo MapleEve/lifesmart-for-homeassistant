@@ -21,6 +21,7 @@ from .const import (
     DEVICE_NAME_KEY,
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
+    SUBDEVICE_INDEX_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     # --- 设备类型常量 ---
     SUPPORTED_SWITCH_TYPES,
@@ -157,6 +158,7 @@ class LifeSmartSwitch(SwitchEntity):
         self._attr_extra_state_attributes = {
             HUB_ID_KEY: raw_device[HUB_ID_KEY],
             DEVICE_ID_KEY: raw_device[DEVICE_ID_KEY],
+            SUBDEVICE_INDEX_KEY: self._sub_key,
         }
 
         # --- 初始化状态 ---
