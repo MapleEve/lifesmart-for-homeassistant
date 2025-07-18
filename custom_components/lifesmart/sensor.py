@@ -379,6 +379,8 @@ class LifeSmartSensor(SensorEntity):
             SensorDeviceClass.PM25,
             SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             SensorDeviceClass.SOUND_PRESSURE,
+            SensorDeviceClass.BATTERY,
+            SensorDeviceClass.VOLTAGE,
         ]:
             return SensorStateClass.MEASUREMENT
         if self.device_class == SensorDeviceClass.ENERGY:
