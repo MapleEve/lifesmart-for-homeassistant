@@ -163,8 +163,6 @@ async def async_setup_entry(
                 LifeSmartDimmerLight(
                     device=ha_device,
                     raw_device=device,
-                    sub_device_key="P1P2",
-                    sub_device_data=device[DEVICE_DATA_KEY],
                     client=client,
                     entry_id=entry_id,
                 )
@@ -872,8 +870,32 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
         )
 
 
-class LifeSmartDimmerLight(LifeSmartBaseLight):
-    """LifeSmart调光灯."""
+class LifeSmartDimmerLight(LightEntity):
+    """LifeSmart调光灯 (复合实体)."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        device: LifeSmartDevice,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+    ) -> None:
+        """初始化调光灯."""
+        self._device = device
+        self._raw_device = raw_device
+        self._client = client
+        self._entry_id = entry_id
+
+        self._attr_unique_id = generate_entity_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "dimmer",  # 使用固定后缀代替错误的IO键
+        )
+        self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Dimmer Light")
+        self._initialize_state()
 
     @callback
     def _initialize_state(self) -> None:
@@ -883,91 +905,109 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
         self._attr_max_mireds = MAX_MIREDS
         self._attr_min_mireds = MIN_MIREDS
 
-        for data_idx, data_val in self._sub_data.items():
-            if data_idx == "P1":
-                # 设置开关状态和亮度
-                if data_val.get("type", 0) & 0x01 == 1:
-                    self._attr_is_on = True
-                else:
-                    self._attr_is_on = False
-                self._attr_brightness = data_val.get("val", 0)
-            elif data_idx == "P2":
-                # 设置色温
-                ratio = 1 - (data_val.get("val", 0) / 255)
-                self._attr_color_temp = (
-                    int((self._attr_max_mireds - self._attr_min_mireds) * ratio)
-                    + self._attr_min_mireds
-                )
+        p1_data = self._raw_device.get(DEVICE_DATA_KEY, {}).get("P1", {})
+        p2_data = self._raw_device.get(DEVICE_DATA_KEY, {}).get("P2", {})
+
+        # P1 控制开关状态和亮度
+        self._attr_is_on = p1_data.get("type", 0) & 0x01 == 1
+        self._attr_brightness = p1_data.get("val", 0)
+
+        # P2 控制色温
+        p2_val = p2_data.get("val", 0)
+        ratio = 1 - (p2_val / 255)
+        self._attr_color_temp = (
+            int((self._attr_max_mireds - self._attr_min_mireds) * ratio)
+            + self._attr_min_mireds
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """返回设备信息."""
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY])
+            },
+            name=self._raw_device[DEVICE_NAME_KEY],
+            manufacturer=MANUFACTURER,
+            model=self._raw_device[DEVICE_TYPE_KEY],
+            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
+            via_device=(
+                (DOMAIN, self._raw_device[HUB_ID_KEY])
+                if self._raw_device[HUB_ID_KEY]
+                else None
+            ),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """注册更新监听器."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self.unique_id}",
+                self._handle_update,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                LIFESMART_SIGNAL_UPDATE_ENTITY,
+                self._handle_global_refresh,
+            )
+        )
 
     async def _handle_update(self, new_data: dict) -> None:
-        """处理调光灯状态更新."""
-        if not new_data:
-            return
+        """处理实时更新."""
+        # 这种复合实体的更新需要刷新整个设备对象
+        devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
+        current_device = next(
+            (d for d in devices if d[DEVICE_ID_KEY] == self._raw_device[DEVICE_ID_KEY]),
+            None,
+        )
+        if current_device:
+            self._raw_device = current_device
+            self._initialize_state()
+            self.async_write_ha_state()
 
-        for data_idx, data_val in new_data.items():
-            if data_idx == "P1":
-                if data_val.get("type", 0) & 0x01 == 1:
-                    self._attr_is_on = True
-                else:
-                    self._attr_is_on = False
-                self._attr_brightness = data_val.get("val", 0)
-            elif data_idx == "P2":
-                ratio = 1 - (data_val.get("val", 0) / 255)
-                self._attr_color_temp = (
-                    int((self._attr_max_mireds - self._attr_min_mireds) * ratio)
-                    + self._attr_min_mireds
-                )
-
-        self.async_write_ha_state()
+    async def _handle_global_refresh(self) -> None:
+        """处理全局刷新."""
+        await self._handle_update({})  # 逻辑与实时更新相同
 
     async def async_turn_on(self, **kwargs) -> None:
         """开启调光灯."""
+        # 注意：由于调光灯的两个IO是独立的，我们不能使用多IO下发
+        # 而是需要逐个发送命令
         if ATTR_BRIGHTNESS in kwargs:
-            result = await self._client.send_epset_async(
-                CMD_TYPE_SET_VAL,
-                kwargs[ATTR_BRIGHTNESS],
-                "P1",
+            await self._client.send_epset_async(
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
+                "P1",
+                CMD_TYPE_SET_VAL,
+                kwargs[ATTR_BRIGHTNESS],
             )
-            if result == 0:
-                self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             ratio = (kwargs[ATTR_COLOR_TEMP_KELVIN] - self._attr_min_mireds) / (
                 self._attr_max_mireds - self._attr_min_mireds
             )
             val = int((-ratio + 1) * 255)
-            result = await self._client.send_epset_async(
+            await self._client.send_epset_async(
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
                 "P2",
                 CMD_TYPE_SET_VAL,
                 val,
             )
-            if result == 0:
-                self._attr_color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
         # 确保在调整完参数后，灯是开启状态
-        result = await self._client.turn_on_light_switch_async(
-            "P1",
-            self._raw_device[HUB_ID_KEY],
-            self._raw_device[DEVICE_ID_KEY],
+        await self._client.turn_on_light_switch_async(
+            "P1", self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY]
         )
-        if result == 0:
-            self._attr_is_on = True
-            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """关闭调光灯."""
-        result = await self._client.turn_off_light_switch_async(
-            "P1",
-            self._raw_device[HUB_ID_KEY],
-            self._raw_device[DEVICE_ID_KEY],
+        await self._client.turn_off_light_switch_async(
+            "P1", self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY]
         )
-        if result == 0:
-            self._attr_is_on = False
-            self.async_write_ha_state()
 
 
 class LifeSmartLight(LifeSmartBaseLight):
@@ -1119,16 +1159,6 @@ class LifeSmartLight(LifeSmartBaseLight):
 
 class LifeSmartCoverLight(LifeSmartBaseLight):
     """Represents a light attached to a LifeSmart cover device (e.g., garage door light)."""
-
-    @callback
-    def _generate_light_name(self) -> str:
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Light")
-        # 如果子设备有自己的名字 (如多联开关的按键名)，则使用它
-        sub_name = self._sub_data.get(DEVICE_NAME_KEY)
-        if sub_name and sub_name != self._sub_key:
-            return f"{base_name} {sub_name}"
-        # 否则，使用基础名 + IO口索引
-        return f"{base_name} {self._sub_key.upper()}"
 
     @callback
     def _initialize_state(self) -> None:
