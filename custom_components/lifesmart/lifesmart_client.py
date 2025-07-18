@@ -293,7 +293,7 @@ class LifeSmartClient:
         if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
             cmd_idx = "P3" if device_type in GARAGE_DOOR_TYPES else "P2"
             return await self.send_epset_async(
-                agt, me, cmd_idx, CMD_TYPE_SET_CONFIG, 0x80
+                agt, me, cmd_idx, CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
             )
         else:
             cmd_idx = "ST" if device_type == "SL_SW_WIN" else "P3"
