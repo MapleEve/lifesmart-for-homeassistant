@@ -80,6 +80,10 @@ class LifeSmartClient:
         self._userid = userid
         self._apppassword = user_password
 
+    # ====================================================================
+    # 核心 API 调用器
+    # ====================================================================
+
     async def _async_call_api(
         self, method: str, params: Optional[dict] = None, api_path: str = "/api"
     ) -> dict[str, Any]:
@@ -100,24 +104,21 @@ class LifeSmartClient:
         tick = int(time.time())
         params = params or {}
 
-        # 1. 构造签名原始串
-        sign_params = {
-            "method": method,
-            "time": tick,
-            "userid": self._userid,
-            "appkey": self._appkey,
-        }
-        if params:
-            sign_params.update(params)
+        # 1. 构造签名原始串 (严格模仿旧版拼接逻辑)
+        sdata_parts = [f"method:{method}"]
+        # 注意：这里参数的顺序可能很重要，我们按字母顺序添加以保持一致性
+        for key, value in sorted(params.items()):
+            sdata_parts.append(f"{key}:{value}")
 
-        sorted_parts = [f"{k}={v}" for k, v in sorted(sign_params.items())]
-        sdata = (
-            "&".join(sorted_parts)
-            + f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
+        credential_data = (
+            f"time:{tick},userid:{self._userid},usertoken:{self._usertoken or ''},"  # 确保 usertoken 为空时也包含
+            f"appkey:{self._appkey},apptoken:{self._apptoken}"
         )
+        sdata_parts.append(credential_data)
+        sdata = ",".join(sdata_parts)
         signature = self.get_signature(sdata)
 
-        # 2. 构造包含 system 节点的请求体
+        # 2. 构造请求体
         send_values = {
             "id": tick,
             "method": method,
@@ -134,11 +135,7 @@ class LifeSmartClient:
             send_values["params"] = params
 
         # 3. 发送请求
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
-        _LOGGER.debug("通用API 请求 -> %s: %s", method, send_data)
-        response_text = await self.post_async(url, send_data, header)
-        response = json.loads(response_text)
+        response = await self._post_and_parse(url, send_values, self.generate_header())
         _LOGGER.debug("通用API 响应 <- %s: %s", method, response)
 
         if response.get("code") != 0:
@@ -164,7 +161,10 @@ class LifeSmartClient:
 
         return response.get("message", response)
 
-    async def login_async(self) -> bool:
+    # ====================================================================
+    # 认证 API 的专属实现
+    # ====================================================================
+    async def login_async(self) -> dict[str, Any]:
         """登录到 LifeSmart 服务以获取用户令牌。
 
         这是一个两步认证过程，首先用密码获取临时令牌，然后用临时令牌换取长期的用户令牌 (usertoken)
@@ -178,7 +178,7 @@ class LifeSmartClient:
         """
         header = self.generate_header()
 
-        # --- 步骤 1: /auth.login ---
+        # 步骤 1: /auth.login (无签名)
         url_step1 = self.get_api_url() + "/auth.login"
         body_step1 = {
             "uid": self._userid,
@@ -186,14 +186,8 @@ class LifeSmartClient:
             "appkey": self._appkey,
         }
         _LOGGER.debug("登录请求 (步骤1) -> %s", body_step1)
-        try:
-            response_text = await self.post_async(
-                url_step1, json.dumps(body_step1), header
-            )
-            response1 = json.loads(response_text)
-            _LOGGER.debug("登录响应 (步骤1) <- %s", response1)
-        except Exception as e:
-            raise LifeSmartAuthError(f"登录请求 (步骤1) 因网络错误失败: {e}") from e
+        response1 = await self._post_and_parse(url_step1, body_step1, header)
+        _LOGGER.debug("登录响应 (步骤1) <- %s", response1)
 
         if response1.get("code") != 0 or "token" not in response1:
             raise LifeSmartAuthError(
@@ -210,14 +204,8 @@ class LifeSmartClient:
             "rgn": self._region,
         }
         _LOGGER.debug("认证请求 (步骤2) -> %s", body_step2)
-        try:
-            response_text = await self.post_async(
-                url_step2, json.dumps(body_step2), header
-            )
-            response2 = json.loads(response_text)
-            _LOGGER.debug("认证响应 (步骤2) <- %s", response2)
-        except Exception as e:
-            raise LifeSmartAuthError(f"认证请求 (步骤2) 因网络错误失败: {e}") from e
+        response2 = await self._post_and_parse(url_step2, body_step2, header)
+        _LOGGER.debug("认证响应 (步骤2) <- %s", response2)
 
         if response2.get("code") == 0 and "usertoken" in response2:
             self._usertoken = response2["usertoken"]
@@ -261,15 +249,9 @@ class LifeSmartClient:
         }
 
         # 3. 发送请求
-        header = self.generate_header()
-        send_data = json.dumps(send_values)
-        _LOGGER.debug("刷新令牌请求 -> %s", send_data)
-        try:
-            response_text = await self.post_async(url, send_data, header)
-            response = json.loads(response_text)
-            _LOGGER.debug("刷新令牌响应 <- %s", response)
-        except Exception as e:
-            raise LifeSmartAuthError(f"刷新令牌因网络错误失败: {e}") from e
+        _LOGGER.debug("刷新令牌请求 -> %s", send_values)
+        response = await self._post_and_parse(url, send_values, self.generate_header())
+        _LOGGER.debug("刷新令牌响应 <- %s", response)
 
         if response.get("code") == 0 and "usertoken" in response:
             self._usertoken = response["usertoken"]
@@ -319,7 +301,7 @@ class LifeSmartClient:
             "val": val,
         }
         response = await self._async_call_api("EpSet", params)
-        return response.get("code", -1)
+        return response.get("code", -1)  # EpSet 成功时 message 为空，返回 code
 
     async def async_set_multi_ep_async(
         self, agt: str, me: str, io_list: list[dict]
@@ -520,7 +502,19 @@ class LifeSmartClient:
                 )
         return -1
 
-    # --- 内部工具和私有方法 ---
+    # ====================================================================
+    # 内部工具方法
+    # ====================================================================
+
+    async def _post_and_parse(self, url: str, data: dict, headers: dict) -> dict:
+        """一个辅助函数，用于发送POST请求并解析JSON响应。"""
+        try:
+            response_text = await self.post_async(url, json.dumps(data), headers)
+            return json.loads(response_text)
+        except Exception as e:
+            _LOGGER.error("POST请求到 %s 失败: %s", url, e)
+            raise LifeSmartAPIError(f"网络请求失败: {e}") from e
+
     async def post_async(self, url: str, data: str, headers: dict) -> str:
         """使用 Home Assistant 的共享客户端会话发送 POST 请求。"""
         session = async_get_clientsession(self.hass)
