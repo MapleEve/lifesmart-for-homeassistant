@@ -191,12 +191,32 @@ class LifeSmartClimate(ClimateEntity):
 
     def _init_sl_cp_dn(self):
         """初始化 SL_CP_DN 地暖温控器。"""
-        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.AUTO]
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_min_temp, self._attr_max_temp = 5, 35
+
+    def _init_sl_cp_air(self):
+        """初始化 SL_CP_AIR 风机盘管。"""
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
+        self._attr_hvac_modes = [
+            HVACMode.OFF,
+            HVACMode.COOL,
+            HVACMode.HEAT,
+            HVACMode.FAN_ONLY,
+            HVACMode.AUTO,
+        ]
+        self._attr_fan_modes = list(LIFESMART_CP_AIR_FAN_MAP.keys())
+        self._attr_min_temp, self._attr_max_temp = 10, 35
 
     def _init_sl_cp_vl(self):
         """初始化 SL_CP_VL 温控阀门。"""
-        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT]  # 假设模式
+        self._attr_hvac_modes = [
+            HVACMode.OFF,
+            HVACMode.HEAT,
+            HVACMode.AUTO,
+        ]  # 手动/节能 -> HEAT, 自动 -> AUTO
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_min_temp, self._attr_max_temp = 5, 35
 
@@ -247,18 +267,19 @@ class LifeSmartClimate(ClimateEntity):
         p1_data = data.get("P1", {})
         self._attr_is_on = p1_data.get("type", 0) % 2 == 1
         if self._attr_is_on:
-            mode_val = p1_data.get("val", 0) & 0b110  # 假设模式在 bit 1-2
-            self._attr_hvac_mode = {
-                0: HVACMode.HEAT,
-                1: HVACMode.COOL,
-                2: HVACMode.AUTO,
-            }.get(
-                mode_val, HVACMode.HEAT
-            )  # 假设模式
+            # 解析 val 的 bit 1-2
+            mode_val = (p1_data.get("val", 0) >> 1) & 0b11
+            mode_map = {
+                0: HVACMode.HEAT,  # 手动模式
+                1: HVACMode.HEAT,  # 节能模式 (视为HEAT的一种)
+                2: HVACMode.AUTO,  # 自动模式
+            }
+            self._attr_hvac_mode = mode_map.get(mode_val, HVACMode.HEAT)
         else:
             self._attr_hvac_mode = HVACMode.OFF
         self._attr_current_temperature = data.get("P4", {}).get("v")
         self._attr_target_temperature = data.get("P3", {}).get("v")
+        self._p1_val = p1_data.get("val", 0)
 
     def _update_sl_nature(self, data: dict):
         is_on = data.get("P1", {}).get("type", 0) % 2 == 1
@@ -278,10 +299,15 @@ class LifeSmartClimate(ClimateEntity):
     def _update_sl_cp_dn(self, data: dict):
         p1_data = data.get("P1", {})
         self._attr_is_on = p1_data.get("type", 0) % 2 == 1
-        self._attr_hvac_mode = HVACMode.HEAT if self._attr_is_on else HVACMode.OFF
+        if self._attr_is_on:
+            # 解析 val 的 bit 31 来确定模式
+            is_auto_mode = (p1_data.get("val", 0) >> 31) & 0b1
+            self._attr_hvac_mode = HVACMode.AUTO if is_auto_mode else HVACMode.HEAT
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
         self._attr_current_temperature = data.get("P4", {}).get("v")
         self._attr_target_temperature = data.get("P3", {}).get("v")
-        self._p1_val = p1_data.get("val", 0)  # 存储P1的val以备后用
+        self._p1_val = p1_data.get("val", 0)
 
     def _update_sl_cp_air(self, data: dict):
         p1_data = data.get("P1", {})

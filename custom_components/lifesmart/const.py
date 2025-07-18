@@ -10,7 +10,6 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    FAN_OFF,
 )
 from homeassistant.const import Platform
 
@@ -283,7 +282,7 @@ LIFESMART_TF_FAN_MODE_MAP = {
 REVERSE_LIFESMART_TF_FAN_MODE_MAP = {v: k for k, v in LIFESMART_TF_FAN_MODE_MAP.items()}
 
 
-def get_tf_fan_mode(val: int) -> str:
+def get_tf_fan_mode(val: int) -> str | None:
     """根据 tF/F 口的 val 值获取风扇模式。"""
     if 30 >= val > 0:
         return FAN_LOW
@@ -293,7 +292,7 @@ def get_tf_fan_mode(val: int) -> str:
         return FAN_HIGH
     if val == 101:
         return FAN_AUTO
-    return FAN_OFF  # 风扇停止时返回 None ?
+    return None  # 风扇停止时返回 None
 
 
 # ================= 门锁系列 (Lock Series) =================

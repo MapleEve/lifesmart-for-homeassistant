@@ -335,6 +335,16 @@ class LifeSmartClient:
                 new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
                 return await self.send_epset_async(agt, me, "P1", "0xFF", new_val)
 
+        if device_type == "SL_CP_DN":
+            is_auto = 1 if hvac_mode == HVACMode.AUTO else 0
+            new_val = (current_val & ~(1 << 31)) | (is_auto << 31)
+            return await self.send_epset_async(agt, me, "P1", "0xFF", new_val)
+
+        if device_type == "SL_CP_VL":
+            mode_map = {HVACMode.HEAT: 0, HVACMode.AUTO: 2}  # 映射回设备值
+            mode_val = mode_map.get(hvac_mode, 0)
+            new_val = (current_val & ~(0b11 << 1)) | (mode_val << 1)
+            return await self.send_epset_async(agt, me, "P1", "0xFF", new_val)
         return 0
 
     # 设置空调温度的异步方法
