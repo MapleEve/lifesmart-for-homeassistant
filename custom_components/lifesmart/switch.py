@@ -193,17 +193,17 @@ class LifeSmartSwitch(SwitchEntity):
         """Return device info to link entities to a single device."""
         return DeviceInfo(
             identifiers={
-                (
-                    DOMAIN,
-                    self._raw_device[HUB_ID_KEY],
-                    self._raw_device[DEVICE_ID_KEY],
-                )
+                (DOMAIN, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY])
             },
             name=self._raw_device[DEVICE_NAME_KEY],
             manufacturer=MANUFACTURER,
             model=self._raw_device[DEVICE_TYPE_KEY],
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(DOMAIN, self._raw_device[HUB_ID_KEY]),
+            via_device=(
+                (DOMAIN, self._raw_device[HUB_ID_KEY])
+                if self._raw_device[HUB_ID_KEY]
+                else None
+            ),
         )
 
     async def async_added_to_hass(self) -> None:

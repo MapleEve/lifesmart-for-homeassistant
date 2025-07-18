@@ -406,12 +406,18 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.hub_id, self.device_id)},
-            name=self.sensor_device_name,
+            identifiers={
+                (DOMAIN, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY])
+            },
+            name=self._raw_device[DEVICE_NAME_KEY],
             manufacturer=MANUFACTURER,
-            model=self.device_type,
+            model=self._raw_device[DEVICE_TYPE_KEY],
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(DOMAIN, self.hub_id) if self.hub_id else None,
+            via_device=(
+                (DOMAIN, self._raw_device[HUB_ID_KEY])
+                if self._raw_device[HUB_ID_KEY]
+                else None
+            ),
         )
 
     @property
