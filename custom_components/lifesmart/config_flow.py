@@ -61,10 +61,17 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
                 _LOGGER.error("Authentication failed with provided password.")
                 raise ConfigEntryAuthFailed("invalid_auth")
             _LOGGER.info("Login successful, obtained user token.")
-            data[CONF_LIFESMART_USERTOKEN] = client._usertoken
+            data[CONF_LIFESMART_USERTOKEN] = login_response.get(
+                "usertoken", data.get(CONF_LIFESMART_USERTOKEN, "")
+            )
+            data[CONF_REGION] = login_response.get(
+                "region", data.get(CONF_REGION, "cn2")
+            )
             # 同时更新 userid，以防 API 返回的是规范化的 userid
             if "userid" in login_response:
-                data[CONF_LIFESMART_USERID] = login_response["userid"]
+                data[CONF_LIFESMART_USERID] = login_response.get(
+                    "userid", data.get(CONF_LIFESMART_USERID, "")
+                )
 
         devices = await client.get_all_device_async()
 
