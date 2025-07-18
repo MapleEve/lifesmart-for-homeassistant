@@ -1,6 +1,8 @@
 """Support for LifeSmart Gateway Light by @MapleEve
 
-未实现的灯光：插座面板、窗帘电机的动态灯光 RGB灯光
+未实现的灯光：
+- 插座面板自身的 RGB/RGBW
+- 窗帘电机自身的动态灯光 RGB灯光
 """
 
 import binascii
@@ -180,45 +182,31 @@ async def async_setup_entry(
                             entry_id=entry_id,
                         )
                     )
-        elif device_type in RGBW_LIGHT_TYPES:
-            for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
-                if sub_key == "RGBW":
-                    lights.append(
-                        LifeSmartRGBWLight(
-                            device=ha_device,
-                            raw_device=device,
-                            sub_device_key=sub_key,
-                            sub_device_data=sub_data,
-                            client=client,
-                            entry_id=entry_id,
-                        )
-                    )
-        elif device_type in RGB_LIGHT_TYPES:
-            for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
-                if sub_key == "RGB":
-                    lights.append(
-                        LifeSmartRGBLight(
-                            device=ha_device,
-                            raw_device=device,
-                            sub_device_key=sub_key,
-                            sub_device_data=sub_data,
-                            client=client,
-                            entry_id=entry_id,
-                        )
-                    )
-        elif device_type in OUTDOOR_LIGHT_TYPES + BRIGHTNESS_LIGHT_TYPES:
-            for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
-                if sub_key == "P1":
-                    lights.append(
-                        LifeSmartBrightnessLight(
-                            device=ha_device,
-                            raw_device=device,
-                            sub_device_key=sub_key,
-                            sub_device_data=sub_data,
-                            client=client,
-                            entry_id=entry_id,
-                        )
-                    )
+        elif device_type in RGBW_LIGHT_TYPES and "RGBW" in device and "DYN" in device:
+            lights.append(
+                LifeSmartDualIORGBWLight(
+                    ha_device, device, client, entry_id, "RGBW", "DYN"
+                )
+            )
+        elif device_type in RGB_LIGHT_TYPES and "RGB" in device:
+            lights.append(
+                LifeSmartSingleIORGBWLight(ha_device, device, client, entry_id, "RGB")
+            )
+        elif device_type in OUTDOOR_LIGHT_TYPES and "P1" in device:
+            lights.append(
+                LifeSmartSingleIORGBWLight(ha_device, device, client, entry_id, "P1")
+            )
+        elif device_type in BRIGHTNESS_LIGHT_TYPES and "P1" in device:
+            lights.append(
+                LifeSmartBrightnessLight(
+                    ha_device,
+                    device,
+                    "P1",
+                    device.get(DEVICE_DATA_KEY, {}).get("P1", {}),
+                    client,
+                    entry_id,
+                )
+            )
         else:
             for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
                 if _is_light_subdevice(device_type, sub_key):
@@ -466,171 +454,6 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
         )
 
 
-class LifeSmartRGBWLight(LifeSmartBaseLight):
-    """LifeSmart RGBW灯带."""
-
-    @callback
-    def _initialize_state(self) -> None:
-        """初始化RGBW灯状态."""
-        if self._sub_data.get("type", 0) & 0x01 == 1:
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
-
-        self._attr_color_mode = ColorMode.RGBW
-        self._attr_supported_color_modes = {ColorMode.RGBW}
-
-        # 解析RGBW颜色值
-        color_val = self._sub_data.get("val", 0)
-        self._attr_rgbw_color = self._parse_rgbw_color(color_val)
-
-    def _parse_rgbw_color(self, value: int) -> tuple:
-        """解析RGBW颜色值."""
-        return _parse_color_value(value, has_white=True)
-
-    def _encode_rgbw_color(self, rgbw: tuple) -> int:
-        """编码RGBW颜色值."""
-        r, g, b, w = rgbw
-        return (w << 24) | (r << 16) | (g << 8) | b
-
-    async def _handle_update(self, new_data: dict) -> None:
-        """处理RGBW灯状态更新."""
-        if not new_data:
-            return
-
-        if new_data.get("type", 0) & 0x01 == 1:
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
-
-        color_val = new_data.get("val", 0)
-        self._attr_rgbw_color = self._parse_rgbw_color(color_val)
-        self.async_write_ha_state()
-
-    async def async_turn_on(self, **kwargs) -> None:
-        """开启RGBW灯."""
-        if ATTR_RGBW_COLOR in kwargs:
-            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
-            color_val = self._encode_rgbw_color(self._attr_rgbw_color)
-            result = await self._client.send_epset_async(
-                "0xff",
-                color_val,
-                self._sub_key,
-                self._raw_device[HUB_ID_KEY],
-                self._raw_device[DEVICE_ID_KEY],
-            )
-        else:
-            result = await self._client.turn_on_light_switch_async(
-                self._sub_key,
-                self._raw_device[HUB_ID_KEY],
-                self._raw_device[DEVICE_ID_KEY],
-            )
-
-        if result == 0:
-            self._attr_is_on = True
-            self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """关闭RGBW灯."""
-        if ATTR_RGBW_COLOR in kwargs:
-            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
-            color_val = self._encode_rgbw_color(self._attr_rgbw_color)
-            result = await self._client.send_epset_async(
-                "0xfe",
-                color_val,
-                self._sub_key,
-                self._raw_device[HUB_ID_KEY],
-                self._raw_device[DEVICE_ID_KEY],
-            )
-        else:
-            result = await self._client.turn_off_light_switch_async(
-                self._sub_key,
-                self._raw_device[HUB_ID_KEY],
-                self._raw_device[DEVICE_ID_KEY],
-            )
-
-        if result == 0:
-            self._attr_is_on = False
-            self.async_write_ha_state()
-
-
-class LifeSmartRGBLight(LifeSmartBaseLight):
-    """LifeSmart RGB灯带（不带白光）."""
-
-    @callback
-    def _initialize_state(self) -> None:
-        """初始化RGB灯状态."""
-        if self._sub_data.get("type", 0) & 0x01 == 1:
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
-
-        self._attr_color_mode = ColorMode.RGB
-        self._attr_supported_color_modes = {ColorMode.RGB}
-
-        # 解析RGB颜色值
-        color_val = self._sub_data.get("val", 0)
-        self._attr_rgb_color = self._parse_rgb_color(color_val)
-
-    def _parse_rgb_color(self, value: int) -> tuple:
-        """解析RGB颜色值."""
-        return _parse_color_value(value, has_white=False)
-
-    def _encode_rgb_color(self, rgb: tuple) -> int:
-        """编码RGB颜色值."""
-        r, g, b = rgb
-        return (r << 16) | (g << 8) | b
-
-    async def _handle_update(self, new_data: dict) -> None:
-        """处理RGB灯状态更新."""
-        if not new_data:
-            return
-
-        if new_data.get("type", 0) & 0x01 == 1:
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
-
-        color_val = new_data.get("val", 0)
-        self._attr_rgb_color = self._parse_rgb_color(color_val)
-        self.async_write_ha_state()
-
-    async def async_turn_on(self, **kwargs) -> None:
-        """开启RGB灯."""
-        if ATTR_RGB_COLOR in kwargs:
-            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
-            color_val = self._encode_rgb_color(self._attr_rgb_color)
-            result = await self._client.send_epset_async(
-                "0xff",
-                color_val,
-                self._sub_key,
-                self._raw_device[HUB_ID_KEY],
-                self._raw_device[DEVICE_ID_KEY],
-            )
-        else:
-            result = await self._client.turn_on_light_switch_async(
-                self._sub_key,
-                self._raw_device[HUB_ID_KEY],
-                self._raw_device[DEVICE_ID_KEY],
-            )
-
-        if result == 0:
-            self._attr_is_on = True
-            self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """关闭RGB灯."""
-        result = await self._client.turn_off_light_switch_async(
-            self._sub_key,
-            self._raw_device[HUB_ID_KEY],
-            self._raw_device[DEVICE_ID_KEY],
-        )
-
-        if result == 0:
-            self._attr_is_on = False
-            self.async_write_ha_state()
-
-
 class LifeSmartBrightnessLight(LifeSmartBaseLight):
     """LifeSmart户外灯光（调光壁灯、花园地灯）.亮度控制器"""
 
@@ -694,6 +517,188 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
         if result == 0:
             self._attr_is_on = False
             self.async_write_ha_state()
+
+
+class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
+    """
+    通用类，用于处理通过单个IO口控制颜色、白光和动态效果的灯。
+    例如: SL_SC_RGB, SL_LI_UG1, OD_WE_IRCTL.
+    """
+
+    def __init__(
+        self,
+        device: LifeSmartDevice,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+        io_key: str,
+    ):
+        super().__init__(
+            device, raw_device, io_key, raw_device.get(io_key, {}), client, entry_id
+        )
+        self._attr_supported_color_modes = {ColorMode.RGBW}
+        self._attr_effect_list = DYN_EFFECT_LIST
+
+    @callback
+    def _initialize_state(self) -> None:
+        self._attr_is_on = self._sub_data.get("type", 0) % 2 == 1
+        val = self._sub_data.get("val", 0)
+        r, g, b, w = _parse_color_value(val, has_white=True)
+
+        if w >= 128:  # 动态效果模式
+            self._attr_effect = next(
+                (k for k, v in DYN_EFFECT_MAP.items() if v == val), None
+            )
+            # 效果模式下，亮度是满的，颜色是效果本身决定的
+            self._attr_brightness = 255 if self._attr_is_on else 0
+            self._attr_rgbw_color = (r, g, b, 0)  # 效果模式下，W通道不代表白光
+        elif w > 0:  # 白光模式 (W在1-100之间)
+            self._attr_effect = None
+            self._attr_brightness = int(w / 100 * 255)
+            self._attr_rgbw_color = (r, g, b, w)  # 此时W代表白光
+        else:  # 静态颜色模式
+            self._attr_effect = None
+            self._attr_brightness = (
+                255 if self._attr_is_on else 0
+            )  # 假设RGB模式下亮度满
+            self._attr_rgbw_color = (r, g, b, 0)
+
+    async def _handle_update(self, new_data: dict) -> None:
+        self._sub_data = new_data
+        self._initialize_state()
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        cmd_val = None
+        if ATTR_EFFECT in kwargs:
+            cmd_val = DYN_EFFECT_MAP.get(kwargs[ATTR_EFFECT])
+        elif ATTR_RGBW_COLOR in kwargs:
+            r, g, b, w = kwargs[ATTR_RGBW_COLOR]
+            # 根据文档，白光值范围是0-100
+            w_val = min(100, int(w / 255 * 100)) if w > 0 else 0
+            cmd_val = (w_val << 24) | (r << 16) | (g << 8) | b
+        elif ATTR_BRIGHTNESS in kwargs and self._attr_rgbw_color:
+            # 调整白光亮度
+            r, g, b, _ = self._attr_rgbw_color
+            w_val = min(100, int(kwargs[ATTR_BRIGHTNESS] / 255 * 100))
+            cmd_val = (w_val << 24) | (r << 16) | (g << 8) | b
+
+        if cmd_val is not None:
+            await self._client.send_epset_async(
+                self._raw_device[HUB_ID_KEY],
+                self._raw_device[DEVICE_ID_KEY],
+                self._sub_key,
+                CMD_TYPE_SET_RAW,
+                cmd_val,
+            )
+        else:
+            await self._client.turn_on_light_switch_async(
+                self._sub_key,
+                self._raw_device[HUB_ID_KEY],
+                self._raw_device[DEVICE_ID_KEY],
+            )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self._client.turn_off_light_switch_async(
+            self._sub_key, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY]
+        )
+
+
+class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
+    """
+    通用类，用于处理通过独立 'RGBW' 和 'DYN' IO口控制的灯。
+    例如: SL_CT_RGBW, MSL_IRCTL.
+    """
+
+    def __init__(
+        self,
+        device: LifeSmartDevice,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+        color_io: str,
+        effect_io: str,
+    ):
+        super().__init__(
+            device, raw_device, color_io, raw_device.get(color_io, {}), client, entry_id
+        )
+        self._color_io = color_io
+        self._effect_io = effect_io
+        self._attr_supported_color_modes = {ColorMode.RGBW}
+        self._attr_effect_list = DYN_EFFECT_LIST
+
+    @callback
+    def _initialize_state(self) -> None:
+        color_data = self._raw_device.get(self._color_io, {})
+        dyn_data = self._raw_device.get(self._effect_io, {})
+
+        self._attr_is_on = color_data.get("type", 0) % 2 == 1
+        self._attr_brightness = 255 if self._attr_is_on else 0
+
+        if dyn_data.get("type", 0) % 2 == 1:
+            dyn_val = dyn_data.get("val", 0)
+            self._attr_effect = next(
+                (k for k, v in DYN_EFFECT_MAP.items() if v == dyn_val), None
+            )
+        else:
+            self._attr_effect = None
+
+        self._attr_rgbw_color = _parse_color_value(
+            color_data.get("val", 0), has_white=True
+        )
+
+    async def _handle_update(self, new_data: dict) -> None:
+        # 这种设备更新需要刷新整个设备对象
+        devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
+        current_device = next(
+            (d for d in devices if d[DEVICE_ID_KEY] == self._raw_device[DEVICE_ID_KEY]),
+            None,
+        )
+        if current_device:
+            self._raw_device = current_device
+            self._initialize_state()
+            self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        io_list = []
+        if ATTR_EFFECT in kwargs:
+            effect_val = DYN_EFFECT_MAP.get(kwargs[ATTR_EFFECT])
+            if effect_val is not None:
+                io_list = [
+                    {"idx": self._color_io, "type": CMD_TYPE_ON, "val": 1},
+                    {
+                        "idx": self._effect_io,
+                        "type": CMD_TYPE_SET_RAW,
+                        "val": effect_val,
+                    },
+                ]
+        elif ATTR_RGBW_COLOR in kwargs:
+            r, g, b, w = kwargs[ATTR_RGBW_COLOR]
+            color_val = (w << 24) | (r << 16) | (g << 8) | b
+            io_list = [
+                {"idx": self._color_io, "type": CMD_TYPE_SET_RAW, "val": color_val},
+                {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
+            ]
+
+        if io_list:
+            await self._client.async_set_multi_ep_async(
+                self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY], io_list
+            )
+        else:
+            await self._client.turn_on_light_switch_async(
+                self._sub_key,
+                self._raw_device[HUB_ID_KEY],
+                self._raw_device[DEVICE_ID_KEY],
+            )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        io_list = [
+            {"idx": self._color_io, "type": CMD_TYPE_OFF, "val": 0},
+            {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
+        ]
+        await self._client.async_set_multi_ep_async(
+            self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY], io_list
+        )
 
 
 class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
