@@ -939,15 +939,16 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
             )
             val = int((-ratio + 1) * 255)
             result = await self._client.send_epset_async(
-                CMD_TYPE_SET_VAL,
-                val,
-                "P2",
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
+                "P2",
+                CMD_TYPE_SET_VAL,
+                val,
             )
             if result == 0:
                 self._attr_color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
+        # 确保在调整完参数后，灯是开启状态
         result = await self._client.turn_on_light_switch_async(
             "P1",
             self._raw_device[HUB_ID_KEY],
