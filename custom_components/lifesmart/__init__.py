@@ -7,6 +7,7 @@
 import asyncio
 import json
 import logging
+import time
 import traceback
 from datetime import timedelta, datetime
 from importlib import reload
@@ -314,7 +315,10 @@ def _async_register_services(hass: HomeAssistant, client: Any):
 
 
 def _async_setup_background_tasks(
-    hass: HomeAssistant, config_entry: ConfigEntry, client: Any
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    client: Any,
+    auth_response: dict | None = None,
 ):
     """设置后台任务，包括 WebSocket 管理器和定时刷新。
 
@@ -322,6 +326,7 @@ def _async_setup_background_tasks(
         hass: Home Assistant 的核心实例。
         config_entry: 当前集成的配置条目。
         client: 已初始化的 LifeSmart 客户端。
+        auth_response: 登录成功后返回的认证数据，包含令牌过期时间。
     """
 
     async def _async_periodic_refresh(now=None):
@@ -337,14 +342,19 @@ def _async_setup_background_tasks(
         except Exception as e:
             _LOGGER.warning("定时刷新时发生意外错误，这可能是临时问题。错误: %s", e)
 
-    # 仅在云端模式下启动 WebSocket 状态管理器
+    # 仅在云端模式下启动 WebSocket 状态管理器和令牌刷新任务
     if isinstance(client, LifeSmartClient):
         state_manager = LifeSmartStateManager(
             hass=hass,
             config_entry=config_entry,
+            client=client,  # <--- 传递 client 实例
             ws_url=client.get_wss_url(),
             refresh_callback=_async_periodic_refresh,
         )
+        # 如果有认证响应，设置初始的令牌过期时间
+        if auth_response and "expiredtime" in auth_response:
+            state_manager.set_token_expiry(auth_response["expiredtime"])
+
         state_manager.start()
         hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = state_manager
 
@@ -579,6 +589,7 @@ class LifeSmartStateManager:
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
+        client: LifeSmartClient,
         ws_url: str,
         refresh_callback: callable,
         retry_interval: int = 10,
@@ -596,6 +607,7 @@ class LifeSmartStateManager:
         """
         self.hass = hass
         self.config_entry = config_entry
+        self.client = client
         self.ws_url = ws_url
         self.refresh_callback = refresh_callback
         self.retry_interval = retry_interval
@@ -603,16 +615,30 @@ class LifeSmartStateManager:
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self._connection_lock = asyncio.Lock()
         self._retry_count = 0
-        self._task: Optional[asyncio.Task] = None
+        self._ws_task: Optional[asyncio.Task] = None
+        self._token_task: Optional[asyncio.Task] = None
         self._should_stop = False
         self._last_disconnect_time: Optional[datetime] = None
+        self._token_expiry_time: int = 0
+        self._token_refresh_event = asyncio.Event()
 
     def start(self) -> None:
-        """启动 WebSocket 连接管理循环。"""
-        if not self._task or self._task.done():
+        """启动 WebSocket 连接和令牌刷新管理循环。"""
+        if not self._ws_task or self._ws_task.done():
             self._should_stop = False
-            self._task = self.hass.loop.create_task(self._connection_handler())
+            self._ws_task = self.hass.loop.create_task(self._connection_handler())
             _LOGGER.info("LifeSmart WebSocket 状态管理器已启动。")
+        if not self._token_task or self._token_task.done():
+            self._token_task = self.hass.loop.create_task(self._token_refresh_handler())
+            _LOGGER.info("LifeSmart 令牌刷新管理器已启动。")
+
+    def set_token_expiry(self, expiry_timestamp: int):
+        """设置令牌的过期时间戳。"""
+        self._token_expiry_time = expiry_timestamp
+        self._token_refresh_event.set()  # 通知刷新任务可以开始工作了
+        _LOGGER.info(
+            "令牌过期时间已设置为: %s", datetime.fromtimestamp(expiry_timestamp)
+        )
 
     async def _connection_handler(self):
         """主连接处理循环，包含状态机和错误处理。"""
@@ -744,19 +770,78 @@ class LifeSmartStateManager:
         )
         await asyncio.sleep(delay)
 
+    async def _token_refresh_handler(self):
+        """后台任务，负责在 usertoken 过期前自动刷新。"""
+        await self._token_refresh_event.wait()  # 等待初始过期时间被设置
+
+        while not self._should_stop:
+            try:
+                now = int(time.time())
+                time_to_expiry = self._token_expiry_time - now
+
+                # 在过期前2天（172800秒）尝试刷新
+                refresh_threshold = 2 * 24 * 3600
+
+                if time_to_expiry < refresh_threshold:
+                    _LOGGER.info(
+                        "令牌即将在 %.1f 小时内过期，开始刷新...", time_to_expiry / 3600
+                    )
+                    try:
+                        new_token_data = await self.client.async_refresh_token()
+
+                        # 更新成功，持久化新令牌并更新内部状态
+                        current_data = self.config_entry.data.copy()
+                        current_data["usertoken"] = new_token_data["usertoken"]
+                        self.hass.config_entries.async_update_entry(
+                            self.config_entry, data=current_data
+                        )
+
+                        self.set_token_expiry(new_token_data["expiredtime"])
+
+                        # 刷新成功后，等待下一次检查周期（例如12小时）
+                        await asyncio.sleep(12 * 3600)
+
+                    except LifeSmartAuthError as e:
+                        _LOGGER.error("自动刷新令牌失败: %s。将在1小时后重试。", e)
+                        await asyncio.sleep(3600)  # 刷新失败，短时间后重试
+                else:
+                    # 如果离过期还早，计算到刷新点需要等待的时间
+                    wait_duration = time_to_expiry - refresh_threshold
+                    _LOGGER.debug(
+                        "令牌有效期充足，将在 %.1f 小时后再次检查。",
+                        wait_duration / 3600,
+                    )
+                    await asyncio.sleep(wait_duration)
+
+            except asyncio.CancelledError:
+                _LOGGER.info("令牌刷新任务已被取消。")
+                break
+            except Exception as e:
+                _LOGGER.error(
+                    "令牌刷新处理器发生未捕获的异常: %s。将在1小时后重试。", e
+                )
+                await asyncio.sleep(3600)
+
     async def stop(self):
         """优雅地停止 WebSocket 连接和管理任务。"""
         _LOGGER.info("正在停止 LifeSmart WebSocket 状态管理器...")
         self._should_stop = True
         if self._ws and not self._ws.closed:
             await self._ws.close(code=1000)
-        if self._task:
-            self._task.cancel()
-            try:
-                await self._task
-            except asyncio.CancelledError:
-                pass  # 任务被取消是预期的
-        _LOGGER.info("LifeSmart WebSocket 状态管理器已停止。")
+
+        # 取消两个任务
+        if self._ws_task:
+            self._ws_task.cancel()
+        if self._token_task:
+            self._token_task.cancel()
+
+        # 等待任务完成
+        await asyncio.gather(
+            self._ws_task if self._ws_task else asyncio.sleep(0),
+            self._token_task if self._token_task else asyncio.sleep(0),
+            return_exceptions=True,
+        )
+        _LOGGER.info("LifeSmart 状态管理器已完全停止。")
 
 
 def get_platform_by_device(device_type: str, sub_device: Optional[str] = None) -> str:

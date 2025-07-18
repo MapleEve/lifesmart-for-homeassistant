@@ -193,6 +193,69 @@ class LifeSmartClient:
             response.get("code"),
         )
 
+    async def async_refresh_token(self) -> dict[str, Any]:
+        """刷新用户令牌 (usertoken) 以延长其有效期。
+
+        Returns:
+            一个包含新 'usertoken' 和 'expiredtime' 的字典。
+
+        Raises:
+            LifeSmartAuthError: 如果刷新失败。
+        """
+        url = f"{self.get_api_url()}/auth.refreshtoken"
+        tick = int(time.time())
+
+        # 1. 准备请求体参数
+        params = {
+            "id": tick,  # 使用时间戳作为唯一ID
+            "appkey": self._appkey,
+            "time": tick,
+            "userid": self._userid,
+        }
+
+        # 2. 准备签名字符串 (根据文档的特殊排序规则)
+        # 将需要排序的字段放入字典
+        sortable_params = {
+            "appkey": self._appkey,
+            "time": tick,
+            "userid": self._userid,
+        }
+        # 按字母顺序排序并格式化
+        sorted_parts = [f"{k}={v}" for k, v in sorted(sortable_params.items())]
+        # 附加固定的 apptoken 和 usertoken
+        sdata = (
+            "&".join(sorted_parts)
+            + f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
+        )
+
+        # 3. 构造最终请求体
+        send_values = {
+            "id": params["id"],
+            "system": self.generate_system_request_body(tick, sdata),
+        }
+        send_values.update(params)  # 添加其他参数到顶层
+
+        header = self.generate_header()
+        send_data = json.dumps(send_values)
+
+        _LOGGER.debug("刷新令牌请求 -> %s", send_data)
+        try:
+            response_text = await self.post_async(url, send_data, header)
+            response = json.loads(response_text)
+            _LOGGER.debug("刷新令牌响应 <- %s", response)
+        except Exception as e:
+            raise LifeSmartAuthError(f"刷新令牌因网络错误失败: {e}") from e
+
+        if response.get("code") == 0 and "usertoken" in response:
+            # 成功刷新，更新客户端内部状态
+            self._usertoken = response["usertoken"]
+            _LOGGER.info("用户令牌刷新成功。")
+            return response
+
+        error_msg = f"刷新令牌失败: {response.get('message', '未知错误')}"
+        _LOGGER.error(error_msg)
+        raise LifeSmartAuthError(error_msg, response.get("code"))
+
     # ====================================================================
     # 接口：所有管理和查询接口
     # ====================================================================
