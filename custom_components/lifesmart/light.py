@@ -1073,11 +1073,6 @@ class LifeSmartLight(LifeSmartBaseLight):
             rgba = struct.unpack("BBBB", rgbhex)
             rgb = rgba[1:]
             self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
-        elif self._sub_key in ["RGBW", "RGB"]:
-            rgbhexstr = f"{value:x}".zfill(8)
-            rgbhex = bytes.fromhex(rgbhexstr)
-            rgbhex = struct.unpack("BBBB", rgbhex)
-            self._attr_rgbw_color = rgbhex[1:] + (rgbhex[0],)
 
         self.async_write_ha_state()
 
