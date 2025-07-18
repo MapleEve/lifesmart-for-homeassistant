@@ -1122,7 +1122,7 @@ class LifeSmartCoverLight(LifeSmartBaseLight):
 
     @callback
     def _generate_light_name(self) -> str:
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Switch")
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Light")
         # 如果子设备有自己的名字 (如多联开关的按键名)，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
         if sub_name and sub_name != self._sub_key:
