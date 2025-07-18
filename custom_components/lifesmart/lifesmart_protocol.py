@@ -1,3 +1,13 @@
+"""由 @MagicBear 实现的 LifeSmart 本地协议解析与客户端。 @MapleEve 进行重构
+
+此模块包含两个核心部分：
+1. LifeSmartPacketFactory: 一个纯粹的指令包工厂，负责根据不同的控制需求，
+构建符合 LifeSmart 本地二进制协议的指令包。
+2. LifeSmartLocalClient: 一个功能完备的本地客户端，它使用 LifeSmartPacketFactory
+来构建指令，并通过 TCP Socket 与 LifeSmart 中枢进行通信。它提供了与云端客户端
+(LifeSmartClient) 完全对齐的异步控制接口，使得上层平台可以无缝切换。
+"""
+
 import asyncio
 import gzip
 import json
@@ -6,15 +16,38 @@ import struct
 from collections import OrderedDict
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Callable
+from typing import Callable, Any
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.core import Event, ServiceCall
+
+from .const import (
+    # --- 命令类型常量 ---
+    CMD_TYPE_ON,
+    CMD_TYPE_OFF,
+    CMD_TYPE_SET_VAL,
+    CMD_TYPE_SET_CONFIG,
+    CMD_TYPE_SET_TEMP_DECIMAL,
+    CMD_TYPE_SET_RAW,
+    CMD_TYPE_SET_TEMP_FCU,
+    # --- 设备类型和映射 ---
+    DOOYA_TYPES,
+    GARAGE_DOOR_TYPES,
+    REVERSE_LIFESMART_HVAC_MODE_MAP,
+    REVERSE_LIFESMART_TF_FAN_MODE_MAP,
+    LIFESMART_F_FAN_MODE_MAP,
+    REVERSE_LIFESMART_ACIPM_FAN_MAP,
+    REVERSE_LIFESMART_CP_AIR_FAN_MAP,
+    REVERSE_LIFESMART_CP_AIR_MODE_MAP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class LSTimestamp:
+    """用于表示 LifeSmart 协议中时间戳对象的数据类。"""
+
     index: int
     value: int
     raw_data: bytes
@@ -25,7 +58,7 @@ class LSTimestamp:
     #     return datetime.datetime.fromtimestamp(self.value, tz=self.timezone)
 
     def as_dict(self) -> dict:
-        """转换为字典格式（兼容旧代码）"""
+        """将其转换为字典格式，以兼容旧代码或序列化需求。"""
         return {
             "type": "timestamp",
             "index": self.index,
@@ -41,9 +74,10 @@ class LSTimestamp:
 
 
 class LSEncoder(json.JSONEncoder):
-    """自定义JSON编码器"""
+    """自定义的 JSON 编码器，用于处理 LifeSmart 特殊数据类型。"""
 
     def default(self, obj):
+        """重写默认编码方法。"""
         if isinstance(obj, LSTimestamp):
             return str(obj)
         if isinstance(obj, bytes):
@@ -52,6 +86,12 @@ class LSEncoder(json.JSONEncoder):
 
 
 class LifeSmartProtocol:
+    """LifeSmart 二进制协议的编码器和解码器。
+
+    此类实现了 LifeSmart 专有的二进制通信协议，能够将 Python 字典
+    编码为二进制数据包，以及将二进制数据包解码回 Python 字典。
+    """
+
     KEY_MAPPING = {
         2: "timestamp",
         3: "req",
@@ -89,6 +129,7 @@ class LifeSmartProtocol:
     REVERSE_KEY_MAPPING = {v: k for k, v in KEY_MAPPING.items()}
 
     def __init__(self, debug=False):
+        """初始化协议处理器。"""
         self.debug = debug
         self.decode_context = "binary"
         self.decode_direct_output = False
@@ -97,6 +138,7 @@ class LifeSmartProtocol:
 
     @staticmethod
     def _encode_varint(value):
+        """将一个整数编码为变长整数 (Varint)。"""
         data = bytearray()
         while value >= 128:
             data.append((value & 0x7F) | 0x80)
@@ -106,6 +148,7 @@ class LifeSmartProtocol:
 
     @staticmethod
     def _decode_varint(stream):
+        """从字节流中解码一个变长整数 (Varint)。"""
         value = 0
         shift = 0
         while True:
@@ -120,12 +163,14 @@ class LifeSmartProtocol:
         return value
 
     def _string_to_bin(self, value):
+        """将字符串编码为二进制格式。"""
         data = b"\x11"
         data += self._encode_varint(len(value))
         data += value.encode("utf-8")
         return data
 
     def _pack_value(self, value, isKey=False):
+        """递归地将 Python 对象打包成二进制格式。"""
         if isinstance(value, bool):
             return b"\x02" if value else b"\x03"
 
@@ -173,10 +218,11 @@ class LifeSmartProtocol:
             return b"\x00"
 
         else:
-            _LOGGER.warning("Unsupported type: %s", type(value))
+            _LOGGER.warning("不支持的打包类型: %s", type(value))
             return b""
 
     def encode(self, parts):
+        """将多个部分编码成一个完整的 LifeSmart 数据包。"""
         header = b"GL00\x00\x00"
         data = b""
         for part in parts:
@@ -190,6 +236,7 @@ class LifeSmartProtocol:
         return pkt
 
     def _parse_value(self, stream, data_type, call_stack=""):
+        """递归地从字节流中解析出 Python 对象。"""
         try:
             if data_type == 0x00:  # NULL
                 return None
@@ -202,7 +249,6 @@ class LifeSmartProtocol:
 
             elif data_type == 0x04:  # Integer
                 varint = self._decode_varint(stream)
-                # 处理32位系统的大整数问题
                 if varint & 1:
                     result = -((varint >> 1) + 1)
                 else:
@@ -210,33 +256,10 @@ class LifeSmartProtocol:
                 return result if result <= 0x7FFFFFFF else result - 0x100000000
 
             elif data_type == 0x05:  # HEX类型处理
-                start_pos = stream.tell()
-
-                # 读取索引字节
-                index = stream.read(1)
-                if len(index) < 1:
-                    raise EOFError("Missing index byte")
-                index = index[0]
-
-                # 读取HEX数据
+                index = stream.read(1)[0]
                 hex_data = stream.read(8)
                 if len(hex_data) < 8:
-                    raise EOFError(
-                        f"HEX data incomplete, need 8 bytes got {len(hex_data)}"
-                    )
-
-                # 调试输出
-                if self.debug:
-                    stream.seek(start_pos)
-                    debug_data = stream.read(9)
-                    stream.seek(start_pos)
-                    self._dump_decode_value(debug_data)
-                    print(f"\033[31mpack index: 0x{index:02x}\033[0m hex (len: 8)")
-                    if self.debug_level > 1:
-                        print(f"0x{start_pos+5:08x}: ", end="")
-                        self._dump_decode_value(hex_data[:4])
-
-                # 处理长度判断
+                    raise EOFError("HEX 数据不完整")
                 return {
                     "type": "HEX",
                     "index": index,
@@ -245,109 +268,74 @@ class LifeSmartProtocol:
                 }
 
             elif data_type == 0x06:  # 时间戳类型处理
-                start_pos = stream.tell()
-
-                # 读取索引字节
-                index = stream.read(1)
-                if len(index) < 1:
-                    raise EOFError("Missing index byte")
-                index = index[0]
-
-                # 解码变长整数
+                index = stream.read(1)[0]
                 int_value = 0
                 shift = 0
-                intlen = 0
                 while True:
                     byte = stream.read(1)
-                    if len(byte) < 1:
-                        raise EOFError("Unexpected end of varint")
-                    int_value |= (byte[0] & 0x7F) << shift
-                    shift += 7
-                    intlen += 1
-                    if not (byte[0] & 0x80):
+                    if not byte:
+                        raise EOFError("Varint 数据意外结束")
+                    b = ord(byte)
+                    int_value |= (b & 0x7F) << shift
+                    if not (b & 0x80):
                         break
-
-                # 处理符号和数值
-                sign = -1 if (int_value & 0x1) else 1
-                final_value = (int_value >> 1) * sign
-
-                # 调试输出
-                if self.debug:
-                    stream.seek(start_pos)
-                    debug_data = stream.read(7)
-                    stream.seek(start_pos)
-                    self._dump_decode_value(debug_data)
-                    print(
-                        f"\033[32mpack index: 0x{index:02x}\033[0m time value: {final_value} intlen = {intlen}"
-                    )
-
-                return LSTimestamp(
-                    index=index,
-                    value=final_value,
-                    raw_data=int_value.to_bytes(
-                        (int_value.bit_length() + 7) // 8, "big"
-                    ),
-                )
+                    shift += 7
+                final_value = -(int_value >> 1) if (int_value & 1) else (int_value >> 1)
+                raw_bytes = int_value.to_bytes((int_value.bit_length() + 7) // 8, "big")
+                return LSTimestamp(index=index, value=final_value, raw_data=raw_bytes)
 
             elif data_type == 0x11:  # String
                 length = self._decode_varint(stream)
-                # 检查字符串长度有效性
                 if length < 0 or stream.tell() + length > len(stream.getvalue()):
-                    raise ValueError("Invalid string length")
+                    raise ValueError("无效的字符串长度")
                 return stream.read(length).decode("utf-8", errors="replace")
 
             elif data_type == 0x12:  # Array/Dict
                 if stream.tell() + 1 > len(stream.getvalue()):
-                    raise EOFError("Unexpected end of data")
+                    raise EOFError("数据意外结束")
 
                 count = ord(stream.read(1))
-                is_dict = False
                 items = []
 
                 for _ in range(count):
-                    # 解析键
                     if stream.tell() + 1 > len(stream.getvalue()):
                         break
                     key_type = ord(stream.read(1))
                     key = self._parse_value(stream, key_type, call_stack + ".")
 
-                    # 解析值
                     if stream.tell() + 1 > len(stream.getvalue()):
                         break
                     value_type = ord(stream.read(1))
                     value = self._parse_value(
-                        stream, value_type, call_stack + ".%s" % key
+                        stream, value_type, call_stack + f".{key}"
                     )
 
-                    # 检查键是否为可哈希类型
-                    if not isinstance(key, (str, int, float, bool)):
-                        # raise TypeError(f"Unhashable key type: {type(key)}")
-                        print(f"Unhashable key type: {type(key)}")
+                    if not isinstance(key, (str, int, float, bool, type(None))):
+                        _LOGGER.warning(
+                            "解码时遇到不可哈希的键类型: %s，已跳过。", type(key)
+                        )
                         continue
 
                     items.append((key, value))
 
-                # 自动检测是否为字典结构
                 try:
                     return dict(items)
-                except TypeError:
+                except (TypeError, ValueError):
                     return [v for _, v in items]
 
             elif data_type == 0x13:  # Enum
-                # 添加长度检查
                 if stream.tell() + 1 > len(stream.getvalue()):
-                    raise EOFError("Unexpected end of data")
-
+                    raise EOFError("数据意外结束")
                 enum_id = ord(stream.read(1))
                 return "enum:" + self.KEY_MAPPING.get(enum_id, f"{enum_id}")
 
             else:
-                _LOGGER.warning("Unknown data type: 0x%02x", data_type)
+                _LOGGER.warning("未知的解码数据类型: 0x%02x", data_type)
                 return None
 
         except Exception as e:
             _LOGGER.error(
-                "Parsing error at position %d: %s, Type[0x%x] %s",
+                "在位置 %d 解析时出错: %s, 类型[0x%x] 调用栈[%s]",
                 stream.tell(),
                 str(e),
                 data_type,
@@ -355,81 +343,49 @@ class LifeSmartProtocol:
             )
             raise
 
-    def _normalize_structure(self, data):
-        """递归规范化数据结构"""
-        if isinstance(data, dict):
-            # 转换所有子元素
-            return {
-                self._normalize_key(k): self._normalize_structure(v)
-                for k, v in data.items()
-            }
-        elif isinstance(data, list):
-            return [self._normalize_structure(item) for item in data]
-        return data
-
-    def _normalize_key(self, key):
-        """确保字典键为基本类型"""
-        if isinstance(key, (str, int, float, bool)):
-            return key
-        try:
-            # 尝试转换为字符串
-            return str(key)
-        except:
-            # 无法转换则使用固定值
-            return "invalid_key"
-
     def decode(self, data):
+        """解码一个完整的 LifeSmart 数据包。"""
         original_data = data
         try:
-            # 保存原始数据用于计算剩余部分
             if len(data) < 4:
-                raise EOFError("Packet header incomplete (need 4 bytes)")
+                raise EOFError("包头不完整 (需要 4 字节)")
 
             header = data[:4]
             remaining = data[4:]
 
             if header == b"ZZ00":  # 压缩包处理
                 if len(remaining) < 4:
-                    raise EOFError("Compressed packet incomplete (need orig_len)")
-
+                    raise EOFError("压缩包不完整 (需要原始长度)")
                 orig_len = struct.unpack(">I", remaining[:4])[0]
                 compressed_data = remaining[4:]
-
                 try:
                     decompressed = gzip.decompress(compressed_data)
                 except OSError as e:
-                    raise ValueError(f"Decompression failed: {str(e)}") from e
-
+                    raise ValueError(f"解压失败: {str(e)}") from e
                 if len(decompressed) != orig_len:
                     raise ValueError(
-                        f"Decompressed size mismatch ({len(decompressed)} vs {orig_len})"
+                        f"解压后尺寸不匹配 ({len(decompressed)} vs {orig_len})"
                     )
 
                 # 递归解码解压后的数据
-                consumed_bytes = (
-                    4 + 4 + len(compressed_data)
-                )  # header + orig_len + compressed_data
+                consumed_bytes = 4 + 4 + len(compressed_data)
                 remaining_compressed, structure = self.decode(decompressed)
 
                 if remaining_compressed:
                     _LOGGER.warning(
-                        "Unprocessed data after decompression: %d bytes",
+                        "解压后仍有未处理的数据: %d 字节",
                         len(remaining_compressed),
                     )
-
                 return original_data[consumed_bytes:], structure
 
             elif header == b"GL00":  # 标准包处理
                 if len(original_data) < 10:
-                    raise EOFError("Packet incomplete (need at least 10 bytes)")
-
+                    raise EOFError("数据包不完整 (至少需要 10 字节)")
                 pkt_len = struct.unpack(">I", original_data[6:10])[0]
                 total_length = 10 + pkt_len
 
                 if len(original_data) < total_length:
-                    raise EOFError(
-                        f"Packet length mismatch (need {total_length} bytes)"
-                    )
+                    raise EOFError(f"数据包长度不匹配 (需要 {total_length} 字节)")
 
                 packet_data = original_data[10:total_length]
                 remaining_data = original_data[total_length:]
@@ -441,32 +397,41 @@ class LifeSmartProtocol:
                         parsed = self._parse_value(stream, 0x12)
                         result.append(parsed)
                 except EOFError as e:
-                    raise EOFError(f"Incomplete packet data: {str(e)}") from e
-
+                    raise EOFError(f"不完整的数据包数据: {str(e)}") from e
                 return remaining_data, self._normalize_structure(result)
 
             else:
-                raise ValueError(f"Unknown packet header: {header.hex()}")
+                raise ValueError(f"未知的包头: {header.hex()}")
 
         except EOFError as e:
-            _LOGGER.debug("Decode EOF: %s", str(e))
+            _LOGGER.debug("解码时遇到 EOF: %s", str(e))
             raise  # 重新抛出给上层处理
         except Exception as e:
-            _LOGGER.error("Decoding error: %s", str(e), exc_info=True)
+            _LOGGER.error("解码时出错: %s", str(e), exc_info=True)
             return original_data, None
 
+    def _normalize_key(self, key):
+        """确保字典键为基本类型。"""
+        if isinstance(key, (str, int, float, bool, type(None))):
+            return key
+        try:
+            return str(key)
+        except Exception:
+            return "invalid_key"
+
     def _normalize_structure(self, data):
-        """将OrderedDict转换为标准字典"""
-        if isinstance(data, OrderedDict):
-            data = dict(data)
-            for k, v in data.items():
-                data[k] = self._normalize_structure(v)
-            return data
+        """递归地将 OrderedDict 转换为标准字典，并规范化键。"""
+        if isinstance(data, (dict, OrderedDict)):
+            return {
+                self._normalize_key(k): self._normalize_structure(v)
+                for k, v in data.items()
+            }
         elif isinstance(data, list):
             return [self._normalize_structure(item) for item in data]
         return data
 
     def _build_structure(self, ops):
+        """根据操作列表构建数据结构。"""
         stack = []
         current = []
         for op in ops:
@@ -489,31 +454,35 @@ class LifeSmartProtocol:
         return current
 
 
-class LifeSmart:
-    _proto = None
-    node = ""
-    node_agt = ""
-    _sel = 1
+class LifeSmartPacketFactory:
+    """LifeSmart 本地协议的指令包工厂。
 
-    attr_mapping = {
-        "M": "motion",
-        "VU": "volt_USB",
-        "V": "volt_Battery",
-        "C": "charge",
-        "T": "templature",
-        "H": "humidity",
-        "Z": "light",
-        "O": "switch",
-        "G": "gate",
-        "OP": "OP",
-        "ST": "ST",
-        "CL": "CL",
-    }
+    此类不直接与网络通信，它的唯一职责是构建各种控制命令的二进制数据包。
+    """
 
-    def __init__(self):
+    def __init__(self, node_agt: str, node: str = ""):
+        """初始化指令包工厂。"""
         self._proto = LifeSmartProtocol()
+        self._sel = 1
+        self.node_agt = node_agt
+        self.node = node
 
-    def login(self, uid="admin", pwd="admin"):
+    def _build_packet(
+        self, args: dict, act: str = "rfSetA", node_suffix: str = "/ep"
+    ) -> bytes:
+        """构建一个标准的控制指令包。"""
+        packet_data = [
+            {"_sel": self._sel, "req": False, "timestamp": 10},
+            {
+                "args": args,
+                "node": f"{self.node_agt}{node_suffix}",
+                "act": act,
+            },
+        ]
+        return self._proto.encode(packet_data)
+
+    def build_login_packet(self, uid: str, pwd: str) -> bytes:
+        """构建登录指令包。"""
         login_data = [
             {"_sel": 1, "sn": 1, "req": False},
             {
@@ -531,7 +500,8 @@ class LifeSmart:
         ]
         return self._proto.encode(login_data)
 
-    def loginAsCamera(self, uid="admin", pwd="admin"):
+    def build_login_as_camera_packet(self, uid: str, pwd: str) -> bytes:
+        """构建作为摄像头登录的指令包。"""
         login_data = [
             {"_sel": 1, "sn": 1, "req": False},
             {
@@ -555,7 +525,8 @@ class LifeSmart:
         ]
         return self._proto.encode(login_data)
 
-    def loginByToken(self, token):
+    def build_login_by_token_packet(self, token: str) -> bytes:
+        """构建使用令牌登录的指令包。"""
         login_data = [
             {"_sel": 1, "sn": 1, "req": False},
             {
@@ -572,313 +543,253 @@ class LifeSmart:
         ]
         return self._proto.encode(login_data)
 
-    def switchControl(self, devid, state):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "val": 1 if state else 0,
-                        "valtag": "m",
-                        "enum:53": "devid",
-                        "devid": devid,
-                        "key": "O",
-                        "type": 128,
+    def build_get_config_packet(self, node: str) -> bytes:
+        """构建获取所有设备配置的指令包。"""
+        config_data = [
+            {"req": False, "timestamp": 10},
+            {
+                "args": {
+                    "enum:14": {
+                        "enum:98": {
+                            "uuid": False,
+                            "enum:114": False,
+                            "ver": False,
+                            "enum:14": {"m": 1, "s": False, "_chd": 1},
+                            "icon": False,
+                            "cls": False,
+                            "enum:56": False,
+                            "_": "eps",
+                            "P_Flip": False,
+                            "ptzmr": False,
+                            "enum:83": False,
+                            "nid": False,
+                            "devType": False,
+                            "cgy": False,
+                            "enum:108": False,
+                            "rfic": False,
+                            "name": False,
+                            "agtid": False,
+                        }
                     },
-                    "node": f"{self.node_agt}/ep",
-                    "act": "rfSetA",
+                    "enum:12": {"enum:13": False},
+                    "_chd": 1,
                 },
-            ]
-        )
+                "node": f"{node}/me/ep",
+                "act": "enum:91",
+            },
+        ]
+        return self._proto.encode(config_data)
 
-    def lightControl(self, devid, button, state):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "timestamp": 10, "req": False},
+    def build_switch_packet(self, devid: str, idx: str, on: bool) -> bytes:
+        """构建开关指令包。"""
+        args = {
+            "val": 1 if on else 0,
+            "valtag": "m",
+            "devid": devid,
+            "key": idx,
+            "type": CMD_TYPE_ON if on else CMD_TYPE_OFF,
+        }
+        return self._build_packet(args)
+
+    def build_cover_command_packet(
+        self, devid: str, idx: str, command: str, device_type: str
+    ) -> bytes:
+        """构建窗帘的开/关/停指令包。"""
+        args = {
+            "valtag": "m",
+            "devid": devid,
+            "key": idx,
+        }
+        if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
+            args.update(
                 {
-                    "args": {
-                        "valtag": "m",
-                        "val": 1 if state else 0,
-                        "enum:53": "enum:devid",
-                        "devid": devid,
-                        "key": button,
-                        "type": 128,
-                    },
-                    "node": f"{self.node_agt}/ep",
-                    "act": "rfSetA",
-                },
-            ]
-        )
+                    "val": 100 if command == "open" else 0,
+                    "type": CMD_TYPE_SET_VAL,
+                }
+            )
+            if command == "stop":
+                args["type"] = CMD_TYPE_SET_CONFIG
+                args["val"] = 0x80
+        else:
+            args.update({"val": 1, "type": CMD_TYPE_ON})
+        return self._build_packet(args)
 
-    def curtainControl(self, devid, state, operate=True):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
+    def build_cover_position_packet(self, devid: str, idx: str, position: int) -> bytes:
+        """构建设置窗帘位置的指令包。"""
+        args = {
+            "val": position,
+            "valtag": "m",
+            "devid": devid,
+            "key": idx,
+            "type": CMD_TYPE_SET_VAL,
+        }
+        return self._build_packet(args)
+
+    def build_climate_hvac_mode_packet(
+        self, devid: str, hvac_mode: HVACMode, current_val: int, device_type: str
+    ) -> bytes:
+        """构建设置温控器HVAC模式的指令包。"""
+        if hvac_mode == HVACMode.OFF:
+            return self.build_switch_packet(devid, "P1", False)
+
+        # 温控器开机
+        self.build_switch_packet(devid, "P1", True)
+
+        args = {"valtag": "m", "devid": devid}
+        mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
+        if mode_val is not None and device_type in [
+            "SL_UACCB",
+            "SL_NATURE",
+            "SL_FCU",
+            "V_AIR_P",
+        ]:
+            args.update(
                 {
-                    "args": {
-                        "val": 1 if operate else 0,
-                        "valtag": "m",
-                        "enum:53": "devid",
-                        "devid": devid,
-                        "key": "OP" if state else "CL",
-                        "type": 128,
-                    },
-                    "node": f"{self.node_agt}/ep",
-                    "act": "rfSetA",
-                },
-            ]
-        )
+                    "key": "MODE" if device_type == "V_AIR_P" else "P7",
+                    "type": CMD_TYPE_SET_CONFIG,
+                    "val": mode_val,
+                }
+            )
+        elif device_type == "SL_CP_AIR":
+            mode_val = REVERSE_LIFESMART_CP_AIR_MODE_MAP.get(hvac_mode)
+            if mode_val is not None:
+                new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
+                args.update({"key": "P1", "type": CMD_TYPE_SET_RAW, "val": new_val})
+        elif device_type == "SL_CP_DN":
+            is_auto = 1 if hvac_mode == HVACMode.AUTO else 0
+            new_val = (current_val & ~(1 << 31)) | (is_auto << 31)
+            args.update({"key": "P1", "type": CMD_TYPE_SET_RAW, "val": new_val})
+        elif device_type == "SL_CP_VL":
+            mode_map = {HVACMode.HEAT: 0, HVACMode.AUTO: 2}
+            mode_val = mode_map.get(hvac_mode, 0)
+            new_val = (current_val & ~(0b11 << 1)) | (mode_val << 1)
+            args.update({"key": "P1", "type": CMD_TYPE_SET_RAW, "val": new_val})
+        return self._build_packet(args)
 
-    def RGBWControl(self, devid, state):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "val": 1 if state else 0,
-                        "valtag": "m",
-                        "enum:53": "devid",
-                        "devid": devid,
-                        "key": "RGBW",
-                        "type": 128,
-                    },
-                    "node": f"{self.node_agt}/ep",
-                    "act": "rfSetA",
-                },
-            ]
-        )
+    def build_climate_temperature_packet(
+        self, devid: str, temp: float, device_type: str
+    ) -> bytes:
+        """构建设置温控器目标温度的指令包。"""
+        temp_val = int(temp * 10)
+        idx_map = {
+            "V_AIR_P": ("tT", CMD_TYPE_SET_TEMP_DECIMAL),
+            "SL_UACCB": ("P3", CMD_TYPE_SET_TEMP_DECIMAL),
+            "SL_CP_DN": ("P3", CMD_TYPE_SET_RAW),
+            "SL_CP_AIR": ("P4", CMD_TYPE_SET_RAW),
+            "SL_NATURE": ("P8", CMD_TYPE_SET_TEMP_DECIMAL),
+            "SL_FCU": ("P8", CMD_TYPE_SET_TEMP_FCU),
+            "SL_CP_VL": ("P3", CMD_TYPE_SET_RAW),
+        }
+        if device_type in idx_map:
+            idx, cmd_type = idx_map[device_type]
+            args = {"devid": devid, "key": idx, "type": cmd_type, "val": temp_val}
+            return self._build_packet(args)
+        return b""
 
-    def setRGBW(self, devid, r, g, b, white):
-        rgbwVal = (white << 24) | (r << 16) | (g << 8) | b
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "devid": devid,
-                        "key": {
-                            1: {"type": 255, "key": "RGBW", "val": rgbwVal},
-                            2: {"type": 128, "key": "DYN"},
-                        },
-                    },
-                    "node": f"{self.node_agt}/ep",
-                    "act": "rfSetA",
-                },
-            ]
-        )
+    def build_climate_fan_mode_packet(
+        self, devid: str, fan_mode: str, current_val: int, device_type: str
+    ) -> bytes:
+        """构建设置温控器风扇模式的指令包。"""
+        args = {"devid": devid}
+        if device_type == "V_AIR_P":
+            fan_val = LIFESMART_F_FAN_MODE_MAP.get(fan_mode)
+            args.update({"key": "F", "type": CMD_TYPE_SET_CONFIG, "val": fan_val})
+        elif device_type == "SL_TR_ACIPM":
+            fan_val = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
+            args.update({"key": "P2", "type": CMD_TYPE_SET_RAW, "val": fan_val})
+        elif device_type in ["SL_NATURE", "SL_FCU"]:
+            fan_val = REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)
+            args.update({"key": "P9", "type": CMD_TYPE_SET_CONFIG, "val": fan_val})
+        elif device_type == "SL_CP_AIR":
+            fan_val = REVERSE_LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)
+            if fan_val is not None:
+                new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
+                args.update({"key": "P1", "type": CMD_TYPE_SET_RAW, "val": new_val})
+        if "val" in args:
+            return self._build_packet(args)
+        return b""
 
-    def IRControl(self, devid, opt):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "args": {"opt": opt, "cron_name": f"AI_IR_{devid}"},
-                    "node": f"{self.node_agt}/ai",
-                    "act": "RunA",
-                },
-            ]
-        )
+    def build_change_icon_packet(self, devid: str, icon: str) -> bytes:
+        """构建修改设备图标的指令包。"""
+        args = {"icon": icon}
+        node_suffix = f"/me/ep/{devid}"
+        return self._build_packet(args, act="enum:92", node_suffix=node_suffix)
 
-    def sendcode(self, devid, data):
+    def build_add_trigger_packet(self, trigger_name: str, cmdlist: str) -> bytes:
+        """构建添加触发器的指令包。"""
+        args = {
+            "cmdlist": cmdlist,
+            "_": "trigger",
+            "name": "enum:1",
+            "enum:13": trigger_name,
+        }
+        node_suffix = f"{self.node}/me/ai"
+        return self._build_packet(args, act="AddA", node_suffix=node_suffix)
+
+    def build_del_ai_packet(self, ai_name: str) -> bytes:
+        """构建删除AI（场景或触发器）的指令包。"""
+        args = {
+            "cmdlist": "enum:1",
+            "enum:13": ai_name,
+        }
+        node_suffix = f"{self.node}/me/ai"
+        return self._build_packet(args, act="DelA", node_suffix=node_suffix)
+
+    def build_ir_control_packet(self, devid: str, opt: dict) -> bytes:
+        """构建红外控制（运行AI场景）的指令包。"""
+        args = {"opt": opt, "cron_name": f"AI_IR_{devid}"}
+        return self._build_packet(args, act="RunA", node_suffix="/ai")
+
+    def build_send_code_packet(self, devid: str, data: list | bytes) -> bytes:
+        """构建发送原始红外码的指令包。"""
         if isinstance(data, list):
             data.insert(0, "C*")
             data = bytes(data)
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "enum:args": {
-                        "ctrlcmd": "sendcode",
-                        "enum:valtag": "m",
-                        "cmd": "ctrl",
-                        "enum:devid": devid,
-                        "param": {"enum:type": 1, "data": data},
-                    },
-                    "enum:node": f"{self.node_agt}/ep",
-                    "enum:act": "epCmdA",
-                },
-            ]
-        )
+        args = {
+            "ctrlcmd": "sendcode",
+            "enum:valtag": "m",
+            "cmd": "ctrl",
+            "enum:devid": devid,
+            "param": {"enum:type": 1, "data": data},
+        }
+        return self._build_packet(args, act="epCmdA")
 
-    def IRRAWControl(self, devid, datas):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "data": json.loads(datas),
-                        "devid": devid,
-                        "key": "193",
-                        "cmd": 0,
-                    },
-                    "node": f"{self.node_agt}/ep",
-                    "act": "rfSetVarA",
-                },
-            ]
-        )
+    def build_ir_raw_control_packet(self, devid: str, datas: str) -> bytes:
+        """构建发送原始红外控制数据的指令包。"""
+        args = {
+            "data": json.loads(datas),
+            "devid": devid,
+            "key": "193",
+            "cmd": 0,
+        }
+        return self._build_packet(args, act="rfSetVarA")
 
-    def setEEPRom(self, devid, key, val):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "type": 255,
-                        "valtag": "m",
-                        "devid": devid,
-                        "key": key,
-                        "val": val,
-                    },
-                    "node": f"{self.node_agt}/ep",
-                    "act": "rfSetEEPromA",
-                },
-            ]
-        )
+    def build_set_eeprom_packet(self, devid: str, key: str, val: Any) -> bytes:
+        """构建设置设备EEPROM的指令包。"""
+        args = {
+            "type": 255,
+            "valtag": "m",
+            "devid": devid,
+            "key": key,
+            "val": val,
+        }
+        return self._build_packet(args, act="rfSetEEPromA")
 
-    def addTimer(self, devid, croninfo, key):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "cmdlist": f"SCHDEF({{pause=false;}},'0 {croninfo} *',SET,io,'/ep/{devid}',{{{key}}});",
-                        "enum:13": f"sys_sch_{devid}_CL",
-                    },
-                    "node": f"{self.node}/me/ai",
-                    "act": "SetA",
-                },
-            ]
-        )
-
-    def getver(self):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "icon": False,
-                        "cls": False,
-                        "rfic": False,
-                        "enum:90": False,
-                        "_chd": 1,
-                        "enum:14": {"s": False, "enum:106": 1},
-                        "cgy": False,
-                        "tmzone": False,
-                        "nid": False,
-                        "enum:108": False,
-                        "agt_ver": False,
-                        "name": False,
-                        "enum:113": False,
-                    },
-                    "node": f"{self.node}/me",
-                    "act": "enum:91",
-                },
-            ]
-        )
-
-    def getconfig(self):
-        return self._proto.encode(
-            [
-                {"req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "enum:14": {
-                            "enum:98": {
-                                "uuid": False,
-                                "enum:114": False,
-                                "ver": False,
-                                "enum:14": {"m": 1, "s": False, "_chd": 1},
-                                "icon": False,
-                                "cls": False,
-                                "enum:56": False,
-                                "_": "eps",
-                                "P_Flip": False,
-                                "ptzmr": False,
-                                "enum:83": False,
-                                "nid": False,
-                                "devType": False,
-                                "cgy": False,
-                                "enum:108": False,
-                                "rfic": False,
-                                "name": False,
-                                "agtid": False,
-                            }
-                        },
-                        "enum:12": {"enum:13": False},
-                        "_chd": 1,
-                    },
-                    "node": f"{self.node}/me/ep",
-                    "act": "enum:91",
-                },
-            ]
-        )
-
-    def getAttrName(self, field):
-        return self.attr_mapping.get(field, field)
-
-    def getItemAttrs(self, item):
-        rc = {}
-        for field, value in item.items():
-            if field == "RGBW":
-                rc_key = f"{self.attr_mapping.get(field, field)}:TYPE"
-                rc[rc_key] = value["type"]
-            rc_key = self.attr_mapping.get(field, field)
-            rc[rc_key] = value["val"]
-        return rc
-
-    def changeIcon(self, devid, icon):
-        return self._proto.encode(
-            [
-                {"req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "icon": icon,
-                    },
-                    "node": f"{self.node}/me/ep/{devid}",
-                    "act": "enum:92",
-                },
-            ]
-        )
-
-    def addTrigger(self, trigger_name, cmdlist):
-        return self._proto.encode(
-            [
-                {
-                    "_sel": 1,
-                    "req": False,
-                    "timestamp": 11,
-                },
-                {
-                    "args": {
-                        "cmdlist": cmdlist,
-                        "_": "trigger",
-                        "name": "enum:1",
-                        "enum:13": trigger_name,
-                    },
-                    "node": f"{self.node}/me/ai",
-                    "act": "AddA",
-                },
-            ]
-        )
-
-    def delAI(self, ai_name):
-        return self._proto.encode(
-            [
-                {"_sel": self._sel, "req": False, "timestamp": 10},
-                {
-                    "args": {
-                        "cmdlist": "enum:1",
-                        "enum:13": ai_name,
-                    },
-                    "node": f"{self.node}/me/ai",
-                    "act": "DelA",
-                },
-            ]
-        )
+    def build_add_timer_packet(self, devid: str, croninfo: str, key: str) -> bytes:
+        """构建添加设备定时器的指令包。"""
+        args = {
+            "cmdlist": f"SCHDEF({{pause=false;}},'0 {croninfo} *',SET,io,'/ep/{devid}',{{{key}}});",
+            "enum:13": f"sys_sch_{devid}_CL",
+        }
+        node_suffix = f"{self.node}/me/ai"
+        return self._build_packet(args, act="SetA", node_suffix=node_suffix)
 
 
-class LifeSmartLocalClient(LifeSmart):
+class LifeSmartLocalClient:
+    """LifeSmart 本地客户端，负责与中枢进行 TCP 通信。"""
+
     def __init__(self, host, port, username, password, config_agt=None) -> None:
+        """初始化本地客户端。"""
         super().__init__()
         self.host = host
         self.port = port
@@ -886,17 +797,66 @@ class LifeSmartLocalClient(LifeSmart):
         self.password = password
         self.config_agt = config_agt
         self.reader, self.writer = None, None
-        self.dev = LifeSmart()
+        self._proto = LifeSmartProtocol()
+        self._factory: LifeSmartPacketFactory | None = None
         self.disconnected = False
         self.device_ready = asyncio.Event()
         self.devices = {}
+        self.node = ""
+        self.node_agt = ""
+        self._attr_mapping = {
+            "M": "motion",
+            "VU": "volt_USB",
+            "V": "volt_Battery",
+            "C": "charge",
+            "T": "templature",
+            "H": "humidity",
+            "Z": "light",
+            "O": "switch",
+            "G": "gate",
+            "OP": "OP",
+            "ST": "ST",
+            "CL": "CL",
+        }
+
+    def get_attr_name(self, field: str) -> str:
+        """根据设备返回的字段名获取对应的友好属性名。"""
+        return self._attr_mapping.get(field, field)
+
+    def get_item_attrs(self, item: dict) -> dict:
+        """解析设备状态字典，返回格式化的属性字典。"""
+        rc = {}
+        for field, value in item.items():
+            if field == "RGBW":
+                rc_key = f"{self._attr_mapping.get(field, field)}:TYPE"
+                rc[rc_key] = value["type"]
+            rc_key = self.get_attr_name(field)
+            rc[rc_key] = value["val"]
+        return rc
 
     async def check_login(self):
+        """检查登录凭据是否有效。"""
         self.reader, self.writer = await asyncio.wait_for(
-            asyncio.open_connection(self.host, self.port), timeout=5  # 设置5秒超时
+            asyncio.open_connection(self.host, self.port), timeout=5
         )
 
-        pkt = self.dev.login(self.username, self.password)
+        pkt = self._proto.encode(
+            [
+                {"_sel": 1, "sn": 1, "req": False},
+                {
+                    "args": {
+                        "cid": "6D56899B-82DA-403D-8291-50B57EE05DBA",
+                        "cver": "1.0.48p1",
+                        "uid": self.username,
+                        "nick": "admin",
+                        "cname": "LifeSmart",
+                        "pwd": self.password,
+                    },
+                    "node": "A3MAAABaAEkBRzQ0Mzc0OA/ac",
+                    "act": "Login",
+                },
+            ]
+        )
         self.writer.write(pkt)
         await self.writer.drain()
 
@@ -908,13 +868,11 @@ class LifeSmartLocalClient(LifeSmart):
                 await self.writer.wait_closed()
                 raise asyncio.TimeoutError
             response += buf
-            # 使用协议解码
             if response:
                 try:
-                    response, decoded = self.dev._proto.decode(response)
-
-                    if decoded[1].get("ret", None) is None:
-                        _LOGGER.error("Login Failed -> ", decoded[1].get("err"))
+                    _, decoded = self._proto.decode(response)
+                    if decoded and decoded[1].get("ret", None) is None:
+                        _LOGGER.error("本地登录失败 -> %s", decoded[1].get("err"))
                         raise asyncio.InvalidStateError
                     else:
                         break
@@ -925,24 +883,25 @@ class LifeSmartLocalClient(LifeSmart):
         return True
 
     async def get_all_device_async(self, timeout=5):
-        """获取所有设备数据，带超时控制"""
+        """异步获取所有设备数据，带超时控制。"""
         try:
-            # 等待设备加载完成或超时
             await asyncio.wait_for(self.device_ready.wait(), timeout=timeout)
-            return self.devices.values()
+            return list(self.devices.values())
         except asyncio.TimeoutError as e:
-            _LOGGER.error(e)
+            _LOGGER.error("获取本地设备超时: %s", e)
             return False
 
     async def async_connect(self, callback: None | Callable):
+        """主连接循环，负责登录、获取设备和监听状态更新。"""
         while not self.disconnected:
             try:
                 self.reader, self.writer = await asyncio.wait_for(
-                    asyncio.open_connection(self.host, self.port),
-                    timeout=5,  # 设置5秒超时
+                    asyncio.open_connection(self.host, self.port), timeout=5
                 )
 
-                pkt = self.dev.login(self.username, self.password)
+                # 阶段1: 登录
+                pkt_factory = LifeSmartPacketFactory("", "")
+                pkt = pkt_factory.build_login_packet(self.username, self.password)
                 self.writer.write(pkt)
                 await self.writer.drain()
 
@@ -951,34 +910,41 @@ class LifeSmartLocalClient(LifeSmart):
                 while not self.disconnected:
                     buf = await self.reader.read(4096)
                     if not buf:
-                        self.writer.close()
-                        await self.writer.wait_closed()
+                        if self.writer:
+                            self.writer.close()
+                            await self.writer.wait_closed()
                         if self.disconnected:
                             return None
                         raise asyncio.TimeoutError
                     response += buf
-                    # 使用协议解码
                     if response:
                         try:
-                            response, decoded = self.dev._proto.decode(response)
+                            response, decoded = self._proto.decode(response)
+                            if not decoded:
+                                continue
 
                             if stage == "login":
                                 if decoded[1].get("ret", None) is None:
                                     _LOGGER.error(
-                                        "Login Failed -> ", decoded[1].get("err")
+                                        "本地登录失败 -> %s", decoded[1].get("err")
                                     )
                                     self.disconnected = True
                                 else:
-                                    self.dev.node = decoded[1]["ret"][4]["base"][1]
-                                    self.dev.node_agt = decoded[1]["ret"][4]["agt"][1]
+                                    self.node = decoded[1]["ret"][4]["base"][1]
+                                    self.node_agt = decoded[1]["ret"][4]["agt"][1]
+                                    self._factory = LifeSmartPacketFactory(
+                                        self.node_agt, self.node
+                                    )
                                     stage = "loading"
-                                    self.writer.write(self.dev.getconfig())
+                                    # 阶段2: 获取设备
+                                    pkt = self._factory.build_get_config_packet(
+                                        self.node
+                                    )
+                                    self.writer.write(pkt)
                                     await self.writer.drain()
                             elif stage == "loading":
                                 payload = decoded[1]["ret"][1]
-                                dev_ids = list(payload["eps_i"].values())
                                 self.devices = {}
-                                self.device_ready.set()
                                 for devid, dev in payload["eps"].items():
                                     dev_meta = {
                                         "me": devid,
@@ -987,101 +953,183 @@ class LifeSmartLocalClient(LifeSmart):
                                             if dev["cls"][-3:-1] == "_V"
                                             else dev["cls"]
                                         ),
-                                        "agt": self.dev.node_agt,
+                                        "agt": self.node_agt,
                                         "name": dev["name"],
                                         "data": dev["_chd"]["m"]["_chd"],
                                     }
                                     dev_meta.update(dev)
                                     del dev_meta["_chd"]
                                     self.devices[devid] = dev_meta
-
+                                self.device_ready.set()
                                 stage = "loaded"
                             else:
+                                # 阶段3: 监听更新
                                 if schg := decoded[1].get("_schg", None):
-                                    for schg_key, schg in schg.items():
-                                        if schg_key.startswith(
-                                            self.dev.node_agt + "/ep/"
-                                        ):
-                                            if schg_key.endswith("/s"):
-                                                continue
-                                            schg_key = schg_key[
-                                                len(self.dev.node_agt) + len("/ep/") :
-                                            ].split("/")
-                                            if len(schg_key) > 2 and schg_key[1] == "m":
-                                                if schg_key[0] in self.devices:
-                                                    self.devices[schg_key[0]][
+                                    for schg_key, schg_data in schg.items():
+                                        if schg_key.startswith(f"{self.node_agt}/ep/"):
+                                            parts = schg_key.split("/")
+                                            if len(parts) >= 4:
+                                                dev_id, _, sub_key = (
+                                                    parts[2],
+                                                    parts[3],
+                                                    parts[4],
+                                                )
+                                                if dev_id in self.devices:
+                                                    self.devices[dev_id][
                                                         "data"
-                                                    ].setdefault(schg_key[2], {})
-                                                    self.devices[schg_key[0]]["data"][
-                                                        schg_key[2]
-                                                    ].update(schg["chg"])
-                                                    if (
-                                                        callback is not None
-                                                        and callable(callback)
-                                                    ):
+                                                    ].setdefault(sub_key, {})
+                                                    self.devices[dev_id]["data"][
+                                                        sub_key
+                                                    ].update(schg_data["chg"])
+                                                    if callback and callable(callback):
                                                         msg = {
-                                                            "me": schg_key[0],
-                                                            "idx": schg_key[-1],
-                                                            "agt": self.dev.node_agt,
+                                                            "me": dev_id,
+                                                            "idx": sub_key,
+                                                            "agt": self.node_agt,
                                                             "devtype": self.devices[
-                                                                schg_key[0]
+                                                                dev_id
                                                             ]["devtype"],
                                                         }
                                                         msg.update(
-                                                            self.devices[schg_key[0]][
+                                                            self.devices[dev_id][
                                                                 "data"
-                                                            ][schg_key[2]]
+                                                            ][sub_key]
                                                         )
                                                         callback({"msg": msg})
                                                 else:
-                                                    if (
-                                                        callback is not None
-                                                        and callable(callback)
-                                                    ):
+                                                    if callback and callable(callback):
                                                         callback({"reload": True})
                                                     _LOGGER.warning(
-                                                        "Device invalid, reload"
+                                                        "设备 %s 无效，将重新加载。",
+                                                        dev_id,
                                                     )
-                                            else:
-                                                if callback is not None and callable(
-                                                    callback
-                                                ):
-                                                    callback({"reload": True})
-                                                _LOGGER.warning(
-                                                    "Device property changed, reload"
-                                                )
                                 elif len(decoded[1].get("_sdel", {}).values()) > 0:
-                                    if callback is not None and callable(callback):
+                                    if callback and callable(callback):
                                         callback({"reload": True})
-                                    _LOGGER.warning("Device deleted, reload")
+                                    _LOGGER.warning("设备被删除，将重新加载。")
                         except EOFError:
                             pass
-                self.writer.close()
-                await self.writer.wait_closed()
-            except ConnectionResetError as e:
-                _LOGGER.warning("%s: %s" % (e.__class__.__name__, str(e)))
-                self.writer.close()
-                await asyncio.sleep(1.0)
-            except (asyncio.TimeoutError, ConnectionRefusedError, OSError) as e:
-                _LOGGER.error("Connection failed %s: %s", e.__class__.__name__, str(e))
-                # raise e
-                await asyncio.sleep(1.0)
+                if self.writer:
+                    self.writer.close()
+                    await self.writer.wait_closed()
+            except (
+                ConnectionResetError,
+                asyncio.TimeoutError,
+                ConnectionRefusedError,
+                OSError,
+            ) as e:
+                _LOGGER.warning(
+                    "本地连接失败: %s: %s，将稍后重试。", e.__class__.__name__, str(e)
+                )
+                if self.writer:
+                    self.writer.close()
+                await asyncio.sleep(5.0)
 
-    async def async_disconnect(self, call: Event | ServiceCall):
+    async def async_disconnect(self, call: Event | ServiceCall | None):
+        """断开与本地中枢的连接。"""
         self.disconnected = True
         if self.writer is not None:
             self.writer.close()
             await self.writer.wait_closed()
             self.writer = None
 
-    async def turn_on_light_switch_async(self, idx, agt, me):
-        pkt = self.dev.lightControl(me, idx, True)
-        self.writer.write(pkt)
-        await self.writer.drain()
-        return 0
+    async def _send_packet(self, packet: bytes):
+        """一个集中的方法，用于发送已构建好的指令包。"""
+        if self.writer and not self.writer.is_closing():
+            self.writer.write(packet)
+            await self.writer.drain()
+            return 0
+        _LOGGER.error("本地客户端未连接，无法发送指令。")
+        return -1
 
-    async def turn_off_light_switch_async(self, idx, agt, me):
-        pkt = self.dev.lightControl(me, idx, False)
-        self.writer.write(pkt)
-        await self.writer.drain()
-        return 0
+    # --- 与云端客户端对齐的控制方法 ---
+
+    async def turn_on_light_switch_async(self, idx: str, agt: str, me: str) -> int:
+        """开启一个灯或开关。"""
+        pkt = self._factory.build_switch_packet(me, idx, True)
+        return await self._send_packet(pkt)
+
+    async def turn_off_light_switch_async(self, idx: str, agt: str, me: str) -> int:
+        """关闭一个灯或开关。"""
+        pkt = self._factory.build_switch_packet(me, idx, False)
+        return await self._send_packet(pkt)
+
+    async def open_cover_async(self, agt: str, me: str, device_type: str) -> int:
+        """开启窗帘或车库门。"""
+        idx = (
+            "P3"
+            if device_type in GARAGE_DOOR_TYPES
+            else (
+                "P2"
+                if device_type in DOOYA_TYPES
+                else "OP" if device_type == "SL_SW_WIN" else "P1"
+            )
+        )
+        pkt = self._factory.build_cover_command_packet(me, idx, "open", device_type)
+        return await self._send_packet(pkt)
+
+    async def close_cover_async(self, agt: str, me: str, device_type: str) -> int:
+        """关闭窗帘或车库门。"""
+        idx = (
+            "P3"
+            if device_type in GARAGE_DOOR_TYPES
+            else (
+                "P2"
+                if device_type in DOOYA_TYPES
+                else "CL" if device_type == "SL_SW_WIN" else "P2"
+            )
+        )
+        pkt = self._factory.build_cover_command_packet(me, idx, "close", device_type)
+        return await self._send_packet(pkt)
+
+    async def stop_cover_async(self, agt: str, me: str, device_type: str) -> int:
+        """停止窗帘或车库门。"""
+        idx = (
+            "P3"
+            if device_type in GARAGE_DOOR_TYPES
+            else (
+                "P2"
+                if device_type in DOOYA_TYPES
+                else "ST" if device_type == "SL_SW_WIN" else "P3"
+            )
+        )
+        pkt = self._factory.build_cover_command_packet(me, idx, "stop", device_type)
+        return await self._send_packet(pkt)
+
+    async def set_cover_position_async(
+        self, agt: str, me: str, position: int, device_type: str
+    ) -> int:
+        """设置窗帘或车库门到指定位置。"""
+        idx = "P3" if device_type in GARAGE_DOOR_TYPES else "P2"
+        pkt = self._factory.build_cover_position_packet(me, idx, position)
+        return await self._send_packet(pkt)
+
+    async def async_set_climate_hvac_mode(
+        self,
+        agt: str,
+        me: str,
+        device_type: str,
+        hvac_mode: HVACMode,
+        current_val: int = 0,
+    ) -> int:
+        """设置温控设备的 HVAC 模式。"""
+        pkt = self._factory.build_climate_hvac_mode_packet(
+            me, hvac_mode, current_val, device_type
+        )
+        return await self._send_packet(pkt)
+
+    async def async_set_climate_temperature(
+        self, agt: str, me: str, device_type: str, temp: float
+    ) -> int:
+        """设置温控设备的目标温度。"""
+        pkt = self._factory.build_climate_temperature_packet(me, temp, device_type)
+        return await self._send_packet(pkt)
+
+    async def async_set_climate_fan_mode(
+        self, agt: str, me: str, device_type: str, fan_mode: str, current_val: int = 0
+    ) -> int:
+        """设置温控设备的风扇模式。"""
+        pkt = self._factory.build_climate_fan_mode_packet(
+            me, fan_mode, current_val, device_type
+        )
+        return await self._send_packet(pkt)
