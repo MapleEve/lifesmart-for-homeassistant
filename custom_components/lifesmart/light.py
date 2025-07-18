@@ -258,18 +258,27 @@ class LifeSmartBaseLight(LightEntity):
         self,
         device: LifeSmartDevice,
         raw_device: dict[str, Any],
-        sub_device_key: str,
-        sub_device_data: dict[str, Any],
         client: Any,
         entry_id: str,
+        sub_device_key: str | None = None,
     ) -> None:
-        """初始化灯."""
+        """初始化灯基类."""
         self._device = device
         self._raw_device = raw_device
-        self._sub_key = sub_device_key
-        self._sub_data = sub_device_data
         self._client = client
         self._entry_id = entry_id
+
+        # 处理复合实体和子实体的差异
+        self._sub_key = sub_device_key
+        if sub_device_key:
+            self._sub_data = raw_device.get(DEVICE_DATA_KEY, {}).get(sub_device_key, {})
+        else:
+            self._sub_data = {}  # 复合实体没有单一的 sub_data
+
+        # 统一的属性赋值
+        self._devtype = raw_device[DEVICE_TYPE_KEY]
+        self._agt = raw_device[HUB_ID_KEY]
+        self._me = raw_device[DEVICE_ID_KEY]
 
         self._attr_unique_id = generate_entity_id(
             raw_device[DEVICE_TYPE_KEY],
@@ -300,18 +309,12 @@ class LifeSmartBaseLight(LightEntity):
     def device_info(self) -> DeviceInfo:
         """返回设备信息."""
         return DeviceInfo(
-            identifiers={
-                (DOMAIN, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY])
-            },
+            identifiers={(DOMAIN, self._agt, self._me)},
             name=self._raw_device[DEVICE_NAME_KEY],
             manufacturer=MANUFACTURER,
-            model=self._raw_device[DEVICE_TYPE_KEY],
+            model=self._devtype,
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(
-                (DOMAIN, self._raw_device[HUB_ID_KEY])
-                if self._raw_device[HUB_ID_KEY]
-                else None
-            ),
+            via_device=((DOMAIN, self._agt) if self._agt else None),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -351,11 +354,21 @@ class LifeSmartBaseLight(LightEntity):
             sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
             await self._handle_update(sub_data)
 
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """默认的开灯实现."""
+        await self._client.turn_on_light_switch_async(
+            self._sub_key, self._agt, self._me
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """默认的关灯实现."""
+        await self._client.turn_off_light_switch_async(
+            self._sub_key, self._agt, self._me
+        )
+
 
 class LifeSmartQuantumLight(LifeSmartBaseLight):
     """LifeSmart量子灯 (OD_WE_QUAN)."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -364,10 +377,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
         client: Any,
         entry_id: str,
     ) -> None:
-        """初始化量子灯."""
-        # --- 修正: 调用父类构造函数 ---
         super().__init__(device, raw_device, client, entry_id)
-
         self._attr_unique_id = generate_entity_id(
             self._devtype, self._agt, self._me, "quantum"
         )
@@ -550,11 +560,11 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
         entry_id: str,
         io_key: str,
     ):
-        super().__init__(
-            device, raw_device, io_key, raw_device.get(io_key, {}), client, entry_id
+        super().__init__(device, raw_device, client, entry_id, io_key)
+        self._attr_unique_id = generate_entity_id(
+            self._devtype, self._agt, self._me, io_key
         )
-        self._attr_supported_color_modes = {ColorMode.RGBW}
-        self._attr_effect_list = DYN_EFFECT_LIST
+        self._attr_name = self._generate_light_name()
         self._initialize_state()
 
     @callback
@@ -637,13 +647,9 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         color_io: str,
         effect_io: str,
     ):
-        super().__init__(
-            device, raw_device, color_io, raw_device.get(color_io, {}), client, entry_id
-        )
+        super().__init__(device, raw_device, client, entry_id, color_io)
         self._color_io = color_io
         self._effect_io = effect_io
-        self._attr_supported_color_modes = {ColorMode.RGBW}
-        self._attr_effect_list = DYN_EFFECT_LIST
         self._attr_unique_id = generate_entity_id(
             self._devtype, self._agt, self._me, "rgbw_dual"
         )
@@ -733,11 +739,13 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
         raw_device: dict[str, Any],
         client: Any,
         entry_id: str,
-    ) -> None:
-        """初始化SPOT RGB灯。"""
-        super().__init__(
-            device, raw_device, "RGB", raw_device.get("RGB", {}), client, entry_id
+    ):
+        super().__init__(device, raw_device, client, entry_id, "RGB")
+        self._attr_unique_id = generate_entity_id(
+            self._devtype, self._agt, self._me, "RGB"
         )
+        self._attr_name = self._generate_light_name()
+        self._initialize_state()
 
     @callback
     def _initialize_state(self) -> None:
@@ -807,11 +815,13 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
         raw_device: dict[str, Any],
         client: Any,
         entry_id: str,
-    ) -> None:
-        """初始化SPOT RGBW灯。"""
-        super().__init__(
-            device, raw_device, "RGBW", raw_device.get("RGBW", {}), client, entry_id
+    ):
+        super().__init__(device, raw_device, client, entry_id, "RGBW")
+        self._attr_unique_id = generate_entity_id(
+            self._devtype, self._agt, self._me, "RGBW"
         )
+        self._attr_name = self._generate_light_name()
+        self._initialize_state()
 
     @callback
     def _initialize_state(self) -> None:
@@ -898,8 +908,6 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
 class LifeSmartDimmerLight(LifeSmartBaseLight):
     """LifeSmart调光灯 (复合实体)."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         device: LifeSmartDevice,
@@ -907,16 +915,11 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
         client: Any,
         entry_id: str,
     ) -> None:
-        """初始化调光灯."""
         super().__init__(device, raw_device, client, entry_id)
-
         self._attr_unique_id = generate_entity_id(
-            raw_device[DEVICE_TYPE_KEY],
-            raw_device[HUB_ID_KEY],
-            raw_device[DEVICE_ID_KEY],
-            "dimmer",  # 使用固定后缀代替错误的IO键
+            self._devtype, self._agt, self._me, "dimmer"
         )
-        self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Dimmer Light")
+        self._attr_name = self._raw_device.get(DEVICE_NAME_KEY, "Dimmer Light")
         self._initialize_state()
 
     @callback
@@ -995,6 +998,22 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
 
 class LifeSmartLight(LifeSmartBaseLight):
     """LifeSmart通用灯."""
+
+    def __init__(
+        self,
+        device: LifeSmartDevice,
+        raw_device: dict[str, Any],
+        sub_device_key: str,
+        sub_device_data: dict[str, Any],
+        client: Any,
+        entry_id: str,
+    ):
+        super().__init__(device, raw_device, client, entry_id, sub_device_key)
+        self._attr_unique_id = generate_entity_id(
+            self._devtype, self._agt, self._me, sub_device_key
+        )
+        self._attr_name = self._generate_light_name()
+        self._initialize_state()
 
     @callback
     def _initialize_state(self) -> None:
@@ -1102,6 +1121,22 @@ class LifeSmartLight(LifeSmartBaseLight):
 
 class LifeSmartCoverLight(LifeSmartBaseLight):
     """Represents a light attached to a LifeSmart cover device (e.g., garage door light)."""
+
+    def __init__(
+        self,
+        device: LifeSmartDevice,
+        raw_device: dict[str, Any],
+        sub_device_key: str,
+        sub_device_data: dict[str, Any],
+        client: Any,
+        entry_id: str,
+    ):
+        super().__init__(device, raw_device, client, entry_id, sub_device_key)
+        self._attr_unique_id = generate_entity_id(
+            self._devtype, self._agt, self._me, sub_device_key
+        )
+        self._attr_name = f"{self._raw_device.get(DEVICE_NAME_KEY)} Light"
+        self._initialize_state()
 
     @callback
     def _initialize_state(self) -> None:
