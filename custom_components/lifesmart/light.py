@@ -1,6 +1,6 @@
 """Support for LifeSmart Gateway Light by @MapleEve
 
-未实现的灯光：
+未实现的灯光 PR Welcome：
 - 插座面板自身的 RGB/RGBW
 - 窗帘电机自身的动态灯光 RGB灯光
 """
