@@ -1,31 +1,104 @@
-send_keys:
-  description: 红外遥控设备.
+send_ir_keys:
+  name: "发送红外按键"
+  description: "发送红外按键命令到指定的遥控设备。(Send IR keys to a remote device.)"
   fields:
+    agt:
+      description: "智慧中心 (网关) 的 agt 标识符。"
+      example: "_xXXXXXXXXXXXXXXXXX"
     me:
-      description: 设备me值
-      example: '0010'
-    agt:
-      description: 智慧中心agt
-      example: '_xXXXXXXXXXXXXXXXXX'
+      description: "红外发射器所属设备的 me 标识符。"
+      example: "sl_spot_xxxxxxxx"
     ai:
-      description: 遥控器AI
-      example: 'AI_IR_xxxx_xxxxxxxx'
+      description: "虚拟遥控器的 ai 标识符。"
+      example: "AI_IR_xxxx_xxxxxxxx"
     category:
-      description: 遥控设备类别
-      example: 'custom'
+      description: "遥控设备的类别，例如 'tv', 'ac', 'custom'。"
+      example: "custom"
     brand:
-      description: 遥控器品牌
-      example: 'custom'
+      description: "遥控器的品牌，例如 'custom'。"
+      example: "custom"
     keys:
-      description: 遥控器命令key
-      example: '["key"]'
+      description: "要发送的命令按键，JSON数组格式。例如 '[\"power\"]'。"
+      example: '["power"]'
 
-scene_set:
-  description: 场景设置.
+send_ackeys:
+  name: "发送空调按键"
+  description: "向空调设备发送红外按键指令。"
   fields:
     agt:
-      description: 智慧中心agt
+      name: "中枢 ID"
+      description: "中枢的 'agt' 标识符。"
+      example: "_xXXXXXXXXXXXXXXXXX"
+      required: true
+    me:
+      name: "设备 ID"
+      description: "红外发射器所属设备的 'me' 标识符。"
+      example: "sl_spot_xxxxxxxx"
+      required: true
+    ai:
+      name: "遥控器 ID"
+      description: "虚拟遥控器的 'ai' 标识符。"
+      example: "AI_AC_xxxx_xxxxxxxx"
+      required: true
+    category:
+      name: "类别"
+      description: "目标设备的类别，必须是 'ac'。"
+      example: "ac"
+      required: true
+    brand:
+      name: "品牌"
+      description: "目标空调的品牌。"
+      example: "Gree"
+      required: true
+    keys:
+      name: "按键"
+      description: "要发送的命令按键。"
+      example: "power"
+      required: true
+    power:
+      name: "电源"
+      description: "电源状态 (1代表开, 0代表关)。"
+      example: 1
+      required: true
+    mode:
+      name: "模式"
+      description: "运行模式 (例如 cool, heat)。"
+      example: "cool"
+      required: true
+    temp:
+      name: "温度"
+      description: "设置温度。"
+      example: 26
+      required: true
+    wind:
+      name: "风速"
+      description: "风扇速度。"
+      example: "auto"
+      required: true
+    swing:
+      name: "扫风模式"
+      description: "摆风/叶片模式。"
+      example: "auto"
+      required: true
+
+trigger_scene:
+  name: "触发场景"
+  description: "激活一个 LifeSmart 场景。(Activates a LifeSmart scene.)"
+  fields:
+    agt:
+      description: "定义了该场景的中枢的 'agt' 标识符。"
       example: "_xXXXXXXXXXXXXXXXXX"
     id:
-      description: 消息id号
+      description: "要触发的场景的标识符。"
       example: "AIxxxxxxxxxxxx"
+
+press_switch:
+  name: "点动开关"
+  description: "对一个开关实体执行点动操作（按下后在指定时间后自动关闭）。(Performs a momentary press on a switch entity.)"
+  fields:
+    entity_id:
+      description: "要执行点动操作的开关实体的 entity_id。"
+      example: "switch.my_button_p1"
+    duration:
+      description: "点动持续时间（毫秒）。默认为1000毫秒（1秒）。"
+      example: 500

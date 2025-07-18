@@ -33,12 +33,16 @@ from .const import (
     DOMAIN,
     LIFESMART_REGION_OPTIONS,
 )
+from .diagnostics import get_error_advice
+from .exceptions import LifeSmartAuthError
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect."""
+    # 注意：这个函数现在只在成功时返回值，失败时直接抛出异常
+    # 错误处理逻辑移至调用方 (各个 step 中)
     try:
         client = LifeSmartClient(
             hass,
@@ -52,12 +56,22 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
 
         if data.get(CONF_LIFESMART_USERPASSWORD):
             _LOGGER.info("Attempting login with user password...")
-            login_success = await client.login_async()
-            if not login_success:
+            login_response = await client.login_async()
+            if not login_response:
                 _LOGGER.error("Authentication failed with provided password.")
                 raise ConfigEntryAuthFailed("invalid_auth")
             _LOGGER.info("Login successful, obtained user token.")
-            data[CONF_LIFESMART_USERTOKEN] = client._usertoken
+            data[CONF_LIFESMART_USERTOKEN] = login_response.get(
+                "usertoken", data.get(CONF_LIFESMART_USERTOKEN, "")
+            )
+            data[CONF_REGION] = login_response.get(
+                "region", data.get(CONF_REGION, "cn2")
+            )
+            # 同时更新 userid，以防 API 返回的是规范化的 userid
+            if "userid" in login_response:
+                data[CONF_LIFESMART_USERID] = login_response.get(
+                    "userid", data.get(CONF_LIFESMART_USERID, "")
+                )
 
         devices = await client.get_all_device_async()
 
@@ -67,17 +81,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
         if len(devices) == 0:
             _LOGGER.warning("No devices found for this user.")
 
-        if data.get(CONF_LIFESMART_AUTH_METHOD) == "password":
-            data.pop(CONF_LIFESMART_USERTOKEN, None)
-        else:
-            data.pop(CONF_LIFESMART_USERPASSWORD, None)
-
         return {
             "title": f"LifeSmart ({data.get(CONF_LIFESMART_USERID)})",
             "data": data,
         }
-    except ConfigEntryAuthFailed:
-        raise
+    except LifeSmartAuthError as e:
+        _LOGGER.error("认证失败: %s", e)
+        raise ConfigEntryAuthFailed(str(e)) from e
     except Exception as e:
         _LOGGER.error("Unknown error during validation: %s", str(e), exc_info=True)
         raise ConfigEntryNotReady("Unknown error during validation") from e
@@ -112,6 +122,30 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         super().__init__()
         self.config_data = {}
+
+    # 统一的流程结束处理函数
+    async def _async_finish_flow(self, validation_result: dict[str, Any]) -> FlowResult:
+        """统一处理配置流程的最后一步，区分首次设置和重新认证。"""
+        # 检查是否处于重新认证流程
+        if self._reauth_entry:
+            _LOGGER.info("重新认证成功，正在更新配置条目...")
+            self.hass.config_entries.async_update_entry(
+                self._reauth_entry, data=validation_result["data"]
+            )
+            # 更新后需要重新加载集成以使新凭据生效
+            await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+            # 中止流程，并向用户显示成功消息
+            return self.async_abort(reason="reauth_successful")
+
+        # 检查此用户是否已配置
+        await self.async_set_unique_id(validation_result["data"][CONF_LIFESMART_USERID])
+        self._abort_if_unique_id_configured()
+
+        # 首次设置，创建新的配置条目
+        _LOGGER.info("首次设置成功，正在创建新的配置条目...")
+        return self.async_create_entry(
+            title=validation_result["title"], data=validation_result["data"]
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -233,12 +267,19 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.config_data.update(user_input)
             try:
                 validation_result = await validate_input(self.hass, self.config_data)
-                return self.async_create_entry(
-                    title=validation_result["title"], data=validation_result["data"]
-                )
-            except ConfigEntryAuthFailed as e:
-                errors["base"] = str(e) or "invalid_auth"
-            except Exception:
+                return await self._async_finish_flow(validation_result)
+            except LifeSmartAuthError as e:
+                _LOGGER.error("配置流程认证失败: %s", e)
+                # 从异常中获取错误码
+                if e.code:
+                    _, advice, _ = get_error_advice(e.code)
+                    errors["base"] = advice
+                else:
+                    errors["base"] = "invalid_auth"
+            except ConfigEntryNotReady:
+                errors["base"] = "cannot_connect"
+            except Exception as e:
+                _LOGGER.error("配置流程发生未知错误: %s", e, exc_info=True)
                 errors["base"] = "unknown"
 
         return self.async_show_form(
@@ -263,12 +304,18 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.config_data.update(user_input)
             try:
                 validation_result = await validate_input(self.hass, self.config_data)
-                return self.async_create_entry(
-                    title=validation_result["title"], data=validation_result["data"]
-                )
-            except ConfigEntryAuthFailed as e:
-                errors["base"] = str(e) or "invalid_auth"
-            except Exception:
+                return await self._async_finish_flow(validation_result)
+            except LifeSmartAuthError as e:
+                _LOGGER.error("配置流程认证失败: %s", e)
+                if e.code:
+                    _, advice, _ = get_error_advice(e.code)
+                    errors["base"] = advice
+                else:
+                    errors["base"] = "invalid_auth"
+            except ConfigEntryNotReady:
+                errors["base"] = "cannot_connect"
+            except Exception as e:
+                _LOGGER.error("配置流程发生未知错误: %s", e, exc_info=True)
                 errors["base"] = "unknown"
 
         return self.async_show_form(
@@ -288,6 +335,9 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+        # 将现有数据预填充到流程中
+        self.config_data = self._reauth_entry.data.copy()
+        # 直接进入云端配置的第一步
         return await self.async_step_cloud()
 
     @staticmethod
@@ -314,7 +364,6 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_menu(
             step_id="init",
             menu_options=["main_params", "auth_params"],
-            description_placeholders={"name": self.config_entry.title},
         )
 
     async def async_step_main_params(

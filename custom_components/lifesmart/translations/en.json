@@ -41,12 +41,13 @@
         "title": "Cloud Setup (Step 2 of 2)",
         "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
         "data": {
-          "userpassword": "User Password"
+          "userpassword": "Mobile App User Password"
         }
       }
     },
     "abort": {
       "already_in_progress": "Configuration is already in progress.",
+      "reauth_successful": "Re-authentication successful. Please reload the integration.",
       "already_configured": "This device is already configured."
     },
     "error": {
@@ -60,7 +61,7 @@
     "step": {
       "init": {
         "title": "LifeSmart Integration Options",
-        "description": "Select which settings you want to edit for {name}.",
+        "description": "Select which settings you want to edit for Hub.",
         "menu_options": {
           "main_params": "General Settings",
           "auth_params": "Authentication Settings"
@@ -82,17 +83,31 @@
         "data": {
           "auth_method": "Authentication Method"
         }
+      },
+      "auth_token": {
+        "title": "Hub Setup",
+        "description": "Please enter your User Token.",
+        "data": {
+          "usertoken": "User Token"
+        }
+      },
+      "auth_password": {
+        "title": "Hub Setup",
+        "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
+        "data": {
+          "userpassword": "Mobile App User Password"
+        }
       }
     }
   },
   "services": {
-    "send_keys": {
-      "name": "Send Keys",
+    "send_ir_keys": {
+      "name": "Send IR Keys",
       "description": "Sends IR keys to a remote device.",
       "fields": {
         "me": {
-          "name": "Sub-device ID",
-          "description": "The 'me' identifier of the sub-device (e.g., the IR blaster)."
+          "name": "Device ID",
+          "description": "The 'me' identifier of the device containing the IR blaster."
         },
         "agt": {
           "name": "Hub ID",
@@ -121,8 +136,8 @@
       "description": "Sends IR keys to an A/C device.",
       "fields": {
         "me": {
-          "name": "Sub-device ID",
-          "description": "The 'me' identifier of the sub-device (e.g., the IR blaster)."
+          "name": "Device ID",
+          "description": "The 'me' identifier of the device containing the IR blaster."
         },
         "agt": {
           "name": "Hub ID",
@@ -166,7 +181,7 @@
         }
       }
     },
-    "scene_set": {
+    "trigger_scene": {
       "name": "Trigger Scene",
       "description": "Activates a LifeSmart scene.",
       "fields": {
@@ -177,6 +192,20 @@
         "id": {
           "name": "Scene ID",
           "description": "The identifier of the scene to trigger."
+        }
+      }
+    },
+    "press_switch": {
+      "name": "Press Switch",
+      "description": "Performs a momentary press on a switch entity (turns on, then off after a duration).",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "The entity_id of the switch entity to press."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Duration of the press in milliseconds. Defaults to 1000ms (1 second)."
         }
       }
     }
@@ -196,14 +225,14 @@
     },
     "region": {
       "options": {
-        "cn0": "China 1 (cn0)",
+        "cn0": "China VIP (cn0)",
         "cn1": "China Backup (cn1)",
-        "cn2": "China 2 (cn2)",
+        "cn2": "China Main (cn2)",
         "us": "North America (US/NA)",
         "eur": "Europe (EUROPE)",
         "jp": "Japan (JAPAN)",
         "apz": "Asia Pacific (APAC)",
-        "AUTO": "Global (Auto)"
+        "AUTO": "Global Auto"
       }
     }
   }
