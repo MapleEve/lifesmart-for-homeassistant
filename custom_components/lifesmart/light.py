@@ -1,4 +1,7 @@
-"""Support for LifeSmart Gateway Light by @MapleEve"""
+"""Support for LifeSmart Gateway Light by @MapleEve
+
+未实现的灯光：插座面板、窗帘电机的动态灯光 RGB灯光
+"""
 
 import binascii
 import logging
@@ -49,9 +52,9 @@ from .const import (
     BRIGHTNESS_LIGHT_TYPES,
     ALL_LIGHT_TYPES,
     GARAGE_DOOR_TYPES,
-    # 导入SPOT动态效果列表
-    SPOT_EFFECT_LIST,
-    SPOT_EFFECT_MAP,
+    # 导入DYN动态效果列表
+    DYN_EFFECT_MAP,
+    DYN_EFFECT_LIST,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -679,7 +682,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
         self._attr_is_on = self._sub_data.get("type", 0) % 2 == 1
         self._attr_color_mode = ColorMode.RGB
         self._attr_supported_color_modes = {ColorMode.RGB}
-        self._attr_effect_list = SPOT_EFFECT_LIST
+        self._attr_effect_list = DYN_EFFECT_LIST
         self._attr_brightness = 255 if self._attr_is_on else 0
 
         val = self._sub_data.get("val", 0)
@@ -687,7 +690,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
         white_byte = (val >> 24) & 0xFF
         if white_byte > 0:
             self._attr_effect = next(
-                (k for k, v in SPOT_EFFECT_MAP.items() if v == val), None
+                (k for k, v in DYN_EFFECT_MAP.items() if v == val), None
             )
         else:
             self._attr_effect = None
@@ -708,8 +711,8 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
 
         if ATTR_EFFECT in kwargs:
             effect_name = kwargs[ATTR_EFFECT]
-            if effect_name in SPOT_EFFECT_MAP:
-                cmd_val = SPOT_EFFECT_MAP[effect_name]
+            if effect_name in DYN_EFFECT_MAP:
+                cmd_val = DYN_EFFECT_MAP[effect_name]
         elif ATTR_RGB_COLOR in kwargs:
             r, g, b = kwargs[ATTR_RGB_COLOR]
             cmd_val = (r << 16) | (g << 8) | b
@@ -756,13 +759,13 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
         self._attr_is_on = rgbw_data.get("type", 0) % 2 == 1
         self._attr_color_mode = ColorMode.RGBW
         self._attr_supported_color_modes = {ColorMode.RGBW}
-        self._attr_effect_list = SPOT_EFFECT_LIST
+        self._attr_effect_list = DYN_EFFECT_LIST
         self._attr_brightness = 255 if self._attr_is_on else 0
 
         if dyn_data.get("type", 0) % 2 == 1:
             dyn_val = dyn_data.get("val", 0)
             self._attr_effect = next(
-                (k for k, v in SPOT_EFFECT_MAP.items() if v == dyn_val), None
+                (k for k, v in DYN_EFFECT_MAP.items() if v == dyn_val), None
             )
         else:
             self._attr_effect = None
@@ -789,8 +792,8 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
         io_list = []
         if ATTR_EFFECT in kwargs:
             effect_name = kwargs[ATTR_EFFECT]
-            if effect_name in SPOT_EFFECT_MAP:
-                effect_val = SPOT_EFFECT_MAP[effect_name]
+            if effect_name in DYN_EFFECT_MAP:
+                effect_val = DYN_EFFECT_MAP[effect_name]
                 io_list = [
                     {"idx": "RGBW", "type": CMD_TYPE_ON, "val": 1},
                     {"idx": "DYN", "type": CMD_TYPE_SET_RAW, "val": effect_val},
