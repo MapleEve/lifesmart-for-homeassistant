@@ -622,7 +622,7 @@ class LifeSmartStateManager:
                     _LOGGER.info("正在尝试建立 WebSocket 连接...")
                     self._ws = await self._create_websocket()
                     _LOGGER.info("WebSocket 底层连接已建立，正在进行认证...")
-                    await self._perform_v2_auth()
+                    await self._perform_auth()
                     _LOGGER.info("认证成功，开始监听消息...")
                     await self._message_consumer()
 
@@ -663,8 +663,8 @@ class LifeSmartStateManager:
             _LOGGER.error("SSL 证书验证失败，请检查服务器区域设置是否正确。错误: %s", e)
             raise
 
-    async def _perform_v2_auth(self):
-        """执行 V2 版的 WebSocket 认证流程。"""
+    async def _perform_auth(self):
+        """执行 WebSocket 认证流程。"""
         client = self.hass.data[DOMAIN][self.config_entry.entry_id]["client"]
         auth_payload = client.generate_wss_auth()
         _LOGGER.debug("发送 WebSocket 认证载荷: %s", auth_payload)
