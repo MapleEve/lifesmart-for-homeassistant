@@ -805,7 +805,7 @@ class LifeSmartStateManager:
 
                         self.set_token_expiry(new_token_data["expiredtime"])
 
-                        # 刷新成功后，等待下一次检查周期（例如12小时）
+                        # 刷新成功后，等待下一次检查周期 12 小时
                         await asyncio.sleep(12 * 3600)
 
                     except LifeSmartAuthError as e:
