@@ -61,6 +61,7 @@
     },
     "abort": {
       "already_in_progress": "当前配置流程已经在进行中",
+      "reauth_successful": "重新认证成功，请重新加载集成",
       "already_configured": "此设备已经配置过了"
     },
     "error": {

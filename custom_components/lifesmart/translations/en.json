@@ -61,6 +61,7 @@
     },
     "abort": {
       "already_in_progress": "Configuration is already in progress.",
+      "reauth_successful": "Re-authentication successful. Please reload the integration.",
       "already_configured": "This device is already configured."
     },
     "error": {
