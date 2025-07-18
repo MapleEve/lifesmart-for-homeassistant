@@ -588,8 +588,12 @@ class LifeSmartStateManager:
         ws_url (str): WebSocket 连接地址。
         refresh_callback (callable): 全量刷新回调函数。
         _ws: 当前的 aiohttp WebSocket 连接实例。
-        _task: 运行连接循环的 asyncio 任务。
+        _ws_task: 运行连接循环的 asyncio 任务。
+        _token_task: 运行令牌刷新管理的 asyncio 任务。
         _should_stop (bool): 标记是否应停止连接循环。
+        _last_disconnect_time (Optional[datetime]): 上次断开连接的时间。
+        _token_expiry_time (int): 令牌的过期时间戳。
+        _token_refresh_event (asyncio.Event): 用于令牌刷新任务的事件。
     """
 
     def __init__(
