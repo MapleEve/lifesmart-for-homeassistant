@@ -1054,20 +1054,6 @@ class LifeSmartLight(LifeSmartBaseLight):
                 rgba = struct.unpack("BBBB", rgbhex)
                 rgb = rgba[1:]
                 self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
-        elif self._sub_key in ["RGB_0"]:
-            if value == 0:
-                self._attr_rgb_color = None
-            else:
-                rgbhexstr = f"{value:x}".zfill(8)
-                rgbhex = bytes.fromhex(rgbhexstr)
-                rgba = struct.unpack("BBBB", rgbhex)
-                self._attr_rgb_color = rgba[1:]
-        elif self._sub_key in ["RGBW", "RGB"]:
-            rgbhexstr = f"{value:x}".zfill(8)
-            rgbhex = bytes.fromhex(rgbhexstr)
-            rgbhex = struct.unpack("BBBB", rgbhex)
-            # 转换从wrgb到rgbw元组
-            self._attr_rgbw_color = rgbhex[1:] + (rgbhex[0],)
 
     async def _handle_update(self, new_data: dict) -> None:
         """处理通用灯状态更新."""
