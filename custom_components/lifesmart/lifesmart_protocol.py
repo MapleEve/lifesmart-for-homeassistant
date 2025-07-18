@@ -709,6 +709,29 @@ class LifeSmartPacketFactory:
             return self._build_packet(args)
         return b""
 
+    def build_epset_packet(
+        self, devid: str, idx: str, command_type: str, val: Any
+    ) -> bytes:
+        """构建一个标准的单IO口控制指令包 (EpSet)。"""
+        args = {
+            "val": val,
+            "valtag": "m",
+            "devid": devid,
+            "key": idx,
+            "type": command_type,
+        }
+        return self._build_packet(args)
+
+    def build_multi_epset_packet(self, devid: str, io_list: list[dict]) -> bytes:
+        """构建一个多IO口同时控制的指令包 (EpSet)。"""
+        # 本地协议通过将IO口列表作为val字段的值来实现多点控制
+        args = {
+            "val": io_list,
+            "valtag": "m",
+            "devid": devid,
+        }
+        return self._build_packet(args)
+
     def build_change_icon_packet(self, devid: str, icon: str) -> bytes:
         """构建修改设备图标的指令包。"""
         args = {"icon": icon}
@@ -1052,6 +1075,22 @@ class LifeSmartLocalClient:
     async def turn_off_light_switch_async(self, idx: str, agt: str, me: str) -> int:
         """关闭一个灯或开关。"""
         pkt = self._factory.build_switch_packet(me, idx, False)
+        return await self._send_packet(pkt)
+
+    async def send_epset_async(
+        self, agt: str, me: str, idx: str, command_type: str, val: Any
+    ) -> int:
+        """向本地设备端点发送通用命令。"""
+        # agt 在本地模式下未使用，但为了保持签名一致而保留
+        pkt = self._factory.build_epset_packet(me, idx, command_type, val)
+        return await self._send_packet(pkt)
+
+    async def async_set_multi_ep_async(
+        self, agt: str, me: str, io_list: list[dict]
+    ) -> int:
+        """向本地设备端点同时发送多个IO口的命令。"""
+        # agt 在本地模式下未使用，但为了保持签名一致而保留
+        pkt = self._factory.build_multi_epset_packet(me, io_list)
         return await self._send_packet(pkt)
 
     async def open_cover_async(self, agt: str, me: str, device_type: str) -> int:
