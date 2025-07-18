@@ -101,7 +101,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # 1. 创建客户端并获取设备，处理连接和认证错误
     try:
-        client, devices = await _async_create_client_and_get_devices(hass, config_entry)
+        client, devices, auth_response = await _async_create_client_and_get_devices(
+            hass, config_entry
+        )
     except LifeSmartAuthError:
         # 认证失败是不可恢复的，直接设置失败且不重试。
         return False
@@ -129,15 +131,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # 5. 注册集成提供的服务（如场景触发、红外控制等）
     _async_register_services(hass, client)
 
-    # 6. 设置后台任务，如 WebSocket 连接和定时数据刷新
-    _async_setup_background_tasks(hass, config_entry, client)
+    # 6. 设置后台任务，如 WebSocket 连接和定时数据刷新、Usertoken 的定时更新
+    _async_setup_background_tasks(hass, config_entry, client, auth_response)
 
     return True
 
 
 async def _async_create_client_and_get_devices(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> tuple[Any, list]:
+) -> tuple[Any, list, dict | None]:
     """创建 LifeSmart 客户端并获取初始设备列表。
 
     根据配置类型（云端或本地）初始化对应的客户端，并尝试连接和获取设备数据。
@@ -154,34 +156,13 @@ async def _async_create_client_and_get_devices(
         LifeSmartAuthError: 当认证凭据无效时引发。
         ConfigEntryNotReady: 当发生网络错误或其他可重试的连接问题时引发。
     """
-    config_data = config_entry.data.copy()  # 创建副本以安全地修改
+    config_data = config_entry.data.copy()  # 创建副本
     conn_type = config_data.get(CONF_TYPE, CONN_CLASS_CLOUD_PUSH)
+    auth_response = None
 
     if conn_type == CONN_CLASS_CLOUD_PUSH:
         # --- 云端模式 ---
         try:
-            # 如果使用密码认证，先登录获取最新的 usertoken
-            if config_data.get(CONF_LIFESMART_AUTH_METHOD) == "password":
-                _LOGGER.info("检测到密码认证方式，正在登录以获取新的用户令牌。")
-                temp_client = LifeSmartClient(
-                    hass,
-                    config_data.get(CONF_REGION),
-                    config_data.get(CONF_LIFESMART_APPKEY),
-                    config_data.get(CONF_LIFESMART_APPTOKEN),
-                    None,  # 临时登录，不使用旧令牌
-                    config_data.get(CONF_LIFESMART_USERID),
-                    config_data.get(CONF_LIFESMART_USERPASSWORD),
-                )
-                if await temp_client.login_async():
-                    _LOGGER.info("登录成功，正在更新配置条目中的用户令牌。")
-                    new_token = temp_client._usertoken
-                    config_data[CONF_LIFESMART_USERTOKEN] = new_token
-                    # 更新配置条目，以便持久化新的令牌
-                    hass.config_entries.async_update_entry(
-                        config_entry, data=config_data
-                    )
-
-            # 使用最终的凭据创建客户端
             client = LifeSmartClient(
                 hass,
                 config_data.get(CONF_REGION),
@@ -189,9 +170,41 @@ async def _async_create_client_and_get_devices(
                 config_data.get(CONF_LIFESMART_APPTOKEN),
                 config_data.get(CONF_LIFESMART_USERTOKEN),
                 config_data.get(CONF_LIFESMART_USERID),
+                config_data.get(CONF_LIFESMART_USERPASSWORD),
             )
+
+            # 1. 如果使用密码，先登录获取初始令牌
+            if config_data.get(CONF_LIFESMART_AUTH_METHOD) == "password":
+                _LOGGER.info("通过密码登录获取初始令牌...")
+                auth_response = await client.login_async()
+
+            # 2. 无论如何，都尝试刷新一次令牌
+            # 这会验证现有令牌，或使用刚登录获取的令牌来获取最新的过期时间
+            _LOGGER.info("正在刷新令牌以确保状态同步...")
+            try:
+                auth_response = await client.async_refresh_token()
+                # 刷新成功，持久化最新的令牌
+                if config_data.get("usertoken") != auth_response.get("usertoken"):
+                    config_data["usertoken"] = auth_response["usertoken"]
+                    hass.config_entries.async_update_entry(
+                        config_entry, data=config_data
+                    )
+            except LifeSmartAuthError as e:
+                # 如果刷新失败，且我们不是通过密码登录的，说明旧令牌已失效，需要重新认证
+                if config_data.get(CONF_LIFESMART_AUTH_METHOD) != "password":
+                    _LOGGER.error("令牌已失效，需要重新认证: %s", e)
+                    # 在HA中触发重新认证流程
+                    config_entry.async_start_reauth(hass)
+                    raise LifeSmartAuthError("令牌已失效，请重新认证。", e.code) from e
+                else:
+                    # 如果是密码登录后刷新失败，这是一个更严重的问题
+                    raise LifeSmartAuthError(
+                        "获取初始令牌后立即刷新失败，请检查API。"
+                    ) from e
+
+            # 3. 获取设备列表
             devices = await client.get_all_device_async()
-            return client, devices
+            return client, devices, auth_response
 
         except LifeSmartAuthError as e:
             _LOGGER.critical("认证失败，请检查您的配置。错误: %s", e)

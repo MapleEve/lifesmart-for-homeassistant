@@ -186,7 +186,7 @@ class LifeSmartClient:
         if response.get("code") == 0 and "usertoken" in response:
             self._usertoken = response["usertoken"]
             _LOGGER.info("成功登录并获取用户令牌。")
-            return True
+            return response
 
         raise LifeSmartAuthError(
             f"认证失败 (步骤 2): {response.get('message', '无消息')}",
@@ -195,6 +195,8 @@ class LifeSmartClient:
 
     async def async_refresh_token(self) -> dict[str, Any]:
         """刷新用户令牌 (usertoken) 以延长其有效期。
+
+        此方法的实现严格遵循 'auth.refreshtoken' 的特殊API格式。
 
         Returns:
             一个包含新 'usertoken' 和 'expiredtime' 的字典。
@@ -205,15 +207,7 @@ class LifeSmartClient:
         url = f"{self.get_api_url()}/auth.refreshtoken"
         tick = int(time.time())
 
-        # 1. 准备请求体参数
-        params = {
-            "id": tick,  # 使用时间戳作为唯一ID
-            "appkey": self._appkey,
-            "time": tick,
-            "userid": self._userid,
-        }
-
-        # 2. 准备签名字符串 (根据文档的特殊排序规则)
+        # 1. 准备签名字符串 (根据文档的特殊排序规则)
         # 将需要排序的字段放入字典
         sortable_params = {
             "appkey": self._appkey,
@@ -228,12 +222,18 @@ class LifeSmartClient:
             + f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
         )
 
-        # 3. 构造最终请求体
+        # 2. 生成签名
+        signature = self.get_signature(sdata)
+
+        # 3. 构造最终的、扁平化的请求体
+        # 注意：此API的结构与其他API不同，sign在顶层
         send_values = {
-            "id": params["id"],
-            "system": self.generate_system_request_body(tick, sdata),
+            "id": tick,
+            "appkey": self._appkey,
+            "time": tick,
+            "userid": self._userid,
+            "sign": signature,
         }
-        send_values.update(params)  # 添加其他参数到顶层
 
         header = self.generate_header()
         send_data = json.dumps(send_values)
