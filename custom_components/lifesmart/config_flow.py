@@ -33,12 +33,16 @@ from .const import (
     DOMAIN,
     LIFESMART_REGION_OPTIONS,
 )
+from .diagnostics import get_error_advice
+from .exceptions import LifeSmartAuthError
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     """Validate the user input allows us to connect."""
+    # 注意：这个函数现在只在成功时返回值，失败时直接抛出异常
+    # 错误处理逻辑移至调用方 (各个 step 中)
     try:
         client = LifeSmartClient(
             hass,
@@ -236,9 +240,18 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=validation_result["title"], data=validation_result["data"]
                 )
-            except ConfigEntryAuthFailed as e:
-                errors["base"] = str(e) or "invalid_auth"
-            except Exception:
+            except LifeSmartAuthError as e:
+                _LOGGER.error("配置流程认证失败: %s", e)
+                # 从异常中获取错误码
+                if e.code:
+                    _, advice, _ = get_error_advice(e.code)
+                    errors["base"] = advice
+                else:
+                    errors["base"] = "invalid_auth"
+            except ConfigEntryNotReady:
+                errors["base"] = "cannot_connect"
+            except Exception as e:
+                _LOGGER.error("配置流程发生未知错误: %s", e, exc_info=True)
                 errors["base"] = "unknown"
 
         return self.async_show_form(
@@ -266,9 +279,17 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=validation_result["title"], data=validation_result["data"]
                 )
-            except ConfigEntryAuthFailed as e:
-                errors["base"] = str(e) or "invalid_auth"
-            except Exception:
+            except LifeSmartAuthError as e:
+                _LOGGER.error("配置流程认证失败: %s", e)
+                if e.code:
+                    _, advice, _ = get_error_advice(e.code)
+                    errors["base"] = advice
+                else:
+                    errors["base"] = "invalid_auth"
+            except ConfigEntryNotReady:
+                errors["base"] = "cannot_connect"
+            except Exception as e:
+                _LOGGER.error("配置流程发生未知错误: %s", e, exc_info=True)
                 errors["base"] = "unknown"
 
         return self.async_show_form(

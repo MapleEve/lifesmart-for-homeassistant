@@ -39,6 +39,7 @@ from .const import (
     REVERSE_LIFESMART_CP_AIR_FAN_MAP,
     REVERSE_LIFESMART_CP_AIR_MODE_MAP,
 )
+from .diagnostics import get_error_advice
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,11 +142,25 @@ class LifeSmartClient:
         _LOGGER.debug("通用API 响应 <- %s: %s", method, response)
 
         if response.get("code") != 0:
-            error_msg = f"API 调用 '{method}' 失败，错误码 {response.get('code')}: {response.get('message')}"
-            _LOGGER.error(error_msg)
-            if response.get("code") in [10004, 10005, 10006]:
-                raise LifeSmartAuthError(error_msg, response.get("code"))
-            raise LifeSmartAPIError(error_msg, response.get("code"))
+            error_code = response.get("code")
+            raw_message = response.get("message")
+
+            desc, advice, category = get_error_advice(error_code)
+
+            # 构造更详细的错误日志
+            log_message = (
+                f"API 调用 '{method}' 失败! "
+                f"[错误码: {error_code}] "
+                f"[分类: {category or '未知'}] "
+                f"[描述: {desc}] "
+                f"[原始消息: {raw_message}]"
+            )
+            _LOGGER.error(log_message)
+
+            # 抛出异常，供上层处理
+            if error_code in [10004, 10005, 10006]:
+                raise LifeSmartAuthError(advice, error_code)
+            raise LifeSmartAPIError(advice, error_code)
 
         return response.get("message", response)
 
