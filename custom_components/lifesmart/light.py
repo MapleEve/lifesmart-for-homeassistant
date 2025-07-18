@@ -55,6 +55,8 @@ from .const import (
     # 导入DYN动态效果列表
     DYN_EFFECT_MAP,
     DYN_EFFECT_LIST,
+    ALL_EFFECT_LIST,
+    ALL_EFFECT_MAP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -365,70 +367,103 @@ class LifeSmartBaseLight(LightEntity):
 
 
 class LifeSmartQuantumLight(LifeSmartBaseLight):
-    """LifeSmart量子灯."""
+    """LifeSmart量子灯 (OD_WE_QUAN)."""
 
     @callback
     def _initialize_state(self) -> None:
         """初始化量子灯状态."""
-        # 量子灯通过P2口控制颜色，没有明确的开关状态
-        self._attr_is_on = True  # 默认开启
+        # 获取P1(亮度/开关)和P2(颜色)的数据
+        p1_data = self._raw_device.get(DEVICE_DATA_KEY, {}).get("P1", {})
+        p2_data = self._raw_device.get(DEVICE_DATA_KEY, {}).get("P2", {})
+
+        # P1 控制开关状态和亮度
+        self._attr_is_on = p1_data.get("type", 0) % 2 == 1
+        self._attr_brightness = p1_data.get("val", 0)
+
+        # P2 控制颜色和动态效果
         self._attr_color_mode = ColorMode.RGBW
         self._attr_supported_color_modes = {ColorMode.RGBW}
+        self._attr_effect_list = ALL_EFFECT_LIST  # 支持所有动态效果
 
-        # 解析颜色值
-        color_val = self._sub_data.get("val", 0)
-        self._attr_rgbw_color = self._parse_quantum_color(color_val)
+        color_val = p2_data.get("val", 0)
+        white_byte = (color_val >> 24) & 0xFF
 
-    def _parse_quantum_color(self, value: int) -> tuple:
-        """解析量子灯颜色值."""
-        return _parse_color_value(value, has_white=True)
+        if white_byte > 0:
+            # 动态效果模式
+            self._attr_effect = next(
+                (k for k, v in ALL_EFFECT_MAP.items() if v == color_val), None
+            )
+        else:
+            # 静态颜色模式
+            self._attr_effect = None
 
-    def _encode_quantum_color(self, rgbw: tuple) -> int:
-        """编码量子灯颜色值."""
-        r, g, b, w = rgbw
-        return (w << 24) | (r << 16) | (g << 8) | b
+        self._attr_rgbw_color = _parse_color_value(color_val, has_white=True)
 
     async def _handle_update(self, new_data: dict) -> None:
         """处理量子灯状态更新."""
-        if not new_data:
-            return
+        # 量子灯的更新涉及多个IO，需要从完整的设备信息中刷新
+        devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
+        current_device = next(
+            (d for d in devices if d[DEVICE_ID_KEY] == self._raw_device[DEVICE_ID_KEY]),
+            None,
+        )
+        if current_device:
+            self._raw_device = current_device
+            self._initialize_state()
+            self.async_write_ha_state()
 
-        color_val = new_data.get("val", 0)
-        self._attr_rgbw_color = self._parse_quantum_color(color_val)
-        self.async_write_ha_state()
-
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """开启量子灯."""
-        if ATTR_RGBW_COLOR in kwargs:
-            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+        io_commands = []
 
-        color_val = self._encode_quantum_color(self._attr_rgbw_color)
-        result = await self._client.send_epset_async(
-            "0xff",
-            color_val,
-            self._sub_key,
-            self._raw_device[HUB_ID_KEY],
-            self._raw_device[DEVICE_ID_KEY],
-        )
+        # 优先处理效果
+        if ATTR_EFFECT in kwargs:
+            effect_name = kwargs[ATTR_EFFECT]
+            if effect_name in ALL_EFFECT_MAP:
+                effect_val = ALL_EFFECT_MAP[effect_name]
+                # 设置效果时，需要同时确保灯是亮的
+                io_commands.append({"idx": "P1", "type": CMD_TYPE_ON, "val": 1})
+                io_commands.append(
+                    {"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": effect_val}
+                )
 
-        if result == 0:
-            self._attr_is_on = True
-            self.async_write_ha_state()
+        # 其次处理颜色和亮度
+        else:
+            # 确保灯是开的
+            io_commands.append({"idx": "P1", "type": CMD_TYPE_ON, "val": 1})
 
-    async def async_turn_off(self, **kwargs) -> None:
+            if ATTR_RGBW_COLOR in kwargs:
+                r, g, b, w = kwargs[ATTR_RGBW_COLOR]
+                color_val = (w << 24) | (r << 16) | (g << 8) | b
+                io_commands.append(
+                    {"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": color_val}
+                )
+
+            if ATTR_BRIGHTNESS in kwargs:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+                # P1的type为0xcf时设置亮度
+                io_commands.append(
+                    {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": brightness}
+                )
+
+        if io_commands:
+            await self._client.async_set_multi_ep_async(
+                self._raw_device[HUB_ID_KEY],
+                self._raw_device[DEVICE_ID_KEY],
+                io_commands,
+            )
+        else:
+            # 如果没有其他参数，就是单纯的开灯
+            await self._client.turn_on_light_switch_async(
+                "P1", self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY]
+            )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """关闭量子灯."""
-        # 量子灯关闭设置为黑色
-        result = await self._client.send_epset_async(
-            "0xff",
-            0,  # 全黑
-            self._sub_key,
-            self._raw_device[HUB_ID_KEY],
-            self._raw_device[DEVICE_ID_KEY],
+        # 根据文档，通过P1口关闭
+        await self._client.turn_off_light_switch_async(
+            "P1", self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY]
         )
-
-        if result == 0:
-            self._attr_is_on = False
-            self.async_write_ha_state()
 
 
 class LifeSmartRGBWLight(LifeSmartBaseLight):
