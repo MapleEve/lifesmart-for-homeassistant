@@ -1066,11 +1066,11 @@ class LifeSmartLight(LifeSmartBaseLight):
             rgbhex = int(rgbhex, 16)
 
             result = await self._client.send_epset_async(
-                "0xff",
-                rgbhex,
-                self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
+                self._sub_key,
+                CMD_TYPE_SET_RAW,
+                rgbhex,
             )
         elif self._attr_color_mode == ColorMode.RGBW:
             if ATTR_RGBW_COLOR in kwargs:
@@ -1081,11 +1081,11 @@ class LifeSmartLight(LifeSmartBaseLight):
                 rgbhex = int(rgbhex, 16)
 
                 result = await self._client.send_epset_async(
-                    "0xff",
-                    rgbhex,
-                    self._sub_key,
                     self._raw_device[HUB_ID_KEY],
                     self._raw_device[DEVICE_ID_KEY],
+                    self._sub_key,
+                    CMD_TYPE_SET_RAW,
+                    rgbhex,
                 )
             else:
                 result = await self._client.turn_on_light_switch_async(

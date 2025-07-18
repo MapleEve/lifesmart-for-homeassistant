@@ -553,7 +553,7 @@ class LifeSmartDevice(Entity):
 
     async def async_lifesmart_epset(self, type: str, val: Any, idx: str) -> Any:
         """向 LifeSmart 设备发送 EpSet 命令。"""
-        return await self._client.send_epset_async(type, val, idx, self._agt, self._me)
+        return await self._client.send_epset_async(self._agt, self._me, idx, type, val)
 
     async def async_lifesmart_epget(self) -> Any:
         """获取 LifeSmart 设备的详细信息。"""
