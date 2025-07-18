@@ -354,7 +354,7 @@ def _async_setup_background_tasks(
         state_manager = LifeSmartStateManager(
             hass=hass,
             config_entry=config_entry,
-            client=client,  # <--- 传递 client 实例
+            client=client,
             ws_url=client.get_wss_url(),
             refresh_callback=_async_periodic_refresh,
         )
