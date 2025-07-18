@@ -437,7 +437,7 @@ QUANTUM_EFFECT_MAP = {
 
 # 将动态效果和量子灯光效果映射合并
 DYN_EFFECT_LIST = list(DYN_EFFECT_MAP.keys())
-ALL_EFFECT_MAP = {**DYN_EFFECT_LIST, **QUANTUM_EFFECT_MAP}
+ALL_EFFECT_MAP = {**DYN_EFFECT_MAP, **QUANTUM_EFFECT_MAP}
 ALL_EFFECT_LIST = list(ALL_EFFECT_MAP.keys())
 
 # ================= 其他常量 =================
