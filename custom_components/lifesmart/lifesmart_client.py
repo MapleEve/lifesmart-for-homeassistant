@@ -225,6 +225,23 @@ class LifeSmartClient:
         response = await self._async_call_api("EpSet", params)
         return response.get("code", -1)
 
+    async def async_set_multi_ep_async(
+        self, agt: str, me: str, io_list: list[dict]
+    ) -> int:
+        """向设备端点同时发送多个IO口的命令。(API: EpSet)
+
+        Args:
+            agt: 中枢ID。
+            me: 设备ID。
+            io_list: 一个包含多个IO设置的列表，
+                     例如: [{"idx": "DYN", "type": "0xff", "val": 123},
+                            {"idx": "RGBW", "type": "0x81", "val": 1}]
+        """
+        # LifeSmart的EpSet接口通过在val字段中传递一个列表来实现多IO口设置
+        params = {"agt": agt, "me": me, "val": io_list}
+        response = await self._async_call_api("EpSet", params)
+        return response.get("code", -1)
+
     async def get_epget_async(self, agt: str, me: str) -> dict[str, Any]:
         """获取指定设备的详细信息。(API: EpGet)"""
         response = await self._async_call_api("EpGet", {"agt": agt, "me": me})

@@ -323,6 +323,30 @@ UNLOCK_METHOD = {
 # ================= 其他设备类型 =================
 # --- 超级碗 (SPOT) ---
 SPOT_TYPES = ["MSL_IRCTL", "OD_WE_IRCTL", "SL_SPOT", "SL_P_IR", "SL_P_IR_V2"]
+SPOT_EFFECT_MAP = {
+    "青草": 0x8218CC80,
+    "海浪": 0x8318CC80,
+    "深蓝山脉": 0x8418CC80,
+    "紫色妖姬": 0x8518CC80,
+    "树莓": 0x8618CC80,
+    "橙光": 0x8718CC80,
+    "秋实": 0x8818CC80,
+    "冰淇淋": 0x8918CC80,
+    "高原": 0x8020CC80,
+    "披萨": 0x8120CC80,
+    "果汁": 0x8A20CC80,
+    "温暖小屋": 0x8B30CC80,
+    "魔力红": 0x9318CC80,
+    "光斑": 0x9518CC80,
+    "蓝粉知己": 0x9718CC80,
+    "晨曦": 0x9618CC80,
+    "木槿": 0x9818CC80,
+    "缤纷时代": 0x9918CC80,
+    "天上人间": 0xA318CC80,
+    "魅蓝": 0xA718CC80,
+    "炫红": 0xA918CC80,
+}
+SPOT_EFFECT_LIST = list(SPOT_EFFECT_MAP.keys())
 # --- 通用控制器 ---
 GENERIC_CONTROLLER_TYPES = ["SL_P", "SL_JEMA"]
 # --- 摄像头 ---
