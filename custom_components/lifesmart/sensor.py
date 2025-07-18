@@ -540,7 +540,7 @@ class LifeSmartSensor(SensorEntity):
         sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
         val = sub_data.get("v") or sub_data.get("val")
         if val is not None:
-            self._attr_native_value = val
+            self._attr_native_value = self._convert_raw_value(val)
             self.async_write_ha_state()
         else:
             _LOGGER.debug(
