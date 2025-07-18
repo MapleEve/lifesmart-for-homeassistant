@@ -233,7 +233,7 @@ class LifeSmartClimate(ClimateEntity):
         """初始化 V_FRESH_P 新风系统。"""
         self._attr_supported_features = ClimateEntityFeature.FAN_MODE
         self._attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
-        self.fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+        self._attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
     # --- 设备专属状态更新方法 ---
     def _update_default(self, data: dict):
