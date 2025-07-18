@@ -99,33 +99,52 @@ class LifeSmartClient:
         tick = int(time.time())
         params = params or {}
 
-        # 构造用于签名的字符串
-        param_list = [f"method:{method}"]
-        for key, value in sorted(params.items()):
-            param_list.append(f"{key}:{value}")
-        param_list.append(self.generate_time_and_credential_data(tick))
-        sdata = ",".join(param_list)
-
-        # 构造最终的请求体
-        send_values = {
-            "id": 1,
+        # 1. 构造签名原始串
+        sign_params = {
             "method": method,
-            "system": self.generate_system_request_body(tick, sdata),
+            "time": tick,
+            "userid": self._userid,
+            "appkey": self._appkey,
+        }
+        if params:
+            sign_params.update(params)
+
+        sorted_parts = [f"{k}={v}" for k, v in sorted(sign_params.items())]
+        sdata = (
+            "&".join(sorted_parts)
+            + f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
+        )
+        signature = self.get_signature(sdata)
+
+        # 2. 构造包含 system 节点的请求体
+        send_values = {
+            "id": tick,
+            "method": method,
+            "system": {
+                "ver": "1.0",
+                "lang": "en",
+                "userid": self._userid,
+                "appkey": self._appkey,
+                "time": tick,
+                "sign": signature,
+            },
         }
         if params:
             send_values["params"] = params
 
+        # 3. 发送请求
         header = self.generate_header()
         send_data = json.dumps(send_values)
-
-        _LOGGER.debug("API 请求 -> %s: %s", method, send_data)
+        _LOGGER.debug("通用API 请求 -> %s: %s", method, send_data)
         response_text = await self.post_async(url, send_data, header)
         response = json.loads(response_text)
-        _LOGGER.debug("API 响应 <- %s: %s", method, response)
+        _LOGGER.debug("通用API 响应 <- %s: %s", method, response)
 
         if response.get("code") != 0:
             error_msg = f"API 调用 '{method}' 失败，错误码 {response.get('code')}: {response.get('message')}"
             _LOGGER.error(error_msg)
+            if response.get("code") in [10004, 10005, 10006]:
+                raise LifeSmartAuthError(error_msg, response.get("code"))
             raise LifeSmartAPIError(error_msg, response.get("code"))
 
         return response.get("message", response)
@@ -133,8 +152,8 @@ class LifeSmartClient:
     async def login_async(self) -> bool:
         """登录到 LifeSmart 服务以获取用户令牌。
 
-        这是一个两步认证过程，首先用密码获取临时令牌，然后用临时令牌换取
-        长期的用户令牌 (usertoken)。
+        这是一个两步认证过程，首先用密码获取临时令牌，然后用临时令牌换取长期的用户令牌 (usertoken)
+        此方法处理 /auth.login 和 /auth.do_auth 两个特殊的、无签名的端点。
 
         Returns:
             如果登录成功，则返回 True。
@@ -142,61 +161,65 @@ class LifeSmartClient:
         Raises:
             LifeSmartAuthError: 如果任何一步认证失败。
         """
-        # 登录流程特殊，不使用通用调用器 `_async_call_api`
-        url = self.get_api_url() + "/auth.login"
-        login_data = {
+        header = self.generate_header()
+
+        # --- 步骤 1: /auth.login ---
+        url_step1 = self.get_api_url() + "/auth.login"
+        body_step1 = {
             "uid": self._userid,
             "pwd": self._apppassword,
             "appkey": self._appkey,
         }
-        header = self.generate_header()
-        send_data = json.dumps(login_data)
+        _LOGGER.debug("登录请求 (步骤1) -> %s", body_step1)
         try:
-            response_text = await self.post_async(url, send_data, header)
-            response = json.loads(response_text)
+            response_text = await self.post_async(
+                url_step1, json.dumps(body_step1), header
+            )
+            response1 = json.loads(response_text)
+            _LOGGER.debug("登录响应 (步骤1) <- %s", response1)
         except Exception as e:
-            raise LifeSmartAuthError(f"登录请求因网络错误失败: {e}") from e
+            raise LifeSmartAuthError(f"登录请求 (步骤1) 因网络错误失败: {e}") from e
 
-        if response.get("code") != 0 or "token" not in response:
+        if response1.get("code") != 0 or "token" not in response1:
             raise LifeSmartAuthError(
-                f"登录失败 (步骤 1): {response.get('message', '无消息')}",
-                response.get("code"),
+                f"登录失败 (步骤1): {response1.get('message', '无消息')}",
+                response1.get("code"),
             )
 
-        # 第二步：使用临时令牌进行最终认证
-        url = self.get_api_url() + "/auth.do_auth"
-        auth_data = {
-            "userid": response["userid"],
-            "token": response["token"],
+        # --- 步骤 2: /auth.do_auth ---
+        url_step2 = self.get_api_url() + "/auth.do_auth"
+        body_step2 = {
+            "userid": response1["userid"],
+            "token": response1["token"],
             "appkey": self._appkey,
             "rgn": self._region,
         }
-
-        # 如果 userid 发生变化，则更新
-        if self._userid != response["userid"]:
-            self._userid = response["userid"]
-
-        send_data = json.dumps(auth_data)
+        _LOGGER.debug("认证请求 (步骤2) -> %s", body_step2)
         try:
-            response_text = await self.post_async(url, send_data, header)
-            response = json.loads(response_text)
+            response_text = await self.post_async(
+                url_step2, json.dumps(body_step2), header
+            )
+            response2 = json.loads(response_text)
+            _LOGGER.debug("认证响应 (步骤2) <- %s", response2)
         except Exception as e:
-            raise LifeSmartAuthError(f"认证请求因网络错误失败: {e}") from e
+            raise LifeSmartAuthError(f"认证请求 (步骤2) 因网络错误失败: {e}") from e
 
-        if response.get("code") == 0 and "usertoken" in response:
-            self._usertoken = response["usertoken"]
+        if response2.get("code") == 0 and "usertoken" in response2:
+            self._usertoken = response2["usertoken"]
+            if self._userid != response2["userid"]:
+                self._userid = response2["userid"]
             _LOGGER.info("成功登录并获取用户令牌。")
-            return response
+            return response2
 
         raise LifeSmartAuthError(
-            f"认证失败 (步骤 2): {response.get('message', '无消息')}",
-            response.get("code"),
+            f"认证失败 (步骤2): {response2.get('message', '无消息')}",
+            response2.get("code"),
         )
 
     async def async_refresh_token(self) -> dict[str, Any]:
         """刷新用户令牌 (usertoken) 以延长其有效期。
 
-        此方法的实现严格遵循 'auth.refreshtoken' 的特殊API格式。
+        此方法处理 /auth.refreshtoken 这个特殊的、带顶层签名的端点。
 
         Returns:
             一个包含新 'usertoken' 和 'expiredtime' 的字典。
@@ -207,26 +230,13 @@ class LifeSmartClient:
         url = f"{self.get_api_url()}/auth.refreshtoken"
         tick = int(time.time())
 
-        # 1. 准备签名字符串 (根据文档的特殊排序规则)
-        # 将需要排序的字段放入字典
-        sortable_params = {
-            "appkey": self._appkey,
-            "time": tick,
-            "userid": self._userid,
-        }
-        # 按字母顺序排序并格式化
-        sorted_parts = [f"{k}={v}" for k, v in sorted(sortable_params.items())]
-        # 附加固定的 apptoken 和 usertoken
-        sdata = (
-            "&".join(sorted_parts)
-            + f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
-        )
-
-        # 2. 生成签名
+        # 1. 构造签名原始串
+        sdata_params = {"appkey": self._appkey, "time": tick, "userid": self._userid}
+        sdata = "&".join([f"{k}={v}" for k, v in sorted(sdata_params.items())])
+        sdata += f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
         signature = self.get_signature(sdata)
 
-        # 3. 构造最终的、扁平化的请求体
-        # 注意：此API的结构与其他API不同，sign在顶层
+        # 2. 构造扁平化的请求体
         send_values = {
             "id": tick,
             "appkey": self._appkey,
@@ -235,9 +245,9 @@ class LifeSmartClient:
             "sign": signature,
         }
 
+        # 3. 发送请求
         header = self.generate_header()
         send_data = json.dumps(send_values)
-
         _LOGGER.debug("刷新令牌请求 -> %s", send_data)
         try:
             response_text = await self.post_async(url, send_data, header)
@@ -247,14 +257,13 @@ class LifeSmartClient:
             raise LifeSmartAuthError(f"刷新令牌因网络错误失败: {e}") from e
 
         if response.get("code") == 0 and "usertoken" in response:
-            # 成功刷新，更新客户端内部状态
             self._usertoken = response["usertoken"]
             _LOGGER.info("用户令牌刷新成功。")
             return response
 
-        error_msg = f"刷新令牌失败: {response.get('message', '未知错误')}"
-        _LOGGER.error(error_msg)
-        raise LifeSmartAuthError(error_msg, response.get("code"))
+        raise LifeSmartAuthError(
+            f"刷新令牌失败: {response.get('message', '未知错误')}", response.get("code")
+        )
 
     # ====================================================================
     # 接口：所有管理和查询接口
@@ -497,7 +506,6 @@ class LifeSmartClient:
         return -1
 
     # --- 内部工具和私有方法 ---
-
     async def post_async(self, url: str, data: str, headers: dict) -> str:
         """使用 Home Assistant 的共享客户端会话发送 POST 请求。"""
         session = async_get_clientsession(self.hass)
