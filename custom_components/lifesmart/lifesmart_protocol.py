@@ -25,12 +25,12 @@ from .const import (
     # --- 命令类型常量 ---
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
+    CMD_TYPE_PRESS,
     CMD_TYPE_SET_VAL,
     CMD_TYPE_SET_CONFIG,
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_RAW,
     CMD_TYPE_SET_TEMP_FCU,
-    CMD_TYPE_PRESS,
     # --- 设备类型和映射 ---
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
@@ -40,6 +40,8 @@ from .const import (
     REVERSE_LIFESMART_ACIPM_FAN_MAP,
     REVERSE_LIFESMART_CP_AIR_FAN_MAP,
     REVERSE_LIFESMART_CP_AIR_MODE_MAP,
+    # --- 核心常量 ---
+    SUBDEVICE_INDEX_KEY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -587,7 +589,7 @@ class LifeSmartPacketFactory:
             "val": 1 if on else 0,
             "valtag": "m",
             "devid": devid,
-            "key": idx,
+            "key": idx,  # 本地协议使用 'key'
             "type": CMD_TYPE_ON if on else CMD_TYPE_OFF,
         }
         return self._build_packet(args)
@@ -718,7 +720,7 @@ class LifeSmartPacketFactory:
             "val": val,
             "valtag": "m",
             "devid": devid,
-            "key": idx,
+            "key": idx,  # 本地协议使用 'key'
             "type": command_type,
         }
         return self._build_packet(args)
@@ -726,8 +728,16 @@ class LifeSmartPacketFactory:
     def build_multi_epset_packet(self, devid: str, io_list: list[dict]) -> bytes:
         """构建一个多IO口同时控制的指令包 (EpSet)。"""
         # 本地协议通过将IO口列表作为val字段的值来实现多点控制
+        # 翻译 io_list 中的 'idx' 为 'key'
+        translated_io_list = []
+        for item in io_list:
+            new_item = item.copy()
+            if SUBDEVICE_INDEX_KEY in new_item:
+                new_item["key"] = new_item.pop(SUBDEVICE_INDEX_KEY)
+            translated_io_list.append(new_item)
+
         args = {
-            "val": io_list,
+            "val": translated_io_list,
             "valtag": "m",
             "devid": devid,
         }
@@ -816,7 +826,7 @@ class LifeSmartPacketFactory:
             "val": duration_val,
             "valtag": "m",
             "devid": devid,
-            "key": idx,
+            "key": idx,  # 本地协议使用 'key'
             "type": CMD_TYPE_PRESS,
         }
         return self._build_packet(args)
@@ -1219,14 +1229,15 @@ class LifeSmartLocalClient:
 
     async def set_scene_async(self, agt: str, scene_id: str) -> int:
         """激活一个本地场景。"""
-        # agt 在此方法中未使用，但为保持签名一致而保留
         pkt = self._factory.build_scene_trigger_packet(scene_id)
-        return await self._send_packet(pkt)
+        # 本地协议的返回不是code，但为保持一致性，成功发送返回0
+        await self._send_packet(pkt)
+        return 0
 
     async def send_ir_key_async(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
     ) -> int:
         """发送一个本地红外按键命令。"""
-        # agt 在此方法中未使用，但为保持签名一致而保留
         pkt = self._factory.build_send_ir_keys_packet(ai, me, category, brand, keys)
-        return await self._send_packet(pkt)
+        await self._send_packet(pkt)
+        return 0

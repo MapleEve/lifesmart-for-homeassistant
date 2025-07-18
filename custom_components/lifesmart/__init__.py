@@ -518,12 +518,12 @@ class LifeSmartDevice(Entity):
         self._device_name = dev[DEVICE_NAME_KEY]
         self._agt = dev[HUB_ID_KEY]
         self._me = dev[DEVICE_ID_KEY]
-        self._devtype = dev["devtype"]
+        self._devtype = dev[DEVICE_TYPE_KEY]
         self._client = lifesmart_client
         self._attributes = {
             HUB_ID_KEY: self._agt,
             DEVICE_ID_KEY: self._me,
-            "devtype": self._devtype,
+            DEVICE_TYPE_KEY: self._devtype,
         }
 
     @property

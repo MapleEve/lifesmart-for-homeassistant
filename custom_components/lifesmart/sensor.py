@@ -35,6 +35,7 @@ from .const import (
     DEVICE_TYPE_KEY,
     DEVICE_NAME_KEY,
     DEVICE_DATA_KEY,
+    DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     # --- 设备类型常量导入 ---
     ALL_SENSOR_TYPES,
@@ -471,7 +472,9 @@ class LifeSmartSensor(SensorEntity):
             name=self._raw_device[DEVICE_NAME_KEY],
             manufacturer=MANUFACTURER,
             model=self._raw_device[DEVICE_TYPE_KEY],
-            sw_version=self._raw_device.get("ver", "unknown"),  # 添加版本信息
+            sw_version=self._raw_device.get(
+                DEVICE_VERSION_KEY, "unknown"
+            ),  # 添加版本信息
             via_device=(
                 (DOMAIN, self._raw_device[HUB_ID_KEY])
                 if self._raw_device[HUB_ID_KEY]

@@ -26,6 +26,10 @@ from .const import (
     CMD_TYPE_SET_RAW,
     CMD_TYPE_SET_TEMP_FCU,
     # --- 设备类型和映射 ---
+    HUB_ID_KEY,
+    DEVICE_ID_KEY,
+    SUBDEVICE_INDEX_KEY,
+    DEVICE_DATA_KEY,
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
     REVERSE_LIFESMART_HVAC_MODE_MAP,
@@ -199,7 +203,7 @@ class LifeSmartClient:
 
     async def get_agt_details_async(self, agt: str) -> dict[str, Any]:
         """获取指定中枢的详细信息。(API: AgtGet)"""
-        return await self._async_call_api("AgtGet", {"agt": agt})
+        return await self._async_call_api("AgtGet", {HUB_ID_KEY: agt})
 
     async def get_all_device_async(self) -> list[dict[str, Any]]:
         """获取当前用户下的所有设备。(API: EpGetAll)"""
@@ -207,21 +211,26 @@ class LifeSmartClient:
 
     async def get_scene_list_async(self, agt: str) -> dict[str, Any]:
         """获取指定中枢下的所有场景。(API: SceneGet)"""
-        return await self._async_call_api("SceneGet", {"agt": agt})
+        return await self._async_call_api("SceneGet", {HUB_ID_KEY: agt})
 
     async def get_room_list_async(self, agt: str) -> dict[str, Any]:
         """获取指定中枢下配置的房间列表。(API: RoomGet)"""
-        return await self._async_call_api("RoomGet", {"agt": agt})
+        return await self._async_call_api("RoomGet", {HUB_ID_KEY: agt})
 
     async def set_scene_async(self, agt: str, scene_id: str) -> dict[str, Any]:
         """激活一个场景。(API: SceneSet)"""
-        return await self._async_call_api("SceneSet", {"agt": agt, "id": scene_id})
+        return await self._async_call_api("SceneSet", {HUB_ID_KEY: agt, "id": scene_id})
 
     async def send_epset_async(
         self, agt: str, me: str, idx: str, command_type: str, val: Any
     ) -> int:
-        """向设备端点发送通用命令。(API: EpSet)"""
-        params = {"agt": agt, "me": me, "idx": idx, "type": command_type, "val": val}
+        params = {
+            HUB_ID_KEY: agt,
+            DEVICE_ID_KEY: me,
+            SUBDEVICE_INDEX_KEY: idx,
+            "type": command_type,
+            "val": val,
+        }
         response = await self._async_call_api("EpSet", params)
         return response.get("code", -1)
 
@@ -238,19 +247,21 @@ class LifeSmartClient:
                             {"idx": "RGBW", "type": "0x81", "val": 1}]
         """
         # LifeSmart的EpSet接口通过在val字段中传递一个列表来实现多IO口设置
-        params = {"agt": agt, "me": me, "val": io_list}
+        params = {HUB_ID_KEY: agt, DEVICE_ID_KEY: me, "val": io_list}
         response = await self._async_call_api("EpSet", params)
         return response.get("code", -1)
 
     async def get_epget_async(self, agt: str, me: str) -> dict[str, Any]:
         """获取指定设备的详细信息。(API: EpGet)"""
-        response = await self._async_call_api("EpGet", {"agt": agt, "me": me})
-        return response.get("data", {})
+        response = await self._async_call_api(
+            "EpGet", {HUB_ID_KEY: agt, DEVICE_ID_KEY: me}
+        )
+        return response.get(DEVICE_DATA_KEY, {})
 
     async def get_ir_remote_list_async(self, agt: str) -> dict[str, Any]:
         """获取指定中枢下的红外遥控器列表。(API: GetRemoteList)"""
         return await self._async_call_api(
-            "GetRemoteList", {"agt": agt}, api_path="/irapi"
+            "GetRemoteList", {HUB_ID_KEY: agt}, api_path="/irapi"
         )
 
     async def send_ir_key_async(
@@ -258,9 +269,9 @@ class LifeSmartClient:
     ) -> dict[str, Any]:
         """发送一个红外按键命令。(API: SendKeys)"""
         params = {
-            "agt": agt,
+            HUB_ID_KEY: agt,
             "ai": ai,
-            "me": me,
+            DEVICE_ID_KEY: me,
             "category": category,
             "brand": brand,
             "keys": keys,
