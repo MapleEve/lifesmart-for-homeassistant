@@ -1,4 +1,5 @@
 send_ir_keys:
+  name: "发送红外按键"
   description: "发送红外按键命令到指定的遥控设备。(Send IR keys to a remote device.)"
   fields:
     agt:
@@ -20,7 +21,68 @@ send_ir_keys:
       description: "要发送的命令按键，JSON数组格式。例如 '[\"power\"]'。"
       example: '["power"]'
 
+send_ackeys:
+  name: "发送空调按键"
+  description: "向空调设备发送红外按键指令。"
+  fields:
+    agt:
+      name: "中枢 ID"
+      description: "中枢的 'agt' 标识符。"
+      example: "_xXXXXXXXXXXXXXXXXX"
+      required: true
+    me:
+      name: "设备 ID"
+      description: "红外发射器所属设备的 'me' 标识符。"
+      example: "sl_spot_xxxxxxxx"
+      required: true
+    ai:
+      name: "遥控器 ID"
+      description: "虚拟遥控器的 'ai' 标识符。"
+      example: "AI_AC_xxxx_xxxxxxxx"
+      required: true
+    category:
+      name: "类别"
+      description: "目标设备的类别，必须是 'ac'。"
+      example: "ac"
+      required: true
+    brand:
+      name: "品牌"
+      description: "目标空调的品牌。"
+      example: "Gree"
+      required: true
+    keys:
+      name: "按键"
+      description: "要发送的命令按键。"
+      example: "power"
+      required: true
+    power:
+      name: "电源"
+      description: "电源状态 (1代表开, 0代表关)。"
+      example: 1
+      required: true
+    mode:
+      name: "模式"
+      description: "运行模式 (例如 cool, heat)。"
+      example: "cool"
+      required: true
+    temp:
+      name: "温度"
+      description: "设置温度。"
+      example: 26
+      required: true
+    wind:
+      name: "风速"
+      description: "风扇速度。"
+      example: "auto"
+      required: true
+    swing:
+      name: "扫风模式"
+      description: "摆风/叶片模式。"
+      example: "auto"
+      required: true
+
 trigger_scene:
+  name: "触发场景"
   description: "激活一个 LifeSmart 场景。(Activates a LifeSmart scene.)"
   fields:
     agt:
@@ -31,6 +93,7 @@ trigger_scene:
       example: "AIxxxxxxxxxxxx"
 
 press_switch:
+  name: "点动开关"
   description: "对一个开关实体执行点动操作（按下后在指定时间后自动关闭）。(Performs a momentary press on a switch entity.)"
   fields:
     entity_id:
