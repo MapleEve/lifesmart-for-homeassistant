@@ -778,16 +778,25 @@ class LifeSmartStateManager:
         await asyncio.sleep(delay)
 
     async def _token_refresh_handler(self):
-        """后台任务，负责在 usertoken 过期前自动刷新。"""
-        await self._token_refresh_event.wait()  # 等待初始过期时间被设置
+        """后台任务，采用周期性检查的方式，在 usertoken 过期前自动刷新。"""
+        # 启动后稍作等待，避免在HA启动高峰期执行
+        await asyncio.sleep(60)
+
+        # 定义检查周期为1小时
+        check_interval_seconds = 1 * 3600
 
         while not self._should_stop:
             try:
+                # 如果初始令牌时间还未设置，则等待
+                if self._token_expiry_time == 0:
+                    await asyncio.sleep(check_interval_seconds)
+                    continue
+
                 now = int(time.time())
                 time_to_expiry = self._token_expiry_time - now
 
-                # 在过期前2天（172800秒）尝试刷新
-                refresh_threshold = 2 * 24 * 3600
+                # 定义刷新阈值，还有 275 天就要尝试了（90 天刷新一次）
+                refresh_threshold = 275 * 24 * 3600
 
                 if time_to_expiry < refresh_threshold:
                     _LOGGER.info(
@@ -798,36 +807,37 @@ class LifeSmartStateManager:
 
                         # 更新成功，持久化新令牌并更新内部状态
                         current_data = self.config_entry.data.copy()
-                        current_data["usertoken"] = new_token_data["usertoken"]
+                        current_data[CONF_LIFESMART_USERTOKEN] = new_token_data[
+                            "usertoken"
+                        ]
                         self.hass.config_entries.async_update_entry(
                             self.config_entry, data=current_data
                         )
 
                         self.set_token_expiry(new_token_data["expiredtime"])
-
-                        # 刷新成功后，等待下一次检查周期 12 小时
-                        await asyncio.sleep(12 * 3600)
+                        _LOGGER.info("令牌刷新成功，下一次检查在1小时后。")
 
                     except LifeSmartAuthError as e:
+                        # 刷新失败，记录错误。循环将在1小时后自动重试。
                         _LOGGER.error("自动刷新令牌失败: %s。将在1小时后重试。", e)
-                        await asyncio.sleep(3600)  # 刷新失败，短时间后重试
                 else:
-                    # 如果离过期还早，计算到刷新点需要等待的时间
-                    wait_duration = time_to_expiry - refresh_threshold
                     _LOGGER.debug(
-                        "令牌有效期充足，将在 %.1f 小时后再次检查。",
-                        wait_duration / 3600,
+                        "令牌有效期充足 (剩余 %.1f 小时)，下一次检查在1小时后。",
+                        time_to_expiry / 3600,
                     )
-                    await asyncio.sleep(wait_duration)
+
+                # 等待下一个检查周期
+                await asyncio.sleep(check_interval_seconds)
 
             except asyncio.CancelledError:
                 _LOGGER.info("令牌刷新任务已被取消。")
                 break
             except Exception as e:
                 _LOGGER.error(
-                    "令牌刷新处理器发生未捕获的异常: %s。将在1小时后重试。", e
+                    "令牌刷新处理器发生未捕获的异常: %s。将在12小时后重试。", e
                 )
-                await asyncio.sleep(3600)
+                # 即使发生未知异常，也等待一个周期再试，避免快速失败循环
+                await asyncio.sleep(check_interval_seconds)
 
     async def stop(self):
         """优雅地停止 WebSocket 连接和管理任务。"""
@@ -836,7 +846,7 @@ class LifeSmartStateManager:
         if self._ws and not self._ws.closed:
             await self._ws.close(code=1000)
 
-        # 取消两个任务
+        # 取消所有任务，_connection_handler 和 _token_refresh_handler
         if self._ws_task:
             self._ws_task.cancel()
         if self._token_task:
