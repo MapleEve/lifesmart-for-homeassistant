@@ -198,7 +198,7 @@ class LifeSmartClient:
         response1 = await self._post_and_parse(url_step1, body_step1, header)
         _LOGGER.debug("登录响应 (步骤1) <- %s", response1)
 
-        if response1.get("code") != "success" or "token" not in response1:
+        if response1.get("code") != "success" and "token" not in response1:
             raise LifeSmartAuthError(
                 f"登录失败 (步骤1): {response1.get('message', '无消息')}",
                 response1.get("code"),
