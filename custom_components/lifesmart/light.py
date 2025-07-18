@@ -487,11 +487,11 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             result = await self._client.send_epset_async(
-                CMD_TYPE_SET_VAL,
-                brightness,
-                self._sub_key,
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
+                self._sub_key,
+                CMD_TYPE_SET_VAL,
+                brightness,
             )
             if result == 0:
                 self._attr_brightness = brightness
