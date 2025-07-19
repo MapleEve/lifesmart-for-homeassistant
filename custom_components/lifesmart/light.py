@@ -111,13 +111,14 @@ async def async_setup_entry(
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
+        device_data = device.get(DEVICE_DATA_KEY, {})
         ha_device = LifeSmartDevice(device, client)
 
         # --- 优先处理特殊的超级碗SPOT设备 ---
         if device_type in SPOT_TYPES:
             # 根据文档，不同型号的SPOT设备灯光IO不同
             if device_type == "MSL_IRCTL":
-                if "RGBW" in device:
+                if "RGBW" in device_data:
                     lights.append(
                         LifeSmartSPOTRGBWLight(
                             device=ha_device,
@@ -127,7 +128,7 @@ async def async_setup_entry(
                         )
                     )
             elif device_type in ["OD_WE_IRCTL", "SL_SPOT"]:
-                if "RGB" in device:
+                if "RGB" in device_data:
                     lights.append(
                         LifeSmartSPOTRGBLight(
                             device=ha_device,
@@ -180,21 +181,25 @@ async def async_setup_entry(
                             entry_id=entry_id,
                         )
                     )
-        elif device_type in RGBW_LIGHT_TYPES and "RGBW" in device and "DYN" in device:
+        elif (
+            device_type in RGBW_LIGHT_TYPES
+            and "RGBW" in device_data
+            and "DYN" in device_data
+        ):
             lights.append(
                 LifeSmartDualIORGBWLight(
                     ha_device, device, client, entry_id, "RGBW", "DYN"
                 )
             )
-        elif device_type in RGB_LIGHT_TYPES and "RGB" in device:
+        elif device_type in RGB_LIGHT_TYPES and "RGB" in device_data:
             lights.append(
                 LifeSmartSingleIORGBWLight(ha_device, device, client, entry_id, "RGB")
             )
-        elif device_type in OUTDOOR_LIGHT_TYPES and "P1" in device:
+        elif device_type in OUTDOOR_LIGHT_TYPES and "P1" in device_data:
             lights.append(
                 LifeSmartSingleIORGBWLight(ha_device, device, client, entry_id, "P1")
             )
-        elif device_type in BRIGHTNESS_LIGHT_TYPES and "P1" in device:
+        elif device_type in BRIGHTNESS_LIGHT_TYPES and "P1" in device_data:
             lights.append(
                 LifeSmartBrightnessLight(
                     ha_device,
@@ -658,8 +663,9 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
 
     @callback
     def _initialize_state(self) -> None:
-        color_data = self._raw_device.get(self._color_io, {})
-        dyn_data = self._raw_device.get(self._effect_io, {})
+        device_data = self._raw_device.get(DEVICE_DATA_KEY, {})
+        color_data = device_data.get(self._color_io, {})
+        dyn_data = device_data.get(self._effect_io, {})
 
         self._attr_is_on = color_data.get("type", 0) % 2 == 1
         self._attr_brightness = 255 if self._attr_is_on else 0
@@ -826,8 +832,9 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
     @callback
     def _initialize_state(self) -> None:
         """初始化SPOT RGBW灯状态。"""
-        rgbw_data = self._raw_device.get("RGBW", {})
-        dyn_data = self._raw_device.get("DYN", {})
+        device_data = self._raw_device.get(DEVICE_DATA_KEY, {})
+        rgbw_data = device_data.get("RGBW", {})
+        dyn_data = device_data.get("DYN", {})
 
         self._attr_is_on = rgbw_data.get("type", 0) % 2 == 1
         self._attr_color_mode = ColorMode.RGBW
