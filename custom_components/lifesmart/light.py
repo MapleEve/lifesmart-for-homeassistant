@@ -158,82 +158,122 @@ async def async_setup_entry(
         if device_type in GARAGE_DOOR_TYPES:
             for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
                 if sub_key == "P1":
-                    lights.append(
-                        LifeSmartCoverLight(
-                            device=ha_device,
-                            raw_device=device,
-                            sub_device_key=sub_key,
-                            sub_device_data=sub_data,
-                            client=client,
-                            entry_id=entry_id,
-                        )
+                    unique_id = generate_entity_id(
+                        device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], sub_key
                     )
+                    if unique_id not in created_entities:
+                        lights.append(
+                            LifeSmartCoverLight(
+                                device=ha_device,
+                                raw_device=device,
+                                sub_device_key=sub_key,
+                                sub_device_data=sub_data,
+                                client=client,
+                                entry_id=entry_id,
+                            )
+                        )
+                        created_entities.add(unique_id)
             continue
 
         if device_type in LIGHT_DIMMER_TYPES:
-            lights.append(
-                LifeSmartDimmerLight(
-                    device=ha_device,
-                    raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
-                )
+            unique_id = generate_entity_id(
+                device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], None
             )
+            if unique_id not in created_entities:
+                lights.append(
+                    LifeSmartDimmerLight(
+                        device=ha_device,
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                    )
+                )
+                created_entities.add(unique_id)
         elif device_type in QUANTUM_TYPES:
             for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
                 if sub_key == "P2":
-                    lights.append(
-                        LifeSmartQuantumLight(
-                            device=ha_device,
-                            raw_device=device,
-                            sub_device_key=sub_key,
-                            sub_device_data=sub_data,
-                            client=client,
-                            entry_id=entry_id,
-                        )
+                    unique_id = generate_entity_id(
+                        device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], sub_key
                     )
+                    if unique_id not in created_entities:
+                        lights.append(
+                            LifeSmartQuantumLight(
+                                device=ha_device,
+                                raw_device=device,
+                                sub_device_key=sub_key,
+                                sub_device_data=sub_data,
+                                client=client,
+                                entry_id=entry_id,
+                            )
+                        )
+                        created_entities.add(unique_id)
         elif (
             device_type in RGBW_LIGHT_TYPES
             and "RGBW" in device_data
             and "DYN" in device_data
         ):
-            lights.append(
-                LifeSmartDualIORGBWLight(
-                    ha_device, device, client, entry_id, "RGBW", "DYN"
-                )
+            unique_id = generate_entity_id(
+                device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], "RGBW"
             )
+            if unique_id not in created_entities:
+                lights.append(
+                    LifeSmartDualIORGBWLight(
+                        ha_device, device, client, entry_id, "RGBW", "DYN"
+                    )
+                )
+                created_entities.add(unique_id)
         elif device_type in RGB_LIGHT_TYPES and "RGB" in device_data:
-            lights.append(
-                LifeSmartSingleIORGBWLight(ha_device, device, client, entry_id, "RGB")
+            unique_id = generate_entity_id(
+                device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], "RGB"
             )
-        elif device_type in OUTDOOR_LIGHT_TYPES and "P1" in device_data:
-            lights.append(
-                LifeSmartSingleIORGBWLight(ha_device, device, client, entry_id, "P1")
-            )
-        elif device_type in BRIGHTNESS_LIGHT_TYPES and "P1" in device_data:
-            lights.append(
-                LifeSmartBrightnessLight(
-                    ha_device,
-                    device,
-                    "P1",
-                    device.get(DEVICE_DATA_KEY, {}).get("P1", {}),
-                    client,
-                    entry_id,
+            if unique_id not in created_entities:
+                lights.append(
+                    LifeSmartSingleIORGBWLight(ha_device, device, client, entry_id, "RGB")
                 )
+                created_entities.add(unique_id)
+        elif device_type in OUTDOOR_LIGHT_TYPES and "P1" in device_data:
+            unique_id = generate_entity_id(
+                device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], "P1"
             )
+            if unique_id not in created_entities:
+                lights.append(
+                    LifeSmartSingleIORGBWLight(ha_device, device, client, entry_id, "P1")
+                )
+                created_entities.add(unique_id)
+        elif device_type in BRIGHTNESS_LIGHT_TYPES and "P1" in device_data:
+            unique_id = generate_entity_id(
+                device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], "P1"
+            )
+            if unique_id not in created_entities:
+                lights.append(
+                    LifeSmartBrightnessLight(
+                        ha_device,
+                        device,
+                        "P1",
+                        device.get(DEVICE_DATA_KEY, {}).get("P1", {}),
+                        client,
+                        entry_id,
+                    )
+                )
+                created_entities.add(unique_id)
         else:
             for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
                 if _is_light_subdevice(device_type, sub_key):
-                    lights.append(
-                        LifeSmartLight(
-                            device=ha_device,
-                            raw_device=device,
-                            sub_device_key=sub_key,
-                            sub_device_data=sub_data,
-                            client=client,
-                            entry_id=entry_id,
-                        )
+                    unique_id = generate_entity_id(
+                        device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], sub_key
                     )
+                    if unique_id not in created_entities:
+                        lights.append(
+                            LifeSmartLight(
+                                device=ha_device,
+                                raw_device=device,
+                                sub_device_key=sub_key,
+                                sub_device_data=sub_data,
+                                client=client,
+                                entry_id=entry_id,
+                            )
+                        )
+                        created_entities.add(unique_id)
 
     async_add_entities(lights)
 
