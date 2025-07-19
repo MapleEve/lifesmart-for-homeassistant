@@ -110,6 +110,7 @@ SUPPORTED_SWITCH_TYPES = [
     "SL_SW_MJ2",  # 奇点开关模块 (双路)
     "SL_SW_MJ3",  # 奇点开关模块 (三路)
     "SL_SW_DM1",  # 动态调光开关
+    "V_IND_S",  # 虚拟开关
 ]
 
 # ================= 插座系列 (Outlet/Plug Series) =================
@@ -418,7 +419,7 @@ ALL_SENSOR_TYPES = (
     + POWER_METER_TYPES
     + VOICE_SENSOR_TYPES
     + ALL_BINARY_SENSOR_TYPES  # 二元传感器也可能提供电量等数值
-    + COVER_TYPES  # 窗帘提供位置数值
+    + COVER_TYPES  # 窗帘电机电量
 )
 
 # --- 总窗帘/覆盖物列表 ---
