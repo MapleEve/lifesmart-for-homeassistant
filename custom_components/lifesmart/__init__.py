@@ -35,6 +35,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.ssl import get_default_context
 
 from . import lifesmart_protocol
+from .client_base import AbstractLifeSmartClient
 from .const import (
     # --- 核心常量 ---
     DOMAIN,
@@ -518,7 +519,7 @@ class LifeSmartDevice(Entity):
         _attributes (dict): 存储通用设备属性的字典。
     """
 
-    def __init__(self, dev: dict, lifesmart_client: LifeSmartClient) -> None:
+    def __init__(self, dev: dict, lifesmart_client: AbstractLifeSmartClient) -> None:
         """初始化基础设备。
 
         Args:
@@ -573,7 +574,7 @@ class LifeSmartDevice(Entity):
     async def async_lifesmart_sceneset(self, id: str) -> Any:
         """设置场景。"""
         response = await self._client.set_scene_async(self._agt, id)
-        return response["code"]
+        return response  # Now returns int status code directly
 
 
 class LifeSmartStateManager:
