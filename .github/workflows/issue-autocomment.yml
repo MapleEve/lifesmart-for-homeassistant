@@ -46,7 +46,7 @@ jobs:
           pullRequestOpened: |
             👍 @{{ author }}
 
-            Thank you for raising your pull request and contributing to our Community
+            Thank you for raising your pull request and contributing to LifeSmart integration.
             Please make sure you have followed our contributing guidelines. We will review it as soon as possible.
             If you encounter any problems, please feel free to connect with us.\
             非常感谢您提出拉取请求并为 LifeSmart 集成做出贡献，请确保您已经遵循了我们的贡献指南，我们会尽快审查它。
