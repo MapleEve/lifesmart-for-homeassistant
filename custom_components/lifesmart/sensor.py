@@ -292,12 +292,14 @@ class LifeSmartSensor(SensorEntity):
             if device_type == "SL_SC_CH":
                 return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS  # 甲醛也属于VOC
 
-        # 智能插座特殊处理
+        # 计量插座特殊处理
         if device_type in POWER_METER_PLUG_TYPES:
             if sub_key == "P2":
                 return SensorDeviceClass.ENERGY
             if sub_key == "P3":
                 return SensorDeviceClass.POWER
+
+        # 智能插座的电压、电流、功率等传感器
         if device_type in SMART_PLUG_TYPES:
             if sub_key == "EV":
                 return SensorDeviceClass.VOLTAGE

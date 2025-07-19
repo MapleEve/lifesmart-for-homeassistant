@@ -388,7 +388,6 @@ ALL_SWITCH_TYPES = (
 )
 
 # --- 总灯光列表 ---
-# SPOT 设备因其特殊性，在 light.py 中被单独处理，故不包含在此通用列表中。
 ALL_LIGHT_TYPES = (
     LIGHT_SWITCH_TYPES
     + LIGHT_DIMMER_TYPES
