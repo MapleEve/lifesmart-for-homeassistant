@@ -61,6 +61,27 @@ CON_AI_TYPES = [
 ]
 AI_TYPES = ["ai"]
 
+# ================= 其他设备类型 =================
+# --- 超级碗 (SPOT) ---
+SPOT_TYPES = [
+    "MSL_IRCTL",  # 超级碗（基础版,蓝牙版）
+    "OD_WE_IRCTL",  # 超级碗（闪联版）
+    "SL_SPOT",  # 超级碗（CoSS版）
+    "SL_P_IR",  # 红外模块 / 超级碗（Mini版）
+    "SL_P_IR_V2",  # 红外模块 / 超级碗（Mini版 V2）
+]
+
+# --- 通用控制器 ---
+GENERIC_CONTROLLER_TYPES = [
+    "SL_P",  # 通用控制器
+    "SL_JEMA",  # 通用控制器
+]
+# --- 摄像头 ---
+CAMERA_TYPES = [
+    "LSCAM:LSICAMGOS1",  # 摄像头
+    "LSCAM:LSICAMEZ2",  # 摄像头
+]
+
 # ================= 开关系列 (Switch Series) =================
 # 涵盖所有单火、零火、调光、场景、窗帘等开关面板
 SUPPORTED_SWITCH_TYPES = [
@@ -110,6 +131,7 @@ SUPPORTED_SWITCH_TYPES = [
     "SL_SW_MJ2",  # 奇点开关模块 (双路)
     "SL_SW_MJ3",  # 奇点开关模块 (三路)
     "SL_SW_DM1",  # 动态调光开关
+    # --- 其他开关 ---
     "V_IND_S",  # 虚拟开关
 ]
 
@@ -211,9 +233,7 @@ DEFED_SENSOR_TYPES = [
 ]
 # --- 基础二元传感器 (通常是其他设备附带的) ---
 BINARY_SENSOR_TYPES = (
-    [
-        "SL_P",  # 通用控制器 (部分IO口可作为二元传感器)
-    ]
+    GENERIC_CONTROLLER_TYPES  # 通用控制器有时也作为二元传感器
     + GUARD_SENSOR_TYPES
     + MOTION_SENSOR_TYPES
 )
@@ -360,32 +380,16 @@ UNLOCK_METHOD = {
     15: "Error",
 }
 
-# ================= 其他设备类型 =================
-# --- 超级碗 (SPOT) ---
-SPOT_TYPES = [
-    "MSL_IRCTL",  # 超级碗（基础版,蓝牙版）
-    "OD_WE_IRCTL",  # 超级碗（闪联版）
-    "SL_SPOT",  # 超级碗（CoSS版）
-    "SL_P_IR",  # 红外模块 / 超级碗（Mini版）
-    "SL_P_IR_V2",  # 红外模块 / 超级碗（Mini版 V2）
-]
-
-# --- 通用控制器 ---
-GENERIC_CONTROLLER_TYPES = [
-    "SL_P",  # 通用控制器
-    "SL_JEMA",  # 通用控制器
-]
-# --- 摄像头 ---
-CAMERA_TYPES = [
-    "LSCAM:LSICAMGOS1",  # 摄像头
-    "LSCAM:LSICAMEZ2",  # 摄像头
-]
-
 # ================= 平台聚合 (Platform Aggregation) =================
 # 这些列表用于在 __init__.py 的 get_platform_by_device 函数中快速确定设备所属的平台。
 
 # --- 总开关列表 ---
-ALL_SWITCH_TYPES = SUPPORTED_SWITCH_TYPES + SMART_PLUG_TYPES + POWER_METER_PLUG_TYPES
+ALL_SWITCH_TYPES = (
+    SUPPORTED_SWITCH_TYPES
+    + SMART_PLUG_TYPES
+    + POWER_METER_PLUG_TYPES
+    + GENERIC_CONTROLLER_TYPES
+)
 
 # --- 总灯光列表 ---
 # SPOT 设备因其特殊性，在 light.py 中被单独处理，故不包含在此通用列表中。
@@ -398,6 +402,8 @@ ALL_LIGHT_TYPES = (
     + OUTDOOR_LIGHT_TYPES
     + LIGHT_BULB_TYPES
     + BRIGHTNESS_LIGHT_TYPES
+    + SPOT_TYPES  # 超级碗的流光灯
+    + GARAGE_DOOR_TYPES  # 车库门灯
 )
 
 # --- 总二元传感器列表 ---
