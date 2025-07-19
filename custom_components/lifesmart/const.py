@@ -111,6 +111,8 @@ SUPPORTED_SWITCH_TYPES = [
     "SL_SW_MJ3",  # 奇点开关模块 (三路)
     "SL_SW_DM1",  # 动态调光开关
     "V_IND_S",  # 虚拟开关
+    # --- LifeSmart Mini 设备 ---
+    "LSSSMINIV1",  # LifeSmart Mini 开关设备
 ]
 
 # ================= 插座系列 (Outlet/Plug Series) =================
@@ -254,6 +256,7 @@ CLIMATE_TYPES = [
     "V_FRESH_P",  # 艾弗纳 KV11 (新风)
     "SL_NATURE",  # 超能面板PRO(温控) / 星玉温控面板
     "SL_FCU",  # ⻛机盘管 (星玉温控面板)
+    "SL_TR_XX",  # 多功能中央空调智控网关
 ]
 
 # ================= 温控器映射 (Climate Mappings) =================
