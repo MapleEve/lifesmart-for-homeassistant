@@ -10,24 +10,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import LifeSmartDevice, generate_entity_id
+from . import LifeSmartDevice, LifeSmartEntity, generate_entity_id, async_setup_entities
 from .const import (
     # --- 核心常量导入 ---
-    DOMAIN,
-    MANUFACTURER,
-    HUB_ID_KEY,
-    DEVICE_ID_KEY,
-    DEVICE_TYPE_KEY,
-    DEVICE_NAME_KEY,
     DEVICE_DATA_KEY,
-    DEVICE_VERSION_KEY,
-    LIFESMART_SIGNAL_UPDATE_ENTITY,
     UNLOCK_METHOD,
     # --- 设备类型常量导入 ---
     ALL_BINARY_SENSOR_TYPES,
@@ -52,45 +43,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LifeSmart binary sensors from a config entry."""
-    entry_id = config_entry.entry_id
-    devices = hass.data[DOMAIN][entry_id]["devices"]
-    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
-    client = hass.data[DOMAIN][entry_id]["client"]
-
-    binary_sensors = []
-    for device in devices:
-        if (
-            device[DEVICE_ID_KEY] in exclude_devices
-            or device[HUB_ID_KEY] in exclude_hubs
-        ):
-            continue
-
-        device_type = device[DEVICE_TYPE_KEY]
-
-        if device_type not in ALL_BINARY_SENSOR_TYPES:
-            continue
-
-        ha_device = LifeSmartDevice(device, client)
-
-        for sub_device_key in device[DEVICE_DATA_KEY]:
-            sub_device_data = device[DEVICE_DATA_KEY][sub_device_key]
-
-            if not _is_binary_sensor_subdevice(device_type, sub_device_key):
-                continue
-
-            binary_sensors.append(
-                LifeSmartBinarySensor(
-                    device=ha_device,
-                    raw_device=device,
-                    sub_device_key=sub_device_key,
-                    sub_device_data=sub_device_data,
-                    client=client,
-                    entry_id=entry_id,
-                )
-            )
-
-    async_add_entities(binary_sensors)
+    
+    # Define device type to entity class mapping for binary sensors
+    BINARY_SENSOR_ENTITY_MAP = {}
+    
+    # Add all binary sensor types to the mapping
+    for device_type in ALL_BINARY_SENSOR_TYPES:
+        BINARY_SENSOR_ENTITY_MAP[device_type] = LifeSmartBinarySensor
+    
+    # Use the generic setup helper
+    await async_setup_entities(
+        hass=hass,
+        config_entry=config_entry,
+        async_add_entities=async_add_entities,
+        platform=Platform.BINARY_SENSOR,
+        entity_class_map=BINARY_SENSOR_ENTITY_MAP,
+        sub_device_filter_func=_is_binary_sensor_subdevice,
+    )
 
 
 def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
@@ -159,10 +128,8 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     return False
 
 
-class LifeSmartBinarySensor(BinarySensorEntity):
+class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
     """LifeSmart binary sensor entity with enhanced compatibility."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -174,35 +141,33 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         entry_id: str,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__()
-        self._device = device
-        self._raw_device = raw_device
-        self._sub_key = sub_device_key
+        # Call parent constructor
+        super().__init__(device, raw_device, client, entry_id, sub_device_key)
+        
+        # Store sub_device_data for binary sensor-specific use
         self._sub_data = sub_device_data
-        self._client = client
-        self._entry_id = entry_id
-
-        # 基本属性
-        self.device_type = raw_device[DEVICE_TYPE_KEY]
-        self.hub_id = raw_device[HUB_ID_KEY]
-        self.device_id = raw_device[DEVICE_ID_KEY]
-        self.sensor_device_name = raw_device[DEVICE_NAME_KEY]
-        self.device_name = sub_device_data.get(DEVICE_NAME_KEY, "")
-
-        # 生成唯一ID
-        self._attr_unique_id = generate_entity_id(
-            self.device_type, self.hub_id, self.device_id, sub_device_key
-        )
-
-        # 初始化设备类别和状态
+        
+        # Initialize binary sensor-specific attributes
         self._attr_device_class = self._determine_device_class()
         self._attr_is_on = self._parse_initial_state()
         self._attrs = self._get_initial_attributes()
 
+    def _generate_name(self) -> str:
+        """Generate entity name for binary sensor."""
+        # Use custom name logic for binary sensors
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown")
+        device_name = self._sub_data.get(DEVICE_NAME_KEY, "")
+        
+        if device_name:
+            return device_name
+        elif self._sub_key:
+            return f"{base_name} {self._sub_key.upper()}"
+        return base_name
+
     @callback
     def _determine_device_class(self) -> BinarySensorDeviceClass | None:
         """Determine device class based on device type and sub-device key."""
-        device_type = self.device_type
+        device_type = self._devtype
         sub_key = self._sub_key
 
         if device_type in CLIMATE_TYPES:
@@ -271,7 +236,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     @callback
     def _parse_initial_state(self) -> bool:
         """Parse the initial state based on device type and sub-device data."""
-        device_type = self.device_type
+        device_type = self._devtype
         sub_key = self._sub_key
         val = self._sub_data.get("val", 0)
         type_val = self._sub_data.get("type", 0)
@@ -348,7 +313,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     @callback
     def _get_initial_attributes(self) -> dict[str, Any]:
         """Get initial attributes for the sensor."""
-        device_type = self.device_type
+        device_type = self._devtype
         sub_key = self._sub_key
 
         # 门锁事件的特殊属性
@@ -398,58 +363,15 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         return dict(self._sub_data)
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self.device_name or None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY])
-            },
-            name=self._raw_device[DEVICE_NAME_KEY],
-            manufacturer=MANUFACTURER,
-            model=self._raw_device[DEVICE_TYPE_KEY],
-            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(
-                (DOMAIN, self._raw_device[HUB_ID_KEY])
-                if self._raw_device[HUB_ID_KEY]
-                else None
-            ),
-        )
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this entity."""
-        return self._attr_unique_id
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self._attrs
+        # Merge base attributes with binary sensor specific attributes
+        attrs = super().extra_state_attributes.copy()
+        attrs.update(self._attrs)
+        return attrs
 
-    async def async_added_to_hass(self) -> None:
-        """Register update listeners."""
-        # 实时更新事件
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self.unique_id}",
-                self._handle_update,
-            )
-        )
-        # 全局数据刷新事件
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                LIFESMART_SIGNAL_UPDATE_ENTITY,
-                self._handle_global_refresh,
-            )
-        )
-
-    async def _handle_update(self, data: dict) -> None:
+    @callback
+    def _handle_update(self, data: dict) -> None:
         """Handle real-time updates."""
         try:
             if data is None:
@@ -475,7 +397,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     @callback
     def _update_state_by_device_type(self, data: dict) -> None:
         """Update state based on device type."""
-        device_type = self.device_type
+        device_type = self._devtype
         sub_key = self._sub_key
         val = data.get("val", 0)
         type_val = data.get("type", 0)  # 获取 type 值
@@ -544,7 +466,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             {
                 "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
                 "unlocking_user": val & 0xFFF,
-                "device_type": self.device_type,
+                "device_type": self._devtype,
                 "unlocking_success": self._attr_is_on,
                 "last_updated": datetime.datetime.fromtimestamp(
                     data.get("ts", 0) / 1000
@@ -552,41 +474,6 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             }
         )
 
-    async def _handle_global_refresh(self) -> None:
-        """Handle periodic full data refresh."""
-        try:
-            # 从hass.data获取最新设备列表
-            devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
-
-            # 查找当前设备
-            current_device = next(
-                (
-                    d
-                    for d in devices
-                    if d[HUB_ID_KEY] == self.hub_id
-                    and d[DEVICE_ID_KEY] == self.device_id
-                ),
-                None,
-            )
-
-            if current_device is None:
-                _LOGGER.warning(
-                    "LifeSmartBinarySensor: Device not found during global refresh: %s",
-                    self.unique_id,
-                )
-                return
-
-            sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
-            if not sub_data:
-                _LOGGER.debug(
-                    "LifeSmartBinarySensor: No sub-device data found for '%s' during global refresh",
-                    self._sub_key,
-                )
-                return
-
-            # 更新状态
-            self._update_state_by_device_type(sub_data)
-            self.async_write_ha_state()
-
-        except Exception as e:
-            _LOGGER.error("Error during global refresh for %s: %s", self.unique_id, e)
+    def _update_from_sub_data(self, sub_data: dict) -> None:
+        """Update binary sensor state from sub-device data during global refresh."""
+        self._update_state_by_device_type(sub_data)
