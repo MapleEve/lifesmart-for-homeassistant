@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
     UnitOfSoundPressure,
+    UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -44,6 +45,7 @@ from .const import (
     GAS_SENSOR_TYPES,
     NOISE_SENSOR_TYPES,
     POWER_METER_PLUG_TYPES,
+    SMART_PLUG_TYPES,
     POWER_METER_TYPES,
     LOCK_TYPES,
     COVER_TYPES,
@@ -164,6 +166,10 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
 
     # 智能插座
     if device_type in POWER_METER_PLUG_TYPES and sub_key in {"P2", "P3", "P4"}:
+        return True
+
+    # 智能插座 (非计量版，但也可能带计量功能)
+    if device_type in SMART_PLUG_TYPES and sub_key in {"EV", "EI", "EP", "EPA"}:
         return True
 
     # 噪音感应器
@@ -292,6 +298,15 @@ class LifeSmartSensor(SensorEntity):
                 return SensorDeviceClass.ENERGY
             if sub_key == "P3":
                 return SensorDeviceClass.POWER
+        if device_type in SMART_PLUG_TYPES:
+            if sub_key == "EV":
+                return SensorDeviceClass.VOLTAGE
+            if sub_key == "EI":
+                return SensorDeviceClass.CURRENT
+            if sub_key == "EP":
+                return SensorDeviceClass.POWER
+            if sub_key == "EPA":
+                return SensorDeviceClass.ENERGY
 
         # 噪音感应器
         if device_type in NOISE_SENSOR_TYPES and sub_key == "P1":
@@ -348,6 +363,8 @@ class LifeSmartSensor(SensorEntity):
             return LIGHT_LUX
         if self.device_class == SensorDeviceClass.VOLTAGE:
             return UnitOfElectricPotential.VOLT
+        if self.device_class == SensorDeviceClass.CURRENT:
+            return UnitOfElectricCurrent.AMPERE
         if self.device_class == SensorDeviceClass.POWER:
             return UnitOfPower.WATT
         if self.device_class == SensorDeviceClass.ENERGY:
