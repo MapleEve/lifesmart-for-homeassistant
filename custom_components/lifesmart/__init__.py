@@ -25,12 +25,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
+from homeassistant.helpers.entity import Entity, DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.ssl import get_default_context
 
@@ -413,6 +414,77 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+async def async_setup_entities(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    platform: Platform,
+    entity_class_map: dict,
+    device_filter_func: callable = None,
+    sub_device_filter_func: callable = None,
+) -> None:
+    """Generic helper to set up entities for a platform.
+    
+    This function eliminates duplication across platform setup functions by
+    providing a common pattern for entity creation.
+    
+    Args:
+        hass: Home Assistant instance
+        config_entry: Config entry
+        async_add_entities: Callback to add entities
+        platform: Platform type (Platform.SWITCH, Platform.SENSOR, etc.)
+        entity_class_map: Dict mapping device_type to entity class
+        device_filter_func: Optional function to filter devices (device_type, device) -> bool
+        sub_device_filter_func: Optional function to filter sub-devices (device_type, sub_key) -> bool
+    """
+    entry_id = config_entry.entry_id
+    devices = hass.data[DOMAIN][entry_id]["devices"]
+    client = hass.data[DOMAIN][entry_id]["client"]
+    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
+    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+
+    entities = []
+    for device in devices:
+        # Apply exclusion filters
+        if (
+            device[DEVICE_ID_KEY] in exclude_devices
+            or device[HUB_ID_KEY] in exclude_hubs
+        ):
+            continue
+
+        device_type = device[DEVICE_TYPE_KEY]
+        
+        # Apply device filter if provided
+        if device_filter_func and not device_filter_func(device_type, device):
+            continue
+
+        # Check if device type is supported by this platform
+        if device_type not in entity_class_map:
+            continue
+
+        ha_device = LifeSmartDevice(device, client)
+
+        # Process sub-devices
+        for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
+            # Apply sub-device filter if provided
+            if sub_device_filter_func and not sub_device_filter_func(device_type, sub_key):
+                continue
+
+            # Create entity instance
+            entity_class = entity_class_map[device_type]
+            entity = entity_class(
+                device=ha_device,
+                raw_device=device,
+                sub_device_key=sub_key,
+                sub_device_data=sub_data,
+                client=client,
+                entry_id=entry_id,
+            )
+            entities.append(entity)
+
+    async_add_entities(entities)
+
+
 async def data_update_handler(
     hass: HomeAssistant, config_entry: ConfigEntry, raw_data: dict
 ) -> None:
@@ -574,6 +646,133 @@ class LifeSmartDevice(Entity):
         """设置场景。"""
         response = await self._client.set_scene_async(self._agt, id)
         return response["code"]
+
+
+class LifeSmartEntity(Entity):
+    """Base class for all LifeSmart entities.
+    
+    This class contains all the common logic shared across different LifeSmart
+    entity types (switches, sensors, lights, etc.) to eliminate code duplication.
+    """
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, 
+        device: LifeSmartDevice, 
+        raw_device: dict, 
+        client: Any, 
+        entry_id: str, 
+        sub_key: str | None = None
+    ):
+        """Initialize the base entity.
+        
+        Args:
+            device: The LifeSmartDevice instance
+            raw_device: Raw device data from the API
+            client: LifeSmart client instance
+            entry_id: Config entry ID
+            sub_key: Sub-device key (e.g., 'P1', 'L1', etc.)
+        """
+        self._device = device
+        self._raw_device = raw_device
+        self._client = client
+        self._entry_id = entry_id
+        self._sub_key = sub_key
+
+        self._devtype = raw_device[DEVICE_TYPE_KEY]
+        self._agt = raw_device[HUB_ID_KEY]
+        self._me = raw_device[DEVICE_ID_KEY]
+
+        # Generate unique_id using the existing helper function
+        self._attr_unique_id = generate_entity_id(
+            self._devtype, self._agt, self._me, self._sub_key
+        )
+        
+        # Generate entity name - subclasses can override _generate_name method
+        self._attr_name = self._generate_name()
+
+        # Set up common extra state attributes
+        self._attr_extra_state_attributes = {
+            HUB_ID_KEY: self._agt,
+            DEVICE_ID_KEY: self._me,
+        }
+        if self._sub_key:
+            self._attr_extra_state_attributes[SUBDEVICE_INDEX_KEY] = self._sub_key
+
+    def _generate_name(self) -> str:
+        """Generate entity name. Can be overridden by subclasses."""
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown")
+        if self._sub_key:
+            # Try to get a friendly name from sub-device data
+            sub_data = self._raw_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
+            sub_name = sub_data.get(DEVICE_NAME_KEY)
+            if sub_name and sub_name != self._sub_key:
+                return f"{base_name} {sub_name}"
+            return f"{base_name} {self._sub_key.upper()}"
+        return base_name
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info to link entities to a single device."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._agt, self._me)},
+            name=self._raw_device[DEVICE_NAME_KEY],
+            manufacturer=MANUFACTURER,
+            model=self._devtype,
+            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
+            via_device=((DOMAIN, self._agt) if self._agt else None),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Register update listeners when entity is added."""
+        # Listen for specific entity real-time updates
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self.unique_id}",
+                self._handle_update,
+            )
+        )
+        # Listen for global data refresh to ensure eventual consistency
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                LIFESMART_SIGNAL_UPDATE_ENTITY,
+                self._handle_global_refresh,
+            )
+        )
+
+    @callback
+    def _handle_update(self, new_data: dict) -> None:
+        """Handle real-time updates. Must be implemented by subclasses."""
+        raise NotImplementedError("Subclasses must implement _handle_update")
+
+    @callback
+    def _handle_global_refresh(self) -> None:
+        """Handle periodic full data refresh. Can be overridden by subclasses if needed."""
+        try:
+            devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
+            current_device = next(
+                (
+                    d
+                    for d in devices
+                    if d[HUB_ID_KEY] == self._agt and d[DEVICE_ID_KEY] == self._me
+                ),
+                None,
+            )
+            if current_device and self._sub_key:
+                sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key)
+                if sub_data:
+                    self._update_from_sub_data(sub_data)
+                    self.async_write_ha_state()
+        except (KeyError, StopIteration):
+            _LOGGER.warning(
+                "Could not find device %s during global refresh.", self.unique_id
+            )
+
+    def _update_from_sub_data(self, sub_data: dict) -> None:
+        """Update entity state from sub-device data. Should be implemented by subclasses."""
+        pass
 
 
 class LifeSmartStateManager:
