@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        在创建新的 Issue 之前，请先[搜索已有问题](https://github.com/lobehub/lobe-chat/issues)，如果发现已有类似的问题，请给它 **👍 点赞**，这样可以帮助我们更快地解决问题。
+        在创建新的 Issue 之前，请先[搜索已有问题](https://github.com/MapleEve/lifesmart-for-homeassistant/issues)，如果发现已有类似的问题，请给它 **👍 点赞**，这样可以帮助我们更快地解决问题。
   - type: dropdown
     attributes:
       label: '📦 HomeAssistant 部署环境'
