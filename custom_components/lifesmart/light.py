@@ -101,6 +101,7 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry_id]["client"]
     exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
     exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    created_entities = hass.data[DOMAIN][entry_id]["created_entities"]
 
     lights = []
     for device in devices:
@@ -119,24 +120,34 @@ async def async_setup_entry(
             # 根据文档，不同型号的SPOT设备灯光IO不同
             if device_type == "MSL_IRCTL":
                 if "RGBW" in device_data:
-                    lights.append(
-                        LifeSmartSPOTRGBWLight(
-                            device=ha_device,
-                            raw_device=device,
-                            client=client,
-                            entry_id=entry_id,
-                        )
+                    unique_id = generate_entity_id(
+                        device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], "RGBW"
                     )
+                    if unique_id not in created_entities:
+                        lights.append(
+                            LifeSmartSPOTRGBWLight(
+                                device=ha_device,
+                                raw_device=device,
+                                client=client,
+                                entry_id=entry_id,
+                            )
+                        )
+                        created_entities.add(unique_id)
             elif device_type in ["OD_WE_IRCTL", "SL_SPOT"]:
                 if "RGB" in device_data:
-                    lights.append(
-                        LifeSmartSPOTRGBLight(
-                            device=ha_device,
-                            raw_device=device,
-                            client=client,
-                            entry_id=entry_id,
-                        )
+                    unique_id = generate_entity_id(
+                        device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], "RGB"
                     )
+                    if unique_id not in created_entities:
+                        lights.append(
+                            LifeSmartSPOTRGBLight(
+                                device=ha_device,
+                                raw_device=device,
+                                client=client,
+                                entry_id=entry_id,
+                            )
+                        )
+                        created_entities.add(unique_id)
             # SL_P_IR 和 SL_P_IR_V2 没有灯，不创建实体
             continue  # 处理完SPOT后跳过后续逻辑
 

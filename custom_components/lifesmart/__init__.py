@@ -120,6 +120,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         "exclude_hubs": config_entry.options.get(CONF_EXCLUDE_AGTS, ""),
         "ai_include_hubs": config_entry.options.get(CONF_AI_INCLUDE_AGTS, ""),
         "ai_include_items": config_entry.options.get(CONF_AI_INCLUDE_ITEMS, ""),
+        "created_entities": set(),  # 用于跟踪已创建的实体，避免重复创建
+        "create_lock": asyncio.Lock(),  # 用于同步动态创建过程
         UPDATE_LISTENER: config_entry.add_update_listener(_async_update_listener),
     }
 
@@ -475,6 +477,19 @@ async def data_update_handler(
                 # 未来可在此处扩展AI事件的具体处理逻辑
             return
 
+        # --- 检查是否为未知设备 ---
+        entry_data = hass.data[DOMAIN][config_entry.entry_id]
+        known_device_ids = {
+            f"{dev[HUB_ID_KEY]}_{dev[DEVICE_ID_KEY]}" 
+            for dev in entry_data["devices"]
+        }
+        current_device_key = f"{hub_id}_{device_id}"
+        
+        if current_device_key not in known_device_ids:
+            _LOGGER.info("发现未知设备: %s (类型: %s), 开始动态创建实体", device_id, device_type)
+            await _async_create_new_device_entity(hass, config_entry, data)
+            return
+
         # --- 普通设备更新处理 ---
         entity_id = generate_entity_id(device_type, hub_id, device_id, sub_device_key)
 
@@ -487,6 +502,82 @@ async def data_update_handler(
 
     except Exception as e:
         _LOGGER.error("处理设备更新时发生异常: %s\n原始数据: %s", str(e), raw_data)
+
+
+async def _async_create_new_device_entity(
+    hass: HomeAssistant, config_entry: ConfigEntry, io_data: dict
+) -> None:
+    """动态创建新发现的设备实体。
+
+    当收到未知设备的 WebSocket 消息时，尝试创建对应的实体。
+
+    Args:
+        hass: Home Assistant 的核心实例。
+        config_entry: 当前集成的配置条目。
+        io_data: 包含设备信息的 IO 数据。
+    """
+    try:
+        entry_data = hass.data[DOMAIN][config_entry.entry_id]
+        client = entry_data["client"]
+        create_lock = entry_data["create_lock"]
+
+        async with create_lock:
+            # 解析设备信息
+            device_type = io_data.get(DEVICE_TYPE_KEY, "unknown")
+            hub_id = io_data.get(HUB_ID_KEY, "").strip()
+            device_id = io_data.get(DEVICE_ID_KEY, "").strip()
+            sub_device_key = str(io_data.get(SUBDEVICE_INDEX_KEY, "")).strip()
+
+            # 再次检查避免竞争条件
+            known_device_ids = {
+                f"{dev[HUB_ID_KEY]}_{dev[DEVICE_ID_KEY]}" 
+                for dev in entry_data["devices"]
+            }
+            current_device_key = f"{hub_id}_{device_id}"
+            
+            if current_device_key in known_device_ids:
+                _LOGGER.debug("设备 %s 已存在，跳过创建", device_id)
+                return
+
+            # 尝试通过 EpGet 获取完整设备信息
+            try:
+                device_details = await client.get_epget_async(hub_id, device_id)
+                if not device_details:
+                    _LOGGER.warning("无法获取设备 %s 的详细信息，使用基础信息创建", device_id)
+                    device_details = {sub_device_key: {"val": io_data.get("val", 0)}}
+            except Exception as e:
+                _LOGGER.warning("获取设备 %s 详细信息失败: %s, 使用基础信息创建", device_id, e)
+                device_details = {sub_device_key: {"val": io_data.get("val", 0)}}
+
+            # 构建新设备信息字典
+            new_device = {
+                HUB_ID_KEY: hub_id,
+                DEVICE_ID_KEY: device_id,
+                DEVICE_TYPE_KEY: device_type,
+                DEVICE_NAME_KEY: f"{device_type}_{device_id[-6:]}",  # 使用类型和ID生成默认名称
+                DEVICE_DATA_KEY: device_details,
+                DEVICE_VERSION_KEY: "unknown",
+            }
+
+            # 将新设备添加到内存列表
+            entry_data["devices"].append(new_device)
+            _LOGGER.info("已添加新设备到内存列表: %s (类型: %s)", device_id, device_type)
+
+            # 确定需要设置的平台
+            platform = get_platform_by_device(device_type, sub_device_key)
+            if platform:
+                platforms_to_setup = [platform]
+                _LOGGER.info("为新设备 %s 触发平台设置: %s", device_id, platforms_to_setup)
+                
+                # 重新触发相关平台的设置流程
+                await hass.config_entries.async_forward_entry_setups(
+                    config_entry, platforms_to_setup
+                )
+            else:
+                _LOGGER.warning("无法确定设备 %s 的平台类型，跳过实体创建", device_id)
+
+    except Exception as e:
+        _LOGGER.error("动态创建设备实体时发生异常: %s", e)
 
 
 async def _async_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):

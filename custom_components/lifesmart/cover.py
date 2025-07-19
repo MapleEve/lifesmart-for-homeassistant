@@ -46,6 +46,7 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry_id]["client"]
     exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
     exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    created_entities = hass.data[DOMAIN][entry_id]["created_entities"]
 
     covers = []
     for device in devices:
@@ -57,13 +58,19 @@ async def async_setup_entry(
 
         device_type = device[DEVICE_TYPE_KEY]
         if device_type in ALL_COVER_TYPES:
-            covers.append(
-                LifeSmartCover(
-                    raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
-                )
+            # 检查是否已创建此实体
+            unique_id = generate_entity_id(
+                device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], None
             )
+            if unique_id not in created_entities:
+                covers.append(
+                    LifeSmartCover(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                    )
+                )
+                created_entities.add(unique_id)
 
     async_add_entities(covers)
 

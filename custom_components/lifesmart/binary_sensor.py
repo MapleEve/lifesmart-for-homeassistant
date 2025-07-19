@@ -57,6 +57,7 @@ async def async_setup_entry(
     exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
     exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
     client = hass.data[DOMAIN][entry_id]["client"]
+    created_entities = hass.data[DOMAIN][entry_id]["created_entities"]
 
     binary_sensors = []
     for device in devices:
@@ -79,16 +80,22 @@ async def async_setup_entry(
             if not _is_binary_sensor_subdevice(device_type, sub_device_key):
                 continue
 
-            binary_sensors.append(
-                LifeSmartBinarySensor(
-                    device=ha_device,
-                    raw_device=device,
-                    sub_device_key=sub_device_key,
-                    sub_device_data=sub_device_data,
-                    client=client,
-                    entry_id=entry_id,
-                )
+            # 检查是否已创建此实体
+            unique_id = generate_entity_id(
+                device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], sub_device_key
             )
+            if unique_id not in created_entities:
+                binary_sensors.append(
+                    LifeSmartBinarySensor(
+                        device=ha_device,
+                        raw_device=device,
+                        sub_device_key=sub_device_key,
+                        sub_device_data=sub_device_data,
+                        client=client,
+                        entry_id=entry_id,
+                    )
+                )
+                created_entities.add(unique_id)
 
     async_add_entities(binary_sensors)
 

@@ -54,6 +54,7 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry_id]["client"]
     exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
     exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    created_entities = hass.data[DOMAIN][entry_id]["created_entities"]
 
     climates = []
     for device in devices:
@@ -64,13 +65,19 @@ async def async_setup_entry(
             continue
 
         if _is_climate_device(device):
-            climates.append(
-                LifeSmartClimate(
-                    raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
-                )
+            # 检查是否已创建此实体
+            unique_id = generate_entity_id(
+                device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], None
             )
+            if unique_id not in created_entities:
+                climates.append(
+                    LifeSmartClimate(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                    )
+                )
+                created_entities.add(unique_id)
 
     async_add_entities(climates)
 

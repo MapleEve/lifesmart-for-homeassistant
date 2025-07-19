@@ -70,6 +70,7 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry_id]["client"]
     exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
     exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    created_entities = hass.data[DOMAIN][entry_id]["created_entities"]
 
     sensors = []
     for device in devices:
@@ -87,16 +88,22 @@ async def async_setup_entry(
                 ha_device = LifeSmartDevice(device, client)
                 # P4 是当前温度
                 if "P4" in device[DEVICE_DATA_KEY]:
-                    sensors.append(
-                        LifeSmartSensor(
-                            device=ha_device,
-                            raw_device=device,
-                            sub_device_key="P4",
-                            sub_device_data=device[DEVICE_DATA_KEY]["P4"],
-                            client=client,
-                            entry_id=entry_id,
-                        )
+                    # 检查是否已创建此实体
+                    unique_id = generate_entity_id(
+                        device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], "P4"
                     )
+                    if unique_id not in created_entities:
+                        sensors.append(
+                            LifeSmartSensor(
+                                device=ha_device,
+                                raw_device=device,
+                                sub_device_key="P4",
+                                sub_device_data=device[DEVICE_DATA_KEY]["P4"],
+                                client=client,
+                                entry_id=entry_id,
+                            )
+                        )
+                        created_entities.add(unique_id)
             continue  # 处理完 SL_NATURE，跳过
 
         if device_type not in ALL_SENSOR_TYPES:
@@ -108,16 +115,22 @@ async def async_setup_entry(
             if not _is_sensor_subdevice(device_type, sub_key):
                 continue
 
-            sensors.append(
-                LifeSmartSensor(
-                    device=ha_device,
-                    raw_device=device,
-                    sub_device_key=sub_key,
-                    sub_device_data=sub_data,
-                    client=client,
-                    entry_id=entry_id,
-                )
+            # 检查是否已创建此实体
+            unique_id = generate_entity_id(
+                device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], sub_key
             )
+            if unique_id not in created_entities:
+                sensors.append(
+                    LifeSmartSensor(
+                        device=ha_device,
+                        raw_device=device,
+                        sub_device_key=sub_key,
+                        sub_device_data=sub_data,
+                        client=client,
+                        entry_id=entry_id,
+                    )
+                )
+                created_entities.add(unique_id)
 
     async_add_entities(sensors)
 
