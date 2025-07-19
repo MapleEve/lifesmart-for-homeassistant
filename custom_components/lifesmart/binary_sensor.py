@@ -123,7 +123,13 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
         return True
 
     # 门窗、动态、振动等传感器
-    if device_type in BINARY_SENSOR_TYPES and sub_key in {"M", "G", "B", "AXS", "P1"}:
+    if device_type in BINARY_SENSOR_TYPES and sub_key in {
+        "M",
+        "G",
+        "B",
+        "AXS",
+        "P1",
+    }:
         return True
 
     # 水浸传感器
