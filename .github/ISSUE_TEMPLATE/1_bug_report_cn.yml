@@ -1,6 +1,7 @@
 name: '🐛 反馈缺陷'
 description: '反馈一个问题缺陷'
-labels: [ 'unconfirm' ]
+title: '[缺陷] '
+labels: [ '🔍 Unconfirmed' ]
 body:
   - type: markdown
     attributes:
