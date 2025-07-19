@@ -229,6 +229,10 @@ class LifeSmartClimate(ClimateEntity):
         ]  # 简化模式，主要控制风速
         self._attr_fan_modes = list(LIFESMART_ACIPM_FAN_MAP.keys())
 
+    def _init_sl_tr_xx(self):
+        """初始化 SL_TR_XX 多功能中央空调智控网关 (逻辑与 SL_TR_ACIPM 相同)。"""
+        self._init_sl_tr_acipm()
+
     def _init_v_fresh_p(self):
         """初始化 V_FRESH_P 新风系统。"""
         self._attr_supported_features = ClimateEntityFeature.FAN_MODE
@@ -331,6 +335,22 @@ class LifeSmartClimate(ClimateEntity):
         # 该设备有送风(F1)和排风(F2)，这里简化为取送风风速
         self._attr_fan_mode = get_f_fan_mode(data.get("F1", {}).get("val", 0))
         self._attr_current_temperature = data.get("T", {}).get("v")
+
+    def _update_sl_tr_acipm(self, data: dict):
+        """更新 SL_TR_ACIPM 新风系统状态。"""
+        # SL_TR_ACIPM 新风系统主要通过 P1 控制开关，P2 控制风速
+        p1_data = data.get("P1", {})
+        is_on = p1_data.get("type", 0) % 2 == 1
+        self._attr_hvac_mode = HVACMode.FAN_ONLY if is_on else HVACMode.OFF
+        
+        # P2 用于风速控制
+        fan_val = data.get("P2", {}).get("val", 1)
+        from .const import REVERSE_LIFESMART_ACIPM_FAN_MAP
+        self._attr_fan_mode = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_val, FAN_LOW)
+
+    def _update_sl_tr_xx(self, data: dict):
+        """更新 SL_TR_XX 多功能中央空调智控网关状态 (逻辑与 SL_TR_ACIPM 相同)。"""
+        self._update_sl_tr_acipm(data)
 
     # --- 控制方法 ---
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

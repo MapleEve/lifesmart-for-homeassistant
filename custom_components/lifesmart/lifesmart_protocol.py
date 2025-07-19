@@ -700,6 +700,10 @@ class LifeSmartPacketFactory:
         elif device_type == "SL_TR_ACIPM":
             fan_val = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
             args.update({"key": "P2", "type": CMD_TYPE_SET_RAW, "val": fan_val})
+        elif device_type == "SL_TR_XX":
+            # SL_TR_XX 使用与 SL_TR_ACIPM 相同的协议
+            fan_val = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
+            args.update({"key": "P2", "type": CMD_TYPE_SET_RAW, "val": fan_val})
         elif device_type in ["SL_NATURE", "SL_FCU"]:
             fan_val = REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)
             args.update({"key": "P9", "type": CMD_TYPE_SET_CONFIG, "val": fan_val})

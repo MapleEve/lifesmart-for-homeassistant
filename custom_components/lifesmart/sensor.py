@@ -132,6 +132,8 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
             return True
         if device_type == "SL_TR_ACIPM" and sub_key in ["P4", "P5"]:
             return True
+        if device_type == "SL_TR_XX" and sub_key in ["P4", "P5"]:
+            return True
         return False
 
     # 环境感应器（包括温度、湿度、光照、电压）
@@ -450,6 +452,8 @@ class LifeSmartSensor(SensorEntity):
             # 地暖底板温度和新风VOC都需要除以10
             if (device_type == "SL_CP_DN" and self._sub_key == "P5") or (
                 device_type == "SL_TR_ACIPM" and self._sub_key == "P4"
+            ) or (
+                device_type == "SL_TR_XX" and self._sub_key == "P4"
             ):
                 return raw_value / 10.0
             # 其他值（如电量、PM2.5）直接使用
