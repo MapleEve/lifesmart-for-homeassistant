@@ -110,6 +110,7 @@ SUPPORTED_SWITCH_TYPES = [
     "SL_SW_MJ2",  # 奇点开关模块 (双路)
     "SL_SW_MJ3",  # 奇点开关模块 (三路)
     "SL_SW_DM1",  # 动态调光开关
+    "V_IND_S",  # 虚拟开关
 ]
 
 # ================= 插座系列 (Outlet/Plug Series) =================
