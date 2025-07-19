@@ -1,0 +1,59 @@
+name: '🐛 反馈缺陷'
+description: '反馈一个问题缺陷'
+labels: [ 'unconfirm' ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        在创建新的 Issue 之前，请先[搜索已有问题](https://github.com/lobehub/lobe-chat/issues)，如果发现已有类似的问题，请给它 **👍 点赞**，这样可以帮助我们更快地解决问题。
+  - type: dropdown
+    attributes:
+      label: '📦 HomeAssistant 部署环境'
+      multiple: true
+      options:
+        - 'Docker'
+        - '自托管'
+        - '云托管'
+        - '本地/路由器等运行'
+        - 'Other'
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: '📌 插件版本'
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: '🌐 浏览器'
+      multiple: true
+      options:
+        - 'Chrome'
+        - 'Edge'
+        - 'Safari'
+        - 'Firefox'
+        - 'Other'
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '🐛 问题描述'
+      description: 请提供一个清晰且简洁的问题描述，若上述选项为`Other`，也请详细说明。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '📷 复现步骤'
+      description: 请提供一个清晰且简洁的描述，说明如何复现问题。
+  - type: textarea
+    attributes:
+      label: '🚦 期望结果'
+      description: 请提供一个清晰且简洁的描述，说明您期望发生什么。
+  - type: textarea
+    attributes:
+      label: '📝 补充信息'
+      description: 如果您的问题需要进一步说明，或者您遇到的问题无法在一个简单的示例中复现，请在这里添加更多信息。
+  - type: textarea
+    attributes:
+      label: '调试日志'
+      description: 如果您已启用调试模式，请在此处粘贴调试日志。对于 EpGetAll API 和 Websocket 返回的内容。（敏感信息可以替换掉，如pwd,userid,token,usertoken）
