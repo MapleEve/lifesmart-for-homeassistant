@@ -232,11 +232,7 @@ DEFED_SENSOR_TYPES = [
     "SL_DF_BB",  # 云防遥控器
 ]
 # --- 基础二元传感器 (通常是其他设备附带的) ---
-BINARY_SENSOR_TYPES = (
-    GENERIC_CONTROLLER_TYPES  # 通用控制器有时也作为二元传感器
-    + GUARD_SENSOR_TYPES
-    + MOTION_SENSOR_TYPES
-)
+BINARY_SENSOR_TYPES = GUARD_SENSOR_TYPES + MOTION_SENSOR_TYPES
 
 # ================= 感应器 - 数值状态 (Sensor Series) =================
 # --- 环境感应器 ---
@@ -388,7 +384,7 @@ ALL_SWITCH_TYPES = (
     SUPPORTED_SWITCH_TYPES
     + SMART_PLUG_TYPES
     + POWER_METER_PLUG_TYPES
-    + GENERIC_CONTROLLER_TYPES
+    + GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关、插座等多种类型
 )
 
 # --- 总灯光列表 ---
@@ -414,6 +410,7 @@ ALL_BINARY_SENSOR_TYPES = (
     + RADAR_SENSOR_TYPES
     + DEFED_SENSOR_TYPES
     + LOCK_TYPES
+    + GENERIC_CONTROLLER_TYPES  # 通用控制器有时也作为二元传感器
 )
 
 # --- 总数值传感器列表 ---
@@ -429,7 +426,12 @@ ALL_SENSOR_TYPES = (
 )
 
 # --- 总窗帘/覆盖物列表 ---
-ALL_COVER_TYPES = COVER_TYPES + DOOYA_TYPES + GARAGE_DOOR_TYPES
+ALL_COVER_TYPES = (
+    COVER_TYPES
+    + DOOYA_TYPES
+    + GARAGE_DOOR_TYPES
+    + GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关、插座等多种类型
+)
 
 # --- Home Assistant 支持的平台列表 ---
 SUPPORTED_PLATFORMS = [

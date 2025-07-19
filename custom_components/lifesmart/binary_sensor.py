@@ -129,9 +129,6 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
         "B",
         "AXS",
         "P1",
-        "P5",
-        "P6",
-        "P7",
     }:
         return True
 
