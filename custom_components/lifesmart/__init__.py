@@ -838,7 +838,7 @@ class LifeSmartStateManager:
                 break
             except Exception as e:
                 _LOGGER.error(
-                    "令牌刷新处理器发生未捕获的异常: %s。将在12小时后重试。", e
+                    "令牌刷新处理器发生未捕获的异常: %s。将在1小时后重试。", e
                 )
                 # 即使发生未知异常，也等待一个周期再试，避免快速失败循环
                 await asyncio.sleep(check_interval_seconds)
