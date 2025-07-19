@@ -1,0 +1,55 @@
+name: '🐛 Bug Report'
+description: 'Report a bug'
+labels: [ 'unconfirm' ]
+body:
+  - type: dropdown
+    attributes:
+      label: '📦 HomeAssistant Deployment'
+      multiple: true
+      options:
+        - 'Docker'
+        - 'Self hosting'
+        - 'Cloud hosting'
+        - 'Local/Router etc.'
+        - 'Other'
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: '📌 Version'
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: '🌐 Browser'
+      multiple: true
+      options:
+        - 'Chrome'
+        - 'Edge'
+        - 'Safari'
+        - 'Firefox'
+        - 'Other'
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '🐛 Bug Description'
+      description: A clear and concise description of the bug, if the above option is `Other`, please also explain in detail.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '📷 Recurrence Steps'
+      description: A clear and concise description of how to recurrence.
+  - type: textarea
+    attributes:
+      label: '🚦 Expected Behavior'
+      description: A clear and concise description of what you expected to happen.
+  - type: textarea
+    attributes:
+      label: '📝 Additional Information'
+      description: If your problem needs further explanation, or if the issue you're seeing cannot be reproduced in a gist, please add more information here.
+  - type: textarea
+    attributes:
+      label: 'Debug Log'
+      description: If you have enabled debug mode, please paste the debug log here. For EpGetAll API and Websocket returns.(Sensitive information MUST be replaced, such as pwd, userid, token, usertoken)
