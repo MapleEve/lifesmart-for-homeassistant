@@ -21,6 +21,7 @@ from typing import Callable, Any
 from homeassistant.components.climate import HVACMode
 from homeassistant.core import Event, ServiceCall
 
+from .client_base import AbstractLifeSmartClient
 from .const import (
     # --- 命令类型常量 ---
     CMD_TYPE_ON,
@@ -854,7 +855,7 @@ class LifeSmartPacketFactory:
         return self._build_packet(args, act="RunA", node_suffix="/ai")
 
 
-class LifeSmartLocalClient:
+class LifeSmartLocalClient(AbstractLifeSmartClient):
     """LifeSmart 本地客户端，负责与中枢进行 TCP 通信。"""
 
     def __init__(self, host, port, username, password, config_agt=None) -> None:

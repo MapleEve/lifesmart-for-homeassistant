@@ -15,6 +15,7 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .client_base import AbstractLifeSmartClient
 from .const import (
     # --- 命令类型常量 ---
     CMD_TYPE_ON,
@@ -45,7 +46,7 @@ from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 _LOGGER = logging.getLogger(__name__)
 
 
-class LifeSmartClient:
+class LifeSmartClient(AbstractLifeSmartClient):
     """一个用于高效、健壮地管理 LifeSmart API 调用的类。
 
     此类封装了所有与 LifeSmart API 的通信细节，包括认证、签名生成、
@@ -298,9 +299,10 @@ class LifeSmartClient:
         """获取指定中枢下配置的房间列表。(API: RoomGet)"""
         return await self._async_call_api("RoomGet", {HUB_ID_KEY: agt})
 
-    async def set_scene_async(self, agt: str, scene_id: str) -> dict[str, Any]:
+    async def set_scene_async(self, agt: str, scene_id: str) -> int:
         """激活一个场景。(API: SceneSet)"""
-        return await self._async_call_api("SceneSet", {HUB_ID_KEY: agt, "id": scene_id})
+        response = await self._async_call_api("SceneSet", {HUB_ID_KEY: agt, "id": scene_id})
+        return response.get("code", 0)  # Return status code for consistency
 
     async def send_epset_async(
         self, agt: str, me: str, idx: str, command_type: str, val: Any
@@ -347,7 +349,7 @@ class LifeSmartClient:
 
     async def send_ir_key_async(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
-    ) -> dict[str, Any]:
+    ) -> int:
         """发送一个红外按键命令。(API: SendKeys)"""
         params = {
             HUB_ID_KEY: agt,
@@ -357,7 +359,8 @@ class LifeSmartClient:
             "brand": brand,
             "keys": keys,
         }
-        return await self._async_call_api("SendKeys", params, api_path="/irapi")
+        response = await self._async_call_api("SendKeys", params, api_path="/irapi")
+        return response.get("code", 0)  # Return status code for consistency
 
     # --- 设备直接控制的辅助方法 ---
 
