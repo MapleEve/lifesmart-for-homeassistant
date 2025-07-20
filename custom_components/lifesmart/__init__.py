@@ -564,18 +564,19 @@ class LifeSmartDevice(Entity):
         """返回实体是否需要轮询更新状态。"""
         return False
 
-    async def async_lifesmart_epset(self, type: str, val: Any, idx: str) -> Any:
+    async def async_lifesmart_epset(self, type: str, val: Any, idx: str) -> int:
         """向 LifeSmart 设备发送 EpSet 命令。"""
-        return await self._client.send_epset_async(self._agt, self._me, idx, type, val)
+        return await self._client.set_single_ep_async(
+            self._agt, self._me, idx, type, val
+        )
 
-    async def async_lifesmart_epget(self) -> Any:
+    async def async_lifesmart_epget(self) -> dict:
         """获取 LifeSmart 设备的详细信息。"""
         return await self._client.get_epget_async(self._agt, self._me)
 
-    async def async_lifesmart_sceneset(self, id: str) -> Any:
+    async def async_lifesmart_sceneset(self, id: str) -> int:
         """设置场景。"""
-        response = await self._client.set_scene_async(self._agt, id)
-        return response["code"]
+        return await self._client.set_scene_async(self._agt, id)
 
 
 class LifeSmartStateManager:

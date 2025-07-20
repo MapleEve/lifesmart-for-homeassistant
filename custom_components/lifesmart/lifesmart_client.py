@@ -29,7 +29,6 @@ from .const import (
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     SUBDEVICE_INDEX_KEY,
-    DEVICE_DATA_KEY,
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
     REVERSE_LIFESMART_HVAC_MODE_MAP,
@@ -58,7 +57,7 @@ class LifeSmartClient:
         _apptoken (str): 应用 AppToken。
         _usertoken (str): 用户 UserToken。
         _userid (str): 用户 UserID。
-        _apppassword (Optional[str]): 用户密码（仅用于登录获取令牌）。
+        _apppassword (Optional[str]): App 用户密码（仅用于登录获取令牌）。
     """
 
     def __init__(
@@ -100,60 +99,49 @@ class LifeSmartClient:
         Raises:
             LifeSmartAPIError: 当 API 返回非零错误码时引发。
         """
-        url = f"{self.get_api_url()}{api_path}.{method}"
+        url = f"{self._get_api_url()}{api_path}.{method}"
         tick = int(time.time())
         params = params or {}
 
-        # 1. 构造签名原始串
-        sdata_parts = []
-
-        sdata_parts.append(f"method:{method}")
-
-        if params:
-            for key, value in sorted(params.items()):
-                sdata_parts.append(f"{key}:{value}")
-
-        sdata_parts.append(f"time:{tick}")
-        sdata_parts.append(f"userid:{self._userid}")
-        sdata_parts.append(f"usertoken:{self._usertoken or ''}")
-        sdata_parts.append(f"appkey:{self._appkey}")
-        sdata_parts.append(f"apptoken:{self._apptoken}")
-
-        # 拼接成最终的签名原始串
-        sdata = ",".join(sdata_parts)
-        signature = self.get_signature(sdata)
-        _LOGGER.debug("签名原始串 (sdata): %s", sdata)
-        _LOGGER.debug("生成签名 (sign): %s", signature)
-
-        # 2. 构造请求体
-        system_node = {
-            "ver": "1.0",
-            "lang": "en",
-            "userid": self._userid,
-            "appkey": self._appkey,
+        # 1. 构造用于签名的字典
+        sdata_for_sign = {
+            "method": method,
+            **params,
             "time": tick,
-            "sign": signature,
+            "userid": self._userid,
+            "usertoken": self._usertoken or "",
+            "appkey": self._appkey,
+            "apptoken": self._apptoken,
         }
 
+        # 2. 构造请求体
         send_values = {
             "id": tick,
             "method": method,
-            "system": system_node,
+            "system": {
+                "ver": "1.0",
+                "lang": "en",
+                "userid": self._userid,
+                "appkey": self._appkey,
+                "time": tick,
+                "sign": self._get_signature(sdata_for_sign),
+            },
         }
         if params:
             send_values["params"] = params
 
         # 3. 发送请求
-        response = await self._post_and_parse(url, send_values, self.generate_header())
+        _LOGGER.debug("通用API 请求 -> %s: %s", method, send_values)
+        response = await self._post_and_parse(url, send_values, self._generate_header())
         _LOGGER.debug("通用API 响应 <- %s: %s", method, response)
 
-        if response.get("code") != 0:
+        # 4. 核心检查：只检查顶层 'code' 字段
+        code = response.get("code")
+        if code != 0:
             error_code = response.get("code")
             raw_message = response.get("message")
-
             desc, advice, category = get_error_advice(error_code)
 
-            # 构造更详细的错误日志
             log_message = (
                 f"API 调用 '{method}' 失败! "
                 f"[错误码: {error_code}] "
@@ -163,11 +151,11 @@ class LifeSmartClient:
             )
             _LOGGER.error(log_message)
 
-            # 抛出异常，供上层处理
             if error_code in [10004, 10005, 10006]:
                 raise LifeSmartAuthError(advice, error_code)
             raise LifeSmartAPIError(advice, error_code)
 
+        # 5. 成功时，返回完整的、未经修改的响应字典
         return response
 
     # ====================================================================
@@ -185,10 +173,10 @@ class LifeSmartClient:
         Raises:
             LifeSmartAuthError: 如果任何一步认证失败。
         """
-        header = self.generate_header()
+        header = self._generate_header()
 
         # 步骤 1: /auth.login (无签名)
-        url_step1 = self.get_api_url() + "/auth.login"
+        url_step1 = self._get_api_url() + "/auth.login"
         body_step1 = {
             "uid": self._userid,
             "pwd": self._apppassword,
@@ -205,7 +193,7 @@ class LifeSmartClient:
             )
 
         # --- 步骤 2: /auth.do_auth ---
-        url_step2 = self.get_api_url() + "/auth.do_auth"
+        url_step2 = self._get_api_url() + "/auth.do_auth"
         body_step2 = {
             "userid": response1["userid"],
             "token": response1["token"],
@@ -240,14 +228,15 @@ class LifeSmartClient:
         Raises:
             LifeSmartAuthError: 如果刷新失败。
         """
-        url = f"{self.get_api_url()}/auth.refreshtoken"
+        url = f"{self._get_api_url()}/auth.refreshtoken"
         tick = int(time.time())
 
         # 1. 构造签名原始串
         sdata_params = {"appkey": self._appkey, "time": tick, "userid": self._userid}
         sdata = "&".join([f"{k}={v}" for k, v in sorted(sdata_params.items())])
         sdata += f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
-        signature = self.get_signature(sdata)
+        # async_refresh_token 方法生成的签名原始串 sdata 是用 & 连接的 key=value 格式，与官方文档要求的 API 不一致
+        signature = hashlib.md5(sdata.encode("utf-8")).hexdigest()
         _LOGGER.debug("刷新令牌签名原始串 (sdata): %s", sdata)
         _LOGGER.debug("生成刷新令牌签名 (sign): %s", signature)
 
@@ -262,7 +251,7 @@ class LifeSmartClient:
 
         # 3. 发送请求
         _LOGGER.debug("刷新令牌请求 -> %s", send_values)
-        response = await self._post_and_parse(url, send_values, self.generate_header())
+        response = await self._post_and_parse(url, send_values, self._generate_header())
         _LOGGER.debug("刷新令牌响应 <- %s", response)
 
         if response.get("code") == 0 and "usertoken" in response:
@@ -274,35 +263,83 @@ class LifeSmartClient:
             f"刷新令牌失败: {response.get('message', '未知错误')}", response.get("code")
         )
 
+    def get_wss_url(self) -> str:
+        """根据所选区域生成 WebSocket (WSS) URL。"""
+        if not self._region or self._region.upper() == "AUTO":
+            return "wss://api.ilifesmart.com:8443/wsapp/"
+        return f"wss://api.{self._region.lower()}.ilifesmart.com:8443/wsapp/"
+
+    def generate_wss_auth(self) -> str:
+        """为 WebSocket 连接生成认证消息。"""
+        tick = int(time.time())
+
+        # 1. 像新的 _async_call_api 一样，构建一个用于签名的字典
+        sign_dict = {
+            "method": "WbAuth",
+            "time": tick,
+            "userid": self._userid,
+            "usertoken": self._usertoken or "",
+            "appkey": self._appkey,
+            "apptoken": self._apptoken,
+        }
+
+        # 2. 构建完整的请求体，并调用新的 _get_signature 方法
+        send_values = {
+            "id": 1,
+            "method": "WbAuth",
+            "system": {
+                "ver": "1.0",
+                "lang": "en",
+                "userid": self._userid,
+                "appkey": self._appkey,
+                "time": tick,
+                "sign": self._get_signature(sign_dict),
+            },
+        }
+        return json.dumps(send_values)
+
     # ====================================================================
     # 接口：所有管理和查询接口
     # ====================================================================
 
-    async def get_agt_list_async(self) -> dict[str, Any]:
+    async def get_agt_list_async(self) -> list[dict[str, Any]]:
         """获取用户下的所有中枢（网关）列表。(API: AgtGetList)"""
-        return await self._async_call_api("AgtGetList")
+        response = await self._async_call_api("AgtGetList")
+        message = response.get("message")
+        return message if isinstance(message, list) else []
 
     async def get_agt_details_async(self, agt: str) -> dict[str, Any]:
         """获取指定中枢的详细信息。(API: AgtGet)"""
-        return await self._async_call_api("AgtGet", {HUB_ID_KEY: agt})
+        response = await self._async_call_api("AgtGet", {HUB_ID_KEY: agt})
+        message = response.get("message")
+        return message if isinstance(message, dict) else {}
 
     async def get_all_device_async(self) -> list[dict[str, Any]]:
         """获取当前用户下的所有设备。(API: EpGetAll)"""
-        return await self._async_call_api("EpGetAll")
+        response = await self._async_call_api("EpGetAll")
+        message = response.get("message")
+        return message if isinstance(message, list) else []
 
-    async def get_scene_list_async(self, agt: str) -> dict[str, Any]:
+    async def get_scene_list_async(self, agt: str) -> list[dict[str, Any]]:
         """获取指定中枢下的所有场景。(API: SceneGet)"""
-        return await self._async_call_api("SceneGet", {HUB_ID_KEY: agt})
+        response = await self._async_call_api("SceneGet", {HUB_ID_KEY: agt})
+        message = response.get("message")
+        return message if isinstance(message, list) else []
 
-    async def get_room_list_async(self, agt: str) -> dict[str, Any]:
+    async def get_room_list_async(self, agt: str) -> list[dict[str, Any]]:
         """获取指定中枢下配置的房间列表。(API: RoomGet)"""
-        return await self._async_call_api("RoomGet", {HUB_ID_KEY: agt})
+        response = await self._async_call_api("RoomGet", {HUB_ID_KEY: agt})
+        message = response.get("message")
+        return message if isinstance(message, list) else []
 
-    async def set_scene_async(self, agt: str, scene_id: str) -> dict[str, Any]:
+    async def set_scene_async(self, agt: str, scene_id: str) -> int:
         """激活一个场景。(API: SceneSet)"""
-        return await self._async_call_api("SceneSet", {HUB_ID_KEY: agt, "id": scene_id})
+        response = await self._async_call_api(
+            "SceneSet", {HUB_ID_KEY: agt, "id": scene_id}
+        )
+        return self._get_code_from_response(response, "SceneSet")
 
-    async def send_epset_async(
+    async def set_single_ep_async(
         self, agt: str, me: str, idx: str, command_type: str, val: Any
     ) -> int:
         params = {
@@ -313,11 +350,9 @@ class LifeSmartClient:
             "val": val,
         }
         response = await self._async_call_api("EpSet", params)
-        return response.get("code", -1)
+        return self._get_code_from_response(response, "EpSet")
 
-    async def async_set_multi_ep_async(
-        self, agt: str, me: str, io_list: list[dict]
-    ) -> int:
+    async def set_multi_eps_async(self, agt: str, me: str, io_list: list[dict]) -> int:
         """向设备端点同时发送多个IO口的命令。(API: EpsSet)
 
         根据官方文档，此方法使用 EpsSet 接口，并将操作列表作为JSON字符串
@@ -332,26 +367,35 @@ class LifeSmartClient:
         """
         args_str = json.dumps(io_list)
         params = {"args": args_str}
-
         response = await self._async_call_api("EpsSet", params)
-        return response.get("code", -1)
+        return self._get_code_from_response(response, "EpsSet")
 
     async def get_epget_async(self, agt: str, me: str) -> dict[str, Any]:
         """获取指定设备的详细信息。(API: EpGet)"""
         response = await self._async_call_api(
             "EpGet", {HUB_ID_KEY: agt, DEVICE_ID_KEY: me}
         )
-        return response.get(DEVICE_DATA_KEY, {})
+
+        message = response.get("message")
+
+        if isinstance(message, list) and message:
+            device_data = message[0]
+            if isinstance(device_data, dict):
+                return device_data
+
+        return {}
 
     async def get_ir_remote_list_async(self, agt: str) -> dict[str, Any]:
         """获取指定中枢下的红外遥控器列表。(API: GetRemoteList)"""
-        return await self._async_call_api(
+        response = await self._async_call_api(
             "GetRemoteList", {HUB_ID_KEY: agt}, api_path="/irapi"
         )
+        message = response.get("message")
+        return message if isinstance(message, dict) else {}
 
     async def send_ir_key_async(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
-    ) -> dict[str, Any]:
+    ) -> int:
         """发送一个红外按键命令。(API: SendKeys)"""
         params = {
             HUB_ID_KEY: agt,
@@ -361,17 +405,20 @@ class LifeSmartClient:
             "brand": brand,
             "keys": keys,
         }
-        return await self._async_call_api("SendKeys", params, api_path="/irapi")
+        response = await self._async_call_api("SendKeys", params, api_path="/irapi")
+        return self._get_code_from_response(response, "SendKeys")
 
-    # --- 设备直接控制的辅助方法 ---
+    # ====================================================================
+    # 设备直接控制的辅助方法
+    # ====================================================================
 
     async def turn_on_light_switch_async(self, idx: str, agt: str, me: str) -> int:
         """开启一个灯或开关。"""
-        return await self.send_epset_async(agt, me, idx, CMD_TYPE_ON, 1)
+        return await self.set_single_ep_async(agt, me, idx, CMD_TYPE_ON, 1)
 
     async def turn_off_light_switch_async(self, idx: str, agt: str, me: str) -> int:
         """关闭一个灯或开关。"""
-        return await self.send_epset_async(agt, me, idx, CMD_TYPE_OFF, 0)
+        return await self.set_single_ep_async(agt, me, idx, CMD_TYPE_OFF, 0)
 
     async def press_switch_async(
         self, idx: str, agt: str, me: str, duration_ms: int
@@ -379,49 +426,49 @@ class LifeSmartClient:
         """执行点动操作（按下后在指定时间后自动弹起）。"""
         # 将毫秒转换为设备需要的 100ms 单位
         val = max(1, round(duration_ms / 100))
-        return await self.send_epset_async(agt, me, idx, CMD_TYPE_PRESS, val)
+        return await self.set_single_ep_async(agt, me, idx, CMD_TYPE_PRESS, val)
 
     async def open_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """开启窗帘或车库门。"""
         if device_type in GARAGE_DOOR_TYPES:
-            return await self.send_epset_async(agt, me, "P3", CMD_TYPE_SET_VAL, 100)
+            return await self.set_single_ep_async(agt, me, "P3", CMD_TYPE_SET_VAL, 100)
         elif device_type in DOOYA_TYPES:
-            return await self.send_epset_async(agt, me, "P2", CMD_TYPE_SET_VAL, 100)
+            return await self.set_single_ep_async(agt, me, "P2", CMD_TYPE_SET_VAL, 100)
         else:
             cmd_idx = "OP" if device_type == "SL_SW_WIN" else "P1"
-            return await self.send_epset_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
+            return await self.set_single_ep_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
 
     async def close_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """关闭窗帘或车库门。"""
         if device_type in GARAGE_DOOR_TYPES:
-            return await self.send_epset_async(agt, me, "P3", CMD_TYPE_SET_VAL, 0)
+            return await self.set_single_ep_async(agt, me, "P3", CMD_TYPE_SET_VAL, 0)
         elif device_type in DOOYA_TYPES:
-            return await self.send_epset_async(agt, me, "P2", CMD_TYPE_SET_VAL, 0)
+            return await self.set_single_ep_async(agt, me, "P2", CMD_TYPE_SET_VAL, 0)
         else:
             cmd_idx = "CL" if device_type == "SL_SW_WIN" else "P2"
-            return await self.send_epset_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
+            return await self.set_single_ep_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
 
     async def stop_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """停止窗帘或车库门。"""
         if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
             cmd_idx = "P3" if device_type in GARAGE_DOOR_TYPES else "P2"
-            return await self.send_epset_async(
+            return await self.set_single_ep_async(
                 agt, me, cmd_idx, CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
             )
         else:
             cmd_idx = "ST" if device_type == "SL_SW_WIN" else "P3"
-            return await self.send_epset_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
+            return await self.set_single_ep_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
 
     async def set_cover_position_async(
         self, agt: str, me: str, position: int, device_type: str
     ) -> int:
         """设置窗帘或车库门到指定位置。"""
         if device_type in GARAGE_DOOR_TYPES:
-            return await self.send_epset_async(
+            return await self.set_single_ep_async(
                 agt, me, "P3", CMD_TYPE_SET_VAL, position
             )
         elif device_type in DOOYA_TYPES:
-            return await self.send_epset_async(
+            return await self.set_single_ep_async(
                 agt, me, "P2", CMD_TYPE_SET_VAL, position
             )
         _LOGGER.warning("设备类型 %s 不支持设置位置。", device_type)
@@ -437,9 +484,9 @@ class LifeSmartClient:
     ) -> int:
         """设置温控设备的 HVAC 模式。"""
         if hvac_mode == HVACMode.OFF:
-            return await self.send_epset_async(agt, me, "P1", CMD_TYPE_OFF, 0)
+            return await self.set_single_ep_async(agt, me, "P1", CMD_TYPE_OFF, 0)
 
-        await self.send_epset_async(agt, me, "P1", CMD_TYPE_ON, 1)
+        await self.set_single_ep_async(agt, me, "P1", CMD_TYPE_ON, 1)
 
         mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
         if mode_val is not None and device_type in [
@@ -449,7 +496,7 @@ class LifeSmartClient:
             "V_AIR_P",
         ]:
             idx = "MODE" if device_type == "V_AIR_P" else "P7"
-            return await self.send_epset_async(
+            return await self.set_single_ep_async(
                 agt, me, idx, CMD_TYPE_SET_CONFIG, mode_val
             )
 
@@ -457,20 +504,24 @@ class LifeSmartClient:
             mode_val = REVERSE_LIFESMART_CP_AIR_MODE_MAP.get(hvac_mode)
             if mode_val is not None:
                 new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
-                return await self.send_epset_async(
+                return await self.set_single_ep_async(
                     agt, me, "P1", CMD_TYPE_SET_RAW, new_val
                 )
 
         if device_type == "SL_CP_DN":
             is_auto = 1 if hvac_mode == HVACMode.AUTO else 0
             new_val = (current_val & ~(1 << 31)) | (is_auto << 31)
-            return await self.send_epset_async(agt, me, "P1", CMD_TYPE_SET_RAW, new_val)
+            return await self.set_single_ep_async(
+                agt, me, "P1", CMD_TYPE_SET_RAW, new_val
+            )
 
         if device_type == "SL_CP_VL":
             mode_map = {HVACMode.HEAT: 0, HVACMode.AUTO: 2}
             mode_val = mode_map.get(hvac_mode, 0)
             new_val = (current_val & ~(0b11 << 1)) | (mode_val << 1)
-            return await self.send_epset_async(agt, me, "P1", CMD_TYPE_SET_RAW, new_val)
+            return await self.set_single_ep_async(
+                agt, me, "P1", CMD_TYPE_SET_RAW, new_val
+            )
         return 0
 
     async def async_set_climate_temperature(
@@ -489,7 +540,7 @@ class LifeSmartClient:
         }
         if device_type in idx_map:
             idx, cmd_type = idx_map[device_type]
-            return await self.send_epset_async(agt, me, idx, cmd_type, temp_val)
+            return await self.set_single_ep_async(agt, me, idx, cmd_type, temp_val)
         return -1
 
     async def async_set_climate_fan_mode(
@@ -498,22 +549,24 @@ class LifeSmartClient:
         """设置温控设备的风扇模式。"""
         if device_type == "V_AIR_P":
             fan_val = LIFESMART_F_FAN_MODE_MAP.get(fan_mode)
-            return await self.send_epset_async(
+            return await self.set_single_ep_async(
                 agt, me, "F", CMD_TYPE_SET_CONFIG, fan_val
             )
         elif device_type == "SL_TR_ACIPM":
             fan_val = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
-            return await self.send_epset_async(agt, me, "P2", CMD_TYPE_SET_RAW, fan_val)
+            return await self.set_single_ep_async(
+                agt, me, "P2", CMD_TYPE_SET_RAW, fan_val
+            )
         elif device_type in ["SL_NATURE", "SL_FCU"]:
             fan_val = REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)
-            return await self.send_epset_async(
+            return await self.set_single_ep_async(
                 agt, me, "P9", CMD_TYPE_SET_CONFIG, fan_val
             )
         elif device_type == "SL_CP_AIR":
             fan_val = REVERSE_LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)
             if fan_val is not None:
                 new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
-                return await self.send_epset_async(
+                return await self.set_single_ep_async(
                     agt, me, "P1", CMD_TYPE_SET_RAW, new_val
                 )
         return -1
@@ -525,64 +578,80 @@ class LifeSmartClient:
     async def _post_and_parse(self, url: str, data: dict, headers: dict) -> dict:
         """一个辅助函数，用于发送POST请求并解析JSON响应。"""
         try:
-            response_text = await self.post_async(url, json.dumps(data), headers)
+            response_text = await self._post_async(url, json.dumps(data), headers)
             return json.loads(response_text)
         except Exception as e:
             _LOGGER.error("POST请求到 %s 失败: %s", url, e)
             raise LifeSmartAPIError(f"网络请求失败: {e}") from e
 
-    async def post_async(self, url: str, data: str, headers: dict) -> str:
+    async def _post_async(self, url: str, data: str, headers: dict) -> str:
         """使用 Home Assistant 的共享客户端会话发送 POST 请求。"""
         session = async_get_clientsession(self.hass)
         async with session.post(url, data=data, headers=headers) as response:
             response.raise_for_status()
             return await response.text()
 
-    def get_signature(self, data: str) -> str:
-        """生成 LifeSmart API 所需的 MD5 签名。"""
-        return hashlib.md5(data.encode("utf-8")).hexdigest()
-
-    def get_api_url(self) -> str:
+    def _get_api_url(self) -> str:
         """根据所选区域生成基础 API URL。"""
         if not self._region or self._region.upper() == "AUTO":
             return "https://api.ilifesmart.com/app"
         return f"https://api.{self._region.lower()}.ilifesmart.com/app"
 
-    def get_wss_url(self) -> str:
-        """根据所选区域生成 WebSocket (WSS) URL。"""
-        if not self._region or self._region.upper() == "AUTO":
-            return "wss://api.ilifesmart.com:8443/wsapp/"
-        return f"wss://api.{self._region.lower()}.ilifesmart.com:8443/wsapp/"
+    @staticmethod
+    def _get_code_from_response(response: dict, method_name: str) -> int:
+        """用于从“设置”类API的响应中安全地提取和转换'code'。"""
+        if not isinstance(response, dict):
+            _LOGGER.warning("%s: API响应不是预期的字典类型: %s", method_name, response)
+            return -1
 
-    def generate_system_request_body(self, tick: int, data: str) -> dict[str, Any]:
-        """为请求体生成 'system' 节点。"""
-        return {
-            "ver": "1.0",
-            "lang": "en",
-            "userid": self._userid,
-            "appkey": self._appkey,
-            "time": tick,
-            "sign": self.get_signature(data),
-        }
+        code_val = response.get("code")
+        if code_val is None:
+            _LOGGER.warning("%s: API响应中缺少 'code' 字段: %s", method_name, response)
+            return -1
 
-    def generate_time_and_credential_data(self, tick: int) -> str:
-        """为签名字符串生成凭据部分。"""
-        return (
-            f"time:{tick},userid:{self._userid},usertoken:{self._usertoken},"
-            f"appkey:{self._appkey},apptoken:{self._apptoken}"
-        )
+        try:
+            return int(code_val)
+        except (ValueError, TypeError):
+            _LOGGER.error(
+                "%s: API返回的 'code' 字段不是有效的整数: %s", method_name, code_val
+            )
+            return -1
 
-    def generate_header(self) -> dict[str, str]:
+    @staticmethod
+    def _get_signature(data: dict[str, Any]) -> str:
+        """
+        根据字典生成 LifeSmart API 所需的 MD5 签名。
+        此实现严格遵循官方文档提供的 "method+params+system" 格式。
+        """
+        sdata = data.copy()
+        method = sdata.pop("method")
+        did = sdata.pop("did", None)  # did 是可选的，不一定存在
+        time_val = sdata.pop("time")
+        userid = sdata.pop("userid")
+        usertoken = sdata.pop("usertoken")
+        appkey = sdata.pop("appkey")
+        apptoken = sdata.pop("apptoken")
+
+        final_parts = [f"method:{method}"]
+
+        if sdata:
+            params_list = [
+                f"{k}:{v}" for k, v in sorted(sdata.items()) if v is not None
+            ]
+            final_parts.extend(params_list)
+        if did is not None:
+            final_parts.append(f"did:{did}")
+        final_parts.append(f"time:{time_val}")
+        final_parts.append(f"userid:{userid}")
+        final_parts.append(f"usertoken:{usertoken}")
+        final_parts.append(f"appkey:{appkey}")
+        final_parts.append(f"apptoken:{apptoken}")
+
+        signature_raw_string = ",".join(final_parts)
+
+        return hashlib.md5(signature_raw_string.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _generate_header() -> dict[str, str]:
         """生成默认的 HTTP 头部。"""
         return {"Content-Type": "application/json"}
-
-    def generate_wss_auth(self) -> str:
-        """为 WebSocket 连接生成认证消息。"""
-        tick = int(time.time())
-        sdata = "method:WbAuth," + self.generate_time_and_credential_data(tick)
-        send_values = {
-            "id": 1,
-            "method": "WbAuth",
-            "system": self.generate_system_request_body(tick, sdata),
-        }
-        return json.dumps(send_values)
