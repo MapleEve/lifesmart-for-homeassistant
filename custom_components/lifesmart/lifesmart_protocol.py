@@ -1123,7 +1123,7 @@ class LifeSmartLocalClient:
         pkt = self._factory.build_switch_packet(me, idx, False)
         return await self._send_packet(pkt)
 
-    async def send_epset_async(
+    async def set_single_ep_async(
         self, agt: str, me: str, idx: str, command_type: str, val: Any
     ) -> int:
         """向本地设备端点发送通用命令。"""
@@ -1131,9 +1131,7 @@ class LifeSmartLocalClient:
         pkt = self._factory.build_epset_packet(me, idx, command_type, val)
         return await self._send_packet(pkt)
 
-    async def async_set_multi_ep_async(
-        self, agt: str, me: str, io_list: list[dict]
-    ) -> int:
+    async def set_multi_eps_async(self, agt: str, me: str, io_list: list[dict]) -> int:
         """向本地设备端点同时发送多个IO口的命令。"""
         # agt 在本地模式下未使用，但为了保持签名一致而保留
         pkt = self._factory.build_multi_epset_packet(me, io_list)

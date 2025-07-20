@@ -83,7 +83,7 @@ class LifeSmartClient:
     # 核心 API 调用器
     # ====================================================================
 
-    async def __async_call_api(
+    async def _async_call_api(
         self, method: str, params: Optional[dict] = None, api_path: str = "/api"
     ) -> dict[str, Any]:
         """一个集中的方法，用于构建、签名和发送 API 请求。
@@ -272,7 +272,7 @@ class LifeSmartClient:
         """为 WebSocket 连接生成认证消息。"""
         tick = int(time.time())
 
-        # 1. 像新的 __async_call_api 一样，构建一个用于签名的字典
+        # 1. 像新的 _async_call_api 一样，构建一个用于签名的字典
         sign_dict = {
             "method": "WbAuth",
             "time": tick,
@@ -303,37 +303,37 @@ class LifeSmartClient:
 
     async def get_agt_list_async(self) -> list[dict[str, Any]]:
         """获取用户下的所有中枢（网关）列表。(API: AgtGetList)"""
-        response = await self.__async_call_api("AgtGetList")
+        response = await self._async_call_api("AgtGetList")
         message = response.get("message")
         return message if isinstance(message, list) else []
 
     async def get_agt_details_async(self, agt: str) -> dict[str, Any]:
         """获取指定中枢的详细信息。(API: AgtGet)"""
-        response = await self.__async_call_api("AgtGet", {HUB_ID_KEY: agt})
+        response = await self._async_call_api("AgtGet", {HUB_ID_KEY: agt})
         message = response.get("message")
         return message if isinstance(message, dict) else {}
 
     async def get_all_device_async(self) -> list[dict[str, Any]]:
         """获取当前用户下的所有设备。(API: EpGetAll)"""
-        response = await self.__async_call_api("EpGetAll")
+        response = await self._async_call_api("EpGetAll")
         message = response.get("message")
         return message if isinstance(message, list) else []
 
     async def get_scene_list_async(self, agt: str) -> list[dict[str, Any]]:
         """获取指定中枢下的所有场景。(API: SceneGet)"""
-        response = await self.__async_call_api("SceneGet", {HUB_ID_KEY: agt})
+        response = await self._async_call_api("SceneGet", {HUB_ID_KEY: agt})
         message = response.get("message")
         return message if isinstance(message, list) else []
 
     async def get_room_list_async(self, agt: str) -> list[dict[str, Any]]:
         """获取指定中枢下配置的房间列表。(API: RoomGet)"""
-        response = await self.__async_call_api("RoomGet", {HUB_ID_KEY: agt})
+        response = await self._async_call_api("RoomGet", {HUB_ID_KEY: agt})
         message = response.get("message")
         return message if isinstance(message, list) else []
 
     async def set_scene_async(self, agt: str, scene_id: str) -> int:
         """激活一个场景。(API: SceneSet)"""
-        response = await self.__async_call_api(
+        response = await self._async_call_api(
             "SceneSet", {HUB_ID_KEY: agt, "id": scene_id}
         )
         return self._get_code_from_response(response, "SceneSet")
@@ -348,7 +348,7 @@ class LifeSmartClient:
             "type": command_type,
             "val": val,
         }
-        response = await self.__async_call_api("EpSet", params)
+        response = await self._async_call_api("EpSet", params)
         return self._get_code_from_response(response, "EpSet")
 
     async def set_multi_eps_async(self, agt: str, me: str, io_list: list[dict]) -> int:
@@ -366,12 +366,12 @@ class LifeSmartClient:
         """
         args_str = json.dumps(io_list)
         params = {"args": args_str}
-        response = await self.__async_call_api("EpsSet", params)
+        response = await self._async_call_api("EpsSet", params)
         return self._get_code_from_response(response, "EpsSet")
 
     async def get_epget_async(self, agt: str, me: str) -> dict[str, Any]:
         """获取指定设备的详细信息。(API: EpGet)"""
-        response = await self.__async_call_api(
+        response = await self._async_call_api(
             "EpGet", {HUB_ID_KEY: agt, DEVICE_ID_KEY: me}
         )
 
@@ -386,7 +386,7 @@ class LifeSmartClient:
 
     async def get_ir_remote_list_async(self, agt: str) -> dict[str, Any]:
         """获取指定中枢下的红外遥控器列表。(API: GetRemoteList)"""
-        response = await self.__async_call_api(
+        response = await self._async_call_api(
             "GetRemoteList", {HUB_ID_KEY: agt}, api_path="/irapi"
         )
         message = response.get("message")
@@ -404,7 +404,7 @@ class LifeSmartClient:
             "brand": brand,
             "keys": keys,
         }
-        response = await self.__async_call_api("SendKeys", params, api_path="/irapi")
+        response = await self._async_call_api("SendKeys", params, api_path="/irapi")
         return self._get_code_from_response(response, "SendKeys")
 
     # ====================================================================
@@ -577,13 +577,13 @@ class LifeSmartClient:
     async def _post_and_parse(self, url: str, data: dict, headers: dict) -> dict:
         """一个辅助函数，用于发送POST请求并解析JSON响应。"""
         try:
-            response_text = await self.__post_async(url, json.dumps(data), headers)
+            response_text = await self._post_async(url, json.dumps(data), headers)
             return json.loads(response_text)
         except Exception as e:
             _LOGGER.error("POST请求到 %s 失败: %s", url, e)
             raise LifeSmartAPIError(f"网络请求失败: {e}") from e
 
-    async def __post_async(self, url: str, data: str, headers: dict) -> str:
+    async def _post_async(self, url: str, data: str, headers: dict) -> str:
         """使用 Home Assistant 的共享客户端会话发送 POST 请求。"""
         session = async_get_clientsession(self.hass)
         async with session.post(url, data=data, headers=headers) as response:
