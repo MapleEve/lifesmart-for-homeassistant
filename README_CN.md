@@ -8,8 +8,6 @@
 ![haasfestworkflow](https://github.com/MapleEve/lifesmart-for-homeassistant/actions/workflows/haas-vali.yml/badge.svg)
 ![hacsworkflow](https://github.com/MapleEve/lifesmart-for-homeassistant/actions/workflows/hacs-vali.yml/badge.svg)
 
-# LifeSmart for Home Assistant
-
 > 这是中文版文档。如需英文版，请参见 [README.md](./README.md)。
 
 ---
