@@ -235,6 +235,7 @@ class LifeSmartClient:
         sdata_params = {"appkey": self._appkey, "time": tick, "userid": self._userid}
         sdata = "&".join([f"{k}={v}" for k, v in sorted(sdata_params.items())])
         sdata += f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
+        # async_refresh_token 方法生成的签名原始串 sdata 是用 & 连接的 key=value 格式，与官方文档要求的 API 不一致
         signature = hashlib.md5(sdata.encode("utf-8")).hexdigest()
         _LOGGER.debug("刷新令牌签名原始串 (sdata): %s", sdata)
         _LOGGER.debug("生成刷新令牌签名 (sign): %s", signature)
