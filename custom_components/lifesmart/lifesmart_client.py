@@ -168,7 +168,7 @@ class LifeSmartClient:
                 raise LifeSmartAuthError(advice, error_code)
             raise LifeSmartAPIError(advice, error_code)
 
-        return response.get("message") if "message" in response else response
+        return response
 
     # ====================================================================
     # 认证 API 的专属实现
@@ -313,11 +313,7 @@ class LifeSmartClient:
             "val": val,
         }
         response = await self._async_call_api("EpSet", params)
-        if isinstance(response, dict):
-            return response.get("code", -1)
-        # 如果返回的不是字典（例如，在某些罕见情况下），记录警告并返回失败
-        _LOGGER.warning("EpSet: 收到非预期的响应类型: %s", type(response))
-        return -1
+        return response.get("code", -1)
 
     async def async_set_multi_ep_async(
         self, agt: str, me: str, io_list: list[dict]
@@ -338,13 +334,7 @@ class LifeSmartClient:
         params = {"args": args_str}
 
         response = await self._async_call_api("EpsSet", params)
-
-        # EpsSet 的成功响应也是一个字典，我们可以从中获取 code
-        if isinstance(response, dict):
-            return response.get("code", -1)
-
-        _LOGGER.warning("EpsSet: 收到非预期的响应类型: %s", type(response))
-        return -1
+        return response.get("code", -1)
 
     async def get_epget_async(self, agt: str, me: str) -> dict[str, Any]:
         """获取指定设备的详细信息。(API: EpGet)"""
