@@ -334,11 +334,9 @@ class LifeSmartClient:
                      例如: [{"idx": "DYN", "type": "0xff", "val": 123},
                             {"idx": "RGBW", "type": "0x81", "val": 1}]
         """
-        # LifeSmart的EpSet接口通过在val字段中传递一个列表来实现多IO口设置
         args_str = json.dumps(io_list)
         params = {"args": args_str}
 
-        # 调用正确的 EpsSet 接口
         response = await self._async_call_api("EpsSet", params)
 
         # EpsSet 的成功响应也是一个字典，我们可以从中获取 code
