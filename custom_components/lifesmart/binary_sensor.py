@@ -205,7 +205,28 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
     @callback
     def _generate_sensor_name(self) -> str:
-        """Generate user-friendly sensor name."""
+        """
+        Generate a user-friendly name for the binary sensor.
+
+        The naming strategy combines the base device name with the sub-device name or key:
+        - If the sub-device has a specific name (and it differs from the sub-device key), 
+          the name is formatted as "{base_name} {sub_name}".
+        - Otherwise, the name is formatted as "{base_name} {sub_key.upper()}".
+
+        Parameters:
+        - self._raw_device: A dictionary containing the raw device data, including the base name.
+        - self._sub_data: A dictionary containing the sub-device data, including the sub-device name.
+        - self._sub_key: A string representing the sub-device key (e.g., an I/O port index).
+
+        Returns:
+        - A string representing the user-friendly name of the sensor.
+
+        Examples:
+        - Base name: "Living Room Sensor", Sub-device name: "Motion Detector"
+          -> "Living Room Sensor Motion Detector"
+        - Base name: "Living Room Sensor", Sub-device key: "io1"
+          -> "Living Room Sensor IO1"
+        """
         base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Device")
         # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
