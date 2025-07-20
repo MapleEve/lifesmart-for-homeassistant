@@ -483,22 +483,25 @@ class LifeSmartSensor(SensorEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """返回设备信息以链接实体到单个设备。"""
+        # 从 self._raw_device 中安全地获取 hub_id 和 device_id
+        hub_id = self._raw_device.get(HUB_ID_KEY)
+        device_id = self._raw_device.get(DEVICE_ID_KEY)
+
+        # 确保 identifiers 即使在 hub_id 或 device_id 为 None 的情况下也不会出错
+        identifiers = set()
+        if hub_id and device_id:
+            identifiers.add((DOMAIN, hub_id, device_id))
+
         return DeviceInfo(
-            identifiers={
-                (DOMAIN, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY])
-            },
-            name=self._raw_device[DEVICE_NAME_KEY],
+            identifiers=identifiers,
+            name=self._raw_device.get(
+                DEVICE_NAME_KEY, "Unnamed Device"
+            ),  # 安全获取名称
             manufacturer=MANUFACTURER,
-            model=self._raw_device[DEVICE_TYPE_KEY],
-            sw_version=self._raw_device.get(
-                DEVICE_VERSION_KEY, "unknown"
-            ),  # 添加版本信息
-            via_device=(
-                (DOMAIN, self._raw_device[HUB_ID_KEY])
-                if self._raw_device[HUB_ID_KEY]
-                else None
-            ),
+            model=self._raw_device.get(DEVICE_TYPE_KEY),  # 安全获取型号
+            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
+            via_device=((DOMAIN, hub_id) if hub_id else None),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -507,7 +510,7 @@ class LifeSmartSensor(SensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self.unique_id}",
+                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self._attr_unique_id}",
                 self._handle_update,
             )
         )
@@ -555,7 +558,7 @@ class LifeSmartSensor(SensorEntity):
         if current_device is None:
             _LOGGER.warning(
                 "LifeSmartSensor: Device not found during global refresh: %s",
-                self.unique_id,
+                self._attr_unique_id,
             )
             return
 
@@ -569,8 +572,3 @@ class LifeSmartSensor(SensorEntity):
                 "LifeSmartSensor: No value found for sub-device '%s' during global refresh",
                 self._sub_key,
             )
-
-    @property
-    def native_value(self) -> Any:
-        """Return the state of the sensor."""
-        return self._attr_native_value
