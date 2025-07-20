@@ -484,7 +484,6 @@ async def data_update_handler(
         _LOGGER.debug(
             "状态更新已派发 -> %s: %s", entity_id, json.dumps(data, ensure_ascii=False)
         )
-        await asyncio.sleep(0)  # 确保调度器有时间处理事件
 
     except Exception as e:
         _LOGGER.error("处理设备更新时发生异常: %s\n原始数据: %s", str(e), raw_data)
