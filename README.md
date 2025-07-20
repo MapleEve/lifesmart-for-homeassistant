@@ -29,7 +29,7 @@ Installation and updates are available via HACS.
 - Device discovery and broad device support (switches, sensors, locks, controllers, sockets, curtain motors, lights,
   SPOT, cameras)
 - Home Assistant services: send IR keys (including A/C), trigger LifeSmart scenes, momentary switch press
-- Multi-region support: China VIP, China Backup, China Main, North America, Europe, Japan, Asia Pacific, Global Auto
+- Multi-region support: China, North America, Europe, Japan, Asia Pacific, Global Auto
 - Bilingual UI (English/Chinese)
 - Recent improvements: device registration, SSL WebSocket, error handling, code structure
 
