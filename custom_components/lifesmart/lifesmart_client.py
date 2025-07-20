@@ -176,7 +176,7 @@ class LifeSmartClient:
         header = self._generate_header()
 
         # 步骤 1: /auth.login (无签名)
-        url_step1 = self._get_api_url() + "/auth.login"
+        url_step1 = f"{self._get_api_url()}/auth.login"
         body_step1 = {
             "uid": self._userid,
             "pwd": self._apppassword,
@@ -193,7 +193,7 @@ class LifeSmartClient:
             )
 
         # --- 步骤 2: /auth.do_auth ---
-        url_step2 = self._get_api_url() + "/auth.do_auth"
+        url_step2 = f"{self._get_api_url()}/auth.do_auth"
         body_step2 = {
             "userid": response1["userid"],
             "token": response1["token"],
