@@ -478,7 +478,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
                 )
 
         if io_commands:
-            await self._client.async_set_multi_ep_async(
+            await self._client.set_multi_eps_async(
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
                 io_commands,
@@ -529,7 +529,7 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
         """开启亮度灯."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-            result = await self._client.send_epset_async(
+            result = await self._client.set_single_ep_async(
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
                 self._sub_key,
@@ -628,7 +628,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
             cmd_val = (w_val << 24) | (r << 16) | (g << 8) | b
 
         if cmd_val is not None:
-            await self._client.send_epset_async(
+            await self._client.set_single_ep_async(
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
                 self._sub_key,
@@ -727,7 +727,7 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
             ]
 
         if io_list:
-            await self._client.async_set_multi_ep_async(
+            await self._client.set_multi_eps_async(
                 self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY], io_list
             )
         else:
@@ -742,7 +742,7 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
             {"idx": self._color_io, "type": CMD_TYPE_OFF, "val": 0},
             {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
         ]
-        await self._client.async_set_multi_ep_async(
+        await self._client.set_multi_eps_async(
             self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY], io_list
         )
 
@@ -808,7 +808,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
             cmd_type = CMD_TYPE_ON
             cmd_val = 1
 
-        await self._client.send_epset_async(
+        await self._client.set_single_ep_async(
             self._raw_device[HUB_ID_KEY],
             self._raw_device[DEVICE_ID_KEY],
             self._sub_key,
@@ -898,7 +898,7 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
             ]
 
         if io_list:
-            await self._client.async_set_multi_ep_async(
+            await self._client.set_multi_eps_async(
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
                 io_list,
@@ -916,7 +916,7 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
             {"idx": "RGBW", "type": CMD_TYPE_OFF, "val": 0},
             {"idx": "DYN", "type": CMD_TYPE_OFF, "val": 0},
         ]
-        await self._client.async_set_multi_ep_async(
+        await self._client.set_multi_eps_async(
             self._raw_device[HUB_ID_KEY],
             self._raw_device[DEVICE_ID_KEY],
             io_list,
@@ -978,10 +978,9 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
 
     async def async_turn_on(self, **kwargs) -> None:
         """开启调光灯."""
-        # 注意：由于调光灯的两个IO是独立的，我们不能使用多IO下发
-        # 而是需要逐个发送命令
+        # 注意：由于调光灯的两个IO是独立的，我们不能使用多IO下发,而是需要逐个发送命令
         if ATTR_BRIGHTNESS in kwargs:
-            await self._client.send_epset_async(
+            await self._client.set_single_ep_async(
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
                 "P1",
@@ -994,7 +993,7 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
                 self._attr_max_mireds - self._attr_min_mireds
             )
             val = int((-ratio + 1) * 255)
-            await self._client.send_epset_async(
+            await self._client.set_single_ep_async(
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
                 "P2",
@@ -1107,7 +1106,7 @@ class LifeSmartLight(LifeSmartBaseLight):
             rgbhex = binascii.hexlify(struct.pack("BBBB", *rgba)).decode("ASCII")
             rgbhex = int(rgbhex, 16)
 
-            result = await self._client.send_epset_async(
+            result = await self._client.set_single_ep_async(
                 self._raw_device[HUB_ID_KEY],
                 self._raw_device[DEVICE_ID_KEY],
                 self._sub_key,
