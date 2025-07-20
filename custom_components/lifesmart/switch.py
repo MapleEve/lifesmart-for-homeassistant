@@ -291,6 +291,6 @@ class LifeSmartSwitch(SwitchEntity):
             _LOGGER.warning(
                 "Failed to turn off switch %s (dev: %s, sub: %s)",
                 self._attr_name,
-                self._raw_device[DEVICE_ID_KEY],
+                self._raw_device.get(DEVICE_ID_KEY, "Unknown Device ID"),
                 self._sub_key,
             )
