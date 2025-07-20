@@ -168,7 +168,7 @@ class LifeSmartClient:
                 raise LifeSmartAuthError(advice, error_code)
             raise LifeSmartAPIError(advice, error_code)
 
-        return response.get("message", response)
+        return response.get("message") if "message" in response else response
 
     # ====================================================================
     # 认证 API 的专属实现
@@ -313,12 +313,19 @@ class LifeSmartClient:
             "val": val,
         }
         response = await self._async_call_api("EpSet", params)
-        return response.get("code", -1)  # EpSet 成功时 message 为空，返回 code
+        if isinstance(response, dict):
+            return response.get("code", -1)
+        # 如果返回的不是字典（例如，在某些罕见情况下），记录警告并返回失败
+        _LOGGER.warning("EpSet: 收到非预期的响应类型: %s", type(response))
+        return -1
 
     async def async_set_multi_ep_async(
         self, agt: str, me: str, io_list: list[dict]
     ) -> int:
-        """向设备端点同时发送多个IO口的命令。(API: EpSet)
+        """向设备端点同时发送多个IO口的命令。(API: EpsSet)
+
+        根据官方文档，此方法使用 EpsSet 接口，并将操作列表作为JSON字符串
+        在 'args' 参数中传递。
 
         Args:
             agt: 中枢ID。
@@ -328,9 +335,18 @@ class LifeSmartClient:
                             {"idx": "RGBW", "type": "0x81", "val": 1}]
         """
         # LifeSmart的EpSet接口通过在val字段中传递一个列表来实现多IO口设置
-        params = {HUB_ID_KEY: agt, DEVICE_ID_KEY: me, "val": io_list}
-        response = await self._async_call_api("EpSet", params)
-        return response.get("code", -1)
+        args_str = json.dumps(io_list)
+        params = {"args": args_str}
+
+        # 调用正确的 EpsSet 接口
+        response = await self._async_call_api("EpsSet", params)
+
+        # EpsSet 的成功响应也是一个字典，我们可以从中获取 code
+        if isinstance(response, dict):
+            return response.get("code", -1)
+
+        _LOGGER.warning("EpsSet: 收到非预期的响应类型: %s", type(response))
+        return -1
 
     async def get_epget_async(self, agt: str, me: str) -> dict[str, Any]:
         """获取指定设备的详细信息。(API: EpGet)"""
