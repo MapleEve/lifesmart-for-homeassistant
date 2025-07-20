@@ -188,14 +188,12 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         self._client = client
         self._entry_id = entry_id
 
-        # 基本属性
-        self.device_type = raw_device[DEVICE_TYPE_KEY]
-        self.hub_id = raw_device[HUB_ID_KEY]
-        self.device_id = raw_device[DEVICE_ID_KEY]
-        self.sensor_device_name = raw_device[DEVICE_NAME_KEY]
-        self.device_name = sub_device_data.get(DEVICE_NAME_KEY, "")
+        # --- 设置核心属性 ---
+        self.device_type = raw_device.get(DEVICE_TYPE_KEY)
+        self.hub_id = raw_device.get(HUB_ID_KEY)
+        self.device_id = raw_device.get(DEVICE_ID_KEY)
 
-        # 生成唯一ID
+        self._attr_name = self._generate_sensor_name()
         self._attr_unique_id = generate_entity_id(
             self.device_type, self.hub_id, self.device_id, sub_device_key
         )
@@ -204,6 +202,40 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         self._attr_device_class = self._determine_device_class()
         self._attr_is_on = self._parse_initial_state()
         self._attrs = self._get_initial_attributes()
+
+    @callback
+    def _generate_sensor_name(self) -> str:
+        """
+        Generate a user-friendly name for the binary sensor.
+
+        The naming strategy combines the base device name with the sub-device name or key:
+        - If the sub-device has a specific name (and it differs from the sub-device key), 
+          the name is formatted as "{base_name} {sub_name}".
+        - Otherwise, the name is formatted as "{base_name} {sub_key.upper()}".
+
+        Parameters:
+        - self._raw_device: A dictionary containing the raw device data, including the base name.
+        - self._sub_data: A dictionary containing the sub-device data, including the sub-device name.
+        - self._sub_key: A string representing the sub-device key (e.g., an I/O port index).
+
+        Returns:
+        - A string representing the user-friendly name of the sensor.
+
+        Examples:
+        - Base name: "Living Room Sensor", Sub-device name: "Motion Detector"
+          -> "Living Room Sensor Motion Detector"
+        - Base name: "Living Room Sensor", Sub-device key: "io1"
+          -> "Living Room Sensor IO1"
+        """
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Device")
+        # 如果子设备有自己的名字，则使用它
+        sub_name = self._sub_data.get(DEVICE_NAME_KEY)
+        if sub_name and sub_name != self._sub_key:
+            # 对于二元传感器，通常子设备名已经足够清晰，可以不加 base_name
+            # 但为了统一，我们还是保留 base_name + sub_name 的格式
+            return f"{base_name} {sub_name}"
+        # 否则，使用基础名 + IO口索引
+        return f"{base_name} {self._sub_key.upper()}"
 
     @callback
     def _determine_device_class(self) -> BinarySensorDeviceClass | None:
@@ -404,26 +436,26 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         return dict(self._sub_data)
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self.device_name or None
-
-    @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """返回设备信息以链接实体到单个设备。"""
+        # 从 self._raw_device 中安全地获取 hub_id 和 device_id
+        hub_id = self._raw_device.get(HUB_ID_KEY)
+        device_id = self._raw_device.get(DEVICE_ID_KEY)
+
+        # 确保 identifiers 即使在 hub_id 或 device_id 为 None 的情况下也不会出错
+        identifiers = set()
+        if hub_id and device_id:
+            identifiers.add((DOMAIN, hub_id, device_id))
+
         return DeviceInfo(
-            identifiers={
-                (DOMAIN, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY])
-            },
-            name=self._raw_device[DEVICE_NAME_KEY],
+            identifiers=identifiers,
+            name=self._raw_device.get(
+                DEVICE_NAME_KEY, "Unnamed Device"
+            ),  # 安全获取名称
             manufacturer=MANUFACTURER,
-            model=self._raw_device[DEVICE_TYPE_KEY],
+            model=self._raw_device.get(DEVICE_TYPE_KEY),  # 安全获取型号
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(
-                (DOMAIN, self._raw_device[HUB_ID_KEY])
-                if self._raw_device[HUB_ID_KEY]
-                else None
-            ),
+            via_device=((DOMAIN, hub_id) if hub_id else None),
         )
 
     @property
@@ -442,7 +474,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self.unique_id}",
+                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self._attr_unique_id}",
                 self._handle_update,
             )
         )
@@ -476,7 +508,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             self.async_write_ha_state()
 
         except Exception as e:
-            _LOGGER.error("Error handling update for %s: %s", self.unique_id, e)
+            _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
 
     @callback
     def _update_state_by_device_type(self, data: dict) -> None:
@@ -578,7 +610,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             if current_device is None:
                 _LOGGER.warning(
                     "LifeSmartBinarySensor: Device not found during global refresh: %s",
-                    self.unique_id,
+                    self._attr_unique_id,
                 )
                 return
 
@@ -595,4 +627,6 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             self.async_write_ha_state()
 
         except Exception as e:
-            _LOGGER.error("Error during global refresh for %s: %s", self.unique_id, e)
+            _LOGGER.error(
+                "Error during global refresh for %s: %s", self._attr_unique_id, e
+            )

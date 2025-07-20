@@ -525,11 +525,13 @@ class LifeSmartDevice(Entity):
             dev: 从 API 获取的设备信息字典。
             lifesmart_client: LifeSmart 客户端实例。
         """
-        self._name = dev[DEVICE_NAME_KEY]
-        self._device_name = dev[DEVICE_NAME_KEY]
-        self._agt = dev[HUB_ID_KEY]
-        self._me = dev[DEVICE_ID_KEY]
-        self._devtype = dev[DEVICE_TYPE_KEY]
+        self._name = (
+            dev.get(DEVICE_NAME_KEY) or f"Unnamed {dev.get(DEVICE_TYPE_KEY, 'Device')}"
+        )
+        self._device_name = self._name
+        self._agt = dev.get(HUB_ID_KEY)
+        self._me = dev.get(DEVICE_ID_KEY)
+        self._devtype = dev.get(DEVICE_TYPE_KEY)
         self._client = lifesmart_client
         self._attributes = {
             HUB_ID_KEY: self._agt,
