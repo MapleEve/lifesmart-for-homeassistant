@@ -223,6 +223,16 @@ async def _async_create_client_and_get_devices(
                 config_entry.data[CONF_PASSWORD],
                 config_entry.entry_id,
             )
+
+            async def local_update_callback(data):
+                await data_update_handler(hass, config_entry, data)
+
+            connect_task = hass.loop.create_task(
+                client.async_connect(local_update_callback)
+            )
+
+            hass.data[DOMAIN][config_entry.entry_id] = {"local_task": connect_task}
+
             devices = await client.get_all_device_async()
             if not devices:
                 raise ConfigEntryNotReady("从本地网关获取设备列表失败。")
@@ -390,7 +400,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if state_manager := hass.data[DOMAIN].get(LIFESMART_STATE_MANAGER):
         await state_manager.stop()
 
-    # 断开本地客户端连接
+    # 停止本地客户端连接任务
+    if local_task := hass.data[DOMAIN].get(entry_id, {}).get("local_task"):
+        local_task.cancel()
+        # 等待任务取消完成
+        await asyncio.sleep(0)
+
+        # 断开本地客户端连接
     client = hass.data[DOMAIN].get(entry_id, {}).get("client")
     if isinstance(client, lifesmart_protocol.LifeSmartLocalClient):
         await client.async_disconnect(None)
