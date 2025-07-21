@@ -15,7 +15,7 @@ from custom_components.lifesmart import (
     async_setup_entry,
     async_unload_entry,
     data_update_handler,
-    generate_entity_id,
+    generate_unique_id,
     LifeSmartStateManager,
 )
 from custom_components.lifesmart.const import (
@@ -215,26 +215,26 @@ def test_generate_entity_id():
     """Test the entity ID generation utility."""
     # Test a simple switch
     assert (
-        generate_entity_id("SL_SW_IF1", "hub123", "dev456", "L1")
+        generate_unique_id("SL_SW_IF1", "hub123", "dev456", "L1")
         == "switch.sl_sw_if1_hub123_dev456_l1"
     )
     # Test a light
     assert (
-        generate_entity_id("SL_LI_RGBW", "hub123", "dev789", "RGBW")
+        generate_unique_id("SL_LI_RGBW", "hub123", "dev789", "RGBW")
         == "light.sl_li_rgbw_hub123_dev789_rgbw"
     )
     # Test a sensor from a composite device (lock battery)
     assert (
-        generate_entity_id("SL_LK_LS", "hub123", "lock01", "BAT")
+        generate_unique_id("SL_LK_LS", "hub123", "lock01", "BAT")
         == "sensor.sl_lk_ls_hub123_lock01_bat"
     )
     # Test a climate entity (no sub-device needed for platform)
     assert (
-        generate_entity_id("SL_CP_AIR", "hub123", "climate01", "climate")
+        generate_unique_id("SL_CP_AIR", "hub123", "climate01", "climate")
         == "climate.sl_cp_air_hub123_climate01_climate"
     )
     # Test unknown device
-    assert generate_entity_id("UNKNOWN_DEV", "hub123", "dev000", "P1") == ""
+    assert generate_unique_id("UNKNOWN_DEV", "hub123", "dev000", "P1") == ""
 
 
 @pytest.mark.asyncio

@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import LifeSmartDevice, generate_entity_id
+from . import LifeSmartDevice, generate_unique_id
 from .const import (
     # --- 核心常量导入 ---
     DOMAIN,
@@ -194,7 +194,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         self.device_id = raw_device.get(DEVICE_ID_KEY)
 
         self._attr_name = self._generate_sensor_name()
-        self._attr_unique_id = generate_entity_id(
+        self._attr_unique_id = generate_unique_id(
             self.device_type, self.hub_id, self.device_id, sub_device_key
         )
 
@@ -227,7 +227,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         - Base name: "Living Room Sensor", Sub-device key: "io1"
           -> "Living Room Sensor IO1"
         """
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unnamed Device")
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unnamed Binary Sensor")
         # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
         if sub_name and sub_name != self._sub_key:

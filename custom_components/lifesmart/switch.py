@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice, generate_entity_id
+from . import LifeSmartDevice, generate_unique_id
 from .const import (
     # --- 核心常量 ---
     DOMAIN,
@@ -147,7 +147,7 @@ class LifeSmartSwitch(SwitchEntity):
         self._entry_id = entry_id
 
         # --- 设置核心属性 ---
-        self._attr_unique_id = generate_entity_id(
+        self._attr_unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
             raw_device[DEVICE_ID_KEY],

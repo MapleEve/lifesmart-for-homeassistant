@@ -23,7 +23,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -492,13 +491,13 @@ async def data_update_handler(
             return
 
         # --- 普通设备更新处理 ---
-        entity_id = generate_entity_id(device_type, hub_id, device_id, sub_device_key)
+        unique_id = generate_unique_id(device_type, hub_id, device_id, sub_device_key)
 
         # 通过 dispatcher 将更新信号发送给对应的实体
-        dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
+        dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", data)
 
         _LOGGER.debug(
-            "状态更新已派发 -> %s: %s", entity_id, json.dumps(data, ensure_ascii=False)
+            "状态更新已派发 -> %s: %s", unique_id, json.dumps(data, ensure_ascii=False)
         )
 
     except Exception as e:
@@ -884,56 +883,15 @@ class LifeSmartStateManager:
         _LOGGER.info("LifeSmart 状态管理器已完全停止。")
 
 
-def get_platform_by_device(device_type: str, sub_device: Optional[str] = None) -> str:
-    """根据设备类型和子索引，决定其所属的 Home Assistant 平台。
-
-    Args:
-        device_type: 设备的类型代码。
-        sub_device: 子设备的索引键（如果适用）。
-
-    Returns:
-        对应的平台字符串（如 'switch', 'light'），或空字符串。
-    """
-    if device_type in ALL_SWITCH_TYPES:
-        return Platform.SWITCH
-    if device_type in ALL_LIGHT_TYPES:
-        return Platform.LIGHT
-    if device_type in ALL_COVER_TYPES:
-        return Platform.COVER
-    if device_type in CLIMATE_TYPES:
-        return Platform.CLIMATE
-
-    # 对复合设备进行子设备判断
-    if device_type in LOCK_TYPES:
-        if sub_device == "BAT":
-            return Platform.SENSOR
-        if sub_device in {"EVTLO", "ALM"}:
-            return Platform.BINARY_SENSOR
-
-    if device_type in SMART_PLUG_TYPES:
-        if sub_device == "P1":
-            return Platform.SWITCH
-        if sub_device in {"P2", "P3"}:
-            return Platform.SENSOR
-
-    # 将剩余的各类传感器归类,这个判断应该在复合设备之后，避免错误分类
-    if device_type in ALL_BINARY_SENSOR_TYPES:
-        return Platform.BINARY_SENSOR
-    if device_type in ALL_SENSOR_TYPES:
-        return Platform.SENSOR
-
-    return ""
-
-
-def generate_entity_id(
+def generate_unique_id(
     device_type: str,
     hub_id: str,
     device_id: str,
     sub_device: Optional[str] = None,
 ) -> str:
-    """为 LifeSmart 设备生成符合 Home Assistant 规范的唯一实体 ID。
-
-    此函数确保生成的 ID 是唯一的、可读的，并符合 HA 的命名规则。
+    """
+    为 LifeSmart 实体生成一个稳定且唯一的内部 ID (unique_id)。
+    此 ID 必须在所有模式下保持一致，且不应被截断。
 
     Args:
         device_type: 设备的类型代码。
@@ -942,30 +900,9 @@ def generate_entity_id(
         sub_device: 子设备的索引键（如果适用）。
 
     Returns:
-        格式化的实体 ID 字符串，例如 'switch.sl_sw_nd1_agt123_dev456_p1'。
+        格式化的实体 ID 字符串，例如 'sl_sw_nd1_agt123_dev456_p1'。
     """
-    import re
-
-    def sanitize(input_str: str) -> str:
-        """移除字符串中的非字母数字字符并转为小写。"""
-        return re.sub(r"\W", "", str(input_str)).lower()
-
-    platform_str = get_platform_by_device(device_type, sub_device)
-    if not platform_str:
-        return ""  # 如果无法确定平台，则不生成ID
-
-    # 构建实体ID的基础部分
-    base_parts = [
-        sanitize(device_type),
-        sanitize(hub_id),
-        sanitize(device_id),
-    ]
+    parts = [str(device_type), str(hub_id), str(device_id)]
     if sub_device:
-        base_parts.append(sanitize(sub_device))
-
-    clean_entity = "_".join(base_parts)
-    # 确保实体ID不超过最大长度限制
-    max_length = 255 - (len(platform_str) + 1)
-    clean_entity = clean_entity[:max_length]
-
-    return f"{platform_str}.{clean_entity}"
+        parts.append(str(sub_device))
+    return "_".join(parts).lower()

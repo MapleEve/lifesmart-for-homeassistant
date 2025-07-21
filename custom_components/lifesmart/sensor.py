@@ -26,7 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice, generate_entity_id
+from . import LifeSmartDevice, generate_unique_id
 from .const import (
     # 核心常量
     DOMAIN,
@@ -223,7 +223,7 @@ class LifeSmartSensor(SensorEntity):
         self._sub_data = sub_device_data
         self._client = client
         self._entry_id = entry_id
-        self._attr_unique_id = generate_entity_id(
+        self._attr_unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
             raw_device[DEVICE_ID_KEY],
@@ -239,7 +239,7 @@ class LifeSmartSensor(SensorEntity):
     @callback
     def _generate_sensor_name(self) -> str | None:
         """Generate user-friendly sensor name."""
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Switch")
+        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Sensor")
         # 如果子设备有自己的名字 (如多联开关的按键名)，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
         if sub_name and sub_name != self._sub_key:
@@ -539,7 +539,7 @@ class LifeSmartSensor(SensorEntity):
                 )
                 self.async_write_ha_state()
         except Exception as e:
-            _LOGGER.error("Error handling update for %s: %s", self.entity_id, e)
+            _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
 
     async def _handle_global_refresh(self) -> None:
         """Handle periodic full data refresh."""

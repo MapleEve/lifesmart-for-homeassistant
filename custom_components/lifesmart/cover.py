@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import generate_entity_id
+from . import generate_unique_id
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -87,7 +87,7 @@ class LifeSmartCover(CoverEntity):
         self._hub_id = raw_device[HUB_ID_KEY]
         self._device_id = raw_device[DEVICE_ID_KEY]
 
-        self._attr_unique_id = generate_entity_id(
+        self._attr_unique_id = generate_unique_id(
             self.device_type, self._hub_id, self._device_id, "cover"
         )
         self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Unknown Cover")
