@@ -1064,7 +1064,7 @@ class LifeSmartLight(LifeSmartBaseLight):
         """初始化颜色值."""
         value = self._sub_data.get("val", 0)
 
-        if self._sub_key in {"HS"}:
+        if self._sub_key == "HS":
             if value == 0:
                 self._attr_hs_color = None
             else:
