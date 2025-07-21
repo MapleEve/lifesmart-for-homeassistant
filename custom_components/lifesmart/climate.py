@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import generate_unique_id
+from . import generate_unique_id, LifeSmartDevice
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -97,6 +97,7 @@ class LifeSmartClimate(ClimateEntity):
 
     def __init__(
         self,
+        device: LifeSmartDevice,
         raw_device: dict[str, Any],
         client: Any,
         entry_id: str,
@@ -110,7 +111,7 @@ class LifeSmartClimate(ClimateEntity):
         self._device_id = raw_device[DEVICE_ID_KEY]
 
         self._attr_unique_id = generate_unique_id(
-            self.device_type, self._hub_id, self._device_id, "climate"
+            device.devtype, device.agt, device.me, "climate"
         )
         self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Unknown Climate")
 

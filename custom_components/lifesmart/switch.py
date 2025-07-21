@@ -148,9 +148,9 @@ class LifeSmartSwitch(SwitchEntity):
 
         # --- 设置核心属性 ---
         self._attr_unique_id = generate_unique_id(
-            raw_device[DEVICE_TYPE_KEY],
-            raw_device[HUB_ID_KEY],
-            raw_device[DEVICE_ID_KEY],
+            device.devtype,
+            device.agt,
+            device.me,
             sub_device_key,
         )
         self._attr_name = self._generate_switch_name()

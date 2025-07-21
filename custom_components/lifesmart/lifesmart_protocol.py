@@ -978,6 +978,7 @@ class LifeSmartLocalClient:
     async def async_connect(self, callback: None | Callable):
         """主连接循环，负责登录、获取设备和监听状态更新。"""
         while not self.disconnected:
+            self.reader, self.writer = None, None
             try:
                 _LOGGER.info("正在尝试建立本地连接到 %s:%s...", self.host, self.port)
                 self.reader, self.writer = await asyncio.wait_for(
@@ -997,12 +998,8 @@ class LifeSmartLocalClient:
                 while not self.disconnected:
                     buf = await self.reader.read(4096)
                     if not buf:
-                        if self.writer:
-                            self.writer.close()
-                            await self.writer.wait_closed()
-                        if self.disconnected:
-                            return None
-                        raise asyncio.TimeoutError
+                        _LOGGER.warning("Socket 连接被对方关闭，将进行重连。")
+                        break  # 中断内部循环以触发重连
                     _LOGGER.debug("Socket 收到 %d 字节数据。", len(buf))
                     response += buf
                     if response:
@@ -1103,12 +1100,13 @@ class LifeSmartLocalClient:
                                         if not isinstance(schg_key, str):
                                             continue
 
-                                        if schg_key.startswith(f"{self.node_agt}/ep/"):
-                                            parts = schg_key.split("/")
+                                        marker = f"{self.node_agt}/ep/"
+                                        if schg_key.startswith(marker):
+                                            path_after_ep = schg_key[len(marker) :]
+                                            parts = path_after_ep.split("/")
                                             # 正确的解析：dev_id 在第4部分, sub_key 在第6部分
-                                            if len(parts) >= 6:
-                                                dev_id = parts[3]
-                                                sub_key = parts[5]
+                                            if len(parts) == 3 and parts[1] == "m":
+                                                dev_id, sub_key = parts[0], parts[2]
 
                                                 if dev_id in self.devices:
                                                     device_data = self.devices[
@@ -1153,7 +1151,7 @@ class LifeSmartLocalClient:
                             _LOGGER.debug(
                                 "捕获到 EOFError，可能数据包不完整，将等待更多数据。"
                             )
-                            pass
+                            break
                         except Exception as e:
                             _LOGGER.error(
                                 "处理数据时发生意外错误: %s", e, exc_info=True
@@ -1177,9 +1175,16 @@ class LifeSmartLocalClient:
                 _LOGGER.error("本地连接主循环发生未知异常: %s", e, exc_info=True)
             finally:
                 if self.writer:
-                    self.writer.close()
-                    await self.writer.wait_closed()
+                    try:
+                        self.writer.close()
+                        await self.writer.wait_closed()
+                    except (ConnectionResetError, BrokenPipeError):
+                        # 这个异常是预期的，当对方已经强行关闭连接时
+                        _LOGGER.debug("在关闭 writer 时连接已被重置。")
+                    except Exception as e:
+                        _LOGGER.warning("关闭 writer 时发生未知错误: %s", e)
                     self.writer = None
+
                 if not self.disconnected:
                     await asyncio.sleep(5.0)
 
@@ -1329,7 +1334,8 @@ class LifeSmartLocalClient:
         await self._send_packet(pkt)
         return 0
 
-    def _normalize_device_names(self, dev_dict: dict) -> dict:
+    @staticmethod
+    def _normalize_device_names(dev_dict: dict) -> dict:
         """
         递归地规范化设备及其子设备的名称，替换所有已知占位符。
         - '{$EPN}' -> 替换为父设备名称。

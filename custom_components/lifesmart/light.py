@@ -286,9 +286,9 @@ class LifeSmartBaseLight(LightEntity):
         self._me = raw_device[DEVICE_ID_KEY]
 
         self._attr_unique_id = generate_unique_id(
-            self._devtype,
-            self._agt,
-            self._me,
+            device.devtype,
+            device.agt,
+            device.me,
             self._sub_key,
         )
         self._attr_name = self._generate_light_name()
@@ -395,7 +395,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
     ) -> None:
         super().__init__(device, raw_device, client, entry_id)
         self._attr_unique_id = generate_unique_id(
-            self._devtype, self._agt, self._me, "quantum"
+            device.devtype, device.agt, device.me, "quantum"
         )
         self._attr_name = self._raw_device.get(DEVICE_NAME_KEY, "Quantum Light")
         self._initialize_state()
@@ -509,7 +509,7 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
     ) -> None:
         super().__init__(device, raw_device, client, entry_id)
         self._attr_unique_id = generate_unique_id(
-            self._devtype, self._agt, self._me, "brightness"
+            device.devtype, device.agt, device.me, "brightness"
         )
         self._attr_name = self._raw_device.get(DEVICE_NAME_KEY, "Brightness Light")
         self._initialize_state()
@@ -592,7 +592,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
     ):
         super().__init__(device, raw_device, client, entry_id, io_key)
         self._attr_unique_id = generate_unique_id(
-            self._devtype, self._agt, self._me, io_key
+            device.devtype, device.agt, device.me, io_key
         )
         self._initialize_state()
 
@@ -680,7 +680,7 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         self._color_io = color_io
         self._effect_io = effect_io
         self._attr_unique_id = generate_unique_id(
-            self._devtype, self._agt, self._me, "rgbw_dual"
+            device.devtype, device.agt, device.me, "rgbw_dual"
         )
         self._attr_name = self._raw_device.get(DEVICE_NAME_KEY, "RGBW Light")
         self._initialize_state()
@@ -772,7 +772,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
     ):
         super().__init__(device, raw_device, client, entry_id, "RGB")
         self._attr_unique_id = generate_unique_id(
-            self._devtype, self._agt, self._me, "RGB"
+            device.devtype, device.agt, device.me, "RGB"
         )
         self._initialize_state()
 
@@ -847,7 +847,7 @@ class LifeSmartSPOTRGBWLight(LifeSmartBaseLight):
     ):
         super().__init__(device, raw_device, client, entry_id, "RGBW")
         self._attr_unique_id = generate_unique_id(
-            self._devtype, self._agt, self._me, "RGBW"
+            device.devtype, device.agt, device.me, "RGBW"
         )
         self._initialize_state()
 
@@ -946,7 +946,7 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
     ) -> None:
         super().__init__(device, raw_device, client, entry_id)
         self._attr_unique_id = generate_unique_id(
-            self._devtype, self._agt, self._me, "dimmer"
+            device.devtype, device.agt, device.me, "dimmer"
         )
         self._attr_name = self._raw_device.get(DEVICE_NAME_KEY, "Dimmer Light")
         self._initialize_state()
@@ -1038,7 +1038,7 @@ class LifeSmartLight(LifeSmartBaseLight):
     ):
         super().__init__(device, raw_device, client, entry_id, sub_device_key)
         self._attr_unique_id = generate_unique_id(
-            self._devtype, self._agt, self._me, sub_device_key
+            device.devtype, device.agt, device.me, sub_device_key
         )
         self._initialize_state()
 
@@ -1160,7 +1160,7 @@ class LifeSmartCoverLight(LifeSmartBaseLight):
     ):
         super().__init__(device, raw_device, client, entry_id, sub_device_key)
         self._attr_unique_id = generate_unique_id(
-            self._devtype, self._agt, self._me, sub_device_key
+            device.devtype, device.agt, device.me, sub_device_key
         )
         self._initialize_state()
 

@@ -195,7 +195,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
         self._attr_name = self._generate_sensor_name()
         self._attr_unique_id = generate_unique_id(
-            self.device_type, self.hub_id, self.device_id, sub_device_key
+            device.devtype, device.agt, device.me, sub_device_key
         )
 
         # 初始化设备类别和状态

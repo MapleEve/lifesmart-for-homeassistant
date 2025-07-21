@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import generate_unique_id
+from . import generate_unique_id, LifeSmartDevice
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -55,10 +55,13 @@ async def async_setup_entry(
         ):
             continue
 
+        ha_device = LifeSmartDevice(device, client)
+
         device_type = device[DEVICE_TYPE_KEY]
         if device_type in ALL_COVER_TYPES:
             covers.append(
                 LifeSmartCover(
+                    device=ha_device,
                     raw_device=device,
                     client=client,
                     entry_id=entry_id,
@@ -75,6 +78,7 @@ class LifeSmartCover(CoverEntity):
 
     def __init__(
         self,
+        device: LifeSmartDevice,
         raw_device: dict[str, Any],
         client: Any,
         entry_id: str,
@@ -88,7 +92,7 @@ class LifeSmartCover(CoverEntity):
         self._device_id = raw_device[DEVICE_ID_KEY]
 
         self._attr_unique_id = generate_unique_id(
-            self.device_type, self._hub_id, self._device_id, "cover"
+            device.devtype, device.agt, device.me, "cover"
         )
         self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Unknown Cover")
 

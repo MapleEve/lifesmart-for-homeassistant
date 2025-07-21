@@ -7,6 +7,7 @@
 import asyncio
 import json
 import logging
+import re
 import time
 import traceback
 from datetime import timedelta, datetime
@@ -570,6 +571,21 @@ class LifeSmartDevice(Entity):
         return self._name
 
     @property
+    def agt(self) -> str:
+        """Return the agent (hub) ID of the device."""
+        return self._agt
+
+    @property
+    def me(self) -> str:
+        """Return the device ID."""
+        return self._me
+
+    @property
+    def devtype(self) -> str:
+        """Return the device type code."""
+        return self._devtype
+
+    @property
     def assumed_state(self) -> bool:
         """返回是否采用乐观更新模式。"""
         return False
@@ -884,25 +900,32 @@ class LifeSmartStateManager:
 
 
 def generate_unique_id(
-    device_type: str,
-    hub_id: str,
-    device_id: str,
-    sub_device: Optional[str] = None,
+    devtype: str,
+    agt: str,
+    me: str,
+    sub_device_key: Optional[str] = None,
 ) -> str:
     """
     为 LifeSmart 实体生成一个稳定且唯一的内部 ID (unique_id)。
     此 ID 必须在所有模式下保持一致，且不应被截断。
 
     Args:
-        device_type: 设备的类型代码。
-        hub_id: 所属中枢的 ID。
-        device_id: 设备的 ID。
-        sub_device: 子设备的索引键（如果适用）。
+        devtype: 设备的类型代码。
+        agt: 所属中枢的 ID。
+        me: 设备的 ID。
+        sub_device_key: 子设备的索引键（如果适用）。
 
     Returns:
         格式化的实体 ID 字符串，例如 'sl_sw_nd1_agt123_dev456_p1'。
     """
-    parts = [str(device_type), str(hub_id), str(device_id)]
-    if sub_device:
-        parts.append(str(sub_device))
-    return "_".join(parts).lower()
+
+    # 清理和规范化函数，只移除特殊字符并转为小写
+    def sanitize(input_str: str) -> str:
+        # 先转小写，然后用 \W 替换所有非字母、非数字、非下划线的字符
+        return re.sub(r"\W", "", str(input_str).lower())
+
+    parts = [sanitize(devtype), sanitize(agt), sanitize(me)]
+    if sub_device_key:
+        parts.append(sanitize(sub_device_key))
+
+    return "_".join(parts)

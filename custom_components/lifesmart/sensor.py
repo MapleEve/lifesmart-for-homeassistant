@@ -224,9 +224,9 @@ class LifeSmartSensor(SensorEntity):
         self._client = client
         self._entry_id = entry_id
         self._attr_unique_id = generate_unique_id(
-            raw_device[DEVICE_TYPE_KEY],
-            raw_device[HUB_ID_KEY],
-            raw_device[DEVICE_ID_KEY],
+            device.devtype,
+            device.agt,
+            device.me,
             sub_device_key,
         )
         self._attr_name = self._generate_sensor_name()
