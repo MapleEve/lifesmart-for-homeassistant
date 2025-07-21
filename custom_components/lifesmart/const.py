@@ -59,7 +59,7 @@ CON_AI_TYPES = {
     CON_AI_TYPE_AIB,
     CON_AI_TYPE_GROUP,
 }
-AI_TYPES = {"ai"}
+AI_TYPES = "ai"
 
 # ================= 其他设备类型 =================
 # --- 超级碗 (SPOT) ---
