@@ -1086,7 +1086,7 @@ class LifeSmartLight(LifeSmartBaseLight):
 
         # 更新颜色值
         value = new_data.get("val", 0)
-        if self._sub_key in {"HS"} and value != 0:
+        if self._sub_key == "HS" and value != 0:
             rgbhexstr = f"{value:x}".zfill(8)
             rgbhex = bytes.fromhex(rgbhexstr)
             rgba = struct.unpack("BBBB", rgbhex)
