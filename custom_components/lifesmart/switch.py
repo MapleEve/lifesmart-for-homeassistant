@@ -45,6 +45,7 @@ async def async_setup_entry(
     client = hass.data[DOMAIN][entry_id]["client"]
     exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
     exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    created_entities = hass.data[DOMAIN][entry_id]["created_entities"]
 
     switches = []
     for device in devices:
@@ -72,16 +73,22 @@ async def async_setup_entry(
         for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
             # 使用辅助函数判断子设备是否为开关
             if _is_switch_subdevice(device_type, sub_key):
-                switches.append(
-                    LifeSmartSwitch(
-                        device=ha_device,
-                        raw_device=device,
-                        sub_device_key=sub_key,
-                        sub_device_data=sub_data,
-                        client=client,
-                        entry_id=entry_id,
-                    )
+                # 检查是否已创建此实体
+                unique_id = generate_entity_id(
+                    device_type, device[HUB_ID_KEY], device[DEVICE_ID_KEY], sub_key
                 )
+                if unique_id not in created_entities:
+                    switches.append(
+                        LifeSmartSwitch(
+                            device=ha_device,
+                            raw_device=device,
+                            sub_device_key=sub_key,
+                            sub_device_data=sub_data,
+                            client=client,
+                            entry_id=entry_id,
+                        )
+                    )
+                    created_entities.add(unique_id)
 
     async_add_entities(switches)
 
