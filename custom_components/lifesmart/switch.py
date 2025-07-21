@@ -179,7 +179,7 @@ class LifeSmartSwitch(SwitchEntity):
     def _determine_device_class(self) -> SwitchDeviceClass:
         """Determine device class for better UI representation."""
         if self._raw_device[DEVICE_TYPE_KEY] in (
-            SMART_PLUG_TYPES + POWER_METER_PLUG_TYPES
+            SMART_PLUG_TYPES | POWER_METER_PLUG_TYPES
         ):
             return SwitchDeviceClass.OUTLET
         return SwitchDeviceClass.SWITCH

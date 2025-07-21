@@ -445,18 +445,18 @@ async def data_update_handler(
         ai_include_items_str = config_entry.options.get(CONF_AI_INCLUDE_ITEMS, "")
 
         # 将字符串配置转换为列表进行处理
-        exclude_devices = [
+        exclude_devices = {
             dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-        ]
-        exclude_hubs = [
+        }
+        exclude_hubs = {
             hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()
-        ]
-        ai_include_hubs = [
+        }
+        ai_include_hubs = {
             hub.strip() for hub in ai_include_hubs_str.split(",") if hub.strip()
-        ]
-        ai_include_items = [
+        }
+        ai_include_items = {
             item.strip() for item in ai_include_items_str.split(",") if item.strip()
-        ]
+        }
 
         # --- 过滤器处理 ---
         if device_id in exclude_devices:
@@ -891,13 +891,13 @@ def get_platform_by_device(device_type: str, sub_device: Optional[str] = None) -
     if device_type in LOCK_TYPES:
         if sub_device == "BAT":
             return Platform.SENSOR
-        if sub_device in ["EVTLO", "ALM"]:
+        if sub_device in {"EVTLO", "ALM"}:
             return Platform.BINARY_SENSOR
 
     if device_type in SMART_PLUG_TYPES:
         if sub_device == "P1":
             return Platform.SWITCH
-        if sub_device in ["P2", "P3"]:
+        if sub_device in {"P2", "P3"}:
             return Platform.SENSOR
 
     # 将剩余的各类传感器归类,这个判断应该在复合设备之后，避免错误分类

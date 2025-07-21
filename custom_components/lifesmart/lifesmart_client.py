@@ -151,7 +151,7 @@ class LifeSmartClient:
             )
             _LOGGER.error(log_message)
 
-            if error_code in [10004, 10005, 10006]:
+            if error_code in {10004, 10005, 10006}:
                 raise LifeSmartAuthError(advice, error_code)
             raise LifeSmartAPIError(advice, error_code)
 
@@ -489,12 +489,12 @@ class LifeSmartClient:
         await self.set_single_ep_async(agt, me, "P1", CMD_TYPE_ON, 1)
 
         mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
-        if mode_val is not None and device_type in [
+        if mode_val is not None and device_type in {
             "SL_UACCB",
             "SL_NATURE",
             "SL_FCU",
             "V_AIR_P",
-        ]:
+        }:
             idx = "MODE" if device_type == "V_AIR_P" else "P7"
             return await self.set_single_ep_async(
                 agt, me, idx, CMD_TYPE_SET_CONFIG, mode_val
@@ -557,7 +557,7 @@ class LifeSmartClient:
             return await self.set_single_ep_async(
                 agt, me, "P2", CMD_TYPE_SET_RAW, fan_val
             )
-        elif device_type in ["SL_NATURE", "SL_FCU"]:
+        elif device_type in {"SL_NATURE", "SL_FCU"}:
             fan_val = REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)
             return await self.set_single_ep_async(
                 agt, me, "P9", CMD_TYPE_SET_CONFIG, fan_val

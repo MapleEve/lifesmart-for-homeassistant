@@ -640,12 +640,12 @@ class LifeSmartPacketFactory:
 
         args = {"valtag": "m", "devid": devid}
         mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
-        if mode_val is not None and device_type in [
+        if mode_val is not None and device_type in {
             "SL_UACCB",
             "SL_NATURE",
             "SL_FCU",
             "V_AIR_P",
-        ]:
+        }:
             args.update(
                 {
                     "key": "MODE" if device_type == "V_AIR_P" else "P7",
@@ -700,7 +700,7 @@ class LifeSmartPacketFactory:
         elif device_type == "SL_TR_ACIPM":
             fan_val = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
             args.update({"key": "P2", "type": CMD_TYPE_SET_RAW, "val": fan_val})
-        elif device_type in ["SL_NATURE", "SL_FCU"]:
+        elif device_type in {"SL_NATURE", "SL_FCU"}:
             fan_val = REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)
             args.update({"key": "P9", "type": CMD_TYPE_SET_CONFIG, "val": fan_val})
         elif device_type == "SL_CP_AIR":

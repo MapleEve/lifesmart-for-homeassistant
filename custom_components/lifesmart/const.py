@@ -54,37 +54,37 @@ CONF_AI_INCLUDE_ITEMS = "ai_include_me"
 CON_AI_TYPE_SCENE = "scene"
 CON_AI_TYPE_AIB = "aib"
 CON_AI_TYPE_GROUP = "grouphw"
-CON_AI_TYPES = [
+CON_AI_TYPES = {
     CON_AI_TYPE_SCENE,
     CON_AI_TYPE_AIB,
     CON_AI_TYPE_GROUP,
-]
-AI_TYPES = ["ai"]
+}
+AI_TYPES = "ai"
 
 # ================= 其他设备类型 =================
 # --- 超级碗 (SPOT) ---
-SPOT_TYPES = [
+SPOT_TYPES = {
     "MSL_IRCTL",  # 超级碗（基础版,蓝牙版）
     "OD_WE_IRCTL",  # 超级碗（闪联版）
     "SL_SPOT",  # 超级碗（CoSS版）
     "SL_P_IR",  # 红外模块 / 超级碗（Mini版）
     "SL_P_IR_V2",  # 红外模块 / 超级碗（Mini版 V2）
-]
+}
 
 # --- 通用控制器 ---
-GENERIC_CONTROLLER_TYPES = [
+GENERIC_CONTROLLER_TYPES = {
     "SL_P",  # 通用控制器
     "SL_JEMA",  # 通用控制器
-]
+}
 # --- 摄像头 ---
-CAMERA_TYPES = [
+CAMERA_TYPES = {
     "LSCAM:LSICAMGOS1",  # 摄像头
     "LSCAM:LSICAMEZ2",  # 摄像头
-]
+}
 
 # ================= 开关系列 (Switch Series) =================
 # 涵盖所有单火、零火、调光、场景、窗帘等开关面板
-SUPPORTED_SWITCH_TYPES = [
+SUPPORTED_SWITCH_TYPES = {
     # --- 传统/通用开关控制器 ---
     "SL_S",  # 开关智控器
     "SL_P_SW",  # 九路开关控制器
@@ -133,134 +133,134 @@ SUPPORTED_SWITCH_TYPES = [
     "SL_SW_DM1",  # 动态调光开关
     # --- 其他开关 ---
     "V_IND_S",  # 虚拟开关
-]
+}
 
 # ================= 插座系列 (Outlet/Plug Series) =================
-SMART_PLUG_TYPES = [
+SMART_PLUG_TYPES = {
     "SL_OL",  # 智慧插座
     "SL_OL_3C",  # 智慧插座 (国标3C)
     "SL_OL_DE",  # 智慧插座 (德标)
     "SL_OL_UK",  # 智慧插座 (英标)
     "SL_OL_UL",  # 智慧插座 (美标)
     "OD_WE_OT1",  # Wi-Fi插座
-]
+}
 
 # --- 计量插座 ---
-POWER_METER_PLUG_TYPES = [
+POWER_METER_PLUG_TYPES = {
     "SL_OE_DE",  # 计量插座 (德标)
     "SL_OE_3C",  # 计量插座 (国标3C)
     "SL_OE_W",  # 入墙计量插座
-]
+}
 
 # ================= 灯光系列 (Light Series) =================
 # --- 灯光开关 (在HA中作为light实体) ---
-LIGHT_SWITCH_TYPES = [
+LIGHT_SWITCH_TYPES = {
     "SL_OL_W",  # 入墙插座 (其开关行为被视为灯)
-]
+}
 # --- 调光调色灯/控制器 ---
-LIGHT_DIMMER_TYPES = [
+LIGHT_DIMMER_TYPES = {
     "SL_LI_WW",  # 白光智能灯泡
     "SL_LI_WW_V1",  # 智能灯泡(冷暖白)
     "SL_LI_WW_V2",  # 调光调色智控器(0-10V)
-]
+}
 # --- 亮度调节控制器 ---
-BRIGHTNESS_LIGHT_TYPES = [
+BRIGHTNESS_LIGHT_TYPES = {
     "SL_SPWM",  # 可调亮度开关智控器
-]
+}
 # --- 量子灯 ---
-QUANTUM_TYPES = [
+QUANTUM_TYPES = {
     "OD_WE_QUAN",  # 量子灯
-]
+}
 # --- RGB灯带/灯泡 ---
-RGB_LIGHT_TYPES = [
+RGB_LIGHT_TYPES = {
     "SL_SC_RGB",  # 幻彩灯带（不带白光）
-]
-RGBW_LIGHT_TYPES = [
+}
+RGBW_LIGHT_TYPES = {
     "SL_CT_RGBW",  # 幻彩灯带 (带白光)
     "SL_LI_RGBW",  # RGBW灯泡
-]
+}
 # --- 户外灯 ---
-OUTDOOR_LIGHT_TYPES = [
+OUTDOOR_LIGHT_TYPES = {
     "SL_LI_GD1",  # 调光壁灯 (门廊壁灯)
     "SL_LI_UG1",  # 花园地灯
-]
+}
 # --- 智能灯泡 ---
-LIGHT_BULB_TYPES = [
+LIGHT_BULB_TYPES = {
     "SL_LI_BL",  # 智能灯泡
-]
+}
 
 # ================= 窗帘系列 (Cover Series) =================
-DOOYA_TYPES = [
+DOOYA_TYPES = {
     "SL_DOOYA",  # DOOYA窗帘电机
     "SL_DOOYA_V2",  # DOOYA窗帘电机 V2
     "SL_DOOYA_V3",  # 卷帘电机
     "SL_DOOYA_V4",  # 卷帘电机电池版
-]
+}
 
-COVER_TYPES = [
+COVER_TYPES = {
     "SL_P_V2",  # 智界窗帘电机智控器
     "SL_SW_WIN",  # 窗帘控制开关
     "SL_CN_IF",  # 窗帘开关
     "SL_CN_FE",  # 窗帘开关
-]
+}
 
 # 车库门
-GARAGE_DOOR_TYPES = [
+GARAGE_DOOR_TYPES = {
     "SL_ETDOOR",  # 车库门控制器
-]
+}
 
 # ================= 感应器 - 二元状态 (Binary Sensor Series) =================
 # --- 门窗感应器 ---
-GUARD_SENSOR_TYPES = ["SL_SC_G", "SL_SC_BG"]  # 门禁感应器, 多功能(CUBE)门禁感应器
+GUARD_SENSOR_TYPES = {"SL_SC_G", "SL_SC_BG"}  # 门禁感应器, 多功能(CUBE)门禁感应器
 # --- 移动动态(PIR)感应器 ---
-MOTION_SENSOR_TYPES = [
+MOTION_SENSOR_TYPES = {
     "SL_SC_MHW",  # 动态感应器
     "SL_SC_BM",  # 多功能(CUBE)动态感应器
     "SL_SC_CM",  # 动态感应器（7号电池版）
-]
+}
 # --- 水浸感应器 ---
-WATER_SENSOR_TYPES = ["SL_SC_WA"]  # 水浸感应器
+WATER_SENSOR_TYPES = {"SL_SC_WA"}  # 水浸感应器
 # --- 烟雾感应器 ---
-SMOKE_SENSOR_TYPES = ["SL_P_A"]  # 烟雾感应器
+SMOKE_SENSOR_TYPES = {"SL_P_A"}  # 烟雾感应器
 # --- 人体存在(雷达)感应器 ---
-RADAR_SENSOR_TYPES = ["SL_P_RM"]  # 人体存在感应器
+RADAR_SENSOR_TYPES = {"SL_P_RM"}  # 人体存在感应器
 # --- 云防系列 ---
-DEFED_SENSOR_TYPES = [
+DEFED_SENSOR_TYPES = {
     "SL_DF_GG",  # 云防门窗感应器
     "SL_DF_MM",  # 云防动态感应器
     "SL_DF_SR",  # 云防室内警铃
     "SL_DF_BB",  # 云防遥控器
-]
+}
 # --- 基础二元传感器 (通常是其他设备附带的) ---
-BINARY_SENSOR_TYPES = GUARD_SENSOR_TYPES + MOTION_SENSOR_TYPES
+BINARY_SENSOR_TYPES = GUARD_SENSOR_TYPES | MOTION_SENSOR_TYPES
 
 # ================= 感应器 - 数值状态 (Sensor Series) =================
 # --- 环境感应器 ---
-EV_SENSOR_TYPES = [
+EV_SENSOR_TYPES = {
     "SL_SC_THL",  # 环境感应器 (温湿度光照)
     "SL_SC_BE",  # 多功能(CUBE)环境感应器
     "SL_SC_CQ",  # 环境感应器(CO2+TVOC)
     "SL_SC_B1",  # 环境感应器
     "SL_SC_CA",  # 环境感应器(CO2)
-]
+}
 # TVOC/CO2/甲醛等
-ENVIRONMENT_SENSOR_TYPES = [
+ENVIRONMENT_SENSOR_TYPES = {
     "SL_SC_CQ",  # 环境感应器(CO2+TVOC)
     "SL_SC_CA",  # 环境感应器(CO2)
     "SL_SC_B1",  # 环境感应器
     "SL_SC_CH",  # 气体感应器(甲醛)
-]
+}
 # --- 燃气感应器 ---
-GAS_SENSOR_TYPES = ["SL_SC_CP"]  # 气体感应器(燃气)
+GAS_SENSOR_TYPES = {"SL_SC_CP"}  # 气体感应器(燃气)
 # --- 噪音感应器 ---
-NOISE_SENSOR_TYPES = ["SL_SC_CN"]  # 噪音感应器
+NOISE_SENSOR_TYPES = {"SL_SC_CN"}  # 噪音感应器
 # --- 电量计量器 ---
-POWER_METER_TYPES = ["ELIQ_EM", "V_DLT645_P"]  # ELIQ电量计量器, DLT电量计量器
+POWER_METER_TYPES = {"ELIQ_EM", "V_DLT645_P"}  # ELIQ电量计量器, DLT电量计量器
 # --- 语音小Q ---
-VOICE_SENSOR_TYPES = ["SL_SC_CV"]  # 语音小Q
+VOICE_SENSOR_TYPES = {"SL_SC_CV"}  # 语音小Q
 
 # ================= 温控系列 (Climate Series) =================
-CLIMATE_TYPES = [
+CLIMATE_TYPES = {
     "V_AIR_P",  # 智控器空调⾯板
     "SL_CP_DN",  # 地暖温控面板
     "SL_UACCB",  # 空调控制面板
@@ -270,7 +270,7 @@ CLIMATE_TYPES = [
     "V_FRESH_P",  # 艾弗纳 KV11 (新风)
     "SL_NATURE",  # 超能面板PRO(温控) / 星玉温控面板
     "SL_FCU",  # ⻛机盘管 (星玉温控面板)
-]
+}
 
 # ================= 温控器映射 (Climate Mappings) =================
 # 用于在 Home Assistant 的标准 HVAC 模式与 LifeSmart 的私有模式值之间进行转换。
@@ -352,7 +352,7 @@ def get_tf_fan_mode(val: int) -> str | None:
 
 
 # ================= 门锁系列 (Lock Series) =================
-LOCK_TYPES = [
+LOCK_TYPES = {
     "SL_LK_LS",  # 智能门锁 LS
     "SL_LK_GTM",  # 智能门锁 盖特曼
     "SL_LK_AG",  # 智能门锁 西勒奇
@@ -360,7 +360,7 @@ LOCK_TYPES = [
     "SL_LK_YL",  # 智能门锁 耶鲁
     "SL_P_BDLK",  # 智能门锁 必达
     "OD_JIUWANLI_LOCK1",  # 智能门锁 九万里
-]
+}
 # 门锁解锁方式映射
 UNLOCK_METHOD = {
     0: "None",
@@ -382,58 +382,58 @@ UNLOCK_METHOD = {
 # --- 总开关列表 ---
 ALL_SWITCH_TYPES = (
     SUPPORTED_SWITCH_TYPES
-    + SMART_PLUG_TYPES
-    + POWER_METER_PLUG_TYPES
-    + GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关、插座等多种类型
+    | SMART_PLUG_TYPES
+    | POWER_METER_PLUG_TYPES
+    | GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关、插座等多种类型
 )
 
 # --- 总灯光列表 ---
 ALL_LIGHT_TYPES = (
     LIGHT_SWITCH_TYPES
-    + LIGHT_DIMMER_TYPES
-    + RGB_LIGHT_TYPES
-    + RGBW_LIGHT_TYPES
-    + QUANTUM_TYPES
-    + OUTDOOR_LIGHT_TYPES
-    + LIGHT_BULB_TYPES
-    + BRIGHTNESS_LIGHT_TYPES
-    + SPOT_TYPES  # 超级碗的流光灯
-    + GARAGE_DOOR_TYPES  # 车库门灯
+    | LIGHT_DIMMER_TYPES
+    | RGB_LIGHT_TYPES
+    | RGBW_LIGHT_TYPES
+    | QUANTUM_TYPES
+    | OUTDOOR_LIGHT_TYPES
+    | LIGHT_BULB_TYPES
+    | BRIGHTNESS_LIGHT_TYPES
+    | SPOT_TYPES  # 超级碗的流光灯
+    | GARAGE_DOOR_TYPES  # 车库门灯
 )
 
 # --- 总二元传感器列表 ---
 ALL_BINARY_SENSOR_TYPES = (
     BINARY_SENSOR_TYPES
-    + WATER_SENSOR_TYPES
-    + SMOKE_SENSOR_TYPES
-    + RADAR_SENSOR_TYPES
-    + DEFED_SENSOR_TYPES
-    + LOCK_TYPES
-    + GENERIC_CONTROLLER_TYPES  # 通用控制器有时也作为二元传感器
+    | WATER_SENSOR_TYPES
+    | SMOKE_SENSOR_TYPES
+    | RADAR_SENSOR_TYPES
+    | DEFED_SENSOR_TYPES
+    | LOCK_TYPES
+    | GENERIC_CONTROLLER_TYPES  # 通用控制器有时也作为二元传感器
 )
 
 # --- 总数值传感器列表 ---
 ALL_SENSOR_TYPES = (
     EV_SENSOR_TYPES
-    + ENVIRONMENT_SENSOR_TYPES
-    + GAS_SENSOR_TYPES
-    + NOISE_SENSOR_TYPES
-    + POWER_METER_TYPES
-    + VOICE_SENSOR_TYPES
-    + ALL_BINARY_SENSOR_TYPES  # 二元传感器也可能提供电量等数值
-    + COVER_TYPES  # 窗帘电机电量
+    | ENVIRONMENT_SENSOR_TYPES
+    | GAS_SENSOR_TYPES
+    | NOISE_SENSOR_TYPES
+    | POWER_METER_TYPES
+    | VOICE_SENSOR_TYPES
+    | ALL_BINARY_SENSOR_TYPES  # 二元传感器也可能提供电量等数值
+    | COVER_TYPES  # 窗帘电机电量
 )
 
 # --- 总窗帘/覆盖物列表 ---
 ALL_COVER_TYPES = (
     COVER_TYPES
-    + DOOYA_TYPES
-    + GARAGE_DOOR_TYPES
-    + GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关、插座等多种类型
+    | DOOYA_TYPES
+    | GARAGE_DOOR_TYPES
+    | GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关、插座等多种类型
 )
 
 # --- Home Assistant 支持的平台列表 ---
-SUPPORTED_PLATFORMS = [
+SUPPORTED_PLATFORMS = {
     Platform.SWITCH,
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
@@ -441,7 +441,7 @@ SUPPORTED_PLATFORMS = [
     Platform.LIGHT,
     Platform.CLIMATE,
     # Platform.CAMERA, # 摄像头平台当前未实现
-]
+}
 
 # ================= 命令类型常量 (Command Type Constants) =================
 # 用于 EpSet API 调用的命令类型代码，以提高代码可读性和可维护性。
@@ -501,6 +501,7 @@ DYN_EFFECT_LIST = list(DYN_EFFECT_MAP.keys())
 ALL_EFFECT_MAP = {**DYN_EFFECT_MAP, **QUANTUM_EFFECT_MAP}
 ALL_EFFECT_LIST = list(ALL_EFFECT_MAP.keys())
 
+
 # ================= 其他配置映射 =================
 
 # 无位置窗帘配置映射 (用于将开/关/停动作映射到正确的IO口)
@@ -512,7 +513,7 @@ NON_POSITIONAL_COVER_CONFIG = {
 }
 
 # 服务器区域选项 (用于配置流程)
-LIFESMART_REGION_OPTIONS = [
+LIFESMART_REGION_OPTIONS = {
     "cn0",
     "cn1",
     "cn2",
@@ -521,4 +522,4 @@ LIFESMART_REGION_OPTIONS = [
     "jp",
     "apz",
     "AUTO",
-]
+}
