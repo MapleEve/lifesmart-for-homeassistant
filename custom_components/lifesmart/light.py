@@ -127,7 +127,7 @@ async def async_setup_entry(
                             entry_id=entry_id,
                         )
                     )
-            elif device_type in ["OD_WE_IRCTL", "SL_SPOT"]:
+            elif device_type in {"OD_WE_IRCTL", "SL_SPOT"}:
                 if "RGB" in device_data:
                     lights.append(
                         LifeSmartSPOTRGBLight(
@@ -234,7 +234,7 @@ def _is_light_device(device_type: str) -> bool:
 
 def _is_light_subdevice(device_type: str, sub_key: str) -> bool:
     """判断子设备是否为灯."""
-    light_sub_keys = [
+    light_sub_keys = {
         "RGB",
         "RGBW",
         "HS",
@@ -250,7 +250,7 @@ def _is_light_subdevice(device_type: str, sub_key: str) -> bool:
         "bright1",
         "bright2",
         "bright3",
-    ]
+    }
     return sub_key in light_sub_keys
 
 
@@ -1052,9 +1052,9 @@ class LifeSmartLight(LifeSmartBaseLight):
         """确定颜色模式."""
         if self._sub_key == "P1":
             return ColorMode.COLOR_TEMP
-        elif self._sub_key in ["HS"]:
+        elif self._sub_key in {"HS"}:
             return ColorMode.HS
-        elif self._sub_key in ["RGBW", "RGB"]:
+        elif self._sub_key in {"RGBW", "RGB"}:
             return ColorMode.RGBW
         else:
             return ColorMode.ONOFF
@@ -1064,7 +1064,7 @@ class LifeSmartLight(LifeSmartBaseLight):
         """初始化颜色值."""
         value = self._sub_data.get("val", 0)
 
-        if self._sub_key in ["HS"]:
+        if self._sub_key in {"HS"}:
             if value == 0:
                 self._attr_hs_color = None
             else:
@@ -1086,7 +1086,7 @@ class LifeSmartLight(LifeSmartBaseLight):
 
         # 更新颜色值
         value = new_data.get("val", 0)
-        if self._sub_key in ["HS"] and value != 0:
+        if self._sub_key in {"HS"} and value != 0:
             rgbhexstr = f"{value:x}".zfill(8)
             rgbhex = bytes.fromhex(rgbhexstr)
             rgba = struct.unpack("BBBB", rgbhex)

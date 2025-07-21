@@ -130,7 +130,7 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
             return True
         if device_type == "SL_CP_VL" and sub_key == "P6":
             return True
-        if device_type == "SL_TR_ACIPM" and sub_key in ["P4", "P5"]:
+        if device_type == "SL_TR_ACIPM" and sub_key in {"P4", "P5"}:
             return True
         return False
 
@@ -390,7 +390,7 @@ class LifeSmartSensor(SensorEntity):
     def _determine_state_class(self) -> SensorStateClass | None:
         """Determine state class for long-term statistics."""
         # 为传感器设置状态类别，以支持历史图表
-        if self.device_class in [
+        if self.device_class in {
             SensorDeviceClass.TEMPERATURE,
             SensorDeviceClass.HUMIDITY,
             SensorDeviceClass.ILLUMINANCE,
@@ -401,7 +401,7 @@ class LifeSmartSensor(SensorEntity):
             SensorDeviceClass.SOUND_PRESSURE,
             SensorDeviceClass.BATTERY,
             SensorDeviceClass.VOLTAGE,
-        ]:
+        }:
             return SensorStateClass.MEASUREMENT
         if self.device_class == SensorDeviceClass.ENERGY:
             return SensorStateClass.TOTAL_INCREASING

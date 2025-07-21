@@ -103,7 +103,7 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
             return True
         if device_type == "SL_CP_VL" and sub_key == "P5":
             return True
-        if device_type in ["SL_NATURE", "SL_FCU"] and sub_key in ["P2", "P3"]:
+        if device_type in {"SL_NATURE", "SL_FCU"} and sub_key in {"P2", "P3"}:
             return True
         return False  # 默认不为温控设备创建其他二元传感器
 
@@ -209,7 +209,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         Generate a user-friendly name for the binary sensor.
 
         The naming strategy combines the base device name with the sub-device name or key:
-        - If the sub-device has a specific name (and it differs from the sub-device key), 
+        - If the sub-device has a specific name (and it differs from the sub-device key),
           the name is formatted as "{base_name} {sub_name}".
         - Otherwise, the name is formatted as "{base_name} {sub_key.upper()}".
 
@@ -252,7 +252,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 )
             if sub_key == "P5":  # 温控阀门告警
                 return BinarySensorDeviceClass.PROBLEM
-            if sub_key in ["P2", "P3"]:  # 超能面板阀门
+            if sub_key in {"P2", "P3"}:  # 超能面板阀门
                 return BinarySensorDeviceClass.OPENING
 
             return None
