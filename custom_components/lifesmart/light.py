@@ -1052,7 +1052,7 @@ class LifeSmartLight(LifeSmartBaseLight):
         """确定颜色模式."""
         if self._sub_key == "P1":
             return ColorMode.COLOR_TEMP
-        elif self._sub_key in {"HS"}:
+        elif self._sub_key == "HS":
             return ColorMode.HS
         elif self._sub_key in {"RGBW", "RGB"}:
             return ColorMode.RGBW
