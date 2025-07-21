@@ -103,18 +103,28 @@ class LifeSmartClient:
         tick = int(time.time())
         params = params or {}
 
-        # 1. 构造用于签名的字典
-        sdata_for_sign = {
-            "method": method,
-            **params,
-            "time": tick,
-            "userid": self._userid,
-            "usertoken": self._usertoken or "",
-            "appkey": self._appkey,
-            "apptoken": self._apptoken,
-        }
+        sdata_parts = [f"method:{method}"]
 
-        # 2. 构造请求体
+        # 只有 params 字典内部的字段需要按 key 升序排列
+        if params:
+            for key in sorted(params.keys()):
+                sdata_parts.append(f"{key}:{params[key]}")
+
+        sdata_parts.extend(
+            [
+                f"time:{tick}",
+                f"userid:{self._userid}",
+                f"usertoken:{self._usertoken or ''}",
+                f"appkey:{self._appkey}",
+                f"apptoken:{self._apptoken}",
+            ]
+        )
+
+        sdata = ",".join(sdata_parts)
+        signature = self._get_signature(sdata)
+        _LOGGER.debug("签名原始串: %s", sdata)
+        # --- 签名逻辑结束 ---
+
         send_values = {
             "id": tick,
             "method": method,
@@ -124,38 +134,30 @@ class LifeSmartClient:
                 "userid": self._userid,
                 "appkey": self._appkey,
                 "time": tick,
-                "sign": self._get_signature(sdata_for_sign),
+                "sign": signature,
             },
         }
         if params:
             send_values["params"] = params
 
-        # 3. 发送请求
         _LOGGER.debug("通用API 请求 -> %s: %s", method, send_values)
         response = await self._post_and_parse(url, send_values, self._generate_header())
         _LOGGER.debug("通用API 响应 <- %s: %s", method, response)
 
-        # 4. 核心检查：只检查顶层 'code' 字段
         code = response.get("code")
         if code != 0:
             error_code = response.get("code")
             raw_message = response.get("message")
             desc, advice, category = get_error_advice(error_code)
-
             log_message = (
-                f"API 调用 '{method}' 失败! "
-                f"[错误码: {error_code}] "
-                f"[分类: {category or '未知'}] "
-                f"[描述: {desc}] "
-                f"[原始消息: {raw_message}]"
+                f"API 调用 '{method}' 失败! [错误码: {error_code}] "
+                f"[分类: {category or '未知'}] [描述: {desc}] [原始消息: {raw_message}]"
             )
             _LOGGER.error(log_message)
-
             if error_code in {10004, 10005, 10006}:
                 raise LifeSmartAuthError(advice, error_code)
             raise LifeSmartAPIError(advice, error_code)
 
-        # 5. 成功时，返回完整的、未经修改的响应字典
         return response
 
     # ====================================================================
@@ -235,8 +237,7 @@ class LifeSmartClient:
         sdata_params = {"appkey": self._appkey, "time": tick, "userid": self._userid}
         sdata = "&".join([f"{k}={v}" for k, v in sorted(sdata_params.items())])
         sdata += f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
-        # async_refresh_token 方法生成的签名原始串 sdata 是用 & 连接的 key=value 格式，与官方文档要求的 API 不一致
-        signature = hashlib.md5(sdata.encode("utf-8")).hexdigest()
+        signature = self._get_signature(sdata)
         _LOGGER.debug("刷新令牌签名原始串 (sdata): %s", sdata)
         _LOGGER.debug("生成刷新令牌签名 (sign): %s", signature)
 
@@ -273,17 +274,16 @@ class LifeSmartClient:
         """为 WebSocket 连接生成认证消息。"""
         tick = int(time.time())
 
-        # 1. 像新的 _async_call_api 一样，构建一个用于签名的字典
-        sign_dict = {
-            "method": "WbAuth",
-            "time": tick,
-            "userid": self._userid,
-            "usertoken": self._usertoken or "",
-            "appkey": self._appkey,
-            "apptoken": self._apptoken,
-        }
+        sdata_parts = [
+            "method:WbAuth",
+            f"time:{tick}",
+            f"userid:{self._userid}",
+            f"usertoken:{self._usertoken or ''}",
+            f"appkey:{self._appkey}",
+            f"apptoken:{self._apptoken}",
+        ]
+        sdata = ",".join(sdata_parts)
 
-        # 2. 构建完整的请求体，并调用新的 _get_signature 方法
         send_values = {
             "id": 1,
             "method": "WbAuth",
@@ -293,7 +293,7 @@ class LifeSmartClient:
                 "userid": self._userid,
                 "appkey": self._appkey,
                 "time": tick,
-                "sign": self._get_signature(sign_dict),
+                "sign": self._get_signature(sdata),
             },
         }
         return json.dumps(send_values)
@@ -618,38 +618,9 @@ class LifeSmartClient:
             return -1
 
     @staticmethod
-    def _get_signature(data: dict[str, Any]) -> str:
-        """
-        根据字典生成 LifeSmart API 所需的 MD5 签名。
-        此实现严格遵循官方文档提供的 "method+params+system" 格式。
-        """
-        sdata = data.copy()
-        method = sdata.pop("method")
-        did = sdata.pop("did", None)  # did 是可选的，不一定存在
-        time_val = sdata.pop("time")
-        userid = sdata.pop("userid")
-        usertoken = sdata.pop("usertoken")
-        appkey = sdata.pop("appkey")
-        apptoken = sdata.pop("apptoken")
-
-        final_parts = [f"method:{method}"]
-
-        if sdata:
-            params_list = [
-                f"{k}:{v}" for k, v in sorted(sdata.items()) if v is not None
-            ]
-            final_parts.extend(params_list)
-        if did is not None:
-            final_parts.append(f"did:{did}")
-        final_parts.append(f"time:{time_val}")
-        final_parts.append(f"userid:{userid}")
-        final_parts.append(f"usertoken:{usertoken}")
-        final_parts.append(f"appkey:{appkey}")
-        final_parts.append(f"apptoken:{apptoken}")
-
-        signature_raw_string = ",".join(final_parts)
-
-        return hashlib.md5(signature_raw_string.encode("utf-8")).hexdigest()
+    def _get_signature(data: str) -> str:
+        """根据传入的原始串计算MD5签名。"""
+        return hashlib.md5(data.encode("utf-8")).hexdigest()
 
     @staticmethod
     def _generate_header() -> dict[str, str]:

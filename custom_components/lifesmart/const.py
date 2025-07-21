@@ -513,7 +513,7 @@ NON_POSITIONAL_COVER_CONFIG = {
 }
 
 # 服务器区域选项 (用于配置流程)
-LIFESMART_REGION_OPTIONS = {
+LIFESMART_REGION_OPTIONS = [
     "cn0",
     "cn1",
     "cn2",
@@ -522,4 +522,4 @@ LIFESMART_REGION_OPTIONS = {
     "jp",
     "apz",
     "AUTO",
-}
+]
