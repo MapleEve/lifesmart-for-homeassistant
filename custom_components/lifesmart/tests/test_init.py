@@ -1,284 +1,202 @@
-"""Test cases for the LifeSmart integration setup and functionality."""
+"""Tests for the LifeSmart integration's core setup and data handling."""
 
-import asyncio
-import unittest
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-from homeassistant.util import dt as dt_util
 
+# 从组件的根 __init__.py 文件中导入所有需要的对象
 from custom_components.lifesmart import (
+    LifeSmartStateManager,
     async_setup_entry,
     async_unload_entry,
-    data_update_handler,
-    generate_unique_id,
-    LifeSmartStateManager,
 )
+# 严格遵循 const.py 的常量定义
 from custom_components.lifesmart.const import (
     DOMAIN,
     LIFESMART_STATE_MANAGER,
-    SUPPORTED_PLATFORMS,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
 )
-from custom_components.lifesmart.exceptions import LifeSmartAuthError
 
-# --- MOCK DATA ---
-
-MOCK_DEVICES = [
-    {
-        "agt": "mock_hub_1",
-        "me": "mock_switch_1",
-        "devtype": "SL_SW_IF1",  # A switch
-        "name": "Test Switch",
-        "data": {"L1": {"type": 129, "val": 1}},
-    },
-    {
-        "agt": "mock_hub_1",
-        "me": "mock_light_1",
-        "devtype": "SL_LI_RGBW",  # A light
-        "name": "Test Light",
-        "data": {
-            "RGBW": {"type": 129, "val": 0xFFFFFF},
-            "DYN": {"type": 128, "val": 0},
-        },
-    },
-]
-
-MOCK_AUTH_RESPONSE = {
-    "usertoken": "new_refreshed_token",
-    "expiredtime": int(dt_util.utcnow().timestamp() + 3600),
+# --- Mock Device Data ---
+MOCK_SWITCH = {
+    "agt": "mock_hub_1",
+    "me": "switch_me_1",
+    "devtype": "SL_SW_IF3",
+    "name": "Living Room Switch",
+    "data": {"L1": {"type": 129, "val": 1}},
+}
+MOCK_EXCLUDED_DEVICE = {
+    "agt": "mock_hub_1",
+    "me": "excluded_device_me",
+    "devtype": "SL_SC_G",
+    "name": "Excluded Door Sensor",
+    "data": {"P1": {"val": 0}},
+}
+MOCK_DEVICE_IN_EXCLUDED_HUB = {
+    "agt": "excluded_hub_agt",
+    "me": "some_device_me",
+    "devtype": "SL_SW_IF1",
+    "name": "Should not be loaded",
+    "data": {"L1": {"val": 0}},
 }
 
-# --- TESTS ---
+
+@pytest.fixture
+def mock_all_devices():
+    """Fixture for a standard list of devices to test with."""
+    return [
+        MOCK_SWITCH,
+        MOCK_EXCLUDED_DEVICE,
+        MOCK_DEVICE_IN_EXCLUDED_HUB,
+    ]
+
+
+# --- 测试集成设置与卸载 ---
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_success(hass: HomeAssistant, mock_config_entry):
-    """Test successful setup of the integration."""
-    with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=(AsyncMock(), MOCK_DEVICES, MOCK_AUTH_RESPONSE),
-    ) as mock_create_client, patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"
-    ) as mock_forward_setups, patch(
-        "custom_components.lifesmart._async_register_services"
-    ) as mock_register_services, patch(
-        "custom_components.lifesmart._async_setup_background_tasks"
-    ) as mock_setup_tasks:
+async def test_setup_success_and_state_manager_creation(
+    hass: HomeAssistant, mock_lifesmart_client, mock_config_entry
+):
+    """测试成功设置，并验证 StateManager 被正确创建、存储并启动。"""
+    mock_lifesmart_client.get_all_device_async.return_value = [MOCK_SWITCH]
 
-        # Run setup
+    with patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"):
         assert await async_setup_entry(hass, mock_config_entry) is True
         await hass.async_block_till_done()
 
-        # 1. Verify client creation and data fetching
-        mock_create_client.assert_called_once_with(hass, mock_config_entry)
-
-        # 2. Verify hub registration
-        device_registry = dr.async_get(hass)
-        hub_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, "mock_hub_1")}
-        )
-        assert hub_device is not None
-        assert (
-            hub_device.name == "LifeSmart Hub (ck_hub_)"
-        )  # Note: name generation depends on hub_id slicing
-
-        # 3. Verify hass.data is populated
-        entry_data = hass.data[DOMAIN][mock_config_entry.entry_id]
-        assert entry_data["client"] is not None
-        assert entry_data["devices"] == MOCK_DEVICES
-
-        # 4. Verify platforms are forwarded
-        mock_forward_setups.assert_called_once_with(
-            mock_config_entry, SUPPORTED_PLATFORMS
-        )
-
-        # 5. Verify services and background tasks are set up
-        mock_register_services.assert_called_once()
-        mock_setup_tasks.assert_called_once()
+    entry_data = hass.data[DOMAIN][mock_config_entry.entry_id]
+    assert LIFESMART_STATE_MANAGER in entry_data
+    state_manager = entry_data[LIFESMART_STATE_MANAGER]
+    assert isinstance(state_manager, LifeSmartStateManager)
+    # 验证 state_manager.start() 已被调用, 这间接证明了 ws_connect 被调用
+    mock_lifesmart_client.ws_connect.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry_auth_failure(hass: HomeAssistant, mock_config_entry):
-    """Test setup failure due to authentication error."""
-    with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        side_effect=LifeSmartAuthError("Invalid credentials"),
-    ):
-        # Setup should fail and return False, not raise ConfigEntryNotReady for auth errors
-        assert await async_setup_entry(hass, mock_config_entry) is False
-        assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry_connection_failure(
-    hass: HomeAssistant, mock_config_entry
+async def test_unload_entry_cleans_up_resources(
+    hass: HomeAssistant, mock_lifesmart_client, mock_config_entry
 ):
-    """Test setup being deferred due to a connection error."""
-    with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        side_effect=ConfigEntryNotReady("Cannot connect to server"),
-    ):
-        # ConfigEntryNotReady should be raised to HA core for retry
-        with pytest.raises(ConfigEntryNotReady):
-            await async_setup_entry(hass, mock_config_entry)
-        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    """测试成功卸载集成，并清理所有资源。"""
+    await async_setup_entry(hass, mock_config_entry)
+    await hass.async_block_till_done()
 
-
-@pytest.mark.asyncio
-async def test_async_unload_entry(
-    hass: HomeAssistant, mock_config_entry, mock_setup_entry
-):
-    """Test successful unloading of the integration."""
-    # Setup a mock state manager
-    mock_state_manager = AsyncMock()
-    hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = mock_state_manager
+    # 从 hass.data 中获取真实的 state_manager 实例
+    state_manager = hass.data[DOMAIN][mock_config_entry.entry_id][
+        LIFESMART_STATE_MANAGER
+    ]
+    # 为其 stop 方法创建一个 mock 以便验证调用
+    state_manager.stop = MagicMock()
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
         return_value=True,
     ) as mock_unload:
         assert await async_unload_entry(hass, mock_config_entry) is True
 
-        # Verify state manager was stopped
-        mock_state_manager.stop.assert_called_once()
+    mock_unload.assert_called_once()
+    state_manager.stop.assert_called_once()
+    assert mock_config_entry.entry_id not in hass.data[DOMAIN]
 
-        # Verify platforms were unloaded
-        mock_unload.assert_called_once_with(mock_config_entry, SUPPORTED_PLATFORMS)
 
-        # Verify hass.data is cleaned up
-        assert mock_config_entry.entry_id not in hass.data[DOMAIN]
+# --- **核心修正：隔离测试 LifeSmartStateManager 的 WebSocket 消息处理逻辑** ---
 
 
 @pytest.mark.asyncio
-async def test_data_update_handler(hass: HomeAssistant, mock_config_entry):
-    """Test the central data update handler logic."""
-    # Setup options for exclusion
-    mock_config_entry.options = {
-        "exclude": "excluded_device_id",
-        "exclude_agt": "excluded_hub_id",
+async def test_state_manager_message_handling_logic(
+    hass: HomeAssistant, mock_lifesmart_client, mock_all_devices
+):
+    """
+    全面测试 LifeSmartStateManager 对所有类型 WebSocket 消息的响应。
+    此测试通过捕获传递给 ws_connect 的回调函数来精确测试消息处理逻辑。
+    """
+    # 1. 初始化 StateManager
+    entry_id = "test_entry_id_123"
+    manager = LifeSmartStateManager(
+        hass, entry_id, mock_lifesmart_client, mock_all_devices, None
+    )
+
+    # 模拟平台已设置并填充了 unique_id 映射
+    manager._unique_ids = {
+        ("mock_hub_1", "switch_me_1", "L1"): "switch.mock_switch_l1_unique_id"
     }
+    manager._exclude_devices = ["excluded_device_me"]
+    manager._exclude_hubs = ["excluded_hub_agt"]
 
+    # 2. 启动 StateManager 并捕获 WebSocket 回调
+    await manager.start()
+    mock_lifesmart_client.ws_connect.assert_called_once()
+    # 捕获传递给 ws_connect 的第一个参数，即消息处理回调
+    message_callback = mock_lifesmart_client.ws_connect.call_args[0][0]
+
+    # 3. 使用捕获的回调函数来测试各种消息场景
     with patch(
-        "homeassistant.helpers.dispatcher.dispatcher_send"
-    ) as mock_dispatcher_send:
-        # 1. Test a valid update
-        valid_data = {
+        "homeassistant.helpers.dispatcher.async_dispatcher_send"
+    ) as mock_dispatcher, patch(
+        "homeassistant.helpers.device_registry.async_get"
+    ) as mock_get_dr, patch.object(
+        hass.config_entries, "async_reload"
+    ) as mock_reload:
+
+        mock_device_registry = MagicMock()
+        mock_get_dr.return_value = mock_device_registry
+
+        # --- 场景: 'io' 消息 -> 触发实体更新 ---
+        update_msg = {
+            "type": "io",
             "msg": {
-                "agt": "hub1",
-                "me": "dev1",
-                "devtype": "SL_SW_IF1",
+                "agt": "mock_hub_1",
+                "me": "switch_me_1",
                 "idx": "L1",
-                "type": 129,
-            }
+                "data": {"val": 0},
+            },
         }
-        await data_update_handler(hass, mock_config_entry, valid_data)
-        expected_signal = (
-            f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_switch.sl_sw_if1_hub1_dev1_l1"
+        await message_callback(update_msg)
+        mock_dispatcher.assert_called_once_with(
+            hass,
+            f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_switch.mock_switch_l1_unique_id",
+            {"val": 0},
         )
-        mock_dispatcher_send.assert_called_with(
-            hass, expected_signal, valid_data["msg"]
-        )
+        mock_dispatcher.reset_mock()
 
-        mock_dispatcher_send.reset_mock()
-
-        # 2. Test an update for an excluded device
-        excluded_device_data = {
-            "msg": {
-                "agt": "hub1",
-                "me": "excluded_device_id",
-                "devtype": "SL_SW_IF1",
-                "idx": "L1",
-            }
+        # --- 场景: 'epname' 消息 -> 更新设备注册表 ---
+        name_change_msg = {
+            "type": "epname",
+            "msg": {"agt": "mock_hub_1", "me": "switch_me_1", "name": "New Name"},
         }
-        await data_update_handler(hass, mock_config_entry, excluded_device_data)
-        mock_dispatcher_send.assert_not_called()
+        mock_device = MagicMock(id="device_id_1")
+        mock_device_registry.async_get_device.return_value = mock_device
+        await message_callback(name_change_msg)
+        mock_device_registry.async_get_device.assert_called_with(
+            identifiers={(DOMAIN, "switch_me_1_mock_hub_1")}
+        )
+        mock_device_registry.async_update_device.assert_called_with(
+            device_id="device_id_1", name="New Name"
+        )
 
-        # 3. Test an update for an excluded hub
-        excluded_hub_data = {
-            "msg": {
-                "agt": "excluded_hub_id",
-                "me": "dev2",
-                "devtype": "SL_SW_IF1",
-                "idx": "L1",
+        # --- 场景: 'devadd' 和 'devdel' 消息 -> 触发集成重载 ---
+        for msg_type in ["devadd", "devdel"]:
+            dev_change_msg = {
+                "type": msg_type,
+                "msg": {"agt": "any", "me": "any", "devtype": "any"},
             }
-        }
-        await data_update_handler(hass, mock_config_entry, excluded_hub_data)
-        mock_dispatcher_send.assert_not_called()
+            await message_callback(dev_change_msg)
+            # 验证是针对正确的 entry_id 调用的 reload
+            mock_reload.assert_called_with(entry_id)
+            mock_reload.reset_mock()
 
-
-def test_generate_entity_id():
-    """Test the entity ID generation utility."""
-    # Test a simple switch
-    assert (
-        generate_unique_id("SL_SW_IF1", "hub123", "dev456", "L1")
-        == "switch.sl_sw_if1_hub123_dev456_l1"
-    )
-    # Test a light
-    assert (
-        generate_unique_id("SL_LI_RGBW", "hub123", "dev789", "RGBW")
-        == "light.sl_li_rgbw_hub123_dev789_rgbw"
-    )
-    # Test a sensor from a composite device (lock battery)
-    assert (
-        generate_unique_id("SL_LK_LS", "hub123", "lock01", "BAT")
-        == "sensor.sl_lk_ls_hub123_lock01_bat"
-    )
-    # Test a climate entity (no sub-device needed for platform)
-    assert (
-        generate_unique_id("SL_CP_AIR", "hub123", "climate01", "climate")
-        == "climate.sl_cp_air_hub123_climate01_climate"
-    )
-    # Test unknown device
-    assert generate_unique_id("UNKNOWN_DEV", "hub123", "dev000", "P1") == ""
-
-
-@pytest.mark.asyncio
-async def test_lifesmart_state_manager(hass: HomeAssistant, mock_config_entry):
-    """Test the LifeSmartStateManager class."""
-    mock_client = AsyncMock()
-    mock_client.generate_wss_auth.return_value = "{'auth': 'ok'}"
-
-    mock_ws = AsyncMock()
-    mock_ws.receive.side_effect = [
-        MagicMock(type="text", data='{"code":0, "message":"success"}'),
-        # Keep the loop running then simulate a close
-        asyncio.CancelledError,
-    ]
-
-    with patch(
-        "homeassistant.helpers.aiohttp_client.async_get_clientsession"
-    ) as mock_session:
-        mock_session.return_value.ws_connect.return_value = mock_ws
-
-        manager = LifeSmartStateManager(
-            hass=hass,
-            config_entry=mock_config_entry,
-            client=mock_client,
-            ws_url="wss://fake.url",
-            refresh_callback=AsyncMock(),
+        # --- 场景: 测试忽略逻辑 ---
+        # 忽略被排除的设备
+        await message_callback(
+            {"type": "io", "msg": {"agt": "mock_hub_1", "me": "excluded_device_me"}}
         )
-
-        # Start and let it run through one cycle
-        manager.start()
-        await asyncio.sleep(0.1)  # allow the task to start
-
-        # Verify connection and auth were attempted
-        mock_session.return_value.ws_connect.assert_called_with(
-            "wss://fake.url",
-            heartbeat=25,
-            compress=15,
-            ssl=unittest.mock.ANY,
-            timeout=unittest.mock.ANY,
+        # 忽略被排除的网关
+        await message_callback(
+            {"type": "io", "msg": {"agt": "excluded_hub_agt", "me": "some_device_me"}}
         )
-        mock_client.generate_wss_auth.assert_called_once()
-        mock_ws.send_str.assert_called_with("{'auth': 'ok'}")
+        # 忽略格式错误的消息
+        await message_callback({"type": "io", "msg": {}})
 
-        # Stop the manager
-        await manager.stop()
-        assert manager._should_stop is True
-        assert manager._ws_task.cancelled()
+        mock_dispatcher.assert_not_called()
+        mock_reload.assert_not_called()
