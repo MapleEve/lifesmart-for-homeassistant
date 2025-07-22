@@ -106,6 +106,7 @@ class LifeSmartClimate(ClimateEntity):
         self._raw_device = raw_device
         self._client = client
         self._entry_id = entry_id
+        # --- 设置核心属性 ---
         self.device_type = raw_device[DEVICE_TYPE_KEY]
         self._hub_id = raw_device[HUB_ID_KEY]
         self._device_id = raw_device[DEVICE_ID_KEY]
