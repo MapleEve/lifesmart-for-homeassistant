@@ -722,6 +722,13 @@ class LifeSmartStateManager:
         """创建新的 WebSocket 连接，并处理 SSL 验证。"""
         ssl_context = get_default_context()
         session = async_get_clientsession(self.hass)
+        if session.closed:
+            _LOGGER.warning(
+                "无法创建 WebSocket 连接，因为 aiohttp 会话已关闭（可能正在关机）。"
+            )
+            raise asyncio.CancelledError(
+                "Session is closed, aborting connection attempt."
+            )
         try:
             return await session.ws_connect(
                 self.ws_url,
