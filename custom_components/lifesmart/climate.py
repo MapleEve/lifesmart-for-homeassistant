@@ -90,7 +90,7 @@ def _is_climate_device(device: dict) -> bool:
 class LifeSmartClimate(ClimateEntity):
     """LifeSmart 温控设备实体。"""
 
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_precision = PRECISION_TENTHS

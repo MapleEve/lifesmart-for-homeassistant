@@ -257,7 +257,7 @@ def _is_light_subdevice(device_type: str, sub_key: str) -> bool:
 class LifeSmartBaseLight(LightEntity):
     """LifeSmart灯基类."""
 
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
     def __init__(
         self,

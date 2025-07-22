@@ -127,7 +127,7 @@ def _is_switch_subdevice(device_type: str, sub_key: str) -> bool:
 class LifeSmartSwitch(SwitchEntity):
     """LifeSmart switch entity with full state management."""
 
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
     def __init__(
         self,
