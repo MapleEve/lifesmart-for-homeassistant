@@ -98,6 +98,16 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_devices_fixture(request):
+    """
+    一个简单的 fixture，通过 pytest 的 `request` 对象来接收参数。
+    如果测试用例没有间接参数化这个 fixture，它会返回一个空列表。
+    """
+    # request.param 会持有 parametrize 传递过来的值
+    return getattr(request, "param", [])
+
+
+@pytest.fixture
 async def setup_integration(
     hass, mock_config_entry, lifesmart_client_factory
 ) -> Generator[MockConfigEntry, None, None]:
