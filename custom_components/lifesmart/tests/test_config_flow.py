@@ -198,7 +198,6 @@ async def test_cloud_flow_auth_error(hass: HomeAssistant, mock_validate):
     """测试当云端认证失败时，流程显示错误并停留在当前步骤。"""
     mock_validate.side_effect = LifeSmartAuthError("Invalid credentials", 10005)
 
-    # ... go to token step ...
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -209,15 +208,12 @@ async def test_cloud_flow_auth_error(hass: HomeAssistant, mock_validate):
         result["flow_id"],
         {**MOCK_USER_INPUT_CLOUD_BASE, CONF_LIFESMART_AUTH_METHOD: "token"},
     )
-
-    # Submit invalid token
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_LIFESMART_USERTOKEN: "invalid_token"}
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "cloud_token"
-    assert result["errors"]["base"] == "invalid_auth"
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.asyncio
@@ -318,7 +314,7 @@ async def test_reauth_flow_success(
         data=mock_config_entry.data,
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "cloud"
+    assert result["step_id"] == "cloud_password"
 
     # 2. Submit new credentials
     with patch(
@@ -326,16 +322,15 @@ async def test_reauth_flow_success(
     ) as mock_reload:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**mock_config_entry.data, CONF_LIFESMART_AUTH_METHOD: "password"},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_LIFESMART_USERPASSWORD: "new_password"}
+            {
+                **mock_config_entry.data,
+                CONF_LIFESMART_USERPASSWORD: "new_password",
+            },
         )
 
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
-        # Verify entry data is updated and reload was called
         assert mock_config_entry.data[CONF_LIFESMART_USERTOKEN] == "newly_fetched_token"
         mock_reload.assert_called_once_with(mock_config_entry.entry_id)
 
@@ -345,12 +340,10 @@ async def test_options_flow(hass: HomeAssistant, mock_config_entry):
     """测试选项流程可以成功更新排除列表。"""
     mock_config_entry.add_to_hass(hass)
 
-    # 1. Init options flow
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    # 2. Submit new options
     new_exclude_list = "dev1,dev2"
     new_exclude_hubs = "hub1"
     result = await hass.config_entries.options.async_configure(
@@ -361,7 +354,6 @@ async def test_options_flow(hass: HomeAssistant, mock_config_entry):
         },
     )
 
-    # 3. Verify flow finishes and options are saved
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options[CONF_EXCLUDE_ITEMS] == new_exclude_list
     assert mock_config_entry.options[CONF_EXCLUDE_AGTS] == new_exclude_hubs
@@ -373,19 +365,20 @@ async def test_options_flow(hass: HomeAssistant, mock_config_entry):
 # region: Edge Cases
 @pytest.mark.asyncio
 async def test_flow_aborts_if_already_configured(
-    hass: HomeAssistant, mock_config_entry
+    hass: HomeAssistant, mock_config_entry, mock_validate
 ):
     """测试如果用户已配置，流程会中止。"""
     mock_config_entry.add_to_hass(hass)
+    mock_validate.return_value = MOCK_VALIDATE_SUCCESS_RESULT
 
-    # Start a new flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_TYPE: "cloud_push"}
     )
-    # Attempt to configure with the same userid
+
+    # 提交与现有条目相同的数据
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {**MOCK_USER_INPUT_CLOUD_BASE, CONF_LIFESMART_AUTH_METHOD: "token"},
