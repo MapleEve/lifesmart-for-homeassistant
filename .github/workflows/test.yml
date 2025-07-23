@@ -1,4 +1,4 @@
-name: Run Tests CI
+name: Run Union Tests CI
 
 on:
   push:
@@ -10,13 +10,22 @@ on:
 
 jobs:
   test:
-    name: "Run LifeSmart Unit Tests"
+    name: "Run LifeSmart Unit/Union Tests"
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.11", "3.12" ] # 根据HA支持的版本调整
 
 
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
@@ -24,9 +33,15 @@ jobs:
           pip install pytest pytest-asyncio pytest-cov pytest-homeassistant-custom-component
 
       - name: Run unit tests with pytest
-        working-directory: ./custom_components/lifesmart
         run: |
-          pytest -v -m github -c tests/pytest.ini tests/ --cov --cov-branch --cov-report=xml
+          pytest \
+            -v \
+            -m "github" \
+            -c "custom_components/lifesmart/tests/pytest.ini" \
+            "custom_components/lifesmart/tests/" \
+            --cov=custom_components.lifesmart \
+            --cov-branch \
+            --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

@@ -36,6 +36,16 @@ from custom_components.lifesmart.sensor import (
     _is_sensor_subdevice,
 )
 
+DEVICE_DATA_KEY = "data"
+
+DEVICE_NAME_KEY = "name"
+
+DEVICE_TYPE_KEY = "devtype"
+
+DEVICE_ID_KEY = "me"
+
+HUB_ID_KEY = "agt"
+
 
 # --- MOCK DATA FIXTURES ---
 
@@ -58,11 +68,11 @@ def mock_config_entry():
 MOCK_DEVICES = [
     # 1. Standard Env Sensor (Temp, Humidity, Illuminance, Voltage)
     {
-        "agt": "hub1",
-        "me": "device1",
-        "devtype": "SL_SC_THL",
-        "name": "Living Room Env",
-        "data": {
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "device1",
+        DEVICE_TYPE_KEY: "SL_SC_THL",
+        DEVICE_NAME_KEY: "Living Room Env",
+        DEVICE_DATA_KEY: {
             "T": {"v": 25.5, "val": 255},
             "H": {"v": 60.1, "val": 601},
             "Z": {"v": 1000},
@@ -71,11 +81,11 @@ MOCK_DEVICES = [
     },
     # 2. CO2 Sensor
     {
-        "agt": "hub1",
-        "me": "device2",
-        "devtype": "SL_SC_CA",
-        "name": "Study CO2",
-        "data": {
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "device2",
+        DEVICE_TYPE_KEY: "SL_SC_CA",
+        DEVICE_NAME_KEY: "Study CO2",
+        DEVICE_DATA_KEY: {
             "P1": {"val": 220},  # Temp
             "P2": {"val": 550},  # Humidity
             "P3": {"val": 800},  # CO2
@@ -84,11 +94,11 @@ MOCK_DEVICES = [
     },
     # 3. Power Meter Plug
     {
-        "agt": "hub1",
-        "me": "device3",
-        "devtype": "SL_OE_3C",
-        "name": "Washing Machine Plug",
-        "data": {
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "device3",
+        DEVICE_TYPE_KEY: "SL_OE_3C",
+        DEVICE_NAME_KEY: "Washing Machine Plug",
+        DEVICE_DATA_KEY: {
             "P2": {"v": 1.5},  # Energy
             "P3": {"v": 1200},  # Power
             "P4": {
@@ -98,62 +108,62 @@ MOCK_DEVICES = [
     },
     # 4. A lock with a battery sensor
     {
-        "agt": "hub1",
-        "me": "device4",
-        "devtype": "SL_LKS_S",
-        "name": "Main Door Lock",
-        "data": {"BAT": {"val": 88}},
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "device4",
+        DEVICE_TYPE_KEY: "SL_LKS_S",
+        DEVICE_NAME_KEY: "Main Door Lock",
+        DEVICE_DATA_KEY: {"BAT": {"val": 88}},
     },
     # 5. A switch with a battery sensor
     {
-        "agt": "hub1",
-        "me": "device5",
-        "devtype": "SL_SW_IF1",
-        "name": "Bedroom Switch",
-        "data": {"P4": {"val": 92}},
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "device5",
+        DEVICE_TYPE_KEY: "SL_SW_IF1",
+        DEVICE_NAME_KEY: "Bedroom Switch",
+        DEVICE_DATA_KEY: {"P4": {"val": 92}},
     },
     # 6. A device to be excluded by 'me'
     {
-        "agt": "hub1",
-        "me": "excluded_device",
-        "devtype": "SL_SC_THL",
-        "name": "Excluded Sensor",
-        "data": {"T": {"v": 20}},
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "excluded_device",
+        DEVICE_TYPE_KEY: "SL_SC_THL",
+        DEVICE_NAME_KEY: "Excluded Sensor",
+        DEVICE_DATA_KEY: {"T": {"v": 20}},
     },
     # 7. A device to be excluded by 'agt'
     {
-        "agt": "excluded_hub",
-        "me": "device7",
-        "devtype": "SL_SC_THL",
-        "name": "Sensor on Excluded Hub",
-        "data": {"T": {"v": 21}},
+        HUB_ID_KEY: "excluded_hub",
+        DEVICE_ID_KEY: "device7",
+        DEVICE_TYPE_KEY: "SL_SC_THL",
+        DEVICE_NAME_KEY: "Sensor on Excluded Hub",
+        DEVICE_DATA_KEY: {"T": {"v": 21}},
     },
     # 8. An unsupported device type
     {
-        "agt": "hub1",
-        "me": "device8",
-        "devtype": "UNSUPPORTED_TYPE",
-        "name": "Unsupported Device",
-        "data": {"T": {"v": 22}},
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "device8",
+        DEVICE_TYPE_KEY: "UNSUPPORTED_TYPE",
+        DEVICE_NAME_KEY: "Unsupported Device",
+        DEVICE_DATA_KEY: {"T": {"v": 22}},
     },
     # 9. SL_NATURE panel (Thermostat type)
     {
-        "agt": "hub1",
-        "me": "nature1",
-        "devtype": "SL_NATURE",
-        "name": "Nature Panel Thermo",
-        "data": {
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "nature1",
+        DEVICE_TYPE_KEY: "SL_NATURE",
+        DEVICE_NAME_KEY: "Nature Panel Thermo",
+        DEVICE_DATA_KEY: {
             "P4": {"val": 235},  # Current Temperature
             "P5": {"val": 3},  # Mode ID for Thermostat
         },
     },
     # 10. SL_NATURE panel (Non-thermostat type)
     {
-        "agt": "hub1",
-        "me": "nature2",
-        "devtype": "SL_NATURE",
-        "name": "Nature Panel Switch",
-        "data": {"P5": {"val": 1}},
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "nature2",
+        DEVICE_TYPE_KEY: "SL_NATURE",
+        DEVICE_NAME_KEY: "Nature Panel Switch",
+        DEVICE_DATA_KEY: {"P5": {"val": 1}},
     },
 ]
 
@@ -246,9 +256,9 @@ def test_is_sensor_subdevice(device_type, sub_key, expected):
 
 @pytest.mark.parametrize(
     (
-        "devtype",
-        "me",
-        "name",
+        DEVICE_TYPE_KEY,
+        DEVICE_ID_KEY,
+        DEVICE_NAME_KEY,
         "sub_key",
         "sub_data",
         "expected_name",
@@ -335,7 +345,7 @@ def test_is_sensor_subdevice(device_type, sub_key, expected):
             "d3",
             "Kitchen Switch",
             "P4",
-            {"val": 95, "name": "Battery"},
+            {"val": 95, DEVICE_NAME_KEY: "Battery"},
             "Kitchen Switch Battery",
             SensorDeviceClass.BATTERY,
             PERCENTAGE,
@@ -475,11 +485,11 @@ def test_lifesmart_sensor_properties(
 ):
     """Test all derived properties of the LifeSmartSensor entity."""
     raw_device = {
-        "agt": "hub1",
-        "me": me,
-        "devtype": devtype,
-        "name": name,
-        "data": {sub_key: sub_data},
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: me,
+        DEVICE_TYPE_KEY: devtype,
+        DEVICE_NAME_KEY: name,
+        DEVICE_DATA_KEY: {sub_key: sub_data},
     }
 
     # LifeSmartDevice is a simple dataclass, can be instantiated directly
@@ -505,7 +515,7 @@ def test_lifesmart_sensor_properties(
     assert sensor.extra_state_attributes == expected_attrs
     assert sensor.unique_id == f"{devtype}-hub1-{me}-{sub_key}"
     assert sensor.device_info["identifiers"] == {(DOMAIN, "hub1", me)}
-    assert sensor.device_info["name"] == name
+    assert sensor.device_info[DEVICE_NAME_KEY] == name
     assert sensor.device_info["model"] == devtype
     assert sensor.device_info["manufacturer"] == "LifeSmart"
 
@@ -516,11 +526,11 @@ async def test_lifesmart_sensor_updates(
     """Test real-time and global refresh updates."""
     # Setup initial device and sensor
     raw_device = {
-        "agt": "hub1",
-        "me": "device1",
-        "devtype": "SL_SC_THL",
-        "name": "Living Room Env",
-        "data": {"T": {"v": 25.5}},
+        HUB_ID_KEY: "hub1",
+        DEVICE_ID_KEY: "device1",
+        DEVICE_TYPE_KEY: "SL_SC_THL",
+        DEVICE_NAME_KEY: "Living Room Env",
+        DEVICE_DATA_KEY: {"T": {"v": 25.5}},
     }
     from custom_components.lifesmart import LifeSmartDevice
 
@@ -529,7 +539,7 @@ async def test_lifesmart_sensor_updates(
         device=ha_device,
         raw_device=raw_device,
         sub_device_key="T",
-        sub_device_data=raw_device["data"]["T"],
+        sub_device_data=raw_device[DEVICE_DATA_KEY]["T"],
         client=mock_lifesmart_client,
         entry_id=mock_config_entry.entry_id,
     )
@@ -553,11 +563,11 @@ async def test_lifesmart_sensor_updates(
     sensor.async_write_ha_state.reset_mock()
     updated_device_list = [
         {
-            "agt": "hub1",
-            "me": "device1",
-            "devtype": "SL_SC_THL",
-            "name": "Living Room Env",
-            "data": {"T": {"val": 270}},  # New value for global refresh
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "device1",
+            DEVICE_TYPE_KEY: "SL_SC_THL",
+            DEVICE_NAME_KEY: "Living Room Env",
+            DEVICE_DATA_KEY: {"T": {"val": 270}},  # New value for global refresh
         }
     ]
     hass.data[DOMAIN] = {"test_entry_id": {"devices": updated_device_list}}

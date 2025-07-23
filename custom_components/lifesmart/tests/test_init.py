@@ -11,34 +11,38 @@ from custom_components.lifesmart import (
     async_setup_entry,
     async_unload_entry,
 )
-# 严格遵循 const.py 的常量定义
 from custom_components.lifesmart.const import (
     DOMAIN,
     LIFESMART_STATE_MANAGER,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
+    HUB_ID_KEY,
+    DEVICE_ID_KEY,
+    DEVICE_TYPE_KEY,
+    DEVICE_NAME_KEY,
+    DEVICE_DATA_KEY,
 )
 
 # --- Mock Device Data ---
 MOCK_SWITCH = {
-    "agt": "mock_hub_1",
-    "me": "switch_me_1",
-    "devtype": "SL_SW_IF3",
-    "name": "Living Room Switch",
-    "data": {"L1": {"type": 129, "val": 1}},
+    HUB_ID_KEY: "mock_hub_1",
+    DEVICE_ID_KEY: "switch_me_1",
+    DEVICE_TYPE_KEY: "SL_SW_IF3",
+    DEVICE_NAME_KEY: "Living Room Switch",
+    DEVICE_DATA_KEY: {"L1": {"type": 129, "val": 1}},
 }
 MOCK_EXCLUDED_DEVICE = {
-    "agt": "mock_hub_1",
-    "me": "excluded_device_me",
-    "devtype": "SL_SC_G",
-    "name": "Excluded Door Sensor",
-    "data": {"P1": {"val": 0}},
+    HUB_ID_KEY: "mock_hub_1",
+    DEVICE_ID_KEY: "excluded_device_me",
+    DEVICE_TYPE_KEY: "SL_SC_G",
+    DEVICE_NAME_KEY: "Excluded Door Sensor",
+    DEVICE_DATA_KEY: {"P1": {"val": 0}},
 }
 MOCK_DEVICE_IN_EXCLUDED_HUB = {
-    "agt": "excluded_hub_agt",
-    "me": "some_device_me",
-    "devtype": "SL_SW_IF1",
-    "name": "Should not be loaded",
-    "data": {"L1": {"val": 0}},
+    HUB_ID_KEY: "excluded_hub_agt",
+    DEVICE_ID_KEY: "some_device_me",
+    DEVICE_TYPE_KEY: "SL_SW_IF1",
+    DEVICE_NAME_KEY: "Should not be loaded",
+    DEVICE_DATA_KEY: {"L1": {"val": 0}},
 }
 
 
