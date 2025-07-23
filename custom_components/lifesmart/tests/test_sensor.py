@@ -513,7 +513,7 @@ def test_lifesmart_sensor_properties(
     assert sensor.state_class == expected_state_class
     assert sensor.native_value == expected_value
     assert sensor.extra_state_attributes == expected_attrs
-    assert sensor.unique_id == f"{devtype}-hub1-{me}-{sub_key}"
+    assert sensor.unique_id == f"{devtype}_hub1_{me}_{sub_key}"
     assert sensor.device_info["identifiers"] == {(DOMAIN, "hub1", me)}
     assert sensor.device_info[DEVICE_NAME_KEY] == name
     assert sensor.device_info["model"] == devtype
