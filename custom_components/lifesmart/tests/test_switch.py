@@ -364,7 +364,7 @@ async def test_data_update_handlers(
 
     # 3. Test global refresh when device is missing
     hass.data[DOMAIN][switch_entity._entry_id]["devices"] = []  # Remove all devices
-    with patch.object(switch_entity, "_LOGGER") as mock_logger:
+    with patch("custom_components.lifesmart.switch._LOGGER") as mock_logger:
         refresh_callback()
         mock_logger.warning.assert_called_once()
         assert "Could not find device" in mock_logger.warning.call_args[0][0]
