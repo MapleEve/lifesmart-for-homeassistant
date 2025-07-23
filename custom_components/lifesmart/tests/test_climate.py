@@ -1,6 +1,5 @@
 """
 Unit and integration tests for the LifeSmart Climate platform.
-This version uses shared fixtures from conftest.py and correct mocking strategies.
 """
 
 from unittest.mock import AsyncMock, ANY
@@ -19,36 +18,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
-# --- Strictly import constants from the component's code ---
 from custom_components.lifesmart.const import *
 
 pytestmark = pytest.mark.asyncio
-
-# --- Helper Functions ---
 
 
 def find_device(devices: list, me: str):
     """Helper to find a specific device from the mock list by its 'me' id."""
     return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
-
-
-async def setup_platform(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    mock_client: AsyncMock,
-    devices: list,
-) -> None:
-    """Set up the climate platform using provided fixtures and devices."""
-    hass.data[DOMAIN] = {
-        config_entry.entry_id: {
-            "client": mock_client,
-            "devices": devices,
-            "exclude_devices": [],
-            "exclude_hubs": [],
-        }
-    }
-    await hass.config_entries.async_forward_entry_setup(config_entry, CLIMATE_DOMAIN)
-    await hass.async_block_till_done()
 
 
 # --- TEST SUITE ---
@@ -60,14 +37,9 @@ class TestClimateSetup:
     async def test_setup_entry_creates_correct_entities(
         self,
         hass: HomeAssistant,
-        mock_client: AsyncMock,
-        mock_config_entry: ConfigEntry,
-        mock_lifesmart_devices: list,
+        setup_integration: ConfigEntry,
     ):
         """Test that async_setup_entry correctly identifies and creates climate entities."""
-        await setup_platform(
-            hass, mock_config_entry, mock_client, mock_lifesmart_devices
-        )
 
         # Expected climate devices from conftest.py = 5
         assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
@@ -128,8 +100,7 @@ class TestClimateEntity:
     async def test_entity_state_and_attributes(
         self,
         hass: HomeAssistant,
-        mock_client: AsyncMock,
-        mock_config_entry: ConfigEntry,
+        setup_integration: ConfigEntry,
         mock_lifesmart_devices: list,
         device_me: str,
         expected_attrs: dict,
@@ -137,8 +108,6 @@ class TestClimateEntity:
     ):
         """Test initialization of entity attributes and features for various device types."""
         device = find_device(mock_lifesmart_devices, device_me)
-        await setup_platform(hass, mock_config_entry, mock_client, [device])
-
         entity_id = f"climate.{device[DEVICE_NAME_KEY].lower().replace(' ', '_')}"
         state = hass.states.get(entity_id)
 
@@ -153,12 +122,9 @@ class TestClimateEntity:
         self,
         hass: HomeAssistant,
         mock_client: AsyncMock,
-        mock_config_entry: ConfigEntry,
-        mock_lifesmart_devices: list,
+        setup_integration: ConfigEntry,
     ):
         """Test service calls for setting temperature, hvac_mode, and fan_mode."""
-        device = find_device(mock_lifesmart_devices, "climate_fancoil")
-        await setup_platform(hass, mock_config_entry, mock_client, [device])
         entity_id = "climate.fan_coil_unit"
 
         await hass.services.async_call(
@@ -194,13 +160,9 @@ class TestClimateEntity:
     async def test_entity_update_from_dispatcher(
         self,
         hass: HomeAssistant,
-        mock_client: AsyncMock,
-        mock_config_entry: ConfigEntry,
-        mock_lifesmart_devices: list,
+        setup_integration: ConfigEntry,
     ):
         """Test that entity state updates correctly when a dispatcher signal is received."""
-        device = find_device(mock_lifesmart_devices, "climate_airpanel")
-        await setup_platform(hass, mock_config_entry, mock_client, [device])
         entity_id = "climate.air_panel"
 
         assert hass.states.get(entity_id).state == HVACMode.OFF

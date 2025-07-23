@@ -1,15 +1,16 @@
 """
 共享的 pytest fixtures，用于 LifeSmart 集成测试。
-
-此文件集中管理所有平台的模拟设备数据和模拟客户端，以遵循 DRY (Don't Repeat Yourself) 原则。
 """
 
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock, AsyncMock, patch
 
 import pytest
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_REGION
+from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.lifesmart import async_setup_entry
 from custom_components.lifesmart.const import *
 
 # 自动为所有测试加载 Home Assistant 的 pytest 插件
@@ -397,3 +398,26 @@ def mock_config_entry(mock_config_data) -> MockConfigEntry:
         title="LifeSmart Mock",
         options={},
     )
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_client: AsyncMock
+):
+    """
+    一个统一的 fixture，用于完整地设置和加载 LifeSmart 集成及其所有平台。
+    """
+    # 1. 将模拟配置条目添加到 HASS
+    mock_config_entry.add_to_hass(hass)
+
+    # 2. Patch LifeSmartClient 的创建过程，使其返回我们的 mock_client
+    with patch(
+        "custom_components.lifesmart.LifeSmartClient",
+        return_value=mock_client,
+    ):
+        # 3. 运行主集成的 async_setup_entry
+        await async_setup_entry(hass, mock_config_entry)
+        # 4. 等待所有后台任务完成，确保平台已加载
+        await hass.async_block_till_done()
+
+    return mock_config_entry
