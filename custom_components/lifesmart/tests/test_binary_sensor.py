@@ -277,7 +277,7 @@ async def test_momentary_button_update(
     """Test the transient state change of a momentary button."""
     await setup_platform(hass, mock_config_entry, [MOCK_DEVICES["button_v2"]])
     entity_id = "binary_sensor.panic_button_p1"
-    unique_id = f"lifesmart_{MOCK_DEVICES['button_v2'][HUB_ID_KEY]}_{MOCK_DEVICES['button_v2'][DEVICE_ID_KEY]}_{'p1'}"
+    unique_id = f"lifesmart_{MOCK_DEVICES['button_v2'][HUB_ID_KEY]}_{MOCK_DEVICES['button_v2'][DEVICE_ID_KEY]}_p1"
 
     with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep, freeze_time(
         "2023-01-01T12:00:00Z"
