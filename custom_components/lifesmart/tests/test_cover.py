@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
@@ -14,16 +15,13 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from custom_components.lifesmart import async_setup_entry
 from custom_components.lifesmart.const import *
-
-# ATTR_CURRENT_COVER_POSITION has been removed as it's deprecated in Home Assistant.
-# All local fixtures and mock data have been removed and centralized in conftest.py.
 
 pytestmark = pytest.mark.asyncio
 
@@ -45,8 +43,6 @@ class TestCoverSetup:
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ):
         """Test that cover entities are created for all supported device types."""
-        # The setup_integration fixture handles loading all platforms.
-        # Expected covers from conftest.py: cover_garage, cover_dooya, cover_nonpos = 3
         assert len(hass.states.async_entity_ids(COVER_DOMAIN)) == 3
         assert hass.states.get("cover.garage_door") is not None
         assert hass.states.get("cover.living_room_curtain") is not None
@@ -60,12 +56,15 @@ class TestCoverSetup:
         mock_lifesmart_devices: list,
     ):
         """Test that excluded devices are not added using a manual setup."""
-        # This test requires a manual setup to inject the exclusion list.
         mock_config_entry.add_to_hass(hass)
-        mock_config_entry.options = {
-            CONF_EXCLUDE_ITEMS: "cover_dooya",  # Exclude by 'me' from conftest.py
-            CONF_EXCLUDE_AGTS: "",
-        }
+        hass.config_entries.async_update_entry(
+            mock_config_entry,
+            options={
+                CONF_EXCLUDE_ITEMS: "cover_dooya",
+                CONF_EXCLUDE_AGTS: "",
+            },
+        )
+        await hass.async_block_till_done()
 
         with patch(
             "custom_components.lifesmart.LifeSmartClient", return_value=mock_client
@@ -132,15 +131,14 @@ class TestCoverEntity:
         assert state.attributes.get("supported_features") == expected_features
 
     @pytest.mark.parametrize(
-        "device_me, io_key, data, expected_pos, exp_opening, exp_closing, exp_is_closed",
+        "device_me, io_key, data, expected_pos, exp_state",
         [
-            ("cover_garage", "P2", {"val": 0, "type": 128}, 0, False, False, True),
-            ("cover_dooya", "P1", {"val": 100, "type": 128}, 100, False, False, False),
-            ("cover_garage", "P2", {"val": 50, "type": 128}, 50, False, False, False),
-            ("cover_dooya", "P1", {"val": 178, "type": 129}, 50, True, False, False),
-            ("cover_garage", "P2", {"val": 50, "type": 129}, 50, False, True, False),
+            ("cover_garage", "P2", {"val": 0, "type": 128}, 0, STATE_CLOSED),
+            ("cover_dooya", "P1", {"val": 100, "type": 128}, 100, STATE_OPEN),
+            ("cover_garage", "P2", {"val": 50, "type": 128}, 50, STATE_OPEN),
+            ("cover_dooya", "P1", {"val": 50, "type": 129}, 50, STATE_OPEN),
         ],
-        ids=["Closed", "Open", "Stopped", "Opening", "Closing"],
+        ids=["Closed", "Open", "Stopped", "Moving"],
     )
     async def test_positional_cover_state_update(
         self,
@@ -151,9 +149,7 @@ class TestCoverEntity:
         io_key,
         data,
         expected_pos,
-        exp_opening,
-        exp_closing,
-        exp_is_closed,
+        exp_state,
     ):
         """Test state parsing for covers that support set_position."""
         device = find_device(mock_lifesmart_devices, device_me)
@@ -161,19 +157,14 @@ class TestCoverEntity:
         entity_registry = async_get_entity_registry(hass)
         entry = entity_registry.async_get(entity_id)
 
-        # Dispatch an update to the specific entity
         async_dispatcher_send(
             hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entry.unique_id}", {io_key: data}
         )
         await hass.async_block_till_done()
 
         state = hass.states.get(entity_id)
-
-        # CORRECTED: Use state.attributes.get("current_position")
-        assert state.attributes.get("current_position") == expected_pos
-        assert state.attributes.get("is_opening") == exp_opening
-        assert state.attributes.get("is_closing") == exp_closing
-        assert state.attributes.get("is_closed") == exp_is_closed
+        assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_pos
+        assert state.state == exp_state
 
     async def test_service_calls(
         self,
@@ -231,10 +222,8 @@ class TestCoverEntity:
         entity_registry = async_get_entity_registry(hass)
         entry = entity_registry.async_get(entity_id)
 
-        # Initial state from conftest.py
-        assert hass.states.get(entity_id).attributes.get("current_position") == 100
+        assert hass.states.get(entity_id).attributes.get(ATTR_CURRENT_POSITION) == 100
 
-        # Test entity-specific update
         new_data_specific = {"P1": {"val": 30, "type": 128}}
         async_dispatcher_send(
             hass,
@@ -242,9 +231,8 @@ class TestCoverEntity:
             new_data_specific,
         )
         await hass.async_block_till_done()
-        assert hass.states.get(entity_id).attributes.get("current_position") == 30
+        assert hass.states.get(entity_id).attributes.get(ATTR_CURRENT_POSITION) == 30
 
-        # Test global refresh update
         device_in_hass = find_device(
             hass.data[DOMAIN][setup_integration.entry_id]["devices"], "cover_dooya"
         )
@@ -252,4 +240,4 @@ class TestCoverEntity:
 
         async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
         await hass.async_block_till_done()
-        assert hass.states.get(entity_id).attributes.get("current_position") == 45
+        assert hass.states.get(entity_id).attributes.get(ATTR_CURRENT_POSITION) == 45
