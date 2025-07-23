@@ -1,10 +1,9 @@
 """Unit and integration tests for the LifeSmart cover platform."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from homeassistant.components.cover import (
-    ATTR_CURRENT_COVER_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
@@ -22,58 +21,13 @@ from homeassistant.helpers.entity_registry import async_get as async_get_entity_
 # Import all constants and classes from the component
 from custom_components.lifesmart.const import *
 
-
-# --- MOCK DEVICE DATA USING CONSTANTS ONLY ---
-
-
-# Helper to get the first device type from a constant tuple/list
-def get_first_devtype(const_list):
-    return const_list[0] if const_list else "FALLBACK_TYPE"
+pytestmark = pytest.mark.asyncio
 
 
-# Positional Garage Door, using the first type from GARAGE_DOOR_TYPES
-MOCK_GARAGE_DOOR = {
-    HUB_ID_KEY: "mock_hub_id",
-    DEVICE_ID_KEY: "mock_garage_id",
-    DEVICE_TYPE_KEY: get_first_devtype(GARAGE_DOOR_TYPES),
-    DEVICE_NAME_KEY: "Garage Door",
-    DEVICE_DATA_KEY: {"P2": {"val": 0, "type": 128}},  # Closed, stopped
-}
-
-# Positional Dooya Curtain, using the first type from DOOYA_TYPES
-MOCK_DOOYA_CURTAIN = {
-    HUB_ID_KEY: "mock_hub_id",
-    DEVICE_ID_KEY: "mock_dooya_id",
-    DEVICE_TYPE_KEY: get_first_devtype(DOOYA_TYPES),
-    DEVICE_NAME_KEY: "Living Room Curtain",
-    DEVICE_DATA_KEY: {"P1": {"val": 100, "type": 128}},  # Open, stopped
-}
-
-# Non-Positional Curtain, using a type from NON_POSITIONAL_COVER_CONFIG
-NON_POSITIONAL_TYPE = next(iter(NON_POSITIONAL_COVER_CONFIG))
-MOCK_NON_POSITIONAL_CURTAIN = {
-    HUB_ID_KEY: "mock_hub_id",
-    DEVICE_ID_KEY: "mock_non_pos_id",
-    DEVICE_TYPE_KEY: NON_POSITIONAL_TYPE,
-    DEVICE_NAME_KEY: "Bedroom Curtain",
-    DEVICE_DATA_KEY: {
-        "O": {"type": 128},
-        "C": {"type": 128},
-    },  # Stopped
-}
-
-# --- PYTEST FIXTURES AND HELPERS ---
-
-
-@pytest.fixture(name="mock_client")
-def mock_lifesmart_client():
-    """Fixture for a mocked LifeSmart client."""
-    client = MagicMock()
-    client.open_cover_async = AsyncMock(return_value=0)
-    client.close_cover_async = AsyncMock(return_value=0)
-    client.stop_cover_async = AsyncMock(return_value=0)
-    client.set_cover_position_async = AsyncMock(return_value=0)
-    return client
+# --- Helper to find a device in the shared fixture ---
+def find_device(devices: list, me: str):
+    """Helper to find a specific device from the mock list by its 'me' id."""
+    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
 
 
 async def setup_platform(
@@ -98,31 +52,35 @@ class TestCoverSetup:
     """Tests for the platform setup."""
 
     async def test_setup_entry_creates_entities(
-        self, hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MagicMock
+        self,
+        hass: HomeAssistant,
+        mock_client: MagicMock,
+        mock_config_entry: MagicMock,
+        mock_lifesmart_devices: list,
     ):
         """Test that cover entities are created for all supported device types."""
-        non_cover_device = {DEVICE_TYPE_KEY: "SL_SW_IF1"}  # Should be ignored
-        devices = [
-            MOCK_GARAGE_DOOR,
-            MOCK_DOOYA_CURTAIN,
-            MOCK_NON_POSITIONAL_CURTAIN,
-            non_cover_device,
-        ]
-        await setup_platform(hass, mock_client, devices, mock_config_entry)
+        await setup_platform(
+            hass, mock_client, mock_lifesmart_devices, mock_config_entry
+        )
 
+        # Expected covers from conftest.py: cover_garage, cover_dooya, cover_nonpos = 3
         assert len(hass.states.async_entity_ids(COVER_DOMAIN)) == 3
         assert hass.states.get("cover.garage_door") is not None
         assert hass.states.get("cover.living_room_curtain") is not None
         assert hass.states.get("cover.bedroom_curtain") is not None
 
     async def test_setup_entry_with_exclusions(
-        self, hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MagicMock
+        self,
+        hass: HomeAssistant,
+        mock_client: MagicMock,
+        mock_config_entry: MagicMock,
+        mock_lifesmart_devices: list,
     ):
         """Test that excluded devices are not added."""
         hass.data[DOMAIN][mock_config_entry.entry_id] = {
             "client": mock_client,
-            "devices": [MOCK_GARAGE_DOOR, MOCK_DOOYA_CURTAIN],
-            "exclude_devices": ["mock_dooya_id"],
+            "devices": mock_lifesmart_devices,
+            "exclude_devices": ["cover_dooya"],  # Exclude by 'me' from conftest.py
             "exclude_hubs": [],
         }
         await hass.config_entries.async_forward_entry_setup(
@@ -131,7 +89,10 @@ class TestCoverSetup:
         await hass.async_block_till_done()
 
         assert hass.states.get("cover.garage_door") is not None
-        assert hass.states.get("cover.living_room_curtain") is None
+        assert (
+            hass.states.get("cover.living_room_curtain") is None
+        )  # Should be excluded
+        assert hass.states.get("cover.bedroom_curtain") is not None
 
 
 @pytest.mark.asyncio
@@ -139,10 +100,10 @@ class TestCoverEntity:
     """Tests for the LifeSmartCover entity class."""
 
     @pytest.mark.parametrize(
-        "device, expected_class, expected_features",
+        "device_me, expected_class, expected_features",
         [
             (
-                MOCK_GARAGE_DOOR,
+                "cover_garage",
                 CoverDeviceClass.GARAGE,
                 CoverEntityFeature.OPEN
                 | CoverEntityFeature.CLOSE
@@ -150,7 +111,7 @@ class TestCoverEntity:
                 | CoverEntityFeature.SET_POSITION,
             ),
             (
-                MOCK_DOOYA_CURTAIN,
+                "cover_dooya",
                 CoverDeviceClass.CURTAIN,
                 CoverEntityFeature.OPEN
                 | CoverEntityFeature.CLOSE
@@ -158,7 +119,7 @@ class TestCoverEntity:
                 | CoverEntityFeature.SET_POSITION,
             ),
             (
-                MOCK_NON_POSITIONAL_CURTAIN,
+                "cover_nonpos",
                 CoverDeviceClass.CURTAIN,
                 CoverEntityFeature.OPEN
                 | CoverEntityFeature.CLOSE
@@ -172,11 +133,13 @@ class TestCoverEntity:
         hass: HomeAssistant,
         mock_client: MagicMock,
         mock_config_entry: MagicMock,
-        device,
+        mock_lifesmart_devices: list,
+        device_me,
         expected_class,
         expected_features,
     ):
         """Test entity features and device class based on device type."""
+        device = find_device(mock_lifesmart_devices, device_me)
         await setup_platform(hass, mock_client, [device], mock_config_entry)
         entity_id = f"cover.{device[DEVICE_NAME_KEY].lower().replace(' ', '_')}"
         state = hass.states.get(entity_id)
@@ -186,12 +149,13 @@ class TestCoverEntity:
         assert state.attributes.get("supported_features") == expected_features
 
     @pytest.mark.parametrize(
-        "io_key, data, expected_pos, exp_opening, exp_closing, exp_is_closed",
+        "device_me, io_key, data, expected_pos, exp_opening, exp_closing, exp_is_closed",
         [
-            ("P2", {"val": 0, "type": 128}, 0, False, False, True),  # Garage closed
-            ("P1", {"val": 100, "type": 128}, 100, False, False, False),  # Dooya open
-            ("P2", {"val": 50, "type": 128}, 50, False, False, False),  # Stopped
+            ("cover_garage", "P2", {"val": 0, "type": 128}, 0, False, False, True),
+            ("cover_dooya", "P1", {"val": 100, "type": 128}, 100, False, False, False),
+            ("cover_garage", "P2", {"val": 50, "type": 128}, 50, False, False, False),
             (
+                "cover_dooya",
                 "P1",
                 {"val": 178, "type": 129},
                 50,
@@ -200,6 +164,7 @@ class TestCoverEntity:
                 False,
             ),  # Opening (val=0x80|50)
             (
+                "cover_garage",
                 "P2",
                 {"val": 50, "type": 129},
                 50,
@@ -215,6 +180,8 @@ class TestCoverEntity:
         hass: HomeAssistant,
         mock_client: MagicMock,
         mock_config_entry: MagicMock,
+        mock_lifesmart_devices: list,
+        device_me,
         io_key,
         data,
         expected_pos,
@@ -223,27 +190,30 @@ class TestCoverEntity:
         exp_is_closed,
     ):
         """Test state parsing for covers that support set_position."""
-        devtype = get_first_devtype(
-            GARAGE_DOOR_TYPES if io_key == "P2" else DOOYA_TYPES
-        )
-        device = {
-            **MOCK_GARAGE_DOOR,
-            DEVICE_TYPE_KEY: devtype,
-            DEVICE_DATA_KEY: {io_key: data},
-        }
-        await setup_platform(hass, mock_client, [device], mock_config_entry)
+        device = find_device(mock_lifesmart_devices, device_me)
+        # Create a copy to modify its data for the test
+        device_copy = {**device, DEVICE_DATA_KEY: {io_key: data}}
 
-        state = hass.states.get("cover.garage_door")
-        assert state.attributes.get(ATTR_CURRENT_COVER_POSITION) == expected_pos
+        await setup_platform(hass, mock_client, [device_copy], mock_config_entry)
+
+        entity_id = f"cover.{device[DEVICE_NAME_KEY].lower().replace(' ', '_')}"
+        state = hass.states.get(entity_id)
+
+        # CORRECTED: Use state.attributes.get("current_position") instead of the old constant
+        assert state.attributes.get("current_position") == expected_pos
         assert state.attributes.get("is_opening") == exp_opening
         assert state.attributes.get("is_closing") == exp_closing
         assert state.attributes.get("is_closed") == exp_is_closed
 
     async def test_service_calls(
-        self, hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MagicMock
+        self,
+        hass: HomeAssistant,
+        mock_client: MagicMock,
+        mock_config_entry: MagicMock,
+        mock_lifesmart_devices: list,
     ):
         """Test that cover services call the correct client methods."""
-        device = MOCK_DOOYA_CURTAIN
+        device = find_device(mock_lifesmart_devices, "cover_dooya")
         await setup_platform(hass, mock_client, [device], mock_config_entry)
         entity_id = "cover.living_room_curtain"
 
@@ -251,7 +221,7 @@ class TestCoverEntity:
             COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
         mock_client.open_cover_async.assert_awaited_once_with(
-            "mock_hub_id", "mock_dooya_id", device[DEVICE_TYPE_KEY]
+            "hub_cover", "cover_dooya", device[DEVICE_TYPE_KEY]
         )
 
         await hass.services.async_call(
@@ -261,14 +231,14 @@ class TestCoverEntity:
             blocking=True,
         )
         mock_client.close_cover_async.assert_awaited_once_with(
-            "mock_hub_id", "mock_dooya_id", device[DEVICE_TYPE_KEY]
+            "hub_cover", "cover_dooya", device[DEVICE_TYPE_KEY]
         )
 
         await hass.services.async_call(
             COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
         mock_client.stop_cover_async.assert_awaited_once_with(
-            "mock_hub_id", "mock_dooya_id", device[DEVICE_TYPE_KEY]
+            "hub_cover", "cover_dooya", device[DEVICE_TYPE_KEY]
         )
 
         await hass.services.async_call(
@@ -278,22 +248,25 @@ class TestCoverEntity:
             blocking=True,
         )
         mock_client.set_cover_position_async.assert_awaited_once_with(
-            "mock_hub_id", "mock_dooya_id", 60, device[DEVICE_TYPE_KEY]
+            "hub_cover", "cover_dooya", 60, device[DEVICE_TYPE_KEY]
         )
 
     async def test_data_dispatcher(
-        self, hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MagicMock
+        self,
+        hass: HomeAssistant,
+        mock_client: MagicMock,
+        mock_config_entry: MagicMock,
+        mock_lifesmart_devices: list,
     ):
         """Test that entity updates via both specific and global dispatchers."""
-        await setup_platform(hass, mock_client, [MOCK_DOOYA_CURTAIN], mock_config_entry)
+        device = find_device(mock_lifesmart_devices, "cover_dooya")
+        await setup_platform(hass, mock_client, [device], mock_config_entry)
         entity_id = "cover.living_room_curtain"
         entity_registry = async_get_entity_registry(hass)
         entry = entity_registry.async_get(entity_id)
 
-        assert (
-            hass.states.get(entity_id).attributes.get(ATTR_CURRENT_COVER_POSITION)
-            == 100
-        )
+        # CORRECTED: Use state.attributes.get("current_position")
+        assert hass.states.get(entity_id).attributes.get("current_position") == 100
 
         # Test entity-specific update
         new_data_specific = {"P1": {"val": 30, "type": 128}}
@@ -303,16 +276,14 @@ class TestCoverEntity:
             new_data_specific,
         )
         await hass.async_block_till_done()
-        assert (
-            hass.states.get(entity_id).attributes.get(ATTR_CURRENT_COVER_POSITION) == 30
-        )
+        assert hass.states.get(entity_id).attributes.get("current_position") == 30
 
         # Test global refresh update
-        hass.data[DOMAIN][mock_config_entry.entry_id]["devices"][0][DEVICE_DATA_KEY] = {
-            "P1": {"val": 45, "type": 128}
-        }
+        device_in_hass = find_device(
+            hass.data[DOMAIN][mock_config_entry.entry_id]["devices"], "cover_dooya"
+        )
+        device_in_hass[DEVICE_DATA_KEY] = {"P1": {"val": 45, "type": 128}}
+
         async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
         await hass.async_block_till_done()
-        assert (
-            hass.states.get(entity_id).attributes.get(ATTR_CURRENT_COVER_POSITION) == 45
-        )
+        assert hass.states.get(entity_id).attributes.get("current_position") == 45

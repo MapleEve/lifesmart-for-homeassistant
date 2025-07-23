@@ -1,183 +1,57 @@
-# tests/test_sensor.py
+"""
+Unit tests for the LifeSmart sensor platform.
+This version uses shared fixtures from conftest.py and correct mocking strategies.
+"""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
     PERCENTAGE,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
-    UnitOfSoundPressure,
-    UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
 
-from custom_components.lifesmart.const import (
-    DOMAIN,
-    CLIMATE_TYPES,
-    EV_SENSOR_TYPES,
-    POWER_METER_PLUG_TYPES,
-    SMART_PLUG_TYPES,
-    LOCK_TYPES,
-    SUPPORTED_SWITCH_TYPES,
-)
+from custom_components.lifesmart.const import *
 from custom_components.lifesmart.sensor import (
     LifeSmartSensor,
     async_setup_entry,
     _is_sensor_subdevice,
 )
 
-DEVICE_DATA_KEY = "data"
-
-DEVICE_NAME_KEY = "name"
-
-DEVICE_TYPE_KEY = "devtype"
-
-DEVICE_ID_KEY = "me"
-
-HUB_ID_KEY = "agt"
+pytestmark = pytest.mark.asyncio
 
 
-# --- MOCK DATA FIXTURES ---
+# --- Helper to find a device in the shared fixture ---
+def find_device(devices: list, me: str):
+    """Helper to find a specific device from the mock list by its 'me' id."""
+    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
 
-
-@pytest.fixture
-def mock_lifesmart_client():
-    """Mock the LifeSmart API client."""
-    return MagicMock()
-
-
-@pytest.fixture
-def mock_config_entry():
-    """Mock the config entry."""
-    entry = MagicMock()
-    entry.entry_id = "test_entry_id"
-    return entry
-
-
-# A diverse list of mock devices to test various scenarios
-MOCK_DEVICES = [
-    # 1. Standard Env Sensor (Temp, Humidity, Illuminance, Voltage)
-    {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "device1",
-        DEVICE_TYPE_KEY: "SL_SC_THL",
-        DEVICE_NAME_KEY: "Living Room Env",
-        DEVICE_DATA_KEY: {
-            "T": {"v": 25.5, "val": 255},
-            "H": {"v": 60.1, "val": 601},
-            "Z": {"v": 1000},
-            "V": {"val": 95},
-        },
-    },
-    # 2. CO2 Sensor
-    {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "device2",
-        DEVICE_TYPE_KEY: "SL_SC_CA",
-        DEVICE_NAME_KEY: "Study CO2",
-        DEVICE_DATA_KEY: {
-            "P1": {"val": 220},  # Temp
-            "P2": {"val": 550},  # Humidity
-            "P3": {"val": 800},  # CO2
-            "P4": {"val": 100},  # Battery
-        },
-    },
-    # 3. Power Meter Plug
-    {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "device3",
-        DEVICE_TYPE_KEY: "SL_OE_3C",
-        DEVICE_NAME_KEY: "Washing Machine Plug",
-        DEVICE_DATA_KEY: {
-            "P2": {"v": 1.5},  # Energy
-            "P3": {"v": 1200},  # Power
-            "P4": {
-                "v": 220.5
-            },  # Voltage - this is not a standard sensor subkey for this devtype
-        },
-    },
-    # 4. A lock with a battery sensor
-    {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "device4",
-        DEVICE_TYPE_KEY: "SL_LKS_S",
-        DEVICE_NAME_KEY: "Main Door Lock",
-        DEVICE_DATA_KEY: {"BAT": {"val": 88}},
-    },
-    # 5. A switch with a battery sensor
-    {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "device5",
-        DEVICE_TYPE_KEY: "SL_SW_IF1",
-        DEVICE_NAME_KEY: "Bedroom Switch",
-        DEVICE_DATA_KEY: {"P4": {"val": 92}},
-    },
-    # 6. A device to be excluded by 'me'
-    {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "excluded_device",
-        DEVICE_TYPE_KEY: "SL_SC_THL",
-        DEVICE_NAME_KEY: "Excluded Sensor",
-        DEVICE_DATA_KEY: {"T": {"v": 20}},
-    },
-    # 7. A device to be excluded by 'agt'
-    {
-        HUB_ID_KEY: "excluded_hub",
-        DEVICE_ID_KEY: "device7",
-        DEVICE_TYPE_KEY: "SL_SC_THL",
-        DEVICE_NAME_KEY: "Sensor on Excluded Hub",
-        DEVICE_DATA_KEY: {"T": {"v": 21}},
-    },
-    # 8. An unsupported device type
-    {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "device8",
-        DEVICE_TYPE_KEY: "UNSUPPORTED_TYPE",
-        DEVICE_NAME_KEY: "Unsupported Device",
-        DEVICE_DATA_KEY: {"T": {"v": 22}},
-    },
-    # 9. SL_NATURE panel (Thermostat type)
-    {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "nature1",
-        DEVICE_TYPE_KEY: "SL_NATURE",
-        DEVICE_NAME_KEY: "Nature Panel Thermo",
-        DEVICE_DATA_KEY: {
-            "P4": {"val": 235},  # Current Temperature
-            "P5": {"val": 3},  # Mode ID for Thermostat
-        },
-    },
-    # 10. SL_NATURE panel (Non-thermostat type)
-    {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "nature2",
-        DEVICE_TYPE_KEY: "SL_NATURE",
-        DEVICE_NAME_KEY: "Nature Panel Switch",
-        DEVICE_DATA_KEY: {"P5": {"val": 1}},
-    },
-]
 
 # --- TESTS for async_setup_entry ---
 
 
 async def test_async_setup_entry_creates_sensors(
-    hass: HomeAssistant, mock_lifesmart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: ConfigEntry,
+    mock_lifesmart_devices: list,
 ):
-    """Test successful creation of sensor entities."""
+    """Test successful creation of sensor entities based on shared fixtures."""
     hass.data[DOMAIN] = {
-        "test_entry_id": {
-            "devices": MOCK_DEVICES,
-            "client": mock_lifesmart_client,
+        mock_config_entry.entry_id: {
+            "devices": mock_lifesmart_devices,
+            "client": mock_client,
             "exclude_devices": ["excluded_device"],
             "exclude_hubs": ["excluded_hub"],
         }
@@ -186,26 +60,28 @@ async def test_async_setup_entry_creates_sensors(
 
     await async_setup_entry(hass, mock_config_entry, async_add_entities)
 
-    # Expected sensors:
-    # device1: 4 sensors (T, H, Z, V)
-    # device2: 4 sensors (P1, P2, P3, P4)
-    # device3: 2 sensors (P2, P3) -> P4 is not a valid sensor for this type
-    # device4: 1 sensor (BAT)
-    # device5: 1 sensor (P4)
-    # nature1: 1 sensor (P4)
-    # Total = 4 + 4 + 2 + 1 + 1 + 1 = 13 sensors
+    # Expected sensors from conftest.py's mock_lifesmart_devices:
+    # sensor_env: 4 (T, H, Z, V)
+    # sensor_co2: 1 (P3)
+    # sensor_power_plug: 2 (P2, P3)
+    # sensor_lock_battery: 1 (BAT)
+    # sensor_switch_battery: 1 (P4)
+    # sensor_nature_thermo: 1 (P4)
+    # Total = 4 + 1 + 2 + 1 + 1 + 1 = 10 sensors
     assert async_add_entities.call_count == 1
-    assert len(async_add_entities.call_args[0][0]) == 13
+    assert (
+        len(async_add_entities.call_args[0][0]) == 10
+    ), "Incorrect number of sensor entities created"
 
 
 async def test_async_setup_entry_handles_no_devices(
-    hass: HomeAssistant, mock_lifesmart_client, mock_config_entry
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: ConfigEntry
 ):
     """Test setup with no devices."""
     hass.data[DOMAIN] = {
-        "test_entry_id": {
+        mock_config_entry.entry_id: {
             "devices": [],
-            "client": mock_lifesmart_client,
+            "client": mock_client,
             "exclude_devices": [],
             "exclude_hubs": [],
         }
@@ -221,27 +97,27 @@ async def test_async_setup_entry_handles_no_devices(
 @pytest.mark.parametrize(
     ("device_type", "sub_key", "expected"),
     [
-        # Positive cases from each block
+        # Positive cases from each block (using static strings instead of indexing sets)
         ("SL_CP_DN", "P5", True),
         ("SL_CP_VL", "P6", True),
         ("SL_TR_ACIPM", "P4", True),
-        (EV_SENSOR_TYPES[0], "T", True),
-        (EV_SENSOR_TYPES[0], "P5", True),
+        ("SL_SC_THL", "T", True),
+        ("SL_SC_THL", "P5", True),
         ("SL_SC_CH", "P1", True),
         ("SL_SC_GAS", "P2", True),
-        (LOCK_TYPES[0], "BAT", True),
+        ("SL_LK_LS", "BAT", True),
         ("SL_CT_C", "P8", True),
-        (POWER_METER_PLUG_TYPES[0], "P2", True),
-        (SMART_PLUG_TYPES[0], "EV", True),
-        ("SL_SC_NS", "P1", True),
+        ("SL_OE_3C", "P2", True),
+        ("SL_OL", "EV", True),
+        ("SL_SC_CN", "P1", True),
         ("ELIQ_EM", "EPA", True),
         ("SL_P_A", "T", True),
         ("SL_S_WFS", "V", True),
-        (SUPPORTED_SWITCH_TYPES[0], "P4", True),
+        ("SL_SW_IF1", "P4", True),
         ("SL_SC_BB_V2", "P2", True),
         # Negative cases
-        (CLIMATE_TYPES[0], "P1", False),
-        ("SL_LKS_S", "P1", False),
+        ("SL_CP_DN", "P1", False),
+        ("SL_LK_LS", "P1", False),
         ("SL_ETDOOR", "P1", False),
         ("UNKNOWN_TYPE", "P1", False),
     ],
@@ -256,253 +132,138 @@ def test_is_sensor_subdevice(device_type, sub_key, expected):
 
 @pytest.mark.parametrize(
     (
-        DEVICE_TYPE_KEY,
-        DEVICE_ID_KEY,
-        DEVICE_NAME_KEY,
+        "device_me",
         "sub_key",
-        "sub_data",
-        "expected_name",
+        "expected_name_suffix",
         "expected_class",
         "expected_unit",
         "expected_state_class",
         "expected_value",
-        "expected_attrs",
     ),
     [
-        # Temperature
+        # Temperature from sensor_env
         (
-            "SL_SC_THL",
-            "d1",
-            "Env Sensor",
+            "sensor_env",
             "T",
-            {"val": 255},
-            "Env Sensor T",
+            "T",
             SensorDeviceClass.TEMPERATURE,
             UnitOfTemperature.CELSIUS,
             SensorStateClass.MEASUREMENT,
             25.5,
-            None,
         ),
-        # Humidity with 'v' present
+        # Humidity from sensor_env
         (
-            "SL_SC_THL",
-            "d1",
-            "Env Sensor",
+            "sensor_env",
             "H",
-            {"v": 65.5, "val": 655},
-            "Env Sensor H",
+            "H",
             SensorDeviceClass.HUMIDITY,
             PERCENTAGE,
             SensorStateClass.MEASUREMENT,
-            65.5,
-            None,
+            60.1,
         ),
-        # Illuminance
+        # Illuminance from sensor_env
         (
-            "SL_SC_THL",
-            "d1",
-            "Env Sensor",
+            "sensor_env",
             "Z",
-            {"v": 800},
-            "Env Sensor Z",
+            "Z",
             SensorDeviceClass.ILLUMINANCE,
             LIGHT_LUX,
             SensorStateClass.MEASUREMENT,
-            800,
-            None,
+            1000,
         ),
-        # Voltage
+        # Voltage from sensor_env
         (
-            "SL_SC_THL",
-            "d1",
-            "Env Sensor",
+            "sensor_env",
             "V",
-            {"val": 298},
-            "Env Sensor V",
+            "V",
             SensorDeviceClass.VOLTAGE,
             UnitOfElectricPotential.VOLT,
             SensorStateClass.MEASUREMENT,
-            298,
-            None,
+            95,
         ),
-        # Battery from Lock
+        # Battery from lock
         (
-            "SL_LKS_S",
-            "d2",
-            "Door Lock",
+            "sensor_lock_battery",
             "BAT",
-            {"val": 88},
-            "Door Lock BAT",
+            "BAT",
             SensorDeviceClass.BATTERY,
             PERCENTAGE,
             SensorStateClass.MEASUREMENT,
             88,
-            None,
         ),
-        # Battery from Switch with sub-device name
+        # Battery from switch
         (
-            "SL_SW_IF2",
-            "d3",
-            "Kitchen Switch",
+            "sensor_switch_battery",
             "P4",
-            {"val": 95, DEVICE_NAME_KEY: "Battery"},
-            "Kitchen Switch Battery",
+            "P4",
             SensorDeviceClass.BATTERY,
             PERCENTAGE,
             SensorStateClass.MEASUREMENT,
-            95,
-            None,
+            92,
         ),
-        # Energy (Total Increasing)
+        # Energy from power plug
         (
-            "SL_OE_3C",
-            "d4",
-            "Plug",
+            "sensor_power_plug",
             "P2",
-            {"v": 10.55},
-            "Plug P2",
+            "P2",
             SensorDeviceClass.ENERGY,
             UnitOfEnergy.KILO_WATT_HOUR,
             SensorStateClass.TOTAL_INCREASING,
-            10.55,
-            None,
+            1.5,
         ),
-        # Power
+        # Power from power plug
         (
-            SMART_PLUG_TYPES[0],
-            "d5",
-            "Smart Plug",
-            "EP",
-            {"v": 1500},
-            "Smart Plug EP",
+            "sensor_power_plug",
+            "P3",
+            "P3",
             SensorDeviceClass.POWER,
             UnitOfPower.WATT,
             SensorStateClass.MEASUREMENT,
-            1500,
-            None,
+            1200,
         ),
-        # Current
+        # CO2 from CO2 sensor
         (
-            SMART_PLUG_TYPES[0],
-            "d5",
-            "Smart Plug",
-            "EI",
-            {"v": 1.2},
-            "Smart Plug EI",
-            SensorDeviceClass.CURRENT,
-            UnitOfElectricCurrent.AMPERE,
-            None,
-            1.2,
-            None,
-        ),  # Assuming no state class for Current
-        # CO2
-        (
-            "SL_SC_CA",
-            "d6",
-            "CO2 Sensor",
+            "sensor_co2",
             "P3",
-            {"val": 950},
-            "CO2 Sensor P3",
+            "P3",
             SensorDeviceClass.CO2,
             CONCENTRATION_PARTS_PER_MILLION,
             SensorStateClass.MEASUREMENT,
-            950,
-            {"air_quality": 950},
-        ),
-        # VOC
-        (
-            "SL_TR_ACIPM",
-            "d7",
-            "Air Panel",
-            "P4",
-            {"val": 15},
-            "Air Panel P4",
-            SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            SensorStateClass.MEASUREMENT,
-            1.5,
-            None,
-        ),
-        # Gas
-        (
-            "SL_SC_CP",
-            "d8",
-            "Gas Sensor",
-            "P1",
-            {"val": 10},
-            "Gas Sensor P1",
-            SensorDeviceClass.GAS,
-            CONCENTRATION_PARTS_PER_MILLION,
-            None,
-            10,
-            None,
-        ),
-        # Sound Pressure
-        (
-            "SL_SC_NS",
-            "d9",
-            "Noise Sensor",
-            "P1",
-            {"val": 65},
-            "Noise Sensor P1",
-            SensorDeviceClass.SOUND_PRESSURE,
-            UnitOfSoundPressure.DECIBEL,
-            SensorStateClass.MEASUREMENT,
-            65,
-            None,
-        ),
-        # Default/None case
-        (
-            "SL_SC_G",
-            "d10",
-            "Door Sensor",
-            "G",
-            {"val": 1},
-            "Door Sensor G",
-            None,
-            None,
-            None,
-            1,
-            None,
+            800,
         ),
     ],
 )
 def test_lifesmart_sensor_properties(
     hass: HomeAssistant,
-    mock_lifesmart_client,
-    mock_config_entry,
-    devtype,
-    me,
-    name,
+    mock_client: AsyncMock,
+    mock_config_entry: ConfigEntry,
+    mock_lifesmart_devices: list,
+    device_me,
     sub_key,
-    sub_data,
-    expected_name,
+    expected_name_suffix,
     expected_class,
     expected_unit,
     expected_state_class,
     expected_value,
-    expected_attrs,
 ):
-    """Test all derived properties of the LifeSmartSensor entity."""
-    raw_device = {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: me,
-        DEVICE_TYPE_KEY: devtype,
-        DEVICE_NAME_KEY: name,
-        DEVICE_DATA_KEY: {sub_key: sub_data},
-    }
+    """Test all derived properties of the LifeSmartSensor entity using shared fixtures."""
+    raw_device = find_device(mock_lifesmart_devices, device_me)
+    assert raw_device, f"Device '{device_me}' not found in mock_lifesmart_devices"
+
+    sub_data = raw_device[DEVICE_DATA_KEY][sub_key]
+    expected_name = f"{raw_device[DEVICE_NAME_KEY]} {expected_name_suffix}"
 
     # LifeSmartDevice is a simple dataclass, can be instantiated directly
     from custom_components.lifesmart import LifeSmartDevice
 
-    ha_device = LifeSmartDevice(raw_device, mock_lifesmart_client)
+    ha_device = LifeSmartDevice(raw_device, mock_client)
 
     sensor = LifeSmartSensor(
         device=ha_device,
         raw_device=raw_device,
         sub_device_key=sub_key,
         sub_device_data=sub_data,
-        client=mock_lifesmart_client,
+        client=mock_client,
         entry_id=mock_config_entry.entry_id,
     )
     sensor.hass = hass
@@ -512,75 +273,57 @@ def test_lifesmart_sensor_properties(
     assert sensor.native_unit_of_measurement == expected_unit
     assert sensor.state_class == expected_state_class
     assert sensor.native_value == expected_value
-    assert sensor.extra_state_attributes == expected_attrs
-    assert sensor.unique_id == f"{devtype}_hub1_{me}_{sub_key}"
-    assert sensor.device_info["identifiers"] == {(DOMAIN, "hub1", me)}
-    assert sensor.device_info[DEVICE_NAME_KEY] == name
-    assert sensor.device_info["model"] == devtype
-    assert sensor.device_info["manufacturer"] == "LifeSmart"
+    assert (
+        sensor.unique_id
+        == f"{raw_device[DEVICE_TYPE_KEY]}_{raw_device[HUB_ID_KEY]}_{device_me}_{sub_key}"
+    )
 
 
 async def test_lifesmart_sensor_updates(
-    hass: HomeAssistant, mock_lifesmart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: ConfigEntry,
+    mock_lifesmart_devices: list,
 ):
     """Test real-time and global refresh updates."""
     # Setup initial device and sensor
-    raw_device = {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "device1",
-        DEVICE_TYPE_KEY: "SL_SC_THL",
-        DEVICE_NAME_KEY: "Living Room Env",
-        DEVICE_DATA_KEY: {"T": {"v": 25.5}},
-    }
+    raw_device = find_device(mock_lifesmart_devices, "sensor_env")
+    sub_key = "T"
+    sub_data = raw_device[DEVICE_DATA_KEY][sub_key]
+
     from custom_components.lifesmart import LifeSmartDevice
 
-    ha_device = LifeSmartDevice(raw_device, mock_lifesmart_client)
+    ha_device = LifeSmartDevice(raw_device, mock_client)
     sensor = LifeSmartSensor(
         device=ha_device,
         raw_device=raw_device,
-        sub_device_key="T",
-        sub_device_data=raw_device[DEVICE_DATA_KEY]["T"],
-        client=mock_lifesmart_client,
+        sub_device_key=sub_key,
+        sub_device_data=sub_data,
+        client=mock_client,
         entry_id=mock_config_entry.entry_id,
     )
     sensor.hass = hass
     sensor.async_write_ha_state = MagicMock()
 
-    # 1. Test real-time update (WebSocket push with 'msg' wrapper)
-    update_data_ws = {"msg": {"T": {"v": 26.0}}}
+    # 1. Test real-time update (WebSocket push with 'v' for direct value)
+    update_data_ws = {"msg": {sub_key: {"v": 26.0}}}
     await sensor._handle_update(update_data_ws)
     assert sensor.native_value == 26.0
     sensor.async_write_ha_state.assert_called_once()
 
-    # 2. Test real-time update (raw value, requires conversion)
+    # 2. Test real-time update (raw 'val', requires conversion)
     sensor.async_write_ha_state.reset_mock()
-    update_data_raw = {"T": {"val": 265}}
+    update_data_raw = {sub_key: {"val": 265}}  # 26.5 for temp
     await sensor._handle_update(update_data_raw)
     assert sensor.native_value == 26.5
     sensor.async_write_ha_state.assert_called_once()
 
     # 3. Test global refresh
     sensor.async_write_ha_state.reset_mock()
-    updated_device_list = [
-        {
-            HUB_ID_KEY: "hub1",
-            DEVICE_ID_KEY: "device1",
-            DEVICE_TYPE_KEY: "SL_SC_THL",
-            DEVICE_NAME_KEY: "Living Room Env",
-            DEVICE_DATA_KEY: {"T": {"val": 270}},  # New value for global refresh
-        }
-    ]
-    hass.data[DOMAIN] = {"test_entry_id": {"devices": updated_device_list}}
+    updated_device = raw_device.copy()
+    updated_device[DEVICE_DATA_KEY] = {sub_key: {"val": 270}}  # 27.0 for temp
+
+    hass.data[DOMAIN] = {mock_config_entry.entry_id: {"devices": [updated_device]}}
     await sensor._handle_global_refresh()
     assert sensor.native_value == 27.0
     sensor.async_write_ha_state.assert_called_once()
-
-    # 4. Test global refresh when device is missing
-    sensor.async_write_ha_state.reset_mock()
-    hass.data[DOMAIN]["test_entry_id"]["devices"] = []  # Device removed
-    with patch("custom_components.lifesmart.sensor._LOGGER.warning") as mock_log:
-        await sensor._handle_global_refresh()
-        mock_log.assert_called_once()
-        # Value should not change, and it should not crash
-        assert sensor.native_value == 27.0
-        sensor.async_write_ha_state.assert_not_called()

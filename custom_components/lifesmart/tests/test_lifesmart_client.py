@@ -163,7 +163,7 @@ async def test_login_async_full_flow(client):
     with patch.object(
         client, "_post_and_parse", return_value={"code": "fail", "message": "pwd error"}
     ):
-        with pytest.raises(LifeSmartAuthError, match="登录失败 \(步骤1\)"):
+        with pytest.raises(LifeSmartAuthError, match=r"登录失败 \(步骤1\)"):
             await client.login_async()
 
     # 场景: 步骤2失败
@@ -172,7 +172,7 @@ async def test_login_async_full_flow(client):
             {"code": "success", "token": "temp_token", "userid": "user_id"},
             {"code": "fail", "message": "auth failed"},
         ]
-        with pytest.raises(LifeSmartAuthError, match="认证失败 \(步骤2\)"):
+        with pytest.raises(LifeSmartAuthError, match=r"认证失败 \(步骤2\)"):
             await client.login_async()
 
 
@@ -314,14 +314,14 @@ async def test_get_wrappers_empty_or_malformed_response(mock_async_call_api, cli
             "idx",
             CMD_TYPE_PRESS,
             6,
-        ),  # 550ms -> 6*100ms
+        ),  # 550ms -> round(5.5) -> 6*100ms
         (
             "press_switch_async",
             ("idx", "agt", "me", 50),
             "idx",
             CMD_TYPE_PRESS,
             1,
-        ),  # 50ms -> 1*100ms (min 1)
+        ),  # 50ms -> round(0.5) -> 0, but min is 1
     ],
 )
 async def test_simple_control_helpers(

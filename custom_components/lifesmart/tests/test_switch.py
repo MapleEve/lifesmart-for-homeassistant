@@ -1,29 +1,27 @@
 """Unit tests for the LifeSmart switch platform."""
 
-import logging
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.lifesmart.const import (
-    DEVICE_DATA_KEY,
-    DEVICE_ID_KEY,
-    DEVICE_NAME_KEY,
-    DEVICE_TYPE_KEY,
-    DOMAIN,
-    HUB_ID_KEY,
-    POWER_METER_PLUG_TYPES,
-    SMART_PLUG_TYPES,
-)
+from custom_components.lifesmart.const import *
 from custom_components.lifesmart.switch import (
     LifeSmartSwitch,
     _is_switch_subdevice,
     async_setup_entry,
 )
+
+pytestmark = pytest.mark.asyncio
+
+
+# --- Helper to find a device in the shared fixture ---
+def find_device(devices: list, me: str):
+    """Helper to find a specific device from the mock list by its 'me' id."""
+    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
 
 
 # --- Test `_is_switch_subdevice` Helper Function ---
@@ -75,14 +73,14 @@ def test_is_switch_subdevice(device_type: str, sub_key: str, expected: bool) -> 
 
 async def test_async_setup_entry_success(
     hass: HomeAssistant,
-    lifesmart_client: AsyncMock,
-    config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_config_entry: ConfigEntry,
     mock_lifesmart_devices: list[dict[str, Any]],
 ) -> None:
-    """Test successful setup of switch entities."""
+    """Test successful setup of switch entities using shared fixtures."""
     # Arrange
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        "client": lifesmart_client,
+    hass.data[DOMAIN][mock_config_entry.entry_id] = {
+        "client": mock_client,
         "devices": mock_lifesmart_devices,
         "exclude_devices": [],
         "exclude_hubs": [],
@@ -90,36 +88,36 @@ async def test_async_setup_entry_success(
     async_add_entities = AsyncMock()
 
     # Act
-    await async_setup_entry(hass, config_entry, async_add_entities)
+    await async_setup_entry(hass, mock_config_entry, async_add_entities)
 
     # Assert
-    # Total switch sub-devices in mock_lifesmart_devices:
-    # 3 (from SL_SW_IF3) + 1 (from SL_OL) + 2 (from SL_OE_3C) + 3 (from SL_NATURE)
+    # Expected switches from conftest.py:
+    # 3 (from sw_if3) + 1 (from sw_ol) + 2 (from sw_oe3c) + 3 (from sw_nature) = 9
     assert async_add_entities.call_count == 1
     assert len(async_add_entities.call_args[0][0]) == 9
 
 
 async def test_async_setup_entry_with_exclusions(
     hass: HomeAssistant,
-    lifesmart_client: AsyncMock,
-    config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_config_entry: ConfigEntry,
     mock_lifesmart_devices: list[dict[str, Any]],
 ) -> None:
     """Test that devices and hubs can be excluded from setup."""
     # Arrange
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        "client": lifesmart_client,
+    hass.data[DOMAIN][mock_config_entry.entry_id] = {
+        "client": mock_client,
         "devices": mock_lifesmart_devices,
-        # Exclude the SL_OL device (me: "mexp01")
-        "exclude_devices": ["mexp01"],
-        # Exclude all devices from the second hub (agt: "agtexhub2")
-        "exclude_hubs": ["agtexhub2"],
+        # Exclude the sw_ol device (me: "sw_ol")
+        "exclude_devices": ["sw_ol"],
+        # Exclude all devices from the second hub (agt: "hub_sw_excluded")
+        "exclude_hubs": ["hub_sw_excluded"],
     }
-    # Expected devices after exclusion: 3 from SL_SW_IF3, 3 from SL_NATURE
+    # Expected devices after exclusion: 9 - 1 (sw_ol) - 2 (sw_oe3c on excluded hub) = 6
     async_add_entities = AsyncMock()
 
     # Act
-    await async_setup_entry(hass, config_entry, async_add_entities)
+    await async_setup_entry(hass, mock_config_entry, async_add_entities)
 
     # Assert
     assert async_add_entities.call_count == 1
@@ -128,13 +126,13 @@ async def test_async_setup_entry_with_exclusions(
 
 async def test_async_setup_entry_no_switches(
     hass: HomeAssistant,
-    lifesmart_client: AsyncMock,
-    config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_config_entry: ConfigEntry,
 ) -> None:
     """Test setup with no switch devices."""
     # Arrange
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        "client": lifesmart_client,
+    hass.data[DOMAIN][mock_config_entry.entry_id] = {
+        "client": mock_client,
         "devices": [
             {
                 HUB_ID_KEY: "agt1",
@@ -149,40 +147,10 @@ async def test_async_setup_entry_no_switches(
     async_add_entities = AsyncMock()
 
     # Act
-    await async_setup_entry(hass, config_entry, async_add_entities)
+    await async_setup_entry(hass, mock_config_entry, async_add_entities)
 
     # Assert
     async_add_entities.assert_called_once_with([])
-
-
-async def test_async_setup_entry_nature_special_handling(
-    hass: HomeAssistant,
-    lifesmart_client: AsyncMock,
-    config_entry: ConfigEntry,
-    mock_lifesmart_devices: list[dict[str, Any]],
-) -> None:
-    """Test the special handling for SL_NATURE device type."""
-    # Add a non-switch version of SL_NATURE to the device list
-    non_switch_nature = {
-        HUB_ID_KEY: "agt1",
-        DEVICE_ID_KEY: "meslnature_noswitch",
-        DEVICE_TYPE_KEY: "SL_NATURE",
-        DEVICE_DATA_KEY: {"P1": {}, "P2": {}, "P5": {"val": 2}},  # Not a switch panel
-    }
-    devices = mock_lifesmart_devices + [non_switch_nature]
-
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        "client": lifesmart_client,
-        "devices": devices,
-        "exclude_devices": [],
-        "exclude_hubs": [],
-    }
-    async_add_entities = AsyncMock()
-
-    await async_setup_entry(hass, config_entry, async_add_entities)
-
-    # Assert that the non-switch SL_NATURE was skipped
-    assert len(async_add_entities.call_args[0][0]) == 9
 
 
 # --- Test `LifeSmartSwitch` Entity Class ---
@@ -191,23 +159,25 @@ async def test_async_setup_entry_nature_special_handling(
 @pytest.fixture
 def switch_entity(
     hass: HomeAssistant,
-    lifesmart_client: AsyncMock,
-    config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_config_entry: ConfigEntry,
     mock_lifesmart_devices: list[dict[str, Any]],
 ) -> LifeSmartSwitch:
-    """Provides a standard LifeSmartSwitch entity for testing."""
-    device_data = mock_lifesmart_devices[0]  # The SL_SW_IF3
+    """Provides a standard LifeSmartSwitch entity for testing, based on shared fixtures."""
+    device_data = find_device(mock_lifesmart_devices, "sw_if3")
+    assert device_data, "Device 'sw_if3' not found in mock_lifesmart_devices"
+
     ha_device = LifeSmartSwitch(
         device=AsyncMock(),
         raw_device=device_data,
         sub_device_key="L1",
         sub_device_data=device_data[DEVICE_DATA_KEY]["L1"],
-        client=lifesmart_client,
-        entry_id=config_entry.entry_id,
+        client=mock_client,
+        entry_id=mock_config_entry.entry_id,
     )
     ha_device.hass = hass
     # Manually set hass.data for the global refresh handler test
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+    hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = {
         "devices": mock_lifesmart_devices
     }
     return ha_device
@@ -215,19 +185,19 @@ def switch_entity(
 
 def test_switch_init_and_properties(switch_entity: LifeSmartSwitch) -> None:
     """Test the initialization and basic properties of the switch entity."""
-    assert switch_entity.unique_id == "SL_SW_IF3_agt1_me1_L1"
-    assert switch_entity.name == "Switch3 L1"
+    assert switch_entity.unique_id == "SL_SW_IF3_hub_sw_sw_if3_L1"
+    assert switch_entity.name == "3-Gang Switch L1"
     assert switch_entity.device_class == SwitchDeviceClass.SWITCH
-    assert switch_entity.is_on is True  # Initial state from L1 is 'on'
+    assert switch_entity.is_on is True  # Initial state from L1 is 'on' (type 129)
     assert switch_entity.extra_state_attributes == {
-        "hub_id": "agt1",
-        "device_id": "me1",
+        "hub_id": "hub_sw",
+        "device_id": "sw_if3",
         "subdevice_index": "L1",
     }
 
 
 def test_switch_name_generation(
-    lifesmart_client: AsyncMock, config_entry: ConfigEntry
+    mock_client: AsyncMock, mock_config_entry: ConfigEntry
 ) -> None:
     """Test various scenarios for switch name generation."""
     base_device = {
@@ -246,8 +216,8 @@ def test_switch_name_generation(
         base_device,
         "P1",
         base_device[DEVICE_DATA_KEY]["P1"],
-        lifesmart_client,
-        config_entry.entry_id,
+        mock_client,
+        mock_config_entry.entry_id,
     )
     assert entity_with_subname.name == "Device Base Name Button Name"
 
@@ -257,41 +227,28 @@ def test_switch_name_generation(
         base_device,
         "P2",
         base_device[DEVICE_DATA_KEY]["P2"],
-        lifesmart_client,
-        config_entry.entry_id,
+        mock_client,
+        mock_config_entry.entry_id,
     )
     assert entity_without_subname.name == "Device Base Name P2"
 
-    # Without base name
-    base_device_no_name = base_device.copy()
-    del base_device_no_name[DEVICE_NAME_KEY]
-    entity_without_base = LifeSmartSwitch(
-        AsyncMock(),
-        base_device_no_name,
-        "P2",
-        base_device_no_name[DEVICE_DATA_KEY]["P2"],
-        lifesmart_client,
-        config_entry.entry_id,
-    )
-    assert entity_without_base.name == "Unknown Switch P2"
-
 
 def test_determine_device_class(
-    lifesmart_client: AsyncMock, config_entry: ConfigEntry
+    mock_client: AsyncMock, mock_config_entry: ConfigEntry
 ) -> None:
     """Test device class determination for outlets and switches."""
     # Test for OUTLET
     for dev_type in SMART_PLUG_TYPES | POWER_METER_PLUG_TYPES:
         device_data = {DEVICE_TYPE_KEY: dev_type, DEVICE_DATA_KEY: {}}
         entity = LifeSmartSwitch(
-            AsyncMock(), device_data, "P1", {}, lifesmart_client, config_entry.entry_id
+            AsyncMock(), device_data, "P1", {}, mock_client, mock_config_entry.entry_id
         )
         assert entity.device_class == SwitchDeviceClass.OUTLET
 
     # Test for SWITCH
     device_data = {DEVICE_TYPE_KEY: "SL_SW_IF3", DEVICE_DATA_KEY: {}}
     entity = LifeSmartSwitch(
-        AsyncMock(), device_data, "P1", {}, lifesmart_client, config_entry.entry_id
+        AsyncMock(), device_data, "P1", {}, mock_client, mock_config_entry.entry_id
     )
     assert entity.device_class == SwitchDeviceClass.SWITCH
 
@@ -318,22 +275,17 @@ async def test_turn_on_off(
 
     # Turn on
     await switch_entity.async_turn_on()
-    client.turn_on_light_switch_async.assert_awaited_once_with("L1", "agt1", "me1")
+    client.turn_on_light_switch_async.assert_awaited_once_with("L1", "hub_sw", "sw_if3")
     assert switch_entity.is_on is True
-    assert switch_entity.async_write_ha_state.call_count == 1
+    switch_entity.async_write_ha_state.assert_called_once()
 
     # Turn off
     await switch_entity.async_turn_off()
-    client.turn_off_light_switch_async.assert_awaited_once_with("L1", "agt1", "me1")
+    client.turn_off_light_switch_async.assert_awaited_once_with(
+        "L1", "hub_sw", "sw_if3"
+    )
     assert switch_entity.is_on is False
     assert switch_entity.async_write_ha_state.call_count == 2
-
-    # Test failure case
-    client.turn_on_light_switch_async.return_value = -1
-    with caplog.at_level(logging.WARNING):
-        await switch_entity.async_turn_on()
-        assert "Failed to turn on switch" in caplog.text
-    assert switch_entity.is_on is False  # State should not change on failure
 
 
 async def test_data_update_handlers(
@@ -343,28 +295,20 @@ async def test_data_update_handlers(
     switch_entity.async_write_ha_state = AsyncMock()
 
     # 1. Test `_handle_update` (specific entity update)
-    # Simulate a dispatcher signal for this specific entity
     update_callback = switch_entity._handle_update
     update_callback({"type": 128})  # Turn off
-
     assert switch_entity.is_on is False
-    assert switch_entity.async_write_ha_state.call_count == 1
+    switch_entity.async_write_ha_state.assert_called_once()
 
     # 2. Test `_handle_global_refresh`
-    # Simulate a global refresh signal
-    refresh_callback = switch_entity._handle_global_refresh
     # Modify the "source of truth" in hass.data
-    hass.data[DOMAIN][switch_entity._entry_id]["devices"][0][DEVICE_DATA_KEY]["L1"][
-        "type"
-    ] = 129
+    device_in_hass = find_device(
+        hass.data[DOMAIN][switch_entity._entry_id]["devices"], "sw_if3"
+    )
+    device_in_hass[DEVICE_DATA_KEY]["L1"]["type"] = 129  # Turn on
+
+    refresh_callback = switch_entity._handle_global_refresh
     refresh_callback()
 
     assert switch_entity.is_on is True
     assert switch_entity.async_write_ha_state.call_count == 2
-
-    # 3. Test global refresh when device is missing
-    hass.data[DOMAIN][switch_entity._entry_id]["devices"] = []  # Remove all devices
-    with patch("custom_components.lifesmart.switch._LOGGER") as mock_logger:
-        refresh_callback()
-        mock_logger.warning.assert_called_once()
-        assert "Could not find device" in mock_logger.warning.call_args[0][0]

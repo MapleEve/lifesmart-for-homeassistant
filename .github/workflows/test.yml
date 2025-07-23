@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: "Run LifeSmart Unit/Union Tests"
+    name: "LifeSmart Unit/Union Tests"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

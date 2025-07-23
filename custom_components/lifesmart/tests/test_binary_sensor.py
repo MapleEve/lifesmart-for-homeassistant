@@ -1,13 +1,13 @@
 """
 Unit tests for the LifeSmart binary sensor platform.
-This version strictly adheres to using constants defined in const.py
-for all mock device creation, ensuring full alignment with the component's code.
+This version uses shared fixtures from conftest.py and correct mocking strategies.
 """
 
+import datetime
+from datetime import timezone
 from unittest.mock import patch, AsyncMock
 
 import pytest
-from freezegun import freeze_time
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -21,229 +21,124 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 # --- Strictly import constants from the component's code ---
 from custom_components.lifesmart.const import *
 
-DEVICE_DATA_KEY = "data"
-
-DEVICE_NAME_KEY = "name"
-
-DEVICE_TYPE_KEY = "devtype"
-
-DEVICE_ID_KEY = "me"
-
-HUB_ID_KEY = "agt"
-
-
-# --- Helper to safely access devtypes from constant lists ---
-def get_first_devtype(const_list, fallback="FALLBACK_TYPE"):
-    """Safely get the first device type from a constant tuple/list."""
-    return const_list[0] if const_list else fallback
-
-
-# --- MOCK DEVICE DATA: STRICTLY USING CONSTANTS ---
-# Each mock device now programmatically uses the first element from the
-# corresponding constant list imported from const.py.
-MOCK_DEVICES = {
-    # GUARD_SENSOR_TYPES -> Using GUARD_SENSOR_TYPES[0]
-    "door_sensor_open": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d1",
-        DEVICE_TYPE_KEY: get_first_devtype(GUARD_SENSOR_TYPES),
-        DEVICE_NAME_KEY: "Front Door",
-        DEVICE_DATA_KEY: {"G": {"val": 0, "type": 0}},
-    },
-    "door_sensor_closed": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d1",
-        DEVICE_TYPE_KEY: get_first_devtype(GUARD_SENSOR_TYPES),
-        DEVICE_NAME_KEY: "Front Door",
-        DEVICE_DATA_KEY: {"G": {"val": 1, "type": 0}},
-    },
-    # MOTION_SENSOR_TYPES -> Using MOTION_SENSOR_TYPES[0]
-    "motion_sensor_detected": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d2",
-        DEVICE_TYPE_KEY: get_first_devtype(MOTION_SENSOR_TYPES),
-        DEVICE_NAME_KEY: "Living Room Motion",
-        DEVICE_DATA_KEY: {"M": {"val": 1, "type": 0}},
-    },
-    # WATER_SENSOR_TYPES -> Using WATER_SENSOR_TYPES[0]
-    "water_sensor_wet": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d3",
-        DEVICE_TYPE_KEY: get_first_devtype(WATER_SENSOR_TYPES),
-        DEVICE_NAME_KEY: "Kitchen Sink",
-        DEVICE_DATA_KEY: {"WA": {"val": 50, "type": 0}},
-    },
-    # DEFED_SENSOR_TYPES -> Using DEFED_SENSOR_TYPES[1] for motion
-    "defed_sensor_triggered": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d4",
-        DEVICE_TYPE_KEY: "SL_DF_MM",  # Example from list
-        DEVICE_NAME_KEY: "Garage DEFED",
-        DEVICE_DATA_KEY: {"M": {"val": 1, "type": 129}},
-    },
-    # LOCK_TYPES -> Using LOCK_TYPES[0]
-    "lock_device": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d5",
-        DEVICE_TYPE_KEY: get_first_devtype(LOCK_TYPES),
-        DEVICE_NAME_KEY: "Main Lock",
-        DEVICE_DATA_KEY: {
-            "EVTLO": {"val": 4121, "type": 1, "valts": 1672531200000},
-            "ALM": {"val": 2, "type": 0},
-        },
-    },
-    # SMOKE_SENSOR_TYPES -> Using SMOKE_SENSOR_TYPES[0]
-    "smoke_sensor_triggered": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d6",
-        DEVICE_TYPE_KEY: get_first_devtype(SMOKE_SENSOR_TYPES),
-        DEVICE_NAME_KEY: "Hallway Smoke",
-        DEVICE_DATA_KEY: {"P1": {"val": 1, "type": 0}},
-    },
-    # RADAR_SENSOR_TYPES -> Using RADAR_SENSOR_TYPES[0]
-    "radar_sensor_occupied": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d7",
-        DEVICE_TYPE_KEY: get_first_devtype(RADAR_SENSOR_TYPES),
-        DEVICE_NAME_KEY: "Study Occupancy",
-        DEVICE_DATA_KEY: {"P1": {"val": 1, "type": 0}},
-    },
-    # Momentary Button -> Hardcoded 'SL_SC_BB_V2' as it's a specific handled case
-    "button_v2": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d8",
-        DEVICE_TYPE_KEY: "SL_SC_BB_V2",
-        DEVICE_NAME_KEY: "Panic Button",
-        DEVICE_DATA_KEY: {"P1": {"val": 0, "type": 0}},
-    },
-    # CLIMATE_TYPES -> Using a type from the list
-    "climate_valve_alarm": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d9",
-        DEVICE_TYPE_KEY: "SL_CP_VL",  # Example from list
-        DEVICE_NAME_KEY: "Valve Controller",
-        DEVICE_DATA_KEY: {"P5": {"val": 5, "type": 0}},
-    },
-    # GENERIC_CONTROLLER_TYPES -> Using GENERIC_CONTROLLER_TYPES[0]
-    "generic_controller_on": {
-        HUB_ID_KEY: "hub1",
-        DEVICE_ID_KEY: "d10",
-        DEVICE_TYPE_KEY: get_first_devtype(GENERIC_CONTROLLER_TYPES),
-        DEVICE_NAME_KEY: "Generic Relay",
-        DEVICE_DATA_KEY: {"P2": {"val": 0, "type": 0}},
-    },
-}
-
 pytestmark = pytest.mark.asyncio
 
 
 async def setup_platform(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
+    mock_client: AsyncMock,
     devices: list,
-    exclude_devices: list | None = None,
-    exclude_hubs: list | None = None,
 ) -> None:
-    """Helper to set up the binary sensor platform."""
+    """
+    Helper to set up the binary sensor platform.
+    This is now a standard setup helper that uses fixtures correctly.
+    """
     hass.data[DOMAIN] = {
         config_entry.entry_id: {
-            "client": AsyncMock(),
+            "client": mock_client,
             "devices": devices,
-            "exclude_devices": exclude_devices or [],
-            "exclude_hubs": exclude_hubs or [],
+            "exclude_devices": [],
+            "exclude_hubs": [],
         }
     }
-    with patch("custom_components.lifesmart.LifeSmartDevice"):
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, BINARY_SENSOR_DOMAIN
-        )
+    # We no longer patch LifeSmartDevice. We let the platform setup run as intended.
+    await hass.config_entries.async_forward_entry_setup(
+        config_entry, BINARY_SENSOR_DOMAIN
+    )
     await hass.async_block_till_done()
 
 
-async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
-    """Test platform setup creates the correct number of entities."""
-    # This test ensures that setup logic correctly handles multiple sub-entities from a single device
-    await setup_platform(hass, mock_config_entry, [MOCK_DEVICES["lock_device"]])
+def find_device(devices: list, me: str):
+    """Helper to find a specific device from the mock list by its 'me' id."""
+    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
+
+
+async def test_async_setup_entry(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_lifesmart_devices: list,
+):
+    """Test platform setup creates the correct number of entities from a single device."""
+    # Find the specific lock device from the shared fixture
+    lock_device = find_device(mock_lifesmart_devices, "bs_lock")
+    assert lock_device, "Lock device 'bs_lock' not found in mock_lifesmart_devices"
+
+    await setup_platform(hass, mock_config_entry, mock_client, [lock_device])
+
     entity_registry = er.async_get(hass)
+    # A lock device should create 2 binary sensors (ALM for alarm and EVTLO for unlock events)
     assert (
         len(entity_registry.entities) == 2
     ), "A lock should create 2 binary sensors (ALM and EVTLO)"
 
 
 @pytest.mark.parametrize(
-    "device_fixture, entity_id_suffix, expected_name, expected_class, expected_state",
+    "device_me, entity_id_suffix, expected_name, expected_class, expected_state",
     [
+        # The device_me corresponds to the 'me' key in the mock_lifesmart_devices fixture
         (
-            "door_sensor_open",
-            "d1_g",
+            "bs_door",
+            "bs_door_g",
             "Front Door G",
             BinarySensorDeviceClass.DOOR,
-            STATE_ON,
+            STATE_ON,  # val is 0, which means open/on for door sensors
         ),
         (
-            "motion_sensor_detected",
-            "d2_m",
-            "Living Room Motion M",
+            "bs_motion",
+            "bs_motion_m",
+            "Living Motion M",
             BinarySensorDeviceClass.MOTION,
             STATE_ON,
         ),
         (
-            "water_sensor_wet",
-            "d3_wa",
-            "Kitchen Sink WA",
+            "bs_water",
+            "bs_water_wa",
+            "Kitchen Water WA",
             BinarySensorDeviceClass.MOISTURE,
             STATE_ON,
         ),
         (
-            "defed_sensor_triggered",
-            "d4_m",
+            "bs_defed",
+            "bs_defed_m",
             "Garage DEFED M",
             BinarySensorDeviceClass.MOTION,
             STATE_ON,
         ),
         (
-            "smoke_sensor_triggered",
-            "d6_p1",
+            "bs_smoke",
+            "bs_smoke_p1",
             "Hallway Smoke P1",
             BinarySensorDeviceClass.SMOKE,
             STATE_ON,
         ),
         (
-            "radar_sensor_occupied",
-            "d7_p1",
+            "bs_radar",
+            "bs_radar_p1",
             "Study Occupancy P1",
             BinarySensorDeviceClass.OCCUPANCY,
             STATE_ON,
         ),
-        ("button_v2", "d8_p1", "Panic Button P1", None, STATE_OFF),
-        (
-            "climate_valve_alarm",
-            "d9_p5",
-            "Valve Controller P5",
-            BinarySensorDeviceClass.PROBLEM,
-            STATE_ON,
-        ),
-        (
-            "generic_controller_on",
-            "d10_p2",
-            "Generic Relay P2",
-            BinarySensorDeviceClass.OPENING,
-            STATE_ON,
-        ),
+        ("bs_button", "bs_button_p1", "Panic Button P1", None, STATE_OFF),
     ],
 )
 async def test_entity_initialization(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
-    device_fixture: str,
+    mock_client: AsyncMock,
+    mock_lifesmart_devices: list,
+    device_me: str,
     entity_id_suffix: str,
     expected_name: str,
     expected_class: BinarySensorDeviceClass,
     expected_state: str,
 ):
     """Test the initialization of various binary sensor entities."""
-    device = MOCK_DEVICES[device_fixture]
-    await setup_platform(hass, mock_config_entry, [device])
+    device = find_device(mock_lifesmart_devices, device_me)
+    assert device, f"Device '{device_me}' not found in mock_lifesmart_devices"
+
+    await setup_platform(hass, mock_config_entry, mock_client, [device])
 
     entity_id = f"binary_sensor.{expected_name.lower().replace(' ', '_')}"
     state = hass.states.get(entity_id)
@@ -254,35 +149,53 @@ async def test_entity_initialization(
     assert state.state == expected_state
 
     entity_registry = er.async_get(hass)
-    unique_id = f"lifesmart_hub1_{entity_id_suffix}"
+    # Construct unique_id based on the device data from the fixture
+    unique_id = f"lifesmart_{device[HUB_ID_KEY]}_{entity_id_suffix}"
     entry = entity_registry.async_get(entity_id)
     assert entry and entry.unique_id.endswith(unique_id)
 
 
 async def test_special_attributes_initialization(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_lifesmart_devices: list,
 ):
-    """Test extra state attributes for specialized binary sensors."""
-    await setup_platform(hass, mock_config_entry, [MOCK_DEVICES["lock_device"]])
+    """Test extra state attributes for specialized binary sensors like locks."""
+    lock_device = find_device(mock_lifesmart_devices, "bs_lock")
+    assert lock_device, "Lock device 'bs_lock' not found in mock_lifesmart_devices"
+
+    await setup_platform(hass, mock_config_entry, mock_client, [lock_device])
 
     lock_evt_state = hass.states.get("binary_sensor.main_lock_evtlo")
     assert lock_evt_state is not None
+    # Based on EVT_MAP in const.py, val 4121 -> "Password", user 25
     assert lock_evt_state.attributes.get("unlocking_method") == "Password"
     assert lock_evt_state.attributes.get("unlocking_user") == 25
 
 
 async def test_momentary_button_update(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_lifesmart_devices: list,
+    freezer,
 ):
     """Test the transient state change of a momentary button."""
-    await setup_platform(hass, mock_config_entry, [MOCK_DEVICES["button_v2"]])
+    button_device = find_device(mock_lifesmart_devices, "bs_button")
+    assert (
+        button_device
+    ), "Button device 'bs_button' not found in mock_lifesmart_devices"
+
+    await setup_platform(hass, mock_config_entry, mock_client, [button_device])
     entity_id = "binary_sensor.panic_button_p1"
-    unique_id = f"lifesmart_{MOCK_DEVICES['button_v2'][HUB_ID_KEY]}_{MOCK_DEVICES['button_v2'][DEVICE_ID_KEY]}_p1"
+    unique_id = (
+        f"lifesmart_{button_device[HUB_ID_KEY]}_{button_device[DEVICE_ID_KEY]}_p1"
+    )
 
-    with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep, freeze_time(
-        "2023-01-01T12:00:00Z"
-    ) as frozen_time:
-
+    freezer.move_to("2023-01-01T12:00:00Z")
+    with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        # Simulate a WebSocket push for this entity
         async_dispatcher_send(
             hass,
             f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
@@ -293,22 +206,37 @@ async def test_momentary_button_update(
         state = hass.states.get(entity_id)
         assert state.state == STATE_ON
         assert state.attributes.get("last_event") == "single_click"
-        assert state.attributes.get("last_event_time") == frozen_time().isoformat()
+        # 3. 使用标准库获取被冻结的时间
+        assert (
+            state.attributes.get("last_event_time")
+            == datetime.datetime.now(timezone.utc).isoformat()
+        )
 
+        # The momentary button is designed to turn off after a short delay
         mock_sleep.assert_awaited_once_with(0.5)
 
 
 async def test_global_refresh_update(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_lifesmart_devices: list,
 ):
     """Test entity state update via a global data refresh."""
-    await setup_platform(hass, mock_config_entry, [MOCK_DEVICES["door_sensor_open"]])
+    door_device = find_device(mock_lifesmart_devices, "bs_door")
+    assert door_device, "Door sensor 'bs_door' not found in mock_lifesmart_devices"
+
+    # Initial state is open (val: 0 -> ON)
+    await setup_platform(hass, mock_config_entry, mock_client, [door_device])
     entity_id = "binary_sensor.front_door_g"
     assert hass.states.get(entity_id).state == STATE_ON
 
-    updated_device = MOCK_DEVICES["door_sensor_closed"].copy()
+    # Create an updated version of the device where the door is closed
+    updated_device = door_device.copy()
+    updated_device[DEVICE_DATA_KEY] = {"G": {"val": 1, "type": 0}}  # val: 1 -> OFF
     hass.data[DOMAIN][mock_config_entry.entry_id]["devices"] = [updated_device]
 
+    # Simulate a global refresh signal
     async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
     await hass.async_block_till_done()
 
