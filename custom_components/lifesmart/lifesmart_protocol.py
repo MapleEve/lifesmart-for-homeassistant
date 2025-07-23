@@ -880,7 +880,8 @@ class LifeSmartLocalClient:
         self.username = username
         self.password = password
         self.config_agt = config_agt
-        self.reader, self.writer = None, None
+        self.reader: asyncio.StreamReader | None = None
+        self.writer: asyncio.StreamWriter | None = None
         self._proto = LifeSmartProtocol()
         self._factory: LifeSmartPacketFactory | None = None
         self.disconnected = False
@@ -902,6 +903,25 @@ class LifeSmartLocalClient:
             "ST": "ST",
             "CL": "CL",
         }
+
+    @property
+    def is_connected(self) -> bool:
+        """
+        如果读写器都存在且写入器未关闭，则返回 True。
+        """
+        return (
+            self.writer is not None
+            and self.reader is not None
+            and not self.writer.is_closing()
+        )
+
+    def disconnect(self):
+        """
+        此方法通过设置一个标志来向主连接循环发出信号，
+        使其在下一次迭代时正常终止并清理资源。
+        """
+        _LOGGER.info("请求断开本地客户端连接。")
+        self.disconnected = True
 
     def get_attr_name(self, field: str) -> str:
         """根据设备返回的字段名获取对应的友好属性名。"""
@@ -1100,43 +1120,42 @@ class LifeSmartLocalClient:
                                         if not isinstance(schg_key, str):
                                             continue
 
-                                        marker = f"{self.node_agt}/ep/"
-                                        if schg_key.startswith(marker):
-                                            path_after_ep = schg_key[len(marker) :]
-                                            parts = path_after_ep.split("/")
-                                            # 正确的解析：dev_id 在第4部分, sub_key 在第6部分
-                                            if len(parts) == 3 and parts[1] == "m":
-                                                dev_id, sub_key = parts[0], parts[2]
+                                        parts = schg_key.split("/")
+                                        if (
+                                            len(parts) == 5
+                                            and parts[0] == self.node_agt
+                                            and parts[1] == "ep"
+                                            and parts[3] == "m"
+                                        ):
+                                            dev_id, sub_key = parts[2], parts[4]
 
-                                                if dev_id in self.devices:
-                                                    device_data = self.devices[
-                                                        dev_id
-                                                    ].setdefault("data", {})
-                                                    sub_device_data = (
-                                                        device_data.setdefault(
-                                                            sub_key, {}
-                                                        )
-                                                    )
-                                                    sub_device_data.update(
-                                                        schg_data.get("chg", {})
-                                                    )
+                                            if dev_id in self.devices:
+                                                device_data = self.devices[
+                                                    dev_id
+                                                ].setdefault("data", {})
+                                                sub_device_data = (
+                                                    device_data.setdefault(sub_key, {})
+                                                )
+                                                sub_device_data.update(
+                                                    schg_data.get("chg", {})
+                                                )
 
-                                                    if callback and callable(callback):
-                                                        msg = {
-                                                            "me": dev_id,
-                                                            "idx": sub_key,
-                                                            "agt": self.node_agt,
-                                                            "devtype": self.devices[
-                                                                dev_id
-                                                            ]["devtype"],
-                                                            **sub_device_data,
-                                                        }
-                                                        await callback({"msg": msg})
-                                                else:
-                                                    _LOGGER.debug(
-                                                        "收到未知设备 '%s' 的状态更新，已忽略。",
-                                                        dev_id,
-                                                    )
+                                                if callback and callable(callback):
+                                                    msg = {
+                                                        "me": dev_id,
+                                                        "idx": sub_key,
+                                                        "agt": self.node_agt,
+                                                        "devtype": self.devices[dev_id][
+                                                            "devtype"
+                                                        ],
+                                                        **sub_device_data,
+                                                    }
+                                                    await callback({"msg": msg})
+                                            else:
+                                                _LOGGER.debug(
+                                                    "收到未知设备 '%s' 的状态更新，已忽略。",
+                                                    dev_id,
+                                                )
 
                                 elif sdel := decoded[1].get("_sdel"):
                                     _LOGGER.warning(
@@ -1151,7 +1170,6 @@ class LifeSmartLocalClient:
                             _LOGGER.debug(
                                 "捕获到 EOFError，可能数据包不完整，将等待更多数据。"
                             )
-                            break
                         except Exception as e:
                             _LOGGER.error(
                                 "处理数据时发生意外错误: %s", e, exc_info=True
@@ -1190,10 +1208,14 @@ class LifeSmartLocalClient:
 
     async def async_disconnect(self, call: Event | ServiceCall | None):
         """断开与本地中枢的连接。"""
-        self.disconnected = True
+        self.disconnect()  # Call the new simple disconnect method
         if self.writer is not None:
-            self.writer.close()
-            await self.writer.wait_closed()
+            try:
+                if not self.writer.is_closing():
+                    self.writer.close()
+                    await self.writer.wait_closed()
+            except Exception as e:
+                _LOGGER.debug("在 async_disconnect 中关闭 writer 时发生错误: %s", e)
             self.writer = None
 
     async def _send_packet(self, packet: bytes):
