@@ -929,7 +929,7 @@ def generate_unique_id(
     # 清理和规范化函数，只移除特殊字符并转为小写
     def sanitize(input_str: str) -> str:
         # 先转小写，然后用 \W 替换所有非字母、非数字、非下划线的字符
-        return re.sub(r"\W", "", str(input_str).lower())
+        return re.sub(r"\W", "", input_str.lower())
 
     parts = [sanitize(devtype), sanitize(agt), sanitize(me)]
     if sub_device_key:
