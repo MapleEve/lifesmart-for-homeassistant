@@ -5,7 +5,7 @@
 from unittest.mock import MagicMock, AsyncMock, patch
 
 import pytest
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_REGION
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -335,57 +335,44 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 
 
 @pytest.fixture
-def lifesmart_client_factory(mock_lifesmart_devices):
+def mock_client():
     """
-    提供一个 LifeSmartClient 的工厂 fixture。
-    允许测试用例按需创建具有特定返回值的模拟客户端。
+    提供一个默认的、配置了模拟设备的模拟 LifeSmartClient。
     """
+    client = MagicMock(name="mock_lifesmart_client")
+    client.get_all_device_async = AsyncMock(return_value=[])  # 默认返回空列表
+    client.login_async = AsyncMock(
+        return_value={
+            "usertoken": "mock_new_usertoken",
+            "userid": "mock_userid",
+            "region": "cn2",
+        }
+    )
+    client.async_refresh_token = AsyncMock(
+        return_value={
+            "usertoken": "mock_refreshed_usertoken",
+            "expiredtime": 9999999999,
+        }
+    )
 
-    def _create_client(devices=None, side_effect=None):
-        """创建并返回一个模拟的 LifeSmartClient 实例。"""
-        # 如果未指定设备，则使用全面的默认列表
-        if devices is None:
-            devices = mock_lifesmart_devices
+    # 模拟所有控制方法
+    client.turn_on_light_switch_async = AsyncMock(return_value=0)
+    client.turn_off_light_switch_async = AsyncMock(return_value=0)
+    client.set_single_ep_async = AsyncMock(return_value=0)
+    client.set_multi_eps_async = AsyncMock(return_value=0)
+    client.open_cover_async = AsyncMock(return_value=0)
+    client.close_cover_async = AsyncMock(return_value=0)
+    client.stop_cover_async = AsyncMock(return_value=0)
+    client.set_cover_position_async = AsyncMock(return_value=0)
+    client.async_set_climate_hvac_mode = AsyncMock(return_value=0)
+    client.async_set_climate_fan_mode = AsyncMock(return_value=0)
+    client.async_set_climate_temperature = AsyncMock(return_value=0)
 
-        client = MagicMock(name="mock_lifesmart_client")
+    # 模拟后台任务启动/停止
+    client.ws_connect = AsyncMock()
+    client.ws_disconnect = AsyncMock()
 
-        # 模拟异常（如认证失败、连接超时）
-        if side_effect:
-            client.get_all_device_async.side_effect = side_effect
-            client.login_async.side_effect = side_effect
-            return client
-
-        # 默认模拟成功调用的返回值
-        client.get_all_device_async = AsyncMock(return_value=devices)
-        client.login_async = AsyncMock(
-            return_value={
-                "usertoken": "mock_new_usertoken",
-                "userid": "mock_userid",
-                "region": "cn2",
-            }
-        )
-        client.async_refresh_token = AsyncMock(
-            return_value={
-                "usertoken": "mock_refreshed_usertoken",
-                "expiredtime": 9999999999,
-            }
-        )
-        client.turn_on_light_switch_async = AsyncMock(return_value=0)
-        client.turn_off_light_switch_async = AsyncMock(return_value=0)
-        client.set_single_ep_async = AsyncMock(return_value=0)
-        client.set_multi_eps_async = AsyncMock(return_value=0)
-        client.ws_connect = AsyncMock()
-        client.ws_disconnect = AsyncMock()
-
-        return client
-
-    return _create_client
-
-
-@pytest.fixture
-def mock_client(lifesmart_client_factory):
-    """提供一个默认的、配置了模拟设备的模拟 LifeSmartClient。"""
-    return lifesmart_client_factory()
+    return client
 
 
 @pytest.fixture
@@ -402,7 +389,10 @@ def mock_config_entry(mock_config_data) -> MockConfigEntry:
 
 @pytest.fixture
 async def setup_integration(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_client: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_lifesmart_devices: list,
 ):
     """
     一个统一的 fixture，用于完整地设置和加载 LifeSmart 集成及其所有平台。
@@ -410,14 +400,25 @@ async def setup_integration(
     # 1. 将模拟配置条目添加到 HASS
     mock_config_entry.add_to_hass(hass)
 
-    # 2. Patch LifeSmartClient 的创建过程，使其返回我们的 mock_client
+    # 2. 配置模拟客户端以返回设备
+    mock_client.get_all_device_async.return_value = mock_lifesmart_devices
+
+    # 3. Patch LifeSmartClient 的创建过程，使其返回我们的 mock_client
     with patch(
         "custom_components.lifesmart.LifeSmartClient",
         return_value=mock_client,
     ):
-        # 3. 运行主集成的 async_setup_entry
-        await async_setup_entry(hass, mock_config_entry)
-        # 4. 等待所有后台任务完成，确保平台已加载
+        # 4. 运行主集成的 async_setup_entry
+        assert await async_setup_entry(hass, mock_config_entry) is True
+        # 5. 等待所有后台任务完成，确保平台已加载
         await hass.async_block_till_done()
 
-    return mock_config_entry
+    # 确保集成状态为 LOADED
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    yield mock_config_entry
+
+    # 卸载集成以清理资源，防止任务泄露
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED

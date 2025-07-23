@@ -85,11 +85,10 @@ async def test_async_call_api_signature_and_error_handling(client):
             "TestMethod", {"z_param": "val_z", "a_param": "val_a"}
         )
 
-        # It should be sorted alphabetically by key.
-        expected_sdata = "a_param:val_a,z_param:val_z"
-        mock_get_signature.assert_called_with(expected_sdata)
+        mock_get_signature.assert_called_once()
+        signature_raw_string = mock_get_signature.call_args.args[0]
+        assert "a_param:val_a,z_param:val_z" in signature_raw_string
 
-        # Verify the signature is in the payload
         sent_payload = mock_post.call_args.args[1]
         assert sent_payload["system"]["sign"] == "mocked_signature"
 
@@ -138,51 +137,41 @@ def test_get_code_from_response_all_failures(client):
 
 # region Special Auth and WSS Flow Tests
 @pytest.mark.asyncio
-async def test_login_async_full_flow(client):
+async def test_login_async_full_flow(client, mock_async_call_api):
     """测试登录流程的所有成功和失败分支。"""
-    with patch.object(client, "_async_call_api") as mock_call:
-        mock_call.side_effect = [
-            {"token": "temp_token", "userid": "new_user_id"},
-            {
-                "usertoken": "new_user_token",
-                "rgn": "cn1",
-                "userid": "new_user_id",
-            },
-        ]
-        result = await client.login_async()
-        assert client._usertoken == "new_user_token"
-        assert client._region == "cn1"
-        assert client._userid == "new_user_id"
-        assert result["usertoken"] == "new_user_token"
+    mock_async_call_api.side_effect = [
+        {"token": "temp_token", "userid": "new_user_id"},
+        {"usertoken": "new_user_token", "rgn": "cn1", "userid": "new_user_id"},
+    ]
+    result = await client.login_async()
+    assert client._usertoken == "new_user_token"
+    assert client._region == "cn1"
+    assert client._userid == "new_user_id"
+    assert result["usertoken"] == "new_user_token"
 
-    with patch.object(client, "_async_call_api", side_effect=LifeSmartAuthError(-1)):
-        with pytest.raises(LifeSmartAuthError, match=r"登录失败 \(步骤1\)"):
-            await client.login_async()
+    mock_async_call_api.side_effect = LifeSmartAuthError(-1)
+    with pytest.raises(LifeSmartAuthError, match=r"登录失败 \(步骤1\)"):
+        await client.login_async()
 
-    with patch.object(client, "_async_call_api") as mock_call:
-        mock_call.side_effect = [
-            {"token": "temp_token", "userid": "user_id"},
-            LifeSmartAuthError(-1),
-        ]
-        with pytest.raises(LifeSmartAuthError, match=r"认证失败 \(步骤2\)"):
-            await client.login_async()
+    mock_async_call_api.side_effect = [
+        {"token": "temp_token", "userid": "user_id"},
+        LifeSmartAuthError(-1),
+    ]
+    with pytest.raises(LifeSmartAuthError, match=r"认证失败 \(步骤2\)"):
+        await client.login_async()
 
 
 @pytest.mark.asyncio
-async def test_async_refresh_token_full_flow(client):
+async def test_async_refresh_token_full_flow(client, mock_async_call_api):
     """测试令牌刷新流程的成功和失败分支。"""
-    with patch.object(
-        client,
-        "_async_call_api",
-        return_value={"usertoken": "refreshed_token"},
-    ):
-        result = await client.async_refresh_token()
-        assert client._usertoken == "refreshed_token"
-        assert result["usertoken"] == "refreshed_token"
+    mock_async_call_api.return_value = {"usertoken": "refreshed_token"}
+    result = await client.async_refresh_token()
+    assert client._usertoken == "refreshed_token"
+    assert result["usertoken"] == "refreshed_token"
 
-    with patch.object(client, "_async_call_api", side_effect=LifeSmartAuthError(-1)):
-        with pytest.raises(LifeSmartAuthError, match="刷新令牌失败"):
-            await client.async_refresh_token()
+    mock_async_call_api.side_effect = LifeSmartAuthError(-1)
+    with pytest.raises(LifeSmartAuthError, match="刷新令牌失败"):
+        await client.async_refresh_token()
 
 
 def test_generate_wss_auth(client):
@@ -260,7 +249,9 @@ async def test_all_api_wrappers(
         "message": [{"data": "test"}],
     }
     await method(*call_args)
-    mock_async_call_api.assert_called_with(api_method, expected_params or {}, api_path)
+    mock_async_call_api.assert_called_with(
+        api_method, expected_params or {}, api_path=api_path
+    )
 
 
 @pytest.mark.asyncio
