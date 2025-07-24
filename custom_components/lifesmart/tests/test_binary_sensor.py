@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from custom_components.lifesmart import generate_unique_id
 from custom_components.lifesmart.const import *
 
 pytestmark = pytest.mark.asyncio
@@ -83,8 +84,11 @@ async def test_entity_initialization(
     assert state.state == expected_state
 
     entity_registry = er.async_get(hass)
-    unique_id = (
-        f"lifesmart_{device[HUB_ID_KEY]}_{device[DEVICE_ID_KEY]}_{entity_id_suffix}"
+    unique_id = generate_unique_id(
+        device[DEVICE_TYPE_KEY],
+        device[HUB_ID_KEY],
+        device[DEVICE_ID_KEY],
+        entity_id_suffix,
     )
     entry = entity_registry.async_get(entity_id)
     assert entry and entry.unique_id == unique_id
