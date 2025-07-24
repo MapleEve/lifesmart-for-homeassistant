@@ -133,12 +133,19 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
     def _init_default(self):
         """默认温控器初始化 (如仅支持制热的地暖)。"""
         self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
 
     def _init_v_air_p(self):
         """初始化 V_AIR_P 空调面板。"""
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
         )
         self._attr_hvac_modes = [
             HVACMode.OFF,
@@ -158,7 +165,10 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
     def _init_sl_nature(self):
         """初始化 SL_NATURE 超能温控面板。"""
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
         )
         # 根据 P6(CFG) 的值动态确定支持的 HVAC 模式
         p6_cfg = self._raw_device.get(DEVICE_DATA_KEY, {}).get("P6", {}).get("val", 0)
@@ -186,13 +196,20 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
     def _init_sl_cp_dn(self):
         """初始化 SL_CP_DN 地暖温控器。"""
         self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.AUTO]
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
         self._attr_min_temp, self._attr_max_temp = 5, 35
 
     def _init_sl_cp_air(self):
         """初始化 SL_CP_AIR 风机盘管。"""
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
         )
         self._attr_hvac_modes = [
             HVACMode.OFF,
@@ -211,12 +228,20 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
             HVACMode.HEAT,
             HVACMode.AUTO,
         ]  # 手动/节能 -> HEAT, 自动 -> AUTO
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
         self._attr_min_temp, self._attr_max_temp = 5, 35
 
     def _init_sl_tr_acipm(self):
         """初始化 SL_TR_ACIPM 新风系统。"""
-        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        self._attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
         self._attr_hvac_modes = [
             HVACMode.OFF,
             HVACMode.FAN_ONLY,
@@ -225,7 +250,11 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
 
     def _init_v_fresh_p(self):
         """初始化 V_FRESH_P 新风系统。"""
-        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        self._attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
         self._attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
         self._attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
@@ -317,6 +346,18 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
         self._attr_current_temperature = data.get("P5", {}).get("v")
         self._attr_target_temperature = data.get("P4", {}).get("v")
         self._p1_val = p1_data.get("val", 0)
+
+    def _update_sl_tr_acipm(self, data: dict):
+        """更新 SL_TR_ACIPM 新风系统状态。"""
+        p1_data = data.get("P1", {})
+        is_on = p1_data.get("type", 0) % 2 == 1
+        self._attr_hvac_mode = HVACMode.FAN_ONLY if is_on else HVACMode.OFF
+
+        # 根据 P1 的 val 查找对应的风速模式
+        fan_val = p1_data.get("val", 0)
+        self._attr_fan_mode = next(
+            (k for k, v in LIFESMART_ACIPM_FAN_MAP.items() if v == fan_val), None
+        )
 
     def _update_v_fresh_p(self, data: dict):
         """更新 V_FRESH_P 新风系统状态。"""
