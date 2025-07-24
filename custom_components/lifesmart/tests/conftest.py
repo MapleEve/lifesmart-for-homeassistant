@@ -2,6 +2,7 @@
 共享的 pytest fixtures，用于 LifeSmart 集成测试。
 """
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -410,8 +411,13 @@ async def setup_integration(
     with patch(
         "custom_components.lifesmart.LifeSmartClient",
         return_value=mock_client,
-    ), patch("aiohttp.ClientSession.ws_connect", new_callable=AsyncMock):
+    ), patch(
+        "aiohttp.ClientSession.ws_connect", new_callable=AsyncMock
+    ) as mock_ws_connect:
         # 4. 运行主集成的 async_setup_entry
+        mock_ws = mock_ws_connect.return_value
+        mock_ws.receive_json.side_effect = asyncio.CancelledError  # 模拟连接被取消
+
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         # 5. 等待所有后台任务完成，确保平台已加载
         await hass.async_block_till_done()

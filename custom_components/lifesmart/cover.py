@@ -76,6 +76,8 @@ async def async_setup_entry(
 class LifeSmartCover(LifeSmartDevice, CoverEntity):
     """LifeSmart cover entity with full state management."""
 
+    _attr_has_entity_name = False
+
     def __init__(
         self,
         raw_device: dict[str, Any],

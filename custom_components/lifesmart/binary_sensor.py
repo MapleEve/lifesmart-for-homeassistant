@@ -24,9 +24,9 @@ from .const import (
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     DEVICE_TYPE_KEY,
-    DEVICE_NAME_KEY,
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
+    DEVICE_NAME_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     UNLOCK_METHOD,
     CONF_EXCLUDE_AGTS,
@@ -172,7 +172,7 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
 class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
     """LifeSmart binary sensor entity with enhanced compatibility."""
 
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -189,12 +189,22 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
         self._entry_id = entry_id
 
         self._attr_name = self._generate_sensor_name()
+        device_name_slug = self._name.lower().replace(" ", "_")
+        sub_key_slug = self._sub_key.lower()
+        self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
+
         self._attr_unique_id = generate_unique_id(
             self.devtype, self.agt, self.me, sub_device_key
         )
-
-        # 初始化设备类别和状态
         self._update_state(self._sub_data)
+
+    @callback
+    def _generate_sensor_name(self) -> str:
+        """Generate the entity name suffix."""
+        sub_name = self._sub_data.get(DEVICE_NAME_KEY)
+        if sub_name and sub_name != self._sub_key:
+            return sub_name
+        return self._sub_key.upper()
 
     @callback
     def _update_state(self, data: dict) -> None:
@@ -206,38 +216,6 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
         self._attr_is_on = self._parse_state()
         self._attrs = self._get_attributes()
-
-    @callback
-    def _generate_sensor_name(self) -> str:
-        """
-        Generate a user-friendly name for the binary sensor.
-
-        The naming strategy combines the base device name with the sub-device name or key:
-        - If the sub-device has a specific name (and it differs from the sub-device key),
-          the name is formatted as "{base_name} {sub_name}".
-        - Otherwise, the name is formatted as "{base_name} {sub_key.upper()}".
-
-        Parameters:
-        - self._raw_device: A dictionary containing the raw device data, including the base name.
-        - self._sub_data: A dictionary containing the sub-device data, including the sub-device name.
-        - self._sub_key: A string representing the sub-device key (e.g., an I/O port index).
-
-        Returns:
-        - A string representing the user-friendly name of the sensor.
-
-        Examples:
-        - Base name: "Living Room Sensor", Sub-device name: "Motion Detector"
-          -> "Living Room Sensor Motion Detector"
-        - Base name: "Living Room Sensor", Sub-device key: "io1"
-          -> "Living Room Sensor IO1"
-        """
-        base_name = self._name
-        # 如果子设备有自己的名字，则使用它
-        sub_name = self._sub_data.get(DEVICE_NAME_KEY)
-        if sub_name and sub_name != self._sub_key:
-            return f"{base_name} {sub_name}"
-        # 否则，使用基础名 + IO口索引
-        return f"{base_name} {self._sub_key.upper()}"
 
     @callback
     def _determine_device_class(self) -> BinarySensorDeviceClass | None:
