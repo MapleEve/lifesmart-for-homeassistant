@@ -122,8 +122,6 @@ SUPPORTED_SWITCH_TYPES = {
     "SL_SW_BS1",  # 极星开关 (120零火版, 单键)
     "SL_SW_BS2",  # 极星开关 (120零火版, 双键)
     "SL_SW_BS3",  # 极星开关 (120零火版, 三键)
-    "SL_SC_BB",  # 随心开关 (CUBE Clicker)
-    "SL_SC_BB_V2",  # 随心按键 (CUBE Clicker2)
     # --- 超能面板系列 ---
     "SL_NATURE",  # 超能面板 (根据P5口区分开关版或温控版)
     # --- 奇点开关模块 ---
@@ -133,6 +131,10 @@ SUPPORTED_SWITCH_TYPES = {
     "SL_SW_DM1",  # 动态调光开关
     # --- 其他开关 ---
     "V_IND_S",  # 虚拟开关
+}
+BUTTON_SWITCH_TYPES = {
+    "SL_SC_BB",  # 随心开关 (CUBE Clicker)
+    "SL_SC_BB_V2",  # 随心按键 (CUBE Clicker2)
 }
 
 # ================= 插座系列 (Outlet/Plug Series) =================
@@ -410,6 +412,7 @@ ALL_BINARY_SENSOR_TYPES = (
     | DEFED_SENSOR_TYPES
     | LOCK_TYPES
     | GENERIC_CONTROLLER_TYPES  # 通用控制器有时也作为二元传感器
+    | BUTTON_SWITCH_TYPES  # 按钮开关也可以作为二元传感器
 )
 
 # --- 总数值传感器列表 ---
