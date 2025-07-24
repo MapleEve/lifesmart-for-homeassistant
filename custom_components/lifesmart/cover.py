@@ -86,7 +86,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
         self._attr_name = self._name
 
         self._initialize_features()
-        self._update_state(raw_device.get(DEVICE_DATA_KEY, {}))
+        self._update_state(self._raw_device.get(DEVICE_DATA_KEY, {}))
 
     @callback
     def _initialize_features(self) -> None:
@@ -178,6 +178,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
     def _handle_update(self, new_data: dict) -> None:
         if new_data:
             self._update_state(new_data)
+            self.async_write_ha_state()
 
     @callback
     def _handle_global_refresh(self) -> None:
@@ -188,6 +189,7 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
             )
             if current_device:
                 self._update_state(current_device.get(DEVICE_DATA_KEY, {}))
+                self.async_write_ha_state()
         except (KeyError, StopIteration):
             _LOGGER.warning(
                 "Could not find device %s during global refresh.", self._attr_unique_id

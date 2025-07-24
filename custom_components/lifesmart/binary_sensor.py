@@ -484,6 +484,7 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
             # 根据设备类型更新状态
             self._update_state_by_device_type(data)
+            self.async_write_ha_state()
 
         except Exception as e:
             _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
@@ -528,6 +529,7 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
                 async def reset_state():
                     await asyncio.sleep(0.5)  # 保持 on 状态 0.5 秒
                     self._attr_is_on = False
+                    self.async_write_ha_state()
 
                 self.hass.loop.create_task(reset_state())
             else:  # 事件消失
@@ -536,6 +538,7 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
             self._attr_is_on = self._parse_initial_state(data)
             if device_type == "SL_CP_VL" and sub_key == "P5":
                 self._attrs = self._get_initial_attributes(data)
+            self.async_write_ha_state()
         else:
             self._attr_is_on = val != 0
 
@@ -599,6 +602,7 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
             # 更新状态
             self._update_state_by_device_type(sub_data)
+            self.async_write_ha_state()
 
         except Exception as e:
             _LOGGER.error(

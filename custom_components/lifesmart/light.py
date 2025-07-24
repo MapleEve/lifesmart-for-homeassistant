@@ -48,8 +48,8 @@ from .const import (
     QUANTUM_TYPES,
     SPOT_TYPES,
     LIGHT_DIMMER_TYPES,
-    RGBW_LIGHT_TYPES,
     RGB_LIGHT_TYPES,
+    RGBW_LIGHT_TYPES,
     OUTDOOR_LIGHT_TYPES,
     BRIGHTNESS_LIGHT_TYPES,
     ALL_LIGHT_TYPES,
@@ -142,59 +142,70 @@ async def async_setup_entry(
             continue
 
         if device_type in GARAGE_DOOR_TYPES:
-            for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
-                if sub_key == "P1":
-                    lights.append(
-                        LifeSmartCoverLight(
-                            raw_device=device,
-                            client=client,
-                            entry_id=entry_id,
-                            sub_device_key=sub_key,
-                        )
+            if "P1" in device_data:
+                lights.append(
+                    LifeSmartCoverLight(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                        sub_device_key="P1",
                     )
+                )
             continue
 
         if device_type in LIGHT_DIMMER_TYPES:
             lights.append(
                 LifeSmartDimmerLight(
-                    raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
+                    raw_device=device, client=client, entry_id=entry_id
                 )
             )
         elif device_type in QUANTUM_TYPES:
-            for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
-                if sub_key == "P2":
-                    lights.append(
-                        LifeSmartQuantumLight(
-                            raw_device=device,
-                            client=client,
-                            entry_id=entry_id,
-                        )
+            if "P2" in device_data:
+                lights.append(
+                    LifeSmartQuantumLight(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                        sub_device_key="P2",
                     )
+                )
         elif (
             device_type in RGBW_LIGHT_TYPES
             and "RGBW" in device_data
             and "DYN" in device_data
         ):
             lights.append(
-                LifeSmartDualIORGBWLight(device, client, entry_id, "RGBW", "DYN")
+                LifeSmartDualIORGBWLight(
+                    raw_device=device,
+                    client=client,
+                    entry_id=entry_id,
+                    color_io="RGBW",
+                    effect_io="DYN",
+                )
             )
         elif device_type in RGB_LIGHT_TYPES and "RGB" in device_data:
-            lights.append(LifeSmartSingleIORGBWLight(device, client, entry_id, "RGB"))
+            lights.append(
+                LifeSmartSingleIORGBWLight(
+                    raw_device=device, client=client, entry_id=entry_id, io_key="RGB"
+                )
+            )
         elif device_type in OUTDOOR_LIGHT_TYPES and "P1" in device_data:
-            lights.append(LifeSmartSingleIORGBWLight(device, client, entry_id, "P1"))
+            lights.append(
+                LifeSmartSingleIORGBWLight(
+                    raw_device=device, client=client, entry_id=entry_id, io_key="P1"
+                )
+            )
         elif device_type in BRIGHTNESS_LIGHT_TYPES and "P1" in device_data:
             lights.append(
                 LifeSmartBrightnessLight(
-                    device,
-                    client,
-                    entry_id,
-                    "P1",
+                    raw_device=device,
+                    client=client,
+                    entry_id=entry_id,
+                    sub_device_key="P1",
                 )
             )
         else:
-            for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
+            for sub_key, sub_data in device_data.items():
                 if _is_light_subdevice(device_type, sub_key):
                     lights.append(
                         LifeSmartLight(
@@ -326,6 +337,7 @@ class LifeSmartBaseLight(LifeSmartDevice, LightEntity):
                 self._sub_data = current_device.get(DEVICE_DATA_KEY, {})
 
             self._initialize_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """默认的开灯实现."""
@@ -343,8 +355,14 @@ class LifeSmartBaseLight(LifeSmartDevice, LightEntity):
 class LifeSmartQuantumLight(LifeSmartBaseLight):
     """LifeSmart量子灯 (OD_WE_QUAN)."""
 
-    def __init__(self, raw_device: dict[str, Any], client: Any, entry_id: str) -> None:
-        super().__init__(raw_device, client, entry_id)
+    def __init__(
+        self,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+        sub_device_key: str,
+    ) -> None:
+        super().__init__(raw_device, client, entry_id, sub_device_key)
 
     @callback
     def _initialize_state(self) -> None:
@@ -439,6 +457,7 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
         if new_data:
             self._sub_data = new_data
             self._initialize_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
         """开启亮度灯."""
@@ -496,6 +515,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
         if new_data:
             self._sub_data = new_data
             self._initialize_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         cmd_val = None
@@ -542,7 +562,7 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         color_io: str,
         effect_io: str,
     ):
-        super().__init__(raw_device, client, entry_id)
+        super().__init__(raw_device, client, entry_id, color_io)
         self._color_io = color_io
         self._effect_io = effect_io
 
@@ -636,6 +656,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
         if new_data:
             self._sub_data = new_data
             self._initialize_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """开启SPOT RGB灯。"""
@@ -742,6 +763,7 @@ class LifeSmartLight(LifeSmartBaseLight):
         if new_data:
             self._sub_data = new_data
             self._initialize_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
         """开启通用灯."""
@@ -778,3 +800,4 @@ class LifeSmartCoverLight(LifeSmartBaseLight):
     async def _handle_update(self, new_data: dict) -> None:
         if new_data:
             self._attr_is_on = new_data.get("type", 0) % 2 == 1
+            self.async_write_ha_state()

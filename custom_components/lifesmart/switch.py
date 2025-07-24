@@ -218,6 +218,7 @@ class LifeSmartSwitch(LifeSmartDevice, SwitchEntity):
         """Handle real-time updates from the WebSocket."""
         if new_data:
             self._attr_is_on = self._parse_state(new_data)
+            self.async_write_ha_state()
 
     @callback
     def _handle_global_refresh(self) -> None:

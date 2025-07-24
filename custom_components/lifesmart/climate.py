@@ -25,7 +25,6 @@ from .const import (
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     DEVICE_TYPE_KEY,
-    DEVICE_NAME_KEY,
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
@@ -108,11 +107,11 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
         self._attr_unique_id = generate_unique_id(
             self.devtype, self.agt, self.me, "climate"
         )
-        self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Unknown Climate")
+        self._attr_name = self._name
 
         # 使用分派模式初始化特性和状态
         self._initialize_features()
-        self._update_state(raw_device.get(DEVICE_DATA_KEY, {}))
+        self._update_state(self._raw_device.get(DEVICE_DATA_KEY, {}))
 
     @callback
     def _initialize_features(self) -> None:
@@ -381,19 +380,23 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
 
     @callback
     def _handle_update(self, new_data: dict) -> None:
+        """Handle real-time updates."""
         if new_data:
             self._update_state(new_data)
+            self.async_write_ha_state()
 
     @callback
     def _handle_global_refresh(self) -> None:
+        """Handle global data refresh."""
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self.me),
-                None,
+                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
             )
             if current_device:
+                self._raw_device = current_device
                 self._update_state(current_device.get(DEVICE_DATA_KEY, {}))
+                self.async_write_ha_state()
         except (KeyError, StopIteration):
             _LOGGER.warning(
                 "Could not find device %s during global refresh.", self._attr_unique_id
