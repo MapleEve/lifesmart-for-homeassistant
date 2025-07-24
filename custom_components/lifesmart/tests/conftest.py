@@ -88,7 +88,7 @@ def mock_lifesmart_devices_fixture():
             "me": "light_quantum",
             "devtype": "OD_WE_QUAN",
             "name": "Quantum Light",
-            "data": {"P1": {"type": 129}, "P2": {"val": "some_effect_id"}},
+            "data": {"P1": {"type": 129}, "P2": {"val": 0x01010203}},
         },
         {
             "agt": "hub_light",
