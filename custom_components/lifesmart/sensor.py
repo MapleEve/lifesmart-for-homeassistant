@@ -84,12 +84,10 @@ async def async_setup_entry(
         if device_type == "SL_NATURE":
             p5_val = device.get(DEVICE_DATA_KEY, {}).get("P5", {}).get("val", 1) & 0xFF
             if p5_val == 3:  # 是温控面板
-                ha_device = LifeSmartDevice(device, client)
                 # P4 是当前温度
                 if "P4" in device[DEVICE_DATA_KEY]:
                     sensors.append(
                         LifeSmartSensor(
-                            device=ha_device,
                             raw_device=device,
                             sub_device_key="P4",
                             sub_device_data=device[DEVICE_DATA_KEY]["P4"],
@@ -102,15 +100,12 @@ async def async_setup_entry(
         if device_type not in ALL_SENSOR_TYPES:
             continue
 
-        ha_device = LifeSmartDevice(device, client)
-
         for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
             if not _is_sensor_subdevice(device_type, sub_key):
                 continue
 
             sensors.append(
                 LifeSmartSensor(
-                    device=ha_device,
                     raw_device=device,
                     sub_device_key=sub_key,
                     sub_device_data=sub_data,
@@ -202,14 +197,13 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     return False
 
 
-class LifeSmartSensor(SensorEntity):
+class LifeSmartSensor(LifeSmartDevice, SensorEntity):
     """LifeSmart sensor entity with enhanced compatibility."""
 
     _attr_has_entity_name = False
 
     def __init__(
         self,
-        device: LifeSmartDevice,
         raw_device: dict[str, Any],
         sub_device_key: str,
         sub_device_data: dict[str, Any],
@@ -217,16 +211,15 @@ class LifeSmartSensor(SensorEntity):
         entry_id: str,
     ) -> None:
         """Initialize the sensor."""
-        self._device = device
+        super().__init__(raw_device, client)
         self._raw_device = raw_device
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
-        self._client = client
         self._entry_id = entry_id
         self._attr_unique_id = generate_unique_id(
-            device.devtype,
-            device.agt,
-            device.me,
+            self.devtype,
+            self.agt,
+            self.me,
             sub_device_key,
         )
         self._attr_name = self._generate_sensor_name()
@@ -550,8 +543,7 @@ class LifeSmartSensor(SensorEntity):
             (
                 d
                 for d in devices
-                if d[HUB_ID_KEY] == self._raw_device[HUB_ID_KEY]
-                and d[DEVICE_ID_KEY] == self._raw_device[DEVICE_ID_KEY]
+                if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
             ),
             None,
         )

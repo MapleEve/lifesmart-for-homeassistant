@@ -1,28 +1,24 @@
 """Unit tests for the LifeSmart light platform, using shared fixtures."""
 
-from typing import Any
 from unittest.mock import AsyncMock, call
 
 import pytest
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_COLOR_TEMP_KELVIN,
+    DOMAIN as LIGHT_DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-# Import all constants and classes from the component
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.light import (
-    LifeSmartBrightnessLight,
-    LifeSmartCoverLight,
-    LifeSmartDimmerLight,
-    LifeSmartDualIORGBWLight,
-    LifeSmartLight,
-    LifeSmartQuantumLight,
-    LifeSmartSingleIORGBWLight,
-    LifeSmartSPOTRGBLight,
-    LifeSmartSPOTRGBWLight,
     _is_light_subdevice,
     _parse_color_value,
-    async_setup_entry,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -39,10 +35,10 @@ def test_parse_color_value():
 @pytest.mark.parametrize(
     ("device_type", "sub_key", "expected"),
     [
-        ("ANY", "RGB", True),
         ("ANY", "P1", True),
-        ("SL_SW_IF3", "dark1", True),
+        ("SL_SW_IF3", "L1", True),
         ("ANY", "OTHER", False),
+        ("ANY", "P5", False),  # Test exclusion
     ],
 )
 def test_is_light_subdevice(device_type: str, sub_key: str, expected: bool) -> None:
@@ -53,50 +49,43 @@ def test_is_light_subdevice(device_type: str, sub_key: str, expected: bool) -> N
 # --- Test `async_setup_entry` ---
 
 
-async def test_async_setup_entry_coverage(
+async def test_async_setup_entry_creates_entities(
     hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: ConfigEntry,
-    mock_lifesmart_devices: list[dict[str, Any]],
+    setup_integration: ConfigEntry,
 ) -> None:
     """Test successful setup of all light entity types from shared fixtures."""
-    hass.data[DOMAIN][mock_config_entry.entry_id] = {
-        "client": mock_client,
-        "devices": mock_lifesmart_devices,
-        "exclude_devices": [],
-        "exclude_hubs": [],
-    }
-    async_add_entities = AsyncMock()
-
-    await async_setup_entry(hass, mock_config_entry, async_add_entities)
-
     # Expected lights from conftest.py:
     # Brightness(1) + Dimmer(1) + Quantum(1) + SingleIORGB(1) + DualIORGBW(1)
     # + SPOTRGB(1) + SPOTRGBW(1) + CoverLight(1) + GenericHS(1) = 9
-    assert async_add_entities.call_count == 1
-    assert (
-        len(async_add_entities.call_args[0][0]) == 9
-    ), "Incorrect number of light entities created"
+    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 9
+    assert hass.states.get("light.brightness_light") is not None
+    assert hass.states.get("light.dimmer_light") is not None
+    assert hass.states.get("light.quantum_light") is not None
+    assert hass.states.get("light.single_io_rgb_light") is not None
+    assert hass.states.get("light.dual_io_rgbw_light") is not None
+    assert hass.states.get("light.spot_rgb_light") is not None
+    assert hass.states.get("light.spot_rgbw_light") is not None
+    assert hass.states.get("light.cover_light_p1") is not None
+    assert hass.states.get("light.generic_hs_light_hs") is not None
 
 
-# --- Test All Individual Light Entity Classes ---
-
-
-def find_device(devices, dev_id):
-    """Helper to find a specific device from the mock list."""
-    return next((d for d in devices if d[DEVICE_ID_KEY] == dev_id), None)
+# --- Test Service Calls for Each Light Type ---
 
 
 class TestLifeSmartBrightnessLight:
     async def test_services(
-        self, hass, mock_client, mock_config_entry, mock_lifesmart_devices
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        setup_integration: ConfigEntry,
     ):
-        device_data = find_device(mock_lifesmart_devices, "light_bright")
-        entity = LifeSmartBrightnessLight(
-            AsyncMock(), device_data, "P1", {}, mock_client, mock_config_entry.entry_id
+        entity_id = "light.brightness_light"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 150},
+            blocking=True,
         )
-
-        await entity.async_turn_on(brightness=150)
         mock_client.set_single_ep_async.assert_called_with(
             "hub_light", "light_bright", "P1", CMD_TYPE_SET_VAL, 150
         )
@@ -104,16 +93,23 @@ class TestLifeSmartBrightnessLight:
 
 class TestLifeSmartDimmerLight:
     async def test_services(
-        self, hass, mock_client, mock_config_entry, mock_lifesmart_devices
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        setup_integration: ConfigEntry,
     ):
-        device_data = find_device(mock_lifesmart_devices, "light_dimmer")
-        entity = LifeSmartDimmerLight(
-            AsyncMock(), device_data, mock_client, mock_config_entry.entry_id
-        )
-
-        # Correcting the test to use a logical Kelvin value that produces the expected API value.
+        entity_id = "light.dimmer_light"
         # A kelvin value of 3726 produces a `val` of 73 in a standard 2700-6500K range.
-        await entity.async_turn_on(brightness=200, color_temp_kelvin=3726)
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_BRIGHTNESS: 200,
+                ATTR_COLOR_TEMP_KELVIN: 3726,
+            },
+            blocking=True,
+        )
         mock_client.set_single_ep_async.assert_has_calls(
             [
                 call("hub_light", "light_dimmer", "P1", CMD_TYPE_SET_VAL, 200),
@@ -121,18 +117,26 @@ class TestLifeSmartDimmerLight:
             ],
             any_order=True,
         )
+        # Also ensure the final turn_on call is made
+        mock_client.turn_on_light_switch_async.assert_called_with(
+            "P1", "hub_light", "light_dimmer"
+        )
 
 
 class TestLifeSmartQuantumLight:
     async def test_services(
-        self, hass, mock_client, mock_config_entry, mock_lifesmart_devices
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        setup_integration: ConfigEntry,
     ):
-        device_data = find_device(mock_lifesmart_devices, "light_quantum")
-        entity = LifeSmartQuantumLight(
-            AsyncMock(), device_data, mock_client, mock_config_entry.entry_id
+        entity_id = "light.quantum_light"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "魔力红"},
+            blocking=True,
         )
-
-        await entity.async_turn_on(effect="魔力红")
         mock_client.set_multi_eps_async.assert_called_with(
             "hub_light",
             "light_quantum",
@@ -149,15 +153,19 @@ class TestLifeSmartQuantumLight:
 
 class TestLifeSmartSingleIORGBWLight:
     async def test_services(
-        self, hass, mock_client, mock_config_entry, mock_lifesmart_devices
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        setup_integration: ConfigEntry,
     ):
-        device_data = find_device(mock_lifesmart_devices, "light_singlergb")
-        entity = LifeSmartSingleIORGBWLight(
-            AsyncMock(), device_data, mock_client, mock_config_entry.entry_id, "RGB"
-        )
-
+        entity_id = "light.single_io_rgb_light"
         # white w=255 -> 100%. val = (100<<24) | (1<<16) | (2<<8) | 3
-        await entity.async_turn_on(rgbw_color=(1, 2, 3, 255))
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: entity_id, ATTR_RGBW_COLOR: (1, 2, 3, 255)},
+            blocking=True,
+        )
         mock_client.set_single_ep_async.assert_called_with(
             "hub_light", "light_singlergb", "RGB", CMD_TYPE_SET_RAW, 0x64010203
         )
@@ -165,19 +173,18 @@ class TestLifeSmartSingleIORGBWLight:
 
 class TestLifeSmartDualIORGBWLight:
     async def test_services(
-        self, hass, mock_client, mock_config_entry, mock_lifesmart_devices
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        setup_integration: ConfigEntry,
     ):
-        device_data = find_device(mock_lifesmart_devices, "light_dualrgbw")
-        entity = LifeSmartDualIORGBWLight(
-            AsyncMock(),
-            device_data,
-            mock_client,
-            mock_config_entry.entry_id,
-            "RGBW",
-            "DYN",
+        entity_id = "light.dual_io_rgbw_light"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "魔力红"},
+            blocking=True,
         )
-
-        await entity.async_turn_on(effect="魔力红")
         mock_client.set_multi_eps_async.assert_called_with(
             "hub_light",
             "light_dualrgbw",
@@ -194,14 +201,18 @@ class TestLifeSmartDualIORGBWLight:
 
 class TestLifeSmartSPOTRGBLight:
     async def test_services(
-        self, hass, mock_client, mock_config_entry, mock_lifesmart_devices
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        setup_integration: ConfigEntry,
     ):
-        device_data = find_device(mock_lifesmart_devices, "light_spotrgb")
-        entity = LifeSmartSPOTRGBLight(
-            AsyncMock(), device_data, mock_client, mock_config_entry.entry_id
+        entity_id = "light.spot_rgb_light"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (255, 128, 64)},
+            blocking=True,
         )
-
-        await entity.async_turn_on(rgb_color=(255, 128, 64))
         mock_client.set_single_ep_async.assert_called_with(
             "hub_light", "light_spotrgb", "RGB", CMD_TYPE_SET_RAW, 0xFF8040
         )
@@ -209,14 +220,18 @@ class TestLifeSmartSPOTRGBLight:
 
 class TestLifeSmartSPOTRGBWLight:
     async def test_services(
-        self, hass, mock_client, mock_config_entry, mock_lifesmart_devices
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        setup_integration: ConfigEntry,
     ):
-        device_data = find_device(mock_lifesmart_devices, "light_spotrgbw")
-        entity = LifeSmartSPOTRGBWLight(
-            AsyncMock(), device_data, mock_client, mock_config_entry.entry_id
+        entity_id = "light.spot_rgbw_light"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: entity_id, ATTR_RGBW_COLOR: (0x22, 0x33, 0x44, 0x11)},
+            blocking=True,
         )
-
-        await entity.async_turn_on(rgbw_color=(0x22, 0x33, 0x44, 0x11))
         mock_client.set_multi_eps_async.assert_called_with(
             "hub_light",
             "light_spotrgbw",
@@ -229,51 +244,54 @@ class TestLifeSmartSPOTRGBWLight:
 
 class TestLifeSmartCoverLight:
     async def test_services_and_update(
-        self, hass, mock_client, mock_config_entry, mock_lifesmart_devices
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        setup_integration: ConfigEntry,
     ):
-        device_data = find_device(mock_lifesmart_devices, "light_cover")
-        entity = LifeSmartCoverLight(
-            AsyncMock(),
-            device_data,
-            "P1",
-            device_data[DEVICE_DATA_KEY]["P1"],
-            mock_client,
-            mock_config_entry.entry_id,
-        )
-        entity.hass = hass
-        entity.async_write_ha_state = AsyncMock()
+        entity_id = "light.cover_light_p1"
 
-        await entity.async_turn_on()
+        # Test turn on
+        await hass.services.async_call(
+            LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
         mock_client.turn_on_light_switch_async.assert_called_with(
             "P1", "hub_light", "light_cover"
         )
-        assert entity.is_on is True
+        assert hass.states.get(entity_id).state == "on"
 
-        # Test dispatcher update
+        # Test dispatcher update to turn off
+        from homeassistant.helpers.entity_registry import (
+            async_get as async_get_entity_registry,
+        )
+
+        entity_registry = async_get_entity_registry(hass)
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+
         async_dispatcher_send(
-            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity.unique_id}", {"type": 128}
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entry.unique_id}", {"type": 128}
         )
         await hass.async_block_till_done()
-        assert entity.is_on is False
+        assert hass.states.get(entity_id).state == "off"
 
 
 class TestLifeSmartLight:
     async def test_hs_service(
-        self, hass, mock_client, mock_config_entry, mock_lifesmart_devices
+        self,
+        hass: HomeAssistant,
+        mock_client: AsyncMock,
+        setup_integration: ConfigEntry,
     ):
-        device_data = find_device(mock_lifesmart_devices, "light_generic_hs")
-        sub_data = device_data[DEVICE_DATA_KEY]["HS"]
-        entity = LifeSmartLight(
-            AsyncMock(),
-            device_data,
-            "HS",
-            sub_data,
-            mock_client,
-            mock_config_entry.entry_id,
-        )
+        entity_id = "light.generic_hs_light_hs"
 
         # HS (240, 100) -> Blue -> RGB(0,0,255) -> AI val = 255
-        await entity.async_turn_on(hs_color=(240, 100))
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: entity_id, "hs_color": (240, 100)},
+            blocking=True,
+        )
         mock_client.set_single_ep_async.assert_called_with(
             "hub_light", "light_generic_hs", "HS", CMD_TYPE_SET_RAW, 255
         )

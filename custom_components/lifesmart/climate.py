@@ -87,7 +87,7 @@ def _is_climate_device(device: dict) -> bool:
     return device_type in CLIMATE_TYPES
 
 
-class LifeSmartClimate(ClimateEntity):
+class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
     """LifeSmart 温控设备实体。"""
 
     _attr_has_entity_name = False
@@ -97,22 +97,17 @@ class LifeSmartClimate(ClimateEntity):
 
     def __init__(
         self,
-        device: LifeSmartDevice,
         raw_device: dict[str, Any],
         client: Any,
         entry_id: str,
     ) -> None:
         """初始化温控设备。"""
+        super().__init__(raw_device, client)
         self._raw_device = raw_device
-        self._client = client
         self._entry_id = entry_id
-        # --- 设置核心属性 ---
-        self.device_type = raw_device[DEVICE_TYPE_KEY]
-        self._hub_id = raw_device[HUB_ID_KEY]
-        self._device_id = raw_device[DEVICE_ID_KEY]
 
         self._attr_unique_id = generate_unique_id(
-            device.devtype, device.agt, device.me, "climate"
+            self.devtype, self.agt, self.me, "climate"
         )
         self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Unknown Climate")
 
@@ -123,16 +118,16 @@ class LifeSmartClimate(ClimateEntity):
     @callback
     def _initialize_features(self) -> None:
         """根据设备类型初始化支持的特性。"""
-        init_method = getattr(
-            self, f"_init_{self.device_type.lower()}", self._init_default
-        )
+        init_method = getattr(self, f"_init_{self.devtype.lower()}", self._init_default)
         init_method()
 
     @callback
     def _update_state(self, data: dict) -> None:
         """根据设备数据解析并更新实体状态。"""
         update_method = getattr(
-            self, f"_update_{self.device_type.lower()}", self._update_default
+            self,
+            f"_update_{self.devtype.lower()}",
+            self._update_default,
         )
         update_method(data)
         self.async_write_ha_state()
@@ -239,7 +234,7 @@ class LifeSmartClimate(ClimateEntity):
 
     # --- 设备专属状态更新方法 ---
     def _update_default(self, data: dict):
-        _LOGGER.warning("没有为 %s 类型设备指定的状态更新方法", self.device_type)
+        _LOGGER.warning("没有为 %s 类型设备指定的状态更新方法", self.devtype)
 
     def _update_v_air_p(self, data: dict):
         is_on = data.get("O", {}).get("type", 0) % 2 == 1
@@ -339,21 +334,25 @@ class LifeSmartClimate(ClimateEntity):
         """设置新的HVAC模式。"""
         current_val = getattr(self, "_p1_val", 0)
         await self._client.async_set_climate_hvac_mode(
-            self._hub_id, self._device_id, self.device_type, hvac_mode, current_val
+            self.agt,
+            self.me,
+            self.devtype,
+            hvac_mode,
+            current_val,
         )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """设置新的风扇模式。"""
         current_val = getattr(self, "_p1_val", 0)
         await self._client.async_set_climate_fan_mode(
-            self._hub_id, self._device_id, self.device_type, fan_mode, current_val
+            self.agt, self.me, self.devtype, fan_mode, current_val
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """设置新的目标温度。"""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._client.async_set_climate_temperature(
-                self._hub_id, self._device_id, self.device_type, temp
+                self.agt, self.me, self.devtype, temp
             )
 
     @property
@@ -403,7 +402,8 @@ class LifeSmartClimate(ClimateEntity):
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self._device_id), None
+                (d for d in devices if d[DEVICE_ID_KEY] == self.me),
+                None,
             )
             if current_device:
                 self._update_state(current_device.get(DEVICE_DATA_KEY, {}))

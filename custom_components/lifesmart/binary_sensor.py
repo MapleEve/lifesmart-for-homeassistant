@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import LifeSmartDevice, generate_unique_id
+from . import generate_unique_id, LifeSmartDevice
 from .const import (
     # --- 核心常量导入 ---
     DOMAIN,
@@ -71,8 +71,6 @@ async def async_setup_entry(
         if device_type not in ALL_BINARY_SENSOR_TYPES:
             continue
 
-        ha_device = LifeSmartDevice(device, client)
-
         for sub_device_key in device[DEVICE_DATA_KEY]:
             sub_device_data = device[DEVICE_DATA_KEY][sub_device_key]
 
@@ -81,7 +79,6 @@ async def async_setup_entry(
 
             binary_sensors.append(
                 LifeSmartBinarySensor(
-                    device=ha_device,
                     raw_device=device,
                     sub_device_key=sub_device_key,
                     sub_device_data=sub_device_data,
@@ -165,14 +162,13 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     return False
 
 
-class LifeSmartBinarySensor(BinarySensorEntity):
+class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
     """LifeSmart binary sensor entity with enhanced compatibility."""
 
     _attr_has_entity_name = False
 
     def __init__(
         self,
-        device: LifeSmartDevice,
         raw_device: dict[str, Any],
         sub_device_key: str,
         sub_device_data: dict[str, Any],
@@ -180,26 +176,21 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         entry_id: str,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__()
-        self._device = device
+        super().__init__(raw_device, client)
         self._raw_device = raw_device
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
-        self._client = client
         self._entry_id = entry_id
-
-        # --- 设置核心属性 ---
-        self.device_type = raw_device.get(DEVICE_TYPE_KEY)
-        self.hub_id = raw_device.get(HUB_ID_KEY)
-        self.device_id = raw_device.get(DEVICE_ID_KEY)
 
         self._attr_name = self._generate_sensor_name()
         self._attr_unique_id = generate_unique_id(
-            device.devtype, device.agt, device.me, sub_device_key
+            self.devtype, self.agt, self.me, sub_device_key
         )
 
         # 初始化设备类别和状态
-        self._attr_device_class = self._determine_device_class()
+        device_class = self._determine_device_class()
+        if device_class:
+            self._attr_device_class = device_class
         self._attr_is_on = self._parse_initial_state()
         self._attrs = self._get_initial_attributes()
 
@@ -240,7 +231,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     @callback
     def _determine_device_class(self) -> BinarySensorDeviceClass | None:
         """Determine device class based on device type and sub-device key."""
-        device_type = self.device_type
+        device_type = self.devtype
         sub_key = self._sub_key
 
         if device_type in CLIMATE_TYPES:
@@ -310,7 +301,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     def _parse_initial_state(self, data: dict | None = None) -> bool:
         """Parse the state based on device type and sub-device data."""
         source_data = data if data is not None else self._sub_data
-        device_type = self.device_type
+        device_type = self.devtype
         sub_key = self._sub_key
         val = source_data.get("val", 0)
         type_val = source_data.get("type", 0)
@@ -388,7 +379,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     def _get_initial_attributes(self, data: dict | None = None) -> dict[str, Any]:
         """Get attributes for the sensor."""
         source_data = data if data is not None else self._sub_data
-        device_type = self.device_type
+        device_type = self.devtype
         sub_key = self._sub_key
 
         # 门锁事件的特殊属性
@@ -515,7 +506,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
     @callback
     def _update_state_by_device_type(self, data: dict) -> None:
         """Update state based on device type."""
-        device_type = self.device_type
+        device_type = self.devtype
         sub_key = self._sub_key
         val = data.get("val", 0)
         type_val = data.get("type", 0)  # 获取 type 值
@@ -584,7 +575,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             {
                 "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
                 "unlocking_user": val & 0xFFF,
-                "device_type": self.device_type,
+                "device_type": self.devtype,
                 "unlocking_success": self._attr_is_on,
                 "last_updated": datetime.datetime.fromtimestamp(
                     data.get("ts", 0) / 1000
@@ -603,8 +594,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 (
                     d
                     for d in devices
-                    if d[HUB_ID_KEY] == self.hub_id
-                    and d[DEVICE_ID_KEY] == self.device_id
+                    if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
                 ),
                 None,
             )

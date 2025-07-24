@@ -55,13 +55,10 @@ async def async_setup_entry(
         ):
             continue
 
-        ha_device = LifeSmartDevice(device, client)
-
         device_type = device[DEVICE_TYPE_KEY]
         if device_type in ALL_COVER_TYPES:
             covers.append(
                 LifeSmartCover(
-                    device=ha_device,
                     raw_device=device,
                     client=client,
                     entry_id=entry_id,
@@ -71,29 +68,24 @@ async def async_setup_entry(
     async_add_entities(covers)
 
 
-class LifeSmartCover(CoverEntity):
+class LifeSmartCover(LifeSmartDevice, CoverEntity):
     """LifeSmart cover entity with full state management."""
 
     def __init__(
         self,
-        device: LifeSmartDevice,
         raw_device: dict[str, Any],
         client: Any,
         entry_id: str,
     ) -> None:
         """Initialize the cover."""
+        super().__init__(raw_device, client)
         self._raw_device = raw_device
-        self._client = client
         self._entry_id = entry_id
-        # --- 设置核心属性 ---
-        self.device_type = raw_device[DEVICE_TYPE_KEY]
-        self._hub_id = raw_device[HUB_ID_KEY]
-        self._device_id = raw_device[DEVICE_ID_KEY]
 
         self._attr_unique_id = generate_unique_id(
-            device.devtype, device.agt, device.me, "cover"
+            self.devtype, self.agt, self.me, "cover"
         )
-        self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Unknown Cover")
+        self._attr_name = self._name
 
         self._initialize_features()
         self._update_state(raw_device.get(DEVICE_DATA_KEY, {}))
@@ -106,19 +98,19 @@ class LifeSmartCover(CoverEntity):
         )
         self._attr_device_class = (
             CoverDeviceClass.GARAGE
-            if self.device_type in GARAGE_DOOR_TYPES
+            if self.devtype in GARAGE_DOOR_TYPES
             else CoverDeviceClass.CURTAIN
         )
-        if self.device_type in DOOYA_TYPES or self.device_type in GARAGE_DOOR_TYPES:
+        if self.devtype in DOOYA_TYPES or self.devtype in GARAGE_DOOR_TYPES:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     @callback
     def _update_state(self, data: dict) -> None:
         """Parse and update the entity's state from device data."""
         # --- 位置型设备 ---
-        if self.device_type in GARAGE_DOOR_TYPES or self.device_type in DOOYA_TYPES:
+        if self.devtype in GARAGE_DOOR_TYPES or self.devtype in DOOYA_TYPES:
             status_data = data.get(
-                "P2" if self.device_type in GARAGE_DOOR_TYPES else "P1", {}
+                "P2" if self.devtype in GARAGE_DOOR_TYPES else "P1", {}
             )
             val = status_data.get("val", 0)
             self._attr_current_cover_position = val & 0x7F
@@ -130,9 +122,9 @@ class LifeSmartCover(CoverEntity):
             self._attr_is_closed = self.current_cover_position == 0
 
         # --- 命令型设备 ---
-        elif self.device_type in NON_POSITIONAL_COVER_CONFIG:
+        elif self.devtype in NON_POSITIONAL_COVER_CONFIG:
             self._attr_current_cover_position = None
-            config = NON_POSITIONAL_COVER_CONFIG[self.device_type]
+            config = NON_POSITIONAL_COVER_CONFIG[self.devtype]
 
             is_opening = data.get(config["open"], {}).get("type", 0) % 2 == 1
             is_closing = data.get(config["close"], {}).get("type", 0) % 2 == 1
@@ -207,7 +199,7 @@ class LifeSmartCover(CoverEntity):
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self._device_id), None
+                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
             )
             if current_device:
                 self._update_state(current_device.get(DEVICE_DATA_KEY, {}))
@@ -217,22 +209,16 @@ class LifeSmartCover(CoverEntity):
             )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        await self._client.open_cover_async(
-            self._hub_id, self._device_id, self.device_type
-        )
+        await self._client.open_cover_async(self.agt, self.me, self.devtype)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        await self._client.close_cover_async(
-            self._hub_id, self._device_id, self.device_type
-        )
+        await self._client.close_cover_async(self.agt, self.me, self.devtype)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
-        await self._client.stop_cover_async(
-            self._hub_id, self._device_id, self.device_type
-        )
+        await self._client.stop_cover_async(self.agt, self.me, self.devtype)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         position = kwargs[ATTR_POSITION]
         await self._client.set_cover_position_async(
-            self._hub_id, self._device_id, position, self.device_type
+            self.agt, self.me, position, self.devtype
         )
