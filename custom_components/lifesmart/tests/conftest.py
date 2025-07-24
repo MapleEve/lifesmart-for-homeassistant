@@ -410,7 +410,7 @@ async def setup_integration(
     with patch(
         "custom_components.lifesmart.LifeSmartClient",
         return_value=mock_client,
-    ):
+    ), patch("aiohttp.ClientSession.ws_connect", new_callable=AsyncMock):
         # 4. 运行主集成的 async_setup_entry
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         # 5. 等待所有后台任务完成，确保平台已加载
