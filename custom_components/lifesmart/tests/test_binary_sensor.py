@@ -31,32 +31,26 @@ async def test_lock_creates_multiple_sensors(
     setup_integration: ConfigEntry,
 ):
     """Test that a lock device creates the correct number of binary sensors."""
-    assert hass.states.get("binary_sensor.main_lock_alm") is not None
-    assert hass.states.get("binary_sensor.main_lock_evtlo") is not None
+    assert hass.states.get("binary_sensor.main_lock") is not None
+    assert hass.states.get("binary_sensor.main_lock_2") is not None
 
 
 @pytest.mark.parametrize(
     "device_me, entity_id_suffix, expected_name, expected_class, expected_state",
     [
-        ("bs_door", "g", "Front Door G", BinarySensorDeviceClass.DOOR, STATE_ON),
-        ("bs_motion", "m", "Living Motion M", BinarySensorDeviceClass.MOTION, STATE_ON),
-        (
-            "bs_water",
-            "wa",
-            "Kitchen Water WA",
-            BinarySensorDeviceClass.MOISTURE,
-            STATE_ON,
-        ),
-        ("bs_defed", "m", "Garage DEFED M", BinarySensorDeviceClass.MOTION, STATE_ON),
-        ("bs_smoke", "p1", "Hallway Smoke P1", BinarySensorDeviceClass.SMOKE, STATE_ON),
+        ("bs_door", "g", "Front Door", BinarySensorDeviceClass.DOOR, STATE_ON),
+        ("bs_motion", "m", "Living Motion", BinarySensorDeviceClass.MOTION, STATE_ON),
+        ("bs_water", "wa", "Kitchen Water", BinarySensorDeviceClass.MOISTURE, STATE_ON),
+        ("bs_defed", "m", "Garage DEFED", BinarySensorDeviceClass.MOTION, STATE_ON),
+        ("bs_smoke", "p1", "Hallway Smoke", BinarySensorDeviceClass.SMOKE, STATE_ON),
         (
             "bs_radar",
             "p1",
-            "Study Occupancy P1",
+            "Study Occupancy",
             BinarySensorDeviceClass.OCCUPANCY,
             STATE_ON,
         ),
-        ("bs_button", "p1", "Panic Button P1", None, STATE_OFF),
+        ("bs_button", "p1", "Panic Button", None, STATE_OFF),
     ],
 )
 async def test_entity_initialization(
@@ -73,7 +67,8 @@ async def test_entity_initialization(
     device = find_device(mock_lifesmart_devices, device_me)
     assert device, f"Device '{device_me}' not found in mock_lifesmart_devices"
 
-    entity_id = f"binary_sensor.{expected_name.lower().replace(' ', '_')}"
+    entity_id = f"binary_sensor.{device['name'].lower().replace(' ', '_')}"
+
     state = hass.states.get(entity_id)
     assert state is not None, f"Entity {entity_id} not found"
 

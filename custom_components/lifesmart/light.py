@@ -572,15 +572,19 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         color_io: str,
         effect_io: str,
     ):
-        super().__init__(raw_device, client, entry_id, color_io)
         self._color_io = color_io
         self._effect_io = effect_io
+        super().__init__(raw_device, client, entry_id, color_io)
 
     @callback
     def _initialize_state(self) -> None:
         device_data = self._raw_device.get(DEVICE_DATA_KEY, {})
         color_data = device_data.get(self._color_io, {})
         dyn_data = device_data.get(self._effect_io, {})
+
+        self._attr_supported_color_modes = {ColorMode.RGBW}
+        self._attr_color_mode = ColorMode.RGBW
+        self._attr_effect_list = DYN_EFFECT_LIST
 
         self._attr_is_on = color_data.get("type", 0) % 2 == 1
         self._attr_brightness = 255 if self._attr_is_on else 0
