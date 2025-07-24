@@ -147,10 +147,9 @@ async def async_setup_entry(
                     lights.append(
                         LifeSmartCoverLight(
                             raw_device=device,
-                            sub_device_key=sub_key,
-                            sub_device_data=sub_data,
                             client=client,
                             entry_id=entry_id,
+                            sub_device_key=sub_key,
                         )
                     )
             continue
@@ -169,8 +168,6 @@ async def async_setup_entry(
                     lights.append(
                         LifeSmartQuantumLight(
                             raw_device=device,
-                            sub_device_key=sub_key,
-                            sub_device_data=sub_data,
                             client=client,
                             entry_id=entry_id,
                         )
@@ -191,10 +188,9 @@ async def async_setup_entry(
             lights.append(
                 LifeSmartBrightnessLight(
                     device,
-                    "P1",
-                    device.get(DEVICE_DATA_KEY, {}).get("P1", {}),
                     client,
                     entry_id,
+                    "P1",
                 )
             )
         else:
@@ -203,10 +199,9 @@ async def async_setup_entry(
                     lights.append(
                         LifeSmartLight(
                             raw_device=device,
-                            sub_device_key=sub_key,
-                            sub_device_data=sub_data,
                             client=client,
                             entry_id=entry_id,
+                            sub_device_key=sub_key,
                         )
                     )
 
@@ -438,9 +433,9 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
     def __init__(
         self,
         raw_device: dict[str, Any],
-        sub_device_key: str,
         client: Any,
         entry_id: str,
+        sub_device_key: str,
     ) -> None:
         super().__init__(raw_device, client, entry_id, sub_device_key)
 
@@ -733,9 +728,9 @@ class LifeSmartLight(LifeSmartBaseLight):
     def __init__(
         self,
         raw_device: dict[str, Any],
-        sub_device_key: str,
         client: Any,
         entry_id: str,
+        sub_device_key: str,
     ):
         super().__init__(raw_device, client, entry_id, sub_device_key)
 
@@ -783,9 +778,9 @@ class LifeSmartCoverLight(LifeSmartBaseLight):
     def __init__(
         self,
         raw_device: dict[str, Any],
-        sub_device_key: str,
         client: Any,
         entry_id: str,
+        sub_device_key: str,
     ):
         super().__init__(raw_device, client, entry_id, sub_device_key)
 

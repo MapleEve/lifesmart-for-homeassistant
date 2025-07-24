@@ -360,7 +360,7 @@ def _async_setup_background_tasks(
             _LOGGER.warning("定时刷新时发生意外错误，这可能是临时问题。错误: %s", e)
 
     # 仅在云端模式下启动 WebSocket 状态管理器和令牌刷新任务
-    if isinstance(client, LifeSmartClient):
+    if hasattr(client, "get_wss_url"):
         state_manager = LifeSmartStateManager(
             hass=hass,
             config_entry=config_entry,
