@@ -1,6 +1,6 @@
 """Unit and integration tests for the LifeSmart cover platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, AsyncMock
 
 import pytest
 from homeassistant.components.cover import (
@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverDeviceClass,
     CoverEntityFeature,
+    async_setup_entry,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
@@ -20,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
-from custom_components.lifesmart import async_setup_entry
 from custom_components.lifesmart.const import *
 
 pytestmark = pytest.mark.asyncio
@@ -39,6 +39,7 @@ def find_device(devices: list, me: str):
 class TestCoverSetup:
     """Tests for the platform setup."""
 
+    # 这个测试使用 setup_integration fixture，它已经包含了清理逻辑，所以是安全的。
     async def test_setup_entry_creates_entities(
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ):
@@ -52,31 +53,53 @@ class TestCoverSetup:
         self,
         hass: HomeAssistant,
         mock_client: MagicMock,
-        mock_config_entry: MagicMock,
+        mock_config_entry: ConfigEntry,
         mock_lifesmart_devices: list,
     ):
         """Test that excluded devices are not added using a manual setup."""
         mock_config_entry.add_to_hass(hass)
-        hass.config_entries.async_update_entry(
-            mock_config_entry,
-            options={
-                CONF_EXCLUDE_ITEMS: "cover_dooya",
-                CONF_EXCLUDE_AGTS: "",
-            },
-        )
-        await hass.async_block_till_done()
 
-        with patch(
-            "custom_components.lifesmart.LifeSmartClient", return_value=mock_client
-        ):
-            await async_setup_entry(hass, mock_config_entry)
+        try:
+            # 1. 设置测试场景 (更新排除选项)
+            hass.config_entries.async_update_entry(
+                mock_config_entry,
+                options={
+                    CONF_EXCLUDE_ITEMS: "cover_dooya",
+                    CONF_EXCLUDE_AGTS: "",
+                },
+            )
             await hass.async_block_till_done()
 
-        assert hass.states.get("cover.garage_door") is not None
-        assert (
-            hass.states.get("cover.living_room_curtain") is None
-        )  # Should be excluded
-        assert hass.states.get("cover.bedroom_curtain") is not None
+            # 2. 模拟加载过程
+            # 平台级的 async_setup_entry 需要一个 async_add_entities 回调
+            async_add_entities_mock = AsyncMock()
+
+            # 将核心数据存入 hass.data，模拟主 __init__.py 的行为
+            hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = {
+                "client": mock_client,
+                "devices": mock_lifesmart_devices,
+                "exclude_devices": "cover_dooya",
+                "exclude_hubs": "",
+            }
+
+            # 3. 执行被测试的函数
+            await async_setup_entry(hass, mock_config_entry, async_add_entities_mock)
+            await hass.async_block_till_done()
+
+            # 4. 断言结果
+            # 检查是否只创建了未被排除的实体
+            created_entities = async_add_entities_mock.call_args[0][0]
+            created_names = {entity.name for entity in created_entities}
+
+            assert "Garage Door" in created_names
+            assert "Living Room Curtain" not in created_names  # Should be excluded
+            assert "Bedroom Curtain" in created_names
+            assert len(created_names) == 2
+
+        finally:
+            # 5. 在测试结束时卸载集成，以清理后台任务
+            if hass.data.get(DOMAIN, {}).get(mock_config_entry.entry_id):
+                hass.data[DOMAIN].pop(mock_config_entry.entry_id)
 
 
 @pytest.mark.asyncio

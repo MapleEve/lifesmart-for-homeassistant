@@ -1,7 +1,7 @@
 """Unit tests for the LifeSmart switch platform."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.components.switch import SwitchDeviceClass
@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.switch import (
+    DOMAIN as SWITCH_DOMAIN,
     LifeSmartSwitch,
     _is_switch_subdevice,
     async_setup_entry,
@@ -86,27 +87,29 @@ async def test_async_setup_entry_with_exclusions(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     mock_config_entry: ConfigEntry,
-    mock_lifesmart_devices: list[dict[str, Any]],
 ) -> None:
     """Test that devices and hubs can be excluded from setup."""
-    # Arrange
-    hass.data[DOMAIN][mock_config_entry.entry_id] = {
-        "client": mock_client,
-        "devices": mock_lifesmart_devices,
-        # Exclude the sw_ol device (me: "sw_ol")
-        "exclude_devices": ["sw_ol"],
-        # Exclude all devices from the second hub (agt: "hub_sw_excluded")
-        "exclude_hubs": ["hub_sw_excluded"],
-    }
-    # Expected devices after exclusion: 9 - 1 (sw_ol) - 2 (sw_oe3c on excluded hub) = 6
-    async_add_entities = AsyncMock()
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            CONF_EXCLUDE_ITEMS: "sw_ol",
+            CONF_EXCLUDE_AGTS: "hub_sw_excluded",
+        },
+    )
+    await hass.async_block_till_done()
 
-    # Act
-    await async_setup_entry(hass, mock_config_entry, async_add_entities)
+    with patch("custom_components.lifesmart.LifeSmartClient", return_value=mock_client):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # Assert
-    assert async_add_entities.call_count == 1
-    assert len(async_add_entities.call_args[0][0]) == 6
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 6
+    assert hass.states.get("switch.3_gang_switch_l1") is not None
+    assert hass.states.get("switch.smart_outlet_o") is None
+    assert hass.states.get("switch.power_plug_p1") is None
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_async_setup_entry_no_switches(
@@ -198,21 +201,21 @@ def test_switch_name_generation(
     }
     # With sub-name
     entity_with_subname = LifeSmartSwitch(
-        base_device,
-        "P1",
-        base_device[DEVICE_DATA_KEY]["P1"],
-        mock_client,
-        mock_config_entry.entry_id,
+        raw_device=base_device,
+        sub_device_key="P1",
+        sub_device_data=base_device[DEVICE_DATA_KEY]["P1"],
+        client=mock_client,
+        entry_id=mock_config_entry.entry_id,
     )
     assert entity_with_subname.name == "Device Base Name Button Name"
 
     # Without sub-name
     entity_without_subname = LifeSmartSwitch(
-        base_device,
-        "P2",
-        base_device[DEVICE_DATA_KEY]["P2"],
-        mock_client,
-        mock_config_entry.entry_id,
+        raw_device=base_device,
+        sub_device_key="P2",
+        sub_device_data=base_device[DEVICE_DATA_KEY]["P2"],
+        client=mock_client,
+        entry_id=mock_config_entry.entry_id,
     )
     assert entity_without_subname.name == "Device Base Name P2"
 
