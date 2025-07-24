@@ -369,6 +369,7 @@ def mock_client(mock_lifesmart_devices):
         client_instance.async_set_climate_hvac_mode = AsyncMock(return_value=0)
         client_instance.async_set_climate_fan_mode = AsyncMock(return_value=0)
         client_instance.async_set_climate_temperature = AsyncMock(return_value=0)
+        client_instance.get_wss_url.return_value = "wss://example.com/ws"
 
         # 模拟后台任务启动/停止
         client_instance.ws_connect = AsyncMock()
