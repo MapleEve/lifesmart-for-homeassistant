@@ -217,12 +217,10 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
         - Base name: "Living Room Sensor", Sub-device key: "io1"
           -> "Living Room Sensor IO1"
         """
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unnamed Binary Sensor")
+        base_name = self._name
         # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
         if sub_name and sub_name != self._sub_key:
-            # 对于二元传感器，通常子设备名已经足够清晰，可以不加 base_name
-            # 但为了统一，我们还是保留 base_name + sub_name 的格式
             return f"{base_name} {sub_name}"
         # 否则，使用基础名 + IO口索引
         return f"{base_name} {self._sub_key.upper()}"
@@ -430,24 +428,13 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """返回设备信息以链接实体到单个设备。"""
-        # 从 self._raw_device 中安全地获取 hub_id 和 device_id
-        hub_id = self._raw_device.get(HUB_ID_KEY)
-        device_id = self._raw_device.get(DEVICE_ID_KEY)
-
-        # 确保 identifiers 即使在 hub_id 或 device_id 为 None 的情况下也不会出错
-        identifiers = set()
-        if hub_id and device_id:
-            identifiers.add((DOMAIN, hub_id, device_id))
-
         return DeviceInfo(
-            identifiers=identifiers,
-            name=self._raw_device.get(
-                DEVICE_NAME_KEY, "Unnamed Device"
-            ),  # 安全获取名称
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
             manufacturer=MANUFACTURER,
-            model=self._raw_device.get(DEVICE_TYPE_KEY),  # 安全获取型号
+            model=self.devtype,
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=((DOMAIN, hub_id) if hub_id else None),
+            via_device=(DOMAIN, self.agt),
         )
 
     @property

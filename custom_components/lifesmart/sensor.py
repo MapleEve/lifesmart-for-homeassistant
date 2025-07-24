@@ -231,8 +231,8 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
     @callback
     def _generate_sensor_name(self) -> str | None:
         """Generate user-friendly sensor name."""
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Sensor")
-        # 如果子设备有自己的名字 (如多联开关的按键名)，则使用它
+        base_name = self._name
+        # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
         if sub_name and sub_name != self._sub_key:
             return f"{base_name} {sub_name}"
@@ -476,24 +476,13 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """返回设备信息以链接实体到单个设备。"""
-        # 从 self._raw_device 中安全地获取 hub_id 和 device_id
-        hub_id = self._raw_device.get(HUB_ID_KEY)
-        device_id = self._raw_device.get(DEVICE_ID_KEY)
-
-        # 确保 identifiers 即使在 hub_id 或 device_id 为 None 的情况下也不会出错
-        identifiers = set()
-        if hub_id and device_id:
-            identifiers.add((DOMAIN, hub_id, device_id))
-
         return DeviceInfo(
-            identifiers=identifiers,
-            name=self._raw_device.get(
-                DEVICE_NAME_KEY, "Unnamed Device"
-            ),  # 安全获取名称
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
             manufacturer=MANUFACTURER,
-            model=self._raw_device.get(DEVICE_TYPE_KEY),  # 安全获取型号
+            model=self.devtype,
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=((DOMAIN, hub_id) if hub_id else None),
+            via_device=(DOMAIN, self.agt),
         )
 
     async def async_added_to_hass(self) -> None:

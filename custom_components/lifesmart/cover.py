@@ -22,7 +22,6 @@ from .const import (
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     DEVICE_TYPE_KEY,
-    DEVICE_NAME_KEY,
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     NON_POSITIONAL_COVER_CONFIG,
@@ -154,24 +153,13 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """返回设备信息以链接实体到单个设备。"""
-        # 从 self._raw_device 中安全地获取 hub_id 和 device_id
-        hub_id = self._raw_device.get(HUB_ID_KEY)
-        device_id = self._raw_device.get(DEVICE_ID_KEY)
-
-        # 确保 identifiers 即使在 hub_id 或 device_id 为 None 的情况下也不会出错
-        identifiers = set()
-        if hub_id and device_id:
-            identifiers.add((DOMAIN, hub_id, device_id))
-
         return DeviceInfo(
-            identifiers=identifiers,
-            name=self._raw_device.get(
-                DEVICE_NAME_KEY, "Unnamed Device"
-            ),  # 安全获取名称
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
             manufacturer=MANUFACTURER,
-            model=self._raw_device.get(DEVICE_TYPE_KEY),  # 安全获取型号
+            model=self.devtype,
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=((DOMAIN, hub_id) if hub_id else None),
+            via_device=(DOMAIN, self.agt),
         )
 
     async def async_added_to_hass(self) -> None:
