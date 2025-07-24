@@ -129,7 +129,6 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
             self._update_default,
         )
         update_method(data)
-        self.async_write_ha_state()
 
     # --- 设备专属初始化方法 ---
     def _init_default(self):

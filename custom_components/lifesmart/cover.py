@@ -148,8 +148,6 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
             self._attr_is_closed = None  # 状态未知
             self._attr_current_cover_position = None
 
-        self.async_write_ha_state()
-
     @property
     def device_info(self) -> DeviceInfo:
         """返回设备信息以链接实体到单个设备。"""

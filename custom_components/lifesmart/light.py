@@ -326,7 +326,6 @@ class LifeSmartBaseLight(LifeSmartDevice, LightEntity):
                 self._sub_data = current_device.get(DEVICE_DATA_KEY, {})
 
             self._initialize_state()
-            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """默认的开灯实现."""
@@ -440,7 +439,6 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
         if new_data:
             self._sub_data = new_data
             self._initialize_state()
-            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
         """开启亮度灯."""
@@ -638,7 +636,6 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
         if new_data:
             self._sub_data = new_data
             self._initialize_state()
-            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """开启SPOT RGB灯。"""
@@ -745,7 +742,6 @@ class LifeSmartLight(LifeSmartBaseLight):
         if new_data:
             self._sub_data = new_data
             self._initialize_state()
-            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
         """开启通用灯."""
@@ -782,4 +778,3 @@ class LifeSmartCoverLight(LifeSmartBaseLight):
     async def _handle_update(self, new_data: dict) -> None:
         if new_data:
             self._attr_is_on = new_data.get("type", 0) % 2 == 1
-            self.async_write_ha_state()

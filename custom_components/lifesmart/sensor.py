@@ -518,7 +518,6 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
                 self._attr_native_value = (
                     self._convert_raw_value(val) if "v" not in new_data else val
                 )
-                self.async_write_ha_state()
         except Exception as e:
             _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
 
@@ -546,7 +545,6 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         val = sub_data.get("v") or sub_data.get("val")
         if val is not None:
             self._attr_native_value = self._convert_raw_value(val)
-            self.async_write_ha_state()
         else:
             _LOGGER.debug(
                 "LifeSmartSensor: No value found for sub-device '%s' during global refresh",
