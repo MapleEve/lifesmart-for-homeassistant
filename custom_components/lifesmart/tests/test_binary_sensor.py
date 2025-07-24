@@ -77,7 +77,9 @@ async def test_entity_initialization(
     assert state is not None, f"Entity {entity_id} not found"
 
     assert state.name == expected_name
-    assert state.attributes.get("device_class") == expected_class
+    assert state.attributes.get("device_class") == (
+        expected_class.value if expected_class else None
+    )
     assert state.state == expected_state
 
     entity_registry = er.async_get(hass)
