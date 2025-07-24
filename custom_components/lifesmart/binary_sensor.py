@@ -187,11 +187,18 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
         )
 
         # 初始化设备类别和状态
+        self._update_state(self._sub_data)
+
+    @callback
+    def _update_state(self, data: dict) -> None:
+        """Parse and update all entity states and attributes from data."""
+        self._sub_data = data
         device_class = self._determine_device_class()
         if device_class:
             self._attr_device_class = device_class
-        self._attr_is_on = self._parse_initial_state()
-        self._attrs = self._get_initial_attributes()
+
+        self._attr_is_on = self._parse_state()
+        self._attrs = self._get_attributes()
 
     @callback
     def _generate_sensor_name(self) -> str:
@@ -295,24 +302,19 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
         return None
 
     @callback
-    def _parse_initial_state(self, data: dict | None = None) -> bool:
+    def _parse_state(self) -> bool:
         """Parse the state based on device type and sub-device data."""
-        source_data = data if data is not None else self._sub_data
         device_type = self.devtype
         sub_key = self._sub_key
-        val = source_data.get("val", 0)
-        type_val = source_data.get("type", 0)
+        val = self._sub_data.get("val", 0)
+        type_val = self._sub_data.get("type", 0)
 
         # 门窗感应器特殊处理
         if device_type in GUARD_SENSOR_TYPES:
-            if sub_key == "G":
-                return val == 0  # 门窗传感器：0=开，1=关
-            else:
-                return val != 0  # 其他传感器：非0=触发
+            return val == 0 if sub_key == "G" else val != 0
 
         # 云防系列设备特殊处理
         if device_type in DEFED_SENSOR_TYPES:
-            # 所有云防设备都应使用 type 判断
             return type_val % 2 == 1
 
         # 动态感应器
@@ -320,12 +322,18 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
             return val != 0
 
         # 门锁事件
-        if device_type in LOCK_TYPES and sub_key == "EVTLO":
-            return self._parse_lock_event()
-
-        # 门锁报警
-        if device_type in LOCK_TYPES and sub_key == "ALM":
-            return val > 0
+        if device_type in LOCK_TYPES:
+            if sub_key == "EVTLO":
+                unlock_type = self._sub_data.get("type", 0)
+                unlock_user = val & 0xFFF
+                return (
+                    val != 0
+                    and unlock_type & 0x01 == 1
+                    and unlock_user != 0
+                    and val >> 12 != 15
+                )
+            if sub_key == "ALM":
+                return val > 0
 
         # 通用控制器
         if device_type in GENERIC_CONTROLLER_TYPES:
@@ -361,59 +369,38 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
         return val != 0
 
     @callback
-    def _parse_lock_event(self) -> bool:
-        """Parse lock event state."""
-        val = self._sub_data.get("val", 0)
-        unlock_type = self._sub_data.get("type", 0)
-        unlock_user = val & 0xFFF
-
-        if val == 0:
-            return False
-
-        return unlock_type & 0x01 == 1 and unlock_user != 0 and val >> 12 != 15
-
-    @callback
-    def _get_initial_attributes(self, data: dict | None = None) -> dict[str, Any]:
+    def _get_attributes(self) -> dict[str, Any]:
         """Get attributes for the sensor."""
-        source_data = data if data is not None else self._sub_data
         device_type = self.devtype
         sub_key = self._sub_key
+        val = self._sub_data.get("val", 0)
 
         # 门锁事件的特殊属性
         if device_type in LOCK_TYPES and sub_key == "EVTLO":
-            val = source_data.get("val", 0)
-            unlock_method = UNLOCK_METHOD.get(val >> 12, "Unknown")
-            unlock_user = val & 0xFFF
-
             return {
-                "unlocking_method": unlock_method,
-                "unlocking_user": unlock_user,
+                "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
+                "unlocking_user": val & 0xFFF,
                 "device_type": device_type,
                 "unlocking_success": self._attr_is_on,
                 "last_updated": datetime.datetime.fromtimestamp(
-                    source_data.get("valts", 0) / 1000
+                    self._sub_data.get("valts", 0) / 1000
                 ).strftime("%Y-%m-%d %H:%M:%S"),
             }
 
         # 门锁报警的属性
         if device_type in LOCK_TYPES and sub_key == "ALM":
-            return {"alarm_type": source_data.get("val", 0)}
+            return {"alarm_type": val}
 
         # 水浸传感器的属性
         if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
-            val = source_data.get("val", 0)
             return {"conductivity_level": val, "water_detected": val != 0}
 
         # SL_SC_BB_V2 初始化事件属性
         if device_type == "SL_SC_BB_V2":
-            return {
-                "last_event": None,
-                "last_event_time": None,
-            }
+            return {"last_event": None, "last_event_time": None}
 
         # 为温控阀门的告警传感器添加详细属性
         if device_type == "SL_CP_VL" and sub_key == "P5":
-            val = source_data.get("val", 0)
             return {
                 "high_temp_protection": bool(val & 0b1),
                 "low_temp_protection": bool(val & 0b10),
@@ -423,7 +410,7 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
                 "device_offline": bool(val & 0b100000),
             }
         # 默认返回原始数据
-        return dict(source_data)
+        return dict(self._sub_data)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -472,18 +459,7 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
             if data is None:
                 return
 
-            # 处理WebSocket推送的数据格式
-            if "msg" in data:
-                sub_data = data.get("msg", {}).get(self._sub_key, {})
-                val = sub_data.get("val")
-            else:
-                val = data.get("val")
-
-            if val is None:
-                return
-
-            # 根据设备类型更新状态
-            self._update_state_by_device_type(data)
+            self._update_state(data)
             self.async_write_ha_state()
 
         except Exception as e:
@@ -492,82 +468,27 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
     @callback
     def _update_state_by_device_type(self, data: dict) -> None:
         """Update state based on device type."""
-        device_type = self.devtype
-        sub_key = self._sub_key
-        val = data.get("val", 0)
-        type_val = data.get("type", 0)  # 获取 type 值
+        # 使用标准方法更新基础状态
+        self._update_state(data)
 
-        if device_type in LOCK_TYPES and sub_key == "EVTLO":
-            self._update_lock_event_state(data)
-        elif device_type in MOTION_SENSOR_TYPES:
-            self._attr_is_on = val != 0
-        elif device_type in DEFED_SENSOR_TYPES:
-            # 所有云防设备都应使用 type 判断
-            self._attr_is_on = type_val % 2 == 1
-        elif device_type in GUARD_SENSOR_TYPES and sub_key == "G":
-            self._attr_is_on = val == 0
-        elif device_type in WATER_SENSOR_TYPES and sub_key == "WA":
-            self._attr_is_on = val != 0
-            # 更新水浸传感器属性
-            self._attrs.update({"conductivity_level": val, "water_detected": val != 0})
-        elif device_type in SMOKE_SENSOR_TYPES and sub_key == "P1":
-            self._attr_is_on = val != 0
-        elif device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
-            self._attr_is_on = val != 0
-        elif device_type == "SL_SC_BB_V2":  # 特殊处理 SL_SC_BB_V2 的事件更新
+        # 处理特殊的瞬时事件逻辑
+        if self.devtype == "SL_SC_BB_V2":
             type_val = data.get("type", 0)
-            if type_val % 2 == 1:  # 事件发生
+            if type_val % 2 == 1:
                 self._attr_is_on = True
                 val = data.get("val", 0)
                 event_map = {1: "single_click", 2: "double_click", 255: "long_press"}
-                event = event_map.get(val, "unknown")
-
-                self._attrs["last_event"] = event
+                self._attrs["last_event"] = event_map.get(val, "unknown")
                 self._attrs["last_event_time"] = dt_util.utcnow().isoformat()
 
-                # 触发后立即安排一个任务来将其状态重置为 off
                 async def reset_state():
-                    await asyncio.sleep(0.5)  # 保持 on 状态 0.5 秒
+                    await asyncio.sleep(0.5)
                     self._attr_is_on = False
                     self.async_write_ha_state()
 
                 self.hass.loop.create_task(reset_state())
-            else:  # 事件消失
+            else:
                 self._attr_is_on = False
-        elif device_type in CLIMATE_TYPES:
-            self._attr_is_on = self._parse_initial_state(data)
-            if device_type == "SL_CP_VL" and sub_key == "P5":
-                self._attrs = self._get_initial_attributes(data)
-            self.async_write_ha_state()
-        else:
-            self._attr_is_on = val != 0
-
-    @callback
-    def _update_lock_event_state(self, data: dict) -> None:
-        """Update lock event state and attributes."""
-        val = data.get("val", 0)
-        unlock_type = data.get("type", 0)
-
-        if val == 0:
-            self._attr_is_on = False
-        else:
-            unlock_user = val & 0xFFF
-            self._attr_is_on = (
-                unlock_type & 0x01 == 1 and unlock_user != 0 and val >> 12 != 15
-            )
-
-        # 更新属性
-        self._attrs.update(
-            {
-                "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
-                "unlocking_user": val & 0xFFF,
-                "device_type": self.devtype,
-                "unlocking_success": self._attr_is_on,
-                "last_updated": datetime.datetime.fromtimestamp(
-                    data.get("ts", 0) / 1000
-                ).strftime("%Y-%m-%d %H:%M:%S"),
-            }
-        )
 
     async def _handle_global_refresh(self) -> None:
         """Handle periodic full data refresh."""
@@ -585,24 +506,13 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
                 None,
             )
 
-            if current_device is None:
-                _LOGGER.warning(
-                    "LifeSmartBinarySensor: Device not found during global refresh: %s",
-                    self._attr_unique_id,
+            if current_device:
+                sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(
+                    self._sub_key, {}
                 )
-                return
-
-            sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
-            if not sub_data:
-                _LOGGER.debug(
-                    "LifeSmartBinarySensor: No sub-device data found for '%s' during global refresh",
-                    self._sub_key,
-                )
-                return
-
-            # 更新状态
-            self._update_state_by_device_type(sub_data)
-            self.async_write_ha_state()
+                if sub_data:
+                    self._update_state(sub_data)
+                    self.async_write_ha_state()
 
         except Exception as e:
             _LOGGER.error(
