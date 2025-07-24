@@ -136,7 +136,6 @@ class LifeSmartSwitch(LifeSmartDevice, SwitchEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(raw_device, client)
-        self._raw_device = raw_device
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
         self._entry_id = entry_id

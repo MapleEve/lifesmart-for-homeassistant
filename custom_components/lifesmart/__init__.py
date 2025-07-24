@@ -542,6 +542,7 @@ class LifeSmartDevice(Entity):
             lifesmart_client: LifeSmart 客户端实例。
         """
         super().__init__()
+        self._raw_device = dev
         self._name = (
             dev.get(DEVICE_NAME_KEY) or f"Unnamed {dev.get(DEVICE_TYPE_KEY, 'Device')}"
         )

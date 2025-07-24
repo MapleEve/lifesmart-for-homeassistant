@@ -103,7 +103,6 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
     ) -> None:
         """初始化温控设备。"""
         super().__init__(raw_device, client)
-        self._raw_device = raw_device
         self._entry_id = entry_id
 
         self._attr_unique_id = generate_unique_id(

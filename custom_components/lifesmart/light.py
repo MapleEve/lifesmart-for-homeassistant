@@ -244,7 +244,6 @@ class LifeSmartBaseLight(LifeSmartDevice, LightEntity):
     ) -> None:
         """初始化灯基类."""
         super().__init__(raw_device, client)
-        self._raw_device = raw_device
         self._entry_id = entry_id
 
         # 处理复合实体和子实体的差异

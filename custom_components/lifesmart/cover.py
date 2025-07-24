@@ -79,7 +79,6 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
     ) -> None:
         """Initialize the cover."""
         super().__init__(raw_device, client)
-        self._raw_device = raw_device
         self._entry_id = entry_id
 
         self._attr_unique_id = generate_unique_id(
