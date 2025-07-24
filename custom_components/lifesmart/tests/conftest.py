@@ -372,8 +372,8 @@ def mock_client(mock_lifesmart_devices):
         client_instance.async_set_climate_temperature = AsyncMock(return_value=0)
 
         # 模拟后台任务启动/停止
-        client.ws_connect = AsyncMock()
-        client.ws_disconnect = AsyncMock()
+        client_instance.ws_connect = AsyncMock()
+        client_instance.ws_disconnect = AsyncMock()
 
     yield client_instance
 
