@@ -156,7 +156,6 @@ def switch_entity(
 
     # This setup is for isolated unit tests, not using the full integration setup
     ha_device = LifeSmartSwitch(
-        device=AsyncMock(),
         raw_device=device_data,
         sub_device_key="L1",
         sub_device_data=device_data[DEVICE_DATA_KEY]["L1"],
@@ -199,7 +198,6 @@ def test_switch_name_generation(
     }
     # With sub-name
     entity_with_subname = LifeSmartSwitch(
-        AsyncMock(),
         base_device,
         "P1",
         base_device[DEVICE_DATA_KEY]["P1"],
@@ -210,7 +208,6 @@ def test_switch_name_generation(
 
     # Without sub-name
     entity_without_subname = LifeSmartSwitch(
-        AsyncMock(),
         base_device,
         "P2",
         base_device[DEVICE_DATA_KEY]["P2"],
@@ -228,26 +225,37 @@ def test_determine_device_class(
     for dev_type in SMART_PLUG_TYPES | POWER_METER_PLUG_TYPES:
         device_data = {DEVICE_TYPE_KEY: dev_type, DEVICE_DATA_KEY: {}}
         entity = LifeSmartSwitch(
-            AsyncMock(), device_data, "P1", {}, mock_client, mock_config_entry.entry_id
+            device_data, "P1", {}, mock_client, mock_config_entry.entry_id
         )
         assert entity.device_class == SwitchDeviceClass.OUTLET
 
     # Test for SWITCH
     device_data = {DEVICE_TYPE_KEY: "SL_SW_IF3", DEVICE_DATA_KEY: {}}
     entity = LifeSmartSwitch(
-        AsyncMock(), device_data, "P1", {}, mock_client, mock_config_entry.entry_id
+        device_data, "P1", {}, mock_client, mock_config_entry.entry_id
     )
     assert entity.device_class == SwitchDeviceClass.SWITCH
 
 
 def test_parse_state() -> None:
     """Test the _parse_state method."""
-    entity_class = LifeSmartSwitch
-    assert entity_class._parse_state(None, {"type": 129}) is True
-    assert entity_class._parse_state(None, {"type": 1}) is True
-    assert entity_class._parse_state(None, {"type": 128}) is False
-    assert entity_class._parse_state(None, {"type": 0}) is False
-    assert entity_class._parse_state(None, {}) is False
+    dummy_switch = LifeSmartSwitch(
+        raw_device={
+            HUB_ID_KEY: "a",
+            DEVICE_ID_KEY: "b",
+            DEVICE_TYPE_KEY: "c",
+            DEVICE_DATA_KEY: {},
+        },
+        sub_device_key="k",
+        sub_device_data={},
+        client=AsyncMock(),
+        entry_id="e",
+    )
+    assert dummy_switch._parse_state({"type": 129}) is True
+    assert dummy_switch._parse_state({"type": 1}) is True
+    assert dummy_switch._parse_state({"type": 128}) is False
+    assert dummy_switch._parse_state({"type": 0}) is False
+    assert dummy_switch._parse_state({}) is False
 
 
 async def test_turn_on_off(
@@ -258,7 +266,6 @@ async def test_turn_on_off(
     switch_entity.async_write_ha_state = AsyncMock()
 
     # Turn on
-    # [修复] 确保所有异步方法都被 await
     await switch_entity.async_turn_on()
     client.turn_on_light_switch_async.assert_awaited_once_with("L1", "hub_sw", "sw_if3")
     assert switch_entity.is_on is True

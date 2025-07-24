@@ -263,10 +263,15 @@ async def test_local_flow_success(hass: HomeAssistant, mock_validate_local):
     assert result["step_id"] == "local"
 
     # 2. Provide details and finish
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], MOCK_USER_INPUT_LOCAL
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "custom_components.lifesmart.lifesmart_protocol.LifeSmartLocalClient.async_connect",
+        new_callable=AsyncMock,
+    ):
+        # 2. Provide details and finish
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT_LOCAL
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Local Hub ({MOCK_USER_INPUT_LOCAL[CONF_HOST]})"

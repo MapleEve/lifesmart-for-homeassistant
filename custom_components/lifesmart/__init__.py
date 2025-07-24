@@ -541,6 +541,7 @@ class LifeSmartDevice(Entity):
             dev: 从 API 获取的设备信息字典。
             lifesmart_client: LifeSmart 客户端实例。
         """
+        super().__init__()
         self._name = (
             dev.get(DEVICE_NAME_KEY) or f"Unnamed {dev.get(DEVICE_TYPE_KEY, 'Device')}"
         )
