@@ -60,7 +60,6 @@ async def async_setup_entry(
         dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
     }
     exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
-    client = hass.data[DOMAIN][entry_id]["client"]
 
     climates = []
     for device in devices:
@@ -94,10 +93,87 @@ def _is_climate_device(device: dict) -> bool:
     return device_type in CLIMATE_TYPES
 
 
-class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
+class LifeSmartBaseClimate(LifeSmartDevice, ClimateEntity):
+    """LifeSmart 温控设备基类 (借鉴 LifeSmartBaseLight)。"""
+
+    _attr_hvac_mode: HVACMode | None = None
+
+    def __init__(
+        self,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+    ) -> None:
+        """初始化温控设备基类。"""
+        super().__init__(raw_device, client)
+        self._entry_id = entry_id
+
+        self._attr_name = self._name
+        device_name_slug = self._name.lower().replace(" ", "_")
+        self._attr_object_id = device_name_slug
+
+        self._attr_unique_id = generate_unique_id(self.devtype, self.agt, self.me, None)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """返回设备信息以链接实体到单个设备。"""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
+            manufacturer=MANUFACTURER,
+            model=self.devtype,
+            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
+            via_device=(DOMAIN, self.agt),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """注册更新监听器。"""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self._attr_unique_id}",
+                self._handle_update,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, LIFESMART_SIGNAL_UPDATE_ENTITY, self._handle_global_refresh
+            )
+        )
+
+    @callback
+    def _handle_update(self, new_data: dict) -> None:
+        """处理实时更新。"""
+        if new_data:
+            self._update_state(new_data)
+            self.async_write_ha_state()
+
+    @callback
+    def _handle_global_refresh(self) -> None:
+        """处理全局刷新。"""
+        try:
+            devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
+            current_device = next(
+                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
+            )
+            if current_device:
+                self._raw_device = current_device
+                self._update_state(current_device.get(DEVICE_DATA_KEY, {}))
+                self.async_write_ha_state()
+        except (KeyError, StopIteration):
+            _LOGGER.warning(
+                "Could not find device %s during global refresh.", self._attr_unique_id
+            )
+
+    @callback
+    def _update_state(self, data: dict) -> None:
+        """根据设备数据解析并更新实体状态 (由子类实现)。"""
+        raise NotImplementedError
+
+
+class LifeSmartClimate(LifeSmartBaseClimate):
     """LifeSmart 温控设备实体。"""
 
-    _attr_has_entity_name = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_precision = PRECISION_TENTHS
@@ -109,13 +185,7 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
         entry_id: str,
     ) -> None:
         """初始化温控设备。"""
-        super().__init__(raw_device, client)
-        self._entry_id = entry_id
-
-        self._attr_unique_id = generate_unique_id(
-            self.devtype, self.agt, self.me, "climate"
-        )
-        self._attr_name = self._name
+        super().__init__(raw_device, client, entry_id)
 
         # 使用分派模式初始化特性和状态
         self._initialize_features()
@@ -181,18 +251,13 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
         # 根据 P6(CFG) 的值动态确定支持的 HVAC 模式
         p6_cfg = self._raw_device.get(DEVICE_DATA_KEY, {}).get("P6", {}).get("val", 0)
         cfg_mode = (p6_cfg >> 6) & 0x7
-        modes = {
+        modes_map = {
             1: [HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT],
             3: [HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL],
-            4: [
-                HVACMode.AUTO,
-                HVACMode.FAN_ONLY,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.HEAT_COOL,
-            ],
+            4: [HVACMode.AUTO, HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT],
             5: [HVACMode.FAN_ONLY, HVACMode.HEAT_COOL],
-        }.get(cfg_mode, [])
+        }
+        modes = modes_map.get(cfg_mode, [])
         self._attr_hvac_modes = [HVACMode.OFF] + modes
         self._attr_fan_modes = list(LIFESMART_TF_FAN_MODE_MAP.keys())
         self._attr_min_temp, self._attr_max_temp = 10, 35
@@ -226,7 +291,7 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
             HVACMode.FAN_ONLY,
             HVACMode.AUTO,
         ]
-        self._attr_fan_modes = list(LIFESMART_CP_AIR_FAN_MAP.keys())
+        self._attr_fan_modes = list(LIFESMART_CP_AIR_FAN_MAP.values())
         self._attr_min_temp, self._attr_max_temp = 10, 35
 
     def _init_sl_cp_vl(self):
@@ -399,54 +464,4 @@ class LifeSmartClimate(LifeSmartDevice, ClimateEntity):
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._client.async_set_climate_temperature(
                 self.agt, self.me, self.devtype, temp
-            )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """返回设备信息以链接实体到单个设备。"""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.agt, self.me)},
-            name=self._device_name,
-            manufacturer=MANUFACTURER,
-            model=self.devtype,
-            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(DOMAIN, self.agt),
-        )
-
-    async def async_added_to_hass(self) -> None:
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self._attr_unique_id}",
-                self._handle_update,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, LIFESMART_SIGNAL_UPDATE_ENTITY, self._handle_global_refresh
-            )
-        )
-
-    @callback
-    def _handle_update(self, new_data: dict) -> None:
-        """Handle real-time updates."""
-        if new_data:
-            self._update_state(new_data)
-            self.async_write_ha_state()
-
-    @callback
-    def _handle_global_refresh(self) -> None:
-        """Handle global data refresh."""
-        try:
-            devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
-            current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
-            )
-            if current_device:
-                self._raw_device = current_device
-                self._update_state(current_device.get(DEVICE_DATA_KEY, {}))
-                self.async_write_ha_state()
-        except (KeyError, StopIteration):
-            _LOGGER.warning(
-                "Could not find device %s during global refresh.", self._attr_unique_id
             )

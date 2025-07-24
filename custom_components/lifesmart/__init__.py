@@ -558,19 +558,9 @@ class LifeSmartDevice(Entity):
         }
 
     @property
-    def object_id(self) -> str:
-        """返回 LifeSmart 设备的 ID。"""
-        return self.entity_id
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """返回设备的状态属性。"""
         return self._attributes
-
-    @property
-    def name(self) -> str:
-        """返回 LifeSmart 设备的名称。"""
-        return self._name
 
     @property
     def agt(self) -> str:

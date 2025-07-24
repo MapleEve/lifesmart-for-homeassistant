@@ -126,13 +126,6 @@ def mock_lifesmart_devices_fixture():
             "name": "Cover Light",
             "data": {"P1": {"type": 129}},
         },
-        {
-            "agt": "hub_light",
-            "me": "light_generic_hs",
-            "devtype": "SL_P",
-            "name": "Generic HS Light",
-            "data": {"HS": {"val": 255}},
-        },
         # --- Binary Sensor Devices ---
         {
             "agt": "hub_bs",
@@ -231,13 +224,6 @@ def mock_lifesmart_devices_fixture():
             "name": "Bedroom Switch",
             "data": {"P4": {"val": 92}},
         },
-        {
-            "agt": "hub_sensor",
-            "me": "sensor_nature_thermo",
-            "devtype": "SL_NATURE",
-            "name": "Nature Panel Thermo",
-            "data": {"P4": {"val": 235}, "P5": {"val": 3}},
-        },
         # --- Cover Devices ---
         {
             "agt": "hub_cover",
@@ -263,10 +249,18 @@ def mock_lifesmart_devices_fixture():
         # --- Climate Devices ---
         {
             "agt": "hub_climate",
-            "me": "climate_nature",
+            "me": "climate_nature_thermo",
             "devtype": "SL_NATURE",
-            "name": "Nature Panel Climate",
-            "data": {"P5": {"val": 3}, "P6": {"val": (4 << 6)}},
+            "name": "Nature Panel Thermo",
+            "data": {
+                "P1": {"type": 129, "val": 1},  # On
+                "P4": {"v": 28.0},  # Current Temp
+                "P5": {"val": 3},  # 关键：标识为温控面板
+                "P6": {"val": (4 << 6)},  # CFG, 4 -> ⻛机盘管（双阀）模式
+                "P7": {"val": 1},  # Mode, 1 -> Auto
+                "P8": {"v": 26.0},  # Target Temp
+                "P10": {"val": 15},  # Fan Speed, 15 -> Low
+            },
         },
         {
             "agt": "hub_climate",

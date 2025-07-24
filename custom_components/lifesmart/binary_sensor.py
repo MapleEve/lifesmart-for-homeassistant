@@ -26,7 +26,6 @@ from .const import (
     DEVICE_TYPE_KEY,
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
-    DEVICE_NAME_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     UNLOCK_METHOD,
     CONF_EXCLUDE_AGTS,
@@ -87,10 +86,10 @@ async def async_setup_entry(
             binary_sensors.append(
                 LifeSmartBinarySensor(
                     raw_device=device,
-                    sub_device_key=sub_device_key,
-                    sub_device_data=sub_device_data,
                     client=client,
                     entry_id=entry_id,
+                    sub_device_key=sub_device_key,
+                    sub_device_data=sub_device_data,
                 )
             )
 
@@ -172,15 +171,13 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
 class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
     """LifeSmart binary sensor entity with enhanced compatibility."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         raw_device: dict[str, Any],
-        sub_device_key: str,
-        sub_device_data: dict[str, Any],
         client: Any,
         entry_id: str,
+        sub_device_key: str,
+        sub_device_data: dict[str, Any],
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(raw_device, client)
@@ -188,7 +185,7 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
         self._sub_data = sub_device_data
         self._entry_id = entry_id
 
-        self._attr_name = self._generate_sensor_name()
+        self._attr_name = f"{self._name} {self._sub_key.upper()}"
         device_name_slug = self._name.lower().replace(" ", "_")
         sub_key_slug = self._sub_key.lower()
         self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
@@ -197,14 +194,6 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
             self.devtype, self.agt, self.me, sub_device_key
         )
         self._update_state(self._sub_data)
-
-    @callback
-    def _generate_sensor_name(self) -> str:
-        """Generate the entity name suffix."""
-        sub_name = self._sub_data.get(DEVICE_NAME_KEY)
-        if sub_name and sub_name != self._sub_key:
-            return sub_name
-        return self._sub_key.upper()
 
     @callback
     def _update_state(self, data: dict) -> None:

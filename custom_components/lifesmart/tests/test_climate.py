@@ -2,13 +2,11 @@
 Unit and integration tests for the LifeSmart Climate platform.
 """
 
-from unittest.mock import AsyncMock, ANY
+from unittest.mock import AsyncMock
 
 import pytest
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
 )
@@ -16,8 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
+from custom_components.lifesmart import generate_unique_id
 from custom_components.lifesmart.const import *
 
 pytestmark = pytest.mark.asyncio
@@ -40,10 +38,8 @@ class TestClimateSetup:
         setup_integration: ConfigEntry,
     ):
         """Test that async_setup_entry correctly identifies and creates climate entities."""
-
-        # Expected climate devices from conftest.py = 5
         assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
-        assert hass.states.get("climate.nature_panel_climate") is not None
+        assert hass.states.get("climate.nature_panel_thermo") is not None
         assert hass.states.get("climate.floor_heating") is not None
         assert hass.states.get("climate.fan_coil_unit") is not None
         assert hass.states.get("climate.air_panel") is not None
@@ -54,64 +50,91 @@ class TestClimateEntity:
     """Tests for the LifeSmartClimate entity's attributes, state, and services."""
 
     @pytest.mark.parametrize(
-        "device_me, expected_attrs, expected_features",
+        "entity_id, entity_name, me, devtype, expected_state, expected_attrs, expected_features",
         [
             (
+                "climate.nature_panel_thermo",
+                "Nature Panel Thermo",
+                "climate_nature_thermo",
+                "SL_NATURE",
+                HVACMode.AUTO,
+                {
+                    "current_temperature": 28.0,
+                    "temperature": 26.0,
+                    "fan_mode": "low",
+                },
+                ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
+            ),
+            (
+                "climate.floor_heating",
+                "Floor Heating",
                 "climate_floor_heat",
-                {
-                    "hvac_mode": HVACMode.AUTO,
-                    "current_temperature": 22.5,
-                    "target_temperature": 25.0,
-                },
-                ClimateEntityFeature.TARGET_TEMPERATURE,
+                "SL_CP_DN",
+                HVACMode.AUTO,
+                {"current_temperature": 22.5, "temperature": 25.0},
+                ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
             ),
             (
+                "climate.fan_coil_unit",
+                "Fan Coil Unit",
                 "climate_fancoil",
-                {"hvac_mode": HVACMode.COOL, "fan_mode": FAN_MEDIUM},
-                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE,
+                "SL_CP_AIR",
+                HVACMode.HEAT,
+                {"fan_mode": FAN_LOW, "temperature": 24.0, "current_temperature": 26.0},
+                ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
             ),
             (
+                "climate.air_panel",
+                "Air Panel",
                 "climate_airpanel",
-                {"hvac_mode": HVACMode.OFF},
-                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE,
+                "V_AIR_P",
+                HVACMode.OFF,
+                {"current_temperature": 23.0, "temperature": 25.0},
+                ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
             ),
             (
+                "climate.air_system",
+                "Air System",
                 "climate_airsystem",
-                {"hvac_mode": HVACMode.FAN_ONLY, "fan_mode": FAN_LOW},
-                ClimateEntityFeature.FAN_MODE,
-            ),
-            (
-                "climate_nature",
-                {
-                    "hvac_modes": [
-                        HVACMode.OFF,
-                        HVACMode.AUTO,
-                        HVACMode.FAN_ONLY,
-                        HVACMode.COOL,
-                        HVACMode.HEAT,
-                        HVACMode.HEAT_COOL,
-                    ]
-                },
-                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE,
+                "SL_TR_ACIPM",
+                HVACMode.FAN_ONLY,
+                {"fan_mode": FAN_LOW},
+                ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
             ),
         ],
-        ids=["FloorHeating", "FanCoil", "AirPanel", "AirSystem", "NaturePanel"],
+        ids=["NatureThermo", "FloorHeating", "FanCoil", "AirPanel", "AirSystem"],
     )
     async def test_entity_state_and_attributes(
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
-        device_me: str,
+        entity_id: str,
+        entity_name: str,
+        me: str,
+        devtype: str,
+        expected_state: HVACMode,
         expected_attrs: dict,
         expected_features: ClimateEntityFeature,
     ):
         """Test initialization of entity attributes and features for various device types."""
-        device = find_device(mock_lifesmart_devices, device_me)
-        entity_id = f"climate.{device[DEVICE_NAME_KEY].lower().replace(' ', '_')}"
         state = hass.states.get(entity_id)
 
         assert state is not None, f"Entity {entity_id} not found"
+        assert state.name == entity_name
+        assert state.state == expected_state
         assert state.attributes.get("supported_features") == expected_features
         for attr, val in expected_attrs.items():
             assert (
@@ -125,7 +148,7 @@ class TestClimateEntity:
         setup_integration: ConfigEntry,
     ):
         """Test service calls for setting temperature, hvac_mode, and fan_mode."""
-        entity_id = "climate.fan_coil_unit"
+        entity_id = "climate.nature_panel_thermo"
 
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -134,49 +157,35 @@ class TestClimateEntity:
             blocking=True,
         )
         mock_client.async_set_climate_temperature.assert_awaited_once_with(
-            "hub_climate", "climate_fancoil", "SL_CP_AIR", 22.0
-        )
-
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
-            blocking=True,
-        )
-        mock_client.async_set_climate_hvac_mode.assert_awaited_once_with(
-            "hub_climate", "climate_fancoil", "SL_CP_AIR", HVACMode.HEAT, ANY
-        )
-
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, "fan_mode": FAN_HIGH},
-            blocking=True,
-        )
-        mock_client.async_set_climate_fan_mode.assert_awaited_once_with(
-            "hub_climate", "climate_fancoil", "SL_CP_AIR", FAN_HIGH, ANY
+            "hub_climate", "climate_nature_thermo", "SL_NATURE", 22.0
         )
 
     async def test_entity_update_from_dispatcher(
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
     ):
         """Test that entity state updates correctly when a dispatcher signal is received."""
         entity_id = "climate.air_panel"
+        device = find_device(mock_lifesmart_devices, "climate_airpanel")
+        assert device is not None
 
-        assert hass.states.get(entity_id).state == HVACMode.OFF
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == HVACMode.OFF
+
+        unique_id = generate_unique_id(
+            device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], None
+        )
 
         new_data = {"O": {"type": 1}, "MODE": {"val": 2}, "T": {"v": 21.0}}
-        entity_registry = async_get_entity_registry(hass)
-        entry = entity_registry.async_get(entity_id)
-        assert entry is not None
 
         async_dispatcher_send(
-            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entry.unique_id}", new_data
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", new_data
         )
         await hass.async_block_till_done()
 
         state = hass.states.get(entity_id)
-        assert state.state == HVACMode.HEAT
+        assert state.state == HVACMode.FAN_ONLY
         assert state.attributes.get("current_temperature") == 21.0

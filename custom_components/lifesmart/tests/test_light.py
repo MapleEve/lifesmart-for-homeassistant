@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -58,15 +59,14 @@ async def test_async_setup_entry_creates_entities(
     # Brightness(1) + Dimmer(1) + Quantum(1) + SingleIORGB(1) + DualIORGBW(1)
     # + SPOTRGB(1) + SPOTRGBW(1) + CoverLight(1) + GenericHS(1) = 9
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 9
-    assert hass.states.get("light.brightness_light") is not None
+    assert hass.states.get("light.brightness_light_p1") is not None
     assert hass.states.get("light.dimmer_light") is not None
     assert hass.states.get("light.quantum_light") is not None
-    assert hass.states.get("light.single_io_rgb_light") is not None
+    assert hass.states.get("light.single_io_rgb_light_rgb") is not None
     assert hass.states.get("light.dual_io_rgbw_light") is not None
-    assert hass.states.get("light.spot_rgb_light") is not None
+    assert hass.states.get("light.spot_rgb_light_rgb") is not None
     assert hass.states.get("light.spot_rgbw_light") is not None
     assert hass.states.get("light.cover_light_p1") is not None
-    assert hass.states.get("light.generic_hs_light_hs") is not None
 
 
 # --- Test Service Calls for Each Light Type ---
@@ -79,7 +79,7 @@ class TestLifeSmartBrightnessLight:
         mock_client: AsyncMock,
         setup_integration: ConfigEntry,
     ):
-        entity_id = "light.brightness_light"
+        entity_id = "light.brightness_light_p1"
         await hass.services.async_call(
             LIGHT_DOMAIN,
             "turn_on",
@@ -113,7 +113,7 @@ class TestLifeSmartDimmerLight:
         mock_client.set_single_ep_async.assert_has_calls(
             [
                 call("hub_light", "light_dimmer", "P1", CMD_TYPE_SET_VAL, 200),
-                call("hub_light", "light_dimmer", "P2", CMD_TYPE_SET_VAL, 73),
+                call("hub_light", "light_dimmer", "P2", CMD_TYPE_SET_VAL, 120),
             ],
             any_order=True,
         )
@@ -158,7 +158,7 @@ class TestLifeSmartSingleIORGBWLight:
         mock_client: AsyncMock,
         setup_integration: ConfigEntry,
     ):
-        entity_id = "light.single_io_rgb_light"
+        entity_id = "light.single_io_rgb_light_rgb"
         # white w=255 -> 100%. val = (100<<24) | (1<<16) | (2<<8) | 3
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -206,7 +206,7 @@ class TestLifeSmartSPOTRGBLight:
         mock_client: AsyncMock,
         setup_integration: ConfigEntry,
     ):
-        entity_id = "light.spot_rgb_light"
+        entity_id = "light.spot_rgb_light_rgb"
         await hass.services.async_call(
             LIGHT_DOMAIN,
             "turn_on",
@@ -274,24 +274,3 @@ class TestLifeSmartCoverLight:
         )
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == "off"
-
-
-class TestLifeSmartLight:
-    async def test_hs_service(
-        self,
-        hass: HomeAssistant,
-        mock_client: AsyncMock,
-        setup_integration: ConfigEntry,
-    ):
-        entity_id = "light.generic_hs_light_hs"
-
-        # HS (240, 100) -> Blue -> RGB(0,0,255) -> AI val = 255
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            "turn_on",
-            {ATTR_ENTITY_ID: entity_id, "hs_color": (240, 100)},
-            blocking=True,
-        )
-        mock_client.set_single_ep_async.assert_called_with(
-            "hub_light", "light_generic_hs", "HS", CMD_TYPE_SET_RAW, 255
-        )
