@@ -2,7 +2,7 @@
 共享的 pytest fixtures，用于 LifeSmart 集成测试。
 """
 
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -335,44 +335,47 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 
 
 @pytest.fixture
-def mock_client():
+def mock_client(mock_lifesmart_devices):
     """
     提供一个默认的、配置了模拟设备的模拟 LifeSmartClient。
     """
-    client = MagicMock(name="mock_lifesmart_client")
-    client.get_all_device_async = AsyncMock(return_value=[])  # 默认返回空列表
-    client.login_async = AsyncMock(
-        return_value={
-            "usertoken": "mock_new_usertoken",
-            "userid": "mock_userid",
-            "region": "cn2",
-        }
-    )
-    client.async_refresh_token = AsyncMock(
-        return_value={
-            "usertoken": "mock_refreshed_usertoken",
-            "expiredtime": 9999999999,
-        }
-    )
+    with patch(
+        "custom_components.lifesmart.LifeSmartClient", autospec=True
+    ) as mock_client_class:
+        client_instance = mock_client_class.return_value
+        client_instance.get_all_device_async.return_value = mock_lifesmart_devices
+        client_instance.login_async = AsyncMock(
+            return_value={
+                "usertoken": "mock_new_usertoken",
+                "userid": "mock_userid",
+                "region": "cn2",
+            }
+        )
+        client_instance.async_refresh_token = AsyncMock(
+            return_value={
+                "usertoken": "mock_refreshed_usertoken",
+                "expiredtime": 9999999999,
+            }
+        )
 
-    # 模拟所有控制方法
-    client.turn_on_light_switch_async = AsyncMock(return_value=0)
-    client.turn_off_light_switch_async = AsyncMock(return_value=0)
-    client.set_single_ep_async = AsyncMock(return_value=0)
-    client.set_multi_eps_async = AsyncMock(return_value=0)
-    client.open_cover_async = AsyncMock(return_value=0)
-    client.close_cover_async = AsyncMock(return_value=0)
-    client.stop_cover_async = AsyncMock(return_value=0)
-    client.set_cover_position_async = AsyncMock(return_value=0)
-    client.async_set_climate_hvac_mode = AsyncMock(return_value=0)
-    client.async_set_climate_fan_mode = AsyncMock(return_value=0)
-    client.async_set_climate_temperature = AsyncMock(return_value=0)
+        # 模拟所有控制方法
+        client_instance.turn_on_light_switch_async = AsyncMock(return_value=0)
+        client_instance.turn_off_light_switch_async = AsyncMock(return_value=0)
+        client_instance.set_single_ep_async = AsyncMock(return_value=0)
+        client_instance.set_multi_eps_async = AsyncMock(return_value=0)
+        client_instance.open_cover_async = AsyncMock(return_value=0)
+        client_instance.close_cover_async = AsyncMock(return_value=0)
+        client_instance.stop_cover_async = AsyncMock(return_value=0)
+        client_instance.set_cover_position_async = AsyncMock(return_value=0)
+        client_instance.async_set_climate_hvac_mode = AsyncMock(return_value=0)
+        client_instance.async_set_climate_fan_mode = AsyncMock(return_value=0)
+        client_instance.async_set_climate_temperature = AsyncMock(return_value=0)
 
-    # 模拟后台任务启动/停止
-    client.ws_connect = AsyncMock()
-    client.ws_disconnect = AsyncMock()
+        # 模拟后台任务启动/停止
+        client.ws_connect = AsyncMock()
+        client.ws_disconnect = AsyncMock()
 
-    return client
+    yield client_instance
 
 
 @pytest.fixture

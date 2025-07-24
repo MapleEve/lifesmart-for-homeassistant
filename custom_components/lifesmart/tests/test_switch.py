@@ -73,28 +73,13 @@ def test_is_switch_subdevice(device_type: str, sub_key: str, expected: bool) -> 
 
 async def test_async_setup_entry_success(
     hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: ConfigEntry,
-    mock_lifesmart_devices: list[dict[str, Any]],
+    setup_integration: ConfigEntry,
 ) -> None:
     """Test successful setup of switch entities using shared fixtures."""
-    # Arrange
-    hass.data[DOMAIN][mock_config_entry.entry_id] = {
-        "client": mock_client,
-        "devices": mock_lifesmart_devices,
-        "exclude_devices": [],
-        "exclude_hubs": [],
-    }
-    async_add_entities = AsyncMock()
-
-    # Act
-    await async_setup_entry(hass, mock_config_entry, async_add_entities)
-
     # Assert
     # Expected switches from conftest.py:
     # 3 (from sw_if3) + 1 (from sw_ol) + 2 (from sw_oe3c) + 3 (from sw_nature) = 9
-    assert async_add_entities.call_count == 1
-    assert len(async_add_entities.call_args[0][0]) == 9
+    assert len(hass.states.async_entity_ids("switch")) == 9
 
 
 async def test_async_setup_entry_with_exclusions(
@@ -163,10 +148,13 @@ def switch_entity(
     mock_config_entry: ConfigEntry,
     mock_lifesmart_devices: list[dict[str, Any]],
 ) -> LifeSmartSwitch:
-    """Provides a standard LifeSmartSwitch entity for testing, based on shared fixtures."""
-    device_data = find_device(mock_lifesmart_devices, "sw_if3")
-    assert device_data, "Device 'sw_if3' not found in mock_lifesmart_devices"
+    """Provides a standard LifeSmartSwitch entity for testing."""
+    device_data = next(
+        (d for d in mock_lifesmart_devices if d.get(DEVICE_ID_KEY) == "sw_if3"), None
+    )
+    assert device_data, "Device 'sw_if3' not found"
 
+    # This setup is for isolated unit tests, not using the full integration setup
     ha_device = LifeSmartSwitch(
         device=AsyncMock(),
         raw_device=device_data,
@@ -176,7 +164,6 @@ def switch_entity(
         entry_id=mock_config_entry.entry_id,
     )
     ha_device.hass = hass
-    # Manually set hass.data for the global refresh handler test
     hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = {
         "devices": mock_lifesmart_devices
     }
@@ -264,16 +251,14 @@ def test_parse_state() -> None:
 
 
 async def test_turn_on_off(
-    switch_entity: LifeSmartSwitch, caplog: pytest.LogCaptureFixture
+    switch_entity: LifeSmartSwitch,
 ) -> None:
     """Test turning the switch on and off."""
     client = switch_entity._client
-    client.turn_on_light_switch_async.return_value = 0
-    client.turn_off_light_switch_async.return_value = 0
-
     switch_entity.async_write_ha_state = AsyncMock()
 
     # Turn on
+    # [修复] 确保所有异步方法都被 await
     await switch_entity.async_turn_on()
     client.turn_on_light_switch_async.assert_awaited_once_with("L1", "hub_sw", "sw_if3")
     assert switch_entity.is_on is True
@@ -296,19 +281,23 @@ async def test_data_update_handlers(
 
     # 1. Test `_handle_update` (specific entity update)
     update_callback = switch_entity._handle_update
-    update_callback({"type": 128})  # Turn off
+    await update_callback({"type": 128})  # Turn off
     assert switch_entity.is_on is False
     switch_entity.async_write_ha_state.assert_called_once()
 
     # 2. Test `_handle_global_refresh`
-    # Modify the "source of truth" in hass.data
-    device_in_hass = find_device(
-        hass.data[DOMAIN][switch_entity._entry_id]["devices"], "sw_if3"
+    device_in_hass = next(
+        (
+            d
+            for d in hass.data[DOMAIN][switch_entity._entry_id]["devices"]
+            if d.get(DEVICE_ID_KEY) == "sw_if3"
+        ),
+        None,
     )
     device_in_hass[DEVICE_DATA_KEY]["L1"]["type"] = 129  # Turn on
 
     refresh_callback = switch_entity._handle_global_refresh
-    refresh_callback()
+    await refresh_callback()
 
     assert switch_entity.is_on is True
     assert switch_entity.async_write_ha_state.call_count == 2

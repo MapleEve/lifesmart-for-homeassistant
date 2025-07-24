@@ -80,7 +80,7 @@ def mock_validate_fixture():
 def mock_validate_local_fixture():
     """提供一个统一的 patch fixture 来模拟 validate_local_input 函数。"""
     with patch(
-        "custom_components.lifesmart.config_flow.validate_local_input",
+        "custom_components.lifesmart.lifesmart_protocol.LifeSmartLocalClient.check_login",
         new_callable=AsyncMock,
     ) as mock_func:
         yield mock_func
@@ -251,7 +251,7 @@ async def test_cloud_flow_connection_error(hass: HomeAssistant, mock_validate):
 @pytest.mark.asyncio
 async def test_local_flow_success(hass: HomeAssistant, mock_validate_local):
     """测试本地模式配置成功。"""
-    mock_validate_local.return_value = {"title": "Local Hub (192.168.1.100)"}
+    mock_validate_local.return_value = True
 
     # 1. Start flow, select local
     result = await hass.config_entries.flow.async_init(
@@ -269,7 +269,7 @@ async def test_local_flow_success(hass: HomeAssistant, mock_validate_local):
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Local Hub (192.168.1.100)"
+    assert result["title"] == f"Local Hub ({MOCK_USER_INPUT_LOCAL[CONF_HOST]})"
     assert result["data"][CONF_HOST] == MOCK_USER_INPUT_LOCAL[CONF_HOST]
 
 
