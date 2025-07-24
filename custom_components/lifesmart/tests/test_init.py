@@ -70,6 +70,7 @@ async def test_state_manager_message_handling_logic(
     此测试通过捕获传递给 ws_connect 的回调函数来精确测试消息处理逻辑。
     """
     entry_id = "test_entry_id_123"
+    manager = None
     try:
         with patch(
             "custom_components.lifesmart.LifeSmartStateManager._token_refresh_handler",
@@ -175,4 +176,5 @@ async def test_state_manager_message_handling_logic(
                 mock_dispatcher.assert_not_called()
                 mock_reload.assert_not_called()
     finally:
-        await manager.stop()
+        if manager:
+            await manager.stop()
