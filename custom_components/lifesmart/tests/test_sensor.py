@@ -254,12 +254,8 @@ def test_lifesmart_sensor_properties(
     expected_name = f"{raw_device[DEVICE_NAME_KEY]} {expected_name_suffix}"
 
     # LifeSmartDevice is a simple dataclass, can be instantiated directly
-    from custom_components.lifesmart import LifeSmartDevice
-
-    ha_device = LifeSmartDevice(raw_device, mock_client)
 
     sensor = LifeSmartSensor(
-        device=ha_device,
         raw_device=raw_device,
         sub_device_key=sub_key,
         sub_device_data=sub_data,
@@ -273,9 +269,10 @@ def test_lifesmart_sensor_properties(
     assert sensor.native_unit_of_measurement == expected_unit
     assert sensor.state_class == expected_state_class
     assert sensor.native_value == expected_value
-    assert (
-        sensor.unique_id
-        == f"{raw_device[DEVICE_TYPE_KEY]}_{raw_device[HUB_ID_KEY]}_{device_me}_{sub_key}"
+    from custom_components.lifesmart import generate_unique_id
+
+    assert sensor.unique_id == generate_unique_id(
+        raw_device[DEVICE_TYPE_KEY], raw_device[HUB_ID_KEY], device_me, sub_key
     )
 
 
@@ -291,11 +288,7 @@ async def test_lifesmart_sensor_updates(
     sub_key = "T"
     sub_data = raw_device[DEVICE_DATA_KEY][sub_key]
 
-    from custom_components.lifesmart import LifeSmartDevice
-
-    ha_device = LifeSmartDevice(raw_device, mock_client)
     sensor = LifeSmartSensor(
-        device=ha_device,
         raw_device=raw_device,
         sub_device_key=sub_key,
         sub_device_data=sub_data,
