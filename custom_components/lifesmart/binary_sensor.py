@@ -29,6 +29,8 @@ from .const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     UNLOCK_METHOD,
+    CONF_EXCLUDE_AGTS,
+    CONF_EXCLUDE_ITEMS,
     # --- 设备类型常量导入 ---
     ALL_BINARY_SENSOR_TYPES,
     BINARY_SENSOR_TYPES,
@@ -54,8 +56,13 @@ async def async_setup_entry(
     """Set up LifeSmart binary sensors from a config entry."""
     entry_id = config_entry.entry_id
     devices = hass.data[DOMAIN][entry_id]["devices"]
-    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
+    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
+
+    exclude_devices = {
+        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
+    }
+    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
     client = hass.data[DOMAIN][entry_id]["client"]
 
     binary_sensors = []

@@ -44,6 +44,9 @@ from .const import (
     HUB_ID_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
+    # 导入配置选项常量
+    CONF_EXCLUDE_ITEMS,
+    CONF_EXCLUDE_AGTS,
     # 导入所有灯的常量设备类型
     QUANTUM_TYPES,
     SPOT_TYPES,
@@ -99,8 +102,12 @@ async def async_setup_entry(
     entry_id = config_entry.entry_id
     devices = hass.data[DOMAIN][entry_id]["devices"]
     client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
+    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
+    exclude_devices = {
+        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
+    }
+    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
 
     lights = []
     for device in devices:

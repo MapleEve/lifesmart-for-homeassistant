@@ -23,6 +23,9 @@ from .const import (
     DEVICE_VERSION_KEY,
     SUBDEVICE_INDEX_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
+    # --- 配置选项 ---
+    CONF_EXCLUDE_ITEMS,
+    CONF_EXCLUDE_AGTS,
     # --- 设备类型常量 ---
     SUPPORTED_SWITCH_TYPES,
     ALL_SWITCH_TYPES,
@@ -43,8 +46,12 @@ async def async_setup_entry(
     entry_id = config_entry.entry_id
     devices = hass.data[DOMAIN][entry_id]["devices"]
     client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
+    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
+    exclude_devices = {
+        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
+    }
+    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
 
     switches = []
     for device in devices:

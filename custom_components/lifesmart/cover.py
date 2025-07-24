@@ -24,6 +24,8 @@ from .const import (
     DEVICE_TYPE_KEY,
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
+    CONF_EXCLUDE_AGTS,
+    CONF_EXCLUDE_ITEMS,
     NON_POSITIONAL_COVER_CONFIG,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     ALL_COVER_TYPES,
@@ -43,8 +45,12 @@ async def async_setup_entry(
     entry_id = config_entry.entry_id
     devices = hass.data[DOMAIN][entry_id]["devices"]
     client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
+    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
+    exclude_devices = {
+        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
+    }
+    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
 
     covers = []
     for device in devices:
