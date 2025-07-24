@@ -10,7 +10,6 @@ from homeassistant.const import CONF_REGION
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.lifesmart import async_setup_entry
 from custom_components.lifesmart.const import *
 
 # 自动为所有测试加载 Home Assistant 的 pytest 插件
@@ -412,7 +411,7 @@ async def setup_integration(
         return_value=mock_client,
     ):
         # 4. 运行主集成的 async_setup_entry
-        assert await async_setup_entry(hass, mock_config_entry) is True
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         # 5. 等待所有后台任务完成，确保平台已加载
         await hass.async_block_till_done()
 
