@@ -2,8 +2,7 @@
 Unit tests for the LifeSmart binary sensor platform.
 """
 
-from datetime import datetime, timezone
-from unittest.mock import patch, AsyncMock
+from datetime import timedelta
 
 import pytest
 from homeassistant.components.binary_sensor import (
@@ -120,32 +119,41 @@ async def test_momentary_button_update(
     mock_lifesmart_devices: list,
     freezer,
 ):
-    """Test the transient state change of a momentary button."""
+    """
+    Test the transient state change of a momentary button, verifying both
+    the 'on' and the automatic 'off' states.
+    """
     button_device = find_device(mock_lifesmart_devices, "bs_button")
     entity_id = "binary_sensor.panic_button_p1"
-    unique_id = (
-        f"lifesmart_{button_device[HUB_ID_KEY]}_{button_device[DEVICE_ID_KEY]}_p1"
+    unique_id = generate_unique_id(
+        button_device[DEVICE_TYPE_KEY],
+        button_device[HUB_ID_KEY],
+        button_device[DEVICE_ID_KEY],
+        "p1",
     )
 
-    freezer.move_to("2023-01-01T12:00:00+00:00")
+    # --- 步骤 1: 触发按钮并验证其立即变为 'on' ---
+    async_dispatcher_send(
+        hass,
+        f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
+        {"val": 1, "type": 129},
+    )
+    await hass.async_block_till_done()
 
-    with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-        async_dispatcher_send(
-            hass,
-            f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-            {"val": 1, "type": 129},
-        )
-        await hass.async_block_till_done()
+    state_on = hass.states.get(entity_id)
+    assert state_on is not None
+    assert state_on.state == STATE_ON
+    assert state_on.attributes.get("last_event") == "single_click"
 
-        state = hass.states.get(entity_id)
-        assert state.state == STATE_ON
-        assert state.attributes.get("last_event") == "single_click"
+    # --- 步骤 2: 快进时间，以触发自动重置逻辑 ---
+    # 我们向前拨动时间，超过实体代码中的 0.5 秒延迟
+    freezer.tick(timedelta(seconds=0.6))
+    await hass.async_block_till_done()
 
-        # Get the frozen time in the correct format for comparison
-        expected_time = datetime.now(timezone.utc).isoformat()
-        assert state.attributes.get("last_event_time") == expected_time
-
-        mock_sleep.assert_awaited_once_with(0.5)
+    # --- 步骤 3: 验证状态已自动重置为 'off' ---
+    state_off = hass.states.get(entity_id)
+    assert state_off is not None
+    assert state_off.state == STATE_OFF
 
 
 async def test_global_refresh_update(

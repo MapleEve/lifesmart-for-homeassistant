@@ -430,6 +430,7 @@ ALL_SENSOR_TYPES = (
     | VOICE_SENSOR_TYPES
     | ALL_BINARY_SENSOR_TYPES  # 二元传感器也可能提供电量等数值
     | COVER_TYPES  # 窗帘电机电量
+    | BUTTON_SWITCH_TYPES  # 按钮开关也可能提供电量等数值
     | SMOKE_SENSOR_TYPES
     | POWER_METER_PLUG_TYPES  # 计量插座也可能提供电量等数值
 )

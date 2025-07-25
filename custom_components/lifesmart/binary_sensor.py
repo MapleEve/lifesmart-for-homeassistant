@@ -197,14 +197,34 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
     @callback
     def _update_state(self, data: dict) -> None:
-        """Parse and update all entity states and attributes from data."""
+        """解析并根据数据更新所有实体状态和属性。"""
         self._sub_data = data
         device_class = self._determine_device_class()
         if device_class:
             self._attr_device_class = device_class
 
-        self._attr_is_on = self._parse_state()
+        # 首先，使用通用的 _parse_state 来确定当前事件是否应该为 'on'
+        is_currently_on = self._parse_state()
+        self._attr_is_on = is_currently_on
+
+        # 然后，更新所有属性。_get_attributes 可能会用到 self._attr_is_on 的最新值
         self._attrs = self._get_attributes()
+
+        # 最后，处理瞬时按钮的特殊重置逻辑
+        if self.devtype == "SL_SC_BB_V2" and is_currently_on:
+            # 更新事件相关的属性
+            val = data.get("val", 0)
+            event_map = {1: "single_click", 2: "double_click", 255: "long_press"}
+            self._attrs["last_event"] = event_map.get(val, "unknown")
+            self._attrs["last_event_time"] = dt_util.utcnow().isoformat()
+
+            # 创建一个异步任务，在短暂延迟后将状态重置为 "off"
+            async def reset_state():
+                await asyncio.sleep(0.5)
+                self._attr_is_on = False
+                self.async_write_ha_state()
+
+            self.hass.loop.create_task(reset_state())
 
     @callback
     def _determine_device_class(self) -> BinarySensorDeviceClass | None:
@@ -329,10 +349,6 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
         if device_type == "SL_DF_GG" and sub_key == "A":
             return val == 0  # 云防门窗：0=开，1=关
 
-        # SL_SC_BB_V2 的状态是瞬时的, 默认为 off
-        if device_type == "SL_SC_BB_V2":
-            return False  # 初始状态总是 off
-
         if device_type in CLIMATE_TYPES:
             if sub_key == "P5":  # 温控阀门告警 (val 是 bitmask)
                 return val > 0
@@ -438,31 +454,6 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
         except Exception as e:
             _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
-
-    @callback
-    def _update_state_by_device_type(self, data: dict) -> None:
-        """Update state based on device type."""
-        # 使用标准方法更新基础状态
-        self._update_state(data)
-
-        # 处理特殊的瞬时事件逻辑
-        if self.devtype == "SL_SC_BB_V2":
-            type_val = data.get("type", 0)
-            if type_val % 2 == 1:
-                self._attr_is_on = True
-                val = data.get("val", 0)
-                event_map = {1: "single_click", 2: "double_click", 255: "long_press"}
-                self._attrs["last_event"] = event_map.get(val, "unknown")
-                self._attrs["last_event_time"] = dt_util.utcnow().isoformat()
-
-                async def reset_state():
-                    await asyncio.sleep(0.5)
-                    self._attr_is_on = False
-                    self.async_write_ha_state()
-
-                self.hass.loop.create_task(reset_state())
-            else:
-                self._attr_is_on = False
 
     async def _handle_global_refresh(self) -> None:
         """Handle periodic full data refresh."""
