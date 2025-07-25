@@ -879,6 +879,14 @@ class LifeSmartStateManager:
         """优雅地停止 WebSocket 连接和管理任务。"""
         _LOGGER.info("正在停止 LifeSmart WebSocket 状态管理器...")
         self._should_stop = True
+        # 调用客户端的断开连接方法，以满足测试断言并确保正确的清理流程。
+        if hasattr(self.client, "ws_disconnect"):
+            try:
+                await self.client.ws_disconnect()
+            except Exception as e:
+                _LOGGER.warning("调用 client.ws_disconnect() 时发生错误: %s", e)
+
+        # 底层的 WebSocket 关闭操作
         if self._ws and not self._ws.closed:
             await self._ws.close(code=1000)
 
