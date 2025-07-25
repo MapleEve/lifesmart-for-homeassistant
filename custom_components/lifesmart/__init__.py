@@ -398,6 +398,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 停止 WebSocket 状态管理器
     if state_manager := hass.data[DOMAIN].get(LIFESMART_STATE_MANAGER):
         await state_manager.stop()
+        await asyncio.sleep(0)
 
     # 停止本地客户端连接任务
     if local_task := hass.data[DOMAIN].get(entry_id, {}).get("local_task"):
