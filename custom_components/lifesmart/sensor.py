@@ -96,10 +96,10 @@ async def async_setup_entry(
                     sensors.append(
                         LifeSmartSensor(
                             raw_device=device,
-                            sub_device_key="P4",
-                            sub_device_data=device[DEVICE_DATA_KEY]["P4"],
                             client=client,
                             entry_id=entry_id,
+                            sub_device_key="P4",
+                            sub_device_data=device[DEVICE_DATA_KEY]["P4"],
                         )
                     )
             continue  # 处理完 SL_NATURE，跳过
@@ -114,10 +114,10 @@ async def async_setup_entry(
             sensors.append(
                 LifeSmartSensor(
                     raw_device=device,
-                    sub_device_key=sub_key,
-                    sub_device_data=sub_data,
                     client=client,
                     entry_id=entry_id,
+                    sub_device_key=sub_key,
+                    sub_device_data=sub_data,
                 )
             )
 
@@ -207,28 +207,31 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
 class LifeSmartSensor(LifeSmartDevice, SensorEntity):
     """LifeSmart sensor entity with enhanced compatibility."""
 
-    _attr_has_entity_name = False
-
     def __init__(
         self,
         raw_device: dict[str, Any],
-        sub_device_key: str,
-        sub_device_data: dict[str, Any],
         client: Any,
         entry_id: str,
+        sub_device_key: str,
+        sub_device_data: dict[str, Any],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
         self._entry_id = entry_id
+
+        self._attr_name = self._generate_sensor_name()
+        device_name_slug = self._name.lower().replace(" ", "_")
+        sub_key_slug = self._sub_key.lower()
+        self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
+
         self._attr_unique_id = generate_unique_id(
             self.devtype,
             self.agt,
             self.me,
             sub_device_key,
         )
-        self._attr_name = self._generate_sensor_name()
         self._attr_device_class = self._determine_device_class()
         self._attr_state_class = self._determine_state_class()
         self._attr_native_unit_of_measurement = self._determine_unit()

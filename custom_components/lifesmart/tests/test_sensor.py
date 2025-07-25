@@ -253,7 +253,10 @@ def test_lifesmart_sensor_properties(
     sub_data = raw_device[DEVICE_DATA_KEY][sub_key]
     expected_name = f"{raw_device[DEVICE_NAME_KEY]} {expected_name_suffix}"
 
-    # LifeSmartDevice is a simple dataclass, can be instantiated directly
+    # Calculate expected object_id based on the new logic
+    device_name_slug = raw_device[DEVICE_NAME_KEY].lower().replace(" ", "_")
+    sub_key_slug = sub_key.lower()
+    expected_object_id = f"{device_name_slug}_{sub_key_slug}"
 
     sensor = LifeSmartSensor(
         raw_device=raw_device,
@@ -265,6 +268,7 @@ def test_lifesmart_sensor_properties(
     sensor.hass = hass
 
     assert sensor.name == expected_name
+    assert sensor.object_id == expected_object_id
     assert sensor.device_class == expected_class
     assert sensor.native_unit_of_measurement == expected_unit
     assert sensor.state_class == expected_state_class
