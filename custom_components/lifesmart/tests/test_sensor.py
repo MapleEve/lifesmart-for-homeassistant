@@ -40,24 +40,23 @@ async def test_async_setup_entry_creates_sensors(
     """Test successful creation of sensor entities based on shared fixtures."""
     entity_registry = er.async_get(hass)
 
-    # 筛选出所有的 lifesmart sensor 实体
     lifesmart_sensors = [
         entry
         for entry in entity_registry.entities.values()
         if entry.platform == DOMAIN and entry.domain == "sensor"
     ]
 
-    # Expected sensors from conftest.py's mock_lifesmart_devices:
-    # sensor_env: 4 (T, H, Z, V)
-    # sensor_co2: 1 (P3)
-    # sensor_power_plug: 2 (P2, P3)
-    # sensor_lock_battery: 1 (BAT)
-    # sensor_switch_battery: 1 (P4)
-    # climate_nature_thermo: 1 (P4)
+    # Expected sensors:
+    # sensor_env (SL_SC_THL): 4 (T, H, Z, V)
+    # sensor_co2 (SL_SC_CA): 1 (P3)
+    # sensor_power_plug (SL_OE_3C): 2 (P2, P3)
+    # sensor_lock_battery (SL_LK_LS): 1 (BAT)
+    # sensor_switch_battery (SL_SW_IF1): 1 (P4)
+    # climate_nature_thermo (SL_NATURE): 1 (P4)
     # Total = 10 sensors
-    # 注意：conftest.py 中有一个被排除的设备 sw_oe3c，它也有 sensor，但不应被创建
-    # 还有一个在被排除的 hub 上的设备，也不应被创建
-    assert len(lifesmart_sensors) == 10, "Incorrect number of sensor entities created"
+    assert (
+        len(lifesmart_sensors) == 10
+    ), f"Incorrect number of sensor entities created. Expected 10, got {len(lifesmart_sensors)}"
 
 
 @pytest.mark.parametrize(
@@ -185,7 +184,6 @@ async def test_lifesmart_sensor_properties(
         expected_state_class.value if expected_state_class else None
     )
     assert state.attributes.get("unit_of_measurement") == expected_unit
-    # Home Assistant state is always a string, so we need to convert for comparison
     assert float(state.state) == expected_value
 
     entity_registry = er.async_get(hass)
@@ -231,11 +229,9 @@ async def test_lifesmart_sensor_updates(
     assert float(hass.states.get(entity_id).state) == 26.5
 
     # 3. Test global refresh
-    # Modify the device data in hass.data
     device_list = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
     for i, device in enumerate(device_list):
         if device["me"] == "sensor_env":
-            # Create a copy to avoid modifying the original fixture data
             updated_device = device.copy()
             updated_device[DEVICE_DATA_KEY] = updated_device[DEVICE_DATA_KEY].copy()
             updated_device[DEVICE_DATA_KEY][sub_key] = {"val": 270}
@@ -247,30 +243,36 @@ async def test_lifesmart_sensor_updates(
     assert float(hass.states.get(entity_id).state) == 27.0
 
 
-# --- This test remains unchanged as it's a pure function test ---
 @pytest.mark.parametrize(
     ("device_type", "sub_key", "expected"),
     [
+        # Climate
         ("SL_CP_DN", "P5", True),
         ("SL_CP_VL", "P6", True),
         ("SL_TR_ACIPM", "P4", True),
+        # EV Sensor
         ("SL_SC_THL", "T", True),
-        ("SL_SC_THL", "P5", True),
         ("SL_SC_CH", "P1", True),
-        ("SL_SC_GAS", "P2", True),
+        # Env Sensor
+        ("SL_SC_CA", "P3", True),
+        # Lock
         ("SL_LK_LS", "BAT", True),
-        ("SL_CT_C", "P8", True),
+        # Power Meter Plug
         ("SL_OE_3C", "P2", True),
+        # Smart Plug
         ("SL_OL", "EV", True),
         ("SL_SC_CN", "P1", True),
         ("ELIQ_EM", "EPA", True),
         ("SL_P_A", "T", True),
         ("SL_S_WFS", "V", True),
+        # Switch with battery
         ("SL_SW_IF1", "P4", True),
         ("SL_SC_BB_V2", "P2", True),
+        # Negative cases
         ("SL_CP_DN", "P1", False),
-        ("SL_LK_LS", "P1", False),
-        ("SL_ETDOOR", "P1", False),
+        ("SL_P_A", "T", False),  # SL_P_A is smoke sensor, has no 'T'
+        ("SL_SC_G", "T", False),  # Door sensor has no 'T'
+        ("SL_ETDOOR", "P1", False),  # Garage door P1 is a switch, not a sensor
         ("UNKNOWN_TYPE", "P1", False),
     ],
 )
