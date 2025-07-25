@@ -31,7 +31,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.ssl import get_default_context
 
 from . import lifesmart_protocol
 from .const import (
@@ -398,7 +397,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 停止 WebSocket 状态管理器
     if state_manager := hass.data[DOMAIN].get(LIFESMART_STATE_MANAGER):
         await state_manager.stop()
-        await asyncio.sleep(0)
 
     # 停止本地客户端连接任务
     if local_task := hass.data[DOMAIN].get(entry_id, {}).get("local_task"):
@@ -711,22 +709,13 @@ class LifeSmartStateManager:
                 await self._schedule_retry()
 
     async def _create_websocket(self) -> aiohttp.ClientWebSocketResponse:
-        """创建新的 WebSocket 连接，并处理 SSL 验证。"""
-        ssl_context = get_default_context()
+        """创建新的 WebSocket 连接，完全依赖 Home Assistant 的共享会话。"""
         session = async_get_clientsession(self.hass)
-        if session.closed:
-            _LOGGER.warning(
-                "无法创建 WebSocket 连接，因为 aiohttp 会话已关闭（可能正在关机）。"
-            )
-            raise asyncio.CancelledError(
-                "Session is closed, aborting connection attempt."
-            )
         try:
             return await session.ws_connect(
                 self.ws_url,
                 heartbeat=25,
                 compress=15,
-                ssl=ssl_context,
                 timeout=aiohttp.ClientTimeout(total=30),
             )
         except aiohttp.ClientConnectorCertificateError as e:
@@ -880,12 +869,6 @@ class LifeSmartStateManager:
         """优雅地停止 WebSocket 连接和管理任务。"""
         _LOGGER.info("正在停止 LifeSmart WebSocket 状态管理器...")
         self._should_stop = True
-        # 调用客户端的断开连接方法，以满足测试断言并确保正确的清理流程。
-        if hasattr(self.client, "ws_disconnect"):
-            try:
-                await self.client.ws_disconnect()
-            except Exception as e:
-                _LOGGER.warning("调用 client.ws_disconnect() 时发生错误: %s", e)
 
         # 底层的 WebSocket 关闭操作
         if self._ws and not self._ws.closed:
