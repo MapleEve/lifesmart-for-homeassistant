@@ -48,7 +48,8 @@
     "abort": {
       "already_in_progress": "Configuration is already in progress.",
       "reauth_successful": "Re-authentication successful. Please reload the integration.",
-      "already_configured": "This device is already configured."
+      "already_configured": "This device is already configured.",
+      "unknown_error": "An unknown error occurred. Please check the logs."
     },
     "error": {
       "cannot_connect": "Failed to connect. Please check your network and IP address.",

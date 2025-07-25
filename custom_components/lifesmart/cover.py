@@ -15,24 +15,40 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import generate_entity_id
+from . import LifeSmartDevice, generate_unique_id
 from .const import (
-    DOMAIN,
-    MANUFACTURER,
-    HUB_ID_KEY,
-    DEVICE_ID_KEY,
-    DEVICE_TYPE_KEY,
-    DEVICE_NAME_KEY,
-    DEVICE_DATA_KEY,
-    DEVICE_VERSION_KEY,
-    NON_POSITIONAL_COVER_CONFIG,
-    LIFESMART_SIGNAL_UPDATE_ENTITY,
     ALL_COVER_TYPES,
-    GARAGE_DOOR_TYPES,
+    CONF_EXCLUDE_AGTS,
+    CONF_EXCLUDE_ITEMS,
+    DEVICE_DATA_KEY,
+    DEVICE_ID_KEY,
+    DEVICE_NAME_KEY,
+    DEVICE_TYPE_KEY,
+    DEVICE_VERSION_KEY,
+    DOMAIN,
     DOOYA_TYPES,
+    GARAGE_DOOR_TYPES,
+    GENERIC_CONTROLLER_TYPES,
+    HUB_ID_KEY,
+    LIFESMART_SIGNAL_UPDATE_ENTITY,
+    MANUFACTURER,
+    NON_POSITIONAL_COVER_CONFIG,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_cover_subdevice(device_type: str, sub_key: str) -> bool:
+    """Check if a sub-device is a valid cover control point."""
+    if device_type in GARAGE_DOOR_TYPES:
+        return sub_key in {"P2", "HS"}
+    if device_type in DOOYA_TYPES:
+        return sub_key == "P1"
+    if device_type in NON_POSITIONAL_COVER_CONFIG:
+        # For non-positional, any of its defined control keys is a valid sub-device
+        config = NON_POSITIONAL_COVER_CONFIG[device_type]
+        return sub_key in {config["open"], config["close"], config["stop"]}
+    return False
 
 
 async def async_setup_entry(
@@ -40,12 +56,16 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart covers from a config entry, following the standard pattern."""
+    """Set up LifeSmart covers from a config entry."""
     entry_id = config_entry.entry_id
     devices = hass.data[DOMAIN][entry_id]["devices"]
     client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
+    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
+    exclude_devices = {
+        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
+    }
+    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
 
     covers = []
     for device in devices:
@@ -55,132 +75,116 @@ async def async_setup_entry(
         ):
             continue
 
-        device_type = device[DEVICE_TYPE_KEY]
-        if device_type in ALL_COVER_TYPES:
-            covers.append(
-                LifeSmartCover(
-                    raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
+        device_type = device.get(DEVICE_TYPE_KEY)
+        if device_type not in ALL_COVER_TYPES:
+            continue
+
+        if device_type in GENERIC_CONTROLLER_TYPES:
+            p1_val = device.get(DEVICE_DATA_KEY, {}).get("P1", {}).get("val", 0)
+            # 工作模式: (val >>> 24) & 0xE
+            # 2: 二线窗帘, 4: 三线窗帘
+            work_mode = (p1_val >> 24) & 0xE
+            if work_mode not in {2, 4}:
+                # 如果不是窗帘模式，则跳过此设备
+                continue
+
+        device_data = device.get(DEVICE_DATA_KEY, {})
+        for sub_key in device_data:
+            if not _is_cover_subdevice(device_type, sub_key):
+                continue
+
+            if device_type in NON_POSITIONAL_COVER_CONFIG:
+                if device_type in GENERIC_CONTROLLER_TYPES:
+                    rep_key = NON_POSITIONAL_COVER_CONFIG["SL_P"]["open"]
+                else:
+                    rep_key = NON_POSITIONAL_COVER_CONFIG[device_type]["open"]
+
+                if sub_key != rep_key:
+                    continue
+
+            if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
+                covers.append(
+                    LifeSmartPositionalCover(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                        sub_device_key=sub_key,
+                    )
                 )
-            )
+            elif (
+                device_type in NON_POSITIONAL_COVER_CONFIG
+                or device_type in GENERIC_CONTROLLER_TYPES
+            ):
+                covers.append(
+                    LifeSmartNonPositionalCover(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                        sub_device_key=sub_key,
+                    )
+                )
 
     async_add_entities(covers)
 
 
-class LifeSmartCover(CoverEntity):
-    """LifeSmart cover entity with full state management."""
-
-    _attr_has_entity_name = True
+class LifeSmartBaseCover(LifeSmartDevice, CoverEntity):
+    """Base class for LifeSmart covers, mirroring LifeSmartBaseLight."""
 
     def __init__(
         self,
         raw_device: dict[str, Any],
         client: Any,
         entry_id: str,
+        sub_device_key: str,
     ) -> None:
-        """Initialize the cover."""
-        self._raw_device = raw_device
-        self._client = client
+        """Initialize the base cover."""
+        super().__init__(raw_device, client)
         self._entry_id = entry_id
-        self.device_type = raw_device[DEVICE_TYPE_KEY]
-        self._hub_id = raw_device[HUB_ID_KEY]
-        self._device_id = raw_device[DEVICE_ID_KEY]
+        self._sub_key = sub_device_key
 
-        self._attr_unique_id = generate_entity_id(
-            self.device_type, self._hub_id, self._device_id, "cover"
+        base_name = self._name
+        sub_name_from_data = (
+            raw_device.get(DEVICE_DATA_KEY, {})
+            .get(self._sub_key, {})
+            .get(DEVICE_NAME_KEY)
         )
-        self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Unknown Cover")
+        suffix = (
+            sub_name_from_data
+            if sub_name_from_data and sub_name_from_data != self._sub_key
+            else self._sub_key.upper()
+        )
+        self._attr_name = f"{base_name} {suffix}"
 
-        self._initialize_features()
-        self._update_state(raw_device.get(DEVICE_DATA_KEY, {}))
+        device_name_slug = self._name.lower().replace(" ", "_")
+        sub_key_slug = self._sub_key.lower()
+        self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
+
+        self._attr_unique_id = generate_unique_id(
+            self.devtype, self.agt, self.me, self._sub_key
+        )
+
+        self._sub_data = raw_device.get(DEVICE_DATA_KEY, {}).get(sub_device_key, {})
+        self._initialize_state()
 
     @callback
-    def _initialize_features(self) -> None:
-        """Initialize features based on device type using constants."""
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
-        self._attr_device_class = (
-            CoverDeviceClass.GARAGE
-            if self.device_type in GARAGE_DOOR_TYPES
-            else CoverDeviceClass.CURTAIN
-        )
-        if self.device_type in DOOYA_TYPES or self.device_type in GARAGE_DOOR_TYPES:
-            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
-
-    @callback
-    def _update_state(self, data: dict) -> None:
-        """Parse and update the entity's state from device data."""
-        # --- 位置型设备 ---
-        if self.device_type in GARAGE_DOOR_TYPES or self.device_type in DOOYA_TYPES:
-            status_data = data.get(
-                "P2" if self.device_type in GARAGE_DOOR_TYPES else "P1", {}
-            )
-            val = status_data.get("val", 0)
-            self._attr_current_cover_position = val & 0x7F
-            is_moving = status_data.get("type", 0) % 2 == 1
-            is_opening_direction = val & 0x80 == 0x80
-
-            self._attr_is_opening = is_moving and is_opening_direction
-            self._attr_is_closing = is_moving and not is_opening_direction
-            self._attr_is_closed = self.current_cover_position == 0
-
-        # --- 命令型设备 ---
-        elif self.device_type in NON_POSITIONAL_COVER_CONFIG:
-            self._attr_current_cover_position = None
-            config = NON_POSITIONAL_COVER_CONFIG[self.device_type]
-
-            is_opening = data.get(config["open"], {}).get("type", 0) % 2 == 1
-            is_closing = data.get(config["close"], {}).get("type", 0) % 2 == 1
-
-            self._attr_is_opening = is_opening
-            self._attr_is_closing = is_closing
-
-            # 只有在明确收到“关闭”信号后停止，我们才乐观地认为它是关闭的。
-            # 在其他情况下（如打开后停止），我们认为它是打开的（is_closed = False）。
-            if not is_opening and not is_closing:
-                # 如果上一个动作是关闭，现在停止了，我们假设它关闭了
-                if self._attr_is_closing:
-                    self._attr_is_closed = True
-                else:  # 否则，我们假设它是打开的（或部分打开）
-                    self._attr_is_closed = False
-            else:
-                # 只要在移动，就不是关闭状态
-                self._attr_is_closed = False
-        else:
-            # 未知设备类型，采取最保守的状态
-            self._attr_is_opening = False
-            self._attr_is_closing = False
-            self._attr_is_closed = None  # 状态未知
-            self._attr_current_cover_position = None
-
-        self.async_write_ha_state()
+    def _initialize_state(self) -> None:
+        """Initialize state - to be implemented by subclasses."""
+        raise NotImplementedError
 
     @property
     def device_info(self) -> DeviceInfo:
-        """返回设备信息以链接实体到单个设备。"""
-        # 从 self._raw_device 中安全地获取 hub_id 和 device_id
-        hub_id = self._raw_device.get(HUB_ID_KEY)
-        device_id = self._raw_device.get(DEVICE_ID_KEY)
-
-        # 确保 identifiers 即使在 hub_id 或 device_id 为 None 的情况下也不会出错
-        identifiers = set()
-        if hub_id and device_id:
-            identifiers.add((DOMAIN, hub_id, device_id))
-
+        """Return device information to link entities to a single device."""
         return DeviceInfo(
-            identifiers=identifiers,
-            name=self._raw_device.get(
-                DEVICE_NAME_KEY, "Unnamed Device"
-            ),  # 安全获取名称
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
             manufacturer=MANUFACTURER,
-            model=self._raw_device.get(DEVICE_TYPE_KEY),  # 安全获取型号
+            model=self.devtype,
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=((DOMAIN, hub_id) if hub_id else None),
+            via_device=(DOMAIN, self.agt),
         )
 
     async def async_added_to_hass(self) -> None:
+        """Register update listeners."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -196,40 +200,121 @@ class LifeSmartCover(CoverEntity):
 
     @callback
     def _handle_update(self, new_data: dict) -> None:
+        """Handle real-time updates by re-initializing state."""
         if new_data:
-            self._update_state(new_data)
+            self._raw_device[DEVICE_DATA_KEY] = new_data
+            self._initialize_state()
+            self.async_write_ha_state()
 
     @callback
     def _handle_global_refresh(self) -> None:
+        """Handle global refresh."""
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self._device_id), None
+                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
             )
             if current_device:
-                self._update_state(current_device.get(DEVICE_DATA_KEY, {}))
+                self._raw_device = current_device
+                self._initialize_state()
+                self.async_write_ha_state()
         except (KeyError, StopIteration):
             _LOGGER.warning(
                 "Could not find device %s during global refresh.", self._attr_unique_id
             )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        await self._client.open_cover_async(
-            self._hub_id, self._device_id, self.device_type
-        )
+        """Open the cover."""
+        await self._client.open_cover_async(self.agt, self.me, self.devtype)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        await self._client.close_cover_async(
-            self._hub_id, self._device_id, self.device_type
-        )
+        """Close the cover."""
+        await self._client.close_cover_async(self.agt, self.me, self.devtype)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
-        await self._client.stop_cover_async(
-            self._hub_id, self._device_id, self.device_type
+        """Stop the cover."""
+        await self._client.stop_cover_async(self.agt, self.me, self.devtype)
+
+
+class LifeSmartPositionalCover(LifeSmartBaseCover):
+    """Represents a LifeSmart cover that supports positions."""
+
+    def __init__(
+        self,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+        sub_device_key: str,
+    ) -> None:
+        """Initialize the positional cover."""
+        super().__init__(raw_device, client, entry_id, sub_device_key)
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION
+        )
+        self._attr_device_class = (
+            CoverDeviceClass.GARAGE
+            if self.devtype in GARAGE_DOOR_TYPES
+            else CoverDeviceClass.CURTAIN
         )
 
+    @callback
+    def _initialize_state(self) -> None:
+        """Parse and update the entity's state from device data."""
+        status_data = self._raw_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
+        val = status_data.get("val", 0)
+        self._attr_current_cover_position = val & 0x7F
+        is_moving = status_data.get("type", 0) % 2 == 1
+        is_opening_direction = (val & 0x80) == 0
+
+        self._attr_is_opening = is_moving and is_opening_direction
+        self._attr_is_closing = is_moving and not is_opening_direction
+        self._attr_is_closed = self.current_cover_position == 0
+
     async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Set the cover position."""
         position = kwargs[ATTR_POSITION]
         await self._client.set_cover_position_async(
-            self._hub_id, self._device_id, position, self.device_type
+            self.agt, self.me, position, self.devtype
         )
+
+
+class LifeSmartNonPositionalCover(LifeSmartBaseCover):
+    """Represents a LifeSmart cover that only supports open/close/stop."""
+
+    def __init__(
+        self,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+        sub_device_key: str,
+    ) -> None:
+        """Initialize the non-positional cover."""
+        super().__init__(raw_device, client, entry_id, sub_device_key)
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
+        self._attr_device_class = CoverDeviceClass.CURTAIN
+
+    @callback
+    def _initialize_state(self) -> None:
+        """Parse and update the entity's state from device data."""
+        self._attr_current_cover_position = None
+        config = NON_POSITIONAL_COVER_CONFIG[self.devtype]
+        data = self._raw_device.get(DEVICE_DATA_KEY, {})
+
+        is_opening = data.get(config["open"], {}).get("type", 0) % 2 == 1
+        is_closing = data.get(config["close"], {}).get("type", 0) % 2 == 1
+
+        if is_opening or is_closing:
+            self._attr_is_closed = False
+        else:
+            if self._attr_is_closing:
+                self._attr_is_closed = True
+            else:
+                self._attr_is_closed = False
+
+        self._attr_is_opening = is_opening
+        self._attr_is_closing = is_closing

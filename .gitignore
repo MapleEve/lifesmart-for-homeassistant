@@ -9,3 +9,5 @@ custom_components/lifesmart/__pycache__/*
 /venv
 
 .idea_modules/
+__pycache__
+.pytest_cache

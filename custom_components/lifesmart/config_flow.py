@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult, AbortFlow
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import SelectSelectorMode
@@ -189,10 +189,13 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_TYPE: config_entries.CONN_CLASS_LOCAL_PUSH,
                     },
                 )
-            except (asyncio.TimeoutError, ConnectionRefusedError):
+            except (asyncio.TimeoutError, ConnectionRefusedError, ConfigEntryNotReady):
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except ConfigEntryAuthFailed:
                 errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("本地连接流程发生未知错误")
+                errors["base"] = "unknown"
 
         local_schema = vol.Schema(
             {
@@ -212,51 +215,61 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle cloud setup: Step 1 - Basic info and auth method."""
-        config_data = self._reauth_entry.data.copy() if self._reauth_entry else {}
-        self.config_data.update(config_data)
+        try:
 
-        if user_input is not None:
-            self.config_data.update(user_input)
-            if user_input[CONF_LIFESMART_AUTH_METHOD] == "token":
-                return await self.async_step_cloud_token()
-            return await self.async_step_cloud_password()
+            if not hasattr(self, "config_data"):
+                self.config_data = {}
 
-        cloud_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_LIFESMART_APPKEY,
-                    default=self.config_data.get(CONF_LIFESMART_APPKEY, ""),
-                ): str,
-                vol.Required(
-                    CONF_LIFESMART_APPTOKEN,
-                    default=self.config_data.get(CONF_LIFESMART_APPTOKEN, ""),
-                ): str,
-                vol.Required(
-                    CONF_LIFESMART_USERID,
-                    default=self.config_data.get(CONF_LIFESMART_USERID, ""),
-                ): str,
-                vol.Required(
-                    CONF_REGION, default=self.config_data.get(CONF_REGION, "cn2")
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=LIFESMART_REGION_OPTIONS,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="region",
-                    )
-                ),
-                vol.Required(
-                    CONF_LIFESMART_AUTH_METHOD,
-                    default=self.config_data.get(CONF_LIFESMART_AUTH_METHOD, "token"),
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=["token", "password"],
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="auth_method",
-                    )
-                ),
-            }
-        )
-        return self.async_show_form(step_id="cloud", data_schema=cloud_schema)
+            if self._reauth_entry:
+                self.config_data.update(self._reauth_entry.data)
+
+            if user_input is not None:
+                self.config_data.update(user_input)
+                if user_input[CONF_LIFESMART_AUTH_METHOD] == "token":
+                    return await self.async_step_cloud_token()
+                return await self.async_step_cloud_password()
+
+            cloud_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_LIFESMART_APPKEY,
+                        default=self.config_data.get(CONF_LIFESMART_APPKEY, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_LIFESMART_APPTOKEN,
+                        default=self.config_data.get(CONF_LIFESMART_APPTOKEN, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_LIFESMART_USERID,
+                        default=self.config_data.get(CONF_LIFESMART_USERID, ""),
+                    ): str,
+                    vol.Required(
+                        CONF_REGION, default=self.config_data.get(CONF_REGION, "cn2")
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=LIFESMART_REGION_OPTIONS,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="region",
+                        )
+                    ),
+                    vol.Required(
+                        CONF_LIFESMART_AUTH_METHOD,
+                        default=self.config_data.get(
+                            CONF_LIFESMART_AUTH_METHOD, "token"
+                        ),
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=["token", "password"],
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="auth_method",
+                        )
+                    ),
+                }
+            )
+            return self.async_show_form(step_id="cloud", data_schema=cloud_schema)
+        except Exception as e:
+            _LOGGER.exception("Unexpected error in async_step_cloud: %s", e)
+            return self.async_abort(reason="unknown_error")
 
     async def async_step_cloud_token(
         self, user_input: dict[str, Any] | None = None
@@ -268,6 +281,8 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 validation_result = await validate_input(self.hass, self.config_data)
                 return await self._async_finish_flow(validation_result)
+            except AbortFlow:
+                raise
             except LifeSmartAuthError as e:
                 _LOGGER.error("配置流程认证失败: %s", e)
                 # 从异常中获取错误码
@@ -305,6 +320,8 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 validation_result = await validate_input(self.hass, self.config_data)
                 return await self._async_finish_flow(validation_result)
+            except AbortFlow:
+                raise
             except LifeSmartAuthError as e:
                 _LOGGER.error("配置流程认证失败: %s", e)
                 if e.code:

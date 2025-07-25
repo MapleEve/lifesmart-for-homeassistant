@@ -12,6 +12,7 @@ import asyncio
 import gzip
 import json
 import logging
+import re
 import struct
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -423,14 +424,28 @@ class LifeSmartProtocol:
             return "invalid_key"
 
     def _normalize_structure(self, data):
-        """递归地将 OrderedDict 转换为标准字典，并规范化键。"""
+        """递归地将数据结构规范化：
+        1. 将 OrderedDict 转换为标准 dict。
+        2. 将 LSTimestamp 对象转换为其整数值。
+        3. 确保所有字典键都是可哈希的。
+        """
         if isinstance(data, (dict, OrderedDict)):
-            return {
-                self._normalize_key(k): self._normalize_structure(v)
-                for k, v in data.items()
-            }
+            # 创建一个新字典以存储规范化后的数据
+            normalized_dict = {}
+            for k, v in data.items():
+                # 首先规范化键
+                normalized_key = self._normalize_key(k)
+                # 递归地规范化值
+                normalized_value = self._normalize_structure(v)
+                normalized_dict[normalized_key] = normalized_value
+            return normalized_dict
         elif isinstance(data, list):
+            # 递归地规范化列表中的每一项
             return [self._normalize_structure(item) for item in data]
+        elif isinstance(data, LSTimestamp):
+            # 将 LSTimestamp 对象转换为其内部的整数值
+            return data.value
+        # 对于所有其他基本类型 (int, str, bool, None)，直接返回
         return data
 
     def _build_structure(self, ops):
@@ -640,12 +655,12 @@ class LifeSmartPacketFactory:
 
         args = {"valtag": "m", "devid": devid}
         mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
-        if mode_val is not None and device_type in [
+        if mode_val is not None and device_type in {
             "SL_UACCB",
             "SL_NATURE",
             "SL_FCU",
             "V_AIR_P",
-        ]:
+        }:
             args.update(
                 {
                     "key": "MODE" if device_type == "V_AIR_P" else "P7",
@@ -700,7 +715,7 @@ class LifeSmartPacketFactory:
         elif device_type == "SL_TR_ACIPM":
             fan_val = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
             args.update({"key": "P2", "type": CMD_TYPE_SET_RAW, "val": fan_val})
-        elif device_type in ["SL_NATURE", "SL_FCU"]:
+        elif device_type in {"SL_NATURE", "SL_FCU"}:
             fan_val = REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)
             args.update({"key": "P9", "type": CMD_TYPE_SET_CONFIG, "val": fan_val})
         elif device_type == "SL_CP_AIR":
@@ -865,7 +880,8 @@ class LifeSmartLocalClient:
         self.username = username
         self.password = password
         self.config_agt = config_agt
-        self.reader, self.writer = None, None
+        self.reader: asyncio.StreamReader | None = None
+        self.writer: asyncio.StreamWriter | None = None
         self._proto = LifeSmartProtocol()
         self._factory: LifeSmartPacketFactory | None = None
         self.disconnected = False
@@ -887,6 +903,25 @@ class LifeSmartLocalClient:
             "ST": "ST",
             "CL": "CL",
         }
+
+    @property
+    def is_connected(self) -> bool:
+        """
+        如果读写器都存在且写入器未关闭，则返回 True。
+        """
+        return (
+            self.writer is not None
+            and self.reader is not None
+            and not self.writer.is_closing()
+        )
+
+    def disconnect(self):
+        """
+        此方法通过设置一个标志来向主连接循环发出信号，
+        使其在下一次迭代时正常终止并清理资源。
+        """
+        _LOGGER.info("请求断开本地客户端连接。")
+        self.disconnected = True
 
     def get_attr_name(self, field: str) -> str:
         """根据设备返回的字段名获取对应的友好属性名。"""
@@ -963,124 +998,184 @@ class LifeSmartLocalClient:
     async def async_connect(self, callback: None | Callable):
         """主连接循环，负责登录、获取设备和监听状态更新。"""
         while not self.disconnected:
+            self.reader, self.writer = None, None
             try:
+                _LOGGER.info("正在尝试建立本地连接到 %s:%s...", self.host, self.port)
                 self.reader, self.writer = await asyncio.wait_for(
                     asyncio.open_connection(self.host, self.port), timeout=5
                 )
+                _LOGGER.info("本地连接已建立。")
 
                 # 阶段1: 登录
                 pkt_factory = LifeSmartPacketFactory("", "")
                 pkt = pkt_factory.build_login_packet(self.username, self.password)
                 self.writer.write(pkt)
                 await self.writer.drain()
+                _LOGGER.debug("已发送登录请求。")
 
                 response = b""
                 stage = "login"
                 while not self.disconnected:
                     buf = await self.reader.read(4096)
                     if not buf:
-                        if self.writer:
-                            self.writer.close()
-                            await self.writer.wait_closed()
-                        if self.disconnected:
-                            return None
-                        raise asyncio.TimeoutError
+                        _LOGGER.warning("Socket 连接被对方关闭，将进行重连。")
+                        break  # 中断内部循环以触发重连
+                    _LOGGER.debug("Socket 收到 %d 字节数据。", len(buf))
                     response += buf
                     if response:
                         try:
+                            _LOGGER.debug("尝试解码大小为 %d 的缓冲区。", len(response))
                             response, decoded = self._proto.decode(response)
                             if not decoded:
+                                _LOGGER.debug("解码未产生有效结构，可能需要更多数据。")
                                 continue
-
+                            _LOGGER.debug("解码成功。剩余缓冲区大小: %d", len(response))
                             if stage == "login":
-                                if decoded[1].get("ret", None) is None:
-                                    _LOGGER.error(
-                                        "本地登录失败 -> %s", decoded[1].get("err")
+                                _LOGGER.debug(
+                                    "本地协议 'login' 阶段收到数据: %s", decoded
+                                )
+                                try:
+                                    # 检查是否是明确的登录失败响应
+                                    if decoded[1].get("ret") is None:
+                                        err_msg = decoded[1].get("err", "未知登录错误")
+                                        _LOGGER.error("本地登录失败 -> %s", err_msg)
+                                        self.disconnected = True
+                                        continue
+
+                                    # 安全地解析 node 和 node_agt
+                                    ret_data = decoded[1]["ret"]
+                                    node_info = ret_data[4]
+                                    self.node = node_info["base"][1]
+                                    self.node_agt = node_info["agt"][1]
+
+                                    _LOGGER.info(
+                                        "本地登录成功，Node: %s, Agt: %s",
+                                        self.node,
+                                        self.node_agt,
                                     )
-                                    self.disconnected = True
-                                else:
-                                    self.node = decoded[1]["ret"][4]["base"][1]
-                                    self.node_agt = decoded[1]["ret"][4]["agt"][1]
                                     self._factory = LifeSmartPacketFactory(
                                         self.node_agt, self.node
                                     )
                                     stage = "loading"
-                                    # 阶段2: 获取设备
+
                                     pkt = self._factory.build_get_config_packet(
                                         self.node
                                     )
                                     self.writer.write(pkt)
                                     await self.writer.drain()
+                                    _LOGGER.debug("已发送获取设备列表的请求。")
+
+                                except (IndexError, KeyError, TypeError) as e:
+                                    _LOGGER.error(
+                                        "解析登录响应时出错: %s。收到的 'ret' 数据: %s",
+                                        e,
+                                        decoded[1].get("ret", "N/A"),
+                                        exc_info=True,
+                                    )
+                                    break  # 解析失败，中断内部循环以重连
                             elif stage == "loading":
-                                payload = decoded[1]["ret"][1]
-                                self.devices = {}
-                                for devid, dev in payload["eps"].items():
-                                    dev_meta = {
-                                        "me": devid,
-                                        "devtype": (
-                                            dev["cls"][:-3]
-                                            if dev["cls"][-3:-1] == "_V"
-                                            else dev["cls"]
-                                        ),
-                                        "agt": self.node_agt,
-                                        "name": dev["name"],
-                                        "data": dev["_chd"]["m"]["_chd"],
-                                    }
-                                    dev_meta.update(dev)
-                                    del dev_meta["_chd"]
-                                    self.devices[devid] = dev_meta
-                                self.device_ready.set()
-                                stage = "loaded"
+                                _LOGGER.debug(
+                                    "本地协议 'loading' 阶段收到数据: %s", decoded
+                                )
+                                try:
+                                    payload = decoded[1]["ret"][1]
+                                    self.devices = {}
+                                    for devid, dev in payload.get("eps", {}).items():
+                                        dev = self._normalize_device_names(dev)
+                                        dev_meta = {
+                                            "me": devid,
+                                            "devtype": (
+                                                dev["cls"][:-3]
+                                                if dev["cls"][-3:-1] == "_V"
+                                                else dev["cls"]
+                                            ),
+                                            "agt": self.node_agt,
+                                            "name": dev["name"],
+                                            "data": dev.get("_chd", {})
+                                            .get("m", {})
+                                            .get("_chd", {}),
+                                        }
+                                        dev_meta.update(dev)
+                                        if "_chd" in dev_meta:
+                                            del dev_meta["_chd"]
+                                        self.devices[devid] = dev_meta
+
+                                    _LOGGER.info(
+                                        "成功加载 %d 个本地设备。", len(self.devices)
+                                    )
+                                    self.device_ready.set()
+                                    stage = "loaded"
+
+                                except (IndexError, KeyError, TypeError) as e:
+                                    _LOGGER.error(
+                                        "解析设备列表时出错: %s。收到的 'ret' 数据: %s",
+                                        e,
+                                        decoded[1].get("ret", "N/A"),
+                                        exc_info=True,
+                                    )
+                                    break  # 解析失败，中断内部循环以重连
                             else:
-                                # 阶段3: 监听更新
-                                if schg := decoded[1].get("_schg", None):
+                                if schg := decoded[1].get("_schg"):
                                     for schg_key, schg_data in schg.items():
-                                        if schg_key.startswith(f"{self.node_agt}/ep/"):
-                                            parts = schg_key.split("/")
-                                            if len(parts) >= 4:
-                                                dev_id, _, sub_key = (
-                                                    parts[2],
-                                                    parts[3],
-                                                    parts[4],
+                                        if not isinstance(schg_key, str):
+                                            continue
+
+                                        parts = schg_key.split("/")
+                                        if (
+                                            len(parts) == 5
+                                            and parts[0] == self.node_agt
+                                            and parts[1] == "ep"
+                                            and parts[3] == "m"
+                                        ):
+                                            dev_id, sub_key = parts[2], parts[4]
+
+                                            if dev_id in self.devices:
+                                                device_data = self.devices[
+                                                    dev_id
+                                                ].setdefault("data", {})
+                                                sub_device_data = (
+                                                    device_data.setdefault(sub_key, {})
                                                 )
-                                                if dev_id in self.devices:
-                                                    self.devices[dev_id][
-                                                        "data"
-                                                    ].setdefault(sub_key, {})
-                                                    self.devices[dev_id]["data"][
-                                                        sub_key
-                                                    ].update(schg_data["chg"])
-                                                    if callback and callable(callback):
-                                                        msg = {
-                                                            "me": dev_id,
-                                                            "idx": sub_key,
-                                                            "agt": self.node_agt,
-                                                            "devtype": self.devices[
-                                                                dev_id
-                                                            ]["devtype"],
-                                                        }
-                                                        msg.update(
-                                                            self.devices[dev_id][
-                                                                "data"
-                                                            ][sub_key]
-                                                        )
-                                                        callback({"msg": msg})
-                                                else:
-                                                    if callback and callable(callback):
-                                                        callback({"reload": True})
-                                                    _LOGGER.warning(
-                                                        "设备 %s 无效，将重新加载。",
-                                                        dev_id,
-                                                    )
-                                elif len(decoded[1].get("_sdel", {}).values()) > 0:
+                                                sub_device_data.update(
+                                                    schg_data.get("chg", {})
+                                                )
+
+                                                if callback and callable(callback):
+                                                    msg = {
+                                                        "me": dev_id,
+                                                        "idx": sub_key,
+                                                        "agt": self.node_agt,
+                                                        "devtype": self.devices[dev_id][
+                                                            "devtype"
+                                                        ],
+                                                        **sub_device_data,
+                                                    }
+                                                    await callback({"msg": msg})
+                                            else:
+                                                _LOGGER.debug(
+                                                    "收到未知设备 '%s' 的状态更新，已忽略。",
+                                                    dev_id,
+                                                )
+
+                                elif sdel := decoded[1].get("_sdel"):
+                                    _LOGGER.warning(
+                                        "检测到设备被删除，将触发重新加载: %s", sdel
+                                    )
                                     if callback and callable(callback):
-                                        callback({"reload": True})
-                                    _LOGGER.warning("设备被删除，将重新加载。")
+                                        await callback({"reload": True})
+                                else:
+                                    _LOGGER.debug("收到未处理的实时消息: %s", decoded)
+
                         except EOFError:
-                            pass
-                if self.writer:
-                    self.writer.close()
-                    await self.writer.wait_closed()
+                            _LOGGER.debug(
+                                "捕获到 EOFError，可能数据包不完整，将等待更多数据。"
+                            )
+                        except Exception as e:
+                            _LOGGER.error(
+                                "处理数据时发生意外错误: %s", e, exc_info=True
+                            )
+                            break  # 出现意外错误，中断内部循环以重连
+
             except (
                 ConnectionResetError,
                 asyncio.TimeoutError,
@@ -1090,16 +1185,37 @@ class LifeSmartLocalClient:
                 _LOGGER.warning(
                     "本地连接失败: %s: %s，将稍后重试。", e.__class__.__name__, str(e)
                 )
+            except asyncio.CancelledError:
+                _LOGGER.info("本地连接任务已被取消。")
+                self.disconnected = True
+                break
+            except Exception as e:
+                _LOGGER.error("本地连接主循环发生未知异常: %s", e, exc_info=True)
+            finally:
                 if self.writer:
-                    self.writer.close()
-                await asyncio.sleep(5.0)
+                    try:
+                        self.writer.close()
+                        await self.writer.wait_closed()
+                    except (ConnectionResetError, BrokenPipeError):
+                        # 这个异常是预期的，当对方已经强行关闭连接时
+                        _LOGGER.debug("在关闭 writer 时连接已被重置。")
+                    except Exception as e:
+                        _LOGGER.warning("关闭 writer 时发生未知错误: %s", e)
+                    self.writer = None
+
+                if not self.disconnected:
+                    await asyncio.sleep(5.0)
 
     async def async_disconnect(self, call: Event | ServiceCall | None):
         """断开与本地中枢的连接。"""
-        self.disconnected = True
+        self.disconnect()  # Call the new simple disconnect method
         if self.writer is not None:
-            self.writer.close()
-            await self.writer.wait_closed()
+            try:
+                if not self.writer.is_closing():
+                    self.writer.close()
+                    await self.writer.wait_closed()
+            except Exception as e:
+                _LOGGER.debug("在 async_disconnect 中关闭 writer 时发生错误: %s", e)
             self.writer = None
 
     async def _send_packet(self, packet: bytes):
@@ -1239,3 +1355,37 @@ class LifeSmartLocalClient:
         pkt = self._factory.build_send_ir_keys_packet(ai, me, category, brand, keys)
         await self._send_packet(pkt)
         return 0
+
+    @staticmethod
+    def _normalize_device_names(dev_dict: dict) -> dict:
+        """
+        递归地规范化设备及其子设备的名称，替换所有已知占位符。
+        - '{$EPN}' -> 替换为父设备名称。
+        - '{SUB_KEY}' -> 替换为 'SUB_KEY'。
+        """
+        base_name = dev_dict.get("name", "")
+
+        # 规范化子设备 (IO口) 的名称
+        if (
+            "_chd" in dev_dict
+            and "m" in dev_dict["_chd"]
+            and "_chd" in dev_dict["_chd"]["m"]
+        ):
+            sub_devices = dev_dict["_chd"]["m"]["_chd"]
+            for sub_key, sub_data in sub_devices.items():
+                if isinstance(sub_data, dict):
+                    sub_name = sub_data.get("name")
+                    if isinstance(sub_name, str) and sub_name:
+                        # 第一步：替换 {$EPN}
+                        processed_name = sub_name.replace("{$EPN}", base_name).strip()
+
+                        # 第二步：使用正则表达式替换所有其他 {KEY} 格式的占位符
+                        # 例如，将 '家门 {BAT}' 转换为 '家门 BAT'
+                        processed_name = re.sub(
+                            r"\{([A-Z0-9_]+)\}", r"\1", processed_name
+                        )
+
+                        # 去除可能产生的多余空格
+                        sub_data["name"] = " ".join(processed_name.split())
+
+        return dev_dict

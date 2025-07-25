@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice, generate_entity_id
+from . import LifeSmartDevice, generate_unique_id
 from .const import (
     # --- 核心常量 ---
     DOMAIN,
@@ -23,6 +23,9 @@ from .const import (
     DEVICE_VERSION_KEY,
     SUBDEVICE_INDEX_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
+    # --- 配置选项 ---
+    CONF_EXCLUDE_ITEMS,
+    CONF_EXCLUDE_AGTS,
     # --- 设备类型常量 ---
     SUPPORTED_SWITCH_TYPES,
     ALL_SWITCH_TYPES,
@@ -43,8 +46,12 @@ async def async_setup_entry(
     entry_id = config_entry.entry_id
     devices = hass.data[DOMAIN][entry_id]["devices"]
     client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
+    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
+    exclude_devices = {
+        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
+    }
+    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
 
     switches = []
     for device in devices:
@@ -67,14 +74,11 @@ async def async_setup_entry(
         if device_type not in ALL_SWITCH_TYPES:
             continue
 
-        ha_device = LifeSmartDevice(device, client)
-
         for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
             # 使用辅助函数判断子设备是否为开关
             if _is_switch_subdevice(device_type, sub_key):
                 switches.append(
                     LifeSmartSwitch(
-                        device=ha_device,
                         raw_device=device,
                         sub_device_key=sub_key,
                         sub_device_data=sub_data,
@@ -124,14 +128,13 @@ def _is_switch_subdevice(device_type: str, sub_key: str) -> bool:
     return False
 
 
-class LifeSmartSwitch(SwitchEntity):
+class LifeSmartSwitch(LifeSmartDevice, SwitchEntity):
     """LifeSmart switch entity with full state management."""
 
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
     def __init__(
         self,
-        device: LifeSmartDevice,
         raw_device: dict[str, Any],
         sub_device_key: str,
         sub_device_data: dict[str, Any],
@@ -139,25 +142,23 @@ class LifeSmartSwitch(SwitchEntity):
         entry_id: str,
     ) -> None:
         """Initialize the switch."""
-        self._device = device
-        self._raw_device = raw_device
+        super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
-        self._client = client
         self._entry_id = entry_id
 
         # --- 设置核心属性 ---
-        self._attr_unique_id = generate_entity_id(
-            raw_device[DEVICE_TYPE_KEY],
-            raw_device[HUB_ID_KEY],
-            raw_device[DEVICE_ID_KEY],
+        self._attr_unique_id = generate_unique_id(
+            self.devtype,
+            self.agt,
+            self.me,
             sub_device_key,
         )
         self._attr_name = self._generate_switch_name()
         self._attr_device_class = self._determine_device_class()
         self._attr_extra_state_attributes = {
-            HUB_ID_KEY: raw_device[HUB_ID_KEY],
-            DEVICE_ID_KEY: raw_device[DEVICE_ID_KEY],
+            HUB_ID_KEY: self.agt,
+            DEVICE_ID_KEY: self.me,
             SUBDEVICE_INDEX_KEY: self._sub_key,
         }
 
@@ -167,8 +168,8 @@ class LifeSmartSwitch(SwitchEntity):
     @callback
     def _generate_switch_name(self) -> str:
         """Generate user-friendly switch name."""
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Switch")
-        # 如果子设备有自己的名字 (如多联开关的按键名)，则使用它
+        base_name = self._name
+        # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
         if sub_name and sub_name != self._sub_key:
             return f"{base_name} {sub_name}"
@@ -178,9 +179,7 @@ class LifeSmartSwitch(SwitchEntity):
     @callback
     def _determine_device_class(self) -> SwitchDeviceClass:
         """Determine device class for better UI representation."""
-        if self._raw_device[DEVICE_TYPE_KEY] in (
-            SMART_PLUG_TYPES + POWER_METER_PLUG_TYPES
-        ):
+        if self.devtype in (SMART_PLUG_TYPES | POWER_METER_PLUG_TYPES):
             return SwitchDeviceClass.OUTLET
         return SwitchDeviceClass.SWITCH
 
@@ -193,24 +192,13 @@ class LifeSmartSwitch(SwitchEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """返回设备信息以链接实体到单个设备。"""
-        # 从 self._raw_device 中安全地获取 hub_id 和 device_id
-        hub_id = self._raw_device.get(HUB_ID_KEY)
-        device_id = self._raw_device.get(DEVICE_ID_KEY)
-
-        # 确保 identifiers 即使在 hub_id 或 device_id 为 None 的情况下也不会出错
-        identifiers = set()
-        if hub_id and device_id:
-            identifiers.add((DOMAIN, hub_id, device_id))
-
         return DeviceInfo(
-            identifiers=identifiers,
-            name=self._raw_device.get(
-                DEVICE_NAME_KEY, "Unnamed Device"
-            ),  # 安全获取名称
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
             manufacturer=MANUFACTURER,
-            model=self._raw_device.get(DEVICE_TYPE_KEY),  # 安全获取型号
+            model=self.devtype,
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=((DOMAIN, hub_id) if hub_id else None),
+            via_device=(DOMAIN, self.agt),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -248,8 +236,7 @@ class LifeSmartSwitch(SwitchEntity):
                 (
                     d
                     for d in devices
-                    if d[HUB_ID_KEY] == self._raw_device[HUB_ID_KEY]
-                    and d[DEVICE_ID_KEY] == self._raw_device[DEVICE_ID_KEY]
+                    if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
                 ),
                 None,
             )
@@ -266,7 +253,7 @@ class LifeSmartSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         result = await self._client.turn_on_light_switch_async(
-            self._sub_key, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY]
+            self._sub_key, self.agt, self.me
         )
         if result == 0:
             self._attr_is_on = True
@@ -275,14 +262,14 @@ class LifeSmartSwitch(SwitchEntity):
             _LOGGER.warning(
                 "Failed to turn on switch %s (dev: %s, sub: %s)",
                 self._attr_name,
-                self._raw_device.get(DEVICE_ID_KEY, "Unknown Device ID"),
+                self.me,
                 self._sub_key,
             )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         result = await self._client.turn_off_light_switch_async(
-            self._sub_key, self._raw_device[HUB_ID_KEY], self._raw_device[DEVICE_ID_KEY]
+            self._sub_key, self.agt, self.me
         )
         if result == 0:
             self._attr_is_on = False
@@ -291,6 +278,6 @@ class LifeSmartSwitch(SwitchEntity):
             _LOGGER.warning(
                 "Failed to turn off switch %s (dev: %s, sub: %s)",
                 self._attr_name,
-                self._raw_device.get(DEVICE_ID_KEY, "Unknown Device ID"),
+                self.me,
                 self._sub_key,
             )
