@@ -52,9 +52,12 @@ async def test_async_setup_entry_creates_sensors(
         mock_config_entry.entry_id: {
             "devices": mock_lifesmart_devices,
             "client": mock_client,
-            "exclude_devices": ["excluded_device"],
-            "exclude_hubs": ["excluded_hub"],
         }
+    }
+    # 在测试中模拟配置选项
+    mock_config_entry.options = {
+        CONF_EXCLUDE_ITEMS: "excluded_device",
+        CONF_EXCLUDE_AGTS: "excluded_hub",
     }
     async_add_entities = AsyncMock()
 
@@ -66,7 +69,7 @@ async def test_async_setup_entry_creates_sensors(
     # sensor_power_plug: 2 (P2, P3)
     # sensor_lock_battery: 1 (BAT)
     # sensor_switch_battery: 1 (P4)
-    # sensor_nature_thermo: 1 (P4)
+    # climate_nature_thermo: 1 (P4)
     # Total = 4 + 1 + 2 + 1 + 1 + 1 = 10 sensors
     assert async_add_entities.call_count == 1
     assert (
@@ -82,10 +85,9 @@ async def test_async_setup_entry_handles_no_devices(
         mock_config_entry.entry_id: {
             "devices": [],
             "client": mock_client,
-            "exclude_devices": [],
-            "exclude_hubs": [],
         }
     }
+    mock_config_entry.options = {}
     async_add_entities = AsyncMock()
     await async_setup_entry(hass, mock_config_entry, async_add_entities)
     async_add_entities.assert_called_once_with([])
@@ -318,9 +320,10 @@ async def test_lifesmart_sensor_updates(
     # 3. Test global refresh
     sensor.async_write_ha_state.reset_mock()
     updated_device = raw_device.copy()
-    updated_device[DEVICE_DATA_KEY] = {sub_key: {"val": 270}}  # 27.0 for temp
+    updated_device[DEVICE_DATA_KEY][sub_key] = {"val": 270}  # 27.0 for temp
 
     hass.data[DOMAIN] = {mock_config_entry.entry_id: {"devices": [updated_device]}}
     await sensor._handle_global_refresh()
+    # After global refresh, the value should be extracted again
     assert sensor.native_value == 27.0
     sensor.async_write_ha_state.assert_called_once()

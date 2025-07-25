@@ -517,18 +517,29 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
     async def _handle_update(self, new_data: dict) -> None:
         """Handle real-time updates."""
         try:
-            # 处理WebSocket推送的数据格式
+            # 统一处理数据来源
+            sub_data = {}
             if "msg" in new_data:
                 sub_data = new_data.get("msg", {}).get(self._sub_key, {})
-                val = sub_data.get("v") or sub_data.get("val")
+            elif self._sub_key in new_data:
+                sub_data = new_data.get(self._sub_key, {})
             else:
-                val = new_data.get("v") or new_data.get("val")
+                # 兼容直接推送子键值对的格式，例如 {'v': 26.0} 或 {'val': 260}
+                sub_data = new_data
 
-            if val is not None:
-                self._attr_native_value = (
-                    self._convert_raw_value(val) if "v" not in new_data else val
-                )
-                self.async_write_ha_state()
+            if not sub_data:
+                return
+
+            # 优先使用 'v' (最终值), 否则使用 'val' (原始值)
+            if "v" in sub_data:
+                self._attr_native_value = sub_data["v"]
+            elif "val" in sub_data:
+                self._attr_native_value = self._convert_raw_value(sub_data["val"])
+            else:
+                return  # 没有有效值，不更新
+
+            self.async_write_ha_state()
+
         except Exception as e:
             _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
 
@@ -553,9 +564,10 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
             return
 
         sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
-        val = sub_data.get("v") or sub_data.get("val")
+        val = self._extract_initial_value()
         if val is not None:
-            self._attr_native_value = self._convert_raw_value(val)
+            # 全局刷新总是使用原始值转换逻辑，因为'v'可能不存在
+            self._attr_native_value = val
             self.async_write_ha_state()
         else:
             _LOGGER.debug(
