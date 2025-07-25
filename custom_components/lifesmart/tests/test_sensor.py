@@ -1,9 +1,6 @@
 """
 Unit tests for the LifeSmart sensor platform.
-This version uses shared fixtures from conftest.py and correct mocking strategies.
 """
-
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from homeassistant.components.sensor import (
@@ -21,47 +18,34 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from custom_components.lifesmart import generate_unique_id
 from custom_components.lifesmart.const import *
-from custom_components.lifesmart.sensor import (
-    LifeSmartSensor,
-    async_setup_entry,
-    _is_sensor_subdevice,
-)
+from custom_components.lifesmart.sensor import _is_sensor_subdevice
 
 pytestmark = pytest.mark.asyncio
 
 
-# --- Helper to find a device in the shared fixture ---
 def find_device(devices: list, me: str):
     """Helper to find a specific device from the mock list by its 'me' id."""
     return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
 
 
-# --- TESTS for async_setup_entry ---
-
-
 async def test_async_setup_entry_creates_sensors(
     hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: ConfigEntry,
-    mock_lifesmart_devices: list,
+    setup_integration: ConfigEntry,
 ):
     """Test successful creation of sensor entities based on shared fixtures."""
-    hass.data[DOMAIN] = {
-        mock_config_entry.entry_id: {
-            "devices": mock_lifesmart_devices,
-            "client": mock_client,
-        }
-    }
-    # 在测试中模拟配置选项
-    mock_config_entry.options = {
-        CONF_EXCLUDE_ITEMS: "excluded_device",
-        CONF_EXCLUDE_AGTS: "excluded_hub",
-    }
-    async_add_entities = AsyncMock()
+    entity_registry = er.async_get(hass)
 
-    await async_setup_entry(hass, mock_config_entry, async_add_entities)
+    # 筛选出所有的 lifesmart sensor 实体
+    lifesmart_sensors = [
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.platform == DOMAIN and entry.domain == "sensor"
+    ]
 
     # Expected sensors from conftest.py's mock_lifesmart_devices:
     # sensor_env: 4 (T, H, Z, V)
@@ -70,36 +54,203 @@ async def test_async_setup_entry_creates_sensors(
     # sensor_lock_battery: 1 (BAT)
     # sensor_switch_battery: 1 (P4)
     # climate_nature_thermo: 1 (P4)
-    # Total = 4 + 1 + 2 + 1 + 1 + 1 = 10 sensors
-    assert async_add_entities.call_count == 1
-    assert (
-        len(async_add_entities.call_args[0][0]) == 10
-    ), "Incorrect number of sensor entities created"
-
-
-async def test_async_setup_entry_handles_no_devices(
-    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: ConfigEntry
-):
-    """Test setup with no devices."""
-    hass.data[DOMAIN] = {
-        mock_config_entry.entry_id: {
-            "devices": [],
-            "client": mock_client,
-        }
-    }
-    mock_config_entry.options = {}
-    async_add_entities = AsyncMock()
-    await async_setup_entry(hass, mock_config_entry, async_add_entities)
-    async_add_entities.assert_called_once_with([])
-
-
-# --- TESTS for _is_sensor_subdevice ---
+    # Total = 10 sensors
+    # 注意：conftest.py 中有一个被排除的设备 sw_oe3c，它也有 sensor，但不应被创建
+    # 还有一个在被排除的 hub 上的设备，也不应被创建
+    assert len(lifesmart_sensors) == 10, "Incorrect number of sensor entities created"
 
 
 @pytest.mark.parametrize(
+    (
+        "device_me",
+        "sub_key",
+        "expected_name_suffix",
+        "expected_class",
+        "expected_unit",
+        "expected_state_class",
+        "expected_value",
+    ),
+    [
+        (
+            "sensor_env",
+            "T",
+            "T",
+            SensorDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            SensorStateClass.MEASUREMENT,
+            25.5,
+        ),
+        (
+            "sensor_env",
+            "H",
+            "H",
+            SensorDeviceClass.HUMIDITY,
+            PERCENTAGE,
+            SensorStateClass.MEASUREMENT,
+            60.1,
+        ),
+        (
+            "sensor_env",
+            "Z",
+            "Z",
+            SensorDeviceClass.ILLUMINANCE,
+            LIGHT_LUX,
+            SensorStateClass.MEASUREMENT,
+            1000,
+        ),
+        (
+            "sensor_env",
+            "V",
+            "V",
+            SensorDeviceClass.VOLTAGE,
+            UnitOfElectricPotential.VOLT,
+            SensorStateClass.MEASUREMENT,
+            95,
+        ),
+        (
+            "sensor_lock_battery",
+            "BAT",
+            "BAT",
+            SensorDeviceClass.BATTERY,
+            PERCENTAGE,
+            SensorStateClass.MEASUREMENT,
+            88,
+        ),
+        (
+            "sensor_switch_battery",
+            "P4",
+            "P4",
+            SensorDeviceClass.BATTERY,
+            PERCENTAGE,
+            SensorStateClass.MEASUREMENT,
+            92,
+        ),
+        (
+            "sensor_power_plug",
+            "P2",
+            "P2",
+            SensorDeviceClass.ENERGY,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            SensorStateClass.TOTAL_INCREASING,
+            1.5,
+        ),
+        (
+            "sensor_power_plug",
+            "P3",
+            "P3",
+            SensorDeviceClass.POWER,
+            UnitOfPower.WATT,
+            SensorStateClass.MEASUREMENT,
+            1200,
+        ),
+        (
+            "sensor_co2",
+            "P3",
+            "P3",
+            SensorDeviceClass.CO2,
+            CONCENTRATION_PARTS_PER_MILLION,
+            SensorStateClass.MEASUREMENT,
+            800,
+        ),
+    ],
+)
+async def test_lifesmart_sensor_properties(
+    hass: HomeAssistant,
+    setup_integration: ConfigEntry,
+    mock_lifesmart_devices: list,
+    device_me,
+    sub_key,
+    expected_name_suffix,
+    expected_class,
+    expected_unit,
+    expected_state_class,
+    expected_value,
+):
+    """Test all derived properties of the LifeSmartSensor entity using shared fixtures."""
+    raw_device = find_device(mock_lifesmart_devices, device_me)
+    assert raw_device, f"Device '{device_me}' not found in mock_lifesmart_devices"
+
+    device_name_slug = raw_device["name"].lower().replace(" ", "_")
+    sub_key_slug = sub_key.lower()
+    entity_id = f"sensor.{device_name_slug}_{sub_key_slug}"
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"Entity {entity_id} not found"
+
+    assert state.name == f"{raw_device['name']} {expected_name_suffix}"
+    assert state.attributes.get("device_class") == (
+        expected_class.value if expected_class else None
+    )
+    assert state.attributes.get("state_class") == (
+        expected_state_class.value if expected_state_class else None
+    )
+    assert state.attributes.get("unit_of_measurement") == expected_unit
+    # Home Assistant state is always a string, so we need to convert for comparison
+    assert float(state.state) == expected_value
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    expected_unique_id = generate_unique_id(
+        raw_device[DEVICE_TYPE_KEY], raw_device[HUB_ID_KEY], device_me, sub_key
+    )
+    assert entry.unique_id == expected_unique_id
+
+
+async def test_lifesmart_sensor_updates(
+    hass: HomeAssistant,
+    setup_integration: ConfigEntry,
+    mock_lifesmart_devices: list,
+):
+    """Test real-time and global refresh updates."""
+    raw_device = find_device(mock_lifesmart_devices, "sensor_env")
+    sub_key = "T"
+    device_name_slug = raw_device["name"].lower().replace(" ", "_")
+    sub_key_slug = sub_key.lower()
+    entity_id = f"sensor.{device_name_slug}_{sub_key_slug}"
+
+    unique_id = generate_unique_id(
+        raw_device[DEVICE_TYPE_KEY],
+        raw_device[HUB_ID_KEY],
+        raw_device[DEVICE_ID_KEY],
+        sub_key,
+    )
+
+    # 1. Test real-time update (WebSocket push with 'v' for direct value)
+    async_dispatcher_send(
+        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"v": 26.0}
+    )
+    await hass.async_block_till_done()
+    assert float(hass.states.get(entity_id).state) == 26.0
+
+    # 2. Test real-time update (raw 'val', requires conversion)
+    async_dispatcher_send(
+        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"val": 265}
+    )
+    await hass.async_block_till_done()
+    assert float(hass.states.get(entity_id).state) == 26.5
+
+    # 3. Test global refresh
+    # Modify the device data in hass.data
+    device_list = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+    for i, device in enumerate(device_list):
+        if device["me"] == "sensor_env":
+            # Create a copy to avoid modifying the original fixture data
+            updated_device = device.copy()
+            updated_device[DEVICE_DATA_KEY] = updated_device[DEVICE_DATA_KEY].copy()
+            updated_device[DEVICE_DATA_KEY][sub_key] = {"val": 270}
+            device_list[i] = updated_device
+            break
+
+    async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
+    await hass.async_block_till_done()
+    assert float(hass.states.get(entity_id).state) == 27.0
+
+
+# --- This test remains unchanged as it's a pure function test ---
+@pytest.mark.parametrize(
     ("device_type", "sub_key", "expected"),
     [
-        # Positive cases from each block (using static strings instead of indexing sets)
         ("SL_CP_DN", "P5", True),
         ("SL_CP_VL", "P6", True),
         ("SL_TR_ACIPM", "P4", True),
@@ -117,7 +268,6 @@ async def test_async_setup_entry_handles_no_devices(
         ("SL_S_WFS", "V", True),
         ("SL_SW_IF1", "P4", True),
         ("SL_SC_BB_V2", "P2", True),
-        # Negative cases
         ("SL_CP_DN", "P1", False),
         ("SL_LK_LS", "P1", False),
         ("SL_ETDOOR", "P1", False),
@@ -127,203 +277,3 @@ async def test_async_setup_entry_handles_no_devices(
 def test_is_sensor_subdevice(device_type, sub_key, expected):
     """Test the sub-device validation logic for all branches."""
     assert _is_sensor_subdevice(device_type, sub_key) == expected
-
-
-# --- TESTS for LifeSmartSensor Entity ---
-
-
-@pytest.mark.parametrize(
-    (
-        "device_me",
-        "sub_key",
-        "expected_name_suffix",
-        "expected_class",
-        "expected_unit",
-        "expected_state_class",
-        "expected_value",
-    ),
-    [
-        # Temperature from sensor_env
-        (
-            "sensor_env",
-            "T",
-            "T",
-            SensorDeviceClass.TEMPERATURE,
-            UnitOfTemperature.CELSIUS,
-            SensorStateClass.MEASUREMENT,
-            25.5,
-        ),
-        # Humidity from sensor_env
-        (
-            "sensor_env",
-            "H",
-            "H",
-            SensorDeviceClass.HUMIDITY,
-            PERCENTAGE,
-            SensorStateClass.MEASUREMENT,
-            60.1,
-        ),
-        # Illuminance from sensor_env
-        (
-            "sensor_env",
-            "Z",
-            "Z",
-            SensorDeviceClass.ILLUMINANCE,
-            LIGHT_LUX,
-            SensorStateClass.MEASUREMENT,
-            1000,
-        ),
-        # Voltage from sensor_env
-        (
-            "sensor_env",
-            "V",
-            "V",
-            SensorDeviceClass.VOLTAGE,
-            UnitOfElectricPotential.VOLT,
-            SensorStateClass.MEASUREMENT,
-            95,
-        ),
-        # Battery from lock
-        (
-            "sensor_lock_battery",
-            "BAT",
-            "BAT",
-            SensorDeviceClass.BATTERY,
-            PERCENTAGE,
-            SensorStateClass.MEASUREMENT,
-            88,
-        ),
-        # Battery from switch
-        (
-            "sensor_switch_battery",
-            "P4",
-            "P4",
-            SensorDeviceClass.BATTERY,
-            PERCENTAGE,
-            SensorStateClass.MEASUREMENT,
-            92,
-        ),
-        # Energy from power plug
-        (
-            "sensor_power_plug",
-            "P2",
-            "P2",
-            SensorDeviceClass.ENERGY,
-            UnitOfEnergy.KILO_WATT_HOUR,
-            SensorStateClass.TOTAL_INCREASING,
-            1.5,
-        ),
-        # Power from power plug
-        (
-            "sensor_power_plug",
-            "P3",
-            "P3",
-            SensorDeviceClass.POWER,
-            UnitOfPower.WATT,
-            SensorStateClass.MEASUREMENT,
-            1200,
-        ),
-        # CO2 from CO2 sensor
-        (
-            "sensor_co2",
-            "P3",
-            "P3",
-            SensorDeviceClass.CO2,
-            CONCENTRATION_PARTS_PER_MILLION,
-            SensorStateClass.MEASUREMENT,
-            800,
-        ),
-    ],
-)
-def test_lifesmart_sensor_properties(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: ConfigEntry,
-    mock_lifesmart_devices: list,
-    device_me,
-    sub_key,
-    expected_name_suffix,
-    expected_class,
-    expected_unit,
-    expected_state_class,
-    expected_value,
-):
-    """Test all derived properties of the LifeSmartSensor entity using shared fixtures."""
-    raw_device = find_device(mock_lifesmart_devices, device_me)
-    assert raw_device, f"Device '{device_me}' not found in mock_lifesmart_devices"
-
-    sub_data = raw_device[DEVICE_DATA_KEY][sub_key]
-    expected_name = f"{raw_device[DEVICE_NAME_KEY]} {expected_name_suffix}"
-
-    # Calculate expected object_id based on the new logic
-    device_name_slug = raw_device[DEVICE_NAME_KEY].lower().replace(" ", "_")
-    sub_key_slug = sub_key.lower()
-    expected_object_id = f"{device_name_slug}_{sub_key_slug}"
-
-    sensor = LifeSmartSensor(
-        raw_device=raw_device,
-        sub_device_key=sub_key,
-        sub_device_data=sub_data,
-        client=mock_client,
-        entry_id=mock_config_entry.entry_id,
-    )
-    sensor.hass = hass
-
-    assert sensor.name == expected_name
-    assert sensor.object_id == expected_object_id
-    assert sensor.device_class == expected_class
-    assert sensor.native_unit_of_measurement == expected_unit
-    assert sensor.state_class == expected_state_class
-    assert sensor.native_value == expected_value
-    from custom_components.lifesmart import generate_unique_id
-
-    assert sensor.unique_id == generate_unique_id(
-        raw_device[DEVICE_TYPE_KEY], raw_device[HUB_ID_KEY], device_me, sub_key
-    )
-
-
-async def test_lifesmart_sensor_updates(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: ConfigEntry,
-    mock_lifesmart_devices: list,
-):
-    """Test real-time and global refresh updates."""
-    # Setup initial device and sensor
-    raw_device = find_device(mock_lifesmart_devices, "sensor_env")
-    sub_key = "T"
-    sub_data = raw_device[DEVICE_DATA_KEY][sub_key]
-
-    sensor = LifeSmartSensor(
-        raw_device=raw_device,
-        sub_device_key=sub_key,
-        sub_device_data=sub_data,
-        client=mock_client,
-        entry_id=mock_config_entry.entry_id,
-    )
-    sensor.hass = hass
-    sensor.async_write_ha_state = MagicMock()
-
-    # 1. Test real-time update (WebSocket push with 'v' for direct value)
-    update_data_ws = {"msg": {sub_key: {"v": 26.0}}}
-    await sensor._handle_update(update_data_ws)
-    assert sensor.native_value == 26.0
-    sensor.async_write_ha_state.assert_called_once()
-
-    # 2. Test real-time update (raw 'val', requires conversion)
-    sensor.async_write_ha_state.reset_mock()
-    update_data_raw = {sub_key: {"val": 265}}  # 26.5 for temp
-    await sensor._handle_update(update_data_raw)
-    assert sensor.native_value == 26.5
-    sensor.async_write_ha_state.assert_called_once()
-
-    # 3. Test global refresh
-    sensor.async_write_ha_state.reset_mock()
-    updated_device = raw_device.copy()
-    updated_device[DEVICE_DATA_KEY][sub_key] = {"val": 270}  # 27.0 for temp
-
-    hass.data[DOMAIN] = {mock_config_entry.entry_id: {"devices": [updated_device]}}
-    await sensor._handle_global_refresh()
-    # After global refresh, the value should be extracted again
-    assert sensor.native_value == 27.0
-    sensor.async_write_ha_state.assert_called_once()

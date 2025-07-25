@@ -53,6 +53,7 @@ from .const import (
     LOCK_TYPES,
     COVER_TYPES,
     DEFED_SENSOR_TYPES,
+    SMOKE_SENSOR_TYPES,
     WATER_SENSOR_TYPES,
     SUPPORTED_SWITCH_TYPES,
     GARAGE_DOOR_TYPES,
@@ -186,6 +187,9 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     if device_type in DEFED_SENSOR_TYPES and sub_key in {"T", "V"}:
         return True
 
+    # 烟雾传感器
+    if device_type in SMOKE_SENSOR_TYPES and sub_key == "P2":
+        return True
     # 水浸传感器（只保留电压）
     if device_type in WATER_SENSOR_TYPES and sub_key == "V":
         return True
@@ -326,6 +330,10 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         # 云防系列的温度传感器
         if device_type in DEFED_SENSOR_TYPES and sub_key == "T":
             return SensorDeviceClass.TEMPERATURE
+
+        # 烟雾传感器的电量
+        if device_type in SMOKE_SENSOR_TYPES and sub_key == "P2":
+            return SensorDeviceClass.BATTERY
 
         # 环境感应器（EV系列）
         if device_type in EV_SENSOR_TYPES:
