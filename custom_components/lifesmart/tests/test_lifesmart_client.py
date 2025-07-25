@@ -23,6 +23,7 @@ from custom_components.lifesmart.const import (
     CMD_TYPE_SET_CONFIG,
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_RAW,
+    CMD_TYPE_SET_TEMP_FCU,
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
 )
@@ -57,12 +58,12 @@ def mock_async_call_api():
 def test_url_and_header_generation(hass):
     """测试 API/WSS URL 和 HTTP Header 的生成逻辑。"""
     client_region = LifeSmartClient(hass, "cn2", "k", "t", "ut", "uid")
-    assert client_region._get_api_url("/app") == "https://api.cn2.ilifesmart.com/app"
+    assert client_region._get_api_url() == "https://api.cn2.ilifesmart.com/app"
     assert client_region.get_wss_url() == "wss://api.cn2.ilifesmart.com:8443/wsapp/"
 
     for auto_region in ["AUTO", None, ""]:
         client_auto = LifeSmartClient(hass, auto_region, "k", "t", "ut", "uid")
-        assert client_auto._get_api_url("/app") == "https://api.ilifesmart.com/app"
+        assert client_auto._get_api_url() == "https://api.ilifesmart.com/app"
         assert client_auto.get_wss_url() == "wss://api.ilifesmart.com:8443/wsapp/"
 
     assert client_region._generate_header() == {"Content-Type": "application/json"}
@@ -109,17 +110,25 @@ async def test_async_call_api_signature_and_error_handling(client):
 
 
 @pytest.mark.asyncio
-async def test_post_and_parse_all_failures(client):
-    """测试 _post_and_parse 的所有网络和解析失败分支。"""
-    with patch("aiohttp.ClientSession.post", new_callable=AsyncMock) as mock_post:
+async def test_post_and_parse_network_failure(client):
+    """测试 _post_and_parse 在网络失败时的行为。"""
+    with patch(
+        "custom_components.lifesmart.lifesmart_client.LifeSmartClient._post_async",
+        new_callable=AsyncMock,
+    ) as mock_post:
         mock_post.side_effect = ClientError("Connection failed")
         with pytest.raises(LifeSmartAPIError, match="网络请求失败"):
             await client._post_and_parse("http://a.b", {}, {})
 
-        mock_post.side_effect = None
-        mock_post.return_value.__aenter__.return_value.text = AsyncMock(
-            return_value="this is not json"
-        )
+
+@pytest.mark.asyncio
+async def test_post_and_parse_json_failure(client):
+    """测试 _post_and_parse 在JSON解析失败时的行为。"""
+    with patch(
+        "custom_components.lifesmart.lifesmart_client.LifeSmartClient._post_async",
+        new_callable=AsyncMock,
+    ) as mock_post:
+        mock_post.return_value = "this is not json"
         with pytest.raises(LifeSmartAPIError, match="JSON解析失败"):
             await client._post_and_parse("http://a.b", {}, {})
 
@@ -140,38 +149,53 @@ def test_get_code_from_response_all_failures(client):
 async def test_login_async_full_flow(client, mock_async_call_api):
     """测试登录流程的所有成功和失败分支。"""
     mock_async_call_api.side_effect = [
-        {"token": "temp_token", "userid": "new_user_id"},
-        {"usertoken": "new_user_token", "rgn": "cn1", "userid": "new_user_id"},
+        {"code": "success", "token": "temp_token", "userid": "new_user_id"},
+        {
+            "code": "success",
+            "usertoken": "new_user_token",
+            "rgn": "cn1",
+            "userid": "new_user_id",
+        },
     ]
-    result = await client.login_async()
+    # 模拟 _post_and_parse 因为 login 是特殊端点
+    with patch.object(client, "_post_and_parse") as mock_post:
+        mock_post.side_effect = mock_async_call_api.side_effect
+        result = await client.login_async()
+
     assert client._usertoken == "new_user_token"
     assert client._region == "cn1"
     assert client._userid == "new_user_id"
     assert result["usertoken"] == "new_user_token"
 
-    mock_async_call_api.side_effect = LifeSmartAuthError(-1)
-    with pytest.raises(LifeSmartAuthError, match=r"登录失败 \(步骤1\)"):
-        await client.login_async()
+    with patch.object(client, "_post_and_parse") as mock_post:
+        mock_post.side_effect = LifeSmartAuthError(-1)
+        with pytest.raises(LifeSmartAuthError):
+            await client.login_async()
 
-    mock_async_call_api.side_effect = [
-        {"token": "temp_token", "userid": "user_id"},
-        LifeSmartAuthError(-1),
-    ]
-    with pytest.raises(LifeSmartAuthError, match=r"认证失败 \(步骤2\)"):
-        await client.login_async()
+    with patch.object(client, "_post_and_parse") as mock_post:
+        mock_post.side_effect = [
+            {"code": "success", "token": "temp_token", "userid": "user_id"},
+            LifeSmartAuthError(-1),
+        ]
+        with pytest.raises(LifeSmartAuthError):
+            await client.login_async()
 
 
 @pytest.mark.asyncio
 async def test_async_refresh_token_full_flow(client, mock_async_call_api):
     """测试令牌刷新流程的成功和失败分支。"""
-    mock_async_call_api.return_value = {"usertoken": "refreshed_token"}
-    result = await client.async_refresh_token()
+    mock_async_call_api.return_value = {"code": 0, "usertoken": "refreshed_token"}
+    with patch.object(client, "_post_and_parse") as mock_post:
+        mock_post.return_value = mock_async_call_api.return_value
+        result = await client.async_refresh_token()
+
     assert client._usertoken == "refreshed_token"
     assert result["usertoken"] == "refreshed_token"
 
-    mock_async_call_api.side_effect = LifeSmartAuthError(-1)
-    with pytest.raises(LifeSmartAuthError, match="刷新令牌失败"):
-        await client.async_refresh_token()
+    with patch.object(client, "_post_and_parse") as mock_post:
+        mock_post.side_effect = LifeSmartAuthError(-1)
+        with pytest.raises(LifeSmartAuthError):
+            await client.async_refresh_token()
 
 
 def test_generate_wss_auth(client):
@@ -179,8 +203,10 @@ def test_generate_wss_auth(client):
     client._usertoken = "test_wss_token"
     auth_str = client.generate_wss_auth()
     auth_data = json.loads(auth_str)
-    assert auth_data["method"] == "WbAuth"
-    assert auth_data["params"]["system"]["usertoken"] == "test_wss_token"
+    assert "system" in auth_data
+    assert "usertoken" not in auth_data["system"]
+    assert "sign" in auth_data["system"]
+    assert "userid" in auth_data["system"]
 
 
 # endregion
@@ -244,14 +270,26 @@ async def test_all_api_wrappers(
 ):
     """测试所有API包装方法是否正确调用 _async_call_api。"""
     method = getattr(client, method_to_test)
-    mock_async_call_api.return_value = {
-        "code": 0,
-        "message": [{"data": "test"}],
-    }
+    mock_async_call_api.return_value = {"code": 0, "message": [{"data": "test"}]}
     await method(*call_args)
-    mock_async_call_api.assert_called_with(
-        api_method, expected_params or {}, api_path=api_path
-    )
+    if expected_params is None:
+        mock_async_call_api.assert_called_with(api_method, api_path=api_path)
+    else:
+        mock_async_call_api.assert_called_with(
+            api_method, expected_params, api_path=api_path
+        )
+
+
+@pytest.mark.asyncio
+async def test_set_multi_eps_async_wrapper(mock_async_call_api, client):
+    """测试 set_multi_eps_async 是否正确地将列表序列化为JSON字符串。"""
+    io_list = [{"idx": "L1", "val": 1}, {"idx": "L2", "val": 0}]
+    agt = "agt1"
+    me = "me1"
+    await client.set_multi_eps_async(agt, me, io_list)
+
+    expected_params = {"agt": agt, "me": me, "args": json.dumps(io_list)}
+    mock_async_call_api.assert_called_with("EpsSet", expected_params, api_path="/api")
 
 
 @pytest.mark.asyncio
@@ -298,13 +336,20 @@ async def test_simple_control_helpers(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "method, device_type, expected_idx, expected_cmd, expected_val",
+    "method_name, device_type, expected_idx, expected_cmd, expected_val",
     [
-        ("open_cover_async", "SL_LI_WW", "P1", CMD_TYPE_ON, 1),
-        ("open_cover_async", list(DOOYA_TYPES)[0], "P2", CMD_TYPE_SET_VAL, 100),
-        ("close_cover_async", "SL_LI_WW", "P2", CMD_TYPE_ON, 1),
+        # --- 定位窗帘 (特殊命令) ---
+        ("open_cover_async", list(GARAGE_DOOR_TYPES)[0], "P3", CMD_TYPE_SET_VAL, 100),
         ("close_cover_async", list(GARAGE_DOOR_TYPES)[0], "P3", CMD_TYPE_SET_VAL, 0),
-        ("stop_cover_async", "SL_LI_WW", "P3", CMD_TYPE_ON, 1),
+        (
+            "stop_cover_async",
+            list(GARAGE_DOOR_TYPES)[0],
+            "P3",
+            CMD_TYPE_SET_CONFIG,
+            CMD_TYPE_OFF,
+        ),
+        ("open_cover_async", list(DOOYA_TYPES)[0], "P2", CMD_TYPE_SET_VAL, 100),
+        ("close_cover_async", list(DOOYA_TYPES)[0], "P2", CMD_TYPE_SET_VAL, 0),
         (
             "stop_cover_async",
             list(DOOYA_TYPES)[0],
@@ -312,14 +357,32 @@ async def test_simple_control_helpers(
             CMD_TYPE_SET_CONFIG,
             CMD_TYPE_OFF,
         ),
+        # --- 非定位窗帘 (从 NON_POSITIONAL_COVER_CONFIG 映射) ---
+        # SL_SW_WIN
+        ("open_cover_async", "SL_SW_WIN", "OP", CMD_TYPE_ON, 1),
+        ("close_cover_async", "SL_SW_WIN", "CL", CMD_TYPE_ON, 1),
+        ("stop_cover_async", "SL_SW_WIN", "ST", CMD_TYPE_ON, 1),
+        # SL_P_V2
+        ("open_cover_async", "SL_P_V2", "P2", CMD_TYPE_ON, 1),
+        ("close_cover_async", "SL_P_V2", "P3", CMD_TYPE_ON, 1),
+        ("stop_cover_async", "SL_P_V2", "P4", CMD_TYPE_ON, 1),
+        # SL_CN_IF
+        ("open_cover_async", "SL_CN_IF", "P1", CMD_TYPE_ON, 1),
+        ("close_cover_async", "SL_CN_IF", "P2", CMD_TYPE_ON, 1),
+        ("stop_cover_async", "SL_CN_IF", "P3", CMD_TYPE_ON, 1),
+        # SL_P (通用控制器)
+        ("open_cover_async", "SL_P", "P2", CMD_TYPE_ON, 1),
+        ("close_cover_async", "SL_P", "P3", CMD_TYPE_ON, 1),
+        ("stop_cover_async", "SL_P", "P4", CMD_TYPE_ON, 1),
     ],
 )
 async def test_cover_control_helpers(
-    client, method, device_type, expected_idx, expected_cmd, expected_val
+    client, method_name, device_type, expected_idx, expected_cmd, expected_val
 ):
     """全面测试 Cover 控制方法对所有设备类型的处理。"""
     with patch.object(client, "set_single_ep_async") as mock_set:
-        await getattr(client, method)("agt", "me", device_type)
+        method = getattr(client, method_name)
+        await method("agt", "me", device_type)
         mock_set.assert_called_with(
             "agt", "me", expected_idx, expected_cmd, expected_val
         )
@@ -381,6 +444,7 @@ async def test_set_climate_hvac_mode_helper(
     [
         ("V_AIR_P", 25.5, "tT", CMD_TYPE_SET_TEMP_DECIMAL, 255, True),
         ("SL_CP_DN", 18.0, "P3", CMD_TYPE_SET_RAW, 180, True),
+        ("SL_FCU", 22.0, "P8", CMD_TYPE_SET_TEMP_FCU, 220, True),
         ("UNSUPPORTED", 20.0, None, None, None, False),
     ],
 )

@@ -281,7 +281,17 @@ CLIMATE_TYPES = {
 # ================= 温控器映射 (Climate Mappings) =================
 # 用于在 Home Assistant 的标准 HVAC 模式与 LifeSmart 的私有模式值之间进行转换。
 
-# SL_UACCB, SL_NATURE, SL_FCU 等设备的模式映射
+# --- V_AIR_P (智控器空调面板) 模式映射 ---
+LIFESMART_F_FAN_MODE_MAP = {
+    1: HVACMode.AUTO,
+    2: HVACMode.FAN_ONLY,
+    3: HVACMode.COOL,
+    4: HVACMode.HEAT,
+}
+REVERSE_F_FAN_MODE_MAP = {v: k for k, v in LIFESMART_F_FAN_MODE_MAP.items()}
+
+# --- SL_UACCB, SL_NATURE, SL_FCU 等设备的模式映射 ---
+# 这个映射包含了地暖等特殊模式
 LIFESMART_HVAC_MODE_MAP = {
     1: HVACMode.AUTO,
     2: HVACMode.FAN_ONLY,
@@ -291,13 +301,14 @@ LIFESMART_HVAC_MODE_MAP = {
     7: HVACMode.HEAT,  # SL_NATURE/FCU 地暖模式
     8: HVACMode.HEAT_COOL,  # SL_NATURE/FCU 地暖+空调模式
 }
-REVERSE_LIFESMART_HVAC_MODE_MAP = {v: k for k, v in LIFESMART_HVAC_MODE_MAP.items()}
-
-# --- V_AIR_P / SL_UACCB 风速映射 ---
-LIFESMART_F_FAN_MODE_MAP = {
-    FAN_LOW: 15,
-    FAN_MEDIUM: 45,
-    FAN_HIGH: 75,
+# 注意：由于一个HA模式可能对应多个设备模式，反向映射只用于那些没有歧义的设备
+REVERSE_LIFESMART_HVAC_MODE_MAP = {
+    HVACMode.AUTO: 1,
+    HVACMode.FAN_ONLY: 2,
+    HVACMode.COOL: 3,
+    HVACMode.HEAT: 4,  # 默认将制热映射回 4
+    HVACMode.DRY: 5,
+    HVACMode.HEAT_COOL: 8,
 }
 
 

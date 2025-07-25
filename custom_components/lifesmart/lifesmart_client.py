@@ -11,7 +11,7 @@ import logging
 import time
 from typing import Any, Optional
 
-from homeassistant.components.climate import HVACMode
+from aiohttp.client_exceptions import ClientError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -31,12 +31,15 @@ from .const import (
     SUBDEVICE_INDEX_KEY,
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
-    REVERSE_LIFESMART_HVAC_MODE_MAP,
-    REVERSE_LIFESMART_TF_FAN_MODE_MAP,
+    NON_POSITIONAL_COVER_CONFIG,
     LIFESMART_F_FAN_MODE_MAP,
+    REVERSE_F_FAN_MODE_MAP,
     REVERSE_LIFESMART_ACIPM_FAN_MAP,
+    REVERSE_LIFESMART_TF_FAN_MODE_MAP,
     REVERSE_LIFESMART_CP_AIR_FAN_MAP,
+    REVERSE_LIFESMART_HVAC_MODE_MAP,
     REVERSE_LIFESMART_CP_AIR_MODE_MAP,
+    HVACMode,
 )
 from .diagnostics import get_error_advice
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
@@ -236,7 +239,7 @@ class LifeSmartClient:
         # 1. 构造签名原始串
         sdata_params = {"appkey": self._appkey, "time": tick, "userid": self._userid}
         sdata = "&".join([f"{k}={v}" for k, v in sorted(sdata_params.items())])
-        sdata += f"&apptoken={self._apptoken}&usertoken={self._usertoken}"
+        sdata += f"&apptoken={self._apptoken}&usertoken={self._usertoken or ''}"
         signature = self._get_signature(sdata)
         _LOGGER.debug("刷新令牌签名原始串 (sdata): %s", sdata)
         _LOGGER.debug("生成刷新令牌签名 (sign): %s", signature)
@@ -304,38 +307,44 @@ class LifeSmartClient:
 
     async def get_agt_list_async(self) -> list[dict[str, Any]]:
         """获取用户下的所有中枢（网关）列表。(API: AgtGetList)"""
-        response = await self._async_call_api("AgtGetList")
+        response = await self._async_call_api("AgtGetList", api_path="/api")
         message = response.get("message")
         return message if isinstance(message, list) else []
 
     async def get_agt_details_async(self, agt: str) -> dict[str, Any]:
         """获取指定中枢的详细信息。(API: AgtGet)"""
-        response = await self._async_call_api("AgtGet", {HUB_ID_KEY: agt})
+        response = await self._async_call_api(
+            "AgtGet", {HUB_ID_KEY: agt}, api_path="/api"
+        )
         message = response.get("message")
         return message if isinstance(message, dict) else {}
 
     async def get_all_device_async(self) -> list[dict[str, Any]]:
         """获取当前用户下的所有设备。(API: EpGetAll)"""
-        response = await self._async_call_api("EpGetAll")
+        response = await self._async_call_api("EpGetAll", api_path="/api")
         message = response.get("message")
         return message if isinstance(message, list) else []
 
     async def get_scene_list_async(self, agt: str) -> list[dict[str, Any]]:
         """获取指定中枢下的所有场景。(API: SceneGet)"""
-        response = await self._async_call_api("SceneGet", {HUB_ID_KEY: agt})
+        response = await self._async_call_api(
+            "SceneGet", {HUB_ID_KEY: agt}, api_path="/api"
+        )
         message = response.get("message")
         return message if isinstance(message, list) else []
 
     async def get_room_list_async(self, agt: str) -> list[dict[str, Any]]:
         """获取指定中枢下配置的房间列表。(API: RoomGet)"""
-        response = await self._async_call_api("RoomGet", {HUB_ID_KEY: agt})
+        response = await self._async_call_api(
+            "RoomGet", {HUB_ID_KEY: agt}, api_path="/api"
+        )
         message = response.get("message")
         return message if isinstance(message, list) else []
 
     async def set_scene_async(self, agt: str, scene_id: str) -> int:
         """激活一个场景。(API: SceneSet)"""
         response = await self._async_call_api(
-            "SceneSet", {HUB_ID_KEY: agt, "id": scene_id}
+            "SceneSet", {HUB_ID_KEY: agt, "id": scene_id}, api_path="/api"
         )
         return self._get_code_from_response(response, "SceneSet")
 
@@ -349,7 +358,7 @@ class LifeSmartClient:
             "type": command_type,
             "val": val,
         }
-        response = await self._async_call_api("EpSet", params)
+        response = await self._async_call_api("EpSet", params, api_path="/api")
         return self._get_code_from_response(response, "EpSet")
 
     async def set_multi_eps_async(self, agt: str, me: str, io_list: list[dict]) -> int:
@@ -366,14 +375,14 @@ class LifeSmartClient:
                             {"idx": "RGBW", "type": "0x81", "val": 1}]
         """
         args_str = json.dumps(io_list)
-        params = {"args": args_str}
-        response = await self._async_call_api("EpsSet", params)
+        params = {HUB_ID_KEY: agt, DEVICE_ID_KEY: me, "args": args_str}
+        response = await self._async_call_api("EpsSet", params, api_path="/api")
         return self._get_code_from_response(response, "EpsSet")
 
     async def get_epget_async(self, agt: str, me: str) -> dict[str, Any]:
         """获取指定设备的详细信息。(API: EpGet)"""
         response = await self._async_call_api(
-            "EpGet", {HUB_ID_KEY: agt, DEVICE_ID_KEY: me}
+            "EpGet", {HUB_ID_KEY: agt, DEVICE_ID_KEY: me}, api_path="/api"
         )
 
         message = response.get("message")
@@ -430,34 +439,55 @@ class LifeSmartClient:
 
     async def open_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """开启窗帘或车库门。"""
+        # 优先处理有特殊命令的定位窗帘
         if device_type in GARAGE_DOOR_TYPES:
             return await self.set_single_ep_async(agt, me, "P3", CMD_TYPE_SET_VAL, 100)
-        elif device_type in DOOYA_TYPES:
+        if device_type in DOOYA_TYPES:
             return await self.set_single_ep_async(agt, me, "P2", CMD_TYPE_SET_VAL, 100)
-        else:
-            cmd_idx = "OP" if device_type == "SL_SW_WIN" else "P1"
+
+        # 对于非定位窗帘，从 const 配置中查找 'open' 对应的 IO 口
+        if device_type in NON_POSITIONAL_COVER_CONFIG:
+            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["open"]
             return await self.set_single_ep_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
+
+        _LOGGER.warning("设备类型 %s 的 'open_cover' 操作未被支持。", device_type)
+        return -1
 
     async def close_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """关闭窗帘或车库门。"""
+        # 优先处理有特殊命令的定位窗帘
         if device_type in GARAGE_DOOR_TYPES:
             return await self.set_single_ep_async(agt, me, "P3", CMD_TYPE_SET_VAL, 0)
-        elif device_type in DOOYA_TYPES:
+        if device_type in DOOYA_TYPES:
             return await self.set_single_ep_async(agt, me, "P2", CMD_TYPE_SET_VAL, 0)
-        else:
-            cmd_idx = "CL" if device_type == "SL_SW_WIN" else "P2"
+
+        # 对于非定位窗帘，从 const 配置中查找 'close' 对应的 IO 口
+        if device_type in NON_POSITIONAL_COVER_CONFIG:
+            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["close"]
             return await self.set_single_ep_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
+
+        _LOGGER.warning("设备类型 %s 的 'close_cover' 操作未被支持。", device_type)
+        return -1
 
     async def stop_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """停止窗帘或车库门。"""
-        if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
-            cmd_idx = "P3" if device_type in GARAGE_DOOR_TYPES else "P2"
+        # 定位窗帘的停止命令是特殊的
+        if device_type in GARAGE_DOOR_TYPES:
             return await self.set_single_ep_async(
-                agt, me, cmd_idx, CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
+                agt, me, "P3", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
             )
-        else:
-            cmd_idx = "ST" if device_type == "SL_SW_WIN" else "P3"
+        if device_type in DOOYA_TYPES:
+            return await self.set_single_ep_async(
+                agt, me, "P2", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
+            )
+
+        # 对于非定位窗帘，从 const 配置中查找 'stop' 对应的 IO 口
+        if device_type in NON_POSITIONAL_COVER_CONFIG:
+            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["stop"]
             return await self.set_single_ep_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
+
+        _LOGGER.warning("设备类型 %s 的 'stop_cover' 操作未被支持。", device_type)
+        return -1
 
     async def set_cover_position_async(
         self, agt: str, me: str, position: int, device_type: str
@@ -482,20 +512,23 @@ class LifeSmartClient:
         hvac_mode: HVACMode,
         current_val: int = 0,
     ) -> int:
-        """设置温控设备的 HVAC 模式。"""
+        """设置温控设备的风扇模式。"""
         if hvac_mode == HVACMode.OFF:
             return await self.set_single_ep_async(agt, me, "P1", CMD_TYPE_OFF, 0)
 
         await self.set_single_ep_async(agt, me, "P1", CMD_TYPE_ON, 1)
 
-        mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
-        if mode_val is not None and device_type in {
-            "SL_UACCB",
-            "SL_NATURE",
-            "SL_FCU",
-            "V_AIR_P",
-        }:
-            idx = "MODE" if device_type == "V_AIR_P" else "P7"
+        mode_val = None
+        idx = None
+
+        if device_type == "V_AIR_P":
+            mode_val = REVERSE_F_FAN_MODE_MAP.get(hvac_mode)
+            idx = "MODE"
+        elif device_type in {"SL_UACCB", "SL_NATURE", "SL_FCU"}:
+            mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
+            idx = "P7"
+
+        if mode_val is not None and idx is not None:
             return await self.set_single_ep_async(
                 agt, me, idx, CMD_TYPE_SET_CONFIG, mode_val
             )
@@ -522,6 +555,7 @@ class LifeSmartClient:
             return await self.set_single_ep_async(
                 agt, me, "P1", CMD_TYPE_SET_RAW, new_val
             )
+
         return 0
 
     async def async_set_climate_temperature(
@@ -548,23 +582,22 @@ class LifeSmartClient:
     ) -> int:
         """设置温控设备的风扇模式。"""
         if device_type == "V_AIR_P":
-            fan_val = LIFESMART_F_FAN_MODE_MAP.get(fan_mode)
-            return await self.set_single_ep_async(
-                agt, me, "F", CMD_TYPE_SET_CONFIG, fan_val
-            )
+            if (fan_val := LIFESMART_F_FAN_MODE_MAP.get(fan_mode)) is not None:
+                return await self.set_single_ep_async(
+                    agt, me, "F", CMD_TYPE_SET_CONFIG, fan_val
+                )
         elif device_type == "SL_TR_ACIPM":
-            fan_val = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
-            return await self.set_single_ep_async(
-                agt, me, "P2", CMD_TYPE_SET_RAW, fan_val
-            )
+            if (fan_val := REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)) is not None:
+                return await self.set_single_ep_async(
+                    agt, me, "P2", CMD_TYPE_SET_RAW, fan_val
+                )
         elif device_type in {"SL_NATURE", "SL_FCU"}:
-            fan_val = REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)
-            return await self.set_single_ep_async(
-                agt, me, "P9", CMD_TYPE_SET_CONFIG, fan_val
-            )
+            if (fan_val := REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)) is not None:
+                return await self.set_single_ep_async(
+                    agt, me, "P9", CMD_TYPE_SET_CONFIG, fan_val
+                )
         elif device_type == "SL_CP_AIR":
-            fan_val = REVERSE_LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)
-            if fan_val is not None:
+            if (fan_val := REVERSE_LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)) is not None:
                 new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
                 return await self.set_single_ep_async(
                     agt, me, "P1", CMD_TYPE_SET_RAW, new_val
@@ -580,9 +613,12 @@ class LifeSmartClient:
         try:
             response_text = await self._post_async(url, json.dumps(data), headers)
             return json.loads(response_text)
-        except Exception as e:
-            _LOGGER.error("POST请求到 %s 失败: %s", url, e)
+        except ClientError as e:
+            _LOGGER.error("POST请求到 %s 时发生网络错误: %s", url, e)
             raise LifeSmartAPIError(f"网络请求失败: {e}") from e
+        except json.JSONDecodeError as e:
+            _LOGGER.error("解析来自 %s 的响应时发生JSON错误: %s", url, e)
+            raise LifeSmartAPIError(f"JSON解析失败: {e}") from e
 
     async def _post_async(self, url: str, data: str, headers: dict) -> str:
         """使用 Home Assistant 的共享客户端会话发送 POST 请求。"""
