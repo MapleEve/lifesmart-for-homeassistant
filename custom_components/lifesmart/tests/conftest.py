@@ -494,7 +494,18 @@ async def setup_integration(
     # 将控制权交给测试用例
     yield mock_config_entry
 
-    # --- 拆卸过程 ---
+    # 在卸载之前，手动检查并取消任何可能由本地连接测试遗留的后台任务
+    entry_id = mock_config_entry.entry_id
+    if (
+        DOMAIN in hass.data
+        and entry_id in hass.data[DOMAIN]
+        and (local_task := hass.data[DOMAIN][entry_id].get("local_task"))
+    ):
+        if not local_task.done():
+            local_task.cancel()
+            # 等待任务实际被取消
+            await asyncio.sleep(0)
+
     # 卸载集成
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

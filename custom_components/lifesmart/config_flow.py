@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.data_entry_flow import FlowResult, AbortFlow
 from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import SelectSelectorMode
@@ -189,10 +189,13 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_TYPE: config_entries.CONN_CLASS_LOCAL_PUSH,
                     },
                 )
-            except (asyncio.TimeoutError, ConnectionRefusedError):
+            except (asyncio.TimeoutError, ConnectionRefusedError, ConfigEntryNotReady):
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except ConfigEntryAuthFailed:
                 errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("本地连接流程发生未知错误")
+                errors["base"] = "unknown"
 
         local_schema = vol.Schema(
             {
@@ -278,6 +281,8 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 validation_result = await validate_input(self.hass, self.config_data)
                 return await self._async_finish_flow(validation_result)
+            except AbortFlow:
+                raise
             except LifeSmartAuthError as e:
                 _LOGGER.error("配置流程认证失败: %s", e)
                 # 从异常中获取错误码
@@ -315,6 +320,8 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 validation_result = await validate_input(self.hass, self.config_data)
                 return await self._async_finish_flow(validation_result)
+            except AbortFlow:
+                raise
             except LifeSmartAuthError as e:
                 _LOGGER.error("配置流程认证失败: %s", e)
                 if e.code:

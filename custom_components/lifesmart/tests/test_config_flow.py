@@ -15,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.const import (
     CONF_EXCLUDE_AGTS,
@@ -249,33 +250,69 @@ async def test_cloud_flow_connection_error(hass: HomeAssistant, mock_validate):
 
 # region: Local Flow Tests
 @pytest.mark.asyncio
-async def test_local_flow_success(hass: HomeAssistant, mock_validate_local):
-    """测试本地模式配置成功。"""
-    mock_validate_local.return_value = True
-
-    # 1. Start flow, select local
+async def test_local_flow_success(hass: HomeAssistant):
+    """测试本地连接配置流程成功并正确清理。"""
+    # 步骤 1: 初始化配置流程
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": "user"}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_TYPE: "local_push"}
-    )
-    assert result["step_id"] == "local"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    # 2. Provide details and finish
+    # 步骤 2: 选择本地连接类型
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TYPE: config_entries.CONN_CLASS_LOCAL_PUSH},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "local"
+
+    # 步骤 3: 模拟 check_login 成功，并提供本地连接信息
+    # 我们 patch check_login 以避免实际的网络调用，并确保它能成功
     with patch(
-        "custom_components.lifesmart.lifesmart_protocol.LifeSmartLocalClient.async_connect",
-        new_callable=AsyncMock,
-    ):
-        # 2. Provide details and finish
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_USER_INPUT_LOCAL
+        "custom_components.lifesmart.lifesmart_protocol.LifeSmartLocalClient.check_login",
+        return_value=True,
+    ), patch(
+        "custom_components.lifesmart.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "custom_components.lifesmart.async_unload_entry",
+        return_value=True,
+    ) as mock_unload_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 9876,
+                CONF_USERNAME: "admin",
+                CONF_PASSWORD: "password",
+            },
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Local Hub ({MOCK_USER_INPUT_LOCAL[CONF_HOST]})"
-    assert result["data"][CONF_HOST] == MOCK_USER_INPUT_LOCAL[CONF_HOST]
+        # 步骤 4: 断言流程成功并创建了配置条目
+        assert result3["type"] == FlowResultType.CREATE_ENTRY
+        assert result3["title"] == "Local Hub (1.1.1.1)"
+        assert result3["data"] == {
+            CONF_TYPE: config_entries.CONN_CLASS_LOCAL_PUSH,
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 9876,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        }
+
+        # 确保 async_setup_entry 被调用了一次
+        assert len(mock_setup_entry.mock_calls) == 1
+
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        # 卸载它，这将调用我们 patch 过的 async_unload_entry
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # 确保 async_unload_entry 也被调用了
+        assert len(mock_unload_entry.mock_calls) == 1
 
 
 @pytest.mark.asyncio
@@ -322,9 +359,16 @@ async def test_reauth_flow_success(
     assert result["step_id"] == "cloud"
 
     # 模拟用户在第一步选择密码认证
+    user_input_step1 = {
+        CONF_LIFESMART_APPKEY: mock_config_entry.data[CONF_LIFESMART_APPKEY],
+        CONF_LIFESMART_APPTOKEN: mock_config_entry.data[CONF_LIFESMART_APPTOKEN],
+        CONF_LIFESMART_USERID: mock_config_entry.data[CONF_LIFESMART_USERID],
+        CONF_REGION: mock_config_entry.data[CONF_REGION],
+        CONF_LIFESMART_AUTH_METHOD: "password",  # 这是我们要修改的字段
+    }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {**mock_config_entry.data, CONF_LIFESMART_AUTH_METHOD: "password"},
+        user_input_step1,
     )
     assert result["step_id"] == "cloud_password"
 
@@ -383,11 +427,18 @@ async def test_options_flow(hass: HomeAssistant, mock_config_entry):
 # region: Edge Cases
 @pytest.mark.asyncio
 async def test_flow_aborts_if_already_configured(
-    hass: HomeAssistant, mock_config_entry
-):
+    hass: HomeAssistant,
+):  # 移除 mock_config_entry fixture
     """测试如果用户已配置，流程会中止。"""
-    mock_config_entry.add_to_hass(hass)
+    # 1. 创建一个带有 unique_id 的模拟条目并添加到 hass
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_INPUT_CLOUD_BASE,
+        unique_id=MOCK_USER_INPUT_CLOUD_BASE[CONF_LIFESMART_USERID],
+    )
+    existing_entry.add_to_hass(hass)
 
+    # 2. 像新用户一样开始配置流程
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -395,6 +446,7 @@ async def test_flow_aborts_if_already_configured(
         result["flow_id"], {CONF_TYPE: "cloud_push"}
     )
 
+    # 3. 模拟验证成功，这将触发 unique_id 检查
     with patch(
         "custom_components.lifesmart.config_flow.validate_input",
         return_value=MOCK_VALIDATE_SUCCESS_RESULT,
@@ -407,6 +459,7 @@ async def test_flow_aborts_if_already_configured(
             result["flow_id"], {CONF_LIFESMART_USERTOKEN: "any_token"}
         )
 
+    # 4. 断言流程被正确中止
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
