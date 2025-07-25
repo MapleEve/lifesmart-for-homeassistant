@@ -14,8 +14,14 @@ import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_REGION
 from homeassistant.core import HomeAssistant, HassJob
-from homeassistant.util.async_ import get_scheduled_timer_handles
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+try:
+    # 尝试从新版本 HA 的位置导入
+    from homeassistant.helpers.event import get_scheduled_timer_handles
+except ImportError:
+    # 如果失败，则从旧版本 HA 的位置导入
+    from homeassistant.util.async_ import get_scheduled_timer_handles
 
 from custom_components.lifesmart.const import *
 
@@ -60,7 +66,6 @@ def verify_cleanup(
 
     for handle in get_scheduled_timer_handles(event_loop):
         if not handle.cancelled():
-            # --- 'with' 语句已被移除，解决了所有导入问题 ---
             if expected_lingering_timers:
                 _LOGGER.warning("Lingering timer after test %r", handle)
             elif handle._args and isinstance(job := handle._args[-1], HassJob):
