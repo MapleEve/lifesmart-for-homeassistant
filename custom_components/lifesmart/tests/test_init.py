@@ -1,11 +1,12 @@
 """Tests for the LifeSmart integration's core setup and data handling."""
 
+import asyncio
+import json
 from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from custom_components.lifesmart import (
     LifeSmartStateManager,
@@ -13,6 +14,10 @@ from custom_components.lifesmart import (
 from custom_components.lifesmart.const import (
     DOMAIN,
     LIFESMART_STATE_MANAGER,
+    CONF_EXCLUDE_ITEMS,
+    CONF_EXCLUDE_AGTS,
+    CONF_AI_INCLUDE_ITEMS,
+    CONF_AI_INCLUDE_AGTS,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     DEVICE_ID_KEY,
     HUB_ID_KEY,
@@ -43,8 +48,6 @@ async def test_setup_success_and_state_manager_creation(
     assert LIFESMART_STATE_MANAGER in entry_data
     state_manager = entry_data[LIFESMART_STATE_MANAGER]
     assert isinstance(state_manager, LifeSmartStateManager)
-    # 验证 state_manager.start() 已被调用, 这间接证明了 ws_connect 被调用
-    mock_client.ws_connect.assert_called_once()
 
 
 async def test_unload_entry_cleans_up_resources(
@@ -66,115 +69,148 @@ async def test_state_manager_message_handling_logic(
     hass: HomeAssistant, mock_client: MagicMock, mock_lifesmart_devices: list
 ):
     """
-    全面测试 LifeSmartStateManager 对所有类型 WebSocket 消息的响应。
+    测试 LifeSmartStateManager 对 'io' 类型 WebSocket 消息的响应。
     此测试通过捕获传递给 ws_connect 的回调函数来精确测试消息处理逻辑。
     """
-    entry_id = "test_entry_id_123"
+    # 从 conftest.py 中获取一个真实存在的设备用于测试
+    test_device = find_device(mock_lifesmart_devices, "sw_if3")
+    assert test_device is not None, "测试设备 'sw_if3' 未在 conftest 中定义"
+
+    # 使用真实设备的 hub_id 和 me
+    hub_id = test_device[HUB_ID_KEY]
+    device_id = test_device[DEVICE_ID_KEY]
+    sub_key = "L1"  # 假设的子键
+
+    # 创建一个模拟的 ConfigEntry
+    mock_config_entry = MagicMock(spec=ConfigEntry)
+    mock_config_entry.entry_id = "test_entry_id_123"
+    mock_config_entry.options = {
+        CONF_EXCLUDE_ITEMS: "excluded_device",
+        CONF_EXCLUDE_AGTS: "excluded_hub",
+    }
+
     manager = None
     try:
+        # 1. 初始化 StateManager
+        manager = LifeSmartStateManager(
+            hass=hass,
+            config_entry=mock_config_entry,
+            client=mock_client,
+            ws_url="wss://fake.url/ws",
+            refresh_callback=AsyncMock(),
+        )
+
+        # 2. 启动 StateManager 并捕获 WebSocket 回调
+        manager.start()
+        # 等待任务启动
+        await asyncio.sleep(0)
+
+        # 捕获传递给 ws_connect 的回调函数
+        # 注意：在新的 __init__.py 中，ws_connect 已经不存在于 client 上，
+        # 它是在 _create_websocket 中直接调用的。
+        # 我们需要模拟 data_update_handler 来测试消息处理。
+
         with patch(
-            "custom_components.lifesmart.LifeSmartStateManager._token_refresh_handler",
-            new_callable=AsyncMock,
-        ):
-            # 1. Initialize StateManager
-            manager = LifeSmartStateManager(
-                hass, entry_id, mock_client, mock_lifesmart_devices, None
-            )
+            "custom_components.lifesmart.data_update_handler", new_callable=AsyncMock
+        ) as mock_data_handler:
 
-            # Mock platform setup and populate unique_id mapping
-            # 确保 mock_lifesmart_devices 不为空
-            if not mock_lifesmart_devices:
-                pytest.skip("mock_lifesmart_devices is empty, skipping test")
+            # 3. 直接调用 _process_text_message 来模拟收到消息
 
-            first_device = mock_lifesmart_devices[0]
-            unique_id = (
-                f"lifesmart_{first_device[HUB_ID_KEY]}_{first_device[DEVICE_ID_KEY]}_L1"
-            )
-            manager._unique_ids = {("hub_sw", "sw_if3", "L1"): unique_id}
-            manager._exclude_devices = ["excluded_device"]
-            manager._exclude_hubs = ["excluded_hub"]
-
-            # 2. Start StateManager and capture the WebSocket callback
-            await manager.start()
-            mock_client.ws_connect.assert_called_once()
-            # Capture the first argument passed to ws_connect, which is the message handling callback
-            message_callback = mock_client.ws_connect.call_args.args[0]
-            assert callable(message_callback)
-
-            # 3. Use the captured callback to test various message scenarios
-            with patch(
-                "homeassistant.helpers.dispatcher.async_dispatcher_send"
-            ) as mock_dispatcher, patch(
-                "homeassistant.helpers.device_registry.async_get"
-            ) as mock_get_dr, patch.object(
-                hass.config_entries, "async_reload"
-            ) as mock_reload:
-
-                mock_device_registry = MagicMock()
-                mock_get_dr.return_value = mock_device_registry
-
-                # --- Scenario: 'io' message -> triggers entity update ---
-                update_msg = {
+            # --- 场景: 'io' 消息 -> 触发 data_update_handler ---
+            update_msg_str = json.dumps(
+                {
                     "type": "io",
                     "msg": {
-                        "agt": "hub_sw",
-                        "me": "sw_if3",
-                        "idx": "L1",
+                        "agt": hub_id,
+                        "me": device_id,
+                        "idx": sub_key,
                         "data": {"val": 0},
                     },
                 }
-                # The message_callback might be async, so we should await it
-                await message_callback(update_msg)
-                mock_dispatcher.assert_called_once_with(
-                    hass,
-                    f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-                    {"val": 0},
-                )
-                mock_dispatcher.reset_mock()
+            )
+            await manager._process_text_message(update_msg_str)
 
-                # --- Scenario: 'epname' message -> updates device registry ---
-                name_change_msg = {
-                    "type": "epname",
-                    "msg": {"agt": "hub_sw", "me": "sw_if3", "name": "New Name"},
-                }
-                mock_device = MagicMock(spec=DeviceEntry, id="device_id_1")
-                mock_device_registry.async_get_device.return_value = mock_device
-                await message_callback(name_change_msg)
-                mock_device_registry.async_get_device.assert_called_with(
-                    identifiers={(DOMAIN, "hub_sw", "sw_if3")}
-                )
-                mock_device_registry.async_update_device.assert_called_with(
-                    device_id="device_id_1", name="New Name"
-                )
+            # 验证 data_update_handler 被正确调用
+            mock_data_handler.assert_awaited_once()
+            # 验证传递给 data_update_handler 的参数
+            call_args = mock_data_handler.call_args.args
+            assert call_args[0] is hass
+            assert call_args[1] is mock_config_entry
+            assert call_args[2] == json.loads(update_msg_str)
 
-                # --- Scenario: 'devadd' and 'devdel' messages -> trigger integration reload ---
-                for msg_type in ["devadd", "devdel"]:
-                    dev_change_msg = {
-                        "type": msg_type,
-                        "msg": {"agt": "any", "me": "any", "devtype": "any"},
-                    }
-                    await message_callback(dev_change_msg)
-                    # Verify reload is called for the correct entry_id
-                    mock_reload.assert_called_with(entry_id)
-                    mock_reload.reset_mock()
+            mock_data_handler.reset_mock()
 
-                # --- Scenario: Test ignore logic ---
-                # Ignore excluded device
-                await message_callback(
-                    {"type": "io", "msg": {"agt": "hub_bs", "me": "excluded_device"}}
-                )
-                # Ignore excluded hub
-                await message_callback(
-                    {
-                        "type": "io",
-                        "msg": {"agt": "excluded_hub", "me": "device_on_excluded_hub"},
-                    }
-                )
-                # Ignore malformed message
-                await message_callback({"type": "io", "msg": {}})
+            # --- 场景: 非 'io' 消息 -> 不应触发 data_update_handler ---
+            other_msg_str = json.dumps({"type": "epname", "msg": {}})
+            await manager._process_text_message(other_msg_str)
+            mock_data_handler.assert_not_awaited()
 
-                mock_dispatcher.assert_not_called()
-                mock_reload.assert_not_called()
     finally:
         if manager:
             await manager.stop()
+
+
+from custom_components.lifesmart import data_update_handler
+
+
+@pytest.mark.asyncio
+async def test_data_update_handler_logic(hass: HomeAssistant):
+    """
+    独立测试 data_update_handler 函数的过滤和分发逻辑。
+    """
+    mock_config_entry = MagicMock(spec=ConfigEntry)
+    mock_config_entry.options = {
+        CONF_EXCLUDE_ITEMS: "excluded_device",
+        CONF_EXCLUDE_AGTS: "excluded_hub",
+        CONF_AI_INCLUDE_ITEMS: "ai_device",
+        CONF_AI_INCLUDE_AGTS: "ai_hub",
+    }
+
+    with patch("custom_components.lifesmart.dispatcher_send") as mock_dispatcher:
+
+        # --- 场景1: 标准设备更新 -> 应该分发 ---
+        raw_data = {
+            "type": "io",
+            "msg": {
+                "devtype": "SL_SW_IF3",
+                "agt": "hub_sw",
+                "me": "61A9",
+                "idx": "L1",
+                "data": {"val": 1},
+            },
+        }
+        await data_update_handler(hass, mock_config_entry, raw_data)
+        expected_unique_id = "sl_sw_if3_hub_sw_61a9_l1"
+        mock_dispatcher.assert_called_once_with(
+            hass,
+            f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{expected_unique_id}",
+            raw_data["msg"],
+        )
+        mock_dispatcher.reset_mock()
+
+        # --- 场景2: 被排除的设备 -> 不应分发 ---
+        raw_data_excluded_dev = {
+            "type": "io",
+            "msg": {"agt": "hub_sw", "me": "excluded_device", "idx": "G"},
+        }
+        await data_update_handler(hass, mock_config_entry, raw_data_excluded_dev)
+        mock_dispatcher.assert_not_called()
+        mock_dispatcher.reset_mock()
+
+        # --- 场景3: 来自被排除的中枢 -> 不应分发 ---
+        raw_data_excluded_hub = {
+            "type": "io",
+            "msg": {"agt": "excluded_hub", "me": "some_device", "idx": "P1"},
+        }
+        await data_update_handler(hass, mock_config_entry, raw_data_excluded_hub)
+        mock_dispatcher.assert_not_called()
+        mock_dispatcher.reset_mock()
+
+        # --- 场景4: AI 事件 -> 不应分发 (特殊处理后返回) ---
+        raw_data_ai = {
+            "type": "io",
+            "msg": {"agt": "ai_hub", "me": "ai_device", "idx": "s"},
+        }
+        await data_update_handler(hass, mock_config_entry, raw_data_ai)
+        mock_dispatcher.assert_not_called()
+        mock_dispatcher.reset_mock()

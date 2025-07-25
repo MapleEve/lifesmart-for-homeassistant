@@ -371,7 +371,9 @@ def _async_setup_background_tasks(
             state_manager.set_token_expiry(auth_response["expiredtime"])
 
         state_manager.start()
-        hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = state_manager
+        hass.data[DOMAIN][config_entry.entry_id][
+            LIFESMART_STATE_MANAGER
+        ] = state_manager
 
     # 设置定时刷新任务（每10分钟），作为 WebSocket 的备用和补充
     cancel_refresh = async_track_time_interval(
@@ -395,7 +397,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_id = entry.entry_id
 
     # 停止 WebSocket 状态管理器
-    if state_manager := hass.data[DOMAIN].get(LIFESMART_STATE_MANAGER):
+    if (
+        state_manager := hass.data[DOMAIN]
+        .get(entry_id, {})
+        .get(LIFESMART_STATE_MANAGER)
+    ):
         await state_manager.stop()
 
     # 停止本地客户端连接任务
