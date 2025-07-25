@@ -306,9 +306,21 @@ def mock_lifesmart_devices_fixture():
         {
             "agt": "hub_cover",
             "me": "cover_nonpos",
-            "devtype": "SL_LI_WW",
+            "devtype": "SL_SW_WIN",
             "name": "Bedroom Curtain",
-            "data": {"O": {"type": 128}, "C": {"type": 128}},
+            "data": {"OP": {"type": 128}, "CL": {"type": 128}, "ST": {"type": 128}},
+        },
+        {
+            "agt": "hub_cover",
+            "me": "cover_generic",
+            "devtype": "SL_P",
+            "name": "Generic Controller Curtain",
+            "data": {
+                "P1": {"val": (2 << 24)},
+                "P2": {"type": 128},
+                "P3": {"type": 128},
+                "P4": {"type": 128},
+            },
         },
         # --- Climate Devices ---
         {

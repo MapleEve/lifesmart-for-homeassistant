@@ -521,6 +521,9 @@ NON_POSITIONAL_COVER_CONFIG = {
     "SL_P_V2": {"open": "P2", "close": "P3", "stop": "P4"},
     "SL_CN_IF": {"open": "P1", "close": "P2", "stop": "P3"},
     "SL_CN_FE": {"open": "P1", "close": "P2", "stop": "P3"},
+    # 通用控制器
+    "SL_P": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_JEMA": {"open": "P2", "close": "P3", "stop": "P4"},
 }
 
 # 服务器区域选项 (用于配置流程)

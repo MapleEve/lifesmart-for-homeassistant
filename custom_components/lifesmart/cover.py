@@ -28,6 +28,7 @@ from .const import (
     DOMAIN,
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
+    GENERIC_CONTROLLER_TYPES,
     HUB_ID_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
@@ -78,16 +79,26 @@ async def async_setup_entry(
         if device_type not in ALL_COVER_TYPES:
             continue
 
+        if device_type in GENERIC_CONTROLLER_TYPES:
+            p1_val = device.get(DEVICE_DATA_KEY, {}).get("P1", {}).get("val", 0)
+            # 工作模式: (val >>> 24) & 0xE
+            # 2: 二线窗帘, 4: 三线窗帘
+            work_mode = (p1_val >> 24) & 0xE
+            if work_mode not in {2, 4}:
+                # 如果不是窗帘模式，则跳过此设备
+                continue
+
         device_data = device.get(DEVICE_DATA_KEY, {})
         for sub_key in device_data:
             if not _is_cover_subdevice(device_type, sub_key):
                 continue
 
-            # For non-positional covers, multiple keys might point to the same entity.
-            # We only create one entity per device.
-            # We use the 'open' key as the representative sub_key.
             if device_type in NON_POSITIONAL_COVER_CONFIG:
-                rep_key = NON_POSITIONAL_COVER_CONFIG[device_type]["open"]
+                if device_type in GENERIC_CONTROLLER_TYPES:
+                    rep_key = NON_POSITIONAL_COVER_CONFIG["SL_P"]["open"]
+                else:
+                    rep_key = NON_POSITIONAL_COVER_CONFIG[device_type]["open"]
+
                 if sub_key != rep_key:
                     continue
 
@@ -100,7 +111,10 @@ async def async_setup_entry(
                         sub_device_key=sub_key,
                     )
                 )
-            elif device_type in NON_POSITIONAL_COVER_CONFIG:
+            elif (
+                device_type in NON_POSITIONAL_COVER_CONFIG
+                or device_type in GENERIC_CONTROLLER_TYPES
+            ):
                 covers.append(
                     LifeSmartNonPositionalCover(
                         raw_device=device,
@@ -115,8 +129,6 @@ async def async_setup_entry(
 
 class LifeSmartBaseCover(LifeSmartDevice, CoverEntity):
     """Base class for LifeSmart covers, mirroring LifeSmartBaseLight."""
-
-    _attr_has_entity_name = False
 
     def __init__(
         self,
@@ -255,7 +267,7 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
         val = status_data.get("val", 0)
         self._attr_current_cover_position = val & 0x7F
         is_moving = status_data.get("type", 0) % 2 == 1
-        is_opening_direction = val & 0x80 == 0x80
+        is_opening_direction = (val & 0x80) == 0
 
         self._attr_is_opening = is_moving and is_opening_direction
         self._attr_is_closing = is_moving and not is_opening_direction
@@ -296,13 +308,13 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
         is_opening = data.get(config["open"], {}).get("type", 0) % 2 == 1
         is_closing = data.get(config["close"], {}).get("type", 0) % 2 == 1
 
-        self._attr_is_opening = is_opening
-        self._attr_is_closing = is_closing
-
-        if not is_opening and not is_closing:
+        if is_opening or is_closing:
+            self._attr_is_closed = False
+        else:
             if self._attr_is_closing:
                 self._attr_is_closed = True
             else:
                 self._attr_is_closed = False
-        else:
-            self._attr_is_closed = False
+
+        self._attr_is_opening = is_opening
+        self._attr_is_closing = is_closing
