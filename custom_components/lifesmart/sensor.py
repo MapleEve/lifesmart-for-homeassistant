@@ -194,10 +194,6 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     if device_type in WATER_SENSOR_TYPES and sub_key == "V":
         return True
 
-    # SL_SW* 和 SL_MC* 系列的 P4 是电量传感器
-    if device_type in SUPPORTED_SWITCH_TYPES and sub_key == "P4":
-        return True
-
     # SL_SC_BB_V2 的 P2 是电量传感器
     if device_type == "SL_SC_BB_V2" and sub_key == "P2":
         return True
@@ -553,32 +549,36 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
 
     async def _handle_global_refresh(self) -> None:
         """Handle periodic full data refresh."""
-        # 从hass.data获取最新设备列表
-        devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
-        # 查找当前设备
-        current_device = next(
-            (
-                d
-                for d in devices
-                if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
-            ),
-            None,
-        )
-        if current_device is None:
-            _LOGGER.warning(
-                "LifeSmartSensor: Device not found during global refresh: %s",
-                self._attr_unique_id,
+        try:
+            devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
+            current_device = next(
+                (
+                    d
+                    for d in devices
+                    if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
+                ),
+                None,
             )
-            return
+            if current_device is None:
+                _LOGGER.warning(
+                    "LifeSmartSensor: Device not found during global refresh: %s",
+                    self.unique_id,
+                )
+                return
 
-        sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
-        val = self._extract_initial_value()
-        if val is not None:
-            # 全局刷新总是使用原始值转换逻辑，因为'v'可能不存在
-            self._attr_native_value = val
-            self.async_write_ha_state()
-        else:
-            _LOGGER.debug(
-                "LifeSmartSensor: No value found for sub-device '%s' during global refresh",
-                self._sub_key,
-            )
+            new_sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key)
+            if new_sub_data:
+                # 更新内部的 sub_data
+                self._sub_data = new_sub_data
+                # 使用 _extract_initial_value 重新计算值
+                new_value = self._extract_initial_value()
+                if new_value is not None and self._attr_native_value != new_value:
+                    self._attr_native_value = new_value
+                    self.async_write_ha_state()
+            else:
+                _LOGGER.debug(
+                    "LifeSmartSensor: No value found for sub-device '%s' during global refresh",
+                    self._sub_key,
+                )
+        except Exception as e:
+            _LOGGER.error("Error during global refresh for %s: %s", self.unique_id, e)

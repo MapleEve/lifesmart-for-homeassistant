@@ -94,7 +94,7 @@ async def test_async_setup_entry_with_exclusions(
         mock_config_entry,
         options={
             CONF_EXCLUDE_ITEMS: "sw_ol",
-            CONF_EXCLUDE_AGTS: "hub_sw_excluded",
+            CONF_EXCLUDE_AGTS: "excluded_hub",
         },
     )
     await hass.async_block_till_done()

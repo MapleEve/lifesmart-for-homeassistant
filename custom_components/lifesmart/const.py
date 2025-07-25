@@ -84,6 +84,16 @@ CAMERA_TYPES = {
 
 # ================= 开关系列 (Switch Series) =================
 # 涵盖所有单火、零火、调光、场景、窗帘等开关面板
+# --- 带电压的开关系列 ---
+VOLTAGE_SWITCH_TYPES = {
+    # --- 恒星/⾠星/极星系列 (Nature/Star) ---
+    "SL_SW_ND1",  # 恒星/辰星/极星开关 (单键)
+    "SL_MC_ND1",  # 恒星/辰星/极星开关伴侣 (单键)
+    "SL_SW_ND2",  # 恒星/辰星/极星开关 (双键)
+    "SL_MC_ND2",  # 恒星/辰星/极星开关伴侣 (双键)
+    "SL_SW_ND3",  # 恒星/辰星/极星开关 (三键)
+    "SL_MC_ND3",  # 恒星/辰星/极星开关伴侣 (三键)
+}
 SUPPORTED_SWITCH_TYPES = {
     # --- 传统/通用开关控制器 ---
     "SL_S",  # 开关智控器
@@ -103,13 +113,6 @@ SUPPORTED_SWITCH_TYPES = {
     "SL_SW_RC1",  # 白玉/墨玉流光开关 (单键)
     "SL_SW_RC2",  # 白玉/墨玉流光开关 (双键)
     "SL_SW_RC3",  # 白玉/墨玉流光开关 (三键)
-    # --- 恒星/⾠星/极星系列 (Nature/Star) ---
-    "SL_SW_ND1",  # 恒星/辰星/极星开关 (单键)
-    "SL_MC_ND1",  # 恒星/辰星/极星开关伴侣 (单键)
-    "SL_SW_ND2",  # 恒星/辰星/极星开关 (双键)
-    "SL_MC_ND2",  # 恒星/辰星/极星开关伴侣 (双键)
-    "SL_SW_ND3",  # 恒星/辰星/极星开关 (三键)
-    "SL_MC_ND3",  # 恒星/辰星/极星开关伴侣 (三键)
     # --- 视界触摸开关 ---
     "SL_SW_NS1",  # 星玉开关 (单键)
     "SL_SW_NS2",  # 星玉开关 (双键)
@@ -132,6 +135,7 @@ SUPPORTED_SWITCH_TYPES = {
     # --- 其他开关 ---
     "V_IND_S",  # 虚拟开关
 }
+
 BUTTON_SWITCH_TYPES = {
     "SL_SC_BB",  # 随心开关 (CUBE Clicker)
     "SL_SC_BB_V2",  # 随心按键 (CUBE Clicker2)
@@ -387,6 +391,7 @@ ALL_SWITCH_TYPES = (
     | SMART_PLUG_TYPES
     | POWER_METER_PLUG_TYPES
     | GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关、插座等多种类型
+    | VOLTAGE_SWITCH_TYPES  # 带电压的开关
 )
 
 # --- 总灯光列表 ---
@@ -426,6 +431,7 @@ ALL_SENSOR_TYPES = (
     | ALL_BINARY_SENSOR_TYPES  # 二元传感器也可能提供电量等数值
     | COVER_TYPES  # 窗帘电机电量
     | SMOKE_SENSOR_TYPES
+    | POWER_METER_PLUG_TYPES  # 计量插座也可能提供电量等数值
 )
 
 # --- 总窗帘/覆盖物列表 ---

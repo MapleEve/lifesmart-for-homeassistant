@@ -1,7 +1,6 @@
 """由 @MapleEve 实现的 LifeSmart 集成。
 
-此模块是 LifeSmart 集成的核心入口点，负责初始化客户端、
-管理设备、设置平台以及处理与 Home Assistant 的生命周期事件。
+此模块是 LifeSmart 集成的核心入口点，负责初始化客户端、管理设备、设置平台以及处理与 Home Assistant 的生命周期事件。
 """
 
 import asyncio

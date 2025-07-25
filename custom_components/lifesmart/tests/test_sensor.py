@@ -51,12 +51,12 @@ async def test_async_setup_entry_creates_sensors(
     # sensor_co2 (SL_SC_CA): 1 (P3)
     # sensor_power_plug (SL_OE_3C): 2 (P2, P3)
     # sensor_lock_battery (SL_LK_LS): 1 (BAT)
-    # sensor_switch_battery (SL_SW_IF1): 1 (P4)
     # climate_nature_thermo (SL_NATURE): 1 (P4)
-    # Total = 10 sensors
+    # SL_OE_3C excluded in hub
+    # Total = 9 sensors
     assert (
-        len(lifesmart_sensors) == 10
-    ), f"Incorrect number of sensor entities created. Expected 10, got {len(lifesmart_sensors)}"
+        len(lifesmart_sensors) == 9
+    ), f"Incorrect number of sensor entities created. Expected 9, got {len(lifesmart_sensors)}"
 
 
 @pytest.mark.parametrize(
@@ -114,15 +114,6 @@ async def test_async_setup_entry_creates_sensors(
             PERCENTAGE,
             SensorStateClass.MEASUREMENT,
             88,
-        ),
-        (
-            "sensor_switch_battery",
-            "P4",
-            "P4",
-            SensorDeviceClass.BATTERY,
-            PERCENTAGE,
-            SensorStateClass.MEASUREMENT,
-            92,
         ),
         (
             "sensor_power_plug",
@@ -263,10 +254,9 @@ async def test_lifesmart_sensor_updates(
         ("SL_OL", "EV", True),
         ("SL_SC_CN", "P1", True),
         ("ELIQ_EM", "EPA", True),
-        ("SL_P_A", "T", True),
-        ("SL_S_WFS", "V", True),
+        ("SL_P_A", "P2", True),
+        ("SL_SC_WA", "V", True),
         # Switch with battery
-        ("SL_SW_IF1", "P4", True),
         ("SL_SC_BB_V2", "P2", True),
         # Negative cases
         ("SL_CP_DN", "P1", False),

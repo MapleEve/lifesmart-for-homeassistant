@@ -51,7 +51,7 @@ def mock_lifesmart_devices_fixture():
             "data": {"O": {"type": 129}},
         },
         {
-            "agt": "hub_sw_excluded",
+            "agt": "excluded_hub",
             "me": "sw_oe3c",
             "devtype": "SL_OE_3C",
             "name": "Power Plug",
@@ -217,13 +217,6 @@ def mock_lifesmart_devices_fixture():
             "name": "Main Door Lock",
             "data": {"BAT": {"val": 88}},
         },
-        {
-            "agt": "hub_sensor",
-            "me": "sensor_switch_battery",
-            "devtype": "SL_SW_IF1",
-            "name": "Bedroom Switch",
-            "data": {"P4": {"val": 92}},
-        },
         # --- Cover Devices ---
         {
             "agt": "hub_cover",
@@ -381,7 +374,10 @@ def mock_config_entry(mock_config_data) -> MockConfigEntry:
         data=mock_config_data,
         entry_id="mock_entry_id_12345",
         title="LifeSmart Mock",
-        options={},
+        options={
+            CONF_EXCLUDE_ITEMS: "excluded_device",
+            CONF_EXCLUDE_AGTS: "excluded_hub",
+        },
     )
 
 
@@ -410,7 +406,16 @@ async def setup_integration(
     ) as mock_ws_connect:
         # 4. 运行主集成的 async_setup_entry
         mock_ws = mock_ws_connect.return_value
-        mock_ws.receive_json.side_effect = asyncio.CancelledError  # 模拟连接被取消
+        # 您的集成可能首先需要一个成功的登录响应来完成设置。
+        # 我们模拟一个成功的认证响应，然后引发 CancelledError 来停止循环，
+        # 以便测试不会永远运行下去。
+        mock_ws.receive_json.side_effect = [
+            {"msg_type": "login_ack", "message": "ok"},  # 模拟成功的认证响应
+            asyncio.CancelledError,  # 之后取消循环，让测试继续
+        ]
+        # 同样模拟其他可能被调用的方法，以增加健壮性
+        mock_ws.send_json = AsyncMock()
+        mock_ws.close = AsyncMock()
 
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         # 5. 等待所有后台任务完成，确保平台已加载
@@ -424,4 +429,7 @@ async def setup_integration(
     # 卸载集成以清理资源，防止任务泄露
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    # 显式调用模拟的断开连接方法，这应该会触发任务取消
+    mock_client.ws_disconnect.assert_called_once()
     assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
