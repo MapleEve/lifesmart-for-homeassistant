@@ -82,16 +82,27 @@ async def test_async_call_api_signature_and_error_handling(client):
         "custom_components.lifesmart.lifesmart_client.LifeSmartClient._get_signature"
     ) as mock_get_signature:
         mock_get_signature.return_value = "mocked_signature"
-        await client._async_call_api(
-            "TestMethod", {"z_param": "val_z", "a_param": "val_a"}
-        )
 
+        # 1. 测试带参数的情况
+        await client._async_call_api(
+            "TestMethodWithParams", {"z_param": "val_z", "a_param": "val_a"}
+        )
         mock_get_signature.assert_called_once()
         signature_raw_string = mock_get_signature.call_args.args[0]
         assert "a_param:val_a,z_param:val_z" in signature_raw_string
+        sent_payload_with_params = mock_post.call_args.args[1]
+        assert sent_payload_with_params["system"]["sign"] == "mocked_signature"
 
-        sent_payload = mock_post.call_args.args[1]
-        assert sent_payload["system"]["sign"] == "mocked_signature"
+        # 2. 关键补充：测试不带参数的情况
+        mock_get_signature.reset_mock()
+        await client._async_call_api("TestMethodNoParams")
+        mock_get_signature.assert_called_once()
+        signature_raw_string_no_params = mock_get_signature.call_args.args[0]
+        # 验证签名字符串中不包含任何参数部分
+        assert "a_param" not in signature_raw_string_no_params
+        assert "z_param" not in signature_raw_string_no_params
+        sent_payload_no_params = mock_post.call_args.args[1]
+        assert "params" not in sent_payload_no_params
 
     for auth_error_code in [10004, 10005, 10006]:
         with patch.object(
@@ -415,7 +426,9 @@ async def test_set_cover_position_helper(
 @pytest.mark.parametrize(
     "device_type, hvac_mode, current_val, expected_calls",
     [
+        # 基础测试：关闭
         ("any_type", HVACMode.OFF, 0, [call("agt", "me", "P1", CMD_TYPE_OFF, 0)]),
+        # 简单模式设置
         (
             "V_AIR_P",
             HVACMode.HEAT,
@@ -423,6 +436,55 @@ async def test_set_cover_position_helper(
             [
                 call("agt", "me", "P1", CMD_TYPE_ON, 1),
                 call("agt", "me", "MODE", CMD_TYPE_SET_CONFIG, 4),
+            ],
+        ),
+        # --- 关键补充：位运算测试 ---
+        # SL_CP_AIR: 设置为 HEAT (mode_val=4), current_val=0b1010...
+        (
+            "SL_CP_AIR",
+            HVACMode.HEAT,
+            0b1010101010101010,
+            [
+                call("agt", "me", "P1", CMD_TYPE_ON, 1),
+                call(
+                    "agt",
+                    "me",
+                    "P1",
+                    CMD_TYPE_SET_RAW,
+                    (0b1010101010101010 & ~(0b11 << 13)) | (4 << 13),
+                ),
+            ],
+        ),
+        # SL_CP_DN: 设置为 AUTO (is_auto=1), current_val=0b0101...
+        (
+            "SL_CP_DN",
+            HVACMode.AUTO,
+            0b0101010101010101,
+            [
+                call("agt", "me", "P1", CMD_TYPE_ON, 1),
+                call(
+                    "agt",
+                    "me",
+                    "P1",
+                    CMD_TYPE_SET_RAW,
+                    (0b0101010101010101 & ~(1 << 31)) | (1 << 31),
+                ),
+            ],
+        ),
+        # SL_CP_VL: 设置为 HEAT (mode_val=0), current_val=0b1111...
+        (
+            "SL_CP_VL",
+            HVACMode.HEAT,
+            0b1111111111111111,
+            [
+                call("agt", "me", "P1", CMD_TYPE_ON, 1),
+                call(
+                    "agt",
+                    "me",
+                    "P1",
+                    CMD_TYPE_SET_RAW,
+                    (0b1111111111111111 & ~(0b11 << 1)) | (0 << 1),
+                ),
             ],
         ),
     ],
@@ -435,7 +497,11 @@ async def test_set_climate_hvac_mode_helper(
         await client.async_set_climate_hvac_mode(
             "agt", "me", device_type, hvac_mode, current_val
         )
-        mock_set.assert_has_calls(expected_calls, any_order=True)
+        # 对于 HVACMode.OFF，只应该有一次调用
+        if hvac_mode == HVACMode.OFF:
+            mock_set.assert_called_once_with(*expected_calls[0].args)
+        else:
+            mock_set.assert_has_calls(expected_calls, any_order=True)
 
 
 @pytest.mark.asyncio
@@ -505,3 +571,38 @@ async def test_set_climate_fan_mode_helper(
 
 
 # endregion
+
+
+@pytest.mark.asyncio
+async def test_control_helpers_with_unsupported_device(client, caplog):
+    """测试当控制辅助方法遇到不支持的设备类型时的行为。"""
+    with patch.object(client, "set_single_ep_async") as mock_set:
+        # 测试 cover
+        result_cover = await client.open_cover_async("agt", "me", "UNSUPPORTED_TYPE")
+        assert result_cover == -1
+        mock_set.assert_not_called()
+        assert "UNSUPPORTED_TYPE" in caplog.text
+        assert "open_cover" in caplog.text
+
+        caplog.clear()
+        mock_set.reset_mock()
+
+        # 测试 climate temperature
+        result_temp = await client.async_set_climate_temperature(
+            "agt", "me", "UNSUPPORTED_TYPE", 25.0
+        )
+        assert result_temp == -1
+        mock_set.assert_not_called()
+        # 注意：这个方法当前没有日志记录，所以我们只验证行为
+
+        caplog.clear()
+        mock_set.reset_mock()
+
+        # 测试 climate fan mode
+        result_fan = await client.async_set_climate_fan_mode(
+            "agt", "me", "UNSUPPORTED_TYPE", FAN_LOW
+        )
+        assert result_fan == -1
+        mock_set.assert_not_called()
+        assert "UNSUPPORTED_TYPE" in caplog.text
+        assert "fan_mode" in caplog.text
