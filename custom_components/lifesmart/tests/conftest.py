@@ -22,28 +22,10 @@ from custom_components.lifesmart.const import *
 
 _LOGGER = logging.getLogger(__name__)
 
+sys.modules["aiodns"] = None
+
 # 自动为所有测试加载 Home Assistant 的 pytest 插件
 pytest_plugins = "pytest_homeassistant_custom_component"
-
-
-# --- 禁用 aiodns ---
-@pytest.fixture(scope="session", autouse=True)
-def patch_aiodns() -> Generator[None, None, None]:
-    """
-    在所有测试期间禁用 aiodns，以防止 DNS 解析器相关的定时器泄露。
-    这是解决 'Lingering timer' 错误的推荐方法。
-    """
-    if "aiodns" in sys.modules:
-        # 如果已经导入，则无法安全地卸载，跳过补丁
-        _LOGGER.warning("aiodns already imported, skipping patch")
-        yield
-        return
-
-    # 将 aiodns 标记为缺失，aiohttp 将回退到同步的 DNS 解析
-    sys.modules["aiodns"] = None
-    yield
-    # 测试结束后，从 sys.modules 中移除我们的标记
-    del sys.modules["aiodns"]
 
 
 @pytest.fixture(autouse=True)
