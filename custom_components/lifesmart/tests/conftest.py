@@ -101,6 +101,7 @@ def mock_lifesmart_devices_fixture():
     """一个全面的模拟设备列表，覆盖所有平台的测试需求。"""
     return [
         # --- Switch Devices ---
+        # 1. 标准三路开关 (SUPPORTED_SWITCH_TYPES)
         {
             "agt": "hub_sw",
             "me": "sw_if3",
@@ -108,6 +109,7 @@ def mock_lifesmart_devices_fixture():
             "name": "3-Gang Switch",
             "data": {"L1": {"type": 129}, "L2": {"type": 128}, "L3": {"type": 129}},
         },
+        # 2. 普通插座 (SMART_PLUG_TYPES)
         {
             "agt": "hub_sw",
             "me": "sw_ol",
@@ -115,6 +117,7 @@ def mock_lifesmart_devices_fixture():
             "name": "Smart Outlet",
             "data": {"O": {"type": 129}},
         },
+        # 3. 计量插座 (POWER_METER_PLUG_TYPES) - 位于被排除的 hub
         {
             "agt": "excluded_hub",
             "me": "sw_oe3c",
@@ -122,6 +125,7 @@ def mock_lifesmart_devices_fixture():
             "name": "Power Plug",
             "data": {"P1": {"type": 129}, "P4": {"type": 128}},
         },
+        # 4. 超能面板开关版 (SL_NATURE)
         {
             "agt": "hub_sw",
             "me": "sw_nature",
@@ -132,6 +136,38 @@ def mock_lifesmart_devices_fixture():
                 "P2": {"type": 128},
                 "P3": {"type": 129},
                 "P5": {"val": 1},
+            },
+        },
+        # 5 通用控制器（三路开关模式）
+        {
+            "agt": "hub_sw",
+            "me": "generic_p_switch_mode",
+            "devtype": "SL_P",
+            "name": "Generic Controller Switch",
+            "data": {
+                "P1": {"val": (8 << 24)},  # Mode 8: 3-way switch
+                "P2": {"type": 129},
+                "P3": {"type": 128},
+                "P4": {"type": 129},
+            },
+        },
+        # 6. 九路开关控制器 (SL_P_SW) - 新增
+        {
+            "agt": "hub_sw",
+            "me": "sw_p9",
+            "devtype": "SL_P_SW",
+            "name": "9-Way Controller",
+            "data": {
+                "P1": {"type": 129},
+                "P2": {"type": 128},
+                "P3": {"type": 129},
+                "P4": {"type": 128},
+                "P5": {"type": 129},
+                "P6": {"type": 128},
+                "P7": {"type": 129},
+                "P8": {"type": 128},
+                "P9": {"type": 129},
+                "P10": {"type": 128},
             },
         },
         # --- Light Devices ---
@@ -202,7 +238,7 @@ def mock_lifesmart_devices_fixture():
             "name": "Cover Light",
             "data": {"P1": {"type": 129}},
         },
-        # 9. LIGHT_SWITCH_TYPES -> SL_OL_W (新增)
+        # 9. LIGHT_SWITCH_TYPES -> SL_OL_W
         {
             "agt": "hub_light",
             "me": "light_switch",
@@ -210,7 +246,7 @@ def mock_lifesmart_devices_fixture():
             "name": "Wall Outlet Light",
             "data": {"P1": {"type": 129}},
         },
-        # 10. LIGHT_BULB_TYPES -> SL_LI_BL (新增)
+        # 10. LIGHT_BULB_TYPES -> SL_LI_BL
         {
             "agt": "hub_light",
             "me": "light_bulb",
@@ -218,7 +254,7 @@ def mock_lifesmart_devices_fixture():
             "name": "Simple Bulb",
             "data": {"P1": {"type": 128}},
         },
-        # 11. OUTDOOR_LIGHT_TYPES -> SL_LI_UG1 (新增)
+        # 11. OUTDOOR_LIGHT_TYPES -> SL_LI_UG1
         {
             "agt": "hub_light",
             "me": "light_outdoor",

@@ -73,6 +73,19 @@ async def async_setup_entry(
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
+        device_data = device.get(DEVICE_DATA_KEY, {})
+
+        if device_type in GENERIC_CONTROLLER_TYPES:
+            p1_val = device_data.get("P1", {}).get("val", 0)
+            work_mode = (p1_val >> 24) & 0xE
+            # 只有在“自由模式”下，P2/P3/P4 才可能是二元传感器
+            if work_mode == 0:
+                for sub_key in ("P2", "P3", "P4"):
+                    if sub_key in device_data:
+                        binary_sensors.append(
+                            LifeSmartBinarySensor(device, sub_key, client, entry_id)
+                        )
+            continue
 
         if device_type not in ALL_BINARY_SENSOR_TYPES:
             continue

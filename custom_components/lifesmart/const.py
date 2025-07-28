@@ -412,7 +412,7 @@ ALL_SWITCH_TYPES = (
     SUPPORTED_SWITCH_TYPES
     | SMART_PLUG_TYPES
     | POWER_METER_PLUG_TYPES
-    | GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关、插座等多种类型
+    | GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关等多种类型
     | VOLTAGE_SWITCH_TYPES  # 带电压的开关
 )
 
@@ -462,7 +462,7 @@ ALL_COVER_TYPES = (
     COVER_TYPES
     | DOOYA_TYPES
     | GARAGE_DOOR_TYPES
-    | GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关、插座等多种类型
+    | GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含窗帘
 )
 
 # --- Home Assistant 支持的平台列表 ---
