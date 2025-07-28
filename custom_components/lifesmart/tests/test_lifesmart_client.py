@@ -438,7 +438,7 @@ async def test_set_cover_position_helper(
                 call("agt", "me", "MODE", CMD_TYPE_SET_CONFIG, 4),
             ],
         ),
-        # --- 关键补充：位运算测试 ---
+        # --- 位运算测试 ---
         # SL_CP_AIR: 设置为 HEAT (mode_val=4), current_val=0b1010...
         (
             "SL_CP_AIR",
