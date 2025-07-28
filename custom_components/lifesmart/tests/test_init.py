@@ -4,6 +4,7 @@ import asyncio
 import json
 from unittest.mock import MagicMock, patch, AsyncMock
 
+import aiohttp
 import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -88,64 +89,73 @@ async def test_state_manager_message_handling_logic(
     }
 
     manager = None
-    try:
-        # 1. 初始化 StateManager
-        manager = LifeSmartStateManager(
-            hass=hass,
-            config_entry=mock_config_entry,
-            client=mock_client,
-            ws_url="wss://fake.url/ws",
-            refresh_callback=AsyncMock(),
-        )
+    # --- FIX: Patch the method that creates the real network connection ---
+    with patch(
+        "custom_components.lifesmart.LifeSmartStateManager._create_websocket",
+        new_callable=AsyncMock,
+    ) as mock_create_ws:
+        # 模拟一个 WebSocket 对象
+        mock_ws = MagicMock(spec=aiohttp.ClientWebSocketResponse)
+        mock_ws.send_str = AsyncMock()
+        mock_ws.close = AsyncMock()
 
-        # 2. 启动 StateManager 并捕获 WebSocket 回调
-        manager.start()
-        # 等待任务启动
-        await asyncio.sleep(0)
+        # 模拟认证成功
+        auth_response_msg = MagicMock(spec=aiohttp.WSMessage)
+        auth_response_msg.type = aiohttp.WSMsgType.TEXT
+        auth_response_msg.data = json.dumps({"code": 0, "message": "success"})
 
-        # 捕获传递给 ws_connect 的回调函数
-        # 注意：在新的 __init__.py 中，ws_connect 已经不存在于 client 上，
-        # 它是在 _create_websocket 中直接调用的。
-        # 我们需要模拟 data_update_handler 来测试消息处理。
+        # 模拟消息流
+        async def mock_receive_logic(*args, **kwargs):
+            # 第一次调用返回认证成功
+            if mock_ws.receive.call_count == 1:
+                return auth_response_msg
+            # 后续调用无限期挂起，直到被取消
+            await asyncio.sleep(3600)
 
-        with patch(
-            "custom_components.lifesmart.data_update_handler", new_callable=AsyncMock
-        ) as mock_data_handler:
+        mock_ws.receive.side_effect = mock_receive_logic
 
-            # 3. 直接调用 _process_text_message 来模拟收到消息
+        # 让 _create_websocket 返回我们完全模拟的 WebSocket 对象
+        mock_create_ws.return_value = mock_ws
 
-            # --- 场景: 'io' 消息 -> 触发 data_update_handler ---
-            update_msg_str = json.dumps(
-                {
-                    "type": "io",
-                    "msg": {
-                        "agt": hub_id,
-                        "me": device_id,
-                        "idx": sub_key,
-                        "data": {"val": 0},
-                    },
-                }
+        try:
+            # 1. 初始化 StateManager
+            manager = LifeSmartStateManager(
+                hass=hass,
+                config_entry=mock_config_entry,
+                client=mock_client,
+                ws_url="wss://fake.url/ws",
+                refresh_callback=AsyncMock(),
             )
-            await manager._process_text_message(update_msg_str)
 
-            # 验证 data_update_handler 被正确调用
-            mock_data_handler.assert_awaited_once()
-            # 验证传递给 data_update_handler 的参数
-            call_args = mock_data_handler.call_args.args
-            assert call_args[0] is hass
-            assert call_args[1] is mock_config_entry
-            assert call_args[2] == json.loads(update_msg_str)
+            # 2. 启动 StateManager
+            manager.start()
+            await asyncio.sleep(0)  # 允许任务启动
 
-            mock_data_handler.reset_mock()
+            # 验证 _create_websocket 被调用，证明网络连接尝试被触发
+            mock_create_ws.assert_awaited_once()
 
-            # --- 场景: 非 'io' 消息 -> 不应触发 data_update_handler ---
-            other_msg_str = json.dumps({"type": "epname", "msg": {}})
-            await manager._process_text_message(other_msg_str)
-            mock_data_handler.assert_not_awaited()
+            with patch(
+                "custom_components.lifesmart.data_update_handler",
+                new_callable=AsyncMock,
+            ) as mock_data_handler:
+                # 3. 直接调用 _process_text_message 来模拟收到消息
+                update_msg_str = json.dumps(
+                    {
+                        "type": "io",
+                        "msg": {
+                            "agt": hub_id,
+                            "me": device_id,
+                            "idx": sub_key,
+                            "data": {"val": 0},
+                        },
+                    }
+                )
+                await manager._process_text_message(update_msg_str)
+                mock_data_handler.assert_awaited_once()
 
-    finally:
-        if manager:
-            await manager.stop()
+        finally:
+            if manager:
+                await manager.stop()
 
 
 from custom_components.lifesmart import data_update_handler

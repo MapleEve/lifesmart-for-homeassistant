@@ -1,6 +1,6 @@
 """Unit tests for the LifeSmart switch platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
@@ -97,7 +97,9 @@ class TestSwitchSetup:
         }
 
         # 3. 调用被测试的函数
-        async_add_entities = AsyncMock()
+        # --- FIX: Use a standard MagicMock for a synchronous callback ---
+        # async_add_entities is a synchronous function, not a coroutine.
+        async_add_entities = MagicMock()
         await async_setup_entry(hass, entry_with_exclusions, async_add_entities)
 
         # 4. 断言

@@ -62,7 +62,6 @@ async def async_setup_entry(
         device_type = device[DEVICE_TYPE_KEY]
         device_data = device.get(DEVICE_DATA_KEY, {})
 
-        # --- 修复：重构设备处理逻辑 ---
         if device_type not in ALL_SWITCH_TYPES:
             continue
 

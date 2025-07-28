@@ -14,7 +14,7 @@ from importlib import reload
 from typing import Optional, Any
 
 import aiohttp
-from aiohttp import ClientTimeout
+from aiohttp import ClientWSTimeout
 from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH
 from homeassistant.const import (
     CONF_REGION,
@@ -730,13 +730,12 @@ class LifeSmartStateManager:
     async def _create_websocket(self) -> aiohttp.ClientWebSocketResponse:
         """创建新的 WebSocket 连接，完全依赖 Home Assistant 的共享会话。"""
         session = async_get_clientsession(self.hass)
-        timeout = ClientTimeout(total=10, sock_connect=10, sock_read=None)
         try:
             return await session.ws_connect(
                 self.ws_url,
                 heartbeat=25,
                 compress=15,
-                timeout=timeout,
+                timeout=ClientWSTimeout(ws_close=30),
             )
         except aiohttp.ClientConnectorCertificateError as e:
             _LOGGER.error("SSL 证书验证失败，请检查服务器区域设置是否正确。错误: %s", e)
