@@ -120,7 +120,6 @@ class TestClimateSetup:
             await hass.async_block_till_done()
 
         # 步骤 5: 断言最终状态
-        # --- 核心修复：修正断言逻辑 ---
         # 旧的 climate 实体不会完全消失，而是会变为 'unavailable' 状态。
         # 这是 Home Assistant 在实体被移除时的标准行为。
         reloaded_state = hass.states.get("climate.nature_panel_thermo")

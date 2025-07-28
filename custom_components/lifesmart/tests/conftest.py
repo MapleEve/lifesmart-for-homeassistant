@@ -135,6 +135,7 @@ def mock_lifesmart_devices_fixture():
             },
         },
         # --- Light Devices ---
+        # 1. BRIGHTNESS_LIGHT_TYPES -> SL_SPWM
         {
             "agt": "hub_light",
             "me": "light_bright",
@@ -142,6 +143,7 @@ def mock_lifesmart_devices_fixture():
             "name": "Brightness Light",
             "data": {"P1": {"type": 129, "val": 100}},
         },
+        # 2. LIGHT_DIMMER_TYPES -> SL_LI_WW_V2
         {
             "agt": "hub_light",
             "me": "light_dimmer",
@@ -149,47 +151,80 @@ def mock_lifesmart_devices_fixture():
             "name": "Dimmer Light",
             "data": {"P1": {"type": 129, "val": 100}, "P2": {"val": 27}},
         },
+        # 3. QUANTUM_TYPES -> OD_WE_QUAN
         {
             "agt": "hub_light",
             "me": "light_quantum",
             "devtype": "OD_WE_QUAN",
             "name": "Quantum Light",
-            "data": {"P1": {"type": 129}, "P2": {"val": 0x01010203}},
+            "data": {"P1": {"type": 129, "val": 100}, "P2": {"val": 0x01010203}},
         },
+        # 4. RGB_LIGHT_TYPES -> SL_SC_RGB
         {
             "agt": "hub_light",
             "me": "light_singlergb",
             "devtype": "SL_SC_RGB",
             "name": "Single IO RGB Light",
-            "data": {"RGB": {"val": 0x64010203}},
+            "data": {"RGB": {"type": 129, "val": 0x64010203}},
         },
+        # 5. RGBW_LIGHT_TYPES -> SL_CT_RGBW
         {
             "agt": "hub_light",
             "me": "light_dualrgbw",
             "devtype": "SL_CT_RGBW",
             "name": "Dual IO RGBW Light",
-            "data": {"RGBW": {"type": 129}, "DYN": {}},
+            "data": {"RGBW": {"type": 129, "val": 0}, "DYN": {"type": 128}},
         },
+        # 6. SPOT_TYPES -> SL_SPOT (RGB)
         {
             "agt": "hub_light",
             "me": "light_spotrgb",
             "devtype": "SL_SPOT",
             "name": "SPOT RGB Light",
-            "data": {"RGB": {"val": 0xFF8040}},
+            "data": {"RGB": {"type": 129, "val": 0xFF8040}},
         },
+        # 7. SPOT_TYPES -> MSL_IRCTL (RGBW)
         {
             "agt": "hub_light",
             "me": "light_spotrgbw",
             "devtype": "MSL_IRCTL",
             "name": "SPOT RGBW Light",
-            "data": {"RGBW": {"val": 0x11223344}, "DYN": {"type": 129}},
+            "data": {
+                "RGBW": {"type": 129, "val": 0x11223344},
+                "DYN": {"type": 129, "val": DYN_EFFECT_MAP["海浪"]},
+            },
         },
+        # 8. GARAGE_DOOR_TYPES -> SL_ETDOOR
         {
             "agt": "hub_light",
             "me": "light_cover",
             "devtype": "SL_ETDOOR",
             "name": "Cover Light",
             "data": {"P1": {"type": 129}},
+        },
+        # 9. LIGHT_SWITCH_TYPES -> SL_OL_W (新增)
+        {
+            "agt": "hub_light",
+            "me": "light_switch",
+            "devtype": "SL_OL_W",
+            "name": "Wall Outlet Light",
+            "data": {"P1": {"type": 129}},
+        },
+        # 10. LIGHT_BULB_TYPES -> SL_LI_BL (新增)
+        {
+            "agt": "hub_light",
+            "me": "light_bulb",
+            "devtype": "SL_LI_BL",
+            "name": "Simple Bulb",
+            "data": {"P1": {"type": 128}},
+        },
+        # 11. OUTDOOR_LIGHT_TYPES -> SL_LI_UG1 (新增)
+        {
+            "agt": "hub_light",
+            "me": "light_outdoor",
+            "devtype": "SL_LI_UG1",
+            "name": "Outdoor Light",
+            "data": {"P1": {"type": 129, "val": 0x64010203}},
         },
         # --- Binary Sensor Devices ---
         {
