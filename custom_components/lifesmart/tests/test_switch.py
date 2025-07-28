@@ -55,6 +55,7 @@ def test_is_switch_subdevice(device_type: str, sub_key: str, expected: bool) -> 
 # --- Test `async_setup_entry` and Entity Behavior ---
 
 
+@pytest.mark.asyncio
 class TestSwitchSetup:
     """Test the platform setup."""
 
