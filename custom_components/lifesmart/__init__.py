@@ -14,6 +14,7 @@ from importlib import reload
 from typing import Optional, Any
 
 import aiohttp
+from aiohttp import ClientTimeout
 from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH
 from homeassistant.const import (
     CONF_REGION,
@@ -22,7 +23,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -225,25 +225,34 @@ async def _async_create_client_and_get_devices(
             async def local_update_callback(data):
                 await data_update_handler(hass, config_entry, data)
 
-            connect_task = hass.loop.create_task(
+            connect_task = hass.async_create_task(
                 client.async_connect(local_update_callback)
             )
 
-            hass.data[DOMAIN][config_entry.entry_id] = {"local_task": connect_task}
+            hass.data[DOMAIN][config_entry.entry_id]["local_task"] = connect_task
+
+            async def _async_unload_handler():
+                """在卸载时调用客户端的断开方法并取消后台任务。"""
+                _LOGGER.debug("正在为本地连接执行卸载清理...")
+                client.disconnect()
+                if not connect_task.done():
+                    connect_task.cancel()
+                    # 等待任务完成取消操作
+                    await connect_task
+
+            config_entry.async_on_unload(_async_unload_handler)
 
             devices = await client.get_all_device_async()
             if not devices:
+                # 如果获取设备失败，也需要取消已启动的任务
+                if not connect_task.done():
+                    connect_task.cancel()
+                    await connect_task
                 raise ConfigEntryNotReady("从本地网关获取设备列表失败。")
 
-            # 注册 Home Assistant 停止时的回调，以优雅地断开本地连接
-            config_entry.async_on_unload(
-                hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STOP, client.async_disconnect
-                )
-            )
             return client, devices, None
         except Exception as e:
-            _LOGGER.error("设置与 LifeSmart 中枢的本地连接失败: %s", e)
+            _LOGGER.error("设置与 LifeSmart 中枢的本地连接失败: %s", e, exc_info=True)
             raise ConfigEntryNotReady from e
 
 
@@ -413,7 +422,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # 断开本地客户端连接
     client = hass.data[DOMAIN].get(entry_id, {}).get("client")
     if isinstance(client, lifesmart_protocol.LifeSmartLocalClient):
-        await client.async_disconnect(None)
+        # 调用同步的 disconnect 方法来设置标志位，这将由 local_task 的取消来驱动清理
+        client.disconnect()
 
     # 卸载所有相关的平台组件
     unload_ok = await hass.config_entries.async_unload_platforms(
@@ -717,12 +727,13 @@ class LifeSmartStateManager:
     async def _create_websocket(self) -> aiohttp.ClientWebSocketResponse:
         """创建新的 WebSocket 连接，完全依赖 Home Assistant 的共享会话。"""
         session = async_get_clientsession(self.hass)
+        timeout = ClientTimeout(total=10, sock_connect=10, sock_read=None)
         try:
             return await session.ws_connect(
                 self.ws_url,
                 heartbeat=25,
                 compress=15,
-                timeout=aiohttp.ClientTimeout(total=30),
+                timeout=timeout,
             )
         except aiohttp.ClientConnectorCertificateError as e:
             _LOGGER.error("SSL 证书验证失败，请检查服务器区域设置是否正确。错误: %s", e)

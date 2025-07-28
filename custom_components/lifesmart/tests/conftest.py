@@ -55,7 +55,6 @@ def verify_cleanup(
     """
     一个被覆盖的清理验证 fixture。
 
-    修改点:
     1. 移除了对内部变量 'INSTANCES' 的脆弱依赖。
     2. 移除了导致导入错误的 'long_repr_strings' 上下文管理器。
     3. 在线程检查中断言中，明确允许名为 '_run_safe_shutdown_loop' 的线程存在，
@@ -94,8 +93,6 @@ def verify_cleanup(
     # Verify no threads where left behind.
     threads = frozenset(threading.enumerate()) - threads_before
     for thread in threads:
-        # --- 核心修改在这里 ---
-        # 我们在断言中增加了一个条件，以忽略那个特定的线程。
         assert (
             isinstance(thread, threading._DummyThread)
             or thread.name.startswith("waitpid-")
