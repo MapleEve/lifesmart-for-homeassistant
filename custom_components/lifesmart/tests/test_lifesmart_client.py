@@ -191,6 +191,33 @@ async def test_login_async_full_flow(client, mock_async_call_api):
         with pytest.raises(LifeSmartAuthError):
             await client.login_async()
 
+    with patch.object(client, "_post_and_parse") as mock_post:
+        # 存储原始值以便恢复
+        original_userid = client._userid
+        original_apppassword = client._apppassword
+
+        # 遍历无效的 userid 和 apppassword 组合
+        for invalid_user, invalid_apppass in [
+            (None, "valid_hash"),  # 无效用户名
+            ("", "valid_hash"),  # 无效用户名
+            ("valid_user", None),  # 无效应用密码
+            ("valid_user", ""),  # 无效应用密码
+        ]:
+            client._userid = invalid_user
+            client._apppassword = invalid_apppass
+
+            with pytest.raises(
+                LifeSmartAuthError, match="用户名或应用密码无效，无法登录。"
+            ):
+                await client.login_async()
+
+            # 验证在这种情况下没有发起任何网络请求
+            mock_post.assert_not_called()
+
+        # 恢复原始值，避免影响后续测试
+        client._userid = original_userid
+        client._apppassword = original_apppassword
+
 
 @pytest.mark.asyncio
 async def test_async_refresh_token_full_flow(client, mock_async_call_api):
@@ -317,6 +344,29 @@ async def test_get_wrappers_empty_or_malformed_response(mock_async_call_api, cli
     assert await client.get_epget_async("h1", "d1") == {}
     mock_async_call_api.return_value = {"code": 0, "message": ["not_a_dict"]}
     assert await client.get_epget_async("h1", "d1") == {}
+
+
+@pytest.mark.asyncio
+async def test_set_single_ep_async_direct_call(mock_async_call_api, client):
+    """直接测试 set_single_ep_async 方法是否正确调用底层 API。"""
+    agt = "agt1"
+    me = "me1"
+    idx = "L1"
+    cmd_type = "0x81"
+    val = 1
+
+    await client.set_single_ep_async(agt, me, idx, cmd_type, val)
+
+    expected_params = {
+        "agt": agt,
+        "me": me,
+        "idx": idx,
+        "type": cmd_type,
+        "val": val,
+    }
+    mock_async_call_api.assert_called_once_with(
+        "EpSet", expected_params, api_path="/api"
+    )
 
 
 # endregion
@@ -451,7 +501,7 @@ async def test_set_cover_position_helper(
                     "me",
                     "P1",
                     CMD_TYPE_SET_RAW,
-                    (0b1010101010101010 & ~(0b11 << 13)) | (4 << 13),
+                    (0b1010101010101010 & ~(0b11 << 13)) | (1 << 13),
                 ),
             ],
         ),
@@ -605,4 +655,4 @@ async def test_control_helpers_with_unsupported_device(client, caplog):
         assert result_fan == -1
         mock_set.assert_not_called()
         assert "UNSUPPORTED_TYPE" in caplog.text
-        assert "fan_mode" in caplog.text
+        assert "不支持风扇模式" in caplog.text

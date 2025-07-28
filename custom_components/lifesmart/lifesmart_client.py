@@ -178,6 +178,9 @@ class LifeSmartClient:
         Raises:
             LifeSmartAuthError: 如果任何一步认证失败。
         """
+        if not self._userid or not self._apppassword:
+            raise LifeSmartAuthError("用户名或应用密码无效，无法登录。")
+
         header = self._generate_header()
 
         # 步骤 1: /auth.login (无签名)
