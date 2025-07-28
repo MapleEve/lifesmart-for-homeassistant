@@ -416,8 +416,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 停止本地客户端连接任务
     if local_task := hass.data[DOMAIN].get(entry_id, {}).get("local_task"):
         local_task.cancel()
-        # 等待任务取消完成
-        await asyncio.sleep(0)
+        try:
+            await local_task
+        except asyncio.CancelledError:
+            pass  # Expected
 
         # 断开本地客户端连接
     client = hass.data[DOMAIN].get(entry_id, {}).get("client")
@@ -433,7 +435,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 清理 hass.data 中存储的数据
     if unload_ok and DOMAIN in hass.data and entry_id in hass.data[DOMAIN]:
         # 移除此配置条目的更新监听器
-        hass.data[DOMAIN][entry_id][UPDATE_LISTENER]()
+        if UPDATE_LISTENER in hass.data[DOMAIN][entry_id]:
+            hass.data[DOMAIN][entry_id][UPDATE_LISTENER]()
         # 弹出此配置条目的数据
         hass.data[DOMAIN].pop(entry_id)
         # 如果这是最后一个配置条目，清理整个域
