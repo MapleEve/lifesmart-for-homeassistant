@@ -35,9 +35,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from custom_components.lifesmart import generate_unique_id
 from custom_components.lifesmart.const import *
 
-# 自动为所有测试应用 asyncio 标记
-pytestmark = pytest.mark.asyncio
-
 
 def find_device(devices: list, me: str):
     """一个辅助函数，用于根据设备的 'me' ID 从模拟设备列表中查找特定设备。"""

@@ -37,8 +37,6 @@ from custom_components.lifesmart.light import (
     DEFAULT_MAX_KELVIN,
 )
 
-pytestmark = pytest.mark.asyncio
-
 
 # --- 辅助函数 ---
 def get_entity_unique_id(hass: HomeAssistant, entity_id: str) -> str:

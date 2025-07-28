@@ -38,8 +38,6 @@ from homeassistant.helpers.entity_registry import async_get as async_get_entity_
 
 from custom_components.lifesmart.const import *
 
-pytestmark = pytest.mark.asyncio
-
 
 # --- 辅助函数 ---
 def find_device(devices: list, me: str):

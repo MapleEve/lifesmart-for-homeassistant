@@ -13,8 +13,6 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.switch import _is_switch_subdevice, async_setup_entry
 
-pytestmark = pytest.mark.asyncio
-
 
 # --- 辅助函数 ---
 def get_entity_unique_id(hass: HomeAssistant, entity_id: str) -> str:

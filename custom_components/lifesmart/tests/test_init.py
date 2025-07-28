@@ -23,8 +23,6 @@ from custom_components.lifesmart.const import (
     HUB_ID_KEY,
 )
 
-pytestmark = pytest.mark.asyncio
-
 
 # --- Helper to find a device in the shared fixture ---
 def find_device(devices: list, me: str):

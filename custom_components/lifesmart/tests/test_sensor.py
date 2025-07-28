@@ -25,8 +25,6 @@ from custom_components.lifesmart import generate_unique_id
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.sensor import _is_sensor_subdevice
 
-pytestmark = pytest.mark.asyncio
-
 
 def find_device(devices: list, me: str):
     """Helper to find a specific device from the mock list by its 'me' id."""

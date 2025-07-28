@@ -17,8 +17,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from custom_components.lifesmart import generate_unique_id
 from custom_components.lifesmart.const import *
 
-pytestmark = pytest.mark.asyncio
-
 
 def find_device(devices: list, me: str):
     """Helper to find a specific device from the mock list by its 'me' id."""
