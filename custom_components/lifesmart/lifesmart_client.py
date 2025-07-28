@@ -32,13 +32,13 @@ from .const import (
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
     NON_POSITIONAL_COVER_CONFIG,
-    LIFESMART_F_FAN_MODE_MAP,
-    REVERSE_F_FAN_MODE_MAP,
-    REVERSE_LIFESMART_ACIPM_FAN_MAP,
-    REVERSE_LIFESMART_TF_FAN_MODE_MAP,
-    REVERSE_LIFESMART_CP_AIR_FAN_MAP,
+    REVERSE_F_HVAC_MODE_MAP,
+    LIFESMART_F_FAN_MAP,
+    LIFESMART_TF_FAN_MAP,
+    LIFESMART_ACIPM_FAN_MAP,
+    LIFESMART_CP_AIR_FAN_MAP,
     REVERSE_LIFESMART_HVAC_MODE_MAP,
-    REVERSE_LIFESMART_CP_AIR_MODE_MAP,
+    REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
     HVACMode,
 )
 from .diagnostics import get_error_advice
@@ -522,11 +522,14 @@ class LifeSmartClient:
         idx = None
 
         if device_type == "V_AIR_P":
-            mode_val = REVERSE_F_FAN_MODE_MAP.get(hvac_mode)
+            mode_val = REVERSE_F_HVAC_MODE_MAP.get(hvac_mode)
             idx = "MODE"
-        elif device_type in {"SL_UACCB", "SL_NATURE", "SL_FCU"}:
+        elif device_type in {"SL_NATURE", "SL_FCU"}:
             mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
             idx = "P7"
+        elif device_type == "SL_UACCB":
+            mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
+            idx = "P2"
 
         if mode_val is not None and idx is not None:
             return await self.set_single_ep_async(
@@ -534,7 +537,7 @@ class LifeSmartClient:
             )
 
         if device_type == "SL_CP_AIR":
-            mode_val = REVERSE_LIFESMART_CP_AIR_MODE_MAP.get(hvac_mode)
+            mode_val = REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP.get(hvac_mode)
             if mode_val is not None:
                 new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
                 return await self.set_single_ep_async(
@@ -582,26 +585,28 @@ class LifeSmartClient:
     ) -> int:
         """设置温控设备的风扇模式。"""
         if device_type == "V_AIR_P":
-            if (fan_val := LIFESMART_F_FAN_MODE_MAP.get(fan_mode)) is not None:
+            if (fan_val := LIFESMART_F_FAN_MAP.get(fan_mode)) is not None:
                 return await self.set_single_ep_async(
                     agt, me, "F", CMD_TYPE_SET_CONFIG, fan_val
                 )
         elif device_type == "SL_TR_ACIPM":
-            if (fan_val := REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)) is not None:
+            if (fan_val := LIFESMART_ACIPM_FAN_MAP.get(fan_mode)) is not None:
                 return await self.set_single_ep_async(
                     agt, me, "P2", CMD_TYPE_SET_RAW, fan_val
                 )
         elif device_type in {"SL_NATURE", "SL_FCU"}:
-            if (fan_val := REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)) is not None:
+            if (fan_val := LIFESMART_TF_FAN_MAP.get(fan_mode)) is not None:
                 return await self.set_single_ep_async(
                     agt, me, "P9", CMD_TYPE_SET_CONFIG, fan_val
                 )
         elif device_type == "SL_CP_AIR":
-            if (fan_val := REVERSE_LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)) is not None:
+            if (fan_val := LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)) is not None:
                 new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
                 return await self.set_single_ep_async(
                     agt, me, "P1", CMD_TYPE_SET_RAW, new_val
                 )
+
+        _LOGGER.warning("设备类型 %s 不支持风扇模式: %s", device_type, fan_mode)
         return -1
 
     # ====================================================================

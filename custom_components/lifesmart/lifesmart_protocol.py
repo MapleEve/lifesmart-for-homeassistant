@@ -35,12 +35,13 @@ from .const import (
     # --- 设备类型和映射 ---
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
+    LIFESMART_F_FAN_MAP,
+    LIFESMART_ACIPM_FAN_MAP,
+    LIFESMART_TF_FAN_MAP,
+    LIFESMART_CP_AIR_FAN_MAP,
+    REVERSE_F_HVAC_MODE_MAP,
     REVERSE_LIFESMART_HVAC_MODE_MAP,
-    REVERSE_LIFESMART_TF_FAN_MODE_MAP,
-    LIFESMART_F_FAN_MODE_MAP,
-    REVERSE_LIFESMART_ACIPM_FAN_MAP,
-    REVERSE_LIFESMART_CP_AIR_FAN_MAP,
-    REVERSE_LIFESMART_CP_AIR_MODE_MAP,
+    REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
     # --- 核心常量 ---
     SUBDEVICE_INDEX_KEY,
 )
@@ -656,20 +657,36 @@ class LifeSmartPacketFactory:
         args = {"valtag": "m", "devid": devid}
         mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
         if mode_val is not None and device_type in {
-            "SL_UACCB",
             "SL_NATURE",
             "SL_FCU",
-            "V_AIR_P",
         }:
             args.update(
                 {
-                    "key": "MODE" if device_type == "V_AIR_P" else "P7",
+                    "key": "P7",
+                    "type": CMD_TYPE_SET_CONFIG,
+                    "val": mode_val,
+                }
+            )
+        elif mode_val is not None and device_type == "SL_UACCB":
+            mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
+            args.update(
+                {
+                    "key": "P2",
+                    "type": CMD_TYPE_SET_CONFIG,
+                    "val": mode_val,
+                }
+            )
+        elif mode_val is not None and device_type == "V_AIR_P":
+            mode_val = REVERSE_F_HVAC_MODE_MAP.get(hvac_mode)
+            args.update(
+                {
+                    "key": "MODE",
                     "type": CMD_TYPE_SET_CONFIG,
                     "val": mode_val,
                 }
             )
         elif device_type == "SL_CP_AIR":
-            mode_val = REVERSE_LIFESMART_CP_AIR_MODE_MAP.get(hvac_mode)
+            mode_val = REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP.get(hvac_mode)
             if mode_val is not None:
                 new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
                 args.update({"key": "P1", "type": CMD_TYPE_SET_RAW, "val": new_val})
@@ -710,16 +727,16 @@ class LifeSmartPacketFactory:
         """构建设置温控器风扇模式的指令包。"""
         args = {"devid": devid}
         if device_type == "V_AIR_P":
-            fan_val = LIFESMART_F_FAN_MODE_MAP.get(fan_mode)
+            fan_val = LIFESMART_F_FAN_MAP.get(fan_mode)
             args.update({"key": "F", "type": CMD_TYPE_SET_CONFIG, "val": fan_val})
         elif device_type == "SL_TR_ACIPM":
-            fan_val = REVERSE_LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
+            fan_val = LIFESMART_ACIPM_FAN_MAP.get(fan_mode)
             args.update({"key": "P2", "type": CMD_TYPE_SET_RAW, "val": fan_val})
         elif device_type in {"SL_NATURE", "SL_FCU"}:
-            fan_val = REVERSE_LIFESMART_TF_FAN_MODE_MAP.get(fan_mode)
+            fan_val = LIFESMART_TF_FAN_MAP.get(fan_mode)
             args.update({"key": "P9", "type": CMD_TYPE_SET_CONFIG, "val": fan_val})
         elif device_type == "SL_CP_AIR":
-            fan_val = REVERSE_LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)
+            fan_val = LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)
             if fan_val is not None:
                 new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
                 args.update({"key": "P1", "type": CMD_TYPE_SET_RAW, "val": new_val})

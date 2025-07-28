@@ -32,11 +32,11 @@ from .const import (
     CONF_EXCLUDE_ITEMS,
     CONF_EXCLUDE_AGTS,
     LIFESMART_HVAC_MODE_MAP,
-    LIFESMART_CP_AIR_MODE_MAP,
+    LIFESMART_CP_AIR_HVAC_MODE_MAP,
     LIFESMART_CP_AIR_FAN_MAP,
     LIFESMART_ACIPM_FAN_MAP,
-    LIFESMART_F_FAN_MODE_MAP,
-    LIFESMART_TF_FAN_MODE_MAP,
+    LIFESMART_F_HVAC_MODE_MAP,
+    LIFESMART_TF_FAN_MAP,
     get_f_fan_mode,
     get_tf_fan_mode,
 )
@@ -233,7 +233,7 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             HVACMode.HEAT,
             HVACMode.DRY,
         ]
-        self._attr_fan_modes = list(LIFESMART_F_FAN_MODE_MAP.keys())
+        self._attr_fan_modes = list(LIFESMART_F_HVAC_MODE_MAP.keys())
         self._attr_min_temp, self._attr_max_temp = 10, 35
 
     def _init_sl_uaccb(self):
@@ -259,7 +259,7 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         }
         modes = modes_map.get(cfg_mode, [])
         self._attr_hvac_modes = [HVACMode.OFF] + modes
-        self._attr_fan_modes = list(LIFESMART_TF_FAN_MODE_MAP.keys())
+        self._attr_fan_modes = list(LIFESMART_TF_FAN_MAP.keys())
         self._attr_min_temp, self._attr_max_temp = 10, 35
 
     def _init_sl_fcu(self):
@@ -412,7 +412,7 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             val = p1_data.get("val", 0)
             mode_val = (val >> 13) & 0b11
             fan_val = (val >> 15) & 0b11
-            self._attr_hvac_mode = LIFESMART_CP_AIR_MODE_MAP.get(mode_val)
+            self._attr_hvac_mode = LIFESMART_CP_AIR_HVAC_MODE_MAP.get(mode_val)
             self._attr_fan_mode = LIFESMART_CP_AIR_FAN_MAP.get(fan_val)
         else:
             self._attr_hvac_mode = HVACMode.OFF
@@ -443,7 +443,7 @@ class LifeSmartClimate(LifeSmartBaseClimate):
     # --- 控制方法 ---
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """设置新的HVAC模式。"""
-        current_val = getattr(self, "_p1_val", 0)
+        current_val = getattr(self, "val", 0)
         await self._client.async_set_climate_hvac_mode(
             self.agt,
             self.me,
@@ -454,7 +454,7 @@ class LifeSmartClimate(LifeSmartBaseClimate):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """设置新的风扇模式。"""
-        current_val = getattr(self, "_p1_val", 0)
+        current_val = getattr(self, "val", 0)
         await self._client.async_set_climate_fan_mode(
             self.agt, self.me, self.devtype, fan_mode, current_val
         )

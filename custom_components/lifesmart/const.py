@@ -282,13 +282,13 @@ CLIMATE_TYPES = {
 # 用于在 Home Assistant 的标准 HVAC 模式与 LifeSmart 的私有模式值之间进行转换。
 
 # --- V_AIR_P (智控器空调面板) 模式映射 ---
-LIFESMART_F_FAN_MODE_MAP = {
+LIFESMART_F_HVAC_MODE_MAP = {
     1: HVACMode.AUTO,
     2: HVACMode.FAN_ONLY,
     3: HVACMode.COOL,
     4: HVACMode.HEAT,
 }
-REVERSE_F_FAN_MODE_MAP = {v: k for k, v in LIFESMART_F_FAN_MODE_MAP.items()}
+REVERSE_F_HVAC_MODE_MAP = {v: k for k, v in LIFESMART_F_HVAC_MODE_MAP.items()}
 
 # --- SL_UACCB, SL_NATURE, SL_FCU 等设备的模式映射 ---
 # 这个映射包含了地暖等特殊模式
@@ -312,14 +312,15 @@ REVERSE_LIFESMART_HVAC_MODE_MAP = {
 }
 
 
-def get_f_fan_mode(val: int) -> str:
-    """根据 F 口的 val 值获取风扇模式。"""
-    if val < 30:
-        return FAN_LOW
-    if val < 65:
-        return FAN_MEDIUM
-    return FAN_HIGH
-
+# --- SL_CP_AIR (风机盘管) 模式与风速映射 (来自P1 bitmask) ---
+LIFESMART_CP_AIR_HVAC_MODE_MAP = {
+    0: HVACMode.COOL,
+    1: HVACMode.HEAT,
+    2: HVACMode.FAN_ONLY,
+}
+REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {
+    v: k for k, v in LIFESMART_CP_AIR_HVAC_MODE_MAP.items()
+}
 
 # --- SL_TR_ACIPM (新风) 风速映射 ---
 LIFESMART_ACIPM_FAN_MAP = {
@@ -329,34 +330,44 @@ LIFESMART_ACIPM_FAN_MAP = {
 }
 REVERSE_LIFESMART_ACIPM_FAN_MAP = {v: k for k, v in LIFESMART_ACIPM_FAN_MAP.items()}
 
-# --- SL_CP_AIR (风机盘管) 模式与风速映射 (来自P1 bitmask) ---
-LIFESMART_CP_AIR_MODE_MAP = {
-    0: HVACMode.COOL,
-    1: HVACMode.HEAT,
-    2: HVACMode.FAN_ONLY,
-}
-REVERSE_LIFESMART_CP_AIR_MODE_MAP = {v: k for k, v in LIFESMART_CP_AIR_MODE_MAP.items()}
-
+# --- SL_CP_AIR (风机盘管) 风速映射 (P1 bitmask) ---
 LIFESMART_CP_AIR_FAN_MAP = {
-    0: FAN_AUTO,
-    1: FAN_LOW,
-    2: FAN_MEDIUM,
-    3: FAN_HIGH,
+    FAN_AUTO: 0,
+    FAN_LOW: 1,
+    FAN_MEDIUM: 2,
+    FAN_HIGH: 3,
 }
 REVERSE_LIFESMART_CP_AIR_FAN_MAP = {v: k for k, v in LIFESMART_CP_AIR_FAN_MAP.items()}
 
 # --- SL_NATURE / SL_FCU (超能面板) 风速映射 (tF) ---
-LIFESMART_TF_FAN_MODE_MAP = {
+LIFESMART_TF_FAN_MAP = {
     FAN_AUTO: 101,
     FAN_LOW: 15,
     FAN_MEDIUM: 45,
     FAN_HIGH: 75,
 }
-REVERSE_LIFESMART_TF_FAN_MODE_MAP = {v: k for k, v in LIFESMART_TF_FAN_MODE_MAP.items()}
+REVERSE_LIFESMART_TF_FAN_MODE_MAP = {v: k for k, v in LIFESMART_TF_FAN_MAP.items()}
+
+# --- V_AIR_P 风速映射 (F) ---
+LIFESMART_F_FAN_MAP = {
+    FAN_LOW: 15,
+    FAN_MEDIUM: 45,
+    FAN_HIGH: 75,
+}
+REVERSE_LIFESMART_F_FAN_MODE_MAP = {v: k for k, v in LIFESMART_F_FAN_MAP.items()}
+
+
+def get_f_fan_mode(val: int) -> str:
+    """根据 F 口的 val 值获取风扇模式。"""
+    if val < 30:
+        return FAN_LOW
+    if val < 65:
+        return FAN_MEDIUM
+    return FAN_HIGH
 
 
 def get_tf_fan_mode(val: int) -> str | None:
-    """根据 tF/F 口的 val 值获取风扇模式。"""
+    """根据 tF 口的 val 值获取风扇模式。"""
     if 30 >= val > 0:
         return FAN_LOW
     if val <= 65:
