@@ -6,7 +6,7 @@ max-line-length = 120
 # E203: 'whitespace before ':'` - 与 Black 格式化工具冲突
 # W503: 'line break before binary operator' - 与 Black 格式化工具冲突
 # D100, D101, D102, D103, D104, D105, D106, D107: 缺少文档字符串 (docstring) 的错误，可以根据需要开启或关闭
-ignore = E203, W503, F401
+ignore = E201, E202, E203, W503, F401
 
 # 指定要排除检查的目录和文件
 # 排除常见的虚拟环境目录、git目录、依赖目录和测试目录
