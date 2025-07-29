@@ -296,7 +296,7 @@ def mock_lifesmart_devices_fixture():
             "me": "bs_lock",
             "devtype": "SL_LK_LS",
             "name": "Main Lock",
-            "data": {"EVTLO": {"val": 4121}, "ALM": {"val": 2}},
+            "data": {"EVTLO": {"val": 4121, "type": 1}, "ALM": {"val": 2}},
         },
         {
             "agt": "hub_bs",
