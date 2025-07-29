@@ -134,10 +134,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             client.disconnect()
             if not connect_task.done():
                 connect_task.cancel()
-                try:
-                    await connect_task
-                except asyncio.CancelledError:
-                    pass  # 这是预期的
+            try:
+                await connect_task
+            except asyncio.CancelledError:
+                pass  # 这是预期的
 
         config_entry.async_on_unload(_async_unload_handler)
 
