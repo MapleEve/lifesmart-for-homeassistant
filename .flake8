@@ -1,11 +1,13 @@
 [flake8]
-# 设置每行最大长度，88个字符与代码格式化工具 Black 兼容
+# 设置每行最大长度
 max-line-length = 120
 
 # 忽略特定的错误码
+# E201: 'whitespace after '('
+# E202: 'whitespace before ')'
 # E203: 'whitespace before ':'` - 与 Black 格式化工具冲突
 # W503: 'line break before binary operator' - 与 Black 格式化工具冲突
-# D100, D101, D102, D103, D104, D105, D106, D107: 缺少文档字符串 (docstring) 的错误，可以根据需要开启或关闭
+# F401: "'module' imported but unused" - 导入了但未使用的模块 —— 通常在 Home Assistant 中会有这种情况
 ignore = E201, E202, E203, W503, F401
 
 # 指定要排除检查的目录和文件
