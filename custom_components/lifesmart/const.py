@@ -98,6 +98,7 @@ SUPPORTED_SWITCH_TYPES = {
     # --- 传统/通用开关控制器 ---
     "SL_S",  # 开关智控器
     "SL_P_SW",  # 九路开关控制器
+    "SL_SW_NS6",  # 星玉情景开关 (六路) TODO：暂不支持，需要单独写 P7 逻辑
     # --- 流光开关 ---
     "SL_SW_IF1",  # 流光开关 (单键) / 辰星开关
     "SL_SW_IF2",  # 流光开关 (双键) / 辰星开关
@@ -168,6 +169,9 @@ LIGHT_DIMMER_TYPES = {
     "SL_LI_WW",  # 白光智能灯泡
     "SL_LI_WW_V1",  # 智能灯泡(冷暖白)
     "SL_LI_WW_V2",  # 调光调色智控器(0-10V)
+    "SL_SW_WW",  # 星⽟调光开关
+    "SL_SW_DM1",  # 星⽟调光开关（可控硅）Dimming Light Switch
+    "SL_LI_IR",  # 红外吸顶灯 (可调光) TODO: P3 夜灯模式暂不支持
 }
 # --- 亮度调节控制器 ---
 BRIGHTNESS_LIGHT_TYPES = {
@@ -217,12 +221,18 @@ GARAGE_DOOR_TYPES = {
 
 # ================= 感应器 - 二元状态 (Binary Sensor Series) =================
 # --- 门窗感应器 ---
-GUARD_SENSOR_TYPES = {"SL_SC_G", "SL_SC_BG"}  # 门禁感应器, 多功能(CUBE)门禁感应器
+GUARD_SENSOR_TYPES = {  # TODO: 电压传感器电量暂不支持
+    "SL_SC_G",  # 门禁感应器
+    "SL_SC_BG",  # 多功能(CUBE)门禁感应器
+    "SL_SC_GS",  # 门窗感应器
+}
+
 # --- 移动动态(PIR)感应器 ---
-MOTION_SENSOR_TYPES = {
-    "SL_SC_MHW",  # 动态感应器
-    "SL_SC_BM",  # 多功能(CUBE)动态感应器
-    "SL_SC_CM",  # 动态感应器（7号电池版）
+MOTION_SENSOR_TYPES = {  # TODO: 数值传感器电量暂不支持
+    "SL_SC_MHW",  # 动态感应器 # V 电量
+    "SL_SC_BM",  # 多功能(CUBE)动态感应器 # V 电量
+    "SL_SC_CM",  # 动态感应器（7号电池版） # TODO:  P3 电量不支持
+    "SL_BP_MZ",  # 移动感应器 (Pro) # TODO: P2 光照不支持 P3 电量不支持
 }
 # --- 水浸感应器 ---
 WATER_SENSOR_TYPES = {"SL_SC_WA"}  # 水浸感应器
@@ -236,6 +246,7 @@ DEFED_SENSOR_TYPES = {
     "SL_DF_MM",  # 云防动态感应器
     "SL_DF_SR",  # 云防室内警铃
     "SL_DF_BB",  # 云防遥控器
+    "SL_DF_KP",  # 云防Keypad
 }
 # --- 基础二元传感器 (通常是其他设备附带的) ---
 BINARY_SENSOR_TYPES = GUARD_SENSOR_TYPES | MOTION_SENSOR_TYPES
@@ -276,6 +287,7 @@ CLIMATE_TYPES = {
     "V_FRESH_P",  # 艾弗纳 KV11 (新风)
     "SL_NATURE",  # 超能面板PRO(温控) / 星玉温控面板
     "SL_FCU",  # ⻛机盘管 (星玉温控面板)
+    "SL_DN",  # 星⽟地暖 TODO: 暂不支持
 }
 
 # ================= 温控器映射 (Climate Mappings) =================
@@ -388,6 +400,9 @@ LOCK_TYPES = {
     "SL_LK_YL",  # 智能门锁 耶鲁
     "SL_P_BDLK",  # 智能门锁 必达
     "OD_JIUWANLI_LOCK1",  # 智能门锁 九万里
+    "SL_LK_SWIFTE"  # SWIFTE ⻔锁模块
+    "SL_LK_TY",  # 智能门锁 C100
+    "SL_LK_DJ",  # 智能门锁 C200 / C210
 }
 # 门锁解锁方式映射
 UNLOCK_METHOD = {

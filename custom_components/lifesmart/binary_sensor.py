@@ -265,9 +265,9 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
         # 门窗感应器
         if device_type in GUARD_SENSOR_TYPES:
-            if sub_key == "G":
+            if sub_key in {"G", "P1"}:
                 return BinarySensorDeviceClass.DOOR
-            if sub_key == "AXS":
+            if sub_key in {"AXS", "P2"}:
                 return BinarySensorDeviceClass.VIBRATION
             if sub_key == "B":
                 return None  # 通用二元传感器
@@ -322,6 +322,10 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
         # 门窗感应器特殊处理
         if device_type in GUARD_SENSOR_TYPES:
+            if device_type == "SL_SC_GS" and sub_key in {"P1", "P2"}:
+                return type_val % 2 == 1
+            if device_type == "SL_SC_BG" and sub_key == "AXS":
+                return val != 0  # 非0表示检测到震动
             return val == 0 if sub_key == "G" else val != 0
 
         # 云防系列设备特殊处理
