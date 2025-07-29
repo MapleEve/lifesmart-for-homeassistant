@@ -96,21 +96,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                              Home Assistant 将捕获此异常并稍后重试。
     """
     hass.data.setdefault(DOMAIN, {})
+    connect_task = None  # 初始化为 None
 
-    # 1. 创建客户端并获取设备，处理连接和认证错误
+    # 1. 创建客户端并获取设备
     try:
-        client, devices, auth_response = await _async_create_client_and_get_devices(
-            hass, config_entry
-        )
+        # 根据连接类型，返回的结果元组长度可能不同
+        result = await _async_create_client_and_get_devices(hass, config_entry)
+        if len(result) == 4:  # 本地模式
+            client, devices, auth_response, connect_task = result
+        else:  # 云端模式
+            client, devices, auth_response = result
+
     except LifeSmartAuthError:
-        # 认证失败是不可恢复的，直接设置失败且不重试。
         return False
-    # ConfigEntryNotReady 会被 Home Assistant 捕获并触发重试。
 
     # 2. 在设备注册表中注册中枢设备
     await _async_register_hubs(hass, config_entry, devices)
 
-    # 3. 将核心数据（客户端、设备列表、配置等）存入 hass.data
+    # 3. 将核心数据存入 hass.data
     hass.data[DOMAIN][config_entry.entry_id] = {
         "client": client,
         "devices": devices,
@@ -121,15 +124,32 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         UPDATE_LISTENER: config_entry.add_update_listener(_async_update_listener),
     }
 
-    # 4. 将配置条目转发到各个平台（如 switch, sensor, light 等）进行设置
+    # 4. 如果是本地模式，现在存储 task 并注册 unload handler
+    if connect_task:
+        hass.data[DOMAIN][config_entry.entry_id]["local_task"] = connect_task
+
+        async def _async_unload_handler():
+            """在卸载时调用客户端的断开方法并取消后台任务。"""
+            _LOGGER.debug("正在为本地连接执行卸载清理...")
+            client.disconnect()
+            if not connect_task.done():
+                connect_task.cancel()
+                try:
+                    await connect_task
+                except asyncio.CancelledError:
+                    pass  # 这是预期的
+
+        config_entry.async_on_unload(_async_unload_handler)
+
+    # 5. 转发到平台
     await hass.config_entries.async_forward_entry_setups(
         config_entry, SUPPORTED_PLATFORMS
     )
 
-    # 5. 注册集成提供的服务（如场景触发、红外控制等）
+    # 6. 注册服务
     _async_register_services(hass, client)
 
-    # 6. 设置后台任务，如 WebSocket 连接和定时数据刷新、Usertoken 的定时更新
+    # 7. 设置后台任务
     _async_setup_background_tasks(hass, config_entry, client, auth_response)
 
     return True
@@ -213,7 +233,7 @@ async def _async_create_client_and_get_devices(
     else:
         # --- 本地模式 ---
         try:
-            reload(lifesmart_protocol)  # 重新加载协议模块以支持热更新
+            reload(lifesmart_protocol)
             client = lifesmart_protocol.LifeSmartLocalClient(
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
@@ -225,32 +245,20 @@ async def _async_create_client_and_get_devices(
             async def local_update_callback(data):
                 await data_update_handler(hass, config_entry, data)
 
+            # 只创建任务，不存储
             connect_task = hass.async_create_task(
                 client.async_connect(local_update_callback)
             )
 
-            hass.data[DOMAIN][config_entry.entry_id]["local_task"] = connect_task
-
-            async def _async_unload_handler():
-                """在卸载时调用客户端的断开方法并取消后台任务。"""
-                _LOGGER.debug("正在为本地连接执行卸载清理...")
-                client.disconnect()
-                if not connect_task.done():
-                    connect_task.cancel()
-                    # 等待任务完成取消操作
-                    await connect_task
-
-            config_entry.async_on_unload(_async_unload_handler)
-
             devices = await client.get_all_device_async()
             if not devices:
-                # 如果获取设备失败，也需要取消已启动的任务
                 if not connect_task.done():
                     connect_task.cancel()
                     await connect_task
                 raise ConfigEntryNotReady("从本地网关获取设备列表失败。")
 
-            return client, devices, None
+            # 返回 connect_task，让上层函数处理
+            return client, devices, None, connect_task
         except Exception as e:
             _LOGGER.error("设置与 LifeSmart 中枢的本地连接失败: %s", e, exc_info=True)
             raise ConfigEntryNotReady from e
