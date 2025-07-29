@@ -39,15 +39,16 @@ from custom_components.lifesmart.sensor import _is_sensor_subdevice
 
 def find_device(devices: list, me: str):
     """
-    /**
-     * find_device() - 从模拟设备列表中查找特定设备。
-     * @devices: 包含模拟设备字典的列表。
-     * @me:      要查找的设备的 'me' 标识符。
-     *
-     * 此函数是一个辅助函数，用于通过 'me' ID 在测试数据中快速定位设备。
-     *
-     * Return:    找到的设备字典，如果未找到则返回 None。
-     */
+    find_device() - 从模拟设备列表中查找特定设备。
+
+    Args:
+        devices (list): 包含模拟设备字典的列表。
+        me (str): 要查找的设备的 'me' 标识符。
+
+    此函数是一个辅助函数，用于通过 'me' ID 在测试数据中快速定位设备。
+
+    Returns:
+        dict: 找到的设备字典，如果未找到则返回 None。
     """
     return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
 
