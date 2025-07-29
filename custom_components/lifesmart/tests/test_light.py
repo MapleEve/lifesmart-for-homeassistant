@@ -179,6 +179,31 @@ class TestLifeSmartBrightnessLight:
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_BRIGHTNESS) == 75
 
+    async def test_api_failure_reverts_state(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试API调用失败时，亮度灯状态会回滚。"""
+        # 初始状态: on, brightness 100
+        initial_state = hass.states.get(self.ENTITY_ID)
+        assert initial_state.state == STATE_ON
+        assert initial_state.attributes.get(ATTR_BRIGHTNESS) == 100
+
+        # 模拟API调用失败
+        mock_client.turn_off_light_switch_async.side_effect = Exception("API Error")
+
+        # 尝试关灯
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: self.ENTITY_ID},
+            blocking=True,
+        )
+
+        # 验证状态已回滚到初始状态
+        final_state = hass.states.get(self.ENTITY_ID)
+        assert final_state.state == STATE_ON
+        assert final_state.attributes.get(ATTR_BRIGHTNESS) == 100
+
 
 class TestLifeSmartDimmerLight:
     """测试色温灯 (LifeSmartDimmerLight)。"""
@@ -272,6 +297,38 @@ class TestLifeSmartDimmerLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_OFF
 
+    async def test_api_failure_reverts_state(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试API调用失败时，色温灯状态会回滚。"""
+        # 记录初始状态
+        initial_state = hass.states.get(self.ENTITY_ID)
+        initial_brightness = initial_state.attributes.get(ATTR_BRIGHTNESS)
+        initial_kelvin = initial_state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
+
+        # 模拟API调用失败
+        mock_client.set_multi_eps_async.side_effect = Exception("API Error")
+
+        # 尝试改变亮度和色温
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: self.ENTITY_ID,
+                ATTR_BRIGHTNESS: 200,
+                ATTR_COLOR_TEMP_KELVIN: 4000,
+            },
+            blocking=True,
+        )
+
+        # 验证状态已回滚
+        final_state = hass.states.get(self.ENTITY_ID)
+        assert final_state.state == STATE_ON
+        assert final_state.attributes.get(ATTR_BRIGHTNESS) == initial_brightness
+        assert final_state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == pytest.approx(
+            initial_kelvin
+        )
+
 
 class TestLifeSmartQuantumLight:
     """测试量子灯 (LifeSmartQuantumLight)。"""
@@ -312,6 +369,31 @@ class TestLifeSmartQuantumLight:
         mock_client.turn_on_light_switch_async.assert_called_with(
             "P1", self.HUB_ID, self.DEVICE_ME
         )
+
+    async def test_api_failure_reverts_state(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试API调用失败时，量子灯状态会回滚。"""
+        # 初始状态: on, color (1,2,3,1), no effect
+        initial_state = hass.states.get(self.ENTITY_ID)
+        assert initial_state.attributes.get(ATTR_EFFECT) is None
+
+        # 模拟API调用失败
+        mock_client.set_multi_eps_async.side_effect = Exception("API Error")
+
+        # 尝试设置效果
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_EFFECT: "魔力红"},
+            blocking=True,
+        )
+
+        # 验证状态已回滚
+        final_state = hass.states.get(self.ENTITY_ID)
+        assert final_state.state == STATE_ON
+        assert final_state.attributes.get(ATTR_EFFECT) is None
+        assert final_state.attributes.get(ATTR_RGBW_COLOR) == (1, 2, 3, 1)
 
     async def test_attribute_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
@@ -404,13 +486,9 @@ class TestLifeSmartSingleIORGBWLight:
         assert state.attributes.get(ATTR_BRIGHTNESS) == 255
         assert state.attributes.get(ATTR_RGBW_COLOR) == (1, 2, 3, 255)
 
-    # --- 关键修复：删除旧的 test_turn_on_off_services ---
-    # async def test_turn_on_off_services(...) 已被下面的新测试取代
-
     @pytest.mark.parametrize(
         ("service_data", "expected_type", "expected_val", "test_id"),
         [
-            # --- 核心修复：将期望的 type 从整数改为字符串 ---
             # 1. 简单开灯
             ({}, "0x81", 1, "turn_on_simple"),
             # 2. 设置颜色 (同时提供亮度，但协议决定了亮度被忽略)
@@ -468,7 +546,7 @@ class TestLifeSmartSingleIORGBWLight:
             {ATTR_ENTITY_ID: self.ENTITY_ID},
             blocking=True,
         )
-        # --- 核心修复：将期望的 type 从整数改为字符串 ---
+        # 根据文档，关灯命令是 type=0x80, val=0
         mock_client.set_single_ep_async.assert_called_with(
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, "0x80", 0
         )
@@ -486,6 +564,34 @@ class TestLifeSmartSingleIORGBWLight:
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_BRIGHTNESS) == 128
         assert state.attributes.get(ATTR_RGBW_COLOR) == (10, 20, 30, 255)
+
+    async def test_api_failure_reverts_state(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试API调用失败时，单IO RGBW灯状态会回滚。"""
+        # 初始状态: on, brightness 255, color (1,2,3,255)
+        initial_state = hass.states.get(self.ENTITY_ID)
+
+        # 模拟API调用失败
+        mock_client.set_single_ep_async.side_effect = Exception("API Error")
+
+        # 尝试关灯
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: self.ENTITY_ID},
+            blocking=True,
+        )
+
+        # 验证状态已回滚
+        final_state = hass.states.get(self.ENTITY_ID)
+        assert final_state.state == STATE_ON
+        assert final_state.attributes.get(
+            ATTR_BRIGHTNESS
+        ) == initial_state.attributes.get(ATTR_BRIGHTNESS)
+        assert final_state.attributes.get(
+            ATTR_RGBW_COLOR
+        ) == initial_state.attributes.get(ATTR_RGBW_COLOR)
 
 
 class TestLifeSmartDualIORGBWLight:
@@ -604,6 +710,34 @@ class TestLifeSmartDualIORGBWLight:
         assert state.attributes.get(ATTR_EFFECT) == "魔力红"
         assert state.attributes.get(ATTR_RGBW_COLOR) == (0x22, 0x33, 0x44, 0x11)
 
+    async def test_api_failure_reverts_state(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试API调用失败时，双IO RGBW灯状态会回滚。"""
+        # 初始状态: on, color (0,0,0,0), no effect
+        initial_state = hass.states.get(self.ENTITY_ID)
+
+        # 模拟API调用失败
+        mock_client.set_multi_eps_async.side_effect = Exception("API Error")
+
+        # 尝试设置效果
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_EFFECT: "魔力红"},
+            blocking=True,
+        )
+
+        # 验证状态已回滚
+        final_state = hass.states.get(self.ENTITY_ID)
+        assert final_state.state == initial_state.state
+        assert final_state.attributes.get(ATTR_EFFECT) == initial_state.attributes.get(
+            ATTR_EFFECT
+        )
+        assert final_state.attributes.get(
+            ATTR_RGBW_COLOR
+        ) == initial_state.attributes.get(ATTR_RGBW_COLOR)
+
 
 class TestLifeSmartSPOTRGBLight:
     """测试SPOT RGB灯 (LifeSmartSPOTRGBLight)。"""
@@ -698,7 +832,6 @@ class TestLifeSmartSPOTRGBLight:
                 "color_with_max_brightness",
             ),
             # 3. 提供颜色和中等亮度
-            # HA 内部会进行 HS 转换和亮度调整，最终的 RGB 会变化
             (
                 {ATTR_BRIGHTNESS: 128, ATTR_RGB_COLOR: (255, 0, 0)},  # 纯红色
                 0x800000,  # 亮度减半，R分量减半
@@ -768,6 +901,29 @@ class TestLifeSmartSPOTRGBLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_EFFECT) == "海浪"
+
+    async def test_api_failure_reverts_state(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试API调用失败时，SPOT RGB灯状态会回滚。"""
+        # 初始状态: on, color (255, 128, 64)
+        initial_state = hass.states.get(self.ENTITY_ID)
+
+        # 模拟API调用失败
+        mock_client.turn_off_light_switch_async.side_effect = Exception("API Error")
+
+        # 尝试关灯
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: self.ENTITY_ID},
+            blocking=True,
+        )
+
+        # 验证状态已回滚
+        final_state = hass.states.get(self.ENTITY_ID)
+        assert final_state.state == STATE_ON
+        assert final_state.attributes.get(ATTR_RGB_COLOR) == (255, 128, 64)
 
 
 class TestLifeSmartSPOTRGBWLight:
@@ -882,6 +1038,33 @@ class TestLifeSmartSPOTRGBWLight:
         assert state.state == STATE_OFF
         assert state.attributes.get(ATTR_EFFECT) is None
 
+    async def test_api_failure_reverts_state(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试API调用失败时，SPOT RGBW灯状态会回滚。"""
+        # 初始状态: on, effect '海浪'
+        initial_state = hass.states.get(self.ENTITY_ID)
+        assert initial_state.attributes.get(ATTR_EFFECT) == "海浪"
+
+        # 模拟API调用失败
+        mock_client.set_multi_eps_async.side_effect = Exception("API Error")
+
+        # 尝试设置颜色，这会清除效果
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_RGBW_COLOR: (1, 1, 1, 1)},
+            blocking=True,
+        )
+
+        # 验证状态已回滚
+        final_state = hass.states.get(self.ENTITY_ID)
+        assert final_state.state == STATE_ON
+        assert final_state.attributes.get(ATTR_EFFECT) == "海浪"
+        assert final_state.attributes.get(
+            ATTR_RGBW_COLOR
+        ) == initial_state.attributes.get(ATTR_RGBW_COLOR)
+
 
 class TestLifeSmartCoverLight:
     """测试车库门附属灯 (LifeSmartCoverLight)。"""
@@ -929,6 +1112,27 @@ class TestLifeSmartCoverLight:
         )
         await hass.async_block_till_done()
         assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
+
+    async def test_api_failure_reverts_state(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试API调用失败时，车库门灯状态会回滚。"""
+        # 初始状态: on
+        assert hass.states.get(self.ENTITY_ID).state == STATE_ON
+
+        # 模拟API调用失败
+        mock_client.turn_off_light_switch_async.side_effect = Exception("API Error")
+
+        # 尝试关灯
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: self.ENTITY_ID},
+            blocking=True,
+        )
+
+        # 验证状态已回滚
+        assert hass.states.get(self.ENTITY_ID).state == STATE_ON
 
 
 class TestLifeSmartSimpleOnOffLight:
@@ -978,6 +1182,28 @@ class TestLifeSmartSimpleOnOffLight:
         state = hass.states.get(entity_id)
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.ONOFF
+
+    async def test_api_failure_reverts_state(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试API调用失败时，简单开关灯状态会回滚。"""
+        entity_id = "light.wall_outlet_light_p1"
+        device_me = "light_switch"
+        sub_key = "P1"
+
+        # 初始状态: on
+        assert hass.states.get(entity_id).state == STATE_ON
+
+        # 模拟API调用失败
+        mock_client.turn_off_light_switch_async.side_effect = Exception("API Error")
+
+        # 尝试关灯
+        await hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        # 验证状态已回滚
+        assert hass.states.get(entity_id).state == STATE_ON
 
 
 class TestLifeSmartOutdoorLight(TestLifeSmartSingleIORGBWLight):

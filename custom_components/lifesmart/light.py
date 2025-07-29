@@ -321,16 +321,44 @@ class LifeSmartBaseLight(LifeSmartDevice, LightEntity):
             _LOGGER.warning("在全局刷新期间未能找到设备 %s。", self._attr_unique_id)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """默认的开灯实现，带乐观更新。"""
+        """Turn on the light with robust optimistic update."""
+        original_is_on = self._attr_is_on
+
         self._attr_is_on = True
         self.async_write_ha_state()
-        await self._client.turn_on_light_switch_async(self._sub_key, self.agt, self.me)
+
+        try:
+            await self._client.turn_on_light_switch_async(
+                self._sub_key, self.agt, self.me
+            )
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn on light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            self._attr_is_on = original_is_on
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """默认的关灯实现，带乐观更新。"""
+        """Turn off the light with robust optimistic update."""
+        original_is_on = self._attr_is_on
+
         self._attr_is_on = False
         self.async_write_ha_state()
-        await self._client.turn_off_light_switch_async(self._sub_key, self.agt, self.me)
+
+        try:
+            await self._client.turn_off_light_switch_async(
+                self._sub_key, self.agt, self.me
+            )
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn off light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            self._attr_is_on = original_is_on
+            self.async_write_ha_state()
 
 
 class LifeSmartLight(LifeSmartBaseLight):
@@ -357,21 +385,57 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
             self._attr_brightness = val
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """开启亮度灯，支持设置亮度，带乐观更新。"""
+        """Turn on the light with robust optimistic update."""
+        original_is_on = self._attr_is_on
+        original_brightness = self._attr_brightness
+
         self._attr_is_on = True
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
-            self.async_write_ha_state()
-            await self._client.set_single_ep_async(
-                self.agt,
-                self.me,
-                self._sub_key,
-                CMD_TYPE_SET_VAL,
-                self._attr_brightness,
+        self.async_write_ha_state()
+
+        try:
+            if ATTR_BRIGHTNESS in kwargs:
+                await self._client.set_single_ep_async(
+                    self.agt,
+                    self.me,
+                    self._sub_key,
+                    CMD_TYPE_SET_VAL,
+                    self._attr_brightness,
+                )
+            else:
+                await self._client.turn_on_light_switch_async(
+                    self._sub_key, self.agt, self.me
+                )
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn on light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
             )
-        else:
+            self._attr_is_on = original_is_on
+            self._attr_brightness = original_brightness
             self.async_write_ha_state()
-            await super().async_turn_on(**kwargs)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light with robust optimistic update."""
+        original_is_on = self._attr_is_on
+
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+        try:
+            await self._client.turn_off_light_switch_async(
+                self._sub_key, self.agt, self.me
+            )
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn off light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            self._attr_is_on = original_is_on
+            self.async_write_ha_state()
 
 
 class LifeSmartDimmerLight(LifeSmartBaseLight):
@@ -403,43 +467,85 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
             )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """开启色温灯，支持设置亮度和色温，带乐观更新。"""
-        self._attr_is_on = True
-        io_commands = []
+        """Turn on the light with robust optimistic update."""
+        original_is_on = self._attr_is_on
+        original_brightness = self._attr_brightness
+        original_color_temp = self._attr_color_temp_kelvin
 
+        self._attr_is_on = True
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
-            io_commands.append(
-                {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": self._attr_brightness}
-            )
-
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             self._attr_color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
-            kelvin = self._attr_color_temp_kelvin
-            min_k, max_k = (
-                self._attr_min_color_temp_kelvin,
-                self._attr_max_color_temp_kelvin,
-            )
-            clamped_kelvin = max(min_k, min(kelvin, max_k))
-            ratio = (
-                (clamped_kelvin - min_k) / (max_k - min_k)
-                if (max_k - min_k) != 0
-                else 0
-            )
-            val = round(255 - (ratio * 255))
-            io_commands.append({"idx": "P2", "type": CMD_TYPE_SET_VAL, "val": val})
-
         self.async_write_ha_state()
 
-        if io_commands:
-            await self._client.set_multi_eps_async(self.agt, self.me, io_commands)
+        try:
+            io_commands = []
+            # 只有在提供了相关参数时才构建命令
+            if ATTR_BRIGHTNESS in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs:
+                # 确保我们有值可以发送，即使只提供了其中一个参数
+                brightness = (
+                    self._attr_brightness if self._attr_brightness is not None else 255
+                )
+                kelvin = (
+                    self._attr_color_temp_kelvin
+                    if self._attr_color_temp_kelvin is not None
+                    else self._attr_min_color_temp_kelvin
+                )
 
-        await self._client.turn_on_light_switch_async("P1", self.agt, self.me)
+                min_k, max_k = (
+                    self._attr_min_color_temp_kelvin,
+                    self._attr_max_color_temp_kelvin,
+                )
+                clamped_kelvin = max(min_k, min(kelvin, max_k))
+                ratio = (
+                    ((clamped_kelvin - min_k) / (max_k - min_k))
+                    if (max_k - min_k) != 0
+                    else 0
+                )
+                temp_val = round(255 - (ratio * 255))
+
+                io_commands.extend(
+                    [
+                        {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": brightness},
+                        {"idx": "P2", "type": CMD_TYPE_SET_VAL, "val": temp_val},
+                    ]
+                )
+
+            if io_commands:
+                await self._client.set_multi_eps_async(self.agt, self.me, io_commands)
+
+            # 无论如何，最后都要确保灯是开启状态
+            await self._client.turn_on_light_switch_async("P1", self.agt, self.me)
+
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn on light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            self._attr_is_on = original_is_on
+            self._attr_brightness = original_brightness
+            self._attr_color_temp_kelvin = original_color_temp
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light with robust optimistic update."""
+        original_is_on = self._attr_is_on
+
         self._attr_is_on = False
         self.async_write_ha_state()
-        await self._client.turn_off_light_switch_async("P1", self.agt, self.me)
+
+        try:
+            await self._client.turn_off_light_switch_async("P1", self.agt, self.me)
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn off light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            self._attr_is_on = original_is_on
+            self.async_write_ha_state()
 
 
 class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
@@ -470,47 +576,85 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """开启SPOT RGB灯，支持颜色、亮度和效果，带乐观更新。"""
-        self._attr_is_on = True
-        cmd_type, cmd_val = CMD_TYPE_ON, 1
+        # 1. 保存原始状态
+        original_is_on = self._attr_is_on
+        original_brightness = self._attr_brightness
+        original_rgb_color = self._attr_rgb_color
+        original_effect = self._attr_effect
 
+        # 2. 执行乐观更新
+        self._attr_is_on = True
+        if ATTR_BRIGHTNESS in kwargs:
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_RGB_COLOR in kwargs:
+            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+            self._attr_effect = None
         if ATTR_EFFECT in kwargs:
             self._attr_effect = kwargs[ATTR_EFFECT]
             self._attr_rgb_color = None
             self._attr_brightness = 255  # 效果模式下，亮度设为全亮
-            cmd_type, cmd_val = CMD_TYPE_SET_RAW, DYN_EFFECT_MAP.get(self._attr_effect)
-        elif ATTR_RGB_COLOR in kwargs:
-            self._attr_effect = None
-            rgb = kwargs[ATTR_RGB_COLOR]
+        self.async_write_ha_state()
 
-            if ATTR_BRIGHTNESS in kwargs:
-                brightness = kwargs[ATTR_BRIGHTNESS]
+        # 3. 发送命令并处理异常
+        try:
+            cmd_type, cmd_val = CMD_TYPE_ON, 1
+
+            if ATTR_EFFECT in kwargs:
+                effect_val = DYN_EFFECT_MAP.get(self._attr_effect)
+                if effect_val is not None:
+                    cmd_type, cmd_val = CMD_TYPE_SET_RAW, effect_val
+            elif ATTR_RGB_COLOR in kwargs or ATTR_BRIGHTNESS in kwargs:
+                # 使用乐观更新后的状态来计算最终颜色
+                rgb = self._attr_rgb_color if self._attr_rgb_color else (255, 255, 255)
+                brightness = (
+                    self._attr_brightness if self._attr_brightness is not None else 255
+                )
+
                 ratio = brightness / 255.0
                 final_rgb = tuple(round(c * ratio) for c in rgb)
-                self._attr_rgb_color = final_rgb
-                self._attr_brightness = brightness
+
+                r, g, b = final_rgb
+                cmd_type, cmd_val = CMD_TYPE_SET_RAW, (r << 16) | (g << 8) | b
+
+            if cmd_val is not None:
+                await self._client.set_single_ep_async(
+                    self.agt, self.me, self._sub_key, cmd_type, cmd_val
+                )
             else:
-                self._attr_rgb_color = rgb
-                self._attr_brightness = 255
-
-            r, g, b = self._attr_rgb_color
-            cmd_type, cmd_val = CMD_TYPE_SET_RAW, (r << 16) | (g << 8) | b
-
-        self.async_write_ha_state()
-        if cmd_val is not None:
-            await self._client.set_single_ep_async(
-                self.agt, self.me, self._sub_key, cmd_type, cmd_val
+                # 如果没有颜色或效果参数，则执行默认的开灯操作
+                await super().async_turn_on(**kwargs)
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn on light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
             )
-        else:
-            await super().async_turn_on(**kwargs)
+            # 4. 失败则回滚状态
+            self._attr_is_on = original_is_on
+            self._attr_brightness = original_brightness
+            self._attr_rgb_color = original_rgb_color
+            self._attr_effect = original_effect
+            self.async_write_ha_state()
 
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light with robust optimistic update."""
+        original_is_on = self._attr_is_on
+
+        self._attr_is_on = False
         self.async_write_ha_state()
-        if cmd_val is not None:
-            await self._client.set_single_ep_async(
-                self.agt, self.me, self._sub_key, cmd_type, cmd_val
+
+        try:
+            await self._client.turn_off_light_switch_async(
+                self._sub_key, self.agt, self.me
             )
-        else:
-            # 如果没有颜色或效果参数，则执行默认的开灯操作
-            await super().async_turn_on(**kwargs)
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn off light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            self._attr_is_on = original_is_on
+            self.async_write_ha_state()
 
 
 class LifeSmartQuantumLight(LifeSmartBaseLight):
@@ -546,47 +690,77 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
             self._attr_rgbw_color = _parse_color_value(color_val, has_white=True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """开启量子灯，支持亮度、颜色、白光和效果，带乐观更新。"""
-        self._attr_is_on = True
-        io_commands = []
+        """Turn on the light with robust optimistic update."""
+        original_is_on = self._attr_is_on
+        original_brightness = self._attr_brightness
+        original_rgbw_color = self._attr_rgbw_color
+        original_effect = self._attr_effect
 
-        # 亮度优先处理，因为它可能影响颜色
+        self._attr_is_on = True
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
-            io_commands.append(
-                {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": self._attr_brightness}
-            )
-
+        if ATTR_RGBW_COLOR in kwargs:
+            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+            self._attr_effect = None
         if ATTR_EFFECT in kwargs:
             self._attr_effect = kwargs[ATTR_EFFECT]
             self._attr_rgbw_color = None
-            effect_val = ALL_EFFECT_MAP.get(self._attr_effect)
-            if effect_val is not None:
-                io_commands.append(
-                    {"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": effect_val}
-                )
-        elif ATTR_RGBW_COLOR in kwargs:
-            self._attr_effect = None
-            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
-            # 注意：量子灯的亮度由P1口独立控制，所以这里不需要调整RGBW值
-            r, g, b, w = self._attr_rgbw_color
-            color_val = (w << 24) | (r << 16) | (g << 8) | b
-            io_commands.append(
-                {"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": color_val}
-            )
-
         self.async_write_ha_state()
 
-        if io_commands:
-            await self._client.set_multi_eps_async(self.agt, self.me, io_commands)
-
-        # 确保灯是开启状态
-        await self._client.turn_on_light_switch_async("P1", self.agt, self.me)
+        try:
+            params = []
+            if ATTR_BRIGHTNESS in kwargs:
+                params.append(
+                    {
+                        "idx": "P1",
+                        "type": CMD_TYPE_SET_VAL,
+                        "val": self._attr_brightness,
+                    }
+                )
+            if ATTR_RGBW_COLOR in kwargs:
+                r, g, b, w = self._attr_rgbw_color
+                color_val = (w << 24) | (r << 16) | (g << 8) | b
+                params.append({"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": color_val})
+            if ATTR_EFFECT in kwargs:
+                params.append(
+                    {
+                        "idx": "P2",
+                        "type": CMD_TYPE_SET_RAW,
+                        "val": ALL_EFFECT_MAP[self._attr_effect],
+                    }
+                )
+            if params:
+                await self._client.set_multi_eps_async(self.agt, self.me, params)
+            await self._client.turn_on_light_switch_async("P1", self.agt, self.me)
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn on light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            self._attr_is_on = original_is_on
+            self._attr_brightness = original_brightness
+            self._attr_rgbw_color = original_rgbw_color
+            self._attr_effect = original_effect
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light with robust optimistic update."""
+        original_is_on = self._attr_is_on
+
         self._attr_is_on = False
         self.async_write_ha_state()
-        await self._client.turn_off_light_switch_async("P1", self.agt, self.me)
+
+        try:
+            await self._client.turn_off_light_switch_async("P1", self.agt, self.me)
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn off light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            self._attr_is_on = original_is_on
+            self.async_write_ha_state()
 
 
 class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
@@ -623,10 +797,16 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
         开启单IO RGBW灯，严格遵循设备协议。
         协议: type=0xff, val=颜色/动态值; 或 type=0x81, val=1
         """
-        self._attr_is_on = True
+        # 保存原始状态，以备回滚
+        original_is_on = self._attr_is_on
+        original_brightness = self._attr_brightness
+        original_rgbw_color = self._attr_rgbw_color
+        original_effect = self._attr_effect
+
         cmd_type, cmd_val = CMD_TYPE_ON, 1  # 默认为普通开灯
 
         # 优先处理效果
+        self._attr_is_on = True
         if ATTR_EFFECT in kwargs:
             self._attr_effect = kwargs[ATTR_EFFECT]
             self._attr_rgbw_color = None  # 效果模式下，静态颜色无意义
@@ -667,20 +847,50 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
 
         self.async_write_ha_state()
 
-        await self._client.set_single_ep_async(
-            self.agt, self.me, self._sub_key, cmd_type, cmd_val
-        )
+        # 3. 发送命令并处理异常
+        try:
+            await self._client.set_single_ep_async(
+                self.agt, self.me, self._sub_key, cmd_type, cmd_val
+            )
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn on light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            # 4. 失败则回滚状态
+            self._attr_is_on = original_is_on
+            self._attr_brightness = original_brightness
+            self._attr_rgbw_color = original_rgbw_color
+            self._attr_effect = original_effect
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """
         关闭单IO RGBW灯。
         协议: type=0x80, val=0
         """
+        # 1. 保存原始状态
+        original_is_on = self._attr_is_on
+
+        # 2. 执行乐观更新
         self._attr_is_on = False
         self.async_write_ha_state()
-        await self._client.set_single_ep_async(
-            self.agt, self.me, self._sub_key, CMD_TYPE_OFF, 0
-        )
+
+        # 3. 发送命令并处理异常
+        try:
+            await self._client.set_single_ep_async(
+                self.agt, self.me, self._sub_key, CMD_TYPE_OFF, 0
+            )
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn off light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            # 4. 失败则回滚状态
+            self._attr_is_on = original_is_on
+            self.async_write_ha_state()
 
 
 class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
@@ -734,68 +944,103 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         """
         开启双IO RGBW灯，并根据参数设置颜色或效果。
         """
-        self._attr_is_on = True
-        io_list = []
+        # 1. 保存原始状态，以备回滚
+        original_is_on = self._attr_is_on
+        original_brightness = self._attr_brightness
+        original_rgbw_color = self._attr_rgbw_color
+        original_effect = self._attr_effect
 
-        # 场景1: 设置动态效果 (DYN 优先级最高)
+        # 2. 执行乐观更新
+        self._attr_is_on = True
+        if ATTR_BRIGHTNESS in kwargs:
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_RGBW_COLOR in kwargs:
+            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+            self._attr_effect = None  # 设置颜色时，效果应被清除
         if ATTR_EFFECT in kwargs:
             self._attr_effect = kwargs[ATTR_EFFECT]
-            self._attr_rgbw_color = None
-            self._attr_brightness = 255
-            effect_val = DYN_EFFECT_MAP.get(self._attr_effect)
-
-            if effect_val is not None:
-                io_list = [
-                    {"idx": self._color_io, "type": CMD_TYPE_ON, "val": 1},
-                    {
-                        "idx": self._effect_io,
-                        "type": CMD_TYPE_SET_RAW,
-                        "val": effect_val,
-                    },
-                ]
-
-        # 场景2: 设置静态颜色
-        elif ATTR_RGBW_COLOR in kwargs:
-            self._attr_effect = None
-            rgbw = kwargs[ATTR_RGBW_COLOR]
-
-            if ATTR_BRIGHTNESS in kwargs:
-                brightness = kwargs[ATTR_BRIGHTNESS]
-                ratio = brightness / 255.0
-                final_rgbw = tuple(round(c * ratio) for c in rgbw)
-                self._attr_rgbw_color = final_rgbw
-                self._attr_brightness = brightness
-            else:
-                self._attr_rgbw_color = rgbw
-                self._attr_brightness = 255
-
-            r, g, b, w = self._attr_rgbw_color
-            color_val = (w << 24) | (r << 16) | (g << 8) | b
-
-            io_list = [
-                {"idx": self._color_io, "type": CMD_TYPE_SET_RAW, "val": color_val},
-                {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
-            ]
-
+            self._attr_rgbw_color = None  # 设置效果时，颜色无意义
+            self._attr_brightness = 255  # 效果模式下，亮度视为全亮
         self.async_write_ha_state()
 
-        if io_list:
-            await self._client.set_multi_eps_async(self.agt, self.me, io_list)
-        else:
-            # 如果只调用 turn_on 而没有颜色/效果参数，则默认打开
-            await self._client.turn_on_light_switch_async(
-                self._color_io, self.agt, self.me
+        # 3. 发送命令并处理异常
+        try:
+            io_list = []
+            # 场景1: 设置动态效果 (DYN 优先级最高)
+            if ATTR_EFFECT in kwargs:
+                effect_val = DYN_EFFECT_MAP.get(self._attr_effect)
+                if effect_val is not None:
+                    io_list = [
+                        {"idx": self._color_io, "type": CMD_TYPE_ON, "val": 1},
+                        {
+                            "idx": self._effect_io,
+                            "type": CMD_TYPE_SET_RAW,
+                            "val": effect_val,
+                        },
+                    ]
+            # 场景2: 设置静态颜色 (或仅亮度)
+            elif ATTR_RGBW_COLOR in kwargs or ATTR_BRIGHTNESS in kwargs:
+                rgbw = (
+                    self._attr_rgbw_color
+                    if self._attr_rgbw_color
+                    else (255, 255, 255, 255)
+                )
+                ratio = self._attr_brightness / 255.0
+                final_rgbw = tuple(round(c * ratio) for c in rgbw)
+
+                r, g, b, w = final_rgbw
+                color_val = (w << 24) | (r << 16) | (g << 8) | b
+
+                io_list = [
+                    {"idx": self._color_io, "type": CMD_TYPE_SET_RAW, "val": color_val},
+                    {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
+                ]
+
+            if io_list:
+                await self._client.set_multi_eps_async(self.agt, self.me, io_list)
+            else:
+                # 如果只调用 turn_on 而没有颜色/效果参数，则默认打开
+                await self._client.turn_on_light_switch_async(
+                    self._color_io, self.agt, self.me
+                )
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn on light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
             )
+            # 4. 失败则回滚状态
+            self._attr_is_on = original_is_on
+            self._attr_brightness = original_brightness
+            self._attr_rgbw_color = original_rgbw_color
+            self._attr_effect = original_effect
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """关闭双IO RGBW灯，同时关闭颜色和效果通道。"""
+        # 1. 保存原始状态
+        original_is_on = self._attr_is_on
+
+        # 2. 执行乐观更新
         self._attr_is_on = False
         self.async_write_ha_state()
-        io_list = [
-            {"idx": self._color_io, "type": CMD_TYPE_OFF, "val": 0},
-            {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
-        ]
-        await self._client.set_multi_eps_async(self.agt, self.me, io_list)
+
+        # 3. 发送命令并处理异常
+        try:
+            io_list = [
+                {"idx": self._color_io, "type": CMD_TYPE_OFF, "val": 0},
+                {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
+            ]
+            await self._client.set_multi_eps_async(self.agt, self.me, io_list)
+        except Exception as e:
+            _LOGGER.error(
+                "Failed to turn off light %s. Reverting state. Error: %s",
+                self.entity_id,
+                e,
+            )
+            # 4. 失败则回滚状态
+            self._attr_is_on = original_is_on
+            self.async_write_ha_state()
 
 
 class LifeSmartSPOTRGBWLight(LifeSmartDualIORGBWLight):
