@@ -290,7 +290,6 @@ async def test_data_update_handler(
     [
         ("SL_SW_IF1", "agt123", "dev456", "L1", "sl_sw_if1_agt123_dev456_l1"),
         ("SL_P_IR", "agt123", "dev789", None, "sl_p_ir_agt123_dev789"),
-        # 修复: 预期结果与日志中报告的函数实际行为完全匹配
         (
             "SL_SW-WIN",
             "AzcAANOlBwADWFAEdTMyMQ/me",

@@ -7,6 +7,7 @@ This test suite provides comprehensive coverage, including:
 - Specific tests for boundary conditions (zero, null, invalid data).
 - Validation of entity availability logic.
 - Coverage of different real-time update formats ('v' vs 'val').
+- **NEW**: Coverage for ambiguous 'val' key in WebSocket updates.
 - Complete branch coverage for the `_is_sensor_subdevice` helper.
 """
 
@@ -290,9 +291,7 @@ async def test_sensor_becomes_unavailable(
 @pytest.mark.parametrize(
     "entity_id, unique_id_suffix, initial_value, update_payload, expected_value",
     [
-        # Case 1: 温度传感器, 收到 'val'，需要除以10进行转换
         ("sensor.living_room_env_t", "sensor_env_T", 25.5, {"val": 288}, 28.8),
-        # Case 2: 功率传感器, 收到 'v'，是最终值，直接使用
         (
             "sensor.washing_machine_plug_p3",
             "sensor_power_plug_P3",
@@ -300,7 +299,6 @@ async def test_sensor_becomes_unavailable(
             {"v": 1500.5},
             1500.5,
         ),
-        # Case 3: 电池传感器, 收到 'val'，但不需要转换
         ("sensor.main_door_lock_bat", "sensor_lock_battery_BAT", 88, {"val": 50}, 50),
     ],
     ids=["temp_update_with_val", "power_update_with_v", "battery_update_with_val"],
@@ -324,15 +322,10 @@ async def test_sensor_update_logic_coverage(
      * - 包含 'v' 键的最终数据，无需转换。
      */
     """
-    # 1. 验证初始状态
     state = hass.states.get(entity_id)
     assert state is not None and float(state.state) == initial_value
 
-    # 2. 为 dispatcher 生成 unique_id
-    # --- 核心修复：使用 rsplit 从右边分割一次，以正确处理包含下划线的 device_me ---
     device_me, sub_key = unique_id_suffix.rsplit("_", 1)
-    # --- 修复结束 ---
-
     raw_device = find_device(mock_lifesmart_devices, device_me)
     unique_id = generate_unique_id(
         raw_device[DEVICE_TYPE_KEY],
@@ -341,14 +334,57 @@ async def test_sensor_update_logic_coverage(
         sub_key,
     )
 
-    # 3. 发送更新并等待
     async_dispatcher_send(
         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_payload
     )
     await hass.async_block_till_done()
 
-    # 4. 验证更新后的状态
     assert float(hass.states.get(entity_id).state) == expected_value
+
+
+@pytest.mark.asyncio
+async def test_update_with_ambiguous_val_key(
+    hass: HomeAssistant, setup_integration: ConfigEntry, mock_lifesmart_devices: list
+):
+    """
+    /**
+     * test_update_with_ambiguous_val_key() - 验证对模糊 'val' 键的处理。
+     *
+     * 此测试专门用于验证 issue 中描述的场景：WebSocket 推送一个使用 'val'
+     * 键的最终值（如 26），而不是原始值（如 260）。代码应能正确识别
+     * 这种情况，避免将其错误地处理为 2.6。
+     */
+    """
+    entity_id = "sensor.living_room_env_t"
+    device_me = "sensor_env"
+    sub_key = "T"
+
+    # 1. 获取 dispatcher 所需的 unique_id
+    raw_device = find_device(mock_lifesmart_devices, device_me)
+    unique_id = generate_unique_id(
+        raw_device[DEVICE_TYPE_KEY],
+        raw_device[HUB_ID_KEY],
+        raw_device[DEVICE_ID_KEY],
+        sub_key,
+    )
+
+    # 2. 模拟推送一个小的 'val' 值 (模糊情况)
+    async_dispatcher_send(
+        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"val": 26}
+    )
+    await hass.async_block_till_done()
+    assert (
+        float(hass.states.get(entity_id).state) == 26.0
+    ), "Should handle small 'val' as final value"
+
+    # 3. 模拟推送一个大的 'val' 值 (清晰的原始值)
+    async_dispatcher_send(
+        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"val": 275}
+    )
+    await hass.async_block_till_done()
+    assert (
+        float(hass.states.get(entity_id).state) == 27.5
+    ), "Should handle large 'val' as raw value"
 
 
 @pytest.mark.parametrize(
@@ -394,7 +430,7 @@ def test_is_sensor_subdevice(device_type, sub_key, expected):
      * @expected:    预期的布尔返回值。
      *
      * 此测试恢复了对 `_is_sensor_subdevice` 辅助函数所有分支的
-     * 全面覆盖，确保设备识别逻辑的正确性。 Maple
+     * 全面覆盖，确保设备识别逻辑的正确性。
      */
     """
     assert _is_sensor_subdevice(device_type, sub_key) == expected
