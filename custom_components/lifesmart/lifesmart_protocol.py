@@ -206,8 +206,17 @@ class LifeSmartProtocol:
         """将多个部分编码成一个完整的 LifeSmart 数据包。"""
         header, data = b"GL00\x00\x00", b""
         for part in parts:
+            packed = self._pack_value(part)
             # 官方文档要求顶级列表中的每个元素（必须是字典）都被移除类型头
-            data += self._pack_value(part)[1:]
+            # 这里假设 _pack_value 返回的第一个字节始终是类型头（如 0x12），否则抛出异常
+            if not packed or len(packed) < 2:
+                raise ValueError("_pack_value 返回的内容过短，无法移除类型头")
+            # 检查类型头是否为预期的字典类型（0x12），如有需要可调整
+            if packed[0] != 0x12:
+                raise ValueError(
+                    f"_pack_value 返回的类型头不是预期的 0x12，而是 {packed[0]:#x}"
+                )
+            data += packed[1:]
         pkt = header + struct.pack(">I", len(data)) + data
         if len(pkt) >= 1000:
             compressed = gzip.compress(pkt)
