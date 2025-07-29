@@ -187,8 +187,7 @@ class LifeSmartProtocol:
             return self._string_to_bin(value)
         if isinstance(value, list):
             if not value:
-                return b"\x01"  # 使用 0x01 作为空列表的标记
-
+                return b"\x01"
             data = b"\x12" + struct.pack("B", len(value))
             for i, item in enumerate(value):
                 data += self._pack_value(i) + self._pack_value(item)
@@ -207,7 +206,8 @@ class LifeSmartProtocol:
         """将多个部分编码成一个完整的 LifeSmart 数据包。"""
         header, data = b"GL00\x00\x00", b""
         for part in parts:
-            data += self._pack_value(part)
+            # 官方文档要求顶级列表中的每个元素（必须是字典）都被移除类型头
+            data += self._pack_value(part)[1:]
         pkt = header + struct.pack(">I", len(data)) + data
         if len(pkt) >= 1000:
             compressed = gzip.compress(pkt)
@@ -341,8 +341,9 @@ class LifeSmartProtocol:
                 stream = BytesIO(packet_data)
                 result = []
                 while stream.tell() < len(packet_data):
-                    data_type = ord(stream.read(1))
-                    parsed = self._parse_value(stream, data_type)
+                    # 官方要求每个块都是一个字典
+                    # _parse_value 会处理读取类型、长度和内容
+                    parsed = self._parse_value(stream, 0x12)
                     result.append(parsed)
                 return remaining_data, self._normalize_structure(result)
             raise ValueError(f"未知的包头: {header.hex()}")
@@ -657,31 +658,50 @@ class LifeSmartLocalClient:
         self.reader, self.writer = await asyncio.wait_for(
             asyncio.open_connection(self.host, self.port), timeout=5
         )
-        pkt = LifeSmartPacketFactory("", "").build_login_packet(
-            self.username, self.password
-        )
-        self.writer.write(pkt)
-        await self.writer.drain()
-        response = b""
-        while not self.disconnected:
-            buf = await self.reader.read(4096)
-            if not buf:
+        try:
+            pkt = LifeSmartPacketFactory("", "").build_login_packet(
+                self.username, self.password
+            )
+            # 新增：记录将要发送的登录包内容
+            _LOGGER.debug(
+                "Sending login packet to %s:%s with username '%s'.",
+                self.host,
+                self.port,
+                self.username,
+            )
+            self.writer.write(pkt)
+            await self.writer.drain()
+            response = b""
+            while not self.disconnected:
+                # 在读取操作上增加超时，防止无限期等待
+                buf = await asyncio.wait_for(self.reader.read(4096), timeout=10)
+                if not buf:
+                    # 如果读取到空字节，说明对端关闭了连接
+                    raise asyncio.TimeoutError(
+                        "Connection closed by peer during login."
+                    )
+                response += buf
+                if response:
+                    try:
+                        _, decoded = self._proto.decode(response)
+                        if decoded and decoded[1].get("ret") is None:
+                            _LOGGER.error("本地登录失败 -> %s", decoded[1].get("err"))
+                            raise asyncio.InvalidStateError(
+                                "Login failed with error response."
+                            )
+                        break  # 成功解码并验证，跳出循环
+                    except EOFError:
+                        # 数据包尚不完整，继续读取
+                        pass
+            return True
+        finally:
+            if self.writer:
                 self.writer.close()
-                await self.writer.wait_closed()
-                raise asyncio.TimeoutError
-            response += buf
-            if response:
                 try:
-                    _, decoded = self._proto.decode(response)
-                    if decoded and decoded[1].get("ret") is None:
-                        _LOGGER.error("本地登录失败 -> %s", decoded[1].get("err"))
-                        raise asyncio.InvalidStateError
-                    break
-                except EOFError:
+                    await self.writer.wait_closed()
+                except (ConnectionResetError, BrokenPipeError):
+                    # 这是一个预期的异常，如果连接已经被重置，可以忽略
                     pass
-        self.writer.close()
-        await self.writer.wait_closed()
-        return True
 
     async def get_all_device_async(self, timeout=5):
         """异步获取所有设备数据，带超时控制。"""
