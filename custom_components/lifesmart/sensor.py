@@ -437,7 +437,7 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         return None
 
     @callback
-    def _convert_raw_value(self, raw_value: int) -> float | int | None:
+    def _convert_raw_value(self, raw_value: int | None) -> float | int | None:
         """Convert raw value to actual value based on device type."""
         if raw_value is None:
             return None
