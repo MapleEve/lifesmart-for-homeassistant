@@ -110,7 +110,7 @@ async def validate_local_input(
             "Local connection failed, likely due to invalid credentials: %s", e
         )
         raise ConfigEntryAuthFailed("invalid_auth") from e
-    except (asyncio.TimeoutError, ConnectionRefusedError, OSError) as e:
+    except (asyncio.TimeoutError, OSError) as e:
         _LOGGER.error("Local connection error: %s", e)
         raise ConfigEntryNotReady("cannot_connect") from e
     except Exception as e:
