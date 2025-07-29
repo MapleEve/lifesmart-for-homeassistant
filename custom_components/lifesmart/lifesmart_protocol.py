@@ -392,9 +392,7 @@ class LifeSmartProtocol:
             return [self._normalize_structure(item) for item in data]
         if isinstance(data, LSTimestamp):
             return data.value
-        if isinstance(data, str) and data.startswith("enum:"):
-            return data[5:]
-        return data
+        return data[5:] if isinstance(data, str) and data.startswith("enum:") else data
 
 
 class LifeSmartPacketFactory:
