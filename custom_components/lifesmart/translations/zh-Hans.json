@@ -48,7 +48,8 @@
     "abort": {
       "already_in_progress": "当前配置流程已经在进行中",
       "reauth_successful": "重新认证成功，请重新加载集成",
-      "already_configured": "此设备已经配置过了"
+      "already_configured": "此设备已经配置过了",
+      "unknown_error": "发生未知错误，请检查日志。"
     },
     "error": {
       "cannot_connect": "连接失败，请检查您的网络和 IP 地址",

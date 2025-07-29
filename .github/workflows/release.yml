@@ -1,0 +1,29 @@
+name: "Upload Release Asset"
+
+on:
+  release:
+    types: [ published ] # 当一个 Release 被发布时触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 步骤 1: 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 步骤 2: 进入组件目录并打包
+      - name: Archive component
+        run: |
+          cd ${{ github.workspace }}/custom_components/lifesmart
+          zip -r ../../lifesmart.zip .
+
+      # 步骤 3: 上传打包好的 zip 文件到 Release
+      - name: Upload zip to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GH_TOKEN }}
+          file: lifesmart.zip
+          asset_name: lifesmart.zip
+          tag: ${{ github.ref }}
+          overwrite: true

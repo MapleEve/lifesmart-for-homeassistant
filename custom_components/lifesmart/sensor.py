@@ -26,7 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice, generate_entity_id
+from . import LifeSmartDevice, generate_unique_id
 from .const import (
     # 核心常量
     DOMAIN,
@@ -38,6 +38,9 @@ from .const import (
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
+    # 配置选项常量
+    CONF_EXCLUDE_ITEMS,
+    CONF_EXCLUDE_AGTS,
     # --- 设备类型常量导入 ---
     ALL_SENSOR_TYPES,
     EV_SENSOR_TYPES,
@@ -50,6 +53,7 @@ from .const import (
     LOCK_TYPES,
     COVER_TYPES,
     DEFED_SENSOR_TYPES,
+    SMOKE_SENSOR_TYPES,
     WATER_SENSOR_TYPES,
     SUPPORTED_SWITCH_TYPES,
     GARAGE_DOOR_TYPES,
@@ -68,8 +72,12 @@ async def async_setup_entry(
     entry_id = config_entry.entry_id
     devices = hass.data[DOMAIN][entry_id]["devices"]
     client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
+    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
+    exclude_devices = {
+        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
+    }
+    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
 
     sensors = []
     for device in devices:
@@ -83,26 +91,20 @@ async def async_setup_entry(
 
         if device_type == "SL_NATURE":
             p5_val = device.get(DEVICE_DATA_KEY, {}).get("P5", {}).get("val", 1) & 0xFF
-            if p5_val == 3:  # 是温控面板
-                ha_device = LifeSmartDevice(device, client)
-                # P4 是当前温度
-                if "P4" in device[DEVICE_DATA_KEY]:
-                    sensors.append(
-                        LifeSmartSensor(
-                            device=ha_device,
-                            raw_device=device,
-                            sub_device_key="P4",
-                            sub_device_data=device[DEVICE_DATA_KEY]["P4"],
-                            client=client,
-                            entry_id=entry_id,
-                        )
+            if p5_val == 3 and "P4" in device[DEVICE_DATA_KEY]:
+                sensors.append(
+                    LifeSmartSensor(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                        sub_device_key="P4",
+                        sub_device_data=device[DEVICE_DATA_KEY]["P4"],
                     )
+                )
             continue  # 处理完 SL_NATURE，跳过
 
         if device_type not in ALL_SENSOR_TYPES:
             continue
-
-        ha_device = LifeSmartDevice(device, client)
 
         for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
             if not _is_sensor_subdevice(device_type, sub_key):
@@ -110,12 +112,11 @@ async def async_setup_entry(
 
             sensors.append(
                 LifeSmartSensor(
-                    device=ha_device,
                     raw_device=device,
-                    sub_device_key=sub_key,
-                    sub_device_data=sub_data,
                     client=client,
                     entry_id=entry_id,
+                    sub_device_key=sub_key,
+                    sub_device_data=sub_data,
                 )
             )
 
@@ -130,7 +131,7 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
             return True
         if device_type == "SL_CP_VL" and sub_key == "P6":
             return True
-        if device_type == "SL_TR_ACIPM" and sub_key in ["P4", "P5"]:
+        if device_type == "SL_TR_ACIPM" and sub_key in {"P4", "P5"}:
             return True
         return False
 
@@ -184,12 +185,11 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     if device_type in DEFED_SENSOR_TYPES and sub_key in {"T", "V"}:
         return True
 
+    # 烟雾传感器
+    if device_type in SMOKE_SENSOR_TYPES and sub_key == "P2":
+        return True
     # 水浸传感器（只保留电压）
     if device_type in WATER_SENSOR_TYPES and sub_key == "V":
-        return True
-
-    # SL_SW* 和 SL_MC* 系列的 P4 是电量传感器
-    if device_type in SUPPORTED_SWITCH_TYPES and sub_key == "P4":
         return True
 
     # SL_SC_BB_V2 的 P2 是电量传感器
@@ -202,34 +202,34 @@ def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     return False
 
 
-class LifeSmartSensor(SensorEntity):
+class LifeSmartSensor(LifeSmartDevice, SensorEntity):
     """LifeSmart sensor entity with enhanced compatibility."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        device: LifeSmartDevice,
         raw_device: dict[str, Any],
-        sub_device_key: str,
-        sub_device_data: dict[str, Any],
         client: Any,
         entry_id: str,
+        sub_device_key: str,
+        sub_device_data: dict[str, Any],
     ) -> None:
         """Initialize the sensor."""
-        self._device = device
-        self._raw_device = raw_device
+        super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
-        self._client = client
         self._entry_id = entry_id
-        self._attr_unique_id = generate_entity_id(
-            raw_device[DEVICE_TYPE_KEY],
-            raw_device[HUB_ID_KEY],
-            raw_device[DEVICE_ID_KEY],
+
+        self._attr_name = self._generate_sensor_name()
+        device_name_slug = self._name.lower().replace(" ", "_")
+        sub_key_slug = self._sub_key.lower()
+        self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
+
+        self._attr_unique_id = generate_unique_id(
+            self.devtype,
+            self.agt,
+            self.me,
             sub_device_key,
         )
-        self._attr_name = self._generate_sensor_name()
         self._attr_device_class = self._determine_device_class()
         self._attr_state_class = self._determine_state_class()
         self._attr_native_unit_of_measurement = self._determine_unit()
@@ -239,8 +239,8 @@ class LifeSmartSensor(SensorEntity):
     @callback
     def _generate_sensor_name(self) -> str | None:
         """Generate user-friendly sensor name."""
-        base_name = self._raw_device.get(DEVICE_NAME_KEY, "Unknown Switch")
-        # 如果子设备有自己的名字 (如多联开关的按键名)，则使用它
+        base_name = self._name
+        # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
         if sub_name and sub_name != self._sub_key:
             return f"{base_name} {sub_name}"
@@ -325,6 +325,10 @@ class LifeSmartSensor(SensorEntity):
         if device_type in DEFED_SENSOR_TYPES and sub_key == "T":
             return SensorDeviceClass.TEMPERATURE
 
+        # 烟雾传感器的电量
+        if device_type in SMOKE_SENSOR_TYPES and sub_key == "P2":
+            return SensorDeviceClass.BATTERY
+
         # 环境感应器（EV系列）
         if device_type in EV_SENSOR_TYPES:
             if sub_key == "T":
@@ -390,7 +394,7 @@ class LifeSmartSensor(SensorEntity):
     def _determine_state_class(self) -> SensorStateClass | None:
         """Determine state class for long-term statistics."""
         # 为传感器设置状态类别，以支持历史图表
-        if self.device_class in [
+        if self.device_class in {
             SensorDeviceClass.TEMPERATURE,
             SensorDeviceClass.HUMIDITY,
             SensorDeviceClass.ILLUMINANCE,
@@ -401,7 +405,7 @@ class LifeSmartSensor(SensorEntity):
             SensorDeviceClass.SOUND_PRESSURE,
             SensorDeviceClass.BATTERY,
             SensorDeviceClass.VOLTAGE,
-        ]:
+        }:
             return SensorStateClass.MEASUREMENT
         if self.device_class == SensorDeviceClass.ENERGY:
             return SensorStateClass.TOTAL_INCREASING
@@ -413,7 +417,15 @@ class LifeSmartSensor(SensorEntity):
         # 优先使用友好值
         value = self._sub_data.get("v")
         if value is not None:
-            return value
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                _LOGGER.warning(
+                    "Invalid non-numeric 'v' value received for %s: %s",
+                    self.unique_id,
+                    value,
+                )
+                return None
 
         # 使用原始值并进行必要的转换
         raw_value = self._sub_data.get("val")
@@ -423,46 +435,51 @@ class LifeSmartSensor(SensorEntity):
         return None
 
     @callback
-    def _convert_raw_value(self, raw_value: int) -> float | int:
+    def _convert_raw_value(self, raw_value: Any) -> float | int | None:
         """Convert raw value to actual value based on device type."""
+        if raw_value is None:
+            return None
+
+        numeric_raw_value: float | int
+        try:
+            numeric_raw_value = float(raw_value)
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "Invalid non-numeric 'val' received for %s: %s",
+                self.unique_id,
+                raw_value,
+            )
+            return None
+
         device_type = self._raw_device[DEVICE_TYPE_KEY]
 
-        # 温度值通常需要除以10
-        if (
-            self._sub_key in {"T", "P1"}
-            and self.device_class == SensorDeviceClass.TEMPERATURE
-        ):
-            return raw_value / 10.0
+        # 仅当设备类别是温度或湿度时，才应用此启发式规则
+        if self.device_class in {
+            SensorDeviceClass.TEMPERATURE,
+            SensorDeviceClass.HUMIDITY,
+        }:
+            # 假设原始值（如 260）通常会大于一个阈值（如100），
+            # 而最终值（如 26）则小于它。这是一个处理API不一致性的策略。
+            # 这样可以避免将已经是最终值的 26 错误地处理成 2.6。
+            if numeric_raw_value > 100:
+                return numeric_raw_value / 10.0
+            else:
+                return numeric_raw_value
 
-        # 湿度值需要除以10
-        if (
-            self._sub_key in {"H", "P2"}
-            and self.device_class == SensorDeviceClass.HUMIDITY
-        ):
-            return raw_value / 10.0
-
-        # CO2传感器的P1(温度)和P2(湿度)也需要除以10
-        if device_type in EV_SENSOR_TYPES:
-            if self._sub_key == "P1":  # 温度
-                return raw_value / 10.0
-            if self._sub_key == "P2":  # 湿度
-                return raw_value / 10.0
-
+        # 对于其他类型的传感器，保持原有逻辑
         if device_type in CLIMATE_TYPES:
-            # 地暖底板温度和新风VOC都需要除以10
             if (device_type == "SL_CP_DN" and self._sub_key == "P5") or (
                 device_type == "SL_TR_ACIPM" and self._sub_key == "P4"
             ):
-                return raw_value / 10.0
-            # 其他值（如电量、PM2.5）直接使用
-            return raw_value
+                return numeric_raw_value / 10.0
+            return numeric_raw_value
 
         # 电量百分比值直接使用
         if self._sub_key in {"BAT", "V", "P4", "P5"}:
-            return raw_value
+            return numeric_raw_value
 
         # 其他值直接返回
-        return raw_value
+        return numeric_raw_value
 
     @callback
     def _get_extra_attributes(self) -> dict[str, Any] | None:
@@ -484,24 +501,13 @@ class LifeSmartSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """返回设备信息以链接实体到单个设备。"""
-        # 从 self._raw_device 中安全地获取 hub_id 和 device_id
-        hub_id = self._raw_device.get(HUB_ID_KEY)
-        device_id = self._raw_device.get(DEVICE_ID_KEY)
-
-        # 确保 identifiers 即使在 hub_id 或 device_id 为 None 的情况下也不会出错
-        identifiers = set()
-        if hub_id and device_id:
-            identifiers.add((DOMAIN, hub_id, device_id))
-
         return DeviceInfo(
-            identifiers=identifiers,
-            name=self._raw_device.get(
-                DEVICE_NAME_KEY, "Unnamed Device"
-            ),  # 安全获取名称
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
             manufacturer=MANUFACTURER,
-            model=self._raw_device.get(DEVICE_TYPE_KEY),  # 安全获取型号
+            model=self.devtype,
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=((DOMAIN, hub_id) if hub_id else None),
+            via_device=(DOMAIN, self.agt),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -526,49 +532,95 @@ class LifeSmartSensor(SensorEntity):
     async def _handle_update(self, new_data: dict) -> None:
         """Handle real-time updates."""
         try:
-            # 处理WebSocket推送的数据格式
+            if not new_data:
+                import logging
+
+                _LOGGER = logging.getLogger(__name__)
+                _LOGGER.warning(
+                    "Received empty new_data in _handle_update; possible upstream issue."
+                )
+                return
+            # 统一处理数据来源
+            sub_data = {}
             if "msg" in new_data:
                 sub_data = new_data.get("msg", {}).get(self._sub_key, {})
-                val = sub_data.get("v") or sub_data.get("val")
+            elif self._sub_key in new_data:
+                sub_data = new_data.get(self._sub_key, {})
             else:
-                val = new_data.get("v") or new_data.get("val")
+                # 兼容直接推送子键值对的格式，例如 {'v': 26.0} 或 {'val': 260}
+                sub_data = new_data
 
-            if val is not None:
-                self._attr_native_value = (
-                    self._convert_raw_value(val) if "v" not in new_data else val
-                )
-                self.async_write_ha_state()
+            if not sub_data:
+                return
+
+            new_value = None
+            # 优先使用 'v' (最终值), 否则使用 'val' (原始值)
+            if "v" in new_data:
+                try:
+                    new_value = float(new_data["v"])
+                except (ValueError, TypeError):
+                    _LOGGER.warning(
+                        "Invalid non-numeric 'v' value received for %s: %s",
+                        self.unique_id,
+                        new_data["v"],
+                    )
+                    return
+            elif "val" in sub_data:
+                new_value = self._convert_raw_value(sub_data["val"])
+
+            if new_value is None:
+                # 如果收到无效数据仅打印日志（已在convert中完成）
+                return
+
+            self._attr_native_value = new_value
+            self._attr_available = True  # 收到有效数据，确保实体是可用的
+            self.async_write_ha_state()
+
         except Exception as e:
-            _LOGGER.error("Error handling update for %s: %s", self.entity_id, e)
+            _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
 
     async def _handle_global_refresh(self) -> None:
-        """Handle periodic full data refresh."""
-        # 从hass.data获取最新设备列表
-        devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
-        # 查找当前设备
-        current_device = next(
-            (
-                d
-                for d in devices
-                if d[HUB_ID_KEY] == self._raw_device[HUB_ID_KEY]
-                and d[DEVICE_ID_KEY] == self._raw_device[DEVICE_ID_KEY]
-            ),
-            None,
-        )
-        if current_device is None:
-            _LOGGER.warning(
-                "LifeSmartSensor: Device not found during global refresh: %s",
-                self._attr_unique_id,
+        """Handle periodic full data refresh with availability check."""
+        try:
+            devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
+            current_device = next(
+                (
+                    d
+                    for d in devices
+                    if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
+                ),
+                None,
             )
-            return
+            if current_device is None:
+                if self.available:
+                    _LOGGER.warning(
+                        "Device %s not found during global refresh, marking as unavailable.",
+                        self.unique_id,
+                    )
+                    self._attr_available = False
+                    self.async_write_ha_state()
+                return
 
-        sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
-        val = sub_data.get("v") or sub_data.get("val")
-        if val is not None:
-            self._attr_native_value = self._convert_raw_value(val)
-            self.async_write_ha_state()
-        else:
-            _LOGGER.debug(
-                "LifeSmartSensor: No value found for sub-device '%s' during global refresh",
-                self._sub_key,
-            )
+            new_sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key)
+            if new_sub_data is None:
+                if self.available:
+                    _LOGGER.warning(
+                        "Sub-device %s for %s not found, marking as unavailable.",
+                        self._sub_key,
+                        self.unique_id,
+                    )
+                    self._attr_available = False
+                    self.async_write_ha_state()
+                return
+
+            if not self.available:
+                self._attr_available = True
+
+            self._sub_data = new_sub_data
+            new_value = self._extract_initial_value()
+
+            if self._attr_native_value != new_value:
+                self._attr_native_value = new_value
+                self.async_write_ha_state()
+        except Exception as e:
+            _LOGGER.error("Error during global refresh for %s: %s", self.unique_id, e)

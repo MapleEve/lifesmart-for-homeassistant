@@ -1,12 +1,12 @@
 """由 @MapleEve 实现的 LifeSmart 集成。
 
-此模块是 LifeSmart 集成的核心入口点，负责初始化客户端、
-管理设备、设置平台以及处理与 Home Assistant 的生命周期事件。
+此模块是 LifeSmart 集成的核心入口点，负责初始化客户端、管理设备、设置平台以及处理与 Home Assistant 的生命周期事件。
 """
 
 import asyncio
 import json
 import logging
+import re
 import time
 import traceback
 from datetime import timedelta, datetime
@@ -14,6 +14,7 @@ from importlib import reload
 from typing import Optional, Any
 
 import aiohttp
+from aiohttp import ClientWSTimeout
 from homeassistant.config_entries import ConfigEntry, CONN_CLASS_CLOUD_PUSH
 from homeassistant.const import (
     CONF_REGION,
@@ -22,8 +23,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -32,7 +31,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.ssl import get_default_context
 
 from . import lifesmart_protocol
 from .const import (
@@ -98,21 +96,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                              Home Assistant 将捕获此异常并稍后重试。
     """
     hass.data.setdefault(DOMAIN, {})
+    connect_task = None  # 初始化为 None
 
-    # 1. 创建客户端并获取设备，处理连接和认证错误
+    # 1. 创建客户端并获取设备
     try:
-        client, devices, auth_response = await _async_create_client_and_get_devices(
-            hass, config_entry
-        )
+        # 根据连接类型，返回的结果元组长度可能不同
+        result = await _async_create_client_and_get_devices(hass, config_entry)
+        if len(result) == 4:  # 本地模式
+            client, devices, auth_response, connect_task = result
+        else:  # 云端模式
+            client, devices, auth_response = result
+
     except LifeSmartAuthError:
-        # 认证失败是不可恢复的，直接设置失败且不重试。
         return False
-    # ConfigEntryNotReady 会被 Home Assistant 捕获并触发重试。
 
     # 2. 在设备注册表中注册中枢设备
     await _async_register_hubs(hass, config_entry, devices)
 
-    # 3. 将核心数据（客户端、设备列表、配置等）存入 hass.data
+    # 3. 将核心数据存入 hass.data
     hass.data[DOMAIN][config_entry.entry_id] = {
         "client": client,
         "devices": devices,
@@ -123,15 +124,32 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         UPDATE_LISTENER: config_entry.add_update_listener(_async_update_listener),
     }
 
-    # 4. 将配置条目转发到各个平台（如 switch, sensor, light 等）进行设置
+    # 4. 如果是本地模式，现在存储 task 并注册 unload handler
+    if connect_task:
+        hass.data[DOMAIN][config_entry.entry_id]["local_task"] = connect_task
+
+        async def _async_unload_handler():
+            """在卸载时调用客户端的断开方法并取消后台任务。"""
+            _LOGGER.debug("正在为本地连接执行卸载清理...")
+            client.disconnect()
+            if not connect_task.done():
+                connect_task.cancel()
+            try:
+                await connect_task
+            except asyncio.CancelledError:
+                pass  # 这是预期的
+
+        config_entry.async_on_unload(_async_unload_handler)
+
+    # 5. 转发到平台
     await hass.config_entries.async_forward_entry_setups(
         config_entry, SUPPORTED_PLATFORMS
     )
 
-    # 5. 注册集成提供的服务（如场景触发、红外控制等）
+    # 6. 注册服务
     _async_register_services(hass, client)
 
-    # 6. 设置后台任务，如 WebSocket 连接和定时数据刷新、Usertoken 的定时更新
+    # 7. 设置后台任务
     _async_setup_background_tasks(hass, config_entry, client, auth_response)
 
     return True
@@ -215,7 +233,7 @@ async def _async_create_client_and_get_devices(
     else:
         # --- 本地模式 ---
         try:
-            reload(lifesmart_protocol)  # 重新加载协议模块以支持热更新
+            reload(lifesmart_protocol)
             client = lifesmart_protocol.LifeSmartLocalClient(
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
@@ -223,19 +241,26 @@ async def _async_create_client_and_get_devices(
                 config_entry.data[CONF_PASSWORD],
                 config_entry.entry_id,
             )
+
+            async def local_update_callback(data):
+                await data_update_handler(hass, config_entry, data)
+
+            # 只创建任务，不存储
+            connect_task = hass.async_create_task(
+                client.async_connect(local_update_callback)
+            )
+
             devices = await client.get_all_device_async()
             if not devices:
+                if not connect_task.done():
+                    connect_task.cancel()
+                    await connect_task
                 raise ConfigEntryNotReady("从本地网关获取设备列表失败。")
 
-            # 注册 Home Assistant 停止时的回调，以优雅地断开本地连接
-            config_entry.async_on_unload(
-                hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_STOP, client.async_disconnect
-                )
-            )
-            return client, devices, None
+            # 返回 connect_task，让上层函数处理
+            return client, devices, None, connect_task
         except Exception as e:
-            _LOGGER.error("设置与 LifeSmart 中枢的本地连接失败: %s", e)
+            _LOGGER.error("设置与 LifeSmart 中枢的本地连接失败: %s", e, exc_info=True)
             raise ConfigEntryNotReady from e
 
 
@@ -350,7 +375,7 @@ def _async_setup_background_tasks(
             _LOGGER.warning("定时刷新时发生意外错误，这可能是临时问题。错误: %s", e)
 
     # 仅在云端模式下启动 WebSocket 状态管理器和令牌刷新任务
-    if isinstance(client, LifeSmartClient):
+    if hasattr(client, "get_wss_url"):
         state_manager = LifeSmartStateManager(
             hass=hass,
             config_entry=config_entry,
@@ -363,7 +388,9 @@ def _async_setup_background_tasks(
             state_manager.set_token_expiry(auth_response["expiredtime"])
 
         state_manager.start()
-        hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = state_manager
+        hass.data[DOMAIN][config_entry.entry_id][
+            LIFESMART_STATE_MANAGER
+        ] = state_manager
 
     # 设置定时刷新任务（每10分钟），作为 WebSocket 的备用和补充
     cancel_refresh = async_track_time_interval(
@@ -387,13 +414,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_id = entry.entry_id
 
     # 停止 WebSocket 状态管理器
-    if state_manager := hass.data[DOMAIN].get(LIFESMART_STATE_MANAGER):
+    if (
+        state_manager := hass.data[DOMAIN]
+        .get(entry_id, {})
+        .get(LIFESMART_STATE_MANAGER)
+    ):
         await state_manager.stop()
 
-    # 断开本地客户端连接
+    # 停止本地客户端连接任务
+    if local_task := hass.data[DOMAIN].get(entry_id, {}).get("local_task"):
+        local_task.cancel()
+        try:
+            await local_task
+        except asyncio.CancelledError:
+            pass  # Expected
+
+        # 断开本地客户端连接
     client = hass.data[DOMAIN].get(entry_id, {}).get("client")
     if isinstance(client, lifesmart_protocol.LifeSmartLocalClient):
-        await client.async_disconnect(None)
+        # 调用同步的 disconnect 方法来设置标志位，这将由 local_task 的取消来驱动清理
+        client.disconnect()
 
     # 卸载所有相关的平台组件
     unload_ok = await hass.config_entries.async_unload_platforms(
@@ -403,7 +443,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 清理 hass.data 中存储的数据
     if unload_ok and DOMAIN in hass.data and entry_id in hass.data[DOMAIN]:
         # 移除此配置条目的更新监听器
-        hass.data[DOMAIN][entry_id][UPDATE_LISTENER]()
+        if UPDATE_LISTENER in hass.data[DOMAIN][entry_id]:
+            hass.data[DOMAIN][entry_id][UPDATE_LISTENER]()
         # 弹出此配置条目的数据
         hass.data[DOMAIN].pop(entry_id)
         # 如果这是最后一个配置条目，清理整个域
@@ -445,18 +486,18 @@ async def data_update_handler(
         ai_include_items_str = config_entry.options.get(CONF_AI_INCLUDE_ITEMS, "")
 
         # 将字符串配置转换为列表进行处理
-        exclude_devices = [
+        exclude_devices = {
             dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-        ]
-        exclude_hubs = [
+        }
+        exclude_hubs = {
             hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()
-        ]
-        ai_include_hubs = [
+        }
+        ai_include_hubs = {
             hub.strip() for hub in ai_include_hubs_str.split(",") if hub.strip()
-        ]
-        ai_include_items = [
+        }
+        ai_include_items = {
             item.strip() for item in ai_include_items_str.split(",") if item.strip()
-        ]
+        }
 
         # --- 过滤器处理 ---
         if device_id in exclude_devices:
@@ -476,13 +517,13 @@ async def data_update_handler(
             return
 
         # --- 普通设备更新处理 ---
-        entity_id = generate_entity_id(device_type, hub_id, device_id, sub_device_key)
+        unique_id = generate_unique_id(device_type, hub_id, device_id, sub_device_key)
 
         # 通过 dispatcher 将更新信号发送给对应的实体
-        dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data)
+        dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", data)
 
         _LOGGER.debug(
-            "状态更新已派发 -> %s: %s", entity_id, json.dumps(data, ensure_ascii=False)
+            "状态更新已派发 -> %s: %s", unique_id, json.dumps(data, ensure_ascii=False)
         )
 
     except Exception as e:
@@ -525,6 +566,8 @@ class LifeSmartDevice(Entity):
             dev: 从 API 获取的设备信息字典。
             lifesmart_client: LifeSmart 客户端实例。
         """
+        super().__init__()
+        self._raw_device = dev
         self._name = (
             dev.get(DEVICE_NAME_KEY) or f"Unnamed {dev.get(DEVICE_TYPE_KEY, 'Device')}"
         )
@@ -540,19 +583,24 @@ class LifeSmartDevice(Entity):
         }
 
     @property
-    def object_id(self) -> str:
-        """返回 LifeSmart 设备的 ID。"""
-        return self.entity_id
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """返回设备的状态属性。"""
         return self._attributes
 
     @property
-    def name(self) -> str:
-        """返回 LifeSmart 设备的名称。"""
-        return self._name
+    def agt(self) -> str:
+        """Return the agent (hub) ID of the device."""
+        return self._agt
+
+    @property
+    def me(self) -> str:
+        """Return the device ID."""
+        return self._me
+
+    @property
+    def devtype(self) -> str:
+        """Return the device type code."""
+        return self._devtype
 
     @property
     def assumed_state(self) -> bool:
@@ -688,16 +736,14 @@ class LifeSmartStateManager:
                 await self._schedule_retry()
 
     async def _create_websocket(self) -> aiohttp.ClientWebSocketResponse:
-        """创建新的 WebSocket 连接，并处理 SSL 验证。"""
-        ssl_context = get_default_context()
+        """创建新的 WebSocket 连接，完全依赖 Home Assistant 的共享会话。"""
         session = async_get_clientsession(self.hass)
         try:
             return await session.ws_connect(
                 self.ws_url,
                 heartbeat=25,
                 compress=15,
-                ssl=ssl_context,
-                timeout=aiohttp.ClientTimeout(total=30),
+                timeout=ClientWSTimeout(ws_close=30),
             )
         except aiohttp.ClientConnectorCertificateError as e:
             _LOGGER.error("SSL 证书验证失败，请检查服务器区域设置是否正确。错误: %s", e)
@@ -850,6 +896,8 @@ class LifeSmartStateManager:
         """优雅地停止 WebSocket 连接和管理任务。"""
         _LOGGER.info("正在停止 LifeSmart WebSocket 状态管理器...")
         self._should_stop = True
+
+        # 底层的 WebSocket 关闭操作
         if self._ws and not self._ws.closed:
             await self._ws.close(code=1000)
 
@@ -868,88 +916,33 @@ class LifeSmartStateManager:
         _LOGGER.info("LifeSmart 状态管理器已完全停止。")
 
 
-def get_platform_by_device(device_type: str, sub_device: Optional[str] = None) -> str:
-    """根据设备类型和子索引，决定其所属的 Home Assistant 平台。
-
-    Args:
-        device_type: 设备的类型代码。
-        sub_device: 子设备的索引键（如果适用）。
-
-    Returns:
-        对应的平台字符串（如 'switch', 'light'），或空字符串。
-    """
-    if device_type in ALL_SWITCH_TYPES:
-        return Platform.SWITCH
-    if device_type in ALL_LIGHT_TYPES:
-        return Platform.LIGHT
-    if device_type in ALL_COVER_TYPES:
-        return Platform.COVER
-    if device_type in CLIMATE_TYPES:
-        return Platform.CLIMATE
-
-    # 对复合设备进行子设备判断
-    if device_type in LOCK_TYPES:
-        if sub_device == "BAT":
-            return Platform.SENSOR
-        if sub_device in ["EVTLO", "ALM"]:
-            return Platform.BINARY_SENSOR
-
-    if device_type in SMART_PLUG_TYPES:
-        if sub_device == "P1":
-            return Platform.SWITCH
-        if sub_device in ["P2", "P3"]:
-            return Platform.SENSOR
-
-    # 将剩余的各类传感器归类,这个判断应该在复合设备之后，避免错误分类
-    if device_type in ALL_BINARY_SENSOR_TYPES:
-        return Platform.BINARY_SENSOR
-    if device_type in ALL_SENSOR_TYPES:
-        return Platform.SENSOR
-
-    return ""
-
-
-def generate_entity_id(
-    device_type: str,
-    hub_id: str,
-    device_id: str,
-    sub_device: Optional[str] = None,
+def generate_unique_id(
+    devtype: str,
+    agt: str,
+    me: str,
+    sub_device_key: Optional[str] = None,
 ) -> str:
-    """为 LifeSmart 设备生成符合 Home Assistant 规范的唯一实体 ID。
-
-    此函数确保生成的 ID 是唯一的、可读的，并符合 HA 的命名规则。
+    """
+    为 LifeSmart 实体生成一个稳定且唯一的内部 ID (unique_id)。
+    此 ID 必须在所有模式下保持一致，且不应被截断。
 
     Args:
-        device_type: 设备的类型代码。
-        hub_id: 所属中枢的 ID。
-        device_id: 设备的 ID。
-        sub_device: 子设备的索引键（如果适用）。
+        devtype: 设备的类型代码。
+        agt: 所属中枢的 ID。
+        me: 设备的 ID。
+        sub_device_key: 子设备的索引键（如果适用）。
 
     Returns:
-        格式化的实体 ID 字符串，例如 'switch.sl_sw_nd1_agt123_dev456_p1'。
+        格式化的实体 ID 字符串，例如 'sl_sw_nd1_agt123_dev456_p1'。
     """
-    import re
 
+    # 清理和规范化函数，只移除特殊字符并转为小写
     def sanitize(input_str: str) -> str:
-        """移除字符串中的非字母数字字符并转为小写。"""
-        return re.sub(r"\W", "", str(input_str)).lower()
+        # 先转小写，然后用 \W 替换所有非字母、非数字、非下划线的字符
+        return re.sub(r"\W", "", input_str.lower())
 
-    platform_str = get_platform_by_device(device_type, sub_device)
-    if not platform_str:
-        return ""  # 如果无法确定平台，则不生成ID
+    parts = [sanitize(devtype), sanitize(agt), sanitize(me)]
+    if sub_device_key:
+        parts.append(sanitize(sub_device_key))
 
-    # 构建实体ID的基础部分
-    base_parts = [
-        sanitize(device_type),
-        sanitize(hub_id),
-        sanitize(device_id),
-    ]
-    if sub_device:
-        base_parts.append(sanitize(sub_device))
-
-    clean_entity = "_".join(base_parts)
-    # 确保实体ID不超过最大长度限制
-    max_length = 255 - (len(platform_str) + 1)
-    clean_entity = clean_entity[:max_length]
-
-    return f"{platform_str}.{clean_entity}"
+    return "_".join(parts)

@@ -1,4 +1,16 @@
-"""Support for LifeSmart Covers by @MapleEve"""
+"""
+此模块为 LifeSmart 平台提供窗帘、车库门等覆盖物 (Cover) 设备支持。
+
+由 @MapleEve 初始创建和维护。
+
+主要功能:
+- 定义 LifeSmartBaseCover、LifeSmartPositionalCover 和 LifeSmartNonPositionalCover
+  三个类，分别代表覆盖物设备的基类、支持位置控制的设备和不支持位置控制的设备。
+- 在 `async_setup_entry` 中，根据设备类型和IO口配置，智能地创建正确的实体。
+- 对通用控制器 (Generic Controller) 进行特殊处理，仅当其工作在窗帘模式时才创建实体。
+- 实现乐观更新 (Optimistic Update)，在用户发出指令后立即更新UI状态，提升响应体验。
+- 精确处理非定位窗帘在“移动中停止”后的最终状态判断。
+"""
 
 import logging
 from typing import Any
@@ -15,24 +27,50 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import generate_entity_id
+from . import LifeSmartDevice, generate_unique_id
 from .const import (
-    DOMAIN,
-    MANUFACTURER,
-    HUB_ID_KEY,
-    DEVICE_ID_KEY,
-    DEVICE_TYPE_KEY,
-    DEVICE_NAME_KEY,
-    DEVICE_DATA_KEY,
-    DEVICE_VERSION_KEY,
-    NON_POSITIONAL_COVER_CONFIG,
-    LIFESMART_SIGNAL_UPDATE_ENTITY,
     ALL_COVER_TYPES,
-    GARAGE_DOOR_TYPES,
+    CONF_EXCLUDE_AGTS,
+    CONF_EXCLUDE_ITEMS,
+    DEVICE_DATA_KEY,
+    DEVICE_ID_KEY,
+    DEVICE_NAME_KEY,
+    DEVICE_TYPE_KEY,
+    DEVICE_VERSION_KEY,
+    DOMAIN,
     DOOYA_TYPES,
+    GARAGE_DOOR_TYPES,
+    GENERIC_CONTROLLER_TYPES,
+    HUB_ID_KEY,
+    LIFESMART_SIGNAL_UPDATE_ENTITY,
+    MANUFACTURER,
+    NON_POSITIONAL_COVER_CONFIG,
 )
 
+# 初始化模块级日志记录器
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_cover_subdevice(device_type: str, sub_key: str) -> bool:
+    """
+    检查一个子设备IO口是否为有效的窗帘控制点。
+
+    Args:
+        device_type: 设备的类型代码 (devtype)。
+        sub_key: 子设备或IO口的索引键 (如 'P1', 'OP')。
+
+    Returns:
+        如果该IO口是此类型设备的窗帘控制点，则返回 True。
+    """
+    if device_type in GARAGE_DOOR_TYPES:
+        return sub_key in {"P2", "HS"}
+    if device_type in DOOYA_TYPES:
+        return sub_key == "P1"
+    if device_type in NON_POSITIONAL_COVER_CONFIG:
+        # 对于非定位窗帘，其配置中定义的任何一个控制键（开/关/停）都算有效
+        config = NON_POSITIONAL_COVER_CONFIG.get(device_type, {})
+        return sub_key in config.values()
+    return False
 
 
 async def async_setup_entry(
@@ -40,147 +78,153 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart covers from a config entry, following the standard pattern."""
+    """
+    从配置条目异步设置 LifeSmart 覆盖物设备。
+
+    此函数负责筛选出所有覆盖物设备，并为每个设备的有效控制点创建实体。
+    它包含对通用控制器的特殊处理逻辑。
+    """
     entry_id = config_entry.entry_id
     devices = hass.data[DOMAIN][entry_id]["devices"]
     client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices = hass.data[DOMAIN][entry_id]["exclude_devices"]
-    exclude_hubs = hass.data[DOMAIN][entry_id]["exclude_hubs"]
+    # 从配置选项中获取需要排除的设备和网关列表
+    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
+    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
+    exclude_devices = {
+        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
+    }
+    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
 
     covers = []
     for device in devices:
+        # 如果设备或其所属网关在排除列表中，则跳过
         if (
             device[DEVICE_ID_KEY] in exclude_devices
             or device[HUB_ID_KEY] in exclude_hubs
         ):
             continue
 
-        device_type = device[DEVICE_TYPE_KEY]
-        if device_type in ALL_COVER_TYPES:
-            covers.append(
-                LifeSmartCover(
-                    raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
+        device_type = device.get(DEVICE_TYPE_KEY)
+        if device_type not in ALL_COVER_TYPES:
+            continue
+
+        # 对通用控制器进行特殊判断，只有当其工作在窗帘模式时才继续
+        if device_type in GENERIC_CONTROLLER_TYPES:
+            p1_val = device.get(DEVICE_DATA_KEY, {}).get("P1", {}).get("val", 0)
+            # 工作模式编码在 P1 val 的高位: (val >>> 24) & 0xE
+            # 2: 二线窗帘, 4: 三线窗帘
+            work_mode = (p1_val >> 24) & 0xE
+            if work_mode not in {2, 4}:
+                continue  # 如果不是窗帘模式，则跳过此设备
+
+        device_data = device.get(DEVICE_DATA_KEY, {})
+        for sub_key in device_data:
+            if not _is_cover_subdevice(device_type, sub_key):
+                continue
+
+            # 对于非定位窗帘，我们只为其“开”操作的IO口创建一个实体，以避免重复
+            if device_type in NON_POSITIONAL_COVER_CONFIG:
+                # 对通用控制器，使用 SL_P 的配置作为代表
+                config_key = (
+                    "SL_P" if device_type in GENERIC_CONTROLLER_TYPES else device_type
                 )
-            )
+                rep_key = NON_POSITIONAL_COVER_CONFIG[config_key]["open"]
+                if sub_key != rep_key:
+                    continue
+
+            # 根据设备是否支持位置，创建不同类型的实体
+            if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
+                covers.append(
+                    LifeSmartPositionalCover(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                        sub_device_key=sub_key,
+                    )
+                )
+            elif (
+                device_type in NON_POSITIONAL_COVER_CONFIG
+                or device_type in GENERIC_CONTROLLER_TYPES
+            ):
+                covers.append(
+                    LifeSmartNonPositionalCover(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                        sub_device_key=sub_key,
+                    )
+                )
 
     async_add_entities(covers)
 
 
-class LifeSmartCover(CoverEntity):
-    """LifeSmart cover entity with full state management."""
+class LifeSmartBaseCover(LifeSmartDevice, CoverEntity):
+    """
+    LifeSmart 覆盖物设备的基类。
 
-    _attr_has_entity_name = True
+    实现了所有覆盖物设备共有的逻辑，如设备信息、实体唯一ID、
+    更新处理机制和基础的开/关/停服务调用。
+    """
 
     def __init__(
         self,
         raw_device: dict[str, Any],
         client: Any,
         entry_id: str,
+        sub_device_key: str,
     ) -> None:
-        """Initialize the cover."""
-        self._raw_device = raw_device
-        self._client = client
+        """初始化覆盖物基类。"""
+        super().__init__(raw_device, client)
         self._entry_id = entry_id
-        self.device_type = raw_device[DEVICE_TYPE_KEY]
-        self._hub_id = raw_device[HUB_ID_KEY]
-        self._device_id = raw_device[DEVICE_ID_KEY]
+        self._sub_key = sub_device_key
 
-        self._attr_unique_id = generate_entity_id(
-            self.device_type, self._hub_id, self._device_id, "cover"
+        # --- 实体命名逻辑 ---
+        base_name = self._name
+        # 尝试从IO口数据中获取更具体的名称
+        sub_name_from_data = (
+            raw_device.get(DEVICE_DATA_KEY, {})
+            .get(self._sub_key, {})
+            .get(DEVICE_NAME_KEY)
         )
-        self._attr_name = raw_device.get(DEVICE_NAME_KEY, "Unknown Cover")
+        # 如果没有具体名称，则使用IO口键名作为后缀
+        suffix = (
+            sub_name_from_data
+            if sub_name_from_data and sub_name_from_data != self._sub_key
+            else self._sub_key.upper()
+        )
+        self._attr_name = f"{base_name} {suffix}"
 
-        self._initialize_features()
-        self._update_state(raw_device.get(DEVICE_DATA_KEY, {}))
+        # --- 实体ID生成逻辑 ---
+        device_name_slug = self._name.lower().replace(" ", "_")
+        sub_key_slug = self._sub_key.lower()
+        self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
+
+        self._attr_unique_id = generate_unique_id(
+            self.devtype, self.agt, self.me, self._sub_key
+        )
+
+        # 初始化状态
+        self._initialize_state()
 
     @callback
-    def _initialize_features(self) -> None:
-        """Initialize features based on device type using constants."""
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
-        self._attr_device_class = (
-            CoverDeviceClass.GARAGE
-            if self.device_type in GARAGE_DOOR_TYPES
-            else CoverDeviceClass.CURTAIN
-        )
-        if self.device_type in DOOYA_TYPES or self.device_type in GARAGE_DOOR_TYPES:
-            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
-
-    @callback
-    def _update_state(self, data: dict) -> None:
-        """Parse and update the entity's state from device data."""
-        # --- 位置型设备 ---
-        if self.device_type in GARAGE_DOOR_TYPES or self.device_type in DOOYA_TYPES:
-            status_data = data.get(
-                "P2" if self.device_type in GARAGE_DOOR_TYPES else "P1", {}
-            )
-            val = status_data.get("val", 0)
-            self._attr_current_cover_position = val & 0x7F
-            is_moving = status_data.get("type", 0) % 2 == 1
-            is_opening_direction = val & 0x80 == 0x80
-
-            self._attr_is_opening = is_moving and is_opening_direction
-            self._attr_is_closing = is_moving and not is_opening_direction
-            self._attr_is_closed = self.current_cover_position == 0
-
-        # --- 命令型设备 ---
-        elif self.device_type in NON_POSITIONAL_COVER_CONFIG:
-            self._attr_current_cover_position = None
-            config = NON_POSITIONAL_COVER_CONFIG[self.device_type]
-
-            is_opening = data.get(config["open"], {}).get("type", 0) % 2 == 1
-            is_closing = data.get(config["close"], {}).get("type", 0) % 2 == 1
-
-            self._attr_is_opening = is_opening
-            self._attr_is_closing = is_closing
-
-            # 只有在明确收到“关闭”信号后停止，我们才乐观地认为它是关闭的。
-            # 在其他情况下（如打开后停止），我们认为它是打开的（is_closed = False）。
-            if not is_opening and not is_closing:
-                # 如果上一个动作是关闭，现在停止了，我们假设它关闭了
-                if self._attr_is_closing:
-                    self._attr_is_closed = True
-                else:  # 否则，我们假设它是打开的（或部分打开）
-                    self._attr_is_closed = False
-            else:
-                # 只要在移动，就不是关闭状态
-                self._attr_is_closed = False
-        else:
-            # 未知设备类型，采取最保守的状态
-            self._attr_is_opening = False
-            self._attr_is_closing = False
-            self._attr_is_closed = None  # 状态未知
-            self._attr_current_cover_position = None
-
-        self.async_write_ha_state()
+    def _initialize_state(self) -> None:
+        """初始化状态的抽象方法，由子类实现。"""
+        raise NotImplementedError
 
     @property
     def device_info(self) -> DeviceInfo:
-        """返回设备信息以链接实体到单个设备。"""
-        # 从 self._raw_device 中安全地获取 hub_id 和 device_id
-        hub_id = self._raw_device.get(HUB_ID_KEY)
-        device_id = self._raw_device.get(DEVICE_ID_KEY)
-
-        # 确保 identifiers 即使在 hub_id 或 device_id 为 None 的情况下也不会出错
-        identifiers = set()
-        if hub_id and device_id:
-            identifiers.add((DOMAIN, hub_id, device_id))
-
+        """返回设备信息，用于在 Home Assistant UI 中将实体链接到物理设备。"""
         return DeviceInfo(
-            identifiers=identifiers,
-            name=self._raw_device.get(
-                DEVICE_NAME_KEY, "Unnamed Device"
-            ),  # 安全获取名称
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
             manufacturer=MANUFACTURER,
-            model=self._raw_device.get(DEVICE_TYPE_KEY),  # 安全获取型号
+            model=self.devtype,
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=((DOMAIN, hub_id) if hub_id else None),
+            via_device=(DOMAIN, self.agt),
         )
 
     async def async_added_to_hass(self) -> None:
+        """当实体被添加到 Home Assistant 时，注册更新监听器。"""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -196,40 +240,187 @@ class LifeSmartCover(CoverEntity):
 
     @callback
     def _handle_update(self, new_data: dict) -> None:
+        """处理来自 WebSocket 的实时状态更新。"""
         if new_data:
-            self._update_state(new_data)
+            self._raw_device[DEVICE_DATA_KEY] = new_data
+            self._initialize_state()
+            self.async_write_ha_state()
 
     @callback
     def _handle_global_refresh(self) -> None:
+        """处理来自 API 轮询的全局设备列表刷新。"""
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self._device_id), None
+                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
             )
             if current_device:
-                self._update_state(current_device.get(DEVICE_DATA_KEY, {}))
+                self._raw_device = current_device
+                self._initialize_state()
+                self.async_write_ha_state()
         except (KeyError, StopIteration):
-            _LOGGER.warning(
-                "Could not find device %s during global refresh.", self._attr_unique_id
-            )
+            _LOGGER.warning("在全局刷新期间未能找到设备 %s。", self._attr_unique_id)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        await self._client.open_cover_async(
-            self._hub_id, self._device_id, self.device_type
-        )
+        """
+        打开覆盖物，并进行乐观更新。
+
+        在向设备发送命令的同时，立即将实体状态更新为 'opening'，
+        为用户提供即时反馈。
+        """
+        self._attr_is_opening = True
+        self._attr_is_closing = False
+        self.async_write_ha_state()
+        await self._client.open_cover_async(self.agt, self.me, self.devtype)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        await self._client.close_cover_async(
-            self._hub_id, self._device_id, self.device_type
-        )
+        """
+        关闭覆盖物，并进行乐观更新。
+
+        立即将实体状态更新为 'closing'。
+        """
+        self._attr_is_closing = True
+        self._attr_is_opening = False
+        self.async_write_ha_state()
+        await self._client.close_cover_async(self.agt, self.me, self.devtype)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
-        await self._client.stop_cover_async(
-            self._hub_id, self._device_id, self.device_type
+        """
+        停止覆盖物移动，并进行乐观更新。
+
+        立即将实体的 'is_opening' 和 'is_closing' 标志位设为 False。
+        最终状态（open/closed）将由下一次设备状态更新来确定。
+        """
+        self._attr_is_opening = False
+        self._attr_is_closing = False
+        self.async_write_ha_state()
+        await self._client.stop_cover_async(self.agt, self.me, self.devtype)
+
+
+class LifeSmartPositionalCover(LifeSmartBaseCover):
+    """代表支持位置控制的 LifeSmart 覆盖物设备。"""
+
+    def __init__(
+        self,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+        sub_device_key: str,
+    ) -> None:
+        """初始化定位覆盖物。"""
+        super().__init__(raw_device, client, entry_id, sub_device_key)
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION
+        )
+        self._attr_device_class = (
+            CoverDeviceClass.GARAGE
+            if self.devtype in GARAGE_DOOR_TYPES
+            else CoverDeviceClass.CURTAIN
+        )
+
+    @callback
+    def _initialize_state(self) -> None:
+        """
+        从设备数据中解析并更新实体的状态。
+
+        此方法解析包含位置和移动方向的 'val' 值。
+        - val 的低7位 (val & 0x7F) 代表当前位置 (0-100)。
+        - val 的最高位 (val & 0x80) 代表移动方向 (0=开, 1=关)。
+        - 'type' 值的奇偶性代表是否正在移动。
+        """
+        status_data = self._raw_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
+        if not status_data:
+            return  # 如果没有状态数据，则不进行更新
+
+        val = status_data.get("val", 0)
+        self._attr_current_cover_position = val & 0x7F
+        is_moving = status_data.get("type", 0) % 2 == 1
+        is_opening_direction = (val & 0x80) == 0
+
+        self._attr_is_opening = is_moving and is_opening_direction
+        self._attr_is_closing = is_moving and not is_opening_direction
+        self._attr_is_closed = (
+            self.current_cover_position is not None and self.current_cover_position <= 0
         )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """设置覆盖物到指定位置。"""
         position = kwargs[ATTR_POSITION]
+        # 乐观更新：假设窗帘会朝目标位置移动
+        if self.current_cover_position is not None:
+            if position > self.current_cover_position:
+                self._attr_is_opening = True
+                self._attr_is_closing = False
+            else:
+                self._attr_is_closing = True
+                self._attr_is_opening = False
+            self.async_write_ha_state()
+
         await self._client.set_cover_position_async(
-            self._hub_id, self._device_id, position, self.device_type
+            self.agt, self.me, position, self.devtype
         )
+
+
+class LifeSmartNonPositionalCover(LifeSmartBaseCover):
+    """代表仅支持开/关/停的 LifeSmart 覆盖物设备。"""
+
+    def __init__(
+        self,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+        sub_device_key: str,
+    ) -> None:
+        """初始化非定位覆盖物。"""
+        # 用于在停止时判断最终状态
+        self._last_known_is_opening = False
+
+        super().__init__(raw_device, client, entry_id, sub_device_key)
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
+        self._attr_device_class = CoverDeviceClass.CURTAIN
+
+    @callback
+    def _initialize_state(self) -> None:
+        """
+        从设备数据中解析并更新实体的状态。
+
+        此方法通过检查开（OP）、关（CL）IO口的 'type' 值的奇偶性来判断
+        窗帘是否正在移动。
+        """
+        self._attr_current_cover_position = None
+        config_key = (
+            "SL_P" if self.devtype in GENERIC_CONTROLLER_TYPES else self.devtype
+        )
+        config = NON_POSITIONAL_COVER_CONFIG.get(config_key, {})
+        data = self._raw_device.get(DEVICE_DATA_KEY, {})
+
+        # 如果没有配置或数据，则不更新
+        if not config or not data:
+            return
+
+        is_opening = data.get(config["open"], {}).get("type", 0) % 2 == 1
+        is_closing = data.get(config["close"], {}).get("type", 0) % 2 == 1
+
+        # 记录最后一次的移动方向
+        if is_opening:
+            self._last_known_is_opening = True
+        elif is_closing:
+            self._last_known_is_opening = False
+
+        self._attr_is_opening = is_opening
+        self._attr_is_closing = is_closing
+
+        # 判断是否关闭
+        if not is_opening and not is_closing:
+            # 如果停止移动，根据最后一次的移动方向来判断最终状态
+            # 如果最后是打开方向，则认为最终是打开状态 (is_closed = False)
+            # 如果最后是关闭方向，则认为最终是关闭状态 (is_closed = True)
+            self._attr_is_closed = not self._last_known_is_opening
+        else:
+            # 如果正在移动，则肯定不是关闭状态
+            self._attr_is_closed = False
