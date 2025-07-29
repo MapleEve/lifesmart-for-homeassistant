@@ -419,7 +419,15 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         # 优先使用友好值
         value = self._sub_data.get("v")
         if value is not None:
-            return value
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                _LOGGER.warning(
+                    "Invalid non-numeric 'v' value received for %s: %s",
+                    self.unique_id,
+                    value,
+                )
+                return None
 
         # 使用原始值并进行必要的转换
         raw_value = self._sub_data.get("val")
@@ -429,46 +437,50 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         return None
 
     @callback
-    def _convert_raw_value(self, raw_value: int) -> float | int:
+    def _convert_raw_value(self, raw_value: int) -> float | int | None:
         """Convert raw value to actual value based on device type."""
+        if raw_value is None:
+            return None
+        try:
+            # 确保我们处理的是数字
+            numeric_raw_value = int(raw_value)
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "Invalid non-numeric 'val' received for %s: %s",
+                self.unique_id,
+                raw_value,
+            )
+            return None
+
         device_type = self._raw_device[DEVICE_TYPE_KEY]
 
-        # 温度值通常需要除以10
-        if (
-            self._sub_key in {"T", "P1"}
-            and self.device_class == SensorDeviceClass.TEMPERATURE
-        ):
-            return raw_value / 10.0
+        # 仅当设备类别是温度或湿度时，才应用此启发式规则
+        if self.device_class in {
+            SensorDeviceClass.TEMPERATURE,
+            SensorDeviceClass.HUMIDITY,
+        }:
+            # 假设原始值（如 260）通常会大于一个阈值（如100），
+            # 而最终值（如 26）则小于它。这是一个处理API不一致性的策略。
+            # 这样可以避免将已经是最终值的 26 错误地处理成 2.6。
+            if numeric_raw_value > 100:
+                return numeric_raw_value / 10.0
+            else:
+                return float(numeric_raw_value)  # 直接使用，确保是浮点数
 
-        # 湿度值需要除以10
-        if (
-            self._sub_key in {"H", "P2"}
-            and self.device_class == SensorDeviceClass.HUMIDITY
-        ):
-            return raw_value / 10.0
-
-        # CO2传感器的P1(温度)和P2(湿度)也需要除以10
-        if device_type in EV_SENSOR_TYPES:
-            if self._sub_key == "P1":  # 温度
-                return raw_value / 10.0
-            if self._sub_key == "P2":  # 湿度
-                return raw_value / 10.0
-
+        # 对于其他类型的传感器，保持原有逻辑
         if device_type in CLIMATE_TYPES:
-            # 地暖底板温度和新风VOC都需要除以10
             if (device_type == "SL_CP_DN" and self._sub_key == "P5") or (
                 device_type == "SL_TR_ACIPM" and self._sub_key == "P4"
             ):
-                return raw_value / 10.0
-            # 其他值（如电量、PM2.5）直接使用
-            return raw_value
+                return numeric_raw_value / 10.0
+            return numeric_raw_value
 
         # 电量百分比值直接使用
         if self._sub_key in {"BAT", "V", "P4", "P5"}:
-            return raw_value
+            return numeric_raw_value
 
         # 其他值直接返回
-        return raw_value
+        return numeric_raw_value
 
     @callback
     def _get_extra_attributes(self) -> dict[str, Any] | None:
@@ -521,6 +533,8 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
     async def _handle_update(self, new_data: dict) -> None:
         """Handle real-time updates."""
         try:
+            if not new_data:
+                return
             # 统一处理数据来源
             sub_data = {}
             if "msg" in new_data:
@@ -534,21 +548,34 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
             if not sub_data:
                 return
 
+            new_value = None
             # 优先使用 'v' (最终值), 否则使用 'val' (原始值)
-            if "v" in sub_data:
-                self._attr_native_value = sub_data["v"]
+            if "v" in new_data:
+                try:
+                    new_value = float(new_data["v"])
+                except (ValueError, TypeError):
+                    _LOGGER.warning(
+                        "Invalid non-numeric 'v' value received for %s: %s",
+                        self.unique_id,
+                        new_data["v"],
+                    )
+                    return
             elif "val" in sub_data:
-                self._attr_native_value = self._convert_raw_value(sub_data["val"])
-            else:
-                return  # 没有有效值，不更新
+                new_value = self._convert_raw_value(sub_data["val"])
 
+            if new_value is None:
+                # 如果收到无效数据仅打印日志（已在convert中完成）
+                return
+
+            self._attr_native_value = new_value
+            self._attr_available = True  # 收到有效数据，确保实体是可用的
             self.async_write_ha_state()
 
         except Exception as e:
             _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
 
     async def _handle_global_refresh(self) -> None:
-        """Handle periodic full data refresh."""
+        """Handle periodic full data refresh with availability check."""
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
@@ -560,25 +587,35 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
                 None,
             )
             if current_device is None:
-                _LOGGER.warning(
-                    "LifeSmartSensor: Device not found during global refresh: %s",
-                    self.unique_id,
-                )
+                if self.available:
+                    _LOGGER.warning(
+                        "Device %s not found during global refresh, marking as unavailable.",
+                        self.unique_id,
+                    )
+                    self._attr_available = False
+                    self.async_write_ha_state()
                 return
 
             new_sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key)
-            if new_sub_data:
-                # 更新内部的 sub_data
-                self._sub_data = new_sub_data
-                # 使用 _extract_initial_value 重新计算值
-                new_value = self._extract_initial_value()
-                if new_value is not None and self._attr_native_value != new_value:
-                    self._attr_native_value = new_value
+            if new_sub_data is None:
+                if self.available:
+                    _LOGGER.warning(
+                        "Sub-device %s for %s not found, marking as unavailable.",
+                        self._sub_key,
+                        self.unique_id,
+                    )
+                    self._attr_available = False
                     self.async_write_ha_state()
-            else:
-                _LOGGER.debug(
-                    "LifeSmartSensor: No value found for sub-device '%s' during global refresh",
-                    self._sub_key,
-                )
+                return
+
+            if not self.available:
+                self._attr_available = True
+
+            self._sub_data = new_sub_data
+            new_value = self._extract_initial_value()
+
+            if self._attr_native_value != new_value:
+                self._attr_native_value = new_value
+                self.async_write_ha_state()
         except Exception as e:
             _LOGGER.error("Error during global refresh for %s: %s", self.unique_id, e)

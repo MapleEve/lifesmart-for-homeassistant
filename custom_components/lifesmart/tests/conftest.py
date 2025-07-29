@@ -353,6 +353,18 @@ def mock_lifesmart_devices_fixture():
             "name": "Main Door Lock",
             "data": {"BAT": {"val": 88}},
         },
+        {
+            "agt": "hub_sensor",
+            "me": "sensor_boundary",
+            "devtype": "SL_SC_THL",
+            "name": "Boundary Test Sensor",
+            "data": {
+                "T": {"val": 0},  # Zero value
+                "H": {},  # Empty data
+                "Z": {"val": "invalid_string"},  # Invalid data type
+                # 'V' key is completely missing
+            },
+        },
         # --- Cover Devices ---
         {
             "agt": "hub_cover",

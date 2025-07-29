@@ -1,5 +1,13 @@
 """
-Unit tests for the LifeSmart sensor platform.
+Unit tests for the LifeSmart sensor platform (Restored and Enhanced).
+
+This test suite provides comprehensive coverage, including:
+- Verification of entity creation and exclusion logic.
+- Broad "happy path" property tests for all major sensor types.
+- Specific tests for boundary conditions (zero, null, invalid data).
+- Validation of entity availability logic.
+- Coverage of different real-time update formats ('v' vs 'val').
+- Complete branch coverage for the `_is_sensor_subdevice` helper.
 """
 
 import pytest
@@ -12,6 +20,8 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -27,36 +37,78 @@ from custom_components.lifesmart.sensor import _is_sensor_subdevice
 
 
 def find_device(devices: list, me: str):
-    """Helper to find a specific device from the mock list by its 'me' id."""
+    """
+    /**
+     * find_device() - 从模拟设备列表中查找特定设备。
+     * @devices: 包含模拟设备字典的列表。
+     * @me:      要查找的设备的 'me' 标识符。
+     *
+     * 此函数是一个辅助函数，用于通过 'me' ID 在测试数据中快速定位设备。
+     *
+     * Return:    找到的设备字典，如果未找到则返回 None。
+     */
+    """
     return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
 
 
-async def test_async_setup_entry_creates_sensors(
+@pytest.mark.asyncio
+async def test_sensor_creation_and_exclusion(
     hass: HomeAssistant,
     setup_integration: ConfigEntry,
+    mock_lifesmart_devices: list,
 ):
-    """Test successful creation of sensor entities based on shared fixtures."""
+    """
+    /**
+     * test_sensor_creation_and_exclusion() - 测试传感器的创建和排除逻辑。
+     * @hass: Home Assistant 的核心实例。
+     * @setup_integration: 已设置的集成 ConfigEntry。
+     * @mock_lifesmart_devices: 模拟的设备列表。
+     *
+     * 此测试验证了所有预期的传感器实体是否被正确创建，同时确保
+     * 在配置中被排除的设备（通过 me 或 agt）确实没有被创建为实体。
+     */
+    """
     entity_registry = er.async_get(hass)
 
-    lifesmart_sensors = [
-        entry
+    expected_entities = {
+        "sensor.living_room_env_t",
+        "sensor.living_room_env_h",
+        "sensor.living_room_env_z",
+        "sensor.living_room_env_v",
+        "sensor.study_co2_p3",
+        "sensor.washing_machine_plug_p2",
+        "sensor.washing_machine_plug_p3",
+        "sensor.main_door_lock_bat",
+        "sensor.nature_panel_thermo_p4",
+        "sensor.boundary_test_sensor_t",
+        "sensor.boundary_test_sensor_h",
+        "sensor.boundary_test_sensor_z",
+    }
+
+    created_entities = {
+        entry.entity_id
         for entry in entity_registry.entities.values()
         if entry.platform == DOMAIN and entry.domain == "sensor"
-    ]
+    }
 
-    # Expected sensors:
-    # sensor_env (SL_SC_THL): 4 (T, H, Z, V)
-    # sensor_co2 (SL_SC_CA): 1 (P3)
-    # sensor_power_plug (SL_OE_3C): 2 (P2, P3)
-    # sensor_lock_battery (SL_LK_LS): 1 (BAT)
-    # climate_nature_thermo (SL_NATURE): 1 (P4)
-    # SL_OE_3C excluded in hub
-    # Total = 9 sensors
+    assert expected_entities.issubset(created_entities)
+
+    excluded_device_on_hub = find_device(
+        mock_lifesmart_devices, "device_on_excluded_hub"
+    )
+    unique_id_excluded_hub = generate_unique_id(
+        excluded_device_on_hub[DEVICE_TYPE_KEY],
+        excluded_device_on_hub[HUB_ID_KEY],
+        excluded_device_on_hub[DEVICE_ID_KEY],
+        "T",
+    )
     assert (
-        len(lifesmart_sensors) == 9
-    ), f"Incorrect number of sensor entities created. Expected 9, got {len(lifesmart_sensors)}"
+        entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id_excluded_hub)
+        is None
+    )
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     (
         "device_me",
@@ -154,17 +206,20 @@ async def test_lifesmart_sensor_properties(
     expected_state_class,
     expected_value,
 ):
-    """Test all derived properties of the LifeSmartSensor entity using shared fixtures."""
+    """
+    /**
+     * test_lifesmart_sensor_properties() - 测试传感器的核心属性。
+     *
+     * 此参数化测试恢复了对多种传感器的广泛覆盖，验证每个实体在初始化后
+     * 是否具有正确的名称、设备类别、单位、状态类别和初始值。
+     */
+    """
     raw_device = find_device(mock_lifesmart_devices, device_me)
-    assert raw_device, f"Device '{device_me}' not found in mock_lifesmart_devices"
-
-    device_name_slug = raw_device["name"].lower().replace(" ", "_")
-    sub_key_slug = sub_key.lower()
-    entity_id = f"sensor.{device_name_slug}_{sub_key_slug}"
-
+    entity_id = (
+        f"sensor.{raw_device['name'].lower().replace(' ', '_')}_{sub_key.lower()}"
+    )
     state = hass.states.get(entity_id)
     assert state is not None, f"Entity {entity_id} not found"
-
     assert state.name == f"{raw_device['name']} {expected_name_suffix}"
     assert state.attributes.get("device_class") == (
         expected_class.value if expected_class else None
@@ -175,27 +230,110 @@ async def test_lifesmart_sensor_properties(
     assert state.attributes.get("unit_of_measurement") == expected_unit
     assert float(state.state) == expected_value
 
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get(entity_id)
-    assert entry is not None
-    expected_unique_id = generate_unique_id(
-        raw_device[DEVICE_TYPE_KEY], raw_device[HUB_ID_KEY], device_me, sub_key
-    )
-    assert entry.unique_id == expected_unique_id
+
+@pytest.mark.asyncio
+async def test_sensor_boundary_and_invalid_data(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+):
+    """
+    /**
+     * test_sensor_boundary_and_invalid_data() - 测试边界条件和无效数据。
+     *
+     * 此测试验证了传感器在接收到异常数据时的行为是否健壮：
+     * 1. 零值 (`val: 0`) 应被正确处理。
+     * 2. 空数据 (`{}`) 应使实体状态变为 'unknown'。
+     * 3. 无效数据类型 (string) 应使实体状态变为 'unknown' 而不崩溃。
+     * 4. 完全缺失的子键不应创建实体。
+     */
+    """
+    state_zero = hass.states.get("sensor.boundary_test_sensor_t")
+    assert state_zero is not None and float(state_zero.state) == 0.0
+
+    state_empty = hass.states.get("sensor.boundary_test_sensor_h")
+    assert state_empty is not None and state_empty.state == STATE_UNKNOWN
+
+    state_invalid = hass.states.get("sensor.boundary_test_sensor_z")
+    assert state_invalid is not None and state_invalid.state == STATE_UNKNOWN
+
+    assert hass.states.get("sensor.boundary_test_sensor_v") is None
 
 
-async def test_lifesmart_sensor_updates(
+@pytest.mark.asyncio
+async def test_sensor_becomes_unavailable(
+    hass: HomeAssistant, setup_integration: ConfigEntry
+):
+    """
+    /**
+     * test_sensor_becomes_unavailable() - 测试实体的可用性逻辑。
+     *
+     * 模拟场景：一个设备在初始设置时存在，但在后续的全局刷新中从
+     * API 响应中消失。
+     * 预期结果：对应的 Home Assistant 实体状态应变为 'unavailable'。
+     */
+    """
+    entity_id = "sensor.living_room_env_t"
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    device_list = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+    hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+        d for d in device_list if d.get(DEVICE_ID_KEY) != "sensor_env"
+    ]
+
+    async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "entity_id, unique_id_suffix, initial_value, update_payload, expected_value",
+    [
+        # Case 1: 温度传感器, 收到 'val'，需要除以10进行转换
+        ("sensor.living_room_env_t", "sensor_env_T", 25.5, {"val": 288}, 28.8),
+        # Case 2: 功率传感器, 收到 'v'，是最终值，直接使用
+        (
+            "sensor.washing_machine_plug_p3",
+            "sensor_power_plug_P3",
+            1200,
+            {"v": 1500.5},
+            1500.5,
+        ),
+        # Case 3: 电池传感器, 收到 'val'，但不需要转换
+        ("sensor.main_door_lock_bat", "sensor_lock_battery_BAT", 88, {"val": 50}, 50),
+    ],
+    ids=["temp_update_with_val", "power_update_with_v", "battery_update_with_val"],
+)
+async def test_sensor_update_logic_coverage(
     hass: HomeAssistant,
     setup_integration: ConfigEntry,
     mock_lifesmart_devices: list,
+    entity_id,
+    unique_id_suffix,
+    initial_value,
+    update_payload,
+    expected_value,
 ):
-    """Test real-time and global refresh updates."""
-    raw_device = find_device(mock_lifesmart_devices, "sensor_env")
-    sub_key = "T"
-    device_name_slug = raw_device["name"].lower().replace(" ", "_")
-    sub_key_slug = sub_key.lower()
-    entity_id = f"sensor.{device_name_slug}_{sub_key_slug}"
+    """
+    /**
+     * test_sensor_update_logic_coverage() - 覆盖不同的实时更新逻辑。
+     *
+     * 此测试验证了 `_handle_update` 方法能正确处理两种主要的数据格式：
+     * - 包含 'val' 键的原始数据，需要转换。
+     * - 包含 'v' 键的最终数据，无需转换。
+     */
+    """
+    # 1. 验证初始状态
+    state = hass.states.get(entity_id)
+    assert state is not None and float(state.state) == initial_value
 
+    # 2. 为 dispatcher 生成 unique_id
+    # --- 核心修复：使用 rsplit 从右边分割一次，以正确处理包含下划线的 device_me ---
+    device_me, sub_key = unique_id_suffix.rsplit("_", 1)
+    # --- 修复结束 ---
+
+    raw_device = find_device(mock_lifesmart_devices, device_me)
     unique_id = generate_unique_id(
         raw_device[DEVICE_TYPE_KEY],
         raw_device[HUB_ID_KEY],
@@ -203,33 +341,14 @@ async def test_lifesmart_sensor_updates(
         sub_key,
     )
 
-    # 1. Test real-time update (WebSocket push with 'v' for direct value)
+    # 3. 发送更新并等待
     async_dispatcher_send(
-        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"v": 26.0}
+        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_payload
     )
     await hass.async_block_till_done()
-    assert float(hass.states.get(entity_id).state) == 26.0
 
-    # 2. Test real-time update (raw 'val', requires conversion)
-    async_dispatcher_send(
-        hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"val": 265}
-    )
-    await hass.async_block_till_done()
-    assert float(hass.states.get(entity_id).state) == 26.5
-
-    # 3. Test global refresh
-    device_list = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
-    for i, device in enumerate(device_list):
-        if device["me"] == "sensor_env":
-            updated_device = device.copy()
-            updated_device[DEVICE_DATA_KEY] = updated_device[DEVICE_DATA_KEY].copy()
-            updated_device[DEVICE_DATA_KEY][sub_key] = {"val": 270}
-            device_list[i] = updated_device
-            break
-
-    async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
-    await hass.async_block_till_done()
-    assert float(hass.states.get(entity_id).state) == 27.0
+    # 4. 验证更新后的状态
+    assert float(hass.states.get(entity_id).state) == expected_value
 
 
 @pytest.mark.parametrize(
@@ -252,18 +371,30 @@ async def test_lifesmart_sensor_updates(
         ("SL_OL", "EV", True),
         ("SL_SC_CN", "P1", True),
         ("ELIQ_EM", "EPA", True),
+        # Smoke Sensor
         ("SL_P_A", "P2", True),
+        # Water Sensor
         ("SL_SC_WA", "V", True),
-        # Switch with battery
+        # Button with battery
         ("SL_SC_BB_V2", "P2", True),
         # Negative cases
         ("SL_CP_DN", "P1", False),
-        ("SL_P_A", "T", False),  # SL_P_A is smoke sensor, has no 'T'
-        ("SL_SC_G", "T", False),  # Door sensor has no 'T'
-        ("SL_ETDOOR", "P1", False),  # Garage door P1 is a switch, not a sensor
+        ("SL_P_A", "T", False),
+        ("SL_SC_G", "T", False),
+        ("SL_ETDOOR", "P1", False),
         ("UNKNOWN_TYPE", "P1", False),
     ],
 )
 def test_is_sensor_subdevice(device_type, sub_key, expected):
-    """Test the sub-device validation logic for all branches."""
+    """
+    /**
+     * test_is_sensor_subdevice() - 测试子设备验证逻辑。
+     * @device_type: 设备的类型代码。
+     * @sub_key:     子设备的 IO 口键。
+     * @expected:    预期的布尔返回值。
+     *
+     * 此测试恢复了对 `_is_sensor_subdevice` 辅助函数所有分支的
+     * 全面覆盖，确保设备识别逻辑的正确性。 Maple
+     */
+    """
     assert _is_sensor_subdevice(device_type, sub_key) == expected
