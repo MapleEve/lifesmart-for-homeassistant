@@ -10,7 +10,7 @@
 - 对边界条件（如设备类型判断、数据缺失）的处理是否健壮。
 """
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 # 导入 Home Assistant 温控组件所需的核心常量和服务名称
@@ -82,56 +82,42 @@ class TestClimateSetup:
         hass: HomeAssistant,
         mock_lifesmart_devices: list,
         mock_client: AsyncMock,
+        mock_state_manager_class: MagicMock,  # <-- 注入 state manager mock
         setup_integration: ConfigEntry,
     ):
         """
         边界测试：验证在重载后，非温控版的 SL_NATURE 面板不再作为 climate 实体活动。
-
-        此测试验证了 `_is_climate_device` 函数中的特殊逻辑。
-        测试流程：
-        1. 首先通过 `setup_integration` fixture 完整加载一次集成。
-        2. 确认初始状态下，温控版的 Nature Panel climate 实体存在。
-        3. 修改模拟设备数据，将 Nature Panel 变为开关版。
-        4. 调用 `async_reload` 重新加载配置条目。
-        5. 确认重载后，Nature Panel 的 climate 实体状态变为 'unavailable'，
-           并且其对应的 switch 实体被正确创建。
         """
         # 步骤 1 & 2: 确认初始状态
-        # `setup_integration` 已经完成了初始加载
-        assert (
-            hass.states.get("climate.nature_panel_thermo") is not None
-        ), "初始加载后，温控面板实体应存在"
+        assert hass.states.get("climate.nature_panel_thermo") is not None
         assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
 
         # 步骤 3: 修改模拟数据
         nature_switch = find_device(mock_lifesmart_devices, "climate_nature_thermo")
-        # 将 P5 的值修改为 1，这表示它现在应该被识别为开关面板
         nature_switch["data"]["P5"]["val"] = 1
 
-        # 步骤 4: 使用修改后的设备列表重新加载集成
-        with patch(
-            "custom_components.lifesmart.LifeSmartClient", return_value=mock_client
-        ):
-            mock_client.get_all_device_async.return_value = mock_lifesmart_devices
-            assert await hass.config_entries.async_reload(setup_integration.entry_id)
-            await hass.async_block_till_done()
+        # 配置 mock_client 在重载时返回修改后的设备列表
+        mock_client.get_all_device_async.return_value = mock_lifesmart_devices
+
+        # 获取初始的 state_manager 实例，以便稍后验证它的 stop 方法
+        initial_state_manager_instance = mock_state_manager_class.return_value
+        # 重置 mock，因为 setup_integration 已经调用过 start
+        initial_state_manager_instance.start.reset_mock()
+
+        # 步骤 4: 重新加载集成
+        assert await hass.config_entries.async_reload(setup_integration.entry_id)
+        await hass.async_block_till_done()
 
         # 步骤 5: 断言最终状态
-        # 旧的 climate 实体不会完全消失，而是会变为 'unavailable' 状态。
-        # 这是 Home Assistant 在实体被移除时的标准行为。
         reloaded_state = hass.states.get("climate.nature_panel_thermo")
-        assert reloaded_state is not None, "实体对象在重载后依然存在于状态机中"
-        assert (
-            reloaded_state.state == "unavailable"
-        ), "重载后，旧的 climate 实体状态应变为 'unavailable'"
+        assert reloaded_state is not None
+        assert reloaded_state.state == "unavailable"
+        assert hass.states.get("switch.nature_panel_thermo_p1") is not None
 
-        # --- 增强测试：验证新的 switch 实体是否被创建 ---
-        # 由于 P5 的值变了，现在应该为这个设备创建 switch 实体。
-        # 注意：实体ID可能与原始名称不同，取决于 switch 平台的命名规则。
-        # 我们在这里检查一个预期的开关实体是否存在。
-        assert (
-            hass.states.get("switch.nature_panel_thermo_p1") is not None
-        ), "重载后，应创建对应的 switch 实体"
+        # 验证旧的 state_manager 的 stop 方法在卸载时被调用
+        initial_state_manager_instance.stop.assert_awaited_once()
+        # 验证新的 state_manager 在重载后被启动
+        initial_state_manager_instance.start.assert_called_once()
 
 
 class TestClimateEntity:

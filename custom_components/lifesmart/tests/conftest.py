@@ -3,14 +3,12 @@
 """
 
 import asyncio
-import json
 import logging
 import sys
 import threading
 from typing import Generator
 from unittest.mock import AsyncMock, patch, MagicMock
 
-import aiohttp
 import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_REGION
@@ -482,48 +480,53 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 
 
 @pytest.fixture
-def mock_client(mock_lifesmart_devices):
+def mock_client_class(mock_lifesmart_devices):
     """
-    提供一个默认的、配置了模拟设备的模拟 LifeSmartClient。
+    一个高级 fixture，它 patch LifeSmartClient 类并返回这个类的 Mock。
+    这允许测试根据需要控制 LifeSmartClient() 的返回值，对于测试重载至关重要。
     """
     with patch(
         "custom_components.lifesmart.LifeSmartClient", autospec=True
-    ) as mock_client_class:
-        client_instance = mock_client_class.return_value
-        client_instance.get_all_device_async.return_value = mock_lifesmart_devices
-        client_instance.login_async = AsyncMock(
-            return_value={
-                "usertoken": "mock_new_usertoken",
-                "userid": "mock_userid",
-                "region": "cn2",
-            }
-        )
-        client_instance.async_refresh_token = AsyncMock(
-            return_value={
-                "usertoken": "mock_refreshed_usertoken",
-                "expiredtime": 9999999999,
-            }
-        )
+    ) as mock_class:
+        # 配置默认的实例行为
+        instance = mock_class.return_value
+        instance.get_all_device_async.return_value = mock_lifesmart_devices
+        instance.login_async.return_value = {
+            "usertoken": "mock_new_usertoken",
+            "userid": "mock_userid",
+            "region": "cn2",
+        }
+        instance.async_refresh_token.return_value = {
+            "usertoken": "mock_refreshed_usertoken",
+            "expiredtime": 9999999999,
+        }
 
-        # 模拟所有控制方法
-        client_instance.turn_on_light_switch_async = AsyncMock(return_value=0)
-        client_instance.turn_off_light_switch_async = AsyncMock(return_value=0)
-        client_instance.set_single_ep_async = AsyncMock(return_value=0)
-        client_instance.set_multi_eps_async = AsyncMock(return_value=0)
-        client_instance.open_cover_async = AsyncMock(return_value=0)
-        client_instance.close_cover_async = AsyncMock(return_value=0)
-        client_instance.stop_cover_async = AsyncMock(return_value=0)
-        client_instance.set_cover_position_async = AsyncMock(return_value=0)
-        client_instance.async_set_climate_hvac_mode = AsyncMock(return_value=0)
-        client_instance.async_set_climate_fan_mode = AsyncMock(return_value=0)
-        client_instance.async_set_climate_temperature = AsyncMock(return_value=0)
-        client_instance.get_wss_url.return_value = "wss://example.com/ws"
+        instance.turn_on_light_switch_async = AsyncMock(return_value=0)
+        instance.turn_off_light_switch_async = AsyncMock(return_value=0)
+        instance.set_single_ep_async = AsyncMock(return_value=0)
+        instance.set_multi_eps_async = AsyncMock(return_value=0)
+        instance.open_cover_async = AsyncMock(return_value=0)
+        instance.close_cover_async = AsyncMock(return_value=0)
+        instance.stop_cover_async = AsyncMock(return_value=0)
+        instance.set_cover_position_async = AsyncMock(return_value=0)
+        instance.async_set_climate_hvac_mode = AsyncMock(return_value=0)
+        instance.async_set_climate_fan_mode = AsyncMock(return_value=0)
+        instance.async_set_climate_temperature = AsyncMock(return_value=0)
+        instance.get_wss_url.return_value = "wss://example.com/ws"
+        instance.ws_connect = AsyncMock()
+        instance.ws_disconnect = AsyncMock()
 
-        # 模拟后台任务启动/停止
-        client_instance.ws_connect = AsyncMock()
-        client_instance.ws_disconnect = AsyncMock()
+        yield mock_class
 
-    yield client_instance
+
+@pytest.fixture
+def mock_client(mock_client_class):
+    """
+    提供一个默认的模拟 LifeSmartClient 实例。
+    这个 fixture 依赖于 mock_client_class，为不需要控制重载行为的
+    标准测试提供向后兼容性。
+    """
+    return mock_client_class.return_value
 
 
 @pytest.fixture
@@ -542,10 +545,28 @@ def mock_config_entry(mock_config_data) -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_state_manager_class():
+    """
+    一个高级 fixture，它 patch LifeSmartStateManager 类并返回这个类的 Mock。
+    这允许我们验证其方法（如 start, stop）是否被正确调用。
+    """
+    with patch(
+        "custom_components.lifesmart.LifeSmartStateManager", autospec=True
+    ) as mock_class:
+        # 获取实例的 mock，以便我们可以配置和断言它的方法
+        instance = mock_class.return_value
+        instance.start = MagicMock()
+        instance.stop = AsyncMock()
+        instance.set_token_expiry = MagicMock()
+        yield mock_class
+
+
+@pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
+    mock_state_manager_class: MagicMock,
     mock_lifesmart_devices: list,
 ):
     """
@@ -557,33 +578,15 @@ async def setup_integration(
     with patch(
         "custom_components.lifesmart.LifeSmartClient",
         return_value=mock_client,
-    ), patch(
-        "aiohttp.ClientSession.ws_connect", new_callable=AsyncMock
-    ) as mock_ws_connect:
-        mock_ws = mock_ws_connect.return_value
-
-        # 模拟一个稳定、认证后无限期挂起的 WebSocket 连接
-        auth_response_msg = MagicMock(spec=aiohttp.WSMessage)
-        auth_response_msg.type = aiohttp.WSMsgType.TEXT
-        auth_response_msg.data = json.dumps({"code": 0, "message": "success"})
-
-        async def mock_receive_logic(*args, **kwargs):
-            # 第一次调用返回认证成功
-            if mock_ws.receive.call_count == 1:
-                return auth_response_msg
-            # 后续调用无限期挂起，直到被取消
-            await asyncio.sleep(3600)
-
-        mock_ws.receive.side_effect = mock_receive_logic
-        mock_ws.send_str = AsyncMock()
-        mock_ws.close = AsyncMock()
-
-        # 设置并加载集成
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     # 验证集成已成功加载
     assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    # 验证 StateManager 被正确启动
+    mock_state_manager_class.return_value.start.assert_called_once()
 
     # 将控制权交给测试用例
     yield mock_config_entry
