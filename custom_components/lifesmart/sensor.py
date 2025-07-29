@@ -435,13 +435,14 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         return None
 
     @callback
-    def _convert_raw_value(self, raw_value: int | None) -> float | int | None:
+    def _convert_raw_value(self, raw_value: Any) -> float | int | None:
         """Convert raw value to actual value based on device type."""
         if raw_value is None:
             return None
+
+        numeric_raw_value: float | int
         try:
-            # 确保我们处理的是数字
-            numeric_raw_value = int(raw_value)
+            numeric_raw_value = float(raw_value)
         except (ValueError, TypeError):
             _LOGGER.warning(
                 "Invalid non-numeric 'val' received for %s: %s",
@@ -463,7 +464,7 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
             if numeric_raw_value > 100:
                 return numeric_raw_value / 10.0
             else:
-                return float(numeric_raw_value)  # 直接使用，确保是浮点数
+                return numeric_raw_value
 
         # 对于其他类型的传感器，保持原有逻辑
         if device_type in CLIMATE_TYPES:
