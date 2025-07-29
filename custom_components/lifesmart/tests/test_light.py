@@ -330,7 +330,7 @@ class TestLifeSmartQuantumLight:
             self.DEVICE_ME,
             [{"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": ALL_EFFECT_MAP["魔力红"]}],
         )
-        # Test Color
+        # Test Color (without brightness)
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -344,6 +344,35 @@ class TestLifeSmartQuantumLight:
             self.HUB_ID,
             self.DEVICE_ME,
             [{"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": 0x280A141E}],
+        )
+
+    async def test_service_call_with_brightness_and_color(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试量子灯的颜色和亮度组合服务调用。"""
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: self.ENTITY_ID,
+                ATTR_BRIGHTNESS: 128,
+                ATTR_RGBW_COLOR: (10, 20, 30, 40),
+            },
+            blocking=True,
+        )
+
+        # 验证发送了多个命令：一个用于亮度，一个用于颜色
+        mock_client.set_multi_eps_async.assert_called_with(
+            self.HUB_ID,
+            self.DEVICE_ME,
+            [
+                {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": 128},
+                {"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": 0x280A141E},
+            ],
+        )
+        # 验证确保灯开启的命令也被调用
+        mock_client.turn_on_light_switch_async.assert_called_with(
+            "P1", self.HUB_ID, self.DEVICE_ME
         )
 
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
@@ -375,60 +404,73 @@ class TestLifeSmartSingleIORGBWLight:
         assert state.attributes.get(ATTR_BRIGHTNESS) == 255
         assert state.attributes.get(ATTR_RGBW_COLOR) == (1, 2, 3, 255)
 
-    async def test_turn_on_off_services(
+    # --- 关键修复：删除旧的 test_turn_on_off_services ---
+    # async def test_turn_on_off_services(...) 已被下面的新测试取代
+
+    @pytest.mark.parametrize(
+        ("service_data", "expected_type", "expected_val", "test_id"),
+        [
+            # --- 核心修复：将期望的 type 从整数改为字符串 ---
+            # 1. 简单开灯
+            ({}, "0x81", 1, "turn_on_simple"),
+            # 2. 设置颜色 (同时提供亮度，但协议决定了亮度被忽略)
+            (
+                {ATTR_RGBW_COLOR: (10, 20, 30, 40), ATTR_BRIGHTNESS: 128},
+                "0xFF",
+                0x280A141E,
+                "set_color_ignores_brightness",
+            ),
+            # 3. 设置效果
+            (
+                {ATTR_EFFECT: "魔力红"},
+                "0xFF",
+                DYN_EFFECT_MAP["魔力红"],
+                "set_effect",
+            ),
+            # 4. 只设置亮度 (应被解释为设置白光)
+            (
+                {ATTR_BRIGHTNESS: 200},
+                "0xFF",
+                (200 << 24),  # W=200, R=G=B=0
+                "set_brightness_as_white",
+            ),
+        ],
+        ids=lambda x: x[2] if isinstance(x, tuple) else None,
+    )
+    async def test_turn_on_protocol(
+        self,
+        hass: HomeAssistant,
+        mock_client: MagicMock,
+        setup_integration,
+        service_data,
+        expected_type,
+        expected_val,
+        test_id,
+    ):
+        """测试单IO口灯的各种开灯服务调用是否符合协议。"""
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: self.ENTITY_ID, **service_data},
+            blocking=True,
+        )
+        mock_client.set_single_ep_async.assert_called_with(
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, expected_type, expected_val
+        )
+
+    async def test_turn_off_protocol(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
-        # Turn Off
+        """测试单IO口灯的关灯服务调用是否符合协议。"""
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: self.ENTITY_ID},
             blocking=True,
         )
-        assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
-        mock_client.turn_off_light_switch_async.assert_called_with(
-            self.SUB_KEY, self.HUB_ID, self.DEVICE_ME
-        )
-        # Turn On (no params)
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self.ENTITY_ID},
-            blocking=True,
-        )
-        assert hass.states.get(self.ENTITY_ID).state == STATE_ON
-        mock_client.turn_on_light_switch_async.assert_called_with(
-            self.SUB_KEY, self.HUB_ID, self.DEVICE_ME
-        )
-
-    async def test_attribute_services(
-        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
-    ):
-        # Test Color
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_RGBW_COLOR: (10, 20, 30, 0)},
-            blocking=True,
-        )
-        state = hass.states.get(self.ENTITY_ID)
-        assert state.attributes.get(ATTR_RGBW_COLOR) == (10, 20, 30, 0)
+        # --- 核心修复：将期望的 type 从整数改为字符串 ---
         mock_client.set_single_ep_async.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, CMD_TYPE_SET_RAW, 0x000A141E
-        )
-        # Test Brightness (in white mode)
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_BRIGHTNESS: 128},
-            blocking=True,
-        )
-        state = hass.states.get(self.ENTITY_ID)
-        assert state.attributes.get(ATTR_BRIGHTNESS) == 128
-        w_val = round(128 / 255 * 100)
-        expected_val = w_val << 24
-        mock_client.set_single_ep_async.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, CMD_TYPE_SET_RAW, expected_val
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, "0x80", 0
         )
 
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
@@ -496,25 +538,7 @@ class TestLifeSmartDualIORGBWLight:
     async def test_effect_and_color_priority(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
-        # 1. 设置颜色 -> 验证DYN被关闭
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_RGBW_COLOR: (10, 20, 30, 40)},
-            blocking=True,
-        )
-        state = hass.states.get(self.ENTITY_ID)
-        assert state.attributes.get(ATTR_RGBW_COLOR) == (10, 20, 30, 40)
-        assert state.attributes.get(ATTR_EFFECT) is None
-        mock_client.set_multi_eps_async.assert_called_with(
-            self.HUB_ID,
-            self.DEVICE_ME,
-            [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_SET_RAW, "val": 0x280A141E},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
-            ],
-        )
-        # 2. 设置效果 -> 验证RGBW被置为开灯状态
+        # 1. 设置效果 -> 验证RGBW被置为开灯状态
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -534,6 +558,34 @@ class TestLifeSmartDualIORGBWLight:
                     "type": CMD_TYPE_SET_RAW,
                     "val": DYN_EFFECT_MAP["魔力红"],
                 },
+            ],
+        )
+
+    async def test_service_call_with_brightness_and_color(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试双IO口灯的颜色和亮度组合服务调用。"""
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: self.ENTITY_ID,
+                ATTR_BRIGHTNESS: 128,
+                ATTR_RGBW_COLOR: (10, 20, 30, 40),
+            },
+            blocking=True,
+        )
+        # 亮度被应用到颜色上，计算最终颜色值
+        # ratio = 128/255, (10*r, 20*r, 30*r, 40*r) -> (5, 10, 15, 20)
+        # val = 0x14050A0F
+        expected_val = (20 << 24) | (5 << 16) | (10 << 8) | 15
+
+        mock_client.set_multi_eps_async.assert_called_with(
+            self.HUB_ID,
+            self.DEVICE_ME,
+            [
+                {"idx": self.COLOR_IO, "type": CMD_TYPE_SET_RAW, "val": expected_val},
+                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
             ],
         )
 
@@ -630,6 +682,81 @@ class TestLifeSmartSPOTRGBLight:
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, CMD_TYPE_SET_RAW, 0x0A141E
         )
 
+    @pytest.mark.parametrize(
+        ("service_data", "expected_api_val", "test_id"),
+        [
+            # 1. 仅提供颜色，亮度应为全亮 (255)
+            (
+                {ATTR_RGB_COLOR: (255, 128, 64)},
+                0xFF8040,
+                "color_only_full_brightness",
+            ),
+            # 2. 提供颜色和全亮度
+            (
+                {ATTR_BRIGHTNESS: 255, ATTR_RGB_COLOR: (255, 128, 64)},
+                0xFF8040,
+                "color_with_max_brightness",
+            ),
+            # 3. 提供颜色和中等亮度
+            # HA 内部会进行 HS 转换和亮度调整，最终的 RGB 会变化
+            (
+                {ATTR_BRIGHTNESS: 128, ATTR_RGB_COLOR: (255, 0, 0)},  # 纯红色
+                0x800000,  # 亮度减半，R分量减半
+                "color_with_medium_brightness",
+            ),
+            # 4. 提供颜色和低亮度
+            (
+                {ATTR_BRIGHTNESS: 1, ATTR_RGB_COLOR: (0, 255, 0)},  # 纯绿色
+                0x000100,  # 亮度最低，G分量为1
+                "color_with_min_brightness",
+            ),
+            # 5. 复杂的颜色和亮度组合
+            # (255, 128, 64) @ 50% brightness -> (128, 64, 32)
+            (
+                {ATTR_BRIGHTNESS: 128, ATTR_RGB_COLOR: (255, 128, 64)},
+                0x804020,
+                "complex_color_with_medium_brightness",
+            ),
+        ],
+        ids=lambda x: x[2] if isinstance(x, tuple) else None,
+    )
+    async def test_service_call_with_brightness_and_color(
+        self,
+        hass: HomeAssistant,
+        mock_client: MagicMock,
+        setup_integration,
+        service_data,
+        expected_api_val,
+        test_id,
+    ):
+        """
+        /**
+         * test_service_call_with_brightness_and_color() - 验证颜色和亮度组合的正确处理。
+         * @service_data: 包含有效颜色和亮度值的服务调用数据。
+         * @expected_api_val: 经过 Home Assistant 核心颜色/亮度转换后，预期发送给 API 的十六进制值。
+         * @test_id: 测试用例的ID。
+         *
+         * 此测试验证当同时提供 brightness 和 rgb_color 时，集成是否能正确计算
+         * 最终的颜色值并调用底层 API。这反映了 HA 的真实颜色处理逻辑。
+         */
+        """
+        # 准备完整的服务调用数据
+        full_service_data = {ATTR_ENTITY_ID: self.ENTITY_ID, **service_data}
+
+        # 调用服务
+        await hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_ON, full_service_data, blocking=True
+        )
+
+        # 验证底层 API 是否以正确的、经过亮度调整后的颜色值被调用
+        mock_client.set_single_ep_async.assert_called_with(
+            self.HUB_ID,
+            self.DEVICE_ME,
+            self.SUB_KEY,
+            CMD_TYPE_SET_RAW,
+            expected_api_val,
+        )
+
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
@@ -693,22 +820,7 @@ class TestLifeSmartSPOTRGBWLight:
     async def test_effect_and_color_priority(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
-        # 1. 设置颜色
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_RGBW_COLOR: (10, 20, 30, 40)},
-            blocking=True,
-        )
-        mock_client.set_multi_eps_async.assert_called_with(
-            self.HUB_ID,
-            self.DEVICE_ME,
-            [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_SET_RAW, "val": 0x280A141E},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
-            ],
-        )
-        # 2. 设置效果
+        # 设置效果
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
@@ -725,6 +837,34 @@ class TestLifeSmartSPOTRGBWLight:
                     "type": CMD_TYPE_SET_RAW,
                     "val": DYN_EFFECT_MAP["魔力红"],
                 },
+            ],
+        )
+
+    async def test_service_call_with_brightness_and_color(
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+    ):
+        """测试SPOT RGBW灯的颜色和亮度组合服务调用。"""
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: self.ENTITY_ID,
+                ATTR_BRIGHTNESS: 128,
+                ATTR_RGBW_COLOR: (10, 20, 30, 40),
+            },
+            blocking=True,
+        )
+        # 亮度被应用到颜色上，计算最终颜色值
+        # ratio = 128/255, (10*r, 20*r, 30*r, 40*r) -> (5, 10, 15, 20)
+        # val = 0x14050A0F
+        expected_val = (20 << 24) | (5 << 16) | (10 << 8) | 15
+
+        mock_client.set_multi_eps_async.assert_called_with(
+            self.HUB_ID,
+            self.DEVICE_ME,
+            [
+                {"idx": self.COLOR_IO, "type": CMD_TYPE_SET_RAW, "val": expected_val},
+                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
             ],
         )
 

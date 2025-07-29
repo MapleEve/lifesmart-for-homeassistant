@@ -469,17 +469,29 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
             self._attr_rgb_color = _parse_color_value(val, has_white=False)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """开启SPOT RGB灯，支持颜色和效果，带乐观更新。"""
+        """开启SPOT RGB灯，支持颜色、亮度和效果，带乐观更新。"""
         self._attr_is_on = True
         cmd_type, cmd_val = CMD_TYPE_ON, 1
 
         if ATTR_EFFECT in kwargs:
             self._attr_effect = kwargs[ATTR_EFFECT]
             self._attr_rgb_color = None
+            self._attr_brightness = 255  # 效果模式下，亮度设为全亮
             cmd_type, cmd_val = CMD_TYPE_SET_RAW, DYN_EFFECT_MAP.get(self._attr_effect)
         elif ATTR_RGB_COLOR in kwargs:
             self._attr_effect = None
-            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+            rgb = kwargs[ATTR_RGB_COLOR]
+
+            if ATTR_BRIGHTNESS in kwargs:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+                ratio = brightness / 255.0
+                final_rgb = tuple(round(c * ratio) for c in rgb)
+                self._attr_rgb_color = final_rgb
+                self._attr_brightness = brightness
+            else:
+                self._attr_rgb_color = rgb
+                self._attr_brightness = 255
+
             r, g, b = self._attr_rgb_color
             cmd_type, cmd_val = CMD_TYPE_SET_RAW, (r << 16) | (g << 8) | b
 
@@ -489,6 +501,15 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
                 self.agt, self.me, self._sub_key, cmd_type, cmd_val
             )
         else:
+            await super().async_turn_on(**kwargs)
+
+        self.async_write_ha_state()
+        if cmd_val is not None:
+            await self._client.set_single_ep_async(
+                self.agt, self.me, self._sub_key, cmd_type, cmd_val
+            )
+        else:
+            # 如果没有颜色或效果参数，则执行默认的开灯操作
             await super().async_turn_on(**kwargs)
 
 
@@ -529,6 +550,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
         self._attr_is_on = True
         io_commands = []
 
+        # 亮度优先处理，因为它可能影响颜色
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
             io_commands.append(
@@ -546,6 +568,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
         elif ATTR_RGBW_COLOR in kwargs:
             self._attr_effect = None
             self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+            # 注意：量子灯的亮度由P1口独立控制，所以这里不需要调整RGBW值
             r, g, b, w = self._attr_rgbw_color
             color_val = (w << 24) | (r << 16) | (g << 8) | b
             io_commands.append(
@@ -557,6 +580,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
         if io_commands:
             await self._client.set_multi_eps_async(self.agt, self.me, io_commands)
 
+        # 确保灯是开启状态
         await self._client.turn_on_light_switch_async("P1", self.agt, self.me)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -595,35 +619,68 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
                 self._attr_rgbw_color = (r, g, b, 255 if w_flag > 0 else 0)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """开启单IO RGBW灯，带乐观更新。"""
+        """
+        开启单IO RGBW灯，严格遵循设备协议。
+        协议: type=0xff, val=颜色/动态值; 或 type=0x81, val=1
+        """
         self._attr_is_on = True
-        cmd_val = None
+        cmd_type, cmd_val = CMD_TYPE_ON, 1  # 默认为普通开灯
+
+        # 优先处理效果
         if ATTR_EFFECT in kwargs:
             self._attr_effect = kwargs[ATTR_EFFECT]
-            self._attr_rgbw_color = None
-            cmd_val = DYN_EFFECT_MAP.get(self._attr_effect)
+            self._attr_rgbw_color = None  # 效果模式下，静态颜色无意义
+            self._attr_brightness = 255  # 效果模式下，亮度视为全亮
+
+            effect_val = DYN_EFFECT_MAP.get(self._attr_effect)
+            if effect_val is not None:
+                cmd_type, cmd_val = CMD_TYPE_SET_RAW, effect_val
+
+        # 其次处理颜色
         elif ATTR_RGBW_COLOR in kwargs:
             self._attr_effect = None
             self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+
+            # 协议不支持同时设置颜色和亮度，优先保证颜色。
+            # 亮度乐观更新为全亮。
+            self._attr_brightness = 255
+
             r, g, b, w = self._attr_rgbw_color
-            w_val = min(100, int(w / 255 * 100))
-            cmd_val = (w_val << 24) | (r << 16) | (g << 8) | b
-        elif ATTR_BRIGHTNESS in kwargs and self._attr_rgbw_color:
-            # 假设在白光模式下调节亮度
-            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
-            w_val = min(100, int(self._attr_brightness / 255 * 100))
-            # 乐观更新颜色为纯白
-            self._attr_rgbw_color = (0, 0, 0, self._attr_brightness)
-            cmd_val = w_val << 24
+            color_val = (w << 24) | (r << 16) | (g << 8) | b
+            cmd_type, cmd_val = CMD_TYPE_SET_RAW, color_val
+
+        # 如果只调节亮度，这通常意味着用户想要白光
+        elif ATTR_BRIGHTNESS in kwargs:
+            self._attr_effect = None
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            self._attr_brightness = brightness
+
+            # 将亮度转换为白光值 (W通道)
+            # 注意：协议中没有明确定义如何用亮度设置白光，
+            # 这里我们假设将亮度值编码到W通道，RGB为0。
+            w = brightness
+            r, g, b = 0, 0, 0
+            self._attr_rgbw_color = (r, g, b, w)
+
+            color_val = (w << 24) | (r << 16) | (g << 8) | b
+            cmd_type, cmd_val = CMD_TYPE_SET_RAW, color_val
 
         self.async_write_ha_state()
 
-        if cmd_val is not None:
-            await self._client.set_single_ep_async(
-                self.agt, self.me, self._sub_key, CMD_TYPE_SET_RAW, cmd_val
-            )
-        else:
-            await super().async_turn_on(**kwargs)
+        await self._client.set_single_ep_async(
+            self.agt, self.me, self._sub_key, cmd_type, cmd_val
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """
+        关闭单IO RGBW灯。
+        协议: type=0x80, val=0
+        """
+        self._attr_is_on = False
+        self.async_write_ha_state()
+        await self._client.set_single_ep_async(
+            self.agt, self.me, self._sub_key, CMD_TYPE_OFF, 0
+        )
 
 
 class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
@@ -683,11 +740,11 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         # 场景1: 设置动态效果 (DYN 优先级最高)
         if ATTR_EFFECT in kwargs:
             self._attr_effect = kwargs[ATTR_EFFECT]
-            self._attr_rgbw_color = None  # 效果模式下，静态颜色无意义
+            self._attr_rgbw_color = None
+            self._attr_brightness = 255
             effect_val = DYN_EFFECT_MAP.get(self._attr_effect)
 
             if effect_val is not None:
-                # 文档要求：设置DYN时，必须确保RGBW为开启状态
                 io_list = [
                     {"idx": self._color_io, "type": CMD_TYPE_ON, "val": 1},
                     {
@@ -699,12 +756,22 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
 
         # 场景2: 设置静态颜色
         elif ATTR_RGBW_COLOR in kwargs:
-            self._attr_effect = None  # 清除效果状态
-            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+            self._attr_effect = None
+            rgbw = kwargs[ATTR_RGBW_COLOR]
+
+            if ATTR_BRIGHTNESS in kwargs:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+                ratio = brightness / 255.0
+                final_rgbw = tuple(round(c * ratio) for c in rgbw)
+                self._attr_rgbw_color = final_rgbw
+                self._attr_brightness = brightness
+            else:
+                self._attr_rgbw_color = rgbw
+                self._attr_brightness = 255
+
             r, g, b, w = self._attr_rgbw_color
             color_val = (w << 24) | (r << 16) | (g << 8) | b
 
-            # 文档要求：设置颜色时，必须显式关闭DYN
             io_list = [
                 {"idx": self._color_io, "type": CMD_TYPE_SET_RAW, "val": color_val},
                 {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
@@ -715,6 +782,7 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         if io_list:
             await self._client.set_multi_eps_async(self.agt, self.me, io_list)
         else:
+            # 如果只调用 turn_on 而没有颜色/效果参数，则默认打开
             await self._client.turn_on_light_switch_async(
                 self._color_io, self.agt, self.me
             )
