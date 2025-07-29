@@ -373,9 +373,7 @@ def get_f_fan_mode(val: int) -> str:
     """根据 F 口的 val 值获取风扇模式。"""
     if val < 30:
         return FAN_LOW
-    if val < 65:
-        return FAN_MEDIUM
-    return FAN_HIGH
+    return FAN_MEDIUM if val < 65 else FAN_HIGH
 
 
 def get_tf_fan_mode(val: int) -> str | None:
