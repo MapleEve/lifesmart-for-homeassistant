@@ -534,6 +534,9 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         """Handle real-time updates."""
         try:
             if not new_data:
+                import logging
+                _LOGGER = logging.getLogger(__name__)
+                _LOGGER.warning("Received empty new_data in _handle_update; possible upstream issue.")
                 return
             # 统一处理数据来源
             sub_data = {}
