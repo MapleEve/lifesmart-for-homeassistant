@@ -268,11 +268,11 @@ class LifeSmartProtocol:
                 items = []
                 for i in range(count):
                     if stream.tell() >= len(stream.getvalue()):
-                        raise EOFError(f"解析第 {i+1}/{count} 个键时数据流提前结束")
+                        raise EOFError(f"解析第 { i + 1 }/{count} 个键时数据流提前结束")
                     key_type = ord(stream.read(1))
                     key = self._parse_value(stream, key_type, f"{call_stack}[{i}].key")
                     if stream.tell() >= len(stream.getvalue()):
-                        raise EOFError(f"解析第 {i+1}/{count} 个值时数据流提前结束")
+                        raise EOFError(f"解析第 { i + 1 }/{count} 个值时数据流提前结束")
                     value_type = ord(stream.read(1))
                     value = self._parse_value(
                         stream, value_type, f"{call_stack}[{i}].val"
