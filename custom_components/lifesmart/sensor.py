@@ -91,18 +91,16 @@ async def async_setup_entry(
 
         if device_type == "SL_NATURE":
             p5_val = device.get(DEVICE_DATA_KEY, {}).get("P5", {}).get("val", 1) & 0xFF
-            if p5_val == 3:  # 是温控面板
-                # P4 是当前温度
-                if "P4" in device[DEVICE_DATA_KEY]:
-                    sensors.append(
-                        LifeSmartSensor(
-                            raw_device=device,
-                            client=client,
-                            entry_id=entry_id,
-                            sub_device_key="P4",
-                            sub_device_data=device[DEVICE_DATA_KEY]["P4"],
-                        )
+            if p5_val == 3 and "P4" in device[DEVICE_DATA_KEY]:
+                sensors.append(
+                    LifeSmartSensor(
+                        raw_device=device,
+                        client=client,
+                        entry_id=entry_id,
+                        sub_device_key="P4",
+                        sub_device_data=device[DEVICE_DATA_KEY]["P4"],
                     )
+                )
             continue  # 处理完 SL_NATURE，跳过
 
         if device_type not in ALL_SENSOR_TYPES:
@@ -535,8 +533,11 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         try:
             if not new_data:
                 import logging
+
                 _LOGGER = logging.getLogger(__name__)
-                _LOGGER.warning("Received empty new_data in _handle_update; possible upstream issue.")
+                _LOGGER.warning(
+                    "Received empty new_data in _handle_update; possible upstream issue."
+                )
                 return
             # 统一处理数据来源
             sub_data = {}
