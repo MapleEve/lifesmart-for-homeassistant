@@ -151,7 +151,7 @@ def mock_lifesmart_devices_fixture():
                 "P4": {"type": 129},
             },
         },
-        # 6. 九路开关控制器 (SL_P_SW) - 新增
+        # 6. 九路开关控制器 (SL_P_SW)
         {
             "agt": "hub_sw",
             "me": "sw_p9",

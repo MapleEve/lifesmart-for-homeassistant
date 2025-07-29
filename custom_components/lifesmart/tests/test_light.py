@@ -791,9 +791,6 @@ class TestLifeSmartCoverLight:
         assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
 
 
-# --- 新增的测试类 ---
-
-
 class TestLifeSmartSimpleOnOffLight:
     """
     测试简单的开关灯，适用于 LIGHT_SWITCH_TYPES 和 LIGHT_BULB_TYPES。

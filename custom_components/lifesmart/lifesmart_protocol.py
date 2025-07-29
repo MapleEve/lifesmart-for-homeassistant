@@ -662,7 +662,6 @@ class LifeSmartLocalClient:
             pkt = LifeSmartPacketFactory("", "").build_login_packet(
                 self.username, self.password
             )
-            # 新增：记录将要发送的登录包内容
             _LOGGER.debug(
                 "Sending login packet to %s:%s with username '%s'.",
                 self.host,

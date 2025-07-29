@@ -97,7 +97,6 @@ class TestSwitchSetup:
         }
 
         # 3. 调用被测试的函数
-        # --- FIX: Use a standard MagicMock for a synchronous callback ---
         # async_add_entities is a synchronous function, not a coroutine.
         async_add_entities = MagicMock()
         await async_setup_entry(hass, entry_with_exclusions, async_add_entities)
