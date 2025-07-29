@@ -151,7 +151,7 @@ def mock_lifesmart_devices_fixture():
                 "P4": {"type": 129},
             },
         },
-        # 6. 九路开关控制器 (SL_P_SW) - 新增
+        # 6. 九路开关控制器 (SL_P_SW)
         {
             "agt": "hub_sw",
             "me": "sw_p9",
@@ -296,7 +296,7 @@ def mock_lifesmart_devices_fixture():
             "me": "bs_lock",
             "devtype": "SL_LK_LS",
             "name": "Main Lock",
-            "data": {"EVTLO": {"val": 4121}, "ALM": {"val": 2}},
+            "data": {"EVTLO": {"val": 4121, "type": 1}, "ALM": {"val": 2}},
         },
         {
             "agt": "hub_bs",
@@ -352,6 +352,18 @@ def mock_lifesmart_devices_fixture():
             "devtype": "SL_LK_LS",
             "name": "Main Door Lock",
             "data": {"BAT": {"val": 88}},
+        },
+        {
+            "agt": "hub_sensor",
+            "me": "sensor_boundary",
+            "devtype": "SL_SC_THL",
+            "name": "Boundary Test Sensor",
+            "data": {
+                "T": {"val": 0},  # Zero value
+                "H": {},  # Empty data
+                "Z": {"val": "invalid_string"},  # Invalid data type
+                # 'V' key is completely missing
+            },
         },
         # --- Cover Devices ---
         {

@@ -1,4 +1,11 @@
-"""Support for LifeSmart binary sensors by @MapleEve"""
+"""
+Support for LifeSmart binary sensors by @MapleEve
+LifeSmart 二元传感器平台实现
+
+此模块负责将 LifeSmart 的各种感应器（如门磁、动态感应器、水浸、门锁事件等）
+注册为 Home Assistant 中的二元传感器实体。
+
+"""
 
 import asyncio
 import datetime
@@ -78,9 +85,9 @@ async def async_setup_entry(
         if device_type in GENERIC_CONTROLLER_TYPES:
             p1_val = device_data.get("P1", {}).get("val", 0)
             work_mode = (p1_val >> 24) & 0xE
-            # 只有在“自由模式”下，P2/P3/P4 才可能是二元传感器
+            # 只有在“自由模式”下，P5/P6/P7 才可能是二元传感器
             if work_mode == 0:
-                for sub_key in ("P2", "P3", "P4"):
+                for sub_key in ("P5", "P6", "P7"):
                     if sub_key in device_data:
                         binary_sensors.append(
                             LifeSmartBinarySensor(device, sub_key, client, entry_id)
@@ -123,11 +130,8 @@ def _is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
             return True
         return False  # 默认不为温控设备创建其他二元传感器
 
-    # 通用控制器
+    # 通用控制器 (SL_P) 的 P5/P6/P7 在自由模式下是二元传感器
     if device_type in GENERIC_CONTROLLER_TYPES and sub_key in {
-        "P2",
-        "P3",
-        "P4",
         "P5",
         "P6",
         "P7",
@@ -261,9 +265,9 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
         # 门窗感应器
         if device_type in GUARD_SENSOR_TYPES:
-            if sub_key == "G":
+            if sub_key in {"G", "P1"}:
                 return BinarySensorDeviceClass.DOOR
-            if sub_key == "AXS":
+            if sub_key in {"AXS", "P2"}:
                 return BinarySensorDeviceClass.VIBRATION
             if sub_key == "B":
                 return None  # 通用二元传感器
@@ -318,6 +322,10 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
         # 门窗感应器特殊处理
         if device_type in GUARD_SENSOR_TYPES:
+            if device_type == "SL_SC_GS" and sub_key in {"P1", "P2"}:
+                return type_val % 2 == 1
+            if device_type == "SL_SC_BG" and sub_key == "AXS":
+                return val != 0  # 非0表示检测到震动
             return val == 0 if sub_key == "G" else val != 0
 
         # 云防系列设备特殊处理
@@ -344,7 +352,7 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
 
         # 通用控制器
         if device_type in GENERIC_CONTROLLER_TYPES:
-            return val == 0  # 0=开，1=关
+            return type_val % 2 == 1
 
         # 水浸传感器
         if device_type in WATER_SENSOR_TYPES and sub_key == "WA":

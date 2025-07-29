@@ -127,10 +127,10 @@ class TestLifeSmartProtocolDataTypes:
         ids=lambda v: str(type(v).__name__) + "_" + str(v)[:20],
     )
     def test_basic_types_roundtrip(self, protocol: LifeSmartProtocol, value):
-        encoded_packet = protocol.encode([value])
+        original_message = [{"key": value}]
+        encoded_packet = protocol.encode(original_message)
         _, decoded_list = protocol.decode(encoded_packet)
-        assert isinstance(decoded_list, list) and len(decoded_list) == 1
-        assert decoded_list[0] == value
+        assert decoded_list == original_message
 
     def test_dict_with_special_keys_roundtrip(self, protocol: LifeSmartProtocol):
         value_enum_prefix = {"enum:key": "val", "num": 123}

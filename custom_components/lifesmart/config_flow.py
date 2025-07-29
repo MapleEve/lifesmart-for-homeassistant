@@ -105,9 +105,21 @@ async def validate_local_input(
             data[CONF_PASSWORD],
         )
         await dev.check_login()
+    except (ConnectionResetError, asyncio.InvalidStateError) as e:
+        _LOGGER.error(
+            "Local connection failed, likely due to invalid credentials: %s", e
+        )
+        raise ConfigEntryAuthFailed("invalid_auth") from e
+    except (asyncio.TimeoutError, OSError) as e:
+        _LOGGER.error("Local connection error: %s", e)
+        raise ConfigEntryNotReady("cannot_connect") from e
     except Exception as e:
-        _LOGGER.error("Local input error: %s", str(e), exc_info=True)
-        raise ConfigEntryNotReady("Local input error") from e
+        _LOGGER.error(
+            "Local input validation encountered an unknown error: %s",
+            str(e),
+            exc_info=True,
+        )
+        raise ConfigEntryNotReady("unknown") from e
     return data
 
 
