@@ -19,32 +19,13 @@ from dataclasses import dataclass
 from io import BytesIO
 from typing import Callable, Any
 
-from homeassistant.components.climate import HVACMode
-
-from .const import (
+from custom_components.lifesmart.const import (
     # --- 命令类型常量 ---
-    CMD_TYPE_ON,
-    CMD_TYPE_OFF,
-    CMD_TYPE_PRESS,
-    CMD_TYPE_SET_VAL,
-    CMD_TYPE_SET_CONFIG,
-    CMD_TYPE_SET_TEMP_DECIMAL,
-    CMD_TYPE_SET_RAW,
-    CMD_TYPE_SET_TEMP_FCU,
     # --- 设备类型和映射 ---
-    DOOYA_TYPES,
-    GARAGE_DOOR_TYPES,
-    NON_POSITIONAL_COVER_CONFIG,
-    LIFESMART_F_FAN_MAP,
-    LIFESMART_ACIPM_FAN_MAP,
-    LIFESMART_TF_FAN_MAP,
-    LIFESMART_CP_AIR_FAN_MAP,
-    REVERSE_F_HVAC_MODE_MAP,
-    REVERSE_LIFESMART_HVAC_MODE_MAP,
-    REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
     # --- 核心常量 ---
     SUBDEVICE_INDEX_KEY,
 )
+from custom_components.lifesmart.core.client_base import LifeSmartClientBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -621,7 +602,7 @@ class LifeSmartPacketFactory:
         return self._build_packet(args, act="RunA", node_suffix="/ai")
 
 
-class LifeSmartLocalClient:
+class LifeSmartLocalClient(LifeSmartClientBase):
     """LifeSmart 本地客户端，负责与中枢进行 TCP 通信。"""
 
     def __init__(self, host, port, username, password, config_agt=None) -> None:
@@ -905,172 +886,37 @@ class LifeSmartLocalClient:
         _LOGGER.error("本地客户端未连接，无法发送指令。")
         return -1
 
-    async def set_single_ep_async(
+    # ====================================================================
+    # 基类抽象方法的实现
+    # ====================================================================
+
+    async def _async_send_single_command(
         self, agt: str, me: str, idx: str, command_type: str, val: Any
     ) -> int:
+        """
+        [本地实现] 发送单个IO口命令。
+        此方法通过调用包工厂构建二进制包，并发送到TCP Socket。
+        """
         pkt = self._factory.build_epset_packet(me, idx, command_type, val)
         return await self._send_packet(pkt)
 
-    async def set_multi_eps_async(self, agt: str, me: str, io_list: list[dict]) -> int:
+    async def _async_send_multi_command(
+        self, agt: str, me: str, io_list: list[dict]
+    ) -> int:
+        """
+        [本地实现] 同时发送多个IO口的命令。
+        此方法通过调用包工厂构建二进制包，并发送到TCP Socket。
+        """
         pkt = self._factory.build_multi_epset_packet(me, io_list)
         return await self._send_packet(pkt)
 
-    async def turn_on_light_switch_async(self, idx: str, agt: str, me: str) -> int:
-        return await self.set_single_ep_async(agt, me, idx, CMD_TYPE_ON, 1)
-
-    async def turn_off_light_switch_async(self, idx: str, agt: str, me: str) -> int:
-        return await self.set_single_ep_async(agt, me, idx, CMD_TYPE_OFF, 0)
-
-    async def press_switch_async(
-        self, idx: str, agt: str, me: str, duration_ms: int
-    ) -> int:
-        val = max(1, round(duration_ms / 100))
-        return await self.set_single_ep_async(agt, me, idx, CMD_TYPE_PRESS, val)
-
-    async def open_cover_async(self, agt: str, me: str, device_type: str) -> int:
-        if device_type in GARAGE_DOOR_TYPES:
-            return await self.set_single_ep_async(agt, me, "P3", CMD_TYPE_SET_VAL, 100)
-        if device_type in DOOYA_TYPES:
-            return await self.set_single_ep_async(agt, me, "P2", CMD_TYPE_SET_VAL, 100)
-        if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["open"]
-            return await self.set_single_ep_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
-        _LOGGER.warning("设备类型 %s 的 'open_cover' 操作未被支持。", device_type)
-        return -1
-
-    async def close_cover_async(self, agt: str, me: str, device_type: str) -> int:
-        if device_type in GARAGE_DOOR_TYPES:
-            return await self.set_single_ep_async(agt, me, "P3", CMD_TYPE_SET_VAL, 0)
-        if device_type in DOOYA_TYPES:
-            return await self.set_single_ep_async(agt, me, "P2", CMD_TYPE_SET_VAL, 0)
-        if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["close"]
-            return await self.set_single_ep_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
-        _LOGGER.warning("设备类型 %s 的 'close_cover' 操作未被支持。", device_type)
-        return -1
-
-    async def stop_cover_async(self, agt: str, me: str, device_type: str) -> int:
-        if device_type in GARAGE_DOOR_TYPES:
-            return await self.set_single_ep_async(
-                agt, me, "P3", CMD_TYPE_SET_CONFIG, 0x80
-            )
-        if device_type in DOOYA_TYPES:
-            return await self.set_single_ep_async(
-                agt, me, "P2", CMD_TYPE_SET_CONFIG, 0x80
-            )
-        if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["stop"]
-            return await self.set_single_ep_async(agt, me, cmd_idx, CMD_TYPE_ON, 1)
-        _LOGGER.warning("设备类型 %s 的 'stop_cover' 操作未被支持。", device_type)
-        return -1
-
-    async def set_cover_position_async(
-        self, agt: str, me: str, position: int, device_type: str
-    ) -> int:
-        if device_type in GARAGE_DOOR_TYPES:
-            return await self.set_single_ep_async(
-                agt, me, "P3", CMD_TYPE_SET_VAL, position
-            )
-        if device_type in DOOYA_TYPES:
-            return await self.set_single_ep_async(
-                agt, me, "P2", CMD_TYPE_SET_VAL, position
-            )
-        _LOGGER.warning("设备类型 %s 不支持设置位置。", device_type)
-        return -1
-
-    async def async_set_climate_hvac_mode(
-        self,
-        agt: str,
-        me: str,
-        device_type: str,
-        hvac_mode: HVACMode,
-        current_val: int = 0,
-    ) -> int:
-        if hvac_mode == HVACMode.OFF:
-            return await self.set_single_ep_async(agt, me, "P1", CMD_TYPE_OFF, 0)
-        await self.set_single_ep_async(agt, me, "P1", CMD_TYPE_ON, 1)
-        if device_type == "V_AIR_P":
-            if (mode_val := REVERSE_F_HVAC_MODE_MAP.get(hvac_mode)) is not None:
-                return await self.set_single_ep_async(
-                    agt, me, "MODE", CMD_TYPE_SET_CONFIG, mode_val
-                )
-        if device_type in {"SL_NATURE", "SL_FCU"}:
-            if (mode_val := REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)) is not None:
-                return await self.set_single_ep_async(
-                    agt, me, "P7", CMD_TYPE_SET_CONFIG, mode_val
-                )
-        if device_type == "SL_UACCB":
-            if (mode_val := REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)) is not None:
-                return await self.set_single_ep_async(
-                    agt, me, "P2", CMD_TYPE_SET_CONFIG, mode_val
-                )
-        if device_type == "SL_CP_AIR":
-            if (
-                mode_val := REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP.get(hvac_mode)
-            ) is not None:
-                new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
-                return await self.set_single_ep_async(
-                    agt, me, "P1", CMD_TYPE_SET_RAW, new_val
-                )
-        if device_type == "SL_CP_DN":
-            is_auto = 1 if hvac_mode == HVACMode.AUTO else 0
-            new_val = (current_val & ~(1 << 31)) | (is_auto << 31)
-            return await self.set_single_ep_async(
-                agt, me, "P1", CMD_TYPE_SET_RAW, new_val
-            )
-        if device_type == "SL_CP_VL":
-            mode_map = {HVACMode.HEAT: 0, HVACMode.AUTO: 2}
-            if (mode_val := mode_map.get(hvac_mode)) is not None:
-                new_val = (current_val & ~(0b11 << 1)) | (mode_val << 1)
-                return await self.set_single_ep_async(
-                    agt, me, "P1", CMD_TYPE_SET_RAW, new_val
-                )
-        return 0
-
-    async def async_set_climate_temperature(
-        self, agt: str, me: str, device_type: str, temp: float
-    ) -> int:
-        temp_val = int(temp * 10)
-        idx_map = {
-            "V_AIR_P": ("tT", CMD_TYPE_SET_TEMP_DECIMAL),
-            "SL_UACCB": ("P3", CMD_TYPE_SET_TEMP_DECIMAL),
-            "SL_CP_DN": ("P3", CMD_TYPE_SET_RAW),
-            "SL_CP_AIR": ("P4", CMD_TYPE_SET_RAW),
-            "SL_NATURE": ("P8", CMD_TYPE_SET_TEMP_DECIMAL),
-            "SL_FCU": ("P8", CMD_TYPE_SET_TEMP_FCU),
-            "SL_CP_VL": ("P3", CMD_TYPE_SET_RAW),
-        }
-        if device_type in idx_map:
-            idx, cmd_type = idx_map[device_type]
-            return await self.set_single_ep_async(agt, me, idx, cmd_type, temp_val)
-        return -1
-
-    async def async_set_climate_fan_mode(
-        self, agt: str, me: str, device_type: str, fan_mode: str, current_val: int = 0
-    ) -> int:
-        if device_type == "V_AIR_P":
-            if (fan_val := LIFESMART_F_FAN_MAP.get(fan_mode)) is not None:
-                return await self.set_single_ep_async(
-                    agt, me, "F", CMD_TYPE_SET_CONFIG, fan_val
-                )
-        if device_type == "SL_TR_ACIPM":
-            if (fan_val := LIFESMART_ACIPM_FAN_MAP.get(fan_mode)) is not None:
-                return await self.set_single_ep_async(
-                    agt, me, "P2", CMD_TYPE_SET_RAW, fan_val
-                )
-        if device_type in {"SL_NATURE", "SL_FCU"}:
-            if (fan_val := LIFESMART_TF_FAN_MAP.get(fan_mode)) is not None:
-                return await self.set_single_ep_async(
-                    agt, me, "P9", CMD_TYPE_SET_CONFIG, fan_val
-                )
-        if device_type == "SL_CP_AIR":
-            if (fan_val := LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)) is not None:
-                new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
-                return await self.set_single_ep_async(
-                    agt, me, "P1", CMD_TYPE_SET_RAW, new_val
-                )
-        _LOGGER.warning("设备类型 %s 不支持风扇模式: %s", device_type, fan_mode)
-        return -1
+    # ====================================================================
+    # 设备直接控制的辅助方法
+    #
+    # 以下所有高层设备控制方法 (`turn_on_light_switch_async`, `open_cover_async`,
+    # `async_set_climate_hvac_mode` 等) 现已移至 `client_base.py` 中，
+    # 并由该类继承。
+    # ====================================================================
 
     async def set_scene_async(self, agt: str, scene_id: str) -> int:
         """激活一个本地场景。"""

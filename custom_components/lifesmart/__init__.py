@@ -32,7 +32,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import lifesmart_protocol
+from custom_components.lifesmart.core.lifesmart_client import LifeSmartClient
 from .const import (
     # --- 核心常量 ---
     DOMAIN,
@@ -71,9 +71,9 @@ from .const import (
     # --- 所有支持的平台列表 ---
     SUPPORTED_PLATFORMS,
 )
+from .core import lifesmart_protocol, lifesmart_client
 from .diagnostics import get_error_advice, RECOMMENDATION_GROUP
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
-from .lifesmart_client import LifeSmartClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -611,20 +611,6 @@ class LifeSmartDevice(Entity):
     def should_poll(self) -> bool:
         """返回实体是否需要轮询更新状态。"""
         return False
-
-    async def async_lifesmart_epset(self, type: str, val: Any, idx: str) -> int:
-        """向 LifeSmart 设备发送 EpSet 命令。"""
-        return await self._client.set_single_ep_async(
-            self._agt, self._me, idx, type, val
-        )
-
-    async def async_lifesmart_epget(self) -> dict:
-        """获取 LifeSmart 设备的详细信息。"""
-        return await self._client.get_epget_async(self._agt, self._me)
-
-    async def async_lifesmart_sceneset(self, id: str) -> int:
-        """设置场景。"""
-        return await self._client.set_scene_async(self._agt, id)
 
 
 class LifeSmartStateManager:
