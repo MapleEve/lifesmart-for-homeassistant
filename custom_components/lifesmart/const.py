@@ -400,7 +400,7 @@ LOCK_TYPES = {
     "SL_LK_YL",  # 智能门锁 耶鲁
     "SL_P_BDLK",  # 智能门锁 必达
     "OD_JIUWANLI_LOCK1",  # 智能门锁 九万里
-    "SL_LK_SWIFTE"  # SWIFTE ⻔锁模块
+    "SL_LK_SWIFTE",  # SWIFTE ⻔锁模块
     "SL_LK_TY",  # 智能门锁 C100
     "SL_LK_DJ",  # 智能门锁 C200 / C210
 }
