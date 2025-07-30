@@ -44,7 +44,6 @@ jobs:
             -c "custom_components/lifesmart/tests/pytest.ini" \
             "custom_components/lifesmart/tests/" \
             --cov=custom_components.lifesmart \
-            --cov-omit="custom_components/lifesmart/tests/*" \
             --cov-branch \
             --cov-report=xml \
             --junitxml=junit.xml -o junit_family=legacy
