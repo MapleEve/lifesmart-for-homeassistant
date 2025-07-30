@@ -1,15 +1,16 @@
 #### 💻 变更类型 | Change Type
 
-<!-- For change type, change [ ] to [x]. -->
+<!-- 请将 [x] 移动到对应的变更类型行首，或直接删除其他类型 -->
+<!-- Move [x] to the line of the appropriate change type, or delete the other types directly. -->
 
-- [ ] ✨ feat
-- [ ] 🐛 fix
-- [ ] ♻️ refactor
-- [ ] 💄 style
-- [ ] 👷 build
-- [ ] ⚡️ perf
-- [ ] 📝 docs
-- [ ] 🔨 chore
+-  [x] ✨ feat
+- 🐛 fix
+- ♻️ refactor
+- 💄 style
+- 👷 build
+- ⚡️ perf
+- 📝 docs
+- 🔨 chore
 
 #### 🔀 变更说明 | Description of Change
 
