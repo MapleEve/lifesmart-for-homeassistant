@@ -41,7 +41,7 @@ jobs:
         run: |
           pytest \
             -v \
-            --cov=custom_components.lifesmart \
+            --cov \
             --cov-branch \
             --cov-report=xml \
             --junitxml=junit.xml -o junit_family=legacy
