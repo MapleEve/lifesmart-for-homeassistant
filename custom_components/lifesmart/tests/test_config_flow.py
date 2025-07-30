@@ -81,7 +81,7 @@ def mock_validate_fixture():
 def mock_validate_local_fixture():
     """提供一个统一的 patch fixture 来模拟 validate_local_input 函数。"""
     with patch(
-        "custom_components.lifesmart.lifesmart_protocol.LifeSmartLocalTCPClient.check_login",
+        "custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient.check_login",
         new_callable=AsyncMock,
     ) as mock_func:
         yield mock_func
@@ -272,7 +272,7 @@ async def test_local_flow_success(hass: HomeAssistant):
     # 步骤 3: 模拟 check_login 成功，并提供本地连接信息
     # 我们 patch check_login 以避免实际的网络调用，并确保它能成功
     with patch(
-        "custom_components.lifesmart.lifesmart_protocol.LifeSmartLocalTCPClient.check_login",
+        "custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient.check_login",
         return_value=True,
     ), patch(
         "custom_components.lifesmart.async_setup_entry",

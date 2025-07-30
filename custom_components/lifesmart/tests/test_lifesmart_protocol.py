@@ -1,5 +1,5 @@
 """
-对 lifesmart_protocol.py 的单元测试和集成测试
+对 protocol.py 的单元测试和集成测试
 
 此测试套件包含四个主要部分：
 1.  对 LifeSmartProtocol 类的单元测试，验证核心数据类型的编解码及边界条件。
@@ -33,10 +33,10 @@ from custom_components.lifesmart.const import (
     FAN_HIGH,
     NON_POSITIONAL_COVER_CONFIG,
 )
-from custom_components.lifesmart.core.lifesmart_protocol import (
+from custom_components.lifesmart.core.local_tcp_client import LifeSmartLocalTCPClient
+from custom_components.lifesmart.core.protocol import (
     LifeSmartProtocol,
     LifeSmartPacketFactory,
-    LifeSmartLocalTCPClient,
     LSTimestamp,
 )
 
@@ -363,7 +363,7 @@ class TestLifeSmartClientIntegration:
         client = LifeSmartLocalTCPClient("localhost", 9999, "u", "p")
         client.writer = None
         with patch(
-            "custom_components.lifesmart.core.lifesmart_protocol._LOGGER"
+            "custom_components.lifesmart.core.local_tcp_client._LOGGER"
         ) as mock_logger:
             result = await client._send_packet(b"test")
             assert result == -1

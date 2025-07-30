@@ -32,6 +32,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
+import custom_components.lifesmart.core.local_tcp_client
 from .const import (
     # --- 核心常量 ---
     DOMAIN,
@@ -70,7 +71,7 @@ from .const import (
     # --- 所有支持的平台列表 ---
     SUPPORTED_PLATFORMS,
 )
-from .core import lifesmart_protocol
+from .core import protocol
 from .core.client_base import LifeSmartClientBase
 from .core.openapi_client import LifeSmartOAPIClient
 from .diagnostics import get_error_advice, RECOMMENDATION_GROUP
@@ -236,8 +237,8 @@ async def _async_create_client_and_get_devices(
     else:
         # --- 本地模式 ---
         try:
-            reload(lifesmart_protocol)
-            client = lifesmart_protocol.LifeSmartLocalTCPClient(
+            reload(protocol)
+            client = custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient(
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
                 config_entry.data[CONF_USERNAME],
@@ -436,7 +437,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # 断开本地客户端连接
     client = hass.data[DOMAIN].get(entry_id, {}).get("client")
-    if isinstance(client, lifesmart_protocol.LifeSmartLocalTCPClient):
+    if isinstance(
+        client,
+        custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient,
+    ):
         # 调用同步的 disconnect 方法来设置标志位，这将由 local_task 的取消来驱动清理
         client.disconnect()
 

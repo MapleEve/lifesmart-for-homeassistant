@@ -18,6 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import SelectSelectorMode
 
+import custom_components.lifesmart.core.local_tcp_client
 from . import LifeSmartOAPIClient
 from .const import (
     CONF_AI_INCLUDE_AGTS,
@@ -33,7 +34,6 @@ from .const import (
     DOMAIN,
     LIFESMART_REGION_OPTIONS,
 )
-from .core import lifesmart_protocol
 from .diagnostics import get_error_advice
 from .exceptions import LifeSmartAuthError
 
@@ -99,7 +99,7 @@ async def validate_local_input(
 ) -> dict[str, Any]:
     """Validate the user input for local connection."""
     try:
-        dev = lifesmart_protocol.LifeSmartLocalTCPClient(
+        dev = custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient(
             data[CONF_HOST],
             data[CONF_PORT],
             data[CONF_USERNAME],
