@@ -10,7 +10,8 @@
 - 对边界条件（如设备类型判断、数据缺失）的处理是否健壮。
 """
 
-from unittest.mock import AsyncMock, MagicMock
+import time
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 # 导入 Home Assistant 温控组件所需的核心常量和服务名称
@@ -105,8 +106,17 @@ class TestClimateSetup:
         initial_state_manager_instance.start.reset_mock()
 
         # 步骤 4: 重新加载集成
-        assert await hass.config_entries.async_reload(setup_integration.entry_id)
-        await hass.async_block_till_done()
+        create_client_return_value = (
+            mock_client,
+            mock_lifesmart_devices,  # 确保使用已修改的设备列表
+            {"expiredtime": int(time.time()) + 3600},
+        )
+        with patch(
+            "custom_components.lifesmart._async_create_client_and_get_devices",
+            return_value=create_client_return_value,
+        ):
+            assert await hass.config_entries.async_reload(setup_integration.entry_id)
+            await hass.async_block_till_done()
 
         # 步骤 5: 断言最终状态
         reloaded_state = hass.states.get("climate.nature_panel_thermo")

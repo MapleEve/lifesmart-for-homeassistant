@@ -50,7 +50,10 @@ from custom_components.lifesmart.exceptions import LifeSmartAuthError
 
 @pytest.mark.asyncio
 async def test_setup_and_unload_success_cloud_mode(
-    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_lifesmart_devices: list,
 ):
     """
     /**
@@ -72,7 +75,15 @@ async def test_setup_and_unload_success_cloud_mode(
     """
     mock_config_entry.add_to_hass(hass)
 
-    with patch("custom_components.lifesmart.LifeSmartClient", return_value=mock_client):
+    create_client_return_value = (
+        mock_client,
+        mock_lifesmart_devices,
+        {"expiredtime": 9999999999},  # 模拟一个有效的 auth_response
+    )
+    with patch(
+        "custom_components.lifesmart._async_create_client_and_get_devices",
+        return_value=create_client_return_value,
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

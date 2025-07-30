@@ -10,6 +10,7 @@
 - 对边界条件（如数据缺失）的容错能力。
 """
 
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -95,10 +96,15 @@ class TestCoverSetup:
         generic_device["data"]["P1"]["val"] = 0
 
         # 使用修改后的设备列表重新加载集成
+        create_client_return_value = (
+            mock_client,
+            mock_lifesmart_devices,  # 确保使用已修改的设备列表
+            {"expiredtime": int(time.time()) + 3600},
+        )
         with patch(
-            "custom_components.lifesmart.LifeSmartClient", return_value=mock_client
+            "custom_components.lifesmart._async_create_client_and_get_devices",
+            return_value=create_client_return_value,
         ):
-            mock_client.get_all_device_async.return_value = mock_lifesmart_devices
             assert await hass.config_entries.async_reload(setup_integration.entry_id)
             await hass.async_block_till_done()
 
