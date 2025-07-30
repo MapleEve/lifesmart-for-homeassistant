@@ -17,7 +17,7 @@ from typing import Any
 
 from homeassistant.components.climate import HVACMode
 
-from custom_components.lifesmart.const import (
+from ..const import (
     # --- 命令类型常量 ---
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -66,6 +66,18 @@ class LifeSmartClientBase(ABC):
         [抽象方法] 同时发送多个IO口的命令。
         必须由具体的客户端子类（云端/本地）实现。
         """
+        pass
+
+    @abstractmethod
+    async def set_scene_async(self, agt: str, scene_id: str) -> int:
+        """[抽象方法] 激活一个场景。"""
+        pass
+
+    @abstractmethod
+    async def send_ir_key_async(
+        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+    ) -> int:
+        """[抽象方法] 发送一个红外按键命令。"""
         pass
 
     # --- 通用开关/灯光控制 ---

@@ -327,13 +327,6 @@ class LifeSmartClient(LifeSmartClientBase):
         message = response.get("message")
         return message if isinstance(message, list) else []
 
-    async def set_scene_async(self, agt: str, scene_id: str) -> int:
-        """激活一个场景。(API: SceneSet)"""
-        response = await self._async_call_api(
-            "SceneSet", {HUB_ID_KEY: agt, "id": scene_id}, api_path="/api"
-        )
-        return self._get_code_from_response(response, "SceneSet")
-
     async def set_single_ep_async(
         self, agt: str, me: str, idx: str, command_type: str, val: Any
     ) -> int:
@@ -388,21 +381,6 @@ class LifeSmartClient(LifeSmartClientBase):
         message = response.get("message")
         return message if isinstance(message, dict) else {}
 
-    async def send_ir_key_async(
-        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
-    ) -> int:
-        """发送一个红外按键命令。(API: SendKeys)"""
-        params = {
-            HUB_ID_KEY: agt,
-            "ai": ai,
-            DEVICE_ID_KEY: me,
-            "category": category,
-            "brand": brand,
-            "keys": keys,
-        }
-        response = await self._async_call_api("SendKeys", params, api_path="/irapi")
-        return self._get_code_from_response(response, "SendKeys")
-
     # ====================================================================
     # 基类抽象方法的实现
     # ====================================================================
@@ -424,6 +402,34 @@ class LifeSmartClient(LifeSmartClientBase):
         此方法通过调用 set_multi_eps_async 来实现基类的抽象方法。
         """
         return await self.set_multi_eps_async(agt, me, io_list)
+
+    async def set_scene_async(self, agt: str, scene_id: str) -> int:
+        """
+        [云端实现] 激活一个场景。(API: SceneSet)
+        此方法通过调用底层的 _async_call_api 来实现基类的抽象方法。
+        """
+        response = await self._async_call_api(
+            "SceneSet", {HUB_ID_KEY: agt, "id": scene_id}, api_path="/api"
+        )
+        return self._get_code_from_response(response, "SceneSet")
+
+    async def send_ir_key_async(
+        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+    ) -> int:
+        """
+        [云端实现] 发送一个红外按键命令。(API: SendKeys)
+        此方法通过调用底层的 _async_call_api 来实现基类的抽象方法。
+        """
+        params = {
+            HUB_ID_KEY: agt,
+            "ai": ai,
+            DEVICE_ID_KEY: me,
+            "category": category,
+            "brand": brand,
+            "keys": keys,
+        }
+        response = await self._async_call_api("SendKeys", params, api_path="/irapi")
+        return self._get_code_from_response(response, "SendKeys")
 
     # ====================================================================
     # 设备直接控制的辅助方法控制方法 (`turn_on_light_switch_async`, `open_cover_async`,

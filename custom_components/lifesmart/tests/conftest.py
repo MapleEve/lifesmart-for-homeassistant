@@ -6,6 +6,7 @@ import asyncio
 import logging
 import sys
 import threading
+import time
 from typing import Generator
 from unittest.mock import AsyncMock, patch, MagicMock
 
@@ -486,7 +487,8 @@ def mock_client_class(mock_lifesmart_devices):
     这允许测试根据需要控制 LifeSmartClient() 的返回值，对于测试重载至关重要。
     """
     with patch(
-        "custom_components.lifesmart.LifeSmartClient", autospec=True
+        "custom_components.lifesmart.core.lifesmart_client.LifeSmartClient",
+        autospec=True,
     ) as mock_class:
         # 配置默认的实例行为
         instance = mock_class.return_value
@@ -573,13 +575,20 @@ async def setup_integration(
     一个统一的 fixture，用于完整地设置和加载 LifeSmart 集成及其所有平台。
     """
     mock_config_entry.add_to_hass(hass)
-    mock_client.get_all_device_async.return_value = mock_lifesmart_devices
 
+    create_client_return_value = (
+        mock_client,
+        mock_lifesmart_devices,
+        {"expiredtime": int(time.time()) + 3600},
+    )
     with patch(
-        "custom_components.lifesmart.LifeSmartClient",
-        return_value=mock_client,
+        "custom_components.lifesmart._async_create_client_and_get_devices",
+        return_value=create_client_return_value,
+    ) as mock_create_client, patch(
+        "custom_components.lifesmart.LifeSmartStateManager",
+        new=mock_state_manager_class,
     ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     # 验证集成已成功加载
@@ -600,7 +609,6 @@ async def setup_integration(
     ):
         if not local_task.done():
             local_task.cancel()
-            # 等待任务实际被取消
             await asyncio.sleep(0)
 
     # 卸载集成

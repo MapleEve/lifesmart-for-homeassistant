@@ -910,6 +910,30 @@ class LifeSmartLocalClient(LifeSmartClientBase):
         pkt = self._factory.build_multi_epset_packet(me, io_list)
         return await self._send_packet(pkt)
 
+    async def set_scene_async(self, agt: str, scene_id: str) -> int:
+        """
+        [本地实现] 激活一个本地场景。
+        此方法通过调用包工厂构建二进制包，并发送到TCP Socket。
+        """
+        if not self._factory:
+            _LOGGER.error("本地客户端工厂未初始化，无法发送场景指令。")
+            return -1
+        pkt = self._factory.build_scene_trigger_packet(scene_id)
+        return await self._send_packet(pkt)
+
+    async def send_ir_key_async(
+        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+    ) -> int:
+        """
+        [本地实现] 发送一个本地红外按键命令。
+        此方法通过调用包工厂构建二进制包，并发送到TCP Socket。
+        """
+        if not self._factory:
+            _LOGGER.error("本地客户端工厂未初始化，无法发送红外指令。")
+            return -1
+        pkt = self._factory.build_send_ir_keys_packet(ai, me, category, brand, keys)
+        return await self._send_packet(pkt)
+
     # ====================================================================
     # 设备直接控制的辅助方法
     #
@@ -917,20 +941,6 @@ class LifeSmartLocalClient(LifeSmartClientBase):
     # `async_set_climate_hvac_mode` 等) 现已移至 `client_base.py` 中，
     # 并由该类继承。
     # ====================================================================
-
-    async def set_scene_async(self, agt: str, scene_id: str) -> int:
-        """激活一个本地场景。"""
-        pkt = self._factory.build_scene_trigger_packet(scene_id)
-        # 本地协议的返回不是code，但为保持一致性，成功发送返回0
-        await self._send_packet(pkt)
-        return 0
-
-    async def send_ir_key_async(
-        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
-    ) -> int:
-        """发送一个本地红外按键命令。"""
-        pkt = self._factory.build_send_ir_keys_packet(ai, me, category, brand, keys)
-        return await self._send_packet(pkt)
 
     async def change_icon_async(self, devid: str, icon: str) -> int:
         """修改设备图标。"""
