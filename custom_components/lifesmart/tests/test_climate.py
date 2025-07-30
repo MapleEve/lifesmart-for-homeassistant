@@ -450,7 +450,7 @@ class TestClimateEntity:
 
 class TestComplexClimateScenarios:
     """
-    新增的测试类，专注于联合测试、复杂状态机和边缘场景。
+    专注于联合测试、复杂状态机和边缘场景。
     这里的每个测试都使用本文件中定义的专用 `setup_*_only` Fixture 来创建一个
     只包含当前测试所需设备的纯净环境。
     """

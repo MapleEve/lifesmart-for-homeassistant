@@ -498,7 +498,12 @@ def mock_lifesmart_devices_fixture():
 
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
-    """自动为所有测试启用自定义组件集成。"""
+    """
+    自动为所有测试启用自定义组件集成。
+
+    这是一个 `autouse` fixture，它会自动应用到所有测试中，确保
+    `pytest-homeassistant-custom-component` 的功能被激活。
+    """
     yield
 
 
@@ -544,6 +549,10 @@ def mock_client_class(mock_lifesmart_devices):
         instance.get_wss_url.return_value = "wss://example.com/ws"
         instance.ws_connect = AsyncMock()
         instance.ws_disconnect = AsyncMock()
+
+        # 为灯光测试中使用的底层命令方法提供 mock
+        instance._async_send_single_command = AsyncMock(return_value=0)
+        instance._async_send_multi_command = AsyncMock(return_value=0)
 
         yield mock_class
 
@@ -666,16 +675,12 @@ async def setup_integration(
 
 
 # ============================================================================
-# === 为 Climate 平台隔离测试专用的原子设备 Fixtures ===
+# === 为隔离测试专用的原子设备 Fixtures ===
 #
 # 设计说明:
 # 以下 Fixtures 是对您现有 `mock_lifesmart_devices` 的补充，而非替代。
-# 它们提供了独立的、可按需注入的“原材料”，专门用于对 Climate 平台下
-# 的特定设备进行深度、隔离的测试。
-#
-# - `mock_lifesmart_devices` 用于测试“全局”行为（如启动时加载所有实体）。
-# - 下方的“原子” Fixtures 用于测试“个体”行为（如单个风机盘管的状态机切换），
-#   确保测试的纯净性，不受其他设备干扰。
+# 它们提供了独立的、可按需注入的“原材料”，专门用于对特定设备进行深度、
+# 隔离的测试，确保测试的纯净性，不受其他设备干扰。
 #
 # 这种分离的设计，使得测试的意图更加清晰，维护也更加方便。
 # ============================================================================
@@ -805,3 +810,155 @@ def mock_device_climate_nature_floorheat() -> dict:
             "P10": {"val": 15},
         },
     }
+
+
+@pytest.fixture
+def mock_device_spot_rgb_light() -> dict:
+    """
+    提供一个 SPOT RGB 灯 (SL_SPOT) 的模拟数据。
+
+    - 初始状态: 开，颜色为 (255, 128, 64)。
+      - `val` 为 `0xFF8040`。
+    """
+    return {
+        "agt": "hub_light",
+        "me": "light_spotrgb",
+        "devtype": "SL_SPOT",
+        "name": "SPOT RGB Light",
+        "data": {"RGB": {"type": 129, "val": 0xFF8040}},
+    }
+
+
+@pytest.fixture
+def mock_device_dual_io_rgbw_light() -> dict:
+    """
+    提供一个双 IO 口 RGBW 灯 (SL_CT_RGBW) 的模拟数据。
+
+    - 初始状态: 开，但颜色和效果均未激活。
+      - `RGBW` 口为开 (`type: 129`)，但值为 0。
+      - `DYN` 口为关 (`type: 128`)。
+    """
+    return {
+        "agt": "hub_light",
+        "me": "light_dualrgbw",
+        "devtype": "SL_CT_RGBW",
+        "name": "Dual IO RGBW Light",
+        "data": {"RGBW": {"type": 129, "val": 0}, "DYN": {"type": 128}},
+    }
+
+
+@pytest.fixture
+def mock_device_single_io_rgbw_light() -> dict:
+    """
+    提供一个单 IO 口 RGBW 灯 (SL_SC_RGB) 的模拟数据。
+
+    此 Fixture 用于对该特定设备类型的协议进行精确测试。
+    - 初始状态: 开，颜色为 (1, 2, 3)，亮度为 100%。
+      - `val` 为 `0x64010203` (亮度100, R=1, G=2, B=3)。
+    """
+    return {
+        "agt": "hub_light",
+        "me": "light_singlergb",
+        "devtype": "SL_SC_RGB",
+        "name": "Single IO RGB Light",
+        "data": {"RGB": {"type": 129, "val": 0x64010203}},
+    }
+
+
+# ============================================================================
+# === 为隔离测试专用的 Setup Fixtures ===
+# ============================================================================
+
+
+@pytest.fixture
+async def setup_integration_spot_rgb_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_state_manager_class: MagicMock,
+    mock_device_spot_rgb_light: dict,
+):
+    """
+    一个专用的 setup fixture，只加载 SPOT RGB 灯。
+
+    此 fixture 创建一个只包含单个 SPOT RGB 灯的纯净测试环境，
+    用于对该设备的颜色和亮度逻辑进行精确的边缘情况测试。
+    """
+    mock_config_entry.add_to_hass(hass)
+    # 只使用注入的单个设备来创建测试环境
+    devices = [mock_device_spot_rgb_light]
+    create_client_return_value = (
+        mock_client,
+        devices,
+        {"expiredtime": int(time.time()) + 3600},
+    )
+    with patch(
+        "custom_components.lifesmart._async_create_client_and_get_devices",
+        return_value=create_client_return_value,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    yield mock_config_entry
+
+
+@pytest.fixture
+async def setup_integration_dual_io_light_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_state_manager_class: MagicMock,
+    mock_device_dual_io_rgbw_light: dict,
+):
+    """
+    一个专用的 setup fixture，只加载双 IO 口灯。
+
+    此 fixture 创建一个只包含单个双 IO 口灯的纯净测试环境，
+    用于对该设备颜色和效果的互斥逻辑进行精确的联合测试。
+    """
+    mock_config_entry.add_to_hass(hass)
+    devices = [mock_device_dual_io_rgbw_light]
+    create_client_return_value = (
+        mock_client,
+        devices,
+        {"expiredtime": int(time.time()) + 3600},
+    )
+    with patch(
+        "custom_components.lifesmart._async_create_client_and_get_devices",
+        return_value=create_client_return_value,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    yield mock_config_entry
+
+
+@pytest.fixture
+async def setup_integration_single_io_rgbw_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_state_manager_class: MagicMock,
+    mock_device_single_io_rgbw_light: dict,
+):
+    """
+    一个专用的 setup fixture，只加载单 IO 口 RGBW 灯。
+
+    此 fixture 创建一个只包含单个 SL_SC_RGB 灯的纯净测试环境，
+    用于对该设备的服务调用与设备协议的精确匹配进行测试。
+    """
+    mock_config_entry.add_to_hass(hass)
+    devices = [mock_device_single_io_rgbw_light]
+    create_client_return_value = (
+        mock_client,
+        devices,
+        {"expiredtime": int(time.time()) + 3600},
+    )
+    with patch(
+        "custom_components.lifesmart._async_create_client_and_get_devices",
+        return_value=create_client_return_value,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    yield mock_config_entry
