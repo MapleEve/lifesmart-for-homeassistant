@@ -24,10 +24,22 @@ from custom_components.lifesmart.const import *
 
 _LOGGER = logging.getLogger(__name__)
 
-sys.modules["aiodns"] = None
 
 # 自动为所有测试加载 Home Assistant 的 pytest 插件
 pytest_plugins = "pytest_homeassistant_custom_component"
+
+
+@pytest.fixture(autouse=True)
+def mock_aiodns():
+    """
+    通过 Fixture 更稳定地禁用 aiodns，防止残留的 DNS 解析器定时器。
+
+    这是一个在 Home Assistant 异步测试中常见的间歇性问题。通过在每个测试
+    的生命周期内 patch sys.modules，可以确保 aiodns 始终被禁用，
+    从而避免 `Lingering timer` 错误。
+    """
+    with patch.dict(sys.modules, {"aiodns": None}):
+        yield
 
 
 @pytest.fixture(autouse=True)

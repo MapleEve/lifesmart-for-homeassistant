@@ -96,6 +96,8 @@ async def test_setup_and_unload_success_cloud_mode(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    await asyncio.sleep(0)  # 给予事件循环一个机会来完成所有后台清理任务
+
     assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
     assert mock_config_entry.entry_id not in hass.data.get(DOMAIN, {})
 
