@@ -41,8 +41,6 @@ jobs:
         run: |
           pytest \
             -v \
-            -c "custom_components/lifesmart/tests/pytest.ini" \
-            "custom_components/lifesmart/tests/" \
             --cov=custom_components.lifesmart \
             --cov-branch \
             --cov-report=xml \
