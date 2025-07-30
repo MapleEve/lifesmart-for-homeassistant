@@ -74,7 +74,7 @@ async def setup_integration_fancoil_only(
 ):
     """一个专用的 setup fixture，只加载风机盘管这一个设备。"""
     mock_config_entry.add_to_hass(hass)
-    # 只使用注入的单个设备来创建测试环境
+    # 只使用注入的单个设备来创建测试环境了
     devices = [mock_device_climate_fancoil]
     create_client_return_value = (
         mock_client,
