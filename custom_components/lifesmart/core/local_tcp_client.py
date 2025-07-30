@@ -8,7 +8,6 @@
 import asyncio
 import logging
 import re
-from pprint import pformat
 from typing import Callable, Any
 
 from .client_base import LifeSmartClientBase
@@ -179,15 +178,15 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                             "Socket 连接被对方关闭 (在 '%s' 阶段)，将进行重连。", stage
                         )
                         break
-                    _LOGGER.debug(
-                        "收到本地 %d 字节原始数据 <- : %s", len(buf), buf.hex(" ")
-                    )
+                    # _LOGGER.debug(
+                    #     "收到本地 %d 字节原始数据 <- : %s", len(buf), buf.hex(" ")
+                    # )
                     response += buf
-                    _LOGGER.debug(
-                        "当前响应缓冲区 (总长度 %d): %s",
-                        len(response),
-                        response.hex(" "),
-                    )
+                    # _LOGGER.debug(
+                    #     "当前响应缓冲区 (总长度 %d): %s",
+                    #     len(response),
+                    #     response.hex(" "),
+                    # )
                     while response:
                         try:
                             _LOGGER.debug("尝试解码缓冲区数据...")
@@ -199,9 +198,9 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                                 response = b""
                                 break
 
-                            _LOGGER.debug(
-                                "🔑解码成功，解析出的结构: \n%s", pformat(decoded)
-                            )
+                            # _LOGGER.debug(
+                            #     "🔑解码成功，解析出的结构: \n%s", pformat(decoded)
+                            # )
                             response = remaining_response
                             _LOGGER.debug(
                                 "解码后剩余数据 (长度 %d): %s",
