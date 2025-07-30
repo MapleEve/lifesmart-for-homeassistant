@@ -733,9 +733,17 @@ class LifeSmartLocalClient(LifeSmartClientBase):
                 await self.writer.drain()
                 response, stage = b"", "login"
                 while not self.disconnected:
-                    buf = await self.reader.read(4096)
+                    # 为读取操作增加超时，防止无限期阻塞
+                    try:
+                        buf = await asyncio.wait_for(self.reader.read(4096), timeout=15)
+                    except asyncio.TimeoutError:
+                        _LOGGER.error("在 '%s' 阶段等待响应超时，将进行重连。", stage)
+                        break  # 跳出内层循环，触发重连
+
                     if not buf:
-                        _LOGGER.warning("Socket 连接被对方关闭，将进行重连。")
+                        _LOGGER.warning(
+                            "Socket 连接被对方关闭 (在 '%s' 阶段)，将进行重连。", stage
+                        )
                         break
                     response += buf
                     if response:
