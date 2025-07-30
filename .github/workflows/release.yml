@@ -2,11 +2,14 @@ name: "Upload Release Asset"
 
 on:
   release:
-    types: [ published ] # 当一个 Release 被发布时触发
+    types: [ published ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       # 步骤 1: 检出代码
       - name: Checkout repository
@@ -22,7 +25,8 @@ jobs:
       - name: Upload zip to release
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.GH_TOKEN }}
+          # 使用内置的 GITHUB_TOKEN
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: lifesmart.zip
           asset_name: lifesmart.zip
           tag: ${{ github.ref }}
