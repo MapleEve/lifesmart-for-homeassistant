@@ -1,5 +1,5 @@
 """
-对 protocol.py 的单元测试和集成测试
+对 本地 TCP 的单元测试和集成测试
 
 此测试套件包含四个主要部分：
 1.  对 LifeSmartProtocol 类的单元测试，验证核心数据类型的编解码及边界条件。
@@ -288,7 +288,7 @@ DEVICE_DELETED_PKT = PROTOCOL.encode([{}, {"_sdel": {"key": "d1"}}])
 LOGIN_FAILURE_PKT = PROTOCOL.encode([{}, {"err": -2001, "act": "Login"}])
 
 
-class TestLifeSmartClientIntegration:
+class TestTCPClientIntegration:
     """测试客户端的连接、生命周期和网络交互。"""
 
     @pytest.mark.asyncio
@@ -445,7 +445,7 @@ class TestLifeSmartClientIntegration:
 # ====================================================================
 
 
-class TestLifeSmartClientControlMethods:
+class TestTCPClientControlMethods:
     """全面测试 LifeSmartLocalTCPClient 的高层控制方法。"""
 
     @pytest.mark.asyncio
