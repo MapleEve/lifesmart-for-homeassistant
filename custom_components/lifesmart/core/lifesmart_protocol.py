@@ -696,7 +696,7 @@ class LifeSmartLocalClient(LifeSmartClientBase):
         try:
             await asyncio.wait_for(self.device_ready.wait(), timeout=timeout)
             return list(self.devices.values()) if self.devices else []
-        except asyncio.TimeoutError as e:
+        except asyncio.TimeoutError:
             _LOGGER.error("等待本地设备就绪超时 (timeout=%ds)", timeout)
             return False
 
