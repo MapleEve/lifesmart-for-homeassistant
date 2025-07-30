@@ -385,6 +385,19 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
     # 基类抽象方法的实现
     # ====================================================================
 
+    async def _async_get_all_devices(self, timeout=10) -> list[dict[str, Any]]:
+        """
+        [云端实现] 通过调用 EpGetAll API 获取所有设备信息。
+        """
+        _LOGGER.debug("通过云端 API (EpGetAll) 获取设备列表...")
+        response = await self._async_call_api("EpGetAll", api_path="/api")
+        message = response.get("message")
+        if isinstance(message, list):
+            return message
+
+        _LOGGER.warning("EpGetAll 未返回预期的设备列表: %s", message)
+        return []
+
     async def _async_send_single_command(
         self, agt: str, me: str, idx: str, command_type: str, val: Any
     ) -> int:
@@ -403,7 +416,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         """
         return await self.set_multi_eps_async(agt, me, io_list)
 
-    async def set_scene_async(self, agt: str, scene_id: str) -> int:
+    async def _async_set_scene(self, agt: str, scene_id: str) -> int:
         """
         [云端实现] 激活一个场景。(API: SceneSet)
         此方法通过调用底层的 _async_call_api 来实现基类的抽象方法。
@@ -413,7 +426,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         )
         return self._get_code_from_response(response, "SceneSet")
 
-    async def send_ir_key_async(
+    async def _async_send_ir_key(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
     ) -> int:
         """

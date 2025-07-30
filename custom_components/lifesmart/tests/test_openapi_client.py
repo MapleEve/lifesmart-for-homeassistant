@@ -257,11 +257,11 @@ def test_generate_wss_auth(client):
     [
         ("get_agt_list_async", "AgtGetList", (), None, "/api"),
         ("get_agt_details_async", "AgtGet", ("hub1",), {"agt": "hub1"}, "/api"),
-        ("get_all_device_async", "EpGetAll", (), None, "/api"),
+        ("async_get_all_devices", "EpGetAll", (), None, "/api"),
         ("get_scene_list_async", "SceneGet", ("hub1",), {"agt": "hub1"}, "/api"),
         ("get_room_list_async", "RoomGet", ("hub1",), {"agt": "hub1"}, "/api"),
         (
-            "set_scene_async",
+            "async_set_scene",
             "SceneSet",
             ("hub1", "s1"),
             {"agt": "hub1", "id": "s1"},
@@ -282,7 +282,7 @@ def test_generate_wss_auth(client):
             "/irapi",
         ),
         (
-            "send_ir_key_async",
+            "async_send_ir_key",
             "SendKeys",
             ("hub1", "ai1", "me1", "cat1", "brand1", "key1"),
             {
@@ -334,7 +334,7 @@ async def test_set_multi_eps_async_wrapper(mock_async_call_api, client):
 async def test_get_wrappers_empty_or_malformed_response(mock_async_call_api, client):
     """测试 GET 类包装方法在收到空或格式错误的 message 时的处理。"""
     mock_async_call_api.return_value = {"code": 0, "message": []}
-    assert await client.get_all_device_async() == []
+    assert await client.async_get_all_devices() == []
 
     mock_async_call_api.return_value = {"code": 0, "message": None}
     assert await client.get_agt_list_async() == []

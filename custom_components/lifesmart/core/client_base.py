@@ -48,6 +48,66 @@ class LifeSmartClientBase(ABC):
     LifeSmart 客户端的抽象基类，定义了通用的设备控制接口和共享的业务逻辑。
     """
 
+    # --- 公共接口 (Public API) ---
+    async def async_get_all_devices(self, timeout=10) -> list[dict[str, Any]]:
+        """
+        获取所有设备信息的公共接口。
+
+        此方法为上层代码（如 hub.py）提供一个稳定的调用入口。
+        它会调用内部的、由具体子类实现的 _async_get_all_devices 方法。
+        """
+        return await self._async_get_all_devices()
+
+    async def async_send_single_command(
+        self, agt: str, me: str, idx: str, command_type: str, val: Any
+    ) -> int:
+        """
+        发送单个IO口命令的公共接口。
+
+        由具体客户端子类实现的 _async_send_single_command 方法完成实际操作。
+        """
+        return await self._async_send_single_command(agt, me, idx, command_type, val)
+
+    async def async_send_multi_command(
+        self, agt: str, me: str, io_list: list[dict]
+    ) -> int:
+        """
+        同时发送多个IO口命令的公共接口。
+
+        由具体客户端子类实现的 _async_send_multi_command 方法完成实际操作。
+        """
+        return await self._async_send_multi_command(agt, me, io_list)
+
+    async def async_set_scene(self, agt: str, scene_id: str) -> int:
+        """
+        激活一个场景的公共接口。
+
+        由具体客户端子类实现的 set_scene_async 方法完成实际操作。
+        """
+        return await self._async_set_scene(agt, scene_id)
+
+    async def async_send_ir_key(
+        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+    ) -> int:
+        """
+        发送红外按键命令的公共接口。
+
+        由具体客户端子类实现的 send_ir_key_async 方法完成实际操作。
+        """
+        return await self._async_send_ir_key(agt, ai, me, category, brand, keys)
+
+    # --- 受保护的抽象方法 (Protected Abstract Methods) ---
+    @abstractmethod
+    async def _async_get_all_devices(self, timeout=10) -> list[dict[str, Any]]:
+        """
+        [抽象方法] 获取所有设备信息，带超时控制
+
+        每个具体的客户端（云端、本地TCP等）都必须实现此方法。
+        它应该返回一个包含所有设备信息的列表。
+        如果获取失败，应返回一个空列表或引发适当的异常。
+        """
+        pass
+
     @abstractmethod
     async def _async_send_single_command(
         self, agt: str, me: str, idx: str, command_type: str, val: Any
@@ -69,12 +129,12 @@ class LifeSmartClientBase(ABC):
         pass
 
     @abstractmethod
-    async def set_scene_async(self, agt: str, scene_id: str) -> int:
+    async def _async_set_scene(self, agt: str, scene_id: str) -> int:
         """[抽象方法] 激活一个场景。"""
         pass
 
     @abstractmethod
-    async def send_ir_key_async(
+    async def _async_send_ir_key(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
     ) -> int:
         """[抽象方法] 发送一个红外按键命令。"""

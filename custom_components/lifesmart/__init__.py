@@ -10,7 +10,6 @@ import re
 import time
 import traceback
 from datetime import timedelta, datetime
-from importlib import reload
 from typing import Optional, Any
 
 import aiohttp
@@ -71,8 +70,8 @@ from .const import (
     # --- 所有支持的平台列表 ---
     SUPPORTED_PLATFORMS,
 )
-from .core import protocol
 from .core.client_base import LifeSmartClientBase
+from .core.local_tcp_client import LifeSmartLocalTCPClient
 from .core.openapi_client import LifeSmartOAPIClient
 from .diagnostics import get_error_advice, RECOMMENDATION_GROUP
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
@@ -106,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         result = await _async_create_client_and_get_devices(hass, config_entry)
         if len(result) == 4:  # 本地模式
             client, devices, auth_response, connect_task = result
-        else:  # 云端模式
+        else:  # OAPI 模式
             client, devices, auth_response = result
 
     except LifeSmartAuthError:
@@ -164,7 +163,7 @@ async def _async_create_client_and_get_devices(
 ) -> tuple:
     """创建 LifeSmart 客户端并获取初始设备列表。
 
-    根据配置类型（云端或本地）初始化对应的客户端，并尝试连接和获取设备数据。
+    根据配置类型（OAPI或本地）初始化对应的客户端，并尝试连接和获取设备数据。
     此函数封装了连接和认证过程中的错误处理。
 
     Args:
@@ -183,7 +182,7 @@ async def _async_create_client_and_get_devices(
     auth_response = None
 
     if conn_type == CONN_CLASS_CLOUD_PUSH:
-        # --- 云端模式 ---
+        # --- Open API 模式 ---
         try:
             client = LifeSmartOAPIClient(
                 hass,
@@ -220,7 +219,7 @@ async def _async_create_client_and_get_devices(
                     raise ConfigEntryNotReady("令牌已失效，请重新认证。", e.code) from e
 
             # 3. 获取设备列表
-            devices = await client.get_all_device_async()
+            devices = await client.async_get_all_devices()
             return client, devices, auth_response
 
         except LifeSmartAuthError as e:
@@ -237,8 +236,7 @@ async def _async_create_client_and_get_devices(
     else:
         # --- 本地模式 ---
         try:
-            reload(protocol)
-            client = custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient(
+            client = LifeSmartLocalTCPClient(
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
                 config_entry.data[CONF_USERNAME],
@@ -253,7 +251,7 @@ async def _async_create_client_and_get_devices(
                 client.async_connect(local_update_callback)
             )
 
-            devices = await client.get_all_device_async()
+            devices = await client.async_get_all_devices()
             if not devices:
                 if not connect_task.done():
                     connect_task.cancel()
@@ -305,7 +303,7 @@ def _async_register_services(hass: HomeAssistant, client: LifeSmartClientBase):
 
     async def send_ir_keys(call):
         """处理发送红外按键的服务调用。"""
-        await client.send_ir_key_async(
+        await client._async_send_ir_key(
             call.data[HUB_ID_KEY],
             call.data["ai"],
             call.data[DEVICE_ID_KEY],
@@ -324,7 +322,7 @@ def _async_register_services(hass: HomeAssistant, client: LifeSmartClientBase):
             return
 
         _LOGGER.info("正在通过服务调用触发场景: Hub=%s, SceneID=%s", agt, scene_id)
-        await client.set_scene_async(agt, scene_id)
+        await client._async_set_scene(agt, scene_id)
 
     async def press_switch(call):
         """处理点动开关的服务调用。"""
@@ -371,7 +369,7 @@ def _async_setup_background_tasks(
         """全局设备数据定时刷新任务。"""
         try:
             _LOGGER.debug("开始定时刷新设备数据。")
-            new_devices = await client.get_all_device_async()
+            new_devices = await client.async_get_all_devices()
             hass.data[DOMAIN][config_entry.entry_id]["devices"] = new_devices
             dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
             _LOGGER.debug("全局设备数据刷新完成。")
@@ -380,7 +378,7 @@ def _async_setup_background_tasks(
         except Exception as e:
             _LOGGER.warning("定时刷新时发生意外错误，这可能是临时问题。错误: %s", e)
 
-    # 仅在云端模式下启动 WebSocket 状态管理器和令牌刷新任务
+    # 仅在OAPI模式下启动 WebSocket 状态管理器和令牌刷新任务
     if isinstance(client, LifeSmartOAPIClient):
         state_manager = LifeSmartStateManager(
             hass=hass,
@@ -439,7 +437,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = hass.data[DOMAIN].get(entry_id, {}).get("client")
     if isinstance(
         client,
-        custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient,
+        LifeSmartLocalTCPClient,
     ):
         # 调用同步的 disconnect 方法来设置标志位，这将由 local_task 的取消来驱动清理
         client.disconnect()

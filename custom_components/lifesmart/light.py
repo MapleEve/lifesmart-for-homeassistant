@@ -396,7 +396,7 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
 
         try:
             if ATTR_BRIGHTNESS in kwargs:
-                await self._client._async_send_single_command(
+                await self._client.async_send_single_command(
                     self.agt,
                     self.me,
                     self._sub_key,
@@ -513,7 +513,7 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
                 )
 
             if io_commands:
-                await self._client._async_send_multi_command(
+                await self._client.async_send_multi_command(
                     self.agt, self.me, io_commands
                 )
 
@@ -619,7 +619,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
                 cmd_type, cmd_val = CMD_TYPE_SET_RAW, (r << 16) | (g << 8) | b
 
             if cmd_val is not None:
-                await self._client._async_send_single_command(
+                await self._client.async_send_single_command(
                     self.agt, self.me, self._sub_key, cmd_type, cmd_val
                 )
             else:
@@ -732,7 +732,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
                     }
                 )
             if params:
-                await self._client._async_send_multi_command(self.agt, self.me, params)
+                await self._client.async_send_multi_command(self.agt, self.me, params)
             await self._client.turn_on_light_switch_async("P1", self.agt, self.me)
         except Exception as e:
             _LOGGER.error(
@@ -851,7 +851,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
 
         # 3. 发送命令并处理异常
         try:
-            await self._client._async_send_single_command(
+            await self._client.async_send_single_command(
                 self.agt, self.me, self._sub_key, cmd_type, cmd_val
             )
         except Exception as e:
@@ -881,7 +881,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
 
         # 3. 发送命令并处理异常
         try:
-            await self._client._async_send_single_command(
+            await self._client.async_send_single_command(
                 self.agt, self.me, self._sub_key, CMD_TYPE_OFF, 0
             )
         except Exception as e:
@@ -999,7 +999,7 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
                 ]
 
             if io_list:
-                await self._client._async_send_multi_command(self.agt, self.me, io_list)
+                await self._client.async_send_multi_command(self.agt, self.me, io_list)
             else:
                 # 如果只调用 turn_on 而没有颜色/效果参数，则默认打开
                 await self._client.turn_on_light_switch_async(
@@ -1033,7 +1033,7 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
                 {"idx": self._color_io, "type": CMD_TYPE_OFF, "val": 0},
                 {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
             ]
-            await self._client._async_send_multi_command(self.agt, self.me, io_list)
+            await self._client.async_send_multi_command(self.agt, self.me, io_list)
         except Exception as e:
             _LOGGER.error(
                 "Failed to turn off light %s. Reverting state. Error: %s",

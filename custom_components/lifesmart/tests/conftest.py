@@ -560,7 +560,7 @@ def mock_client_class(mock_lifesmart_devices):
     ) as mock_class:
         # 配置默认的实例行为
         instance = mock_class.return_value
-        instance.get_all_device_async.return_value = mock_lifesmart_devices
+        instance.async_get_all_devices.return_value = mock_lifesmart_devices
         instance.login_async.return_value = {
             "usertoken": "mock_new_usertoken",
             "userid": "mock_userid",
@@ -588,8 +588,8 @@ def mock_client_class(mock_lifesmart_devices):
         instance.ws_disconnect = AsyncMock()
 
         # 为灯光测试中使用的底层命令方法提供 mock
-        instance._async_send_single_command = AsyncMock(return_value=0)
-        instance._async_send_multi_command = AsyncMock(return_value=0)
+        instance.async_send_single_command = AsyncMock(return_value=0)
+        instance.async_send_multi_command = AsyncMock(return_value=0)
 
         yield mock_class
 

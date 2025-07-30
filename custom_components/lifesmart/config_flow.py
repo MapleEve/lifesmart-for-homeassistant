@@ -74,7 +74,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
                     "userid", data.get(CONF_LIFESMART_USERID, "")
                 )
 
-        devices = await client.get_all_device_async()
+        devices = await client.async_get_all_devices()
 
         if not isinstance(devices, list):
             _LOGGER.error("API did not return a valid device list: %s", devices)

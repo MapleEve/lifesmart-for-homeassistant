@@ -383,6 +383,20 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
     # ====================================================================
     # 基类抽象方法的实现
     # ====================================================================
+    async def _async_get_all_devices(self, timeout=10) -> list[dict[str, Any]]:
+        """
+        [本地实现] 等待本地连接成功并加载完所有设备。
+
+        此方法不直接发送请求，而是等待后台的 `async_connect` 任务
+        在成功加载设备（该过程会发送 get_config 包）后设置一个 `device_ready` 事件。
+        """
+        try:
+            _LOGGER.debug("等待本地设备列表就绪 (超时: %ds)...", timeout)
+            await asyncio.wait_for(self.device_ready.wait(), timeout=timeout)
+            return list(self.devices.values()) if self.devices else []
+        except asyncio.TimeoutError:
+            _LOGGER.error("等待本地设备就绪超时。")
+            return []
 
     async def _async_send_single_command(
         self, agt: str, me: str, idx: str, command_type: str, val: Any
@@ -404,7 +418,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         pkt = self._factory.build_multi_epset_packet(me, io_list)
         return await self._send_packet(pkt)
 
-    async def set_scene_async(self, agt: str, scene_id: str) -> int:
+    async def _async_set_scene(self, agt: str, scene_id: str) -> int:
         """
         [本地实现] 激活一个本地场景。
         此方法通过调用包工厂构建二进制包，并发送到TCP Socket。
@@ -415,7 +429,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         pkt = self._factory.build_scene_trigger_packet(scene_id)
         return await self._send_packet(pkt)
 
-    async def send_ir_key_async(
+    async def _async_send_ir_key(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
     ) -> int:
         """

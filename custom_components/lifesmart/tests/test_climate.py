@@ -192,7 +192,7 @@ class TestClimateSetup:
         nature_switch["data"]["P5"]["val"] = 1
 
         # 模拟重载过程
-        mock_client.get_all_device_async.return_value = mock_lifesmart_devices
+        mock_client.async_get_all_devices.return_value = mock_lifesmart_devices
         initial_state_manager_instance = mock_state_manager_class.return_value
         initial_state_manager_instance.start.reset_mock()
 

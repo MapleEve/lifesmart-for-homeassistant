@@ -308,7 +308,7 @@ class TestTCPClientIntegration:
 
         # 2. 模拟设备列表响应
         reader.feed_data(DEVICE_LIST_PKT)
-        devices = await client.get_all_device_async(timeout=1)
+        devices = await client.async_get_all_devices(timeout=1)
         assert len(devices) == 1 and "d1" in client.devices, "应成功加载一个设备"
         assert (
             client.devices["d1"]["data"]["L1"]["name"] == "Switch Button"
@@ -668,7 +668,7 @@ class TestTCPClientControlMethods:
         with patch.object(
             mocked_client._factory, "build_scene_trigger_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.set_scene_async("agt", "scene123")
+            await mocked_client._async_set_scene("agt", "scene123")
             mock_build.assert_called_once_with("scene123")
             mocked_client._send_packet.assert_awaited_once()
 
@@ -696,7 +696,7 @@ class TestTCPClientControlMethods:
         with patch.object(
             mocked_client._factory, "build_send_ir_keys_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.send_ir_key_async(
+            await mocked_client._async_send_ir_key(
                 "agt", "ai_id", "dev1", "cat1", "brand1", keys_json
             )
             mock_build.assert_called_once_with(
@@ -713,7 +713,7 @@ class TestTCPClientControlMethods:
         with patch.object(
             mocked_client._factory, "build_multi_epset_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client._async_send_multi_command("agt", "dev1", io_list)
+            await mocked_client.async_send_multi_command("agt", "dev1", io_list)
             mock_build.assert_called_once_with("dev1", io_list)
             mocked_client._send_packet.assert_awaited_once()
 

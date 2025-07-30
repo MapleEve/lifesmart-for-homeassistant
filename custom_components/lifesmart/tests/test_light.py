@@ -154,7 +154,7 @@ class TestLifeSmartBrightnessLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_BRIGHTNESS) == 150
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0xCF, 150
         )
 
@@ -277,7 +277,7 @@ class TestLifeSmartDimmerLight:
                 * 255
             )
         )
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
@@ -307,7 +307,7 @@ class TestLifeSmartDimmerLight:
         initial_kelvin = initial_state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
 
         # 模拟API调用失败
-        mock_client._async_send_multi_command.side_effect = Exception("API Error")
+        mock_client.async_send_multi_command.side_effect = Exception("API Error")
 
         # 尝试改变亮度和色温
         await hass.services.async_call(
@@ -379,7 +379,7 @@ class TestLifeSmartQuantumLight:
         assert initial_state.attributes.get(ATTR_EFFECT) is None
 
         # 模拟API调用失败
-        mock_client._async_send_multi_command.side_effect = Exception("API Error")
+        mock_client.async_send_multi_command.side_effect = Exception("API Error")
 
         # 尝试设置效果
         await hass.services.async_call(
@@ -407,7 +407,7 @@ class TestLifeSmartQuantumLight:
         )
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_EFFECT) == "魔力红"
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [{"idx": "P2", "type": 0xFF, "val": ALL_EFFECT_MAP["魔力红"]}],
@@ -422,7 +422,7 @@ class TestLifeSmartQuantumLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_RGBW_COLOR) == (10, 20, 30, 40)
         assert state.attributes.get(ATTR_EFFECT) is None
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [{"idx": "P2", "type": 0xFF, "val": 0x280A141E}],
@@ -444,7 +444,7 @@ class TestLifeSmartQuantumLight:
         )
 
         # 验证发送了多个命令：一个用于亮度，一个用于颜色
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
@@ -532,7 +532,7 @@ class TestLifeSmartSingleIORGBWLight:
             {ATTR_ENTITY_ID: self.ENTITY_ID, **service_data},
             blocking=True,
         )
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, expected_type, expected_val
         )
 
@@ -547,7 +547,7 @@ class TestLifeSmartSingleIORGBWLight:
             blocking=True,
         )
         # 根据文档，关灯命令是 type=0x80, val=0
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0x80, 0
         )
 
@@ -573,7 +573,7 @@ class TestLifeSmartSingleIORGBWLight:
         initial_state = hass.states.get(self.ENTITY_ID)
 
         # 模拟API调用失败
-        mock_client._async_send_single_command.side_effect = Exception("API Error")
+        mock_client.async_send_single_command.side_effect = Exception("API Error")
 
         # 尝试关灯
         await hass.services.async_call(
@@ -621,7 +621,7 @@ class TestLifeSmartDualIORGBWLight:
             blocking=True,
         )
         assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
@@ -654,7 +654,7 @@ class TestLifeSmartDualIORGBWLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_EFFECT) == "魔力红"
         assert state.attributes.get(ATTR_RGBW_COLOR) is None
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
@@ -686,7 +686,7 @@ class TestLifeSmartDualIORGBWLight:
         # val = 0x14050A0F
         expected_val = (20 << 24) | (5 << 16) | (10 << 8) | 15
 
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
@@ -718,7 +718,7 @@ class TestLifeSmartDualIORGBWLight:
         initial_state = hass.states.get(self.ENTITY_ID)
 
         # 模拟API调用失败
-        mock_client._async_send_multi_command.side_effect = Exception("API Error")
+        mock_client.async_send_multi_command.side_effect = Exception("API Error")
 
         # 尝试设置效果
         await hass.services.async_call(
@@ -776,7 +776,7 @@ class TestLifeSmartSPOTRGBLight:
             blocking=True,
         )
         assert hass.states.get(self.ENTITY_ID).state == STATE_ON
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0x81, 1
         )
 
@@ -795,7 +795,7 @@ class TestLifeSmartSPOTRGBLight:
         )
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_EFFECT) == "魔力红"
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             self.SUB_KEY,
@@ -812,7 +812,7 @@ class TestLifeSmartSPOTRGBLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_RGB_COLOR) == (10, 20, 30)
         assert state.attributes.get(ATTR_EFFECT) is None
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0xFF, 0x0A141E
         )
 
@@ -882,7 +882,7 @@ class TestLifeSmartSPOTRGBLight:
         )
 
         # 验证底层 API 是否以正确的、经过亮度调整后的颜色值被调用
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             self.SUB_KEY,
@@ -953,7 +953,7 @@ class TestLifeSmartSPOTRGBWLight:
             blocking=True,
         )
         assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
@@ -983,7 +983,7 @@ class TestLifeSmartSPOTRGBWLight:
             {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_EFFECT: "魔力红"},
             blocking=True,
         )
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
@@ -1015,7 +1015,7 @@ class TestLifeSmartSPOTRGBWLight:
         # val = 0x14050A0F
         expected_val = (20 << 24) | (5 << 16) | (10 << 8) | 15
 
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
@@ -1047,7 +1047,7 @@ class TestLifeSmartSPOTRGBWLight:
         assert initial_state.attributes.get(ATTR_EFFECT) == "海浪"
 
         # 模拟API调用失败
-        mock_client._async_send_multi_command.side_effect = Exception("API Error")
+        mock_client.async_send_multi_command.side_effect = Exception("API Error")
 
         # 尝试设置颜色，这会清除效果
         await hass.services.async_call(
@@ -1262,7 +1262,7 @@ class TestLightProtocolAndColorEdgeCases:
             blocking=True,
         )
         # 断言：验证底层命令的 type 和 val 是否完全符合协议
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             hub_id,
             device_me,
             sub_key,
@@ -1279,7 +1279,7 @@ class TestLightProtocolAndColorEdgeCases:
             blocking=True,
         )
         # 断言：验证底层命令的 type 和 val 是否完全符合协议
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             hub_id,
             device_me,
             sub_key,
@@ -1320,7 +1320,7 @@ class TestLightProtocolAndColorEdgeCases:
             blocking=True,
         )
         # 断言：验证API调用发送了正确缩放后的颜色值
-        mock_client._async_send_single_command.assert_called_with(
+        mock_client.async_send_single_command.assert_called_with(
             hub_id,
             device_me,
             sub_key,
@@ -1375,7 +1375,7 @@ class TestLightProtocolAndColorEdgeCases:
             blocking=True,
         )
         # 断言：效果通道被打开，颜色通道仅被置为开机状态以点亮灯珠
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             hub_id,
             device_me,
             [
@@ -1396,7 +1396,7 @@ class TestLightProtocolAndColorEdgeCases:
             blocking=True,
         )
         # 断言：颜色通道被设置了具体值，效果通道被明确关闭
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             hub_id,
             device_me,
             [
@@ -1417,7 +1417,7 @@ class TestLightProtocolAndColorEdgeCases:
             blocking=True,
         )
         # 断言：效果通道再次被打开，颜色通道被重置为简单的开机状态
-        mock_client._async_send_multi_command.assert_called_with(
+        mock_client.async_send_multi_command.assert_called_with(
             hub_id,
             device_me,
             [
