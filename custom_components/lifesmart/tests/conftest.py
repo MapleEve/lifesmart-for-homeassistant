@@ -7,12 +7,12 @@
 
 import asyncio
 import logging
-import sys
 import threading
 import time
 from typing import Generator
 from unittest.mock import AsyncMock, patch, MagicMock
 
+import aiohttp
 import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_REGION
@@ -29,16 +29,41 @@ _LOGGER = logging.getLogger(__name__)
 pytest_plugins = "pytest_homeassistant_custom_component"
 
 
-@pytest.fixture(autouse=True)
-def mock_aiodns():
+@pytest.fixture(scope="session", autouse=True)
+def prevent_socket_access():
     """
-    通过 Fixture 更稳定地禁用 aiodns，防止残留的 DNS 解析器定时器。
+    一个全局的、自动执行的 Fixture，用于在整个测试会话期间
+    阻止任何意外的网络 socket 连接。
 
-    这是一个在 Home Assistant 异步测试中常见的间歇性问题。通过在每个测试
-    的生命周期内 patch sys.modules，可以确保 aiodns 始终被禁用，
-    从而避免 `Lingering timer` 错误。
+    这是通过 aiohttp 的 `TraceConfig` 实现的，它会在 DNS 解析开始前
+    就引发一个运行时错误，从而有效地阻止了 aiodns 定时器的创建，
+    这是导致 "Lingering timer" 错误的主要原因。
+
+    此方案是社区中解决 aiodns 问题的最佳实践。
     """
-    with patch.dict(sys.modules, {"aiodns": None}):
+
+    async def _on_dns_resolvehost_start(session, trace_config_ctx, params):
+        raise RuntimeError(
+            f"Socket access is disabled for tests. Tried to resolve {params.host}"
+        )
+
+    trace_config = aiohttp.TraceConfig()
+
+    # --- 这是被修正的一行 ---
+    # 使用 aiohttp 提示的正确属性名 on_dns_resolvehost_start
+    trace_config.on_dns_resolvehost_start.append(_on_dns_resolvehost_start)
+
+    # 通过 patch aiohttp.ClientSession，强制所有新创建的会话都使用我们
+    # 配置好的 trace_config，从而阻止 DNS 解析。
+    original_client_session = aiohttp.ClientSession
+
+    def patched_client_session(*args, **kwargs):
+        existing_trace_configs = kwargs.get("trace_configs") or []
+        return original_client_session(
+            *args, **kwargs, trace_configs=[*existing_trace_configs, trace_config]
+        )
+
+    with patch("aiohttp.ClientSession", new=patched_client_session):
         yield
 
 
