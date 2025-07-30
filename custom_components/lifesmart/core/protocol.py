@@ -30,11 +30,6 @@ class LSTimestamp:
     value: int
     raw_data: bytes
 
-    # @property
-    # def datetime(self) -> datetime.datetime:
-    #     """转换为datetime对象"""
-    #     return datetime.datetime.fromtimestamp(self.value, tz=self.timezone)
-
     def as_dict(self) -> dict:
         """将其转换为字典格式，以兼容旧代码或序列化需求。"""
         return {
