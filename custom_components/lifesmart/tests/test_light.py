@@ -155,7 +155,7 @@ class TestLifeSmartBrightnessLight:
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_BRIGHTNESS) == 150
         mock_client._async_send_single_command.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, CMD_TYPE_SET_VAL, 150
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0xCF, 150
         )
 
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
@@ -281,8 +281,8 @@ class TestLifeSmartDimmerLight:
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": 200},
-                {"idx": "P2", "type": CMD_TYPE_SET_VAL, "val": expected_temp_val},
+                {"idx": "P1", "type": 0xCF, "val": 200},
+                {"idx": "P2", "type": 0xCF, "val": expected_temp_val},
             ],
         )
 
@@ -410,7 +410,7 @@ class TestLifeSmartQuantumLight:
         mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
-            [{"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": ALL_EFFECT_MAP["魔力红"]}],
+            [{"idx": "P2", "type": 0xFF, "val": ALL_EFFECT_MAP["魔力红"]}],
         )
         # Test Color (without brightness)
         await hass.services.async_call(
@@ -425,7 +425,7 @@ class TestLifeSmartQuantumLight:
         mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
-            [{"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": 0x280A141E}],
+            [{"idx": "P2", "type": 0xFF, "val": 0x280A141E}],
         )
 
     async def test_service_call_with_brightness_and_color(
@@ -448,8 +448,8 @@ class TestLifeSmartQuantumLight:
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": 128},
-                {"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": 0x280A141E},
+                {"idx": "P1", "type": 0xCF, "val": 128},
+                {"idx": "P2", "type": 0xFF, "val": 0x280A141E},
             ],
         )
         # 验证确保灯开启的命令也被调用
@@ -490,25 +490,25 @@ class TestLifeSmartSingleIORGBWLight:
         ("service_data", "expected_type", "expected_val", "test_id"),
         [
             # 1. 简单开灯
-            ({}, "0x81", 1, "turn_on_simple"),
+            ({}, 0x81, 1, "turn_on_simple"),
             # 2. 设置颜色 (同时提供亮度，但协议决定了亮度被忽略)
             (
                 {ATTR_RGBW_COLOR: (10, 20, 30, 40), ATTR_BRIGHTNESS: 128},
-                "0xFF",
+                0xFF,
                 0x280A141E,
                 "set_color_ignores_brightness",
             ),
             # 3. 设置效果
             (
                 {ATTR_EFFECT: "魔力红"},
-                "0xFF",
+                0xFF,
                 DYN_EFFECT_MAP["魔力红"],
                 "set_effect",
             ),
             # 4. 只设置亮度 (应被解释为设置白光)
             (
                 {ATTR_BRIGHTNESS: 200},
-                "0xFF",
+                0xFF,
                 (200 << 24),  # W=200, R=G=B=0
                 "set_brightness_as_white",
             ),
@@ -548,7 +548,7 @@ class TestLifeSmartSingleIORGBWLight:
         )
         # 根据文档，关灯命令是 type=0x80, val=0
         mock_client._async_send_single_command.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, "0x80", 0
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0x80, 0
         )
 
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
@@ -625,8 +625,8 @@ class TestLifeSmartDualIORGBWLight:
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_OFF, "val": 0},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
+                {"idx": self.COLOR_IO, "type": 0x80, "val": 0},
+                {"idx": self.EFFECT_IO, "type": 0x80, "val": 0},
             ],
         )
         # Turn On (no params)
@@ -658,10 +658,10 @@ class TestLifeSmartDualIORGBWLight:
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_ON, "val": 1},
+                {"idx": self.COLOR_IO, "type": 0x81, "val": 1},
                 {
                     "idx": self.EFFECT_IO,
-                    "type": CMD_TYPE_SET_RAW,
+                    "type": 0xFF,
                     "val": DYN_EFFECT_MAP["魔力红"],
                 },
             ],
@@ -690,8 +690,8 @@ class TestLifeSmartDualIORGBWLight:
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_SET_RAW, "val": expected_val},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
+                {"idx": self.COLOR_IO, "type": 0xFF, "val": expected_val},
+                {"idx": self.EFFECT_IO, "type": 0x80, "val": 0},
             ],
         )
 
@@ -777,7 +777,7 @@ class TestLifeSmartSPOTRGBLight:
         )
         assert hass.states.get(self.ENTITY_ID).state == STATE_ON
         mock_client._async_send_single_command.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, CMD_TYPE_ON, 1
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0x81, 1
         )
 
     async def test_attribute_services(
@@ -799,7 +799,7 @@ class TestLifeSmartSPOTRGBLight:
             self.HUB_ID,
             self.DEVICE_ME,
             self.SUB_KEY,
-            CMD_TYPE_SET_RAW,
+            0xFF,
             DYN_EFFECT_MAP["魔力红"],
         )
         # Test Color
@@ -813,7 +813,7 @@ class TestLifeSmartSPOTRGBLight:
         assert state.attributes.get(ATTR_RGB_COLOR) == (10, 20, 30)
         assert state.attributes.get(ATTR_EFFECT) is None
         mock_client._async_send_single_command.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, CMD_TYPE_SET_RAW, 0x0A141E
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0xFF, 0x0A141E
         )
 
     @pytest.mark.parametrize(
@@ -886,7 +886,7 @@ class TestLifeSmartSPOTRGBLight:
             self.HUB_ID,
             self.DEVICE_ME,
             self.SUB_KEY,
-            CMD_TYPE_SET_RAW,
+            0xFF,
             expected_api_val,
         )
 
@@ -957,8 +957,8 @@ class TestLifeSmartSPOTRGBWLight:
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_OFF, "val": 0},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
+                {"idx": self.COLOR_IO, "type": 0x80, "val": 0},
+                {"idx": self.EFFECT_IO, "type": 0x80, "val": 0},
             ],
         )
         # Turn On (no params)
@@ -987,10 +987,10 @@ class TestLifeSmartSPOTRGBWLight:
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_ON, "val": 1},
+                {"idx": self.COLOR_IO, "type": 0x81, "val": 1},
                 {
                     "idx": self.EFFECT_IO,
-                    "type": CMD_TYPE_SET_RAW,
+                    "type": 0xFF,
                     "val": DYN_EFFECT_MAP["魔力红"],
                 },
             ],
@@ -1019,8 +1019,8 @@ class TestLifeSmartSPOTRGBWLight:
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_SET_RAW, "val": expected_val},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
+                {"idx": self.COLOR_IO, "type": 0xFF, "val": expected_val},
+                {"idx": self.EFFECT_IO, "type": 0x80, "val": 0},
             ],
         )
 
