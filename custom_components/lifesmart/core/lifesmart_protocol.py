@@ -606,6 +606,8 @@ class LifeSmartPacketFactory:
 class LifeSmartLocalClient(LifeSmartClientBase):
     """LifeSmart 本地客户端，负责与中枢进行 TCP 通信。"""
 
+    IDLE_TIMEOUT = 65.0
+
     def __init__(self, host, port, username, password, config_agt=None) -> None:
         self.host, self.port, self.username, self.password = (
             host,
@@ -616,7 +618,7 @@ class LifeSmartLocalClient(LifeSmartClientBase):
         self.reader: asyncio.StreamReader | None = None
         self.writer: asyncio.StreamWriter | None = None
         self._proto = LifeSmartProtocol()
-        self._factory: LifeSmartPacketFactory | None = None
+        self._factory: LifeSmartPacketFactory = LifeSmartPacketFactory("", "")
         self.disconnected = False
         self.device_ready = asyncio.Event()
         self.devices, self.node, self.node_agt = {}, "", ""
@@ -637,8 +639,7 @@ class LifeSmartLocalClient(LifeSmartClientBase):
         """断开与本地客户端的连接。"""
         _LOGGER.info("请求断开本地客户端连接。")
         self.disconnected = True
-        if self.writer:
-            self.writer.close()
+        # 只取消任务，让任务自己的 finally 块来处理关闭
         if self._connect_task and not self._connect_task.done():
             self._connect_task.cancel()
 
@@ -736,7 +737,9 @@ class LifeSmartLocalClient(LifeSmartClientBase):
                 while not self.disconnected:
                     # 为读取操作增加超时，防止无限期阻塞
                     try:
-                        buf = await asyncio.wait_for(self.reader.read(4096), timeout=65)
+                        buf = await asyncio.wait_for(
+                            self.reader.read(4096), timeout=self.IDLE_TIMEOUT
+                        )
                     except asyncio.TimeoutError:
                         if stage == "loaded":
                             _LOGGER.debug("连接空闲超时，发送心跳包以维持连接...")
@@ -792,6 +795,7 @@ class LifeSmartLocalClient(LifeSmartClientBase):
                             )
 
                             if stage == "login":
+
                                 if _safe_get(decoded, 1, "ret") is None:
                                     _LOGGER.error(
                                         "本地登录失败 -> %s",
@@ -812,9 +816,8 @@ class LifeSmartLocalClient(LifeSmartClientBase):
                                     self.node,
                                     self.node_agt,
                                 )
-                                self._factory = LifeSmartPacketFactory(
-                                    self.node_agt, self.node
-                                )
+                                self._factory.node = self.node
+                                self._factory.node_agt = self.node_agt
                                 stage = "loading"
                                 pkt = self._factory.build_get_config_packet(self.node)
                                 self.writer.write(pkt)

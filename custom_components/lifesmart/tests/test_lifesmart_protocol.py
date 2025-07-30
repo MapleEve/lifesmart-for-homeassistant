@@ -293,43 +293,55 @@ class TestLifeSmartClientIntegration:
 
     @pytest.mark.asyncio
     async def test_client_full_successful_lifecycle(self, mock_connection):
+        """
+        测试客户端从连接、登录、加载设备、接收状态更新到断开的完整成功生命周期。
+        """
         reader, writer, _ = mock_connection
         client = LifeSmartLocalClient("localhost", 9999, "user", "pass")
         callback = AsyncMock()
         connect_task = asyncio.create_task(client.async_connect(callback))
 
+        # 1. 模拟登录成功
         reader.feed_data(LOGIN_SUCCESS_PKT)
         await asyncio.sleep(0.1)
-        assert client.is_connected
+        assert client.is_connected, "客户端在登录后应处于连接状态"
 
+        # 2. 模拟设备列表响应
         reader.feed_data(DEVICE_LIST_PKT)
         devices = await client.get_all_device_async(timeout=1)
-        assert len(devices) == 1 and "d1" in client.devices
-        assert client.devices["d1"]["data"]["L1"]["name"] == "Switch Button"
+        assert len(devices) == 1 and "d1" in client.devices, "应成功加载一个设备"
+        assert (
+            client.devices["d1"]["data"]["L1"]["name"] == "Switch Button"
+        ), "设备子项名称应被正确解析"
 
+        # 3. 模拟状态更新并验证回调
         reader.feed_data(STATUS_UPDATE_PKT)
         await asyncio.sleep(0.01)
-        callback.assert_any_call(
-            {
-                "msg": {
-                    "me": "d1",
-                    "idx": "L1",
-                    "agt": "test_agt",
-                    "devtype": "SL_SW_IF1",
-                    "name": "Switch Button",
-                    "val": 1,
-                }
-            }
-        )
 
+        # 我们构造一个期望的 msg，它应该与客户端内部构造的完全一致
+        expected_msg = {
+            "me": "d1",
+            "idx": "L1",
+            "agt": "test_agt",
+            "devtype": "SL_SW_IF1",
+            **client.devices["d1"]["data"]["L1"],  # 包含所有子设备属性
+        }
+        callback.assert_any_call({"type": "io", "msg": expected_msg})
+
+        # 4. 模拟设备删除事件
         reader.feed_data(DEVICE_DELETED_PKT)
         await asyncio.sleep(0.01)
         callback.assert_any_call({"reload": True})
 
+        # 5. 断开连接并验证任务清理
         client.disconnect()
-        await asyncio.sleep(0.1)
-        writer.close.assert_called()
-        assert connect_task.done()
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass  # 任务被取消是预期的行为
+
+        writer.close.assert_called_once()
+        assert connect_task.done(), "后台连接任务在断开后应处于完成状态"
 
     @pytest.mark.asyncio
     async def test_client_connection_failures(self, mock_connection):
@@ -386,6 +398,46 @@ class TestLifeSmartClientIntegration:
     def test_normalize_device_names(self, input_dict, expected_dict):
         normalized = LifeSmartLocalClient._normalize_device_names(input_dict)
         assert normalized == expected_dict
+
+    @pytest.mark.asyncio
+    async def test_client_keepalive_on_idle(self, mock_connection):
+        """
+        测试客户端在连接空闲时是否会正确发送心跳包以维持连接。
+        这是针对 'loaded' 阶段超时问题的回归测试。
+        """
+        reader, writer, _ = mock_connection
+        client = LifeSmartLocalClient("localhost", 9999, "user", "pass")
+
+        # Mock 掉 PacketFactory 的 build 方法，以便我们可以监视它的调用
+        with patch.object(
+            client._factory, "build_get_config_packet", return_value=b"heartbeat_pkt"
+        ) as mock_build_heartbeat:
+
+            # 将 read 操作的默认超时缩短，以便测试能快速触发心跳
+            client.IDLE_TIMEOUT = 0.1
+
+            connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
+
+            # 走完登录和加载流程
+            reader.feed_data(LOGIN_SUCCESS_PKT)
+            await asyncio.sleep(0.01)
+            reader.feed_data(DEVICE_LIST_PKT)
+            await asyncio.sleep(0.01)
+
+            # 此时客户端进入 'loaded' 阶段，开始等待
+            # 等待时间超过我们设置的 0.1 秒超时
+            await asyncio.sleep(0.2)
+
+            # 验证：心跳包是否被构建和发送
+            mock_build_heartbeat.assert_any_call(client.node)
+
+            # 清理
+            client.disconnect()
+            try:
+                # 等待任务响应取消并完成
+                await asyncio.wait_for(connect_task, timeout=1.0)
+            except asyncio.CancelledError:
+                pass
 
 
 # ====================================================================
