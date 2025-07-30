@@ -33,7 +33,6 @@ from custom_components.lifesmart.const import (
     FAN_HIGH,
     NON_POSITIONAL_COVER_CONFIG,
 )
-# 修改后：从新的 core 路径导入
 from custom_components.lifesmart.core.lifesmart_protocol import (
     LifeSmartProtocol,
     LifeSmartPacketFactory,
@@ -438,7 +437,7 @@ class TestLifeSmartClientControlMethods:
                 "stop_cover_async",
                 "P3",
                 CMD_TYPE_SET_CONFIG,
-                CMD_TYPE_OFF,  # 修改后：使用字符串常量
+                CMD_TYPE_OFF,
             ),
             (list(DOOYA_TYPES)[0], "open_cover_async", "P2", CMD_TYPE_SET_VAL, 100),
             (list(DOOYA_TYPES)[0], "close_cover_async", "P2", CMD_TYPE_SET_VAL, 0),
@@ -447,7 +446,7 @@ class TestLifeSmartClientControlMethods:
                 "stop_cover_async",
                 "P2",
                 CMD_TYPE_SET_CONFIG,
-                CMD_TYPE_OFF,  # 修改后：使用字符串常量
+                CMD_TYPE_OFF,
             ),
             (
                 "SL_SW_WIN",
@@ -655,7 +654,7 @@ class TestLifeSmartClientControlMethods:
 
     @pytest.mark.asyncio
     async def test_async_send_multi_command(self, mocked_client: LifeSmartLocalClient):
-        """修改后：测试新的抽象方法"""
+        """测试新的抽象方法"""
         io_list = [{"idx": "RGBW", "val": 12345}, {"idx": "DYN", "val": 0}]
         with patch.object(
             mocked_client._factory, "build_multi_epset_packet", return_value=b"packet"

@@ -1,5 +1,8 @@
 """
-共享的 pytest fixtures，用于 LifeSmart 集成测试。
+共享的 pytest fixtures，用于 LifeSmart 集成测试。 @MapleEve
+
+此文件是整个测试框架的基石，旨在提供可复用的、一致的模拟数据和环境。
+将所有核心的模拟设备、客户端和配置项统一定义在此处，以确保所有测试用例都在可预测和标准化的基础上运行。
 """
 
 import asyncio
@@ -34,21 +37,29 @@ def verify_cleanup(
     expected_lingering_timers: bool,
 ) -> Generator[None, None, None]:
     """
-    一个被覆盖的清理验证 fixture。
+    一个被覆盖的清理验证 fixture，用于确保测试之间没有资源泄露。
 
-    1. 移除了对内部变量 'INSTANCES' 的脆弱依赖。
-    2. 移除了导致导入错误的 'long_repr_strings' 上下文管理器。
+    此 fixture 在每个测试运行前后执行，用于捕获并报告任何未被正确清理的
+    异步任务、定时器或线程。这对于维护一个稳定、可靠的测试套件至关重要，
+    可以防止一个测试的副作用影响到后续的测试。
+
+    覆盖原因:
+    1. 移除了对 `pytest-homeassistant-custom-component` 内部变量 'INSTANCES'
+       的脆弱依赖，以增强健壮性。
+    2. 移除了可能导致导入错误的 'long_repr_strings' 上下文管理器。
     3. 在线程检查中断言中，明确允许名为 '_run_safe_shutdown_loop' 的线程存在，
-       以解决顽固的线程泄露断言失败问题。
+       这是为了解决在某些 CI 环境下顽固的线程泄露断言失败问题。
     """
+    # 记录测试开始前的状态
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
-    yield
 
+    yield  # 执行测试用例
+
+    # --- 测试结束后的清理与验证 ---
     event_loop.run_until_complete(event_loop.shutdown_default_executor())
 
-    # Warn and clean-up lingering tasks and timers
-    # before moving on to the next test.
+    # 检查并警告/失败于残留的异步任务
     tasks = asyncio.all_tasks(event_loop) - tasks_before
     for task in tasks:
         if expected_lingering_tasks:
@@ -59,6 +70,7 @@ def verify_cleanup(
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
+    # 检查并警告/失败于残留的定时器
     for handle in get_scheduled_timer_handles(event_loop):
         if not handle.cancelled():
             if expected_lingering_timers:
@@ -71,7 +83,7 @@ def verify_cleanup(
                 pytest.fail(f"Lingering timer after test {handle!r}")
             handle.cancel()
 
-    # Verify no threads where left behind.
+    # 验证没有泄露的线程
     threads = frozenset(threading.enumerate()) - threads_before
     for thread in threads:
         assert (
@@ -84,7 +96,12 @@ def verify_cleanup(
 # --- 统一的模拟配置 ---
 @pytest.fixture(name="mock_config_data")
 def mock_config_data_fixture():
-    """提供标准的模拟配置数据。"""
+    """
+    提供标准的模拟配置数据。
+
+    这个 Fixture 封装了一套标准的云端模式配置信息，用于在测试中创建
+    `MockConfigEntry`。这确保了所有测试都使用一致的凭据，简化了测试的编写。
+    """
     return {
         CONF_LIFESMART_APPKEY: "mock_appkey",
         CONF_LIFESMART_APPTOKEN: "mock_apptoken",
@@ -97,7 +114,17 @@ def mock_config_data_fixture():
 # --- 统一的模拟设备列表 ---
 @pytest.fixture(name="mock_lifesmart_devices")
 def mock_lifesmart_devices_fixture():
-    """一个全面的模拟设备列表，覆盖所有平台的测试需求。"""
+    """
+    一个全面的模拟设备列表，覆盖所有平台的测试需求。
+
+    这个 Fixture 是许多集成测试的核心。它提供了一个包含各种设备类型
+    （开关、灯、传感器、温控器等）的列表，模拟了一个真实用户的完整家庭环境。
+
+    用途:
+    - 用于 `setup_integration` Fixture，以在 Home Assistant 中创建所有这些设备对应的实体。
+    - 用于测试平台级别的功能，例如，确保 `climate` 平台在初始化时不会错误地创建 `switch` 实体。
+    - 用于测试设备排除逻辑。
+    """
     return [
         # --- Switch Devices ---
         # 1. 标准三路开关 (SUPPORTED_SWITCH_TYPES)
@@ -134,7 +161,7 @@ def mock_lifesmart_devices_fixture():
                 "P1": {"type": 129},
                 "P2": {"type": 128},
                 "P3": {"type": 129},
-                "P5": {"val": 1},
+                "P5": {"val": 1},  # P5=1 表示其为开关模式
             },
         },
         # 5 通用控制器（三路开关模式）
@@ -357,12 +384,7 @@ def mock_lifesmart_devices_fixture():
             "me": "sensor_boundary",
             "devtype": "SL_SC_THL",
             "name": "Boundary Test Sensor",
-            "data": {
-                "T": {"val": 0},  # Zero value
-                "H": {},  # Empty data
-                "Z": {"val": "invalid_string"},  # Invalid data type
-                # 'V' key is completely missing
-            },
+            "data": {"T": {"val": 0}, "H": {}, "Z": {"val": "invalid_string"}},
         },
         # --- Cover Devices ---
         {
@@ -484,7 +506,11 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 def mock_client_class(mock_lifesmart_devices):
     """
     一个高级 fixture，它 patch LifeSmartClient 类并返回这个类的 Mock。
-    这允许测试根据需要控制 LifeSmartClient() 的返回值，对于测试重载至关重要。
+
+    这允许测试根据需要控制 `LifeSmartClient()` 的返回值，对于测试重载
+    (reload) 行为至关重要。通过 patch 类本身，我们可以确保每次调用
+    `hass.config_entries.async_reload` 时，后续的 `LifeSmartClient()`
+    调用都会返回一个我们可以控制的新实例。
     """
     with patch(
         "custom_components.lifesmart.core.lifesmart_client.LifeSmartClient",
@@ -503,6 +529,7 @@ def mock_client_class(mock_lifesmart_devices):
             "expiredtime": 9999999999,
         }
 
+        # 为所有设备控制方法预设一个异步 mock，以捕获调用
         instance.turn_on_light_switch_async = AsyncMock(return_value=0)
         instance.turn_off_light_switch_async = AsyncMock(return_value=0)
         instance.set_single_ep_async = AsyncMock(return_value=0)
@@ -525,15 +552,22 @@ def mock_client_class(mock_lifesmart_devices):
 def mock_client(mock_client_class):
     """
     提供一个默认的模拟 LifeSmartClient 实例。
-    这个 fixture 依赖于 mock_client_class，为不需要控制重载行为的
-    标准测试提供向后兼容性。
+
+    这个 fixture 依赖于 `mock_client_class`，为不需要控制重载行为的
+    标准测试提供向后兼容性。它只是简单地返回 `mock_client_class`
+    所创建的那个模拟实例。
     """
     return mock_client_class.return_value
 
 
 @pytest.fixture
 def mock_config_entry(mock_config_data) -> MockConfigEntry:
-    """提供一个模拟的 ConfigEntry 实例。"""
+    """
+    提供一个模拟的 ConfigEntry 实例。
+
+    这个 Fixture 使用 `mock_config_data` 来创建一个标准的、可用于测试的
+    `MockConfigEntry` 对象，并预设了排除选项，用于测试相关的逻辑。
+    """
     return MockConfigEntry(
         domain=DOMAIN,
         data=mock_config_data,
@@ -550,7 +584,9 @@ def mock_config_entry(mock_config_data) -> MockConfigEntry:
 def mock_state_manager_class():
     """
     一个高级 fixture，它 patch LifeSmartStateManager 类并返回这个类的 Mock。
-    这允许我们验证其方法（如 start, stop）是否被正确调用。
+
+    这允许我们验证其方法（如 `start`, `stop`）是否在集成的生命周期中
+    （设置、卸载、重载）被正确调用。
     """
     with patch(
         "custom_components.lifesmart.LifeSmartStateManager", autospec=True
@@ -573,6 +609,15 @@ async def setup_integration(
 ):
     """
     一个统一的 fixture，用于完整地设置和加载 LifeSmart 集成及其所有平台。
+
+    这是绝大多数集成测试的入口点。它执行了以下操作：
+    1. 将模拟的 `ConfigEntry` 添加到 Home Assistant。
+    2. Patch 掉真实的客户端创建和设备获取过程，注入模拟数据。
+    3. Patch 掉 `LifeSmartStateManager` 以便进行行为验证。
+    4. 触发 `async_setup` 流程。
+    5. 验证集成是否成功加载。
+    6. 将控制权交给测试用例。
+    7. 在测试结束后，自动执行卸载流程，并验证卸载是否成功。
     """
     mock_config_entry.add_to_hass(hass)
 
@@ -584,7 +629,7 @@ async def setup_integration(
     with patch(
         "custom_components.lifesmart._async_create_client_and_get_devices",
         return_value=create_client_return_value,
-    ) as mock_create_client, patch(
+    ), patch(
         "custom_components.lifesmart.LifeSmartStateManager",
         new=mock_state_manager_class,
     ):
@@ -600,6 +645,7 @@ async def setup_integration(
     # 将控制权交给测试用例
     yield mock_config_entry
 
+    # --- 测试结束后的清理 ---
     # 在卸载之前，手动检查并取消任何可能由本地连接测试遗留的后台任务
     entry_id = mock_config_entry.entry_id
     if (
@@ -617,3 +663,145 @@ async def setup_integration(
 
     # 验证集成已成功卸载
     assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+# ============================================================================
+# === 为 Climate 平台隔离测试专用的原子设备 Fixtures ===
+#
+# 设计说明:
+# 以下 Fixtures 是对您现有 `mock_lifesmart_devices` 的补充，而非替代。
+# 它们提供了独立的、可按需注入的“原材料”，专门用于对 Climate 平台下
+# 的特定设备进行深度、隔离的测试。
+#
+# - `mock_lifesmart_devices` 用于测试“全局”行为（如启动时加载所有实体）。
+# - 下方的“原子” Fixtures 用于测试“个体”行为（如单个风机盘管的状态机切换），
+#   确保测试的纯净性，不受其他设备干扰。
+#
+# 这种分离的设计，使得测试的意图更加清晰，维护也更加方便。
+# ============================================================================
+
+
+@pytest.fixture
+def mock_device_climate_fancoil() -> dict:
+    """
+    提供一个标准的风机盘管设备 (SL_CP_AIR) 的模拟数据。
+
+    此设备的状态由一个位掩码 (bitmask) `P1` 控制，这是测试的重点。
+    - 初始状态: 制热模式 (Heat) + 低风速 (Low)。
+      - `val` 的第 13 位为 1: 代表制热模式 (HEAT)。
+      - `val` 的第 15 位为 1: 代表低风速 (FAN_LOW)。
+      - 计算: `(1 << 15) | (1 << 13)`
+    - 初始温度:
+      - `P4`: 目标温度 (target_temperature) 为 24.0。
+      - `P5`: 当前温度 (current_temperature) 为 26.0。
+    """
+    return {
+        "agt": "hub_climate",
+        "me": "climate_fancoil",
+        "devtype": "SL_CP_AIR",
+        "name": "Fan Coil Unit",
+        "data": {
+            "P1": {"type": 1, "val": (1 << 15) | (1 << 13)},
+            "P4": {"v": 24.0},
+            "P5": {"v": 26.0},
+        },
+    }
+
+
+@pytest.fixture
+def mock_device_climate_floor_heat() -> dict:
+    """
+    提供一个标准的地暖设备 (SL_CP_DN) 的模拟数据。
+
+    - 初始状态: 自动模式 (Auto)。
+      - `P1` 的 `val` 为 `2147483648` (0x80000000)，根据协议，这代表自动模式。
+    - 初始温度:
+      - `P3`: 目标温度 (target_temperature) 为 25.0。
+      - `P4`: 当前温度 (current_temperature) 为 22.5。
+    """
+    return {
+        "agt": "hub_climate",
+        "me": "climate_floor_heat",
+        "devtype": "SL_CP_DN",
+        "name": "Floor Heating",
+        "data": {
+            "P1": {"type": 1, "val": 2147483648},
+            "P3": {"v": 25.0},
+            "P4": {"v": 22.5},
+        },
+    }
+
+
+@pytest.fixture
+def mock_device_climate_nature_fancoil() -> dict:
+    """
+    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制“风机盘管”。
+
+    SL_NATURE 面板是一个多功能设备，其具体功能由内部数据点决定。
+    - `P5` 的 `val` 为 3: 表示此面板工作在“温控器”模式下。
+    - `P6` 的 `val` 为 `(4 << 6)`: 这是最关键的配置，定义了其控制的设备类型为
+      “风机盘管(双阀)”，这将决定实体支持的 `hvac_modes` 和 `fan_modes`。
+    """
+    return {
+        "agt": "hub_climate",
+        "me": "climate_nature_thermo",
+        "devtype": "SL_NATURE",
+        "name": "Nature Panel Thermo",
+        "data": {
+            "P1": {"type": 129, "val": 1},
+            "P4": {"v": 28.0},
+            "P5": {"val": 3},
+            "P6": {"val": (4 << 6)},
+            "P7": {"val": 1},
+            "P8": {"v": 26.0},
+            "P10": {"val": 15},
+        },
+    }
+
+
+@pytest.fixture
+def mock_device_climate_nature_freshair() -> dict:
+    """
+    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制“新风”。
+
+    - `P6` 的 `val` 为 `(0 << 6)`: 定义了其控制的设备类型为“新风”。
+    """
+    return {
+        "agt": "hub_climate",
+        "me": "climate_nature_thermo",
+        "devtype": "SL_NATURE",
+        "name": "Nature Panel Thermo",
+        "data": {
+            "P1": {"type": 129, "val": 1},
+            "P4": {"v": 28.0},
+            "P5": {"val": 3},
+            "P6": {"val": (0 << 6)},
+            "P7": {"val": 1},
+            "P8": {"v": 26.0},
+            "P10": {"val": 15},
+        },
+    }
+
+
+@pytest.fixture
+def mock_device_climate_nature_floorheat() -> dict:
+    """
+    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制“水地暖”。
+
+    - `P6` 的 `val` 为 `(2 << 6)`: 定义了其控制的设备类型为“水地暖”。
+    """
+    return {
+        "agt": "hub_climate",
+        "me": "climate_nature_thermo",
+        "devtype": "SL_NATURE",
+        "name": "Nature Panel Thermo",
+        "data": {
+            "P1": {"type": 129, "val": 1},
+            "P4": {"v": 28.0},
+            "P5": {"val": 3},
+            "P6": {"val": (2 << 6)},
+            "P7": {"val": 1},
+            "P8": {"v": 26.0},
+            "P10": {"val": 15},
+        },
+    }
