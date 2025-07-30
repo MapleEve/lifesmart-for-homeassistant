@@ -241,6 +241,7 @@ async def _async_create_client_and_get_devices(
                 config_entry.data[CONF_PORT],
                 config_entry.data[CONF_USERNAME],
                 config_entry.data[CONF_PASSWORD],
+                config_entry.entry_id,
             )
 
             async def local_update_callback(data):

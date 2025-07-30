@@ -171,6 +171,18 @@ class TestLifeSmartProtocolPacketHandling:
         remaining, decoded_packet = protocol.decode(encoded_data)
         assert not remaining and decoded_packet == original_packet_list
 
+    def test_encode_unsupported_type(self, protocol: LifeSmartProtocol, caplog):
+        """
+        覆盖场景: _pack_value 遇到不支持的类型。
+        目的: 验证程序会记录警告但不会崩溃。
+        """
+
+        class UnsupportedObject:
+            pass
+
+        protocol.encode([{"key": UnsupportedObject()}])
+        assert "不支持的打包类型" in caplog.text
+
     def test_compressed_packet_roundtrip(self, protocol: LifeSmartProtocol):
         large_object = [{"data": "X" * 2048}]
         encoded_data = protocol.encode(large_object)
@@ -183,6 +195,39 @@ class TestLifeSmartProtocolPacketHandling:
         encoded1, encoded2 = protocol.encode(packet1), protocol.encode(packet2)
         remaining, decoded1 = protocol.decode(encoded1 + encoded2)
         assert decoded1 == packet1 and remaining == encoded2
+
+    def test_decode_string_with_insufficient_data(self, protocol: LifeSmartProtocol):
+        """
+        覆盖场景: _parse_value 遇到一个声明长度与实际数据不符的字符串。
+        目的: 验证在这种情况下会正确抛出 EOFError。
+        """
+        # 模拟一个声明长度为 10，但实际没有负载的字符串
+        # 0x0a 是 10 的 varint 编码
+        bad_str_packet = b"\x0a"
+
+        with pytest.raises(EOFError, match="字符串数据不足"):
+            # 我们直接调用 _parse_value 来隔离测试，并传入类型码 0x11
+            protocol._parse_value(BytesIO(bad_str_packet), 0x11)
+
+    def test_decode_incomplete_hex_or_timestamp(self, protocol: LifeSmartProtocol):
+        """
+        覆盖场景: _parse_value 解析HEX或时间戳时数据流提前结束。
+        目的: 验证对不完整数据块的 EOFError 抛出。
+        """
+        # --- 测试 HEX 数据不完整 ---
+        # 模拟一个只有类型码和索引，但没有8字节数据的HEX包
+        incomplete_hex_packet = b"\x01\x11\x22\x33"  # 只有4字节数据
+        with pytest.raises(EOFError, match="HEX 数据不完整"):
+            # 传入正确的类型码 0x05
+            protocol._parse_value(BytesIO(incomplete_hex_packet), 0x05)
+
+        # --- 测试时间戳数据不完整 ---
+        # 模拟一个只有类型码和索引，但没有varint数据的时间戳包
+        incomplete_ts_packet = b"\x01"
+        with pytest.raises(EOFError):
+            # 传入正确的类型码 0x06
+            # 时间戳的EOFError没有特定消息，所以不使用 match
+            protocol._parse_value(BytesIO(incomplete_ts_packet), 0x06)
 
 
 class TestLifeSmartProtocolErrorsAndBoundaries:
@@ -222,6 +267,53 @@ class TestLifeSmartProtocolErrorsAndBoundaries:
 # ====================================================================
 # Section 2: LifeSmartPacketFactory 单元测试
 # ====================================================================
+class TestPacketFactoryCoverage:
+    """确保所有指令包都能被正确构建和解析。"""
+
+    @pytest.mark.parametrize(
+        "factory_method_name",
+        [
+            "build_change_icon_packet",
+            "build_add_trigger_packet",
+            "build_del_ai_packet",
+            "build_ir_control_packet",
+            "build_send_code_packet",
+            "build_ir_raw_control_packet",
+            "build_set_eeprom_packet",
+            "build_add_timer_packet",
+        ],
+    )
+    def test_all_factory_methods_roundtrip(
+        self,
+        factory: LifeSmartPacketFactory,
+        protocol: LifeSmartProtocol,
+        factory_method_name,
+    ):
+        """
+        覆盖场景: 所有未在现有测试中明确验证的 build_* 方法。
+        目的: 确保所有指令都能成功编码并被解码回原始结构。
+        """
+        # 准备通用的模拟参数
+        mock_args = {
+            "build_change_icon_packet": ("dev1", "icon1"),
+            "build_add_trigger_packet": ("trigger1", "cmdlist1"),
+            "build_del_ai_packet": ("ai1",),
+            "build_ir_control_packet": ("dev_ir", {"opt": "val"}),
+            "build_send_code_packet": ("dev_ir", [1, 2, 3]),
+            "build_ir_raw_control_packet": ("dev_ir", '{"key":"val"}'),
+            "build_set_eeprom_packet": ("dev1", "key1", "val1"),
+            "build_add_timer_packet": ("dev1", "cron1", "key1"),
+        }
+
+        method_to_test = getattr(factory, factory_method_name)
+        packet = method_to_test(*mock_args[factory_method_name])
+
+        # 验证可以成功解码，没有异常
+        _, decoded = protocol.decode(packet)
+
+        # 验证基本结构
+        assert isinstance(decoded, list) and len(decoded) == 2
+        assert "args" in decoded[1]
 
 
 class TestPacketFactoryUnit:
@@ -357,6 +449,60 @@ class TestTCPClientIntegration:
         client_fail = LifeSmartLocalTCPClient("valid.host", 1234, "u", "p")
         await asyncio.wait_for(client_fail.async_connect(None), timeout=1)
         assert client_fail.disconnected is True
+
+    @pytest.mark.asyncio
+    async def test_check_login_fails_on_auth_error(self, mock_connection):
+        """
+        覆盖场景: check_login 收到登录失败包。
+        目的: 验证 check_login 会正确抛出异常。
+        """
+        reader, _, _ = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "u", "p")
+
+        # 模拟服务器返回登录失败
+        reader.feed_data(LOGIN_FAILURE_PKT)
+
+        with pytest.raises(asyncio.InvalidStateError, match="Login failed"):
+            await client.check_login()
+
+    @pytest.mark.asyncio
+    async def test_connect_logs_error_on_login_failure(self, mock_connection, caplog):
+        """
+        覆盖场景: async_connect 在登录阶段收到失败响应。
+        目的: 验证会记录错误日志，并设置 disconnected 标志。
+        """
+        reader, _, _ = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "u", "p")
+
+        # 模拟登录失败
+        reader.feed_data(LOGIN_FAILURE_PKT)
+
+        # 运行连接任务，它应该在登录失败后退出循环
+        await asyncio.wait_for(client.async_connect(AsyncMock()), timeout=1.0)
+
+        assert "本地登录失败" in caplog.text
+        assert client.disconnected is True
+
+    @pytest.mark.asyncio
+    async def test_get_all_devices_returns_false_on_timeout(self, mock_connection):
+        """
+        覆盖场景: get_all_device_async 等待超时。
+        目的: 验证在无法获取设备列表时，系统能优雅地失败。
+        """
+        reader, _, _ = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "u", "p")
+
+        # 启动连接任务，但从不发送设备列表包
+        asyncio.create_task(client.async_connect(AsyncMock()))
+        reader.feed_data(LOGIN_SUCCESS_PKT)
+        await asyncio.sleep(0.1)
+
+        # 调用 get_all_device_async 并设置一个很短的超时
+        devices = await client.get_all_device_async(timeout=0.2)
+        assert devices is False
+
+        # 清理
+        client.disconnect()
 
     @pytest.mark.asyncio
     async def test_send_packet_returns_error_if_not_connected(self):

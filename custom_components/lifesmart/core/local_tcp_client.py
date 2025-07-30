@@ -23,11 +23,12 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
     IDLE_TIMEOUT = 65.0
 
     def __init__(self, host, port, username, password, config_agt=None) -> None:
-        self.host, self.port, self.username, self.password = (
+        self.host, self.port, self.username, self.password, self.config_agt = (
             host,
             port,
             username,
             password,
+            config_agt,
         )
         self.reader: asyncio.StreamReader | None = None
         self.writer: asyncio.StreamWriter | None = None

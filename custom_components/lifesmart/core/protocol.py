@@ -118,7 +118,9 @@ class LifeSmartProtocol:
         while True:
             byte = stream.read(1)
             if not byte:
-                break
+                # 如果我们期望读取一个字节但流已耗尽，这总是一个错误。
+                # 这同时覆盖了“初始流为空”和“多字节varint不完整”两种情况。
+                raise EOFError("Incomplete varint data in stream.")
             b = ord(byte)
             value |= (b & 0x7F) << shift
             if not (b & 0x80):
@@ -133,14 +135,17 @@ class LifeSmartProtocol:
 
     def _pack_value(self, value, isKey=False):
         """递归地将 Python 对象打包成二进制格式。"""
-        if isinstance(value, bool):
+
+        if isinstance(value, bool):  # 处理布尔值
             return b"\x02" if value else b"\x03"
-        if isinstance(value, int):
+
+        if isinstance(value, int):  # 处理整数
             if not -0x80000000 <= value <= 0x7FFFFFFF:
                 raise ValueError(f"int 超出 32-bit 有符号范围: {value}")
             zz = (value << 1) ^ (value >> 31)
             return b"\x04" + self._encode_varint(zz)
-        if isinstance(value, str):
+
+        if isinstance(value, str):  # 处理字符串
             if value == "::NULL::":
                 return b"\x11\x08::NULL::"
             if value.startswith("enum:"):
@@ -151,18 +156,25 @@ class LifeSmartProtocol:
                 enum_id = self.REVERSE_KEY_MAPPING.get(value)
                 return struct.pack("BB", 0x13, enum_id)
             return self._string_to_bin(value)
-        if isinstance(value, list):
+
+        if isinstance(value, bytes):  # 处理字节串
+            # 像处理字符串一样，添加类型码(0x11)和长度，然后附加原始字节
+            return b"\x11" + self._encode_varint(len(value)) + value
+
+        if isinstance(value, list):  # 处理列表
             if not value:
                 return b"\x01"
             data = b"\x12" + struct.pack("B", len(value))
             for i, item in enumerate(value):
                 data += self._pack_value(i) + self._pack_value(item)
             return data
-        if isinstance(value, dict):
+
+        if isinstance(value, dict):  # 处理字典
             data = b"\x12" + struct.pack("B", len(value))
             for k, v in value.items():
                 data += self._pack_value(k, True) + self._pack_value(v)
             return data
+
         if value is None:
             return b"\x00"
         _LOGGER.warning("不支持的打包类型: %s", type(value))
@@ -226,28 +238,30 @@ class LifeSmartProtocol:
                 value = (zz >> 1) ^ -(zz & 1)
                 return LSTimestamp(index=index, value=value, raw_data=b"")
 
-            elif data_type == 0x11:  # String
+            elif data_type == 0x11:  # String or Bytes
                 length = self._decode_varint(stream)
-                if length < 0:
-                    raise ValueError("负的字符串长度")
                 raw = stream.read(length)
                 if len(raw) != length:
                     raise EOFError("字符串数据不足")
+
                 try:
+                    # 优先尝试解码为UTF-8字符串
                     return raw.decode("utf-8")
                 except UnicodeDecodeError:
-                    return raw.decode("utf-8", errors="replace")
+                    # 如果解码失败，说明它很可能不是一个字符串，而是原始的二进制数据
+                    _LOGGER.debug("UTF-8解码失败，将数据作为原始bytes返回: %s", raw)
+                    return raw
 
             elif data_type == 0x12:  # Array/Dict
                 count = ord(stream.read(1))
                 items = []
                 for i in range(count):
                     if stream.tell() >= len(stream.getvalue()):
-                        raise EOFError(f"解析第 { i + 1 }/{count} 个键时数据流提前结束")
+                        raise EOFError(f"解析第{i + 1}/{count}个键时数据流提前结束")
                     key_type = ord(stream.read(1))
                     key = self._parse_value(stream, key_type, f"{call_stack}[{i}].key")
                     if stream.tell() >= len(stream.getvalue()):
-                        raise EOFError(f"解析第 { i + 1 }/{count} 个值时数据流提前结束")
+                        raise EOFError(f"解析第{i + 1}/{count}个值时数据流提前结束")
                     value_type = ord(stream.read(1))
                     value = self._parse_value(
                         stream, value_type, f"{call_stack}[{i}].val"
@@ -536,7 +550,7 @@ class LifeSmartPacketFactory:
     def build_send_code_packet(self, devid: str, data: list | bytes) -> bytes:
         """构建发送原始红外码的指令包。"""
         if isinstance(data, list):
-            data = bytes(["C*"] + data)
+            data = "C*".encode("ascii") + bytes(data)
         args = {
             "ctrlcmd": "sendcode",
             "enum:valtag": "m",

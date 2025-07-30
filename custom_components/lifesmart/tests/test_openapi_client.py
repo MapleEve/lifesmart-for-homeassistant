@@ -656,3 +656,82 @@ async def test_control_helpers_with_unsupported_device(client, caplog):
         mock_set.assert_not_called()
         assert "UNSUPPORTED_TYPE" in caplog.text
         assert "不支持风扇模式" in caplog.text
+
+
+class TestOAPIClientErrorHandling:
+    """专注于 OpenAPI 客户端的错误处理和边界情况。"""
+
+    @pytest.mark.asyncio
+    async def test_login_async_no_credentials(self, client: LifeSmartOAPIClient):
+        """
+        覆盖场景: 在没有提供 userid 或 apppassword 时调用 login_async。
+        目的: 验证会提前失败并抛出正确的异常。
+        """
+        client._userid = ""
+        with pytest.raises(LifeSmartAuthError, match="用户名或应用密码无效"):
+            await client.login_async()
+
+        client._userid = "user"
+        client._apppassword = ""
+        with pytest.raises(LifeSmartAuthError, match="用户名或应用密码无效"):
+            await client.login_async()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "bad_response",
+        [
+            {"code": 0, "message": "not_a_list"},
+            {"code": 0, "message": None},
+            {"code": 0},  # no message key
+        ],
+    )
+    async def test_get_list_methods_handle_malformed_response(
+        self, client, mock_async_call_api, bad_response
+    ):
+        """
+        覆盖场景: get_agt_list_async, get_all_device_async 等方法收到非列表格式的 'message'。
+        目的: 验证这些方法会返回一个安全的空列表，而不是崩溃。
+        """
+        mock_async_call_api.return_value = bad_response
+
+        result = await client.get_agt_list_async()
+        assert result == []
+
+        result = await client.async_get_all_devices()
+        assert result == []
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "bad_response",
+        [
+            {"code": 0, "message": "not_a_dict"},
+            {"code": 0, "message": None},
+            {"code": 0, "message": []},  # EpGet 返回的是列表，但可能为空
+        ],
+    )
+    async def test_get_dict_methods_handle_malformed_response(
+        self, client, mock_async_call_api, bad_response
+    ):
+        """
+        覆盖场景: get_agt_details_async, get_epget_async 等方法收到非字典格式的 'message'。
+        目的: 验证这些方法会返回一个安全的空字典。
+        """
+        mock_async_call_api.return_value = bad_response
+
+        result = await client.get_agt_details_async("agt1")
+        assert result == {}
+
+        result = await client.get_epget_async("agt1", "me1")
+        assert result == {}
+
+    def test_get_code_from_response_handles_all_bad_inputs(
+        self, client: LifeSmartOAPIClient
+    ):
+        """
+        覆盖场景: _get_code_from_response 收到各种无效输入。
+        目的: 100% 覆盖这个工具函数的健壮性。
+        """
+        assert client._get_code_from_response(None, "test") == -1
+        assert client._get_code_from_response("not_a_dict", "test") == -1
+        assert client._get_code_from_response({}, "test") == -1  # missing 'code'
+        assert client._get_code_from_response({"code": "not_an_int"}, "test") == -1

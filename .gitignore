@@ -11,3 +11,6 @@ custom_components/lifesmart/__pycache__/*
 .idea_modules/
 __pycache__
 .pytest_cache
+
+/.coverage
+/coverage.xml
