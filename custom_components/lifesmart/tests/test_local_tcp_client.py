@@ -1,5 +1,5 @@
 """
-对 本地 TCP 的单元测试和集成测试
+对本地 TCP protocol.py 和 local_tcp_client.py 的单元测试和集成测试
 
 此测试套件包含四个主要部分：
 1.  对 LifeSmartProtocol 类的单元测试，验证核心数据类型的编解码及边界条件。
