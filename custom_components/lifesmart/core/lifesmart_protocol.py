@@ -17,6 +17,7 @@ import struct
 from collections import OrderedDict
 from dataclasses import dataclass
 from io import BytesIO
+from pprint import pformat
 from typing import Callable, Any
 
 from custom_components.lifesmart.const import (
@@ -605,6 +606,8 @@ class LifeSmartPacketFactory:
 class LifeSmartLocalClient(LifeSmartClientBase):
     """LifeSmart 本地客户端，负责与中枢进行 TCP 通信。"""
 
+    IDLE_TIMEOUT = 65.0
+
     def __init__(self, host, port, username, password, config_agt=None) -> None:
         self.host, self.port, self.username, self.password = (
             host,
@@ -615,7 +618,7 @@ class LifeSmartLocalClient(LifeSmartClientBase):
         self.reader: asyncio.StreamReader | None = None
         self.writer: asyncio.StreamWriter | None = None
         self._proto = LifeSmartProtocol()
-        self._factory: LifeSmartPacketFactory | None = None
+        self._factory: LifeSmartPacketFactory = LifeSmartPacketFactory("", "")
         self.disconnected = False
         self.device_ready = asyncio.Event()
         self.devices, self.node, self.node_agt = {}, "", ""
@@ -636,8 +639,7 @@ class LifeSmartLocalClient(LifeSmartClientBase):
         """断开与本地客户端的连接。"""
         _LOGGER.info("请求断开本地客户端连接。")
         self.disconnected = True
-        if self.writer:
-            self.writer.close()
+        # 只取消任务，让任务自己的 finally 块来处理关闭
         if self._connect_task and not self._connect_task.done():
             self._connect_task.cancel()
 
@@ -690,13 +692,13 @@ class LifeSmartLocalClient(LifeSmartClientBase):
                     # 这是一个预期的异常，如果连接已经被重置，可以忽略
                     pass
 
-    async def get_all_device_async(self, timeout=5):
-        """异步获取所有设备数据，带超时控制。"""
+    async def get_all_device_async(self, timeout=10):
+        """获取所有设备数据，带超时控制"""
         try:
             await asyncio.wait_for(self.device_ready.wait(), timeout=timeout)
             return list(self.devices.values()) if self.devices else []
-        except asyncio.TimeoutError as e:
-            _LOGGER.error("获取本地设备超时: %s", e)
+        except asyncio.TimeoutError:
+            _LOGGER.error("等待本地设备就绪超时 (timeout=%ds)", timeout)
             return False
 
     async def async_connect(self, callback: None | Callable):
@@ -733,17 +735,67 @@ class LifeSmartLocalClient(LifeSmartClientBase):
                 await self.writer.drain()
                 response, stage = b"", "login"
                 while not self.disconnected:
-                    buf = await self.reader.read(4096)
+                    # 为读取操作增加超时，防止无限期阻塞
+                    try:
+                        buf = await asyncio.wait_for(
+                            self.reader.read(4096), timeout=self.IDLE_TIMEOUT
+                        )
+                    except asyncio.TimeoutError:
+                        if stage == "loaded":
+                            _LOGGER.debug("连接空闲超时，发送心跳包以维持连接...")
+                            try:
+                                # 发送一个无害的 getconfig 包作为心跳检测，看是不是真的断了
+                                pkt = self._factory.build_get_config_packet(self.node)
+                                self.writer.write(pkt)
+                                await self.writer.drain()
+                                continue  # 发送心跳后，继续下一次 read 等待
+                            except Exception as e:
+                                _LOGGER.warning("发送心跳包失败，连接可能已断开: %s", e)
+                                break  # 心跳失败，则重连
+                        else:
+                            # 如果在 login 或 loading 阶段超时，说明确实有问题
+                            _LOGGER.error(
+                                "在 '%s' 阶段等待响应超时，将进行重连。", stage
+                            )
+                            break
+
                     if not buf:
-                        _LOGGER.warning("Socket 连接被对方关闭，将进行重连。")
+                        _LOGGER.warning(
+                            "Socket 连接被对方关闭 (在 '%s' 阶段)，将进行重连。", stage
+                        )
                         break
+                    _LOGGER.debug(
+                        "收到本地 %d 字节原始数据 <- : %s", len(buf), buf.hex(" ")
+                    )
                     response += buf
-                    if response:
+                    _LOGGER.debug(
+                        "当前响应缓冲区 (总长度 %d): %s",
+                        len(response),
+                        response.hex(" "),
+                    )
+                    while response:
                         try:
-                            response, decoded = self._proto.decode(response)
-                            if not decoded:
-                                continue
+                            _LOGGER.debug("尝试解码缓冲区数据...")
+                            remaining_response, decoded = self._proto.decode(response)
+                            if decoded is None:
+                                _LOGGER.error(
+                                    "解码器返回了 None，但未抛出异常。可能存在未知错误。清空缓冲区。"
+                                )
+                                response = b""
+                                break
+
+                            _LOGGER.debug(
+                                "🔑解码成功，解析出的结构: \n%s", pformat(decoded)
+                            )
+                            response = remaining_response
+                            _LOGGER.debug(
+                                "解码后剩余数据 (长度 %d): %s",
+                                len(response),
+                                response.hex(" ") if response else "无",
+                            )
+
                             if stage == "login":
+
                                 if _safe_get(decoded, 1, "ret") is None:
                                     _LOGGER.error(
                                         "本地登录失败 -> %s",
@@ -764,9 +816,8 @@ class LifeSmartLocalClient(LifeSmartClientBase):
                                     self.node,
                                     self.node_agt,
                                 )
-                                self._factory = LifeSmartPacketFactory(
-                                    self.node_agt, self.node
-                                )
+                                self._factory.node = self.node
+                                self._factory.node_agt = self.node_agt
                                 stage = "loading"
                                 pkt = self._factory.build_get_config_packet(self.node)
                                 self.writer.write(pkt)
@@ -796,42 +847,67 @@ class LifeSmartLocalClient(LifeSmartClientBase):
                                 _LOGGER.info(
                                     "成功加载 %d 个本地设备。", len(self.devices)
                                 )
-                                self.device_ready.set()
+                                self.device_ready.set()  # 通知 get_all_device_async 可以返回了
                                 stage = "loaded"
                             else:  # 实时状态推送
                                 if schg := _safe_get(decoded, 1, "_schg"):
+                                    _LOGGER.debug(
+                                        "收到本地状态更新 (_schg) <- : %s", schg
+                                    )
                                     for schg_key, schg_data in schg.items():
                                         if not isinstance(schg_key, str):
                                             continue
                                         parts = schg_key.split("/")
+
+                                        # 6段路径: agt/me/ep/devid/m/idx
+                                        # 5段路径 (兼容旧格式): agt/ep/devid/m/idx
+
+                                        dev_id, sub_key = None, None
+
                                         if (
+                                            len(parts) == 6
+                                            and parts[1] == "me"
+                                            and parts[2] == "ep"
+                                            and parts[4] == "m"
+                                        ):
+                                            dev_id, sub_key = parts[3], parts[5]
+                                        elif (
                                             len(parts) == 5
-                                            and parts[0] == self.node_agt
                                             and parts[1] == "ep"
                                             and parts[3] == "m"
                                         ):
                                             dev_id, sub_key = parts[2], parts[4]
-                                            if dev_id in self.devices:
-                                                device_data = self.devices[
-                                                    dev_id
-                                                ].setdefault("data", {})
-                                                sub_device_data = (
-                                                    device_data.setdefault(sub_key, {})
+
+                                        if (
+                                            dev_id
+                                            and sub_key
+                                            and dev_id in self.devices
+                                        ):
+                                            device_data = self.devices[
+                                                dev_id
+                                            ].setdefault("data", {})
+                                            sub_device_data = device_data.setdefault(
+                                                sub_key, {}
+                                            )
+                                            sub_device_data.update(
+                                                schg_data.get("chg", {})
+                                            )
+
+                                            if callback and callable(callback):
+                                                msg = {
+                                                    "me": dev_id,
+                                                    "idx": sub_key,
+                                                    "agt": self.node_agt,
+                                                    "devtype": self.devices[dev_id][
+                                                        "devtype"
+                                                    ],
+                                                    **sub_device_data,
+                                                }
+                                                # 构造一个与云端推送格式完全一致的字典
+                                                # 以便 data_update_handler 可以统一处理
+                                                await callback(
+                                                    {"type": "io", "msg": msg}
                                                 )
-                                                sub_device_data.update(
-                                                    schg_data.get("chg", {})
-                                                )
-                                                if callback and callable(callback):
-                                                    msg = {
-                                                        "me": dev_id,
-                                                        "idx": sub_key,
-                                                        "agt": self.node_agt,
-                                                        "devtype": self.devices[dev_id][
-                                                            "devtype"
-                                                        ],
-                                                        **sub_device_data,
-                                                    }
-                                                    await callback({"msg": msg})
                                 elif _safe_get(decoded, 1, "_sdel"):
                                     _LOGGER.warning(
                                         "检测到设备被删除，将触发重新加载: %s",
@@ -840,11 +916,15 @@ class LifeSmartLocalClient(LifeSmartClientBase):
                                     if callback and callable(callback):
                                         await callback({"reload": True})
                         except EOFError:
-                            pass
+                            _LOGGER.debug(
+                                "捕获到 EOFError，数据包不完整，等待更多数据..."
+                            )
+                            break  # 跳出内层 while response 循环，去外层循环读取更多数据
                         except Exception as e:
                             _LOGGER.error(
                                 "处理数据时发生意外错误: %s", e, exc_info=True
                             )
+                            response = b""  # 清空缓冲区以避免死循环
                             break  # 出现意外错误，中断内部循环以重连
 
             except (

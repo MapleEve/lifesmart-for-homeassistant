@@ -1,0 +1,11 @@
+coverage:
+  ignore:
+    - "custom_components/lifesmart/tests/**/*"  # 忽略 tests 目录下的所有文件
+  status:
+    project:
+      default:
+        informational: true
+
+    patch:
+      default:
+        informational: true
