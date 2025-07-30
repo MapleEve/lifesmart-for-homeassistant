@@ -304,7 +304,7 @@ def _async_register_services(hass: HomeAssistant, client: LifeSmartClientBase):
 
     async def send_ir_keys(call):
         """处理发送红外按键的服务调用。"""
-        await client._async_send_ir_key(
+        await client.async_send_ir_key(
             call.data[HUB_ID_KEY],
             call.data["ai"],
             call.data[DEVICE_ID_KEY],
@@ -323,7 +323,7 @@ def _async_register_services(hass: HomeAssistant, client: LifeSmartClientBase):
             return
 
         _LOGGER.info("正在通过服务调用触发场景: Hub=%s, SceneID=%s", agt, scene_id)
-        await client._async_set_scene(agt, scene_id)
+        await client.async_set_scene(agt, scene_id)
 
     async def press_switch(call):
         """处理点动开关的服务调用。"""
