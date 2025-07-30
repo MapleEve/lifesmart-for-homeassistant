@@ -20,16 +20,16 @@ import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-# 导入 Home Assistant 温控组件所需的核心常量和服务名称
 from homeassistant.components.climate import (
+    # 导入 Home Assistant 温控组件所需的核心常量和服务名称
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
 )
-# ATTR_* 常量位于 homeassistant.components.climate.const 中
 from homeassistant.components.climate.const import (
+    # ATTR_* 常量位于 homeassistant.components.climate.const 中
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
 )
