@@ -4,8 +4,8 @@
 此测试套件包含四个主要部分：
 1.  对 LifeSmartProtocol 类的单元测试，验证核心数据类型的编解码及边界条件。
 2.  对 LifeSmartPacketFactory 的集成验证，确保其生成的指令包可被协议正确解析。
-3.  对 LifeSmartLocalClient 的集成测试，通过模拟网络IO来验证其完整的生命周期和功能。
-4.  对 LifeSmartLocalClient 控制方法的全面单元测试，确保所有业务逻辑正确。
+3.  对 LifeSmartLocalTCPClient 的集成测试，通过模拟网络IO来验证其完整的生命周期和功能。
+4.  对 LifeSmartLocalTCPClient 控制方法的全面单元测试，确保所有业务逻辑正确。
 """
 
 import asyncio
@@ -36,7 +36,7 @@ from custom_components.lifesmart.const import (
 from custom_components.lifesmart.core.lifesmart_protocol import (
     LifeSmartProtocol,
     LifeSmartPacketFactory,
-    LifeSmartLocalClient,
+    LifeSmartLocalTCPClient,
     LSTimestamp,
 )
 
@@ -76,12 +76,12 @@ def mock_connection():
 
 
 @pytest.fixture
-def mocked_client() -> LifeSmartLocalClient:
+def mocked_client() -> LifeSmartLocalTCPClient:
     """
     提供一个客户端实例，其 factory 是真实的，但网络发送是 mock 的。
     这允许我们检查 factory 的调用情况，而无需实际发送网络包。
     """
-    client = LifeSmartLocalClient("host", 1234, "u", "p")
+    client = LifeSmartLocalTCPClient("host", 1234, "u", "p")
     # 客户端需要一个真实的 factory 实例来调用其 build 方法
     client._factory = LifeSmartPacketFactory("test_agt", "test_node")
     # Mock 掉最底层的网络发送，因为我们不关心网络 IO
@@ -249,7 +249,7 @@ class TestPacketFactoryUnit:
 
 
 # ====================================================================
-# Section 3: LifeSmartLocalClient 集成与辅助函数测试
+# Section 3: LifeSmartLocalTCPClient 集成与辅助函数测试
 # ====================================================================
 
 PROTOCOL = LifeSmartProtocol()
@@ -297,7 +297,7 @@ class TestLifeSmartClientIntegration:
         测试客户端从连接、登录、加载设备、接收状态更新到断开的完整成功生命周期。
         """
         reader, writer, _ = mock_connection
-        client = LifeSmartLocalClient("localhost", 9999, "user", "pass")
+        client = LifeSmartLocalTCPClient("localhost", 9999, "user", "pass")
         callback = AsyncMock()
         connect_task = asyncio.create_task(client.async_connect(callback))
 
@@ -347,20 +347,20 @@ class TestLifeSmartClientIntegration:
     async def test_client_connection_failures(self, mock_connection):
         reader, writer, mock_open = mock_connection
         mock_open.side_effect = ConnectionRefusedError
-        client_refused = LifeSmartLocalClient("invalid.host", 1234, "u", "p")
+        client_refused = LifeSmartLocalTCPClient("invalid.host", 1234, "u", "p")
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(client_refused.async_connect(None), timeout=0.1)
 
         mock_open.side_effect = None
         mock_open.return_value = (reader, writer)
         reader.feed_data(LOGIN_FAILURE_PKT)
-        client_fail = LifeSmartLocalClient("valid.host", 1234, "u", "p")
+        client_fail = LifeSmartLocalTCPClient("valid.host", 1234, "u", "p")
         await asyncio.wait_for(client_fail.async_connect(None), timeout=1)
         assert client_fail.disconnected is True
 
     @pytest.mark.asyncio
     async def test_send_packet_returns_error_if_not_connected(self):
-        client = LifeSmartLocalClient("localhost", 9999, "u", "p")
+        client = LifeSmartLocalTCPClient("localhost", 9999, "u", "p")
         client.writer = None
         with patch(
             "custom_components.lifesmart.core.lifesmart_protocol._LOGGER"
@@ -396,7 +396,7 @@ class TestLifeSmartClientIntegration:
         ],
     )
     def test_normalize_device_names(self, input_dict, expected_dict):
-        normalized = LifeSmartLocalClient._normalize_device_names(input_dict)
+        normalized = LifeSmartLocalTCPClient._normalize_device_names(input_dict)
         assert normalized == expected_dict
 
     @pytest.mark.asyncio
@@ -406,7 +406,7 @@ class TestLifeSmartClientIntegration:
         这是针对 'loaded' 阶段超时问题的回归测试。
         """
         reader, writer, _ = mock_connection
-        client = LifeSmartLocalClient("localhost", 9999, "user", "pass")
+        client = LifeSmartLocalTCPClient("localhost", 9999, "user", "pass")
 
         # Mock 掉 PacketFactory 的 build 方法，以便我们可以监视它的调用
         with patch.object(
@@ -441,15 +441,15 @@ class TestLifeSmartClientIntegration:
 
 
 # ====================================================================
-# Section 4: LifeSmartLocalClient 控制方法单元测试 (全面覆盖)
+# Section 4: LifeSmartLocalTCPClient 控制方法单元测试 (全面覆盖)
 # ====================================================================
 
 
 class TestLifeSmartClientControlMethods:
-    """全面测试 LifeSmartLocalClient 的高层控制方法。"""
+    """全面测试 LifeSmartLocalTCPClient 的高层控制方法。"""
 
     @pytest.mark.asyncio
-    async def test_turn_on_light_switch(self, mocked_client: LifeSmartLocalClient):
+    async def test_turn_on_light_switch(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
@@ -458,7 +458,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_turn_off_light_switch(self, mocked_client: LifeSmartLocalClient):
+    async def test_turn_off_light_switch(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
@@ -656,7 +656,7 @@ class TestLifeSmartClientControlMethods:
             )
 
     @pytest.mark.asyncio
-    async def test_press_switch(self, mocked_client: LifeSmartLocalClient):
+    async def test_press_switch(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
@@ -664,7 +664,7 @@ class TestLifeSmartClientControlMethods:
             mock_build.assert_called_once_with("dev1", "L1", CMD_TYPE_PRESS, 6)
 
     @pytest.mark.asyncio
-    async def test_set_scene(self, mocked_client: LifeSmartLocalClient):
+    async def test_set_scene(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_scene_trigger_packet", return_value=b"packet"
         ) as mock_build:
@@ -673,7 +673,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_change_icon(self, mocked_client: LifeSmartLocalClient):
+    async def test_change_icon(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_change_icon_packet", return_value=b"packet"
         ) as mock_build:
@@ -682,7 +682,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_ir_control(self, mocked_client: LifeSmartLocalClient):
+    async def test_ir_control(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_ir_control_packet", return_value=b"packet"
         ) as mock_build:
@@ -691,7 +691,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_send_ir_keys(self, mocked_client: LifeSmartLocalClient):
+    async def test_send_ir_keys(self, mocked_client: LifeSmartLocalTCPClient):
         keys_json = json.dumps([{"key": "power", "delay": 300}])
         with patch.object(
             mocked_client._factory, "build_send_ir_keys_packet", return_value=b"packet"
@@ -705,7 +705,9 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_async_send_multi_command(self, mocked_client: LifeSmartLocalClient):
+    async def test_async_send_multi_command(
+        self, mocked_client: LifeSmartLocalTCPClient
+    ):
         """测试新的抽象方法"""
         io_list = [{"idx": "RGBW", "val": 12345}, {"idx": "DYN", "val": 0}]
         with patch.object(
@@ -716,7 +718,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_add_trigger(self, mocked_client: LifeSmartLocalClient):
+    async def test_add_trigger(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_add_trigger_packet", return_value=b"packet"
         ) as mock_build:
@@ -725,7 +727,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_del_ai(self, mocked_client: LifeSmartLocalClient):
+    async def test_del_ai(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_del_ai_packet", return_value=b"packet"
         ) as mock_build:
@@ -734,7 +736,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_send_ir_code(self, mocked_client: LifeSmartLocalClient):
+    async def test_send_ir_code(self, mocked_client: LifeSmartLocalTCPClient):
         code_data = [1, 2, 3]
         with patch.object(
             mocked_client._factory, "build_send_code_packet", return_value=b"packet"
@@ -744,7 +746,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_ir_raw_control(self, mocked_client: LifeSmartLocalClient):
+    async def test_ir_raw_control(self, mocked_client: LifeSmartLocalTCPClient):
         raw_data_str = '{"some": "data"}'
         with patch.object(
             mocked_client._factory,
@@ -756,7 +758,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_set_eeprom(self, mocked_client: LifeSmartLocalClient):
+    async def test_set_eeprom(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_set_eeprom_packet", return_value=b"packet"
         ) as mock_build:
@@ -765,7 +767,7 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_add_timer(self, mocked_client: LifeSmartLocalClient):
+    async def test_add_timer(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_add_timer_packet", return_value=b"packet"
         ) as mock_build:

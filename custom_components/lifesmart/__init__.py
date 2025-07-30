@@ -72,7 +72,7 @@ from .const import (
 )
 from .core import lifesmart_protocol
 from .core.client_base import LifeSmartClientBase
-from .core.lifesmart_client import LifeSmartClient
+from .core.openapi_client import LifeSmartOAPIClient
 from .diagnostics import get_error_advice, RECOMMENDATION_GROUP
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 
@@ -184,7 +184,7 @@ async def _async_create_client_and_get_devices(
     if conn_type == CONN_CLASS_CLOUD_PUSH:
         # --- 云端模式 ---
         try:
-            client = LifeSmartClient(
+            client = LifeSmartOAPIClient(
                 hass,
                 config_data.get(CONF_REGION),
                 config_data.get(CONF_LIFESMART_APPKEY),
@@ -237,7 +237,7 @@ async def _async_create_client_and_get_devices(
         # --- 本地模式 ---
         try:
             reload(lifesmart_protocol)
-            client = lifesmart_protocol.LifeSmartLocalClient(
+            client = lifesmart_protocol.LifeSmartLocalTCPClient(
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
                 config_entry.data[CONF_USERNAME],
@@ -380,7 +380,7 @@ def _async_setup_background_tasks(
             _LOGGER.warning("定时刷新时发生意外错误，这可能是临时问题。错误: %s", e)
 
     # 仅在云端模式下启动 WebSocket 状态管理器和令牌刷新任务
-    if isinstance(client, LifeSmartClient):
+    if isinstance(client, LifeSmartOAPIClient):
         state_manager = LifeSmartStateManager(
             hass=hass,
             config_entry=config_entry,
@@ -436,7 +436,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # 断开本地客户端连接
     client = hass.data[DOMAIN].get(entry_id, {}).get("client")
-    if isinstance(client, lifesmart_protocol.LifeSmartLocalClient):
+    if isinstance(client, lifesmart_protocol.LifeSmartLocalTCPClient):
         # 调用同步的 disconnect 方法来设置标志位，这将由 local_task 的取消来驱动清理
         client.disconnect()
 
@@ -638,7 +638,7 @@ class LifeSmartStateManager:
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        client: LifeSmartClient,
+        client: LifeSmartOAPIClient,
         ws_url: str,
         refresh_callback: callable,
         retry_interval: int = 10,

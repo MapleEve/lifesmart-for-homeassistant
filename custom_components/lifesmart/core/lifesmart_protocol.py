@@ -3,9 +3,9 @@
 此模块包含两个核心部分：
 1. LifeSmartPacketFactory: 一个纯粹的指令包工厂，负责根据不同的控制需求，
 构建符合 LifeSmart 本地二进制协议的指令包。
-2. LifeSmartLocalClient: 一个功能完备的本地客户端，它使用 LifeSmartPacketFactory
+2. LifeSmartLocalTCPClient: 一个功能完备的本地客户端，它使用 LifeSmartPacketFactory
 来构建指令，并通过 TCP Socket 与 LifeSmart 中枢进行通信。它提供了与云端客户端
-(LifeSmartClient) 完全对齐的异步控制接口，使得上层平台可以无缝切换。
+(LifeSmartOAPIClient) 完全对齐的异步控制接口，使得上层平台可以无缝切换。
 """
 
 import asyncio
@@ -603,7 +603,7 @@ class LifeSmartPacketFactory:
         return self._build_packet(args, act="RunA", node_suffix="/ai")
 
 
-class LifeSmartLocalClient(LifeSmartClientBase):
+class LifeSmartLocalTCPClient(LifeSmartClientBase):
     """LifeSmart 本地客户端，负责与中枢进行 TCP 通信。"""
 
     IDLE_TIMEOUT = 65.0

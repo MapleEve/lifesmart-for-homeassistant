@@ -1,6 +1,6 @@
 """由 @MapleEve 实现的 LifeSmart 云端客户端。
 
-此模块提供了一个 LifeSmartClient 类，用于封装与 LifeSmart 云端 API 的所有交互。
+此模块提供了一个 LifeSmartOAPIClient 类，用于封装与 LifeSmart 云端 API 的所有交互。
 它负责构建请求、处理签名、发送命令，并为上层平台（如 switch, light）
 提供了一套清晰、易于使用的异步方法来控制设备。
 """
@@ -30,7 +30,7 @@ from custom_components.lifesmart.exceptions import LifeSmartAPIError, LifeSmartA
 _LOGGER = logging.getLogger(__name__)
 
 
-class LifeSmartClient(LifeSmartClientBase):
+class LifeSmartOAPIClient(LifeSmartClientBase):
     """一个用于高效、健壮地管理 LifeSmart API 调用的类。
 
     此类封装了所有与 LifeSmart API 的通信细节，包括认证、签名生成、

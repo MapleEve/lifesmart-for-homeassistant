@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import SelectSelectorMode
 
-from . import LifeSmartClient
+from . import LifeSmartOAPIClient
 from .const import (
     CONF_AI_INCLUDE_AGTS,
     CONF_AI_INCLUDE_ITEMS,
@@ -45,7 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     # 注意：这个函数现在只在成功时返回值，失败时直接抛出异常
     # 错误处理逻辑移至调用方 (各个 step 中)
     try:
-        client = LifeSmartClient(
+        client = LifeSmartOAPIClient(
             hass,
             data.get(CONF_REGION),
             data.get(CONF_LIFESMART_APPKEY),
@@ -99,7 +99,7 @@ async def validate_local_input(
 ) -> dict[str, Any]:
     """Validate the user input for local connection."""
     try:
-        dev = lifesmart_protocol.LifeSmartLocalClient(
+        dev = lifesmart_protocol.LifeSmartLocalTCPClient(
             data[CONF_HOST],
             data[CONF_PORT],
             data[CONF_USERNAME],

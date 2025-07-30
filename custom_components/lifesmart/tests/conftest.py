@@ -547,15 +547,15 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 @pytest.fixture
 def mock_client_class(mock_lifesmart_devices):
     """
-    一个高级 fixture，它 patch LifeSmartClient 类并返回这个类的 Mock。
+    一个高级 fixture，它 patch LifeSmartOAPIClient 类并返回这个类的 Mock。
 
-    这允许测试根据需要控制 `LifeSmartClient()` 的返回值，对于测试重载
+    这允许测试根据需要控制 `LifeSmartOAPIClient()` 的返回值，对于测试重载
     (reload) 行为至关重要。通过 patch 类本身，我们可以确保每次调用
-    `hass.config_entries.async_reload` 时，后续的 `LifeSmartClient()`
+    `hass.config_entries.async_reload` 时，后续的 `LifeSmartOAPIClient()`
     调用都会返回一个我们可以控制的新实例。
     """
     with patch(
-        "custom_components.lifesmart.core.lifesmart_client.LifeSmartClient",
+        "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient",
         autospec=True,
     ) as mock_class:
         # 配置默认的实例行为
@@ -597,7 +597,7 @@ def mock_client_class(mock_lifesmart_devices):
 @pytest.fixture
 def mock_client(mock_client_class):
     """
-    提供一个默认的模拟 LifeSmartClient 实例。
+    提供一个默认的模拟 LifeSmartOAPIClient 实例。
 
     这个 fixture 依赖于 `mock_client_class`，为不需要控制重载行为的
     标准测试提供向后兼容性。它只是简单地返回 `mock_client_class`
