@@ -58,9 +58,7 @@ class LSEncoder(json.JSONEncoder):
         """重写默认编码方法。"""
         if isinstance(obj, LSTimestamp):
             return str(obj)
-        if isinstance(obj, bytes):
-            return list(obj)
-        return super().default(obj)
+        return list(obj) if isinstance(obj, bytes) else super().default(obj)
 
 
 class LifeSmartProtocol:
