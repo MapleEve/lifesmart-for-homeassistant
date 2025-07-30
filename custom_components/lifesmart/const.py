@@ -491,14 +491,14 @@ SUPPORTED_PLATFORMS = {
 
 # ================= 命令类型常量 (Command Type Constants) =================
 # 用于 EpSet API 调用的命令类型代码，以提高代码可读性和可维护性。
-CMD_TYPE_ON = "0x81"  # 通用开启命令
-CMD_TYPE_OFF = "0x80"  # 通用关闭命令
-CMD_TYPE_PRESS = "0x89"  # 点动命令
-CMD_TYPE_SET_VAL = "0xCF"  # 设置数值 (如亮度、窗帘位置)
-CMD_TYPE_SET_CONFIG = "0xCE"  # 设置配置/模式 (如空调模式、风速)
-CMD_TYPE_SET_TEMP_DECIMAL = "0x88"  # 设置温度 (值为实际温度*10)
-CMD_TYPE_SET_RAW = "0xFF"  # 设置原始值 (常用于位掩码配置)
-CMD_TYPE_SET_TEMP_FCU = "0x89"  # FCU温控器设置温度的特殊命令码
+CMD_TYPE_ON = 0x81  # 通用开启命令
+CMD_TYPE_OFF = 0x80  # 通用关闭命令
+CMD_TYPE_PRESS = 0x89  # 点动命令
+CMD_TYPE_SET_VAL = 0xCF  # 设置数值 (如亮度、窗帘位置)
+CMD_TYPE_SET_CONFIG = 0xCE  # 设置配置/模式 (如空调模式、风速)
+CMD_TYPE_SET_TEMP_DECIMAL = 0x88  # 设置温度 (值为实际温度*10)
+CMD_TYPE_SET_RAW = 0xFF  # 设置原始值 (常用于位掩码配置)
+CMD_TYPE_SET_TEMP_FCU = 0x89  # FCU温控器设置温度的特殊命令码
 
 # ================= 动态效果映射 (Dynamic Effects Mappings) =================
 # --- 通用动态效果 ---

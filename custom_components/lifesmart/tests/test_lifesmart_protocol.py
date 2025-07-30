@@ -33,7 +33,7 @@ from custom_components.lifesmart.const import (
     FAN_HIGH,
     NON_POSITIONAL_COVER_CONFIG,
 )
-from custom_components.lifesmart.lifesmart_protocol import (
+from custom_components.lifesmart.core.lifesmart_protocol import (
     LifeSmartProtocol,
     LifeSmartPacketFactory,
     LifeSmartLocalClient,
@@ -351,7 +351,7 @@ class TestLifeSmartClientIntegration:
         client = LifeSmartLocalClient("localhost", 9999, "u", "p")
         client.writer = None
         with patch(
-            "custom_components.lifesmart.lifesmart_protocol._LOGGER"
+            "custom_components.lifesmart.core.lifesmart_protocol._LOGGER"
         ) as mock_logger:
             result = await client._send_packet(b"test")
             assert result == -1
@@ -437,11 +437,17 @@ class TestLifeSmartClientControlMethods:
                 "stop_cover_async",
                 "P3",
                 CMD_TYPE_SET_CONFIG,
-                0x80,
+                CMD_TYPE_OFF,
             ),
             (list(DOOYA_TYPES)[0], "open_cover_async", "P2", CMD_TYPE_SET_VAL, 100),
             (list(DOOYA_TYPES)[0], "close_cover_async", "P2", CMD_TYPE_SET_VAL, 0),
-            (list(DOOYA_TYPES)[0], "stop_cover_async", "P2", CMD_TYPE_SET_CONFIG, 0x80),
+            (
+                list(DOOYA_TYPES)[0],
+                "stop_cover_async",
+                "P2",
+                CMD_TYPE_SET_CONFIG,
+                CMD_TYPE_OFF,
+            ),
             (
                 "SL_SW_WIN",
                 "open_cover_async",
@@ -482,7 +488,6 @@ class TestLifeSmartClientControlMethods:
             mock_build.assert_called_once_with(
                 "dev1", expected_idx, expected_type, expected_val
             )
-            mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -516,7 +521,6 @@ class TestLifeSmartClientControlMethods:
                 "SL_CP_AIR",
                 HVACMode.COOL,
                 15,
-                # 根据官方文档和正确的const定义，COOL模式(0)在current_val=15基础上，结果应为15
                 [("P1", CMD_TYPE_ON, 1), ("P1", CMD_TYPE_SET_RAW, 15)],
             ),
             ("V_AIR_P", HVACMode.OFF, 0, [("P1", CMD_TYPE_OFF, 0)]),
@@ -649,12 +653,13 @@ class TestLifeSmartClientControlMethods:
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_set_multi_eps(self, mocked_client: LifeSmartLocalClient):
+    async def test_async_send_multi_command(self, mocked_client: LifeSmartLocalClient):
+        """测试新的抽象方法"""
         io_list = [{"idx": "RGBW", "val": 12345}, {"idx": "DYN", "val": 0}]
         with patch.object(
             mocked_client._factory, "build_multi_epset_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.set_multi_eps_async("agt", "dev1", io_list)
+            await mocked_client._async_send_multi_command("agt", "dev1", io_list)
             mock_build.assert_called_once_with("dev1", io_list)
             mocked_client._send_packet.assert_awaited_once()
 

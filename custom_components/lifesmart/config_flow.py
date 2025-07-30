@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import SelectSelectorMode
 
-from . import lifesmart_protocol, LifeSmartClient
+from . import LifeSmartClient
 from .const import (
     CONF_AI_INCLUDE_AGTS,
     CONF_AI_INCLUDE_ITEMS,
@@ -33,6 +33,7 @@ from .const import (
     DOMAIN,
     LIFESMART_REGION_OPTIONS,
 )
+from .core import lifesmart_protocol
 from .diagnostics import get_error_advice
 from .exceptions import LifeSmartAuthError
 

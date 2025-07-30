@@ -32,7 +32,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import lifesmart_protocol
 from .const import (
     # --- 核心常量 ---
     DOMAIN,
@@ -71,9 +70,11 @@ from .const import (
     # --- 所有支持的平台列表 ---
     SUPPORTED_PLATFORMS,
 )
+from .core import lifesmart_protocol
+from .core.client_base import LifeSmartClientBase
+from .core.lifesmart_client import LifeSmartClient
 from .diagnostics import get_error_advice, RECOMMENDATION_GROUP
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
-from .lifesmart_client import LifeSmartClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,6 +110,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     except LifeSmartAuthError:
         return False
+    except ConfigEntryNotReady:
+        raise
 
     # 2. 在设备注册表中注册中枢设备
     await _async_register_hubs(hass, config_entry, devices)
@@ -157,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def _async_create_client_and_get_devices(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> tuple[Any, list, dict | None]:
+) -> tuple:
     """创建 LifeSmart 客户端并获取初始设备列表。
 
     根据配置类型（云端或本地）初始化对应的客户端，并尝试连接和获取设备数据。
@@ -239,7 +242,6 @@ async def _async_create_client_and_get_devices(
                 config_entry.data[CONF_PORT],
                 config_entry.data[CONF_USERNAME],
                 config_entry.data[CONF_PASSWORD],
-                config_entry.entry_id,
             )
 
             async def local_update_callback(data):
@@ -254,7 +256,10 @@ async def _async_create_client_and_get_devices(
             if not devices:
                 if not connect_task.done():
                     connect_task.cancel()
-                    await connect_task
+                    try:
+                        await connect_task
+                    except asyncio.CancelledError:
+                        pass
                 raise ConfigEntryNotReady("从本地网关获取设备列表失败。")
 
             # 返回 connect_task，让上层函数处理
@@ -286,7 +291,7 @@ async def _async_register_hubs(
         )
 
 
-def _async_register_services(hass: HomeAssistant, client: Any):
+def _async_register_services(hass: HomeAssistant, client: LifeSmartClientBase):
     """注册 LifeSmart 集成提供的服务。
 
     这些服务允许用户通过 Home Assistant 的服务调用功能与 LifeSmart 设备进行交互，
@@ -349,7 +354,7 @@ def _async_register_services(hass: HomeAssistant, client: Any):
 def _async_setup_background_tasks(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    client: Any,
+    client: LifeSmartClientBase,
     auth_response: dict | None = None,
 ):
     """设置后台任务，包括 WebSocket 管理器和定时刷新。
@@ -375,7 +380,7 @@ def _async_setup_background_tasks(
             _LOGGER.warning("定时刷新时发生意外错误，这可能是临时问题。错误: %s", e)
 
     # 仅在云端模式下启动 WebSocket 状态管理器和令牌刷新任务
-    if hasattr(client, "get_wss_url"):
+    if isinstance(client, LifeSmartClient):
         state_manager = LifeSmartStateManager(
             hass=hass,
             config_entry=config_entry,
@@ -429,7 +434,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except asyncio.CancelledError:
             pass  # Expected
 
-        # 断开本地客户端连接
+    # 断开本地客户端连接
     client = hass.data[DOMAIN].get(entry_id, {}).get("client")
     if isinstance(client, lifesmart_protocol.LifeSmartLocalClient):
         # 调用同步的 disconnect 方法来设置标志位，这将由 local_task 的取消来驱动清理
@@ -480,40 +485,36 @@ async def data_update_handler(
         sub_device_key = str(data.get(SUBDEVICE_INDEX_KEY, "")).strip()
 
         # 从 config_entry.options 获取过滤器配置
-        exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
-        exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
-        ai_include_hubs_str = config_entry.options.get(CONF_AI_INCLUDE_AGTS, "")
-        ai_include_items_str = config_entry.options.get(CONF_AI_INCLUDE_ITEMS, "")
-
-        # 将字符串配置转换为列表进行处理
+        options = config_entry.options
         exclude_devices = {
-            dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
+            dev.strip()
+            for dev in options.get(CONF_EXCLUDE_ITEMS, "").split(",")
+            if dev.strip()
         }
         exclude_hubs = {
-            hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()
-        }
-        ai_include_hubs = {
-            hub.strip() for hub in ai_include_hubs_str.split(",") if hub.strip()
-        }
-        ai_include_items = {
-            item.strip() for item in ai_include_items_str.split(",") if item.strip()
+            hub.strip()
+            for hub in options.get(CONF_EXCLUDE_AGTS, "").split(",")
+            if hub.strip()
         }
 
         # --- 过滤器处理 ---
-        if device_id in exclude_devices:
-            _LOGGER.debug(
-                "忽略设备更新 [%s | %s]（在排除列表中）", device_id, device_type
-            )
-            return
-        if hub_id in exclude_hubs:
-            _LOGGER.debug("忽略中枢 [%s] 下所有设备的更新（在排除列表中）", hub_id)
+        if device_id in exclude_devices or hub_id in exclude_hubs:
             return
 
         # --- 特殊子设备处理（AI事件） ---
         if sub_device_key == "s":
+            ai_include_hubs = {
+                hub.strip()
+                for hub in options.get(CONF_AI_INCLUDE_AGTS, "").split(",")
+                if hub.strip()
+            }
+            ai_include_items = {
+                item.strip()
+                for item in options.get(CONF_AI_INCLUDE_ITEMS, "").split(",")
+                if item.strip()
+            }
             if device_id in ai_include_items and hub_id in ai_include_hubs:
                 _LOGGER.info("触发AI事件: %s", data)
-                # 未来可在此处扩展AI事件的具体处理逻辑
             return
 
         # --- 普通设备更新处理 ---
@@ -559,7 +560,7 @@ class LifeSmartDevice(Entity):
         _attributes (dict): 存储通用设备属性的字典。
     """
 
-    def __init__(self, dev: dict, lifesmart_client: LifeSmartClient) -> None:
+    def __init__(self, dev: dict, lifesmart_client: LifeSmartClientBase) -> None:
         """初始化基础设备。
 
         Args:
@@ -611,20 +612,6 @@ class LifeSmartDevice(Entity):
     def should_poll(self) -> bool:
         """返回实体是否需要轮询更新状态。"""
         return False
-
-    async def async_lifesmart_epset(self, type: str, val: Any, idx: str) -> int:
-        """向 LifeSmart 设备发送 EpSet 命令。"""
-        return await self._client.set_single_ep_async(
-            self._agt, self._me, idx, type, val
-        )
-
-    async def async_lifesmart_epget(self) -> dict:
-        """获取 LifeSmart 设备的详细信息。"""
-        return await self._client.get_epget_async(self._agt, self._me)
-
-    async def async_lifesmart_sceneset(self, id: str) -> int:
-        """设置场景。"""
-        return await self._client.set_scene_async(self._agt, id)
 
 
 class LifeSmartStateManager:
@@ -821,7 +808,6 @@ class LifeSmartStateManager:
             _LOGGER.error("已达到最大重试次数 (%s)，将停止尝试连接。", self.max_retries)
             return
 
-        # 指数退避算法，最大间隔5分钟
         delay = min(self.retry_interval * (2 ** (self._retry_count - 1)), 300)
         _LOGGER.info(
             "WebSocket 连接断开，将在 %.1f 秒后进行第 %d 次重试。",
@@ -834,10 +820,7 @@ class LifeSmartStateManager:
         """后台任务，采用周期性检查的方式，在 usertoken 过期前自动刷新。"""
         # 启动后稍作等待，避免在HA启动高峰期执行
         await asyncio.sleep(60)
-
-        # 定义检查周期为1小时
-        check_interval_seconds = 1 * 3600
-
+        check_interval_seconds = 3600
         while not self._should_stop:
             try:
                 # 如果初始令牌时间还未设置，则等待
@@ -847,8 +830,6 @@ class LifeSmartStateManager:
 
                 now = int(time.time())
                 time_to_expiry = self._token_expiry_time - now
-
-                # 定义刷新阈值，还有 275 天就要尝试了（90 天刷新一次）
                 refresh_threshold = 275 * 24 * 3600
 
                 if time_to_expiry < refresh_threshold:
@@ -938,8 +919,7 @@ def generate_unique_id(
 
     # 清理和规范化函数，只移除特殊字符并转为小写
     def sanitize(input_str: str) -> str:
-        # 先转小写，然后用 \W 替换所有非字母、非数字、非下划线的字符
-        return re.sub(r"\W", "", input_str.lower())
+        return re.sub(r"\W", "", str(input_str).lower())
 
     parts = [sanitize(devtype), sanitize(agt), sanitize(me)]
     if sub_device_key:

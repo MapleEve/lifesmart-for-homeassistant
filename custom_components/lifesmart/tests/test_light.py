@@ -154,8 +154,8 @@ class TestLifeSmartBrightnessLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_BRIGHTNESS) == 150
-        mock_client.set_single_ep_async.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, CMD_TYPE_SET_VAL, 150
+        mock_client._async_send_single_command.assert_called_with(
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0xCF, 150
         )
 
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
@@ -277,12 +277,12 @@ class TestLifeSmartDimmerLight:
                 * 255
             )
         )
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": 200},
-                {"idx": "P2", "type": CMD_TYPE_SET_VAL, "val": expected_temp_val},
+                {"idx": "P1", "type": 0xCF, "val": 200},
+                {"idx": "P2", "type": 0xCF, "val": expected_temp_val},
             ],
         )
 
@@ -307,7 +307,7 @@ class TestLifeSmartDimmerLight:
         initial_kelvin = initial_state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
 
         # 模拟API调用失败
-        mock_client.set_multi_eps_async.side_effect = Exception("API Error")
+        mock_client._async_send_multi_command.side_effect = Exception("API Error")
 
         # 尝试改变亮度和色温
         await hass.services.async_call(
@@ -379,7 +379,7 @@ class TestLifeSmartQuantumLight:
         assert initial_state.attributes.get(ATTR_EFFECT) is None
 
         # 模拟API调用失败
-        mock_client.set_multi_eps_async.side_effect = Exception("API Error")
+        mock_client._async_send_multi_command.side_effect = Exception("API Error")
 
         # 尝试设置效果
         await hass.services.async_call(
@@ -407,10 +407,10 @@ class TestLifeSmartQuantumLight:
         )
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_EFFECT) == "魔力红"
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
-            [{"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": ALL_EFFECT_MAP["魔力红"]}],
+            [{"idx": "P2", "type": 0xFF, "val": ALL_EFFECT_MAP["魔力红"]}],
         )
         # Test Color (without brightness)
         await hass.services.async_call(
@@ -422,10 +422,10 @@ class TestLifeSmartQuantumLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_RGBW_COLOR) == (10, 20, 30, 40)
         assert state.attributes.get(ATTR_EFFECT) is None
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
-            [{"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": 0x280A141E}],
+            [{"idx": "P2", "type": 0xFF, "val": 0x280A141E}],
         )
 
     async def test_service_call_with_brightness_and_color(
@@ -444,12 +444,12 @@ class TestLifeSmartQuantumLight:
         )
 
         # 验证发送了多个命令：一个用于亮度，一个用于颜色
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": 128},
-                {"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": 0x280A141E},
+                {"idx": "P1", "type": 0xCF, "val": 128},
+                {"idx": "P2", "type": 0xFF, "val": 0x280A141E},
             ],
         )
         # 验证确保灯开启的命令也被调用
@@ -490,25 +490,25 @@ class TestLifeSmartSingleIORGBWLight:
         ("service_data", "expected_type", "expected_val", "test_id"),
         [
             # 1. 简单开灯
-            ({}, "0x81", 1, "turn_on_simple"),
+            ({}, 0x81, 1, "turn_on_simple"),
             # 2. 设置颜色 (同时提供亮度，但协议决定了亮度被忽略)
             (
                 {ATTR_RGBW_COLOR: (10, 20, 30, 40), ATTR_BRIGHTNESS: 128},
-                "0xFF",
+                0xFF,
                 0x280A141E,
                 "set_color_ignores_brightness",
             ),
             # 3. 设置效果
             (
                 {ATTR_EFFECT: "魔力红"},
-                "0xFF",
+                0xFF,
                 DYN_EFFECT_MAP["魔力红"],
                 "set_effect",
             ),
             # 4. 只设置亮度 (应被解释为设置白光)
             (
                 {ATTR_BRIGHTNESS: 200},
-                "0xFF",
+                0xFF,
                 (200 << 24),  # W=200, R=G=B=0
                 "set_brightness_as_white",
             ),
@@ -532,7 +532,7 @@ class TestLifeSmartSingleIORGBWLight:
             {ATTR_ENTITY_ID: self.ENTITY_ID, **service_data},
             blocking=True,
         )
-        mock_client.set_single_ep_async.assert_called_with(
+        mock_client._async_send_single_command.assert_called_with(
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, expected_type, expected_val
         )
 
@@ -547,8 +547,8 @@ class TestLifeSmartSingleIORGBWLight:
             blocking=True,
         )
         # 根据文档，关灯命令是 type=0x80, val=0
-        mock_client.set_single_ep_async.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, "0x80", 0
+        mock_client._async_send_single_command.assert_called_with(
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0x80, 0
         )
 
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
@@ -573,7 +573,7 @@ class TestLifeSmartSingleIORGBWLight:
         initial_state = hass.states.get(self.ENTITY_ID)
 
         # 模拟API调用失败
-        mock_client.set_single_ep_async.side_effect = Exception("API Error")
+        mock_client._async_send_single_command.side_effect = Exception("API Error")
 
         # 尝试关灯
         await hass.services.async_call(
@@ -621,12 +621,12 @@ class TestLifeSmartDualIORGBWLight:
             blocking=True,
         )
         assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_OFF, "val": 0},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
+                {"idx": self.COLOR_IO, "type": 0x80, "val": 0},
+                {"idx": self.EFFECT_IO, "type": 0x80, "val": 0},
             ],
         )
         # Turn On (no params)
@@ -654,14 +654,14 @@ class TestLifeSmartDualIORGBWLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_EFFECT) == "魔力红"
         assert state.attributes.get(ATTR_RGBW_COLOR) is None
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_ON, "val": 1},
+                {"idx": self.COLOR_IO, "type": 0x81, "val": 1},
                 {
                     "idx": self.EFFECT_IO,
-                    "type": CMD_TYPE_SET_RAW,
+                    "type": 0xFF,
                     "val": DYN_EFFECT_MAP["魔力红"],
                 },
             ],
@@ -686,12 +686,12 @@ class TestLifeSmartDualIORGBWLight:
         # val = 0x14050A0F
         expected_val = (20 << 24) | (5 << 16) | (10 << 8) | 15
 
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_SET_RAW, "val": expected_val},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
+                {"idx": self.COLOR_IO, "type": 0xFF, "val": expected_val},
+                {"idx": self.EFFECT_IO, "type": 0x80, "val": 0},
             ],
         )
 
@@ -718,7 +718,7 @@ class TestLifeSmartDualIORGBWLight:
         initial_state = hass.states.get(self.ENTITY_ID)
 
         # 模拟API调用失败
-        mock_client.set_multi_eps_async.side_effect = Exception("API Error")
+        mock_client._async_send_multi_command.side_effect = Exception("API Error")
 
         # 尝试设置效果
         await hass.services.async_call(
@@ -776,8 +776,8 @@ class TestLifeSmartSPOTRGBLight:
             blocking=True,
         )
         assert hass.states.get(self.ENTITY_ID).state == STATE_ON
-        mock_client.set_single_ep_async.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, CMD_TYPE_ON, 1
+        mock_client._async_send_single_command.assert_called_with(
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0x81, 1
         )
 
     async def test_attribute_services(
@@ -795,11 +795,11 @@ class TestLifeSmartSPOTRGBLight:
         )
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_EFFECT) == "魔力红"
-        mock_client.set_single_ep_async.assert_called_with(
+        mock_client._async_send_single_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             self.SUB_KEY,
-            CMD_TYPE_SET_RAW,
+            0xFF,
             DYN_EFFECT_MAP["魔力红"],
         )
         # Test Color
@@ -812,8 +812,8 @@ class TestLifeSmartSPOTRGBLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.attributes.get(ATTR_RGB_COLOR) == (10, 20, 30)
         assert state.attributes.get(ATTR_EFFECT) is None
-        mock_client.set_single_ep_async.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, CMD_TYPE_SET_RAW, 0x0A141E
+        mock_client._async_send_single_command.assert_called_with(
+            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0xFF, 0x0A141E
         )
 
     @pytest.mark.parametrize(
@@ -863,15 +863,15 @@ class TestLifeSmartSPOTRGBLight:
         test_id,
     ):
         """
-        /**
-         * test_service_call_with_brightness_and_color() - 验证颜色和亮度组合的正确处理。
-         * @service_data: 包含有效颜色和亮度值的服务调用数据。
-         * @expected_api_val: 经过 Home Assistant 核心颜色/亮度转换后，预期发送给 API 的十六进制值。
-         * @test_id: 测试用例的ID。
-         *
-         * 此测试验证当同时提供 brightness 和 rgb_color 时，集成是否能正确计算
-         * 最终的颜色值并调用底层 API。这反映了 HA 的真实颜色处理逻辑。
-         */
+        验证颜色和亮度组合的正确处理。
+
+        此测试验证当同时提供 brightness 和 rgb_color 时，集成是否能正确计算
+        最终的颜色值并调用底层 API。这反映了 HA 的真实颜色处理逻辑。
+
+        Args:
+            service_data: 包含有效颜色和亮度值的服务调用数据。
+            expected_api_val: 经过 Home Assistant 核心颜色/亮度转换后，预期发送给 API 的十六进制值。
+            test_id: 测试用例的ID。
         """
         # 准备完整的服务调用数据
         full_service_data = {ATTR_ENTITY_ID: self.ENTITY_ID, **service_data}
@@ -882,11 +882,11 @@ class TestLifeSmartSPOTRGBLight:
         )
 
         # 验证底层 API 是否以正确的、经过亮度调整后的颜色值被调用
-        mock_client.set_single_ep_async.assert_called_with(
+        mock_client._async_send_single_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             self.SUB_KEY,
-            CMD_TYPE_SET_RAW,
+            0xFF,
             expected_api_val,
         )
 
@@ -953,12 +953,12 @@ class TestLifeSmartSPOTRGBWLight:
             blocking=True,
         )
         assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_OFF, "val": 0},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
+                {"idx": self.COLOR_IO, "type": 0x80, "val": 0},
+                {"idx": self.EFFECT_IO, "type": 0x80, "val": 0},
             ],
         )
         # Turn On (no params)
@@ -983,14 +983,14 @@ class TestLifeSmartSPOTRGBWLight:
             {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_EFFECT: "魔力红"},
             blocking=True,
         )
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_ON, "val": 1},
+                {"idx": self.COLOR_IO, "type": 0x81, "val": 1},
                 {
                     "idx": self.EFFECT_IO,
-                    "type": CMD_TYPE_SET_RAW,
+                    "type": 0xFF,
                     "val": DYN_EFFECT_MAP["魔力红"],
                 },
             ],
@@ -1015,12 +1015,12 @@ class TestLifeSmartSPOTRGBWLight:
         # val = 0x14050A0F
         expected_val = (20 << 24) | (5 << 16) | (10 << 8) | 15
 
-        mock_client.set_multi_eps_async.assert_called_with(
+        mock_client._async_send_multi_command.assert_called_with(
             self.HUB_ID,
             self.DEVICE_ME,
             [
-                {"idx": self.COLOR_IO, "type": CMD_TYPE_SET_RAW, "val": expected_val},
-                {"idx": self.EFFECT_IO, "type": CMD_TYPE_OFF, "val": 0},
+                {"idx": self.COLOR_IO, "type": 0xFF, "val": expected_val},
+                {"idx": self.EFFECT_IO, "type": 0x80, "val": 0},
             ],
         )
 
@@ -1047,7 +1047,7 @@ class TestLifeSmartSPOTRGBWLight:
         assert initial_state.attributes.get(ATTR_EFFECT) == "海浪"
 
         # 模拟API调用失败
-        mock_client.set_multi_eps_async.side_effect = Exception("API Error")
+        mock_client._async_send_multi_command.side_effect = Exception("API Error")
 
         # 尝试设置颜色，这会清除效果
         await hass.services.async_call(
@@ -1215,3 +1215,217 @@ class TestLifeSmartOutdoorLight(TestLifeSmartSingleIORGBWLight):
     ENTITY_ID = "light.outdoor_light_p1"
     DEVICE_ME = "light_outdoor"
     SUB_KEY = "P1"
+
+
+# ============================================================================
+# === 新增：协议细节与颜色逻辑的边际测试 ===
+#
+# 设计说明:
+# 此测试类专注于验证灯光设备在处理颜色、亮度、效果等复杂逻辑时的边缘情况，
+# 以及确保生成的 API 命令与设备协议文档精确匹配。
+#
+# 每个测试方法都使用一个专用的、只加载单个被测设备的 setup fixture，
+# 以实现完全的测试隔离，确保断言的精确性。
+# ============================================================================
+
+
+class TestLightProtocolAndColorEdgeCases:
+    """
+    针对灯光协议细节和颜色计算逻辑的深度和边缘情况测试。
+    """
+
+    async def test_single_io_light_protocol_precision(
+        self,
+        hass: HomeAssistant,
+        mock_client: MagicMock,
+        setup_integration_single_io_rgbw_only: ConfigEntry,
+    ):
+        """
+        测试单IO口灯(SL_SC_RGB)的 `turn_on` 服务调用是否精确匹配协议。
+
+        根据协议文档，当设置颜色或效果时，应使用 `type=0xFF`。此测试
+        旨在验证这一关键的协议细节，确保集成生成的命令是设备可以正确
+        解析的。
+        """
+        # 定义测试中使用的常量
+        entity_id = "light.single_io_rgb_light_rgb"
+        hub_id = "hub_light"
+        device_me = "light_singlergb"
+        sub_key = "RGB"
+
+        # 步骤 1: 设置一个RGBW颜色
+        # 验证：API调用时，type 必须是 0xFF，val 是计算后的颜色值。
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_RGBW_COLOR: (10, 20, 30, 40)},
+            blocking=True,
+        )
+        # 断言：验证底层命令的 type 和 val 是否完全符合协议
+        mock_client._async_send_single_command.assert_called_with(
+            hub_id,
+            device_me,
+            sub_key,
+            0xFF,  # 关键断言：type 必须是 0xFF
+            0x280A141E,  # W=40, R=10, G=20, B=30
+        )
+
+        # 步骤 2: 设置一个动态效果
+        # 验证：API调用时，type 同样必须是 0xFF，val 是效果的ID。
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "天上人间"},
+            blocking=True,
+        )
+        # 断言：验证底层命令的 type 和 val 是否完全符合协议
+        mock_client._async_send_single_command.assert_called_with(
+            hub_id,
+            device_me,
+            sub_key,
+            0xFF,  # 关键断言：type 必须是 0xFF
+            DYN_EFFECT_MAP["天上人间"],
+        )
+
+    async def test_spot_rgb_light_color_brightness_edge_cases(
+        self,
+        hass: HomeAssistant,
+        mock_client: MagicMock,
+        setup_integration_spot_rgb_only: ConfigEntry,
+    ):
+        """
+        测试SPOT RGB灯在颜色和亮度组合下的边缘计算情况。
+
+        此测试旨在验证 Home Assistant 核心的颜色/亮度计算逻辑与我们的
+        集成代码结合后，在边缘条件下（如亮度为1或0）是否能生成正确
+        的最终颜色值并发送给设备。
+        """
+        # 定义测试中使用的常量
+        entity_id = "light.spot_rgb_light_rgb"
+        hub_id = "hub_light"
+        device_me = "light_spotrgb"
+        sub_key = "RGB"
+
+        # 场景 1: 亮度极低 (brightness=1)
+        # 预期：颜色 (255, 128, 64) 在亮度为 1/255 时，应缩放为 (1, 1, 0)。
+        # 计算: R=round(255*1/255)=1, G=round(128*1/255)=1, B=round(64*1/255)=0
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_BRIGHTNESS: 1,
+                ATTR_RGB_COLOR: (255, 128, 64),
+            },
+            blocking=True,
+        )
+        # 断言：验证API调用发送了正确缩放后的颜色值
+        mock_client._async_send_single_command.assert_called_with(
+            hub_id,
+            device_me,
+            sub_key,
+            0xFF,
+            0x010100,  # 修正后的预期值: R=1, G=1, B=0
+        )
+
+        # 场景 2: 亮度为0
+        # 预期：虽然服务是 `turn_on`，但亮度为0应被视为关灯。
+        # 集成代码应将此情况转换为一个明确的关灯命令。
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_BRIGHTNESS: 0,
+                ATTR_RGB_COLOR: (255, 128, 64),
+            },
+            blocking=True,
+        )
+        # 断言：验证调用的是关灯方法，而不是发送颜色(0,0,0)
+        mock_client.turn_off_light_switch_async.assert_called_with(
+            sub_key, hub_id, device_me
+        )
+
+    async def test_dual_io_light_state_competition(
+        self,
+        hass: HomeAssistant,
+        mock_client: MagicMock,
+        setup_integration_dual_io_light_only: ConfigEntry,
+    ):
+        """
+        测试双IO口灯在颜色和效果之间的状态竞争和互斥逻辑。
+
+        此测试模拟用户连续切换颜色和动态效果，以验证：
+        1. 设置效果时，会正确关闭颜色通道。
+        2. 设置颜色时，会正确关闭效果通道。
+        这确保了设备不会处于一个未定义的状态。
+        """
+        # 定义测试中使用的常量
+        entity_id = "light.dual_io_rgbw_light"
+        hub_id = "hub_light"
+        device_me = "light_dualrgbw"
+        color_io = "RGBW"
+        effect_io = "DYN"
+
+        # 步骤 1: 从初始状态（颜色和效果都关闭）切换到动态效果
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "天上人间"},
+            blocking=True,
+        )
+        # 断言：效果通道被打开，颜色通道仅被置为开机状态以点亮灯珠
+        mock_client._async_send_multi_command.assert_called_with(
+            hub_id,
+            device_me,
+            [
+                {"idx": color_io, "type": 0x81, "val": 1},  # 打开颜色IO以供电
+                {"idx": effect_io, "type": 0xFF, "val": DYN_EFFECT_MAP["天上人间"]},
+            ],
+        )
+        # 验证HA状态
+        state = hass.states.get(entity_id)
+        assert state.attributes.get(ATTR_EFFECT) == "天上人间"
+        assert state.attributes.get(ATTR_RGBW_COLOR) is None
+
+        # 步骤 2: 从动态效果切换到静态颜色
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_RGBW_COLOR: (10, 20, 30, 40)},
+            blocking=True,
+        )
+        # 断言：颜色通道被设置了具体值，效果通道被明确关闭
+        mock_client._async_send_multi_command.assert_called_with(
+            hub_id,
+            device_me,
+            [
+                {"idx": color_io, "type": 0xFF, "val": 0x280A141E},
+                {"idx": effect_io, "type": 0x80, "val": 0},  # 关闭效果IO
+            ],
+        )
+        # 验证HA状态
+        state = hass.states.get(entity_id)
+        assert state.attributes.get(ATTR_EFFECT) is None
+        assert state.attributes.get(ATTR_RGBW_COLOR) == (10, 20, 30, 40)
+
+        # 步骤 3: 再次从静态颜色切换回动态效果
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "魔力红"},
+            blocking=True,
+        )
+        # 断言：效果通道再次被打开，颜色通道被重置为简单的开机状态
+        mock_client._async_send_multi_command.assert_called_with(
+            hub_id,
+            device_me,
+            [
+                {"idx": color_io, "type": 0x81, "val": 1},
+                {"idx": effect_io, "type": 0xFF, "val": DYN_EFFECT_MAP["魔力红"]},
+            ],
+        )
+        # 验证HA状态
+        state = hass.states.get(entity_id)
+        assert state.attributes.get(ATTR_EFFECT) == "魔力红"
+        assert state.attributes.get(ATTR_RGBW_COLOR) is None

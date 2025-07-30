@@ -27,8 +27,8 @@ from custom_components.lifesmart.const import (
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
 )
+from custom_components.lifesmart.core.lifesmart_client import LifeSmartClient
 from custom_components.lifesmart.exceptions import LifeSmartAPIError, LifeSmartAuthError
-from custom_components.lifesmart.lifesmart_client import LifeSmartClient
 
 
 # region Fixtures
@@ -44,7 +44,7 @@ def client(hass):
 def mock_async_call_api():
     """Mock _async_call_api 方法，用于测试上层辅助函数。"""
     with patch(
-        "custom_components.lifesmart.lifesmart_client.LifeSmartClient._async_call_api",
+        "custom_components.lifesmart.core.lifesmart_client.LifeSmartClient._async_call_api",
         new_callable=AsyncMock,
     ) as mock_func:
         mock_func.return_value = {"code": 0}  # 默认返回成功
@@ -79,7 +79,7 @@ async def test_async_call_api_signature_and_error_handling(client):
     with patch.object(
         client, "_post_and_parse", return_value={"code": 0}
     ) as mock_post, patch(
-        "custom_components.lifesmart.lifesmart_client.LifeSmartClient._get_signature"
+        "custom_components.lifesmart.core.lifesmart_client.LifeSmartClient._get_signature"
     ) as mock_get_signature:
         mock_get_signature.return_value = "mocked_signature"
 
@@ -124,7 +124,7 @@ async def test_async_call_api_signature_and_error_handling(client):
 async def test_post_and_parse_network_failure(client):
     """测试 _post_and_parse 在网络失败时的行为。"""
     with patch(
-        "custom_components.lifesmart.lifesmart_client.LifeSmartClient._post_async",
+        "custom_components.lifesmart.core.lifesmart_client.LifeSmartClient._post_async",
         new_callable=AsyncMock,
     ) as mock_post:
         mock_post.side_effect = ClientError("Connection failed")
@@ -136,7 +136,7 @@ async def test_post_and_parse_network_failure(client):
 async def test_post_and_parse_json_failure(client):
     """测试 _post_and_parse 在JSON解析失败时的行为。"""
     with patch(
-        "custom_components.lifesmart.lifesmart_client.LifeSmartClient._post_async",
+        "custom_components.lifesmart.core.lifesmart_client.LifeSmartClient._post_async",
         new_callable=AsyncMock,
     ) as mock_post:
         mock_post.return_value = "this is not json"

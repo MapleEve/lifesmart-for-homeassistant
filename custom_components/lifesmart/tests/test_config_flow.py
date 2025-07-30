@@ -364,7 +364,7 @@ async def test_reauth_flow_success(
         CONF_LIFESMART_APPTOKEN: mock_config_entry.data[CONF_LIFESMART_APPTOKEN],
         CONF_LIFESMART_USERID: mock_config_entry.data[CONF_LIFESMART_USERID],
         CONF_REGION: mock_config_entry.data[CONF_REGION],
-        CONF_LIFESMART_AUTH_METHOD: "password",  # 这是我们要修改的字段
+        CONF_LIFESMART_AUTH_METHOD: "password",
     }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
