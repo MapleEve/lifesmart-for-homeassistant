@@ -33,24 +33,11 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.const import *
-from custom_components.lifesmart.helpers import generate_unique_id
+from custom_components.lifesmart.helpers import (
+    generate_unique_id,
+    find_test_device,
+)
 from custom_components.lifesmart.sensor import _is_sensor_subdevice
-
-
-def find_device(devices: list, me: str):
-    """
-    find_device() - 从模拟设备列表中查找特定设备。
-
-    Args:
-        devices (list): 包含模拟设备字典的列表。
-        me (str): 要查找的设备的 'me' 标识符。
-
-    此函数是一个辅助函数，用于通过 'me' ID 在测试数据中快速定位设备。
-
-    Returns:
-        dict: 找到的设备字典，如果未找到则返回 None。
-    """
-    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
 
 
 @pytest.mark.asyncio
@@ -95,7 +82,7 @@ async def test_sensor_creation_and_exclusion(
 
     assert expected_entities.issubset(created_entities)
 
-    excluded_device_on_hub = find_device(
+    excluded_device_on_hub = find_test_device(
         mock_lifesmart_devices, "device_on_excluded_hub"
     )
     unique_id_excluded_hub = generate_unique_id(
@@ -216,7 +203,7 @@ async def test_lifesmart_sensor_properties(
      * 是否具有正确的名称、设备类别、单位、状态类别和初始值。
      */
     """
-    raw_device = find_device(mock_lifesmart_devices, device_me)
+    raw_device = find_test_device(mock_lifesmart_devices, device_me)
     entity_id = (
         f"sensor.{raw_device['name'].lower().replace(' ', '_')}_{sub_key.lower()}"
     )
@@ -327,7 +314,7 @@ async def test_sensor_update_logic_coverage(
     assert state is not None and float(state.state) == initial_value
 
     device_me, sub_key = unique_id_suffix.rsplit("_", 1)
-    raw_device = find_device(mock_lifesmart_devices, device_me)
+    raw_device = find_test_device(mock_lifesmart_devices, device_me)
     unique_id = generate_unique_id(
         raw_device[DEVICE_TYPE_KEY],
         raw_device[HUB_ID_KEY],
@@ -361,7 +348,7 @@ async def test_update_with_ambiguous_val_key(
     sub_key = "T"
 
     # 1. 获取 dispatcher 所需的 unique_id
-    raw_device = find_device(mock_lifesmart_devices, device_me)
+    raw_device = find_test_device(mock_lifesmart_devices, device_me)
     unique_id = generate_unique_id(
         raw_device[DEVICE_TYPE_KEY],
         raw_device[HUB_ID_KEY],

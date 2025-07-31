@@ -40,12 +40,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.const import *
 # 导入项目内部的工具函数和常量
-from custom_components.lifesmart.helpers import generate_unique_id
-
-
-def find_device(devices: list, me: str):
-    """一个辅助函数，用于根据设备的 'me' ID 从模拟设备列表中查找特定设备。"""
-    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
+from custom_components.lifesmart.helpers import (
+    generate_unique_id,
+    find_test_device,
+)
 
 
 def get_entity_unique_id(device: dict) -> str:
@@ -188,7 +186,9 @@ class TestClimateSetup:
         assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
 
         # 模拟将 Nature Panel 的模式从温控(P5=3)改为开关(P5=1)
-        nature_switch = find_device(mock_lifesmart_devices, "climate_nature_thermo")
+        nature_switch = find_test_device(
+            mock_lifesmart_devices, "climate_nature_thermo"
+        )
         nature_switch["data"]["P5"]["val"] = 1
 
         # 模拟重载过程
@@ -431,7 +431,7 @@ class TestClimateEntity:
         方法能否正确解析各种复杂数据（特别是位掩码），并更新实体的状态。
         同时，它也测试了代码在面对不完整数据时的容错能力。
         """
-        device = find_device(mock_lifesmart_devices, me)
+        device = find_test_device(mock_lifesmart_devices, me)
         assert device is not None
         entity_id = f"climate.{device['name'].lower().replace(' ', '_')}"
         unique_id = get_entity_unique_id(device)

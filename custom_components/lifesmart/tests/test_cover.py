@@ -38,12 +38,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from custom_components.lifesmart.const import *
-
-
-# --- 辅助函数 ---
-def find_device(devices: list, me: str):
-    """通过 'me' ID 从模拟设备列表中查找特定设备。"""
-    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
+from custom_components.lifesmart.helpers import find_test_device
 
 
 def get_entity_unique_id(hass: HomeAssistant, entity_id: str) -> str:
@@ -92,7 +87,7 @@ class TestCoverSetup:
         assert hass.states.get("cover.generic_controller_curtain_p2") is not None
 
         # 修改通用控制器的工作模式为非窗帘模式 (例如，设为0)
-        generic_device = find_device(mock_lifesmart_devices, "cover_generic")
+        generic_device = find_test_device(mock_lifesmart_devices, "cover_generic")
         generic_device["data"]["P1"]["val"] = 0
 
         # 使用修改后的设备列表重新加载集成
@@ -136,7 +131,7 @@ class TestPositionalCover:
     @pytest.fixture
     def device(self, mock_lifesmart_devices):
         """提供当前测试类的设备字典。"""
-        return find_device(mock_lifesmart_devices, self.DEVICE_ME)
+        return find_test_device(mock_lifesmart_devices, self.DEVICE_ME)
 
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         """测试定位窗帘的初始属性。"""

@@ -16,10 +16,14 @@ from .const import (
     ALL_SWITCH_TYPES,
     CLIMATE_TYPES,
     DEVICE_DATA_KEY,
+    DEVICE_ID_KEY,
     GENERIC_CONTROLLER_TYPES,
 )
 
 
+# ====================================================================
+# 通用辅助函数
+# ====================================================================
 def safe_get(data: dict | list, *path, default: Any = None) -> Any:
     """
     安全地根据路径从嵌套的字典或列表中取值。
@@ -186,3 +190,24 @@ def is_climate(device: dict) -> bool:
         return p5_val == 3  # 3 代表温控版
 
     return True
+
+
+# ====================================================================
+# 测试专用辅助函数
+# 注意：不要把测试函数导入正常模块中，这些函数仅用于测试
+# ====================================================================
+
+
+def find_test_device(devices: list, me: str):
+    """
+    /**
+     * find_test_device - 一个测试专用辅助函数，用于从模拟设备列表中通过 'me' ID 查找设备。
+     *
+     * @devices: 包含模拟设备字典的列表。
+     * @me: 要查找的设备的 'me' 标识符。
+     *
+     * 返回:
+     *   找到的设备字典，或在未找到时返回 None。
+     */
+    """
+    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)

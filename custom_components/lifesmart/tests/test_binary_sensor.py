@@ -19,22 +19,10 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.const import *
-from custom_components.lifesmart.helpers import generate_unique_id
-
-
-def find_device(devices: list, me: str):
-    """
-    /**
-     * find_device - 一个辅助函数，用于从模拟设备列表中通过 'me' ID 查找设备。
-     *
-     * @devices: 包含模拟设备字典的列表。
-     * @me: 要查找的设备的 'me' 标识符。
-     *
-     * 返回:
-     *   找到的设备字典，或在未找到时返回 None。
-     */
-    """
-    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
+from custom_components.lifesmart.helpers import (
+    generate_unique_id,
+    find_test_device,
+)
 
 
 @pytest.mark.asyncio
@@ -94,7 +82,7 @@ async def test_entity_initialization_and_properties(
      *   - 每个实体的名称、设备类别、初始状态和 unique_id 都应符合预期。
      */
     """
-    device = find_device(mock_lifesmart_devices, device_me)
+    device = find_test_device(mock_lifesmart_devices, device_me)
     entity_registry = er.async_get(hass)
     unique_id = generate_unique_id(
         device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], sub_key
@@ -158,7 +146,7 @@ async def test_momentary_button_events(
      *   - 在短暂延迟后，实体状态应自动重置为 'off'。
      */
     """
-    device = find_device(mock_lifesmart_devices, "bs_button")
+    device = find_test_device(mock_lifesmart_devices, "bs_button")
     unique_id = generate_unique_id(
         device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], "P1"
     )
@@ -199,7 +187,7 @@ async def test_global_refresh_update(
     assert hass.states.get(entity_id).state == STATE_ON
 
     # Find the door device in the live hass data and update it
-    door_device = find_device(
+    door_device = find_test_device(
         hass.data[DOMAIN][setup_integration.entry_id]["devices"], "bs_door"
     )
     door_device[DEVICE_DATA_KEY] = {"G": {"val": 1, "type": 0}}

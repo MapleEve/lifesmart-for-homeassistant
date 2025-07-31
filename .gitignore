@@ -14,3 +14,4 @@ __pycache__
 
 /.coverage
 /coverage.xml
+!/.claude/
