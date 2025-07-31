@@ -39,6 +39,7 @@ from custom_components.lifesmart.core.protocol import (
     LifeSmartPacketFactory,
     LSTimestamp,
 )
+from custom_components.lifesmart.helpers import normalize_device_names
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -542,7 +543,7 @@ class TestTCPClientIntegration:
         ],
     )
     def test_normalize_device_names(self, input_dict, expected_dict):
-        normalized = LifeSmartLocalTCPClient._normalize_device_names(input_dict)
+        normalized = normalize_device_names(input_dict)
         assert normalized == expected_dict
 
     @pytest.mark.asyncio

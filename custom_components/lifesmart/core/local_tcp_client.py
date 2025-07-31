@@ -7,11 +7,11 @@
 
 import asyncio
 import logging
-import re
 from typing import Callable, Any
 
 from .client_base import LifeSmartClientBase
 from .protocol import LifeSmartPacketFactory, LifeSmartProtocol
+from ..helpers import safe_get, normalize_device_names
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,21 +118,6 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
     async def async_connect(self, callback: None | Callable):
         """主连接循环，负责登录、获取设备和监听状态更新。"""
 
-        def _safe_get(data, *path, default=None):
-            """安全地按路径取值，支持 dict/list 混合。"""
-            cur = data
-            for key in path:
-                if isinstance(cur, dict):
-                    cur = cur.get(key, default)
-                elif isinstance(cur, list) and isinstance(key, int):
-                    try:
-                        cur = cur[key]
-                    except IndexError:
-                        return default
-                else:
-                    return default
-            return cur
-
         self._connect_task = asyncio.current_task()
         while not self.disconnected:
             self.reader, self.writer = None, None
@@ -210,19 +195,19 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
 
                             if stage == "login":
 
-                                if _safe_get(decoded, 1, "ret") is None:
+                                if safe_get(decoded, 1, "ret") is None:
                                     _LOGGER.error(
                                         "本地登录失败 -> %s",
-                                        _safe_get(decoded, 1, "err", "未知登录错误"),
+                                        safe_get(decoded, 1, "err", "未知登录错误"),
                                     )
                                     self.disconnected = True
                                     continue
-                                node_info = _safe_get(decoded, 1, "ret", 4)
+                                node_info = safe_get(decoded, 1, "ret", 4)
                                 if not node_info:
                                     _LOGGER.error("登录响应缺少 node 信息")
                                     break
-                                self.node = _safe_get(node_info, "base", 1, default="")
-                                self.node_agt = _safe_get(
+                                self.node = safe_get(node_info, "base", 1, default="")
+                                self.node_agt = safe_get(
                                     node_info, "agt", 1, default=""
                                 )
                                 _LOGGER.info(
@@ -237,10 +222,10 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                                 self.writer.write(pkt)
                                 await self.writer.drain()
                             elif stage == "loading":
-                                eps = _safe_get(decoded, 1, "ret", 1, "eps", default={})
+                                eps = safe_get(decoded, 1, "ret", 1, "eps", default={})
                                 self.devices = {}
                                 for devid, dev in eps.items():
-                                    dev = self._normalize_device_names(dev)
+                                    dev = normalize_device_names(dev)
                                     dev_meta = {
                                         "me": devid,
                                         "devtype": (
@@ -250,7 +235,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                                         ),
                                         "agt": self.node_agt,
                                         "name": dev["name"],
-                                        "data": _safe_get(
+                                        "data": safe_get(
                                             dev, "_chd", "m", "_chd", default={}
                                         ),
                                     }
@@ -264,7 +249,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                                 self.device_ready.set()  # 通知 get_all_device_async 可以返回了
                                 stage = "loaded"
                             else:  # 实时状态推送
-                                if schg := _safe_get(decoded, 1, "_schg"):
+                                if schg := safe_get(decoded, 1, "_schg"):
                                     _LOGGER.debug(
                                         "收到本地状态更新 (_schg) <- : %s", schg
                                     )
@@ -322,10 +307,10 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                                                 await callback(
                                                     {"type": "io", "msg": msg}
                                                 )
-                                elif _safe_get(decoded, 1, "_sdel"):
+                                elif safe_get(decoded, 1, "_sdel"):
                                     _LOGGER.warning(
                                         "检测到设备被删除，将触发重新加载: %s",
-                                        _safe_get(decoded, 1, "_sdel"),
+                                        safe_get(decoded, 1, "_sdel"),
                                     )
                                     if callback and callable(callback):
                                         await callback({"reload": True})
@@ -489,31 +474,3 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         """为设备添加一个定时器。"""
         pkt = self._factory.build_add_timer_packet(devid, croninfo, key)
         return await self._send_packet(pkt)
-
-    # ====================================================================
-    # 设备名称规范化
-    # ====================================================================
-    @staticmethod
-    def _normalize_device_names(dev_dict: dict) -> dict:
-        """
-        递归地规范化设备及其子设备的名称，替换所有已知占位符。
-        - '{$EPN}' -> 替换为父设备名称。
-        - '{SUB_KEY}' -> 替换为 'SUB_KEY'。
-        """
-        base_name = dev_dict.get("name", "")
-        if (
-            "_chd" in dev_dict
-            and "m" in dev_dict["_chd"]
-            and "_chd" in dev_dict["_chd"]["m"]
-        ):
-            sub_devices = dev_dict["_chd"]["m"]["_chd"]
-            for sub_key, sub_data in sub_devices.items():
-                if (
-                    isinstance(sub_data, dict)
-                    and (sub_name := sub_data.get("name"))
-                    and isinstance(sub_name, str)
-                ):
-                    processed_name = sub_name.replace("{$EPN}", base_name).strip()
-                    processed_name = re.sub(r"\{([A-Z0-9_]+)\}", r"\1", processed_name)
-                    sub_data["name"] = " ".join(processed_name.split())
-        return dev_dict
