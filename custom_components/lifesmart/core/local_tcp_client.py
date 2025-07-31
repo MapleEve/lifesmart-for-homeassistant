@@ -226,12 +226,14 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                                 self.devices = {}
                                 for devid, dev in eps.items():
                                     dev = normalize_device_names(dev)
+                                    cls_value = safe_get(dev, "cls", default="")
                                     dev_meta = {
                                         "me": devid,
                                         "devtype": (
-                                            dev["cls"][:-3]
-                                            if dev["cls"][-3:-1] == "_V"
-                                            else dev["cls"]
+                                            cls_value[:-3]
+                                            if len(cls_value) >= 3
+                                            and cls_value[-3:-1] == "_V"
+                                            else cls_value
                                         ),
                                         "agt": self.node_agt,
                                         "name": dev["name"],

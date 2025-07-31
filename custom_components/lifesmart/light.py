@@ -111,7 +111,9 @@ async def async_setup_entry(
         # 使用helpers中的统一逻辑获取所有有效的灯光子设备
         subdevice_keys = get_light_subdevices(device)
         for sub_key in subdevice_keys:
-            light_entity = _create_light_entity(device, hub.get_client(), config_entry.entry_id, sub_key)
+            light_entity = _create_light_entity(
+                device, hub.get_client(), config_entry.entry_id, sub_key
+            )
             if light_entity:
                 lights.append(light_entity)
 

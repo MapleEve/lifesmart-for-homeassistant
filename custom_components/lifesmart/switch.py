@@ -49,7 +49,11 @@ async def async_setup_entry(
         # 使用helpers中的统一逻辑获取所有有效的开关子设备
         subdevice_keys = get_switch_subdevices(device)
         for sub_key in subdevice_keys:
-            switches.append(LifeSmartSwitch(device, sub_key, hub.get_client(), config_entry.entry_id))
+            switches.append(
+                LifeSmartSwitch(
+                    device, sub_key, hub.get_client(), config_entry.entry_id
+                )
+            )
 
     async_add_entities(switches)
 

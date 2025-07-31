@@ -39,6 +39,7 @@ from ..const import (
     REVERSE_LIFESMART_HVAC_MODE_MAP,
     REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
 )
+from ..helpers import safe_get
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +171,10 @@ class LifeSmartClientBase(ABC):
                 agt, me, "P2", CMD_TYPE_SET_VAL, 100
             )
         if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["open"]
+            cmd_idx = safe_get(NON_POSITIONAL_COVER_CONFIG, device_type, "open")
+            if cmd_idx is None:
+                _LOGGER.warning("设备类型 %s 缺少 'open' 配置", device_type)
+                return -1
             return await self._async_send_single_command(
                 agt, me, cmd_idx, CMD_TYPE_ON, 1
             )
@@ -188,7 +192,10 @@ class LifeSmartClientBase(ABC):
                 agt, me, "P2", CMD_TYPE_SET_VAL, 0
             )
         if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["close"]
+            cmd_idx = safe_get(NON_POSITIONAL_COVER_CONFIG, device_type, "close")
+            if cmd_idx is None:
+                _LOGGER.warning("设备类型 %s 缺少 'close' 配置", device_type)
+                return -1
             return await self._async_send_single_command(
                 agt, me, cmd_idx, CMD_TYPE_ON, 1
             )
@@ -206,7 +213,10 @@ class LifeSmartClientBase(ABC):
                 agt, me, "P2", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
             )
         if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["stop"]
+            cmd_idx = safe_get(NON_POSITIONAL_COVER_CONFIG, device_type, "stop")
+            if cmd_idx is None:
+                _LOGGER.warning("设备类型 %s 缺少 'stop' 配置", device_type)
+                return -1
             return await self._async_send_single_command(
                 agt, me, cmd_idx, CMD_TYPE_ON, 1
             )

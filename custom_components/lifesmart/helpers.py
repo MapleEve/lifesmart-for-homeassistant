@@ -97,9 +97,9 @@ def normalize_device_names(dev_dict: dict) -> dict:
     if (
         "_chd" in dev_dict
         and "m" in dev_dict["_chd"]
-        and "_chd" in dev_dict["_chd"]["m"]
+        and "_chd" in safe_get(dev_dict, "_chd", "m", default={})
     ):
-        sub_devices = dev_dict["_chd"]["m"]["_chd"]
+        sub_devices = safe_get(dev_dict, "_chd", "m", "_chd", default={})
         for sub_key, sub_data in sub_devices.items():
             if (
                 isinstance(sub_data, dict)

@@ -36,6 +36,7 @@ from .const import (
 from .core.openapi_client import LifeSmartOAPIClient
 from .diagnostics import get_error_advice
 from .exceptions import LifeSmartAuthError
+from .helpers import safe_get
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,16 +143,17 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # 检查是否处于重新认证流程
         if self._reauth_entry:
             _LOGGER.info("重新认证成功，正在更新配置条目...")
-            self.hass.config_entries.async_update_entry(
-                self._reauth_entry, data=validation_result["data"]
-            )
+            data = safe_get(validation_result, "data", default={})
+            self.hass.config_entries.async_update_entry(self._reauth_entry, data=data)
             # 更新后需要重新加载集成以使新凭据生效
             await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
             # 中止流程，并向用户显示成功消息
             return self.async_abort(reason="reauth_successful")
 
         # 检查此用户是否已配置
-        await self.async_set_unique_id(validation_result["data"][CONF_LIFESMART_USERID])
+        userid = safe_get(validation_result, "data", CONF_LIFESMART_USERID, default="")
+        if userid:
+            await self.async_set_unique_id(userid)
         self._abort_if_unique_id_configured()
 
         # 首次设置，创建新的配置条目
