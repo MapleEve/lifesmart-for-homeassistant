@@ -17,6 +17,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_REGION
 from homeassistant.core import HomeAssistant, HassJob
+from homeassistant.util.async_ import get_scheduled_timer_handles
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.const import *
