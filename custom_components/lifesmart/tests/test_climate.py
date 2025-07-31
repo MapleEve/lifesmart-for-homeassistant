@@ -16,7 +16,6 @@
     这种方法对于测试复杂的状态机（如风机盘管的模式切换）至关重要。
 """
 
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -67,22 +66,24 @@ async def setup_integration_fancoil_only(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
     mock_device_climate_fancoil: dict,  # 直接从 conftest.py 注入单个设备
 ):
     """一个专用的 setup fixture，只加载风机盘管这一个设备。"""
     mock_config_entry.add_to_hass(hass)
     # 只使用注入的单个设备来创建测试环境了
     devices = [mock_device_climate_fancoil]
-    create_client_return_value = (
-        mock_client,
-        devices,
-        {"expiredtime": int(time.time()) + 3600},
-    )
-    with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
-    ):
+
+    # 创建一个模拟的 hub 对象
+    from unittest.mock import AsyncMock
+
+    mock_hub = MagicMock()
+    mock_hub.async_setup = AsyncMock(return_value=True)
+    mock_hub.get_devices.return_value = devices
+    mock_hub.get_client.return_value = mock_client
+    mock_hub.get_exclude_config.return_value = (set(), set())
+    mock_hub.async_unload = AsyncMock(return_value=None)
+
+    with patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -94,21 +95,23 @@ async def setup_integration_floorheat_only(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
     mock_device_climate_floor_heat: dict,
 ):
     """一个专用的 setup fixture，只加载地暖这一个设备。"""
     mock_config_entry.add_to_hass(hass)
     devices = [mock_device_climate_floor_heat]
-    create_client_return_value = (
-        mock_client,
-        devices,
-        {"expiredtime": int(time.time()) + 3600},
-    )
-    with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
-    ):
+
+    # 创建一个模拟的 hub 对象
+    from unittest.mock import AsyncMock
+
+    mock_hub = MagicMock()
+    mock_hub.async_setup = AsyncMock(return_value=True)
+    mock_hub.get_devices.return_value = devices
+    mock_hub.get_client.return_value = mock_client
+    mock_hub.get_exclude_config.return_value = (set(), set())
+    mock_hub.async_unload = AsyncMock(return_value=None)
+
+    with patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -120,21 +123,23 @@ async def setup_integration_nature_fancoil_mode(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
     mock_device_climate_nature_fancoil: dict,
 ):
-    """一个专用的 setup fixture，只加载配置为“风机盘管模式”的 Nature Panel。"""
+    """一个专用的 setup fixture，只加载配置为"风机盘管模式"的 Nature Panel。"""
     mock_config_entry.add_to_hass(hass)
     devices = [mock_device_climate_nature_fancoil]
-    create_client_return_value = (
-        mock_client,
-        devices,
-        {"expiredtime": int(time.time()) + 3600},
-    )
-    with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
-    ):
+
+    # 创建一个模拟的 hub 对象
+    from unittest.mock import AsyncMock
+
+    mock_hub = MagicMock()
+    mock_hub.async_setup = AsyncMock(return_value=True)
+    mock_hub.get_devices.return_value = devices
+    mock_hub.get_client.return_value = mock_client
+    mock_hub.get_exclude_config.return_value = (set(), set())
+    mock_hub.async_unload = AsyncMock(return_value=None)
+
+    with patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -176,7 +181,6 @@ class TestClimateSetup:
         hass: HomeAssistant,
         mock_lifesmart_devices: list,
         mock_client: AsyncMock,
-        mock_state_manager_class: MagicMock,
         setup_integration: ConfigEntry,  # 使用全局 setup
     ):
         """
@@ -191,20 +195,18 @@ class TestClimateSetup:
         )
         nature_switch["data"]["P5"]["val"] = 1
 
-        # 模拟重载过程
-        mock_client.async_get_all_devices.return_value = mock_lifesmart_devices
-        initial_state_manager_instance = mock_state_manager_class.return_value
-        initial_state_manager_instance.start.reset_mock()
+        # 模拟重载过程 - 使用新的 Hub 架构
+        with patch("custom_components.lifesmart.LifeSmartHub") as MockHubClass:
+            mock_hub_instance = MockHubClass.return_value
+            # async_setup 需要返回 AsyncMock
+            from unittest.mock import AsyncMock
 
-        create_client_return_value = (
-            mock_client,
-            mock_lifesmart_devices,
-            {"expiredtime": int(time.time()) + 3600},
-        )
-        with patch(
-            "custom_components.lifesmart._async_create_client_and_get_devices",
-            return_value=create_client_return_value,
-        ):
+            mock_hub_instance.async_setup = AsyncMock(return_value=True)
+            mock_hub_instance.get_devices.return_value = mock_lifesmart_devices
+            mock_hub_instance.get_client.return_value = mock_client
+            mock_hub_instance.get_exclude_config.return_value = (set(), set())
+            mock_hub_instance.async_unload = AsyncMock(return_value=None)
+
             assert await hass.config_entries.async_reload(setup_integration.entry_id)
             await hass.async_block_till_done()
 
@@ -213,8 +215,6 @@ class TestClimateSetup:
         assert reloaded_state is not None
         assert reloaded_state.state == "unavailable"
         assert hass.states.get("switch.nature_panel_thermo_p1") is not None
-        initial_state_manager_instance.stop.assert_awaited_once()
-        initial_state_manager_instance.start.assert_called_once()
 
 
 class TestClimateEntity:

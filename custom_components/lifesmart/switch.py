@@ -10,7 +10,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -21,11 +20,10 @@ from .const import (
     DEVICE_VERSION_KEY,
     SUBDEVICE_INDEX_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
-    CONF_EXCLUDE_ITEMS,
-    CONF_EXCLUDE_AGTS,
     SMART_PLUG_TYPES,
     POWER_METER_PLUG_TYPES,
 )
+from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, get_switch_subdevices
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,18 +35,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LifeSmart switches from a config entry."""
-    entry_id = config_entry.entry_id
-    devices = hass.data[DOMAIN][entry_id]["devices"]
-    client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
-    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
-    exclude_devices = {
-        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-    }
-    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
+    hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
+    exclude_devices, exclude_hubs = hub.get_exclude_config()
 
     switches = []
-    for device in devices:
+    for device in hub.get_devices():
         if (
             device[DEVICE_ID_KEY] in exclude_devices
             or device[HUB_ID_KEY] in exclude_hubs
@@ -58,12 +49,12 @@ async def async_setup_entry(
         # 使用helpers中的统一逻辑获取所有有效的开关子设备
         subdevice_keys = get_switch_subdevices(device)
         for sub_key in subdevice_keys:
-            switches.append(LifeSmartSwitch(device, sub_key, client, entry_id))
+            switches.append(LifeSmartSwitch(device, sub_key, hub.get_client(), config_entry.entry_id))
 
     async_add_entities(switches)
 
 
-class LifeSmartSwitch(LifeSmartDevice, SwitchEntity):
+class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
     """LifeSmart switch entity with full state management."""
 
     _attr_has_entity_name = False

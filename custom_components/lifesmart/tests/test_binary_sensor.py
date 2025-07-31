@@ -170,6 +170,15 @@ async def test_momentary_button_events(
 
     # --- 步骤 2: 快进时间以触发自动重置 ---
     freezer.tick(timedelta(seconds=0.6))
+
+    # 需要手动推进 Home Assistant 的事件循环
+    import asyncio
+
+    await asyncio.sleep(0)  # 让事件循环处理调度的回调
+    await hass.async_block_till_done()
+
+    # 再次推进时间确保回调被执行
+    freezer.tick(timedelta(seconds=0.1))
     await hass.async_block_till_done()
 
     # --- 步骤 3: 验证状态已自动重置为 'off' ---

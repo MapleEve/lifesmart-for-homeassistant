@@ -26,7 +26,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice
 from .const import (
     # 核心常量
     DOMAIN,
@@ -38,9 +37,6 @@ from .const import (
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
-    # 配置选项常量
-    CONF_EXCLUDE_ITEMS,
-    CONF_EXCLUDE_AGTS,
     # --- 设备类型常量导入 ---
     EV_SENSOR_TYPES,
     ENVIRONMENT_SENSOR_TYPES,
@@ -55,6 +51,7 @@ from .const import (
     SUPPORTED_SWITCH_TYPES,
     CLIMATE_TYPES,
 )
+from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, get_sensor_subdevices, safe_get
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,18 +63,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LifeSmart from a config entry."""
-    entry_id = config_entry.entry_id
-    devices = hass.data[DOMAIN][entry_id]["devices"]
-    client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
-    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
-    exclude_devices = {
-        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-    }
-    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
+    hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
+    exclude_devices, exclude_hubs = hub.get_exclude_config()
 
     sensors = []
-    for device in devices:
+    for device in hub.get_devices():
         if (
             device[DEVICE_ID_KEY] in exclude_devices
             or device[HUB_ID_KEY] in exclude_hubs
@@ -91,8 +81,8 @@ async def async_setup_entry(
             sensors.append(
                 LifeSmartSensor(
                     raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
+                    client=hub.get_client(),
+                    entry_id=config_entry.entry_id,
                     sub_device_key=sub_key,
                     sub_device_data=sub_device_data,
                 )
@@ -101,7 +91,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class LifeSmartSensor(LifeSmartDevice, SensorEntity):
+class LifeSmartSensor(LifeSmartEntity, SensorEntity):
     """LifeSmart sensor entity with enhanced compatibility."""
 
     def __init__(

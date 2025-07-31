@@ -30,8 +30,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-# 导入项目内部的工具函数和常量
-from . import LifeSmartDevice
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -40,8 +38,6 @@ from .const import (
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
-    CONF_EXCLUDE_ITEMS,
-    CONF_EXCLUDE_AGTS,
     LIFESMART_HVAC_MODE_MAP,
     LIFESMART_CP_AIR_HVAC_MODE_MAP,
     LIFESMART_CP_AIR_FAN_MAP,
@@ -52,6 +48,8 @@ from .const import (
     get_f_fan_mode,
     get_tf_fan_mode,
 )
+# 导入项目内部的工具函数和常量
+from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, is_climate, safe_get
 
 # 初始化模块级日志记录器
@@ -70,21 +68,11 @@ async def async_setup_entry(
     它会从 hass.data 中获取已发现的设备列表，并筛选出温控设备，
     然后为每个温控设备创建一个 LifeSmartClimate 实体实例。
     """
-    entry_id = config_entry.entry_id
-    devices = hass.data[DOMAIN][entry_id]["devices"]
-    client = hass.data[DOMAIN][entry_id]["client"]
-    # 从配置选项中获取需要排除的设备和网关列表
-    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
-    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
-
-    # 解析排除列表字符串为集合，以提高查找效率
-    exclude_devices = {
-        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-    }
-    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
+    hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
+    exclude_devices, exclude_hubs = hub.get_exclude_config()
 
     climates = []
-    for device in devices:
+    for device in hub.get_devices():
         # 如果设备或其所属网关在排除列表中，则跳过
         if (
             device[DEVICE_ID_KEY] in exclude_devices
@@ -97,8 +85,8 @@ async def async_setup_entry(
             climates.append(
                 LifeSmartClimate(
                     raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
+                    client=hub.get_client(),
+                    entry_id=config_entry.entry_id,
                 )
             )
 
@@ -106,7 +94,7 @@ async def async_setup_entry(
     async_add_entities(climates)
 
 
-class LifeSmartBaseClimate(LifeSmartDevice, ClimateEntity):
+class LifeSmartBaseClimate(LifeSmartEntity, ClimateEntity):
     """
     LifeSmart 温控设备基类。
 

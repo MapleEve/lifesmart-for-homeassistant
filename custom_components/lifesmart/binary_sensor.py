@@ -7,7 +7,6 @@ LifeSmart 二元传感器平台实现
 
 """
 
-import asyncio
 import datetime
 import logging
 from typing import Any
@@ -21,9 +20,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-from . import LifeSmartDevice
 from .const import (
     # --- 核心常量导入 ---
     DOMAIN,
@@ -34,8 +33,6 @@ from .const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     UNLOCK_METHOD,
-    CONF_EXCLUDE_AGTS,
-    CONF_EXCLUDE_ITEMS,
     # --- 设备类型常量导入 ---
     GENERIC_CONTROLLER_TYPES,
     GUARD_SENSOR_TYPES,
@@ -47,6 +44,7 @@ from .const import (
     DEFED_SENSOR_TYPES,
     CLIMATE_TYPES,
 )
+from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, get_binary_sensor_subdevices, safe_get
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,19 +56,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LifeSmart binary sensors from a config entry."""
-    entry_id = config_entry.entry_id
-    devices = hass.data[DOMAIN][entry_id]["devices"]
-    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
-    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
-
-    exclude_devices = {
-        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-    }
-    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
-    client = hass.data[DOMAIN][entry_id]["client"]
+    hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
+    exclude_devices, exclude_hubs = hub.get_exclude_config()
 
     binary_sensors = []
-    for device in devices:
+    for device in hub.get_devices():
         if (
             device[DEVICE_ID_KEY] in exclude_devices
             or device[HUB_ID_KEY] in exclude_hubs
@@ -84,8 +74,8 @@ async def async_setup_entry(
             binary_sensors.append(
                 LifeSmartBinarySensor(
                     raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
+                    client=hub.get_client(),
+                    entry_id=config_entry.entry_id,
                     sub_device_key=sub_key,
                     sub_device_data=sub_device_data,
                 )
@@ -94,7 +84,7 @@ async def async_setup_entry(
     async_add_entities(binary_sensors)
 
 
-class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
+class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
     """LifeSmart binary sensor entity with enhanced compatibility."""
 
     def __init__(
@@ -144,13 +134,14 @@ class LifeSmartBinarySensor(LifeSmartDevice, BinarySensorEntity):
             self._attrs["last_event"] = event_map.get(val, "unknown")
             self._attrs["last_event_time"] = dt_util.utcnow().isoformat()
 
-            # 创建一个异步任务，在短暂延迟后将状态重置为 "off"
-            async def reset_state():
-                await asyncio.sleep(0.5)
+            # 使用 Home Assistant 的调度器在短暂延迟后将状态重置为 "off"
+            @callback
+            def reset_state_callback(_now):
+                """Reset state to off."""
                 self._attr_is_on = False
                 self.async_write_ha_state()
 
-            self.hass.loop.create_task(reset_state())
+            async_call_later(self.hass, 0.5, reset_state_callback)
 
     @callback
     def _determine_device_class(self) -> BinarySensorDeviceClass | None:

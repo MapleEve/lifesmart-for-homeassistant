@@ -10,7 +10,6 @@
 - 对边界条件（如数据缺失）的容错能力。
 """
 
-import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -82,16 +81,20 @@ class TestCoverSetup:
         generic_device["data"]["P1"]["val"] = 0
 
         # 使用修改后的设备列表重新加载集成
-        create_client_return_value = (
-            mock_client,
-            mock_lifesmart_devices,  # 确保使用已修改的设备列表
-            {"expiredtime": int(time.time()) + 3600},
-        )
-        with patch(
-            "custom_components.lifesmart._async_create_client_and_get_devices",
-            return_value=create_client_return_value,
-        ):
-            assert await hass.config_entries.async_reload(setup_integration.entry_id)
+        # 完全模拟Hub的设置过程 - 需要在 __init__ 模块级别 patch
+        with patch("custom_components.lifesmart.LifeSmartHub") as MockHubClass:
+            mock_hub_instance = MockHubClass.return_value
+            # async_setup 需要返回 AsyncMock
+            from unittest.mock import AsyncMock
+
+            mock_hub_instance.async_setup = AsyncMock(return_value=True)
+            mock_hub_instance.get_devices.return_value = mock_lifesmart_devices
+            mock_hub_instance.get_client.return_value = mock_client
+            mock_hub_instance.get_exclude_config.return_value = (set(), set())
+            mock_hub_instance.async_unload = AsyncMock(return_value=None)
+
+            result = await hass.config_entries.async_reload(setup_integration.entry_id)
+            assert result
             await hass.async_block_till_done()
 
         # 断言：通用控制器的 cover 实体状态应变为 'unavailable'。

@@ -38,7 +38,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice
 from .const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -53,8 +52,6 @@ from .const import (
     HUB_ID_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
-    CONF_EXCLUDE_ITEMS,
-    CONF_EXCLUDE_AGTS,
     RGB_LIGHT_TYPES,
     OUTDOOR_LIGHT_TYPES,
     BRIGHTNESS_LIGHT_TYPES,
@@ -64,6 +61,7 @@ from .const import (
     ALL_EFFECT_LIST,
     ALL_EFFECT_MAP,
 )
+from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, get_light_subdevices, safe_get
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,18 +97,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """从配置条目异步设置 LifeSmart 灯光设备。"""
-    entry_id = config_entry.entry_id
-    devices = hass.data[DOMAIN][entry_id]["devices"]
-    client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
-    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
-    exclude_devices = {
-        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-    }
-    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
+    hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
+    exclude_devices, exclude_hubs = hub.get_exclude_config()
 
     lights = []
-    for device in devices:
+    for device in hub.get_devices():
         if (
             device[DEVICE_ID_KEY] in exclude_devices
             or device[HUB_ID_KEY] in exclude_hubs
@@ -120,7 +111,7 @@ async def async_setup_entry(
         # 使用helpers中的统一逻辑获取所有有效的灯光子设备
         subdevice_keys = get_light_subdevices(device)
         for sub_key in subdevice_keys:
-            light_entity = _create_light_entity(device, client, entry_id, sub_key)
+            light_entity = _create_light_entity(device, hub.get_client(), config_entry.entry_id, sub_key)
             if light_entity:
                 lights.append(light_entity)
 
@@ -155,7 +146,7 @@ def _create_light_entity(device: dict, client, entry_id: str, sub_key: str):
         return LifeSmartLight(device, client, entry_id, sub_key)
 
 
-class LifeSmartBaseLight(LifeSmartDevice, LightEntity):
+class LifeSmartBaseLight(LifeSmartEntity, LightEntity):
     """
     LifeSmart 灯光设备的基类。
 

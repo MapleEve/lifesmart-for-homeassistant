@@ -4,15 +4,15 @@
 此测试文件专门测试 helpers.py 中的通用辅助函数，利用 conftest.py 中的现有测试数据。
 覆盖范围包括：
 - safe_get: 安全数据访问
+- generate_unique_id: 唯一ID生成
 - 设备类型检查函数: is_switch, is_light, is_cover, is_binary_sensor, is_sensor, is_climate
 - find_test_device: 测试辅助函数
-
-注意：generate_unique_id 和 normalize_device_names 已在其他测试文件中覆盖，此处不重复测试。
 """
 
 import pytest
 
 from custom_components.lifesmart.helpers import (
+    generate_unique_id,
     get_switch_subdevices,
     get_binary_sensor_subdevices,
     get_cover_subdevices,
@@ -1042,3 +1042,40 @@ class TestDeviceTypeClassificationParametrized:
         assert (
             is_climate(device_data) == expected_climate
         ), f"is_climate failed for {device_data['devtype']}"
+
+
+# ====================================================================
+# Section: 唯一 ID 生成器测试
+# ====================================================================
+
+
+@pytest.mark.parametrize(
+    "devtype, agt, me, sub_key, expected_id",
+    [
+        ("SL_SW_IF1", "agt123", "dev456", "L1", "sl_sw_if1_agt123_dev456_l1"),
+        ("SL_P_IR", "agt123", "dev789", None, "sl_p_ir_agt123_dev789"),
+        (
+            "SL_SW-WIN",
+            "AzcAANOlBwADWFAEdTMyMQ/me",
+            "MyDevice-01",
+            "OP",
+            "sl_swwin_azcaanolbwadwfaedtmymqme_mydevice01_op",
+        ),
+        ("", "agt1", "dev1", "L1", "_agt1_dev1_l1"),
+    ],
+    ids=["standard", "no_subkey", "special_chars", "empty_devtype"],
+)
+def test_generate_unique_id(
+    devtype: str, agt: str, me: str, sub_key: str, expected_id: str
+):
+    """
+    test_generate_unique_id - 测试唯一 ID 生成函数的健壮性
+
+    模拟场景:
+      - 输入各种合法的、包含特殊字符的、或为空的设备参数。
+
+    预期结果:
+      - 函数应始终返回一个稳定、合法、小写的 unique_id。
+      - 特殊字符（如 - 和 /）应被移除，符合 re.sub(r"\\W", "", ...) 的行为。
+    """
+    assert generate_unique_id(devtype, agt, me, sub_key) == expected_id

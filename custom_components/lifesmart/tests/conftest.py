@@ -8,7 +8,6 @@
 import asyncio
 import logging
 import threading
-import time
 from typing import Generator
 from unittest.mock import AsyncMock, patch, MagicMock
 
@@ -20,7 +19,16 @@ from homeassistant.core import HomeAssistant, HassJob
 from homeassistant.util.async_ import get_scheduled_timer_handles
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.lifesmart.const import *
+from custom_components.lifesmart.const import (
+    DOMAIN,
+    CONF_LIFESMART_APPKEY,
+    CONF_LIFESMART_APPTOKEN,
+    CONF_LIFESMART_USERID,
+    CONF_LIFESMART_USERTOKEN,
+    CONF_EXCLUDE_ITEMS,
+    CONF_EXCLUDE_AGTS,
+    DYN_EFFECT_MAP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -627,21 +635,24 @@ def mock_config_entry(mock_config_data) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_state_manager_class():
+def mock_hub_class():
     """
-    一个高级 fixture，它 patch LifeSmartStateManager 类并返回这个类的 Mock。
+    一个高级 fixture，它 patch LifeSmartHub 类并返回这个类的 Mock。
 
-    这允许我们验证其方法（如 `start`, `stop`）是否在集成的生命周期中
+    这允许我们验证其方法（如 `async_setup`, `async_unload`）是否在集成的生命周期中
     （设置、卸载、重载）被正确调用。
     """
     with patch(
-        "custom_components.lifesmart.LifeSmartStateManager", autospec=True
+        "custom_components.lifesmart.hub.LifeSmartHub", autospec=True
     ) as mock_class:
         # 获取实例的 mock，以便我们可以配置和断言它的方法
         instance = mock_class.return_value
-        instance.start = MagicMock()
-        instance.stop = AsyncMock()
-        instance.set_token_expiry = MagicMock()
+        instance.async_setup = AsyncMock(return_value=True)
+        instance.async_unload = AsyncMock()
+        instance.get_devices = MagicMock()
+        instance.get_client = MagicMock()
+        instance.get_exclude_config = MagicMock(return_value=(set(), set()))
+        instance.data_update_handler = AsyncMock()
         yield mock_class
 
 
@@ -650,7 +661,7 @@ async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
+    mock_hub_class: MagicMock,
     mock_lifesmart_devices: list,
 ):
     """
@@ -658,26 +669,26 @@ async def setup_integration(
 
     这是绝大多数集成测试的入口点。它执行了以下操作：
     1. 将模拟的 `ConfigEntry` 添加到 Home Assistant。
-    2. Patch 掉真实的客户端创建和设备获取过程，注入模拟数据。
-    3. Patch 掉 `LifeSmartStateManager` 以便进行行为验证。
-    4. 触发 `async_setup` 流程。
-    5. 验证集成是否成功加载。
-    6. 将控制权交给测试用例。
-    7. 在测试结束后，自动执行卸载流程，并验证卸载是否成功。
+    2. Patch 掉真实的 Hub 创建过程，注入模拟数据。
+    3. 触发 `async_setup` 流程。
+    4. 验证集成是否成功加载。
+    5. 将控制权交给测试用例。
+    6. 在测试结束后，自动执行卸载流程，并验证卸载是否成功。
     """
     mock_config_entry.add_to_hass(hass)
 
-    create_client_return_value = (
-        mock_client,
-        mock_lifesmart_devices,
-        {"expiredtime": int(time.time()) + 3600},
+    # 配置 mock hub 实例
+    hub_instance = mock_hub_class.return_value
+    hub_instance.get_devices.return_value = mock_lifesmart_devices
+    hub_instance.get_client.return_value = mock_client
+    hub_instance.get_exclude_config.return_value = (
+        {"excluded_device"},
+        {"excluded_hub"},
     )
+
     with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
-    ), patch(
-        "custom_components.lifesmart.LifeSmartStateManager",
-        new=mock_state_manager_class,
+        "custom_components.lifesmart.LifeSmartHub",
+        new=mock_hub_class,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -685,24 +696,14 @@ async def setup_integration(
     # 验证集成已成功加载
     assert mock_config_entry.state == ConfigEntryState.LOADED
 
-    # 验证 StateManager 被正确启动
-    mock_state_manager_class.return_value.start.assert_called_once()
+    # 验证 Hub 被正确设置
+    mock_hub_class.assert_called_once()
+    hub_instance.async_setup.assert_called_once()
 
     # 将控制权交给测试用例
     yield mock_config_entry
 
     # --- 测试结束后的清理 ---
-    # 在卸载之前，手动检查并取消任何可能由本地连接测试遗留的后台任务
-    entry_id = mock_config_entry.entry_id
-    if (
-        DOMAIN in hass.data
-        and entry_id in hass.data[DOMAIN]
-        and (local_task := hass.data[DOMAIN][entry_id].get("local_task"))
-    ):
-        if not local_task.done():
-            local_task.cancel()
-            await asyncio.sleep(0)
-
     # 卸载集成
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -912,7 +913,7 @@ async def setup_integration_spot_rgb_only(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
+    mock_hub_class: MagicMock,
     mock_device_spot_rgb_light: dict,
 ):
     """
@@ -922,16 +923,17 @@ async def setup_integration_spot_rgb_only(
     用于对该设备的颜色和亮度逻辑进行精确的边缘情况测试。
     """
     mock_config_entry.add_to_hass(hass)
-    # 只使用注入的单个设备来创建测试环境
+
+    # 配置 mock hub 实例
+    hub_instance = mock_hub_class.return_value
     devices = [mock_device_spot_rgb_light]
-    create_client_return_value = (
-        mock_client,
-        devices,
-        {"expiredtime": int(time.time()) + 3600},
-    )
+    hub_instance.get_devices.return_value = devices
+    hub_instance.get_client.return_value = mock_client
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
     with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
+        "custom_components.lifesmart.LifeSmartHub",
+        new=mock_hub_class,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -944,7 +946,7 @@ async def setup_integration_dual_io_light_only(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
+    mock_hub_class: MagicMock,
     mock_device_dual_io_rgbw_light: dict,
 ):
     """
@@ -954,15 +956,17 @@ async def setup_integration_dual_io_light_only(
     用于对该设备颜色和效果的互斥逻辑进行精确的联合测试。
     """
     mock_config_entry.add_to_hass(hass)
+
+    # 配置 mock hub 实例
+    hub_instance = mock_hub_class.return_value
     devices = [mock_device_dual_io_rgbw_light]
-    create_client_return_value = (
-        mock_client,
-        devices,
-        {"expiredtime": int(time.time()) + 3600},
-    )
+    hub_instance.get_devices.return_value = devices
+    hub_instance.get_client.return_value = mock_client
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
     with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
+        "custom_components.lifesmart.LifeSmartHub",
+        new=mock_hub_class,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -975,7 +979,7 @@ async def setup_integration_single_io_rgbw_only(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
+    mock_hub_class: MagicMock,
     mock_device_single_io_rgbw_light: dict,
 ):
     """
@@ -985,15 +989,17 @@ async def setup_integration_single_io_rgbw_only(
     用于对该设备的服务调用与设备协议的精确匹配进行测试。
     """
     mock_config_entry.add_to_hass(hass)
+
+    # 配置 mock hub 实例
+    hub_instance = mock_hub_class.return_value
     devices = [mock_device_single_io_rgbw_light]
-    create_client_return_value = (
-        mock_client,
-        devices,
-        {"expiredtime": int(time.time()) + 3600},
-    )
+    hub_instance.get_devices.return_value = devices
+    hub_instance.get_client.return_value = mock_client
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
     with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
+        "custom_components.lifesmart.LifeSmartHub",
+        new=mock_hub_class,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

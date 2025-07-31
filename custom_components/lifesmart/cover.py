@@ -27,10 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice
 from .const import (
-    CONF_EXCLUDE_AGTS,
-    CONF_EXCLUDE_ITEMS,
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
@@ -45,6 +42,7 @@ from .const import (
     MANUFACTURER,
     NON_POSITIONAL_COVER_CONFIG,
 )
+from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, get_cover_subdevices, safe_get
 
 # 初始化模块级日志记录器
@@ -62,19 +60,11 @@ async def async_setup_entry(
     此函数负责筛选出所有覆盖物设备，并为每个设备的有效控制点创建实体。
     它包含对通用控制器的特殊处理逻辑。
     """
-    entry_id = config_entry.entry_id
-    devices = hass.data[DOMAIN][entry_id]["devices"]
-    client = hass.data[DOMAIN][entry_id]["client"]
-    # 从配置选项中获取需要排除的设备和网关列表
-    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
-    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
-    exclude_devices = {
-        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-    }
-    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
+    hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
+    exclude_devices, exclude_hubs = hub.get_exclude_config()
 
     covers = []
-    for device in devices:
+    for device in hub.get_devices():
         # 如果设备或其所属网关在排除列表中，则跳过
         if (
             device[DEVICE_ID_KEY] in exclude_devices
@@ -92,8 +82,8 @@ async def async_setup_entry(
                 covers.append(
                     LifeSmartPositionalCover(
                         raw_device=device,
-                        client=client,
-                        entry_id=entry_id,
+                        client=hub.get_client(),
+                        entry_id=config_entry.entry_id,
                         sub_device_key=sub_key,
                     )
                 )
@@ -104,8 +94,8 @@ async def async_setup_entry(
                 covers.append(
                     LifeSmartNonPositionalCover(
                         raw_device=device,
-                        client=client,
-                        entry_id=entry_id,
+                        client=hub.get_client(),
+                        entry_id=config_entry.entry_id,
                         sub_device_key=sub_key,
                     )
                 )
@@ -113,7 +103,7 @@ async def async_setup_entry(
     async_add_entities(covers)
 
 
-class LifeSmartBaseCover(LifeSmartDevice, CoverEntity):
+class LifeSmartBaseCover(LifeSmartEntity, CoverEntity):
     """
     LifeSmart 覆盖物设备的基类。
 

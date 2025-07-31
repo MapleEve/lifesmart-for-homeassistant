@@ -52,9 +52,18 @@ class TestSwitchSetup:
         )
 
         # 2. 准备 hass.data，因为 async_setup_entry 会从中读取数据
+        # 创建一个模拟的 hub 对象
+        mock_hub = MagicMock()
+        mock_hub.get_exclude_config.return_value = (
+            {"sw_ol", "sw_p9"},  # exclude_devices
+            {"excluded_hub"},  # exclude_hubs
+        )
+        mock_hub.get_devices.return_value = mock_lifesmart_devices
+        mock_hub.get_client.return_value = mock_client
+
         hass.data[DOMAIN] = {
             entry_with_exclusions.entry_id: {
-                "client": mock_client,
+                "hub": mock_hub,
                 "devices": mock_lifesmart_devices,
             }
         }
