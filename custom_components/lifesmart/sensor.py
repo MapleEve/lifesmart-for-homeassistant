@@ -26,7 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice, generate_unique_id
+from . import LifeSmartDevice
 from .const import (
     # 核心常量
     DOMAIN,
@@ -59,6 +59,7 @@ from .const import (
     GARAGE_DOOR_TYPES,
     CLIMATE_TYPES,
 )
+from .helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 

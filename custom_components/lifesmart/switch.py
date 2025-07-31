@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice, generate_unique_id
+from . import LifeSmartDevice
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -31,6 +31,7 @@ from .const import (
     SUPPORTED_SWITCH_TYPES,
     GENERIC_CONTROLLER_TYPES,
 )
+from .helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 

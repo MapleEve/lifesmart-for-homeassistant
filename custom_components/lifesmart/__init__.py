@@ -6,7 +6,6 @@
 import asyncio
 import json
 import logging
-import re
 import time
 import traceback
 from datetime import timedelta, datetime
@@ -75,6 +74,7 @@ from .core.local_tcp_client import LifeSmartLocalTCPClient
 from .core.openapi_client import LifeSmartOAPIClient
 from .diagnostics import get_error_advice, RECOMMENDATION_GROUP
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
+from .helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -898,34 +898,3 @@ class LifeSmartStateManager:
             return_exceptions=True,
         )
         _LOGGER.info("LifeSmart 状态管理器已完全停止。")
-
-
-def generate_unique_id(
-    devtype: str,
-    agt: str,
-    me: str,
-    sub_device_key: Optional[str] = None,
-) -> str:
-    """
-    为 LifeSmart 实体生成一个稳定且唯一的内部 ID (unique_id)。
-    此 ID 必须在所有模式下保持一致，且不应被截断。
-
-    Args:
-        devtype: 设备的类型代码。
-        agt: 所属中枢的 ID。
-        me: 设备的 ID。
-        sub_device_key: 子设备的索引键（如果适用）。
-
-    Returns:
-        格式化的实体 ID 字符串，例如 'sl_sw_nd1_agt123_dev456_p1'。
-    """
-
-    # 清理和规范化函数，只移除特殊字符并转为小写
-    def sanitize(input_str: str) -> str:
-        return re.sub(r"\W", "", str(input_str).lower())
-
-    parts = [sanitize(devtype), sanitize(agt), sanitize(me)]
-    if sub_device_key:
-        parts.append(sanitize(sub_device_key))
-
-    return "_".join(parts)

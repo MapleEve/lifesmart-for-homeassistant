@@ -38,7 +38,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice, generate_unique_id
+from . import LifeSmartDevice
 from .const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -69,6 +69,7 @@ from .const import (
     ALL_EFFECT_LIST,
     ALL_EFFECT_MAP,
 )
+from .helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 

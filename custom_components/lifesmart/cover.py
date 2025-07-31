@@ -27,7 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice, generate_unique_id
+from . import LifeSmartDevice
 from .const import (
     ALL_COVER_TYPES,
     CONF_EXCLUDE_AGTS,
@@ -46,6 +46,7 @@ from .const import (
     MANUFACTURER,
     NON_POSITIONAL_COVER_CONFIG,
 )
+from .helpers import generate_unique_id
 
 # 初始化模块级日志记录器
 _LOGGER = logging.getLogger(__name__)

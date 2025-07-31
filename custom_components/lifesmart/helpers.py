@@ -71,7 +71,7 @@ def generate_unique_id(
 
     def sanitize(input_str: str) -> str:
         """清理和规范化字符串，只保留字母数字并转为小写。"""
-        return re.sub(r"[^a-z0-9]", "", str(input_str).lower())
+        return re.sub(r"\W", "", str(input_str).lower())
 
     parts = [sanitize(devtype), sanitize(agt), sanitize(me)]
     if sub_device_key:

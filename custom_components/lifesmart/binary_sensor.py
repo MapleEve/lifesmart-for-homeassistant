@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import generate_unique_id, LifeSmartDevice
+from . import LifeSmartDevice
 from .const import (
     # --- 核心常量导入 ---
     DOMAIN,
@@ -50,6 +50,7 @@ from .const import (
     DEFED_SENSOR_TYPES,
     CLIMATE_TYPES,
 )
+from .helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 

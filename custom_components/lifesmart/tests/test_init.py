@@ -28,7 +28,6 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart import (
     data_update_handler,
-    generate_unique_id,
     LifeSmartStateManager,
 )
 from custom_components.lifesmart.const import (
@@ -41,6 +40,7 @@ from custom_components.lifesmart.const import (
     LIFESMART_SIGNAL_UPDATE_ENTITY,
 )
 from custom_components.lifesmart.exceptions import LifeSmartAuthError
+from custom_components.lifesmart.helpers import generate_unique_id
 
 
 # ====================================================================

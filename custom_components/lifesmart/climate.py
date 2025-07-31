@@ -31,7 +31,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 # 导入项目内部的工具函数和常量
-from . import generate_unique_id, LifeSmartDevice
+from . import LifeSmartDevice
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -54,6 +54,7 @@ from .const import (
     get_f_fan_mode,
     get_tf_fan_mode,
 )
+from .helpers import generate_unique_id
 
 # 初始化模块级日志记录器
 _LOGGER = logging.getLogger(__name__)
