@@ -42,8 +42,8 @@ from custom_components.lifesmart.const import *
 # 导入项目内部的工具函数和常量
 from custom_components.lifesmart.helpers import (
     generate_unique_id,
-    find_test_device,
 )
+from .test_utils import find_test_device
 
 
 def get_entity_unique_id(device: dict) -> str:

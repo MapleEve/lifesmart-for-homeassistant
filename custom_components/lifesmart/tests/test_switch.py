@@ -11,45 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.const import *
-from custom_components.lifesmart.switch import _is_switch_subdevice, async_setup_entry
-
-
-# --- 辅助函数 ---
-def get_entity_unique_id(hass: HomeAssistant, entity_id: str) -> str:
-    """通过 entity_id 获取实体的 unique_id。"""
-    from homeassistant.helpers.entity_registry import (
-        async_get as async_get_entity_registry,
-    )
-
-    entity_registry = async_get_entity_registry(hass)
-    entry = entity_registry.async_get(entity_id)
-    assert entry is not None, f"实体 {entity_id} 未在注册表中找到"
-    return entry.unique_id
-
-
-# --- Test `_is_switch_subdevice` Helper Function ---
-@pytest.mark.parametrize(
-    ("device_type", "sub_key", "expected"),
-    [
-        ("SL_P_SW", "P1", True),
-        ("SL_P_SW", "P4", True),
-        ("SL_P_SW", "P9", True),
-        ("SL_P_SW", "P10", False),
-        ("SL_SW_IF3", "P4", False),
-        ("SL_SW_IF3", "L1", True),
-        ("SL_SC_BB_V2", "P1", False),
-        ("SL_OL", "O", True),
-        ("SL_OE_3C", "P1", True),
-        ("SL_OE_3C", "P4", True),
-        ("SL_OE_3C", "P2", False),
-        ("SL_ETDOOR", "P1", False),
-        ("SL_P", "P3", True),
-        ("SL_P", "P4", False),
-    ],
-)
-def test_is_switch_subdevice(device_type: str, sub_key: str, expected: bool) -> None:
-    """Test the _is_switch_subdevice helper function."""
-    assert _is_switch_subdevice(device_type, sub_key) == expected
+from custom_components.lifesmart.switch import async_setup_entry
+from .test_utils import get_entity_unique_id
 
 
 # --- Test `async_setup_entry` and Entity Behavior ---

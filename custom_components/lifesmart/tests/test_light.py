@@ -31,24 +31,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.light import (
-    _is_light_subdevice,
     _parse_color_value,
     DEFAULT_MIN_KELVIN,
     DEFAULT_MAX_KELVIN,
 )
-
-
-# --- 辅助函数 ---
-def get_entity_unique_id(hass: HomeAssistant, entity_id: str) -> str:
-    """通过 entity_id 获取实体的 unique_id。"""
-    from homeassistant.helpers.entity_registry import (
-        async_get as async_get_entity_registry,
-    )
-
-    entity_registry = async_get_entity_registry(hass)
-    entry = entity_registry.async_get(entity_id)
-    assert entry is not None, f"实体 {entity_id} 未在注册表中找到"
-    return entry.unique_id
+from .test_utils import get_entity_unique_id
 
 
 # --- 辅助函数测试 ---
@@ -56,19 +43,6 @@ def test_parse_color_value():
     """测试 _parse_color_value 辅助函数。"""
     assert _parse_color_value(0x00AABBCC, has_white=False) == (0xAA, 0xBB, 0xCC)
     assert _parse_color_value(0xDDEEFF00, has_white=True) == (0xEE, 0xFF, 0x00, 0xDD)
-
-
-@pytest.mark.parametrize(
-    ("device_type", "sub_key", "expected"),
-    [
-        ("SL_SW_IF3", "L1", True),
-        ("ANY_TYPE", "P1", True),
-        ("ANY_TYPE", "P5", False),
-    ],
-)
-def test_is_light_subdevice(device_type: str, sub_key: str, expected: bool) -> None:
-    """测试 _is_light_subdevice 辅助函数。"""
-    assert _is_light_subdevice(device_type, sub_key) is expected
 
 
 # ==================== 测试套件 ====================

@@ -8,7 +8,8 @@ This test suite provides comprehensive coverage, including:
 - Validation of entity availability logic.
 - Coverage of different real-time update formats ('v' vs 'val').
 - **NEW**: Coverage for ambiguous 'val' key in WebSocket updates.
-- Complete branch coverage for the `_is_sensor_subdevice` helper.
+
+Note: Helper function tests have been moved to test_helpers.py to avoid duplication.
 """
 
 import pytest
@@ -35,9 +36,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.helpers import (
     generate_unique_id,
-    find_test_device,
 )
-from custom_components.lifesmart.sensor import _is_sensor_subdevice
+from .test_utils import find_test_device
 
 
 @pytest.mark.asyncio
@@ -373,52 +373,3 @@ async def test_update_with_ambiguous_val_key(
     assert (
         float(hass.states.get(entity_id).state) == 27.5
     ), "Should handle large 'val' as raw value"
-
-
-@pytest.mark.parametrize(
-    ("device_type", "sub_key", "expected"),
-    [
-        # Climate
-        ("SL_CP_DN", "P5", True),
-        ("SL_CP_VL", "P6", True),
-        ("SL_TR_ACIPM", "P4", True),
-        # EV Sensor
-        ("SL_SC_THL", "T", True),
-        ("SL_SC_CH", "P1", True),
-        # Env Sensor
-        ("SL_SC_CA", "P3", True),
-        # Lock
-        ("SL_LK_LS", "BAT", True),
-        # Power Meter Plug
-        ("SL_OE_3C", "P2", True),
-        # Smart Plug
-        ("SL_OL", "EV", True),
-        ("SL_SC_CN", "P1", True),
-        ("ELIQ_EM", "EPA", True),
-        # Smoke Sensor
-        ("SL_P_A", "P2", True),
-        # Water Sensor
-        ("SL_SC_WA", "V", True),
-        # Button with battery
-        ("SL_SC_BB_V2", "P2", True),
-        # Negative cases
-        ("SL_CP_DN", "P1", False),
-        ("SL_P_A", "T", False),
-        ("SL_SC_G", "T", False),
-        ("SL_ETDOOR", "P1", False),
-        ("UNKNOWN_TYPE", "P1", False),
-    ],
-)
-def test_is_sensor_subdevice(device_type, sub_key, expected):
-    """
-    /**
-     * test_is_sensor_subdevice() - 测试子设备验证逻辑。
-     * @device_type: 设备的类型代码。
-     * @sub_key:     子设备的 IO 口键。
-     * @expected:    预期的布尔返回值。
-     *
-     * 此测试恢复了对 `_is_sensor_subdevice` 辅助函数所有分支的
-     * 全面覆盖，确保设备识别逻辑的正确性。
-     */
-    """
-    assert _is_sensor_subdevice(device_type, sub_key) == expected

@@ -21,8 +21,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.helpers import (
     generate_unique_id,
-    find_test_device,
 )
+from .test_utils import find_test_device
 
 
 @pytest.mark.asyncio

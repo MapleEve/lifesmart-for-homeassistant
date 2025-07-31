@@ -29,7 +29,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LifeSmartDevice
 from .const import (
-    ALL_COVER_TYPES,
     CONF_EXCLUDE_AGTS,
     CONF_EXCLUDE_ITEMS,
     DEVICE_DATA_KEY,
@@ -46,32 +45,10 @@ from .const import (
     MANUFACTURER,
     NON_POSITIONAL_COVER_CONFIG,
 )
-from .helpers import generate_unique_id
+from .helpers import generate_unique_id, get_cover_subdevices, safe_get
 
 # 初始化模块级日志记录器
 _LOGGER = logging.getLogger(__name__)
-
-
-def _is_cover_subdevice(device_type: str, sub_key: str) -> bool:
-    """
-    检查一个子设备IO口是否为有效的窗帘控制点。
-
-    Args:
-        device_type: 设备的类型代码 (devtype)。
-        sub_key: 子设备或IO口的索引键 (如 'P1', 'OP')。
-
-    Returns:
-        如果该IO口是此类型设备的窗帘控制点，则返回 True。
-    """
-    if device_type in GARAGE_DOOR_TYPES:
-        return sub_key in {"P2", "HS"}
-    if device_type in DOOYA_TYPES:
-        return sub_key == "P1"
-    if device_type in NON_POSITIONAL_COVER_CONFIG:
-        # 对于非定位窗帘，其配置中定义的任何一个控制键（开/关/停）都算有效
-        config = NON_POSITIONAL_COVER_CONFIG.get(device_type, {})
-        return sub_key in config.values()
-    return False
 
 
 async def async_setup_entry(
@@ -105,33 +82,10 @@ async def async_setup_entry(
         ):
             continue
 
-        device_type = device.get(DEVICE_TYPE_KEY)
-        if device_type not in ALL_COVER_TYPES:
-            continue
-
-        # 对通用控制器进行特殊判断，只有当其工作在窗帘模式时才继续
-        if device_type in GENERIC_CONTROLLER_TYPES:
-            p1_val = device.get(DEVICE_DATA_KEY, {}).get("P1", {}).get("val", 0)
-            # 工作模式编码在 P1 val 的高位: (val >>> 24) & 0xE
-            # 2: 二线窗帘, 4: 三线窗帘
-            work_mode = (p1_val >> 24) & 0xE
-            if work_mode not in {2, 4}:
-                continue  # 如果不是窗帘模式，则跳过此设备
-
-        device_data = device.get(DEVICE_DATA_KEY, {})
-        for sub_key in device_data:
-            if not _is_cover_subdevice(device_type, sub_key):
-                continue
-
-            # 对于非定位窗帘，我们只为其“开”操作的IO口创建一个实体，以避免重复
-            if device_type in NON_POSITIONAL_COVER_CONFIG:
-                # 对通用控制器，使用 SL_P 的配置作为代表
-                config_key = (
-                    "SL_P" if device_type in GENERIC_CONTROLLER_TYPES else device_type
-                )
-                rep_key = NON_POSITIONAL_COVER_CONFIG[config_key]["open"]
-                if sub_key != rep_key:
-                    continue
+        # 使用helpers中的统一逻辑获取所有有效的窗帘子设备
+        subdevice_keys = get_cover_subdevices(device)
+        for sub_key in subdevice_keys:
+            device_type = device.get(DEVICE_TYPE_KEY)
 
             # 根据设备是否支持位置，创建不同类型的实体
             if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
@@ -182,10 +136,8 @@ class LifeSmartBaseCover(LifeSmartDevice, CoverEntity):
         # --- 实体命名逻辑 ---
         base_name = self._name
         # 尝试从IO口数据中获取更具体的名称
-        sub_name_from_data = (
-            raw_device.get(DEVICE_DATA_KEY, {})
-            .get(self._sub_key, {})
-            .get(DEVICE_NAME_KEY)
+        sub_name_from_data = safe_get(
+            raw_device, DEVICE_DATA_KEY, self._sub_key, DEVICE_NAME_KEY
         )
         # 如果没有具体名称，则使用IO口键名作为后缀
         suffix = (
@@ -332,7 +284,9 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
         - val 的最高位 (val & 0x80) 代表移动方向 (0=开, 1=关)。
         - 'type' 值的奇偶性代表是否正在移动。
         """
-        status_data = self._raw_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key, {})
+        status_data = safe_get(
+            self._raw_device, DEVICE_DATA_KEY, self._sub_key, default={}
+        )
         if not status_data:
             return  # 如果没有状态数据，则不进行更新
 
@@ -398,7 +352,7 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
             "SL_P" if self.devtype in GENERIC_CONTROLLER_TYPES else self.devtype
         )
         config = NON_POSITIONAL_COVER_CONFIG.get(config_key, {})
-        data = self._raw_device.get(DEVICE_DATA_KEY, {})
+        data = safe_get(self._raw_device, DEVICE_DATA_KEY, default={})
 
         # 如果没有配置或数据，则不更新
         if not config or not data:

@@ -35,18 +35,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from custom_components.lifesmart.const import *
-from custom_components.lifesmart.helpers import find_test_device
-
-
-def get_entity_unique_id(hass: HomeAssistant, entity_id: str) -> str:
-    """通过 entity_id 获取实体的 unique_id。"""
-    entity_registry = async_get_entity_registry(hass)
-    entry = entity_registry.async_get(entity_id)
-    assert entry is not None, f"实体 {entity_id} 未在注册表中找到"
-    return entry.unique_id
+from .test_utils import find_test_device, get_entity_unique_id
 
 
 # ==================== 测试套件 ====================
