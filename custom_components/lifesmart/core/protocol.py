@@ -580,25 +580,3 @@ class LifeSmartPacketFactory:
             "enum:13": f"sys_sch_{devid}_CL",
         }
         return self._build_packet(args, act="SetA", node_suffix=f"{self.node}/me/ai")
-
-    def build_scene_trigger_packet(self, scene_id: str) -> bytes:
-        """构建触发场景的指令包。"""
-        args = {"id": scene_id}
-        return self._build_packet(args, act="SceneSet", node_suffix="")
-
-    def build_send_ir_keys_packet(
-        self, ai: str, devid: str, category: str, brand: str, keys: str
-    ) -> bytes:
-        """构建发送红外按键的指令包。"""
-        # 注意：本地协议的红外控制与云端API不同，通常通过运行AI场景实现
-        # 此处我们模拟云端API的行为，通过运行一个预定义的AI场景来发送按键
-        # AI名称格式通常为 AI_IR_{me}_{key}
-        # 为简化，本地模式下我们直接使用 RunA
-        args = {
-            "opt": {"keys": json.loads(keys)},
-            "cron_name": ai,
-            "devid": devid,
-            "category": category,
-            "brand": brand,
-        }
-        return self._build_packet(args, act="RunA", node_suffix="/ai")

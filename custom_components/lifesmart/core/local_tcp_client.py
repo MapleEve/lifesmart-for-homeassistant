@@ -408,26 +408,132 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
     async def _async_set_scene(self, agt: str, scene_id: str) -> int:
         """
         [本地实现] 激活一个本地场景。
-        此方法通过调用包工厂构建二进制包，并发送到TCP Socket。
+        本地协议中场景通过AI触发器实现，如果失败将抛出异常。
         """
-        if not self._factory:
-            _LOGGER.error("本地客户端工厂未初始化，无法发送场景指令。")
-            return -1
-        pkt = self._factory.build_scene_trigger_packet(scene_id)
-        return await self._send_packet(pkt)
+        try:
+            # 尝试通过AI触发器执行场景
+            result = await self.add_trigger_async(f"scene_{scene_id}", f"RUN,ai,'{scene_id}';")
+            if result != 0:
+                from homeassistant.exceptions import HomeAssistantError
+                raise HomeAssistantError(f"Failed to activate scene {scene_id} via AI trigger")
+            return result
+        except Exception as e:
+            _LOGGER.error("本地场景执行失败: %s", e)
+            from homeassistant.exceptions import HomeAssistantError
+            raise HomeAssistantError(f"Local scene execution failed: {e}") from e
 
     async def _async_send_ir_key(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
     ) -> int:
         """
         [本地实现] 发送一个本地红外按键命令。
-        此方法通过调用包工厂构建二进制包，并发送到TCP Socket。
+        此方法通过调用包工厂构建红外控制包，并发送到TCP Socket。
         """
         if not self._factory:
             _LOGGER.error("本地客户端工厂未初始化，无法发送红外指令。")
             return -1
-        pkt = self._factory.build_send_ir_keys_packet(ai, me, category, brand, keys)
+        
+        # 本地协议中红外按键通过红外控制场景实现
+        ir_options = {
+            "ai": ai,
+            "category": category, 
+            "brand": brand,
+            "keys": keys
+        }
+        pkt = self._factory.build_ir_control_packet(me, ir_options)
         return await self._send_packet(pkt)
+
+    async def _async_add_scene(self, agt: str, scene_name: str, actions: str) -> int:
+        """
+        [本地实现] 创建新场景/触发器。
+        此方法通过调用 add_trigger_async 来实现基类的抽象方法。
+        """
+        return await self.add_trigger_async(scene_name, actions)
+
+    async def _async_delete_scene(self, agt: str, scene_id: str) -> int:
+        """
+        [本地实现] 删除场景/触发器。
+        此方法通过调用 del_ai_async 来实现基类的抽象方法。
+        """
+        return await self.del_ai_async(scene_id)
+
+    async def _async_get_scene_list(self, agt: str) -> list[dict[str, Any]]:
+        """
+        [本地实现] 获取场景列表。
+        本地协议不支持场景列表查询，设备将被标记为不可用。
+        """
+        from homeassistant.exceptions import PlatformNotReady
+        _LOGGER.error("本地协议不支持场景列表查询功能")
+        raise PlatformNotReady("Local protocol does not support scene list queries")
+
+    async def _async_get_room_list(self, agt: str) -> list[dict[str, Any]]:
+        """
+        [本地实现] 获取房间列表。
+        本地协议不支持房间列表查询，设备将被标记为不可用。
+        """
+        from homeassistant.exceptions import PlatformNotReady
+        _LOGGER.error("本地协议不支持房间列表查询功能")
+        raise PlatformNotReady("Local protocol does not support room list queries")
+
+    async def _async_get_hub_list(self) -> list[dict[str, Any]]:
+        """
+        [本地实现] 获取中枢列表。
+        注意：本地连接只能访问当前连接的中枢。
+        """
+        if self.node_agt:
+            return [{"agt": self.node_agt, "name": f"Local Hub {self.node_agt}"}]
+        return []
+
+    async def _async_change_device_icon(self, device_id: str, icon: str) -> int:
+        """
+        [本地实现] 修改设备图标。
+        此方法通过调用 change_icon_async 来实现基类的抽象方法。
+        """
+        return await self.change_icon_async(device_id, icon)
+
+    async def _async_set_device_eeprom(self, device_id: str, key: str, value: Any) -> int:
+        """
+        [本地实现] 设置设备EEPROM。
+        此方法通过调用 set_eeprom_async 来实现基类的抽象方法。
+        """
+        return await self.set_eeprom_async(device_id, key, value)
+
+    async def _async_add_device_timer(self, device_id: str, cron_info: str, key: str) -> int:
+        """
+        [本地实现] 为设备添加定时器。
+        此方法通过调用 add_timer_async 来实现基类的抽象方法。
+        """
+        return await self.add_timer_async(device_id, cron_info, key)
+
+    async def _async_ir_control(self, device_id: str, options: dict) -> int:
+        """
+        [本地实现] 通过场景控制红外设备。
+        此方法通过调用 ir_control_async 来实现基类的抽象方法。
+        """
+        return await self.ir_control_async(device_id, options)
+
+    async def _async_send_ir_code(self, device_id: str, ir_data: list | bytes) -> int:
+        """
+        [本地实现] 发送原始红外码。
+        此方法通过调用 send_ir_code_async 来实现基类的抽象方法。
+        """
+        return await self.send_ir_code_async(device_id, ir_data)
+
+    async def _async_ir_raw_control(self, device_id: str, raw_data: str) -> int:
+        """
+        [本地实现] 发送原始红外控制数据。
+        此方法通过调用 ir_raw_control_async 来实现基类的抽象方法。
+        """
+        return await self.ir_raw_control_async(device_id, raw_data)
+
+    async def _async_get_ir_remote_list(self, agt: str) -> dict[str, Any]:
+        """
+        [本地实现] 获取红外遥控器列表。
+        本地协议不支持红外遥控器列表查询，相关实体将被标记为不可用。
+        """
+        from homeassistant.exceptions import PlatformNotReady
+        _LOGGER.error("本地协议不支持红外遥控器列表查询功能")
+        raise PlatformNotReady("Local protocol does not support IR remote list queries")
 
     # ====================================================================
     # 设备直接控制的辅助方法
