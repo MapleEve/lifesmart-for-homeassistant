@@ -555,7 +555,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         """
         try:
             # 首先获取场景列表以找到对应的场景ID
-            scenes = await self._async_get_scene_list(agt)
+            scenes = await self._async_get_scene_list(agt)  # 使用带缓存的场景列表获取方法
 
             # 根据名字查找场景ID
             scene_id = None
