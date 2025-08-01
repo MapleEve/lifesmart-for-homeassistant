@@ -486,13 +486,14 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             # 首先获取场景列表以找到对应的场景ID
             scenes = await self._async_get_scene_list(agt)
 
-            # 根据名字查找场景ID
-            scene_id = None
-            for scene in scenes:
-                if scene.get("name") == scene_name:
-                    scene_id = scene.get("id")
-                    break
-
+            scene_id = next(
+                (
+                    scene.get("id")
+                    for scene in scenes
+                    if scene.get("name") == scene_name
+                ),
+                None,
+            )
             if not scene_id:
                 _LOGGER.error("未找到名为 '%s' 的场景", scene_name)
                 return -1
@@ -506,7 +507,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             return self._get_code_from_response(response, "SceneSet")
 
         except Exception as e:
-            _LOGGER.error("云端场景触发失败: %s", e)
+            _LOGGER.error("云端场景触发失败: %s", e, exc_info=True)
             return -1
 
     async def _async_send_ir_key(
@@ -555,15 +556,16 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         """
         try:
             # 首先获取场景列表以找到对应的场景ID
-            scenes = await self._async_get_scene_list(agt)
+            scenes = await self._async_get_scene_list(agt)  # 使用带缓存的场景列表获取方法
 
-            # 根据名字查找场景ID
-            scene_id = None
-            for scene in scenes:
-                if scene.get("name") == scene_name:
-                    scene_id = scene.get("id")
-                    break
-
+            scene_id = next(
+                (
+                    scene.get("id")
+                    for scene in scenes
+                    if scene.get("name") == scene_name
+                ),
+                None,
+            )
             if not scene_id:
                 _LOGGER.error("未找到名为 '%s' 的场景", scene_name)
                 return -1
