@@ -31,6 +31,7 @@ class TestLifeSmartServiceManager:
         """提供模拟的客户端。"""
         client = AsyncMock()
         client.async_send_ir_key = AsyncMock()
+        client.async_ir_control = AsyncMock()
         client.async_set_scene = AsyncMock()
         client.press_switch_async = AsyncMock()
         return client
@@ -50,6 +51,7 @@ class TestLifeSmartServiceManager:
 
         # 验证所有服务都已注册
         assert hass.services.has_service(DOMAIN, "send_ir_keys"), "应该注册红外发送服务"
+        assert hass.services.has_service(DOMAIN, "send_ackeys"), "应该注册空调红外服务"
         assert hass.services.has_service(
             DOMAIN, "trigger_scene"
         ), "应该注册场景触发服务"
@@ -115,6 +117,83 @@ class TestLifeSmartServiceManager:
         mock_client.async_send_ir_key.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_send_ackeys_service(
+        self, hass: HomeAssistant, service_manager, mock_client
+    ):
+        """测试发送空调按键服务。"""
+        service_manager.register_services()
+
+        # 准备空调服务调用数据
+        service_data = {
+            HUB_ID_KEY: "test_hub",
+            "ai": "test_ai_ac",
+            DEVICE_ID_KEY: "test_spot",
+            "category": "ac",
+            "brand": "daikin",
+            "keys": "power",
+            "power": 1,
+            "mode": 1,
+            "temp": 26,
+            "wind": 2,
+            "swing": 0,
+        }
+
+        # 创建服务调用
+        call = ServiceCall(hass, DOMAIN, "send_ackeys", service_data)
+
+        # 执行服务
+        await service_manager._send_ackeys(call)
+
+        # 验证客户端方法被正确调用
+        expected_options = {
+            "agt": "test_hub",
+            "me": "test_spot",
+            "ai": "test_ai_ac",
+            "category": "ac",
+            "brand": "daikin",
+            "key": "power",
+            "power": 1,
+            "mode": 1,
+            "temp": 26,
+            "wind": 2,
+            "swing": 0,
+        }
+        mock_client.async_ir_control.assert_called_once_with(
+            "test_spot", expected_options
+        )
+
+    @pytest.mark.asyncio
+    async def test_send_ackeys_service_with_exception(
+        self, hass: HomeAssistant, service_manager, mock_client
+    ):
+        """测试空调按键服务遇到异常的情况。"""
+        service_manager.register_services()
+
+        # 设置客户端抛出异常
+        mock_client.async_ir_control.side_effect = Exception("AC IR command failed")
+
+        service_data = {
+            HUB_ID_KEY: "test_hub",
+            "ai": "test_ai_ac",
+            DEVICE_ID_KEY: "test_spot",
+            "category": "ac",
+            "brand": "gree",
+            "keys": "temp",
+            "power": 1,
+            "mode": 2,
+            "temp": 24,
+            "wind": 1,
+            "swing": 1,
+        }
+
+        call = ServiceCall(hass, DOMAIN, "send_ackeys", service_data)
+
+        # 服务不应该抛出异常，而是记录错误
+        await service_manager._send_ackeys(call)
+
+        mock_client.async_ir_control.assert_called_once()
+
+    @pytest.mark.asyncio
     async def test_trigger_scene_service_success(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -123,7 +202,7 @@ class TestLifeSmartServiceManager:
 
         service_data = {
             "agt": "test_hub",
-            "id": "scene_123",
+            "name": "scene_123",
         }
 
         call = ServiceCall(hass, DOMAIN, "trigger_scene", service_data)
@@ -140,7 +219,7 @@ class TestLifeSmartServiceManager:
         service_manager.register_services()
 
         service_data = {
-            "id": "scene_123",
+            "name": "scene_123",
             # 缺少 agt
         }
 
@@ -152,15 +231,15 @@ class TestLifeSmartServiceManager:
         mock_client.async_set_scene.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_trigger_scene_service_missing_id(
+    async def test_trigger_scene_service_missing_name(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
-        """测试触发场景服务缺少 id 参数的情况。"""
+        """测试触发场景服务缺少 name 参数的情况。"""
         service_manager.register_services()
 
         service_data = {
             "agt": "test_hub",
-            # 缺少 id
+            # 缺少 name
         }
 
         call = ServiceCall(hass, DOMAIN, "trigger_scene", service_data)
@@ -181,7 +260,7 @@ class TestLifeSmartServiceManager:
 
         service_data = {
             "agt": "test_hub",
-            "id": "scene_123",
+            "name": "scene_123",
         }
 
         call = ServiceCall(hass, DOMAIN, "trigger_scene", service_data)

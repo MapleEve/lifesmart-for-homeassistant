@@ -5,12 +5,16 @@
 由 @MapleEve 创建，作为集成架构重构的一部分。
 """
 
+import logging
 from typing import Any
 
+from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 from homeassistant.helpers.entity import Entity
 
 from .const import DEVICE_ID_KEY, DEVICE_NAME_KEY, DEVICE_TYPE_KEY, HUB_ID_KEY
 from .core.client_base import LifeSmartClientBase
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class LifeSmartEntity(Entity):
@@ -53,6 +57,11 @@ class LifeSmartEntity(Entity):
             DEVICE_ID_KEY: self._me,
             DEVICE_TYPE_KEY: self._devtype,
         }
+
+        # 可用性管理
+        self._attr_available = True
+        self._unavailable_functions = set()  # 记录不可用的功能
+        self._platform_errors = {}  # 记录平台错误
 
     @property
     def _name(self) -> str:
@@ -124,3 +133,114 @@ class LifeSmartEntity(Entity):
             False，不需要轮询
         """
         return False
+
+    @property
+    def available(self) -> bool:
+        """返回实体是否可用。
+
+        如果客户端协议不支持实体的核心功能，则实体不可用。
+
+        Returns:
+            bool: 实体是否可用
+        """
+        return self._attr_available
+
+    def mark_function_unavailable(
+        self, function_name: str, error_msg: str = None
+    ) -> None:
+        """标记特定功能为不可用。
+
+        Args:
+            function_name: 功能名称
+            error_msg: 错误消息
+        """
+        self._unavailable_functions.add(function_name)
+        if error_msg:
+            self._platform_errors[function_name] = error_msg
+
+        _LOGGER.debug(
+            "标记实体 %s 的功能 '%s' 为不可用: %s",
+            self.entity_id,
+            function_name,
+            error_msg or "未指定原因",
+        )
+
+    def mark_function_available(self, function_name: str) -> None:
+        """标记特定功能为可用。
+
+        Args:
+            function_name: 功能名称
+        """
+        self._unavailable_functions.discard(function_name)
+        self._platform_errors.pop(function_name, None)
+
+        _LOGGER.debug("标记实体 %s 的功能 '%s' 为可用", self.entity_id, function_name)
+
+    def is_function_available(self, function_name: str) -> bool:
+        """检查特定功能是否可用。
+
+        Args:
+            function_name: 功能名称
+
+        Returns:
+            bool: 功能是否可用
+        """
+        return function_name not in self._unavailable_functions
+
+    def set_entity_availability(self, available: bool, reason: str = None) -> None:
+        """设置整个实体的可用性。
+
+        Args:
+            available: 是否可用
+            reason: 不可用的原因
+        """
+        if self._attr_available != available:
+            self._attr_available = available
+            if not available and reason:
+                _LOGGER.warning("实体 %s 被标记为不可用: %s", self.entity_id, reason)
+            elif available:
+                _LOGGER.info("实体 %s 恢复可用", self.entity_id)
+
+            # 触发状态更新
+            self.schedule_update_ha_state()
+
+    async def safe_call_client_method(self, method_name: str, *args, **kwargs):
+        """安全调用客户端方法，处理平台不支持的异常。
+
+        Args:
+            method_name: 客户端方法名称
+            *args: 位置参数
+            **kwargs: 关键字参数
+
+        Returns:
+            方法调用结果，如果不支持则返回 None
+        """
+        try:
+            method = getattr(self._client, method_name)
+            return await method(*args, **kwargs)
+        except PlatformNotReady as e:
+            # 平台不就绪，标记功能为不可用
+            self.mark_function_unavailable(method_name, str(e))
+            _LOGGER.warning(
+                "实体 %s 的功能 '%s' 暂时不可用: %s",
+                self.entity_id,
+                method_name,
+                str(e),
+            )
+            return None
+        except HomeAssistantError as e:
+            # Home Assistant 错误，记录但不影响可用性
+            _LOGGER.error(
+                "实体 %s 调用 '%s' 时发生错误: %s", self.entity_id, method_name, str(e)
+            )
+            raise
+        except Exception as e:
+            # 其他异常，记录错误
+            _LOGGER.error(
+                "实体 %s 调用 '%s' 时发生未知错误: %s",
+                self.entity_id,
+                method_name,
+                str(e),
+                exc_info=True,
+            )
+            raise

@@ -8,9 +8,10 @@
 - 与 Home Assistant 的集成接口
 """
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 
 from custom_components.lifesmart.const import (
     DEVICE_ID_KEY,
@@ -199,3 +200,129 @@ class TestLifeSmartEntity:
 
         entity = LifeSmartEntity(device_data, mock_client)
         assert entity._device_name == expected_name, f"设备名称应该为{expected_name}"
+
+
+class TestEntityAvailabilityManagement:
+    """测试实体可用性管理功能。"""
+
+    @pytest.fixture
+    def mock_client(self):
+        """提供模拟的 LifeSmart 客户端。"""
+        client = AsyncMock()
+        return client
+
+    @pytest.fixture
+    def raw_device(self):
+        """提供标准的设备数据。"""
+        return {
+            "agt": "hub123",
+            "me": "device456",
+            "devtype": "SL_SW_OP",
+            "name": "Test Switch",
+        }
+
+    @pytest.fixture
+    def entity(self, hass, raw_device, mock_client):
+        """提供测试实体实例。"""
+        entity = LifeSmartEntity(raw_device, mock_client)
+        entity.hass = hass
+        entity.entity_id = "switch.test_switch"
+        return entity
+
+    def test_entity_initialization_availability(self, entity):
+        """测试实体初始化时的可用性状态。"""
+        assert entity.available is True, "实体初始化时应该是可用的"
+        assert entity._attr_available is True, "内部可用性属性应该为True"
+        assert len(entity._unavailable_functions) == 0, "初始化时不应有不可用功能"
+        assert len(entity._platform_errors) == 0, "初始化时不应有平台错误"
+
+    def test_set_entity_availability_to_unavailable(self, entity):
+        """测试设置实体为不可用。"""
+        with patch.object(entity, "schedule_update_ha_state") as mock_schedule:
+            entity.set_entity_availability(False, "测试原因")
+
+            assert entity.available is False, "实体应该被标记为不可用"
+            assert entity._attr_available is False, "内部属性应该被更新"
+            mock_schedule.assert_called_once(), "应该触发状态更新"
+
+    def test_set_entity_availability_to_available(self, entity):
+        """测试恢复实体为可用。"""
+        # 先设置为不可用
+        entity.set_entity_availability(False, "初始测试")
+
+        with patch.object(entity, "schedule_update_ha_state") as mock_schedule:
+            entity.set_entity_availability(True)
+
+            assert entity.available is True, "实体应该恢复可用"
+            assert entity._attr_available is True, "内部属性应该被更新"
+            mock_schedule.assert_called_once(), "应该触发状态更新"
+
+    def test_mark_function_unavailable(self, entity):
+        """测试标记功能为不可用。"""
+        function_name = "test_function"
+        error_msg = "功能不支持"
+
+        entity.mark_function_unavailable(function_name, error_msg)
+
+        assert function_name in entity._unavailable_functions, "功能应该被标记为不可用"
+        assert entity._platform_errors[function_name] == error_msg, "错误消息应该被记录"
+        assert not entity.is_function_available(function_name), "功能检查应该返回不可用"
+
+    def test_mark_function_available(self, entity):
+        """测试标记功能为可用。"""
+        function_name = "test_function"
+
+        # 先标记为不可用
+        entity.mark_function_unavailable(function_name, "测试错误")
+
+        # 然后恢复为可用
+        entity.mark_function_available(function_name)
+
+        assert (
+            function_name not in entity._unavailable_functions
+        ), "功能应该被移除出不可用列表"
+        assert function_name not in entity._platform_errors, "错误消息应该被清除"
+        assert entity.is_function_available(function_name), "功能检查应该返回可用"
+
+    @pytest.mark.asyncio
+    async def test_safe_call_client_method_success(self, entity, mock_client):
+        """测试成功的客户端方法调用。"""
+        expected_result = "success_result"
+        mock_client.test_method = AsyncMock(return_value=expected_result)
+
+        result = await entity.safe_call_client_method(
+            "test_method", "arg1", kwarg1="value1"
+        )
+
+        assert result == expected_result, "应该返回方法调用结果"
+        mock_client.test_method.assert_called_once_with(
+            "arg1", kwarg1="value1"
+        ), "应该正确传递参数"
+
+    @pytest.mark.asyncio
+    async def test_safe_call_client_method_platform_not_ready(
+        self, entity, mock_client
+    ):
+        """测试处理 PlatformNotReady 异常。"""
+        error_msg = "平台尚未就绪"
+        mock_client.test_method = AsyncMock(side_effect=PlatformNotReady(error_msg))
+
+        result = await entity.safe_call_client_method("test_method")
+
+        assert result is None, "PlatformNotReady应该返回None"
+        assert not entity.is_function_available("test_method"), "功能应该被标记为不可用"
+        assert entity._platform_errors["test_method"] == error_msg, "错误消息应该被记录"
+
+    @pytest.mark.asyncio
+    async def test_safe_call_client_method_home_assistant_error(
+        self, entity, mock_client
+    ):
+        """测试处理 HomeAssistantError 异常。"""
+        error_msg = "Home Assistant错误"
+        mock_client.test_method = AsyncMock(side_effect=HomeAssistantError(error_msg))
+
+        with pytest.raises(HomeAssistantError):
+            await entity.safe_call_client_method("test_method")
+
+        # HomeAssistantError不影响功能可用性
+        assert entity.is_function_available("test_method"), "功能应该仍然可用"

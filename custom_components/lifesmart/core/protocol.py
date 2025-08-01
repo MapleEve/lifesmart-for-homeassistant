@@ -530,24 +530,29 @@ class LifeSmartPacketFactory:
         args = {"icon": icon}
         return self._build_packet(args, act="enum:92", node_suffix=f"/me/ep/{devid}")
 
-    def build_add_trigger_packet(self, trigger_name: str, cmdlist: str) -> bytes:
-        """构建添加触发器的指令包。"""
+    def build_add_scene_packet(self, scene_name: str, cmdlist: str) -> bytes:
+        """构建添加场景触发器的指令包。"""
         args = {
             "cmdlist": cmdlist,
             "_": "trigger",
             "name": "enum:1",
-            "enum:13": trigger_name,
+            "enum:13": scene_name,
         }
         return self._build_packet(args, act="AddA", node_suffix=f"{self.node}/me/ai")
 
-    def build_del_ai_packet(self, ai_name: str) -> bytes:
-        """构建删除AI（场景或触发器）的指令包。"""
-        args = {"cmdlist": "enum:1", "enum:13": ai_name}
+    def build_delete_scene_packet(self, scene_name: str) -> bytes:
+        """构建删除场景（AI）的指令包。"""
+        args = {"cmdlist": "enum:1", "enum:13": scene_name}
         return self._build_packet(args, act="DelA", node_suffix=f"{self.node}/me/ai")
 
     def build_ir_control_packet(self, devid: str, opt: dict) -> bytes:
         """构建红外控制（运行AI场景）的指令包。"""
         args = {"opt": opt, "cron_name": f"AI_IR_{devid}"}
+        return self._build_packet(args, act="RunA", node_suffix="/ai")
+
+    def build_set_scene_packet(self, scene_name: str) -> bytes:
+        """构建运行场景（通过RunA执行AI场景）的指令包。"""
+        args = {"cron_name": scene_name}
         return self._build_packet(args, act="RunA", node_suffix="/ai")
 
     def build_send_code_packet(self, devid: str, data: list | bytes) -> bytes:

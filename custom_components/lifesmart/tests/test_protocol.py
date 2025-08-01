@@ -462,26 +462,29 @@ class TestPacketFactoryConstruction:
                 ("dev1", [{"idx": "L1", "val": 1}]),
                 {"action": "EpsSet"},
             ),
-            ("build_scene_trigger_packet", ("scene1",), {"action": "SceneTrigger"}),
             ("build_get_config_packet", ("config_key",), {"action": "GetConfig"}),
             ("build_change_icon_packet", ("dev1", "icon1"), {"action": "ChangeIcon"}),
             (
-                "build_add_trigger_packet",
-                ("trigger1", "cmdlist"),
-                {"action": "AddTrigger"},
+                "build_add_scene_packet",
+                ("scene1", "cmdlist"),
+                {"action": "AddScene"},
             ),
-            ("build_del_ai_packet", ("ai1",), {"action": "DelAI"}),
+            (
+                "build_delete_scene_packet",
+                ("scene1",),
+                {"action": "DeleteScene"},
+            ),
             (
                 "build_ir_control_packet",
                 ("ir_dev", {"keys": "power"}),
                 {"action": "IrControl"},
             ),
-            ("build_send_code_packet", ("ir_dev", [1, 2, 3]), {"action": "SendCode"}),
             (
-                "build_send_ir_keys_packet",
-                ("ai1", "dev1", "tv", "samsung", '["power"]'),
-                {"action": "SendIrKeys"},
+                "build_set_scene_packet",
+                ("scene123",),
+                {"action": "SetScene"},
             ),
+            ("build_send_code_packet", ("ir_dev", [1, 2, 3]), {"action": "SendCode"}),
             (
                 "build_ir_raw_control_packet",
                 ("ir_dev", '{"data": "raw"}'),
@@ -501,14 +504,13 @@ class TestPacketFactoryConstruction:
         ids=[
             "EpSet",
             "MultiEpSet",
-            "SceneTrigger",
             "GetConfig",
             "ChangeIcon",
-            "AddTrigger",
-            "DelAI",
+            "AddScene",
+            "DeleteScene",
             "IrControl",
+            "SetScene",
             "SendCode",
-            "SendIrKeys",
             "IrRawControl",
             "SetEEPROM",
             "AddTimer",
@@ -587,26 +589,38 @@ class TestPacketFactoryConstruction:
         assert args["cron_name"] == "AI_IR_ir_device", "cron_name应该按规则生成"
         assert args["opt"] == ir_options, "选项应该正确传递"
 
-    def test_send_ir_keys_packet_structure(
+    def test_set_scene_packet_special_fields(
         self, packet_factory: LifeSmartPacketFactory, protocol: LifeSmartProtocol
     ):
-        """测试红外按键发送包的结构。"""
-        packet = packet_factory.build_send_ir_keys_packet(
-            "ai1", "remote1", "tv", "samsung", '["power"]'
-        )
+        """测试场景运行包的特殊字段。"""
+        scene_name = "scene123"
+        packet = packet_factory.build_set_scene_packet(scene_name)
         _, decoded_data = protocol.decode(packet)
 
         args = decoded_data[1]["args"]
-        expected_fields = ["cron_name", "devid", "category", "brand", "opt"]
+        assert "cron_name" in args, "应该包含cron_name字段"
+        assert args["cron_name"] == scene_name, "cron_name应该等于场景名称"
+
+        # 验证使用RunA动作
+        assert decoded_data[1]["act"] == "RunA", "应该使用RunA动作"
+        assert decoded_data[1]["node"].endswith("/ai"), "节点路径应该以/ai结尾"
+
+    def test_raw_ir_control_packet_structure(
+        self, packet_factory: LifeSmartPacketFactory, protocol: LifeSmartProtocol
+    ):
+        """测试红外原始控制包的结构。"""
+        raw_data = '{"frequency": 38000, "data": [100, 200]}'
+        packet = packet_factory.build_ir_raw_control_packet("ir_dev", raw_data)
+        _, decoded_data = protocol.decode(packet)
+
+        args = decoded_data[1]["args"]
+        expected_fields = ["data", "devid", "key", "cmd"]
 
         for field in expected_fields:
             assert field in args, f"应该包含{field}字段"
 
-        assert args["cron_name"] == "ai1", "cron_name字段应该正确"
-        assert args["devid"] == "remote1", "devid字段应该正确"
-        assert args["category"] == "tv", "category字段应该正确"
-        assert args["brand"] == "samsung", "brand字段应该正确"
-        assert args["opt"]["keys"] == ["power"], "opt.keys字段应该正确"
+        assert args["devid"] == "ir_dev", "devid字段应该正确"
+        assert args["key"] == "193", "key字段应该正确"
 
 
 # ==================== 协议性能和边界测试类 ====================

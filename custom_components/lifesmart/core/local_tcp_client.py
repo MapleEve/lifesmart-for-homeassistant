@@ -405,17 +405,18 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         pkt = self._factory.build_multi_epset_packet(me, io_list)
         return await self._send_packet(pkt)
 
-    async def _async_set_scene(self, agt: str, scene_id: str) -> int:
+    async def _async_set_scene(self, agt: str, scene_name: str) -> int:
         """
         [本地实现] 激活一个本地场景。
-        本地协议中场景通过AI触发器实现，如果失败将抛出异常。
+        本地协议中场景通过RunA方式执行，类似红外控制的方式。
         """
         try:
-            # 尝试通过AI触发器执行场景
-            result = await self.add_trigger_async(f"scene_{scene_id}", f"RUN,ai,'{scene_id}';")
+            _LOGGER.info("通过RunA方式执行本地场景: %s", scene_name)
+            # 使用RunA方式执行场景，类似红外码执行的方式
+            result = await self.set_scene_async(scene_name)
             if result != 0:
                 from homeassistant.exceptions import HomeAssistantError
-                raise HomeAssistantError(f"Failed to activate scene {scene_id} via AI trigger")
+                raise HomeAssistantError(f"Failed to execute scene {scene_name} via RunA")
             return result
         except Exception as e:
             _LOGGER.error("本地场景执行失败: %s", e)
@@ -446,16 +447,16 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
     async def _async_add_scene(self, agt: str, scene_name: str, actions: str) -> int:
         """
         [本地实现] 创建新场景/触发器。
-        此方法通过调用 add_trigger_async 来实现基类的抽象方法。
+        此方法通过调用 add_scene_async 来实现基类的抽象方法。
         """
-        return await self.add_trigger_async(scene_name, actions)
+        return await self.add_scene_async(scene_name, actions)
 
-    async def _async_delete_scene(self, agt: str, scene_id: str) -> int:
+    async def _async_delete_scene(self, agt: str, scene_name: str) -> int:
         """
         [本地实现] 删除场景/触发器。
-        此方法通过调用 del_ai_async 来实现基类的抽象方法。
+        此方法通过调用 delete_scene_async 来实现基类的抽象方法。
         """
-        return await self.del_ai_async(scene_id)
+        return await self.delete_scene_async(scene_name)
 
     async def _async_get_scene_list(self, agt: str) -> list[dict[str, Any]]:
         """
@@ -548,19 +549,24 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         pkt = self._factory.build_change_icon_packet(devid, icon)
         return await self._send_packet(pkt)
 
-    async def add_trigger_async(self, trigger_name: str, cmdlist: str) -> int:
-        """添加一个触发器。"""
-        pkt = self._factory.build_add_trigger_packet(trigger_name, cmdlist)
+    async def add_scene_async(self, scene_name: str, cmdlist: str) -> int:
+        """添加一个场景。"""
+        pkt = self._factory.build_add_scene_packet(scene_name, cmdlist)
         return await self._send_packet(pkt)
 
-    async def del_ai_async(self, ai_name: str) -> int:
-        """删除一个AI（场景或触发器）。"""
-        pkt = self._factory.build_del_ai_packet(ai_name)
+    async def delete_scene_async(self, scene_name: str) -> int:
+        """删除一个场景。"""
+        pkt = self._factory.build_delete_scene_packet(scene_name)
         return await self._send_packet(pkt)
 
     async def ir_control_async(self, devid: str, opt: dict) -> int:
         """通过运行AI场景来控制红外设备。"""
         pkt = self._factory.build_ir_control_packet(devid, opt)
+        return await self._send_packet(pkt)
+
+    async def set_scene_async(self, scene_name: str) -> int:
+        """通过RunA方式执行本地场景。"""
+        pkt = self._factory.build_set_scene_packet(scene_name)
         return await self._send_packet(pkt)
 
     async def send_ir_code_async(self, devid: str, data: list | bytes) -> int:

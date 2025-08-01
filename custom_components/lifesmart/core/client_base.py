@@ -79,13 +79,13 @@ class LifeSmartClientBase(ABC):
         """
         return await self._async_send_multi_command(agt, me, io_list)
 
-    async def async_set_scene(self, agt: str, scene_id: str) -> int:
+    async def async_set_scene(self, agt: str, scene_name: str) -> int:
         """
         激活一个场景的公共接口。
 
-        由具体客户端子类实现的 set_scene_async 方法完成实际操作。
+        由具体客户端子类实现的 _async_set_scene 方法完成实际操作。
         """
-        return await self._async_set_scene(agt, scene_id)
+        return await self._async_set_scene(agt, scene_name)
 
     async def async_send_ir_key(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
@@ -105,13 +105,13 @@ class LifeSmartClientBase(ABC):
         """
         return await self._async_add_scene(agt, scene_name, actions)
 
-    async def async_delete_scene(self, agt: str, scene_id: str) -> int:
+    async def async_delete_scene(self, agt: str, scene_name: str) -> int:
         """
         删除场景的公共接口。
 
         由具体客户端子类实现的 _async_delete_scene 方法完成实际操作。
         """
-        return await self._async_delete_scene(agt, scene_id)
+        return await self._async_delete_scene(agt, scene_name)
 
     async def async_get_scene_list(self, agt: str) -> list[dict[str, Any]]:
         """
@@ -226,7 +226,7 @@ class LifeSmartClientBase(ABC):
         pass
 
     @abstractmethod
-    async def _async_set_scene(self, agt: str, scene_id: str) -> int:
+    async def _async_set_scene(self, agt: str, scene_name: str) -> int:
         """[抽象方法] 激活一个场景。"""
         pass
 
@@ -243,7 +243,7 @@ class LifeSmartClientBase(ABC):
         pass
 
     @abstractmethod
-    async def _async_delete_scene(self, agt: str, scene_id: str) -> int:
+    async def _async_delete_scene(self, agt: str, scene_name: str) -> int:
         """[抽象方法] 删除场景。"""
         pass
 

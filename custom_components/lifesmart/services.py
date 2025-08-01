@@ -9,6 +9,7 @@
 import logging
 
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 
 from .const import DEVICE_ID_KEY, HUB_ID_KEY, SUBDEVICE_INDEX_KEY, DOMAIN
 from .core.client_base import LifeSmartClientBase
@@ -39,6 +40,8 @@ class LifeSmartServiceManager:
             self.hass.services.async_register(
                 DOMAIN, "send_ir_keys", self._send_ir_keys
             )
+        if not self.hass.services.has_service(DOMAIN, "send_ackeys"):
+            self.hass.services.async_register(DOMAIN, "send_ackeys", self._send_ackeys)
         if not self.hass.services.has_service(DOMAIN, "trigger_scene"):
             self.hass.services.async_register(
                 DOMAIN, "trigger_scene", self._trigger_scene
@@ -65,8 +68,44 @@ class LifeSmartServiceManager:
                 call.data["keys"],
             )
             _LOGGER.info("红外命令发送成功: %s", call.data)
+        except PlatformNotReady as e:
+            _LOGGER.warning("红外命令发送功能暂时不可用: %s", e)
+        except HomeAssistantError as e:
+            _LOGGER.error("发送红外命令时发生Home Assistant错误: %s", e)
         except Exception as e:
             _LOGGER.error("发送红外命令失败: %s", e)
+
+    async def _send_ackeys(self, call: ServiceCall) -> None:
+        """处理发送空调按键的服务调用。
+
+        Args:
+            call: 服务调用对象，包含空调相关参数
+        """
+        try:
+            # 准备空调控制选项
+            ac_options = {
+                "agt": call.data[HUB_ID_KEY],
+                "me": call.data[DEVICE_ID_KEY],
+                "ai": call.data["ai"],
+                "category": call.data["category"],
+                "brand": call.data["brand"],
+                "key": call.data["keys"],
+                "power": call.data["power"],
+                "mode": call.data["mode"],
+                "temp": call.data["temp"],
+                "wind": call.data["wind"],
+                "swing": call.data["swing"],
+            }
+
+            # 使用红外控制接口发送空调命令
+            await self.client.async_ir_control(call.data[DEVICE_ID_KEY], ac_options)
+            _LOGGER.info("空调红外命令发送成功: %s", call.data)
+        except PlatformNotReady as e:
+            _LOGGER.warning("空调红外控制功能暂时不可用: %s", e)
+        except HomeAssistantError as e:
+            _LOGGER.error("发送空调红外命令时发生Home Assistant错误: %s", e)
+        except Exception as e:
+            _LOGGER.error("发送空调红外命令失败: %s", e)
 
     async def _trigger_scene(self, call: ServiceCall) -> None:
         """处理触发场景的服务调用。
@@ -75,16 +114,22 @@ class LifeSmartServiceManager:
             call: 服务调用对象，包含场景相关参数
         """
         agt = call.data.get(HUB_ID_KEY)
-        scene_id = call.data.get("id")
+        scene_name = call.data.get("name")
 
-        if not agt or not scene_id:
-            _LOGGER.error("触发场景失败：'agt' 和 'id' 参数不能为空。")
+        if not agt or not scene_name:
+            _LOGGER.error("触发场景失败：'agt' 和 'name' 参数不能为空。")
             return
 
         try:
-            _LOGGER.info("正在通过服务调用触发场景: Hub=%s, SceneID=%s", agt, scene_id)
-            await self.client.async_set_scene(agt, scene_id)
+            _LOGGER.info(
+                "正在通过服务调用触发场景: Hub=%s, SceneName=%s", agt, scene_name
+            )
+            await self.client.async_set_scene(agt, scene_name)
             _LOGGER.info("场景触发成功。")
+        except PlatformNotReady as e:
+            _LOGGER.warning("场景触发功能暂时不可用: %s", e)
+        except HomeAssistantError as e:
+            _LOGGER.error("触发场景时发生Home Assistant错误: %s", e)
         except Exception as e:
             _LOGGER.error("触发场景失败: %s", e)
 
@@ -118,5 +163,9 @@ class LifeSmartServiceManager:
         try:
             await self.client.press_switch_async(idx, agt, me, duration)
             _LOGGER.info("点动开关成功: %s (持续时间: %dms)", entity_id, duration)
+        except PlatformNotReady as e:
+            _LOGGER.warning("点动开关功能暂时不可用: %s", e)
+        except HomeAssistantError as e:
+            _LOGGER.error("点动开关时发生Home Assistant错误: %s", e)
         except Exception as e:
             _LOGGER.error("点动开关失败: %s", e)

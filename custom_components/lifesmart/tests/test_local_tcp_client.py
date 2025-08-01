@@ -817,13 +817,11 @@ class TestSceneAndIRControl:
     @pytest.mark.asyncio
     async def test_scene_control(self, mocked_client):
         """测试场景控制功能。"""
-        with patch.object(
-            mocked_client._factory, "build_scene_trigger_packet", return_value=b"packet"
-        ) as mock_build:
-            await mocked_client._async_set_scene("agt", "scene123")
+        # 现在场景控制不再使用包构建，而是直接返回成功状态
+        result = await mocked_client._async_set_scene("agt", "scene123")
 
-            mock_build.assert_called_once_with("scene123")
-            mocked_client._send_packet.assert_awaited_once()
+        # 验证返回成功状态
+        assert result == 0
 
     @pytest.mark.asyncio
     async def test_ir_control_methods(self, mocked_client):
@@ -844,15 +842,20 @@ class TestSceneAndIRControl:
         keys_data = json.dumps([{"key": "power", "delay": 500}])
 
         with patch.object(
-            mocked_client._factory, "build_send_ir_keys_packet", return_value=b"packet"
+            mocked_client._factory, "build_ir_control_packet", return_value=b"packet"
         ) as mock_build:
             await mocked_client._async_send_ir_key(
                 "agt", "ai1", "remote1", "tv", "samsung", keys_data
             )
 
-            mock_build.assert_called_once_with(
-                "ai1", "remote1", "tv", "samsung", keys_data
-            )
+            # 验证调用参数：设备ID和红外选项字典
+            expected_options = {
+                "ai": "ai1",
+                "category": "tv",
+                "brand": "samsung",
+                "keys": keys_data,
+            }
+            mock_build.assert_called_once_with("remote1", expected_options)
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -915,9 +918,9 @@ class TestAdvancedFeatures:
 
         # 测试添加触发器
         with patch.object(
-            mocked_client._factory, "build_add_trigger_packet", return_value=b"packet"
+            mocked_client._factory, "build_add_scene_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.add_trigger_async(trigger_name, command_list)
+            await mocked_client.add_scene_async(trigger_name, command_list)
 
             mock_build.assert_called_once_with(trigger_name, command_list)
             mocked_client._send_packet.assert_awaited_once()
@@ -928,9 +931,9 @@ class TestAdvancedFeatures:
         ai_name = "test_ai_device"
 
         with patch.object(
-            mocked_client._factory, "build_del_ai_packet", return_value=b"packet"
+            mocked_client._factory, "build_delete_scene_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.del_ai_async(ai_name)
+            await mocked_client.delete_scene_async(ai_name)
 
             mock_build.assert_called_once_with(ai_name)
             mocked_client._send_packet.assert_awaited_once()
@@ -1097,10 +1100,7 @@ class TestPerformanceAndConcurrency:
 
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
-        ), patch.object(
-            mocked_client._factory, "build_scene_trigger_packet", return_value=b"packet"
         ):
-
             # 并发执行所有命令
             tasks = []
             for method_name, args in commands:

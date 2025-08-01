@@ -475,13 +475,13 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         """
         return await self.set_multi_eps_async(agt, me, io_list)
 
-    async def _async_set_scene(self, agt: str, scene_id: str) -> int:
+    async def _async_set_scene(self, agt: str, scene_name: str) -> int:
         """
         [云端实现] 激活一个场景。(API: SceneSet)
         此方法通过调用底层的 _async_call_api 来实现基类的抽象方法。
         """
         response = await self._async_call_api(
-            "SceneSet", {HUB_ID_KEY: agt, "id": scene_id}, api_path="/api"
+            "SceneSet", {HUB_ID_KEY: agt, "id": scene_name}, api_path="/api"
         )
         return self._get_code_from_response(response, "SceneSet")
 
@@ -521,7 +521,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             _LOGGER.warning("场景创建可能不被支持: %s", e)
             return -1
 
-    async def _async_delete_scene(self, agt: str, scene_id: str) -> int:
+    async def _async_delete_scene(self, agt: str, scene_name: str) -> int:
         """
         [云端实现] 删除场景。
         注意：此方法可能需要特殊权限，如果API不支持将返回错误。
@@ -529,7 +529,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         try:
             params = {
                 HUB_ID_KEY: agt,
-                "id": scene_id,
+                "id": scene_name,
             }
             response = await self._async_call_api("SceneDel", params, api_path="/api")
             return self._get_code_from_response(response, "SceneDel")
@@ -575,7 +575,9 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             _LOGGER.warning("设备图标修改可能不被支持: %s", e)
             return -1
 
-    async def _async_set_device_eeprom(self, device_id: str, key: str, value: Any) -> int:
+    async def _async_set_device_eeprom(
+        self, device_id: str, key: str, value: Any
+    ) -> int:
         """
         [云端实现] 设置设备EEPROM。
         注意：此功能可能需要特殊权限，如果API不支持将返回错误。
@@ -586,13 +588,17 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
                 "key": key,
                 "value": value,
             }
-            response = await self._async_call_api("EpSetEeprom", params, api_path="/api")
+            response = await self._async_call_api(
+                "EpSetEeprom", params, api_path="/api"
+            )
             return self._get_code_from_response(response, "EpSetEeprom")
         except LifeSmartAPIError as e:
             _LOGGER.warning("设备EEPROM设置可能不被支持: %s", e)
             return -1
 
-    async def _async_add_device_timer(self, device_id: str, cron_info: str, key: str) -> int:
+    async def _async_add_device_timer(
+        self, device_id: str, cron_info: str, key: str
+    ) -> int:
         """
         [云端实现] 为设备添加定时器。
         注意：此功能可能需要特殊权限，如果API不支持将返回错误。
@@ -620,61 +626,79 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             me = options.get("me") or device_id
             category = options.get("category")
             brand = options.get("brand")
-            
+
             if not all([agt, category, brand]):
-                _LOGGER.error("红外控制缺少必要参数: agt=%s, category=%s, brand=%s", agt, category, brand)
+                _LOGGER.error(
+                    "红外控制缺少必要参数: agt=%s, category=%s, brand=%s",
+                    agt,
+                    category,
+                    brand,
+                )
                 return -1
-            
+
             # 如果是空调类型，使用SendACKeys API
             if category == "ac":
-                ac_params = {
-                    "agt": agt,
-                    "me": me,
-                    "category": category,
-                    "brand": brand,
-                    "key": options.get("key", "power"),
-                    "power": options.get("power", 1),
-                    "mode": options.get("mode", 1),
-                    "temp": options.get("temp", 25),
-                    "wind": options.get("wind", 0),
-                    "swing": options.get("swing", 0)
-                }
-                # 如果指定了ai参数，使用已有遥控器
-                if "ai" in options:
-                    ac_params["ai"] = options["ai"]
-                    ac_params.pop("idx", None)  # ai和idx互斥
-                elif "idx" in options:
-                    ac_params["idx"] = options["idx"]
-                    
-                response = await self._async_call_api("SendACKeys", ac_params, api_path="/irapi")
-                return self._get_code_from_response(response, "SendACKeys")
+                return await self._send_ac_keys_api(options)
             else:
                 # 普通设备使用SendKeys API
-                keys = options.get("keys", "POWER")
-                if isinstance(keys, list):
-                    keys_str = json.dumps(keys)
-                else:
-                    keys_str = f'["{keys}"]'
-                    
-                send_params = {
-                    "agt": agt,
-                    "me": me,
-                    "category": category,
-                    "brand": brand,
-                    "keys": keys_str
-                }
-                # 如果指定了ai参数，使用已有遥控器
-                if "ai" in options:
-                    send_params["ai"] = options["ai"]
-                elif "idx" in options:
-                    send_params["idx"] = options["idx"]
-                    
-                response = await self._async_call_api("SendKeys", send_params, api_path="/irapi")
-                return self._get_code_from_response(response, "SendKeys")
-                
+                return await self._send_ir_keys_api(options)
+
         except LifeSmartAPIError as e:
             _LOGGER.error("红外设备控制失败: %s", e)
             return -1
+
+    async def _send_ir_keys_api(self, options: dict) -> int:
+        """发送普通红外按键API调用。"""
+        keys = options.get("keys", "POWER")
+        if isinstance(keys, list):
+            keys_str = json.dumps(keys)
+        else:
+            keys_str = f'["{keys}"]'
+
+        send_params = {
+            "agt": options["agt"],
+            "me": options["me"],
+            "category": options["category"],
+            "brand": options["brand"],
+            "keys": keys_str,
+        }
+
+        # 如果指定了ai参数，使用已有遥控器
+        if "ai" in options:
+            send_params["ai"] = options["ai"]
+        elif "idx" in options:
+            send_params["idx"] = options["idx"]
+
+        response = await self._async_call_api(
+            "SendKeys", send_params, api_path="/irapi"
+        )
+        return self._get_code_from_response(response, "SendKeys")
+
+    async def _send_ac_keys_api(self, options: dict) -> int:
+        """发送空调红外按键API调用。"""
+        ac_params = {
+            "agt": options["agt"],
+            "me": options["me"],
+            "category": options["category"],
+            "brand": options["brand"],
+            "key": options.get("key", "power"),
+            "power": options.get("power", 1),
+            "mode": options.get("mode", 1),
+            "temp": options.get("temp", 25),
+            "wind": options.get("wind", 0),
+            "swing": options.get("swing", 0),
+        }
+
+        # 如果指定了ai参数，使用已有遥控器
+        if "ai" in options:
+            ac_params["ai"] = options["ai"]
+        elif "idx" in options:
+            ac_params["idx"] = options["idx"]
+
+        response = await self._async_call_api(
+            "SendACKeys", ac_params, api_path="/irapi"
+        )
+        return self._get_code_from_response(response, "SendACKeys")
 
     async def _async_send_ir_code(self, device_id: str, ir_data: list | bytes) -> int:
         """
@@ -686,27 +710,24 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             if isinstance(ir_data, bytes):
                 hex_data = ir_data.hex().upper()
             elif isinstance(ir_data, list):
-                hex_data = ''.join(f'{b:02X}' for b in ir_data)
+                hex_data = "".join(f"{b:02X}" for b in ir_data)
             else:
                 hex_data = str(ir_data)
-            
+
             # 构建SendCodes格式的数据包
-            keys_data = json.dumps([{
-                "param": {
-                    "data": hex_data,
-                    "type": 1
-                }
-            }])
-            
+            keys_data = json.dumps([{"param": {"data": hex_data, "type": 1}}])
+
             params = {
                 "agt": "unknown",  # 需要从设备信息中获取
                 "me": device_id,
-                "keys": keys_data
+                "keys": keys_data,
             }
-            
-            response = await self._async_call_api("SendCodes", params, api_path="/irapi")
+
+            response = await self._async_call_api(
+                "SendCodes", params, api_path="/irapi"
+            )
             return self._get_code_from_response(response, "SendCodes")
-            
+
         except LifeSmartAPIError as e:
             _LOGGER.error("原始红外码发送失败: %s", e)
             return -1
@@ -721,7 +742,9 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
                 DEVICE_ID_KEY: device_id,
                 "rawdata": raw_data,
             }
-            response = await self._async_call_api("IrRawControl", params, api_path="/irapi")
+            response = await self._async_call_api(
+                "IrRawControl", params, api_path="/irapi"
+            )
             return self._get_code_from_response(response, "IrRawControl")
         except LifeSmartAPIError as e:
             _LOGGER.warning("红外原始控制可能不被支持: %s", e)

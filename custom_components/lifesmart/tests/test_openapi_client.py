@@ -918,3 +918,240 @@ class TestCompatibilityAndIntegration:
         assert (
             headers["Content-Type"] == "application/json"
         ), "应该设置正确的Content-Type"
+
+
+# ==================== SuperBowl API 测试类 ====================
+
+
+class TestSuperBowlAPIMethods:
+    """测试 SuperBowl API 的各种查询方法。"""
+
+    @pytest.mark.asyncio
+    async def test_get_ir_categories_async(self, mock_async_call_api, client):
+        """测试获取红外分类 API。"""
+        # 设置预期响应
+        mock_async_call_api.return_value = {
+            "code": 0,
+            "message": ["tv", "ac", "stb", "dvd"],
+        }
+
+        result = await client.get_ir_categories_async()
+
+        # 验证调用参数
+        mock_async_call_api.assert_called_once_with("GetCategory", api_path="/irapi")
+
+        # 验证返回结果
+        assert result == ["tv", "ac", "stb", "dvd"], "应该返回分类列表"
+
+    @pytest.mark.asyncio
+    async def test_get_ir_brands_async(self, mock_async_call_api, client):
+        """测试获取指定分类的品牌列表 API。"""
+        # 设置预期响应
+        mock_async_call_api.return_value = {
+            "code": 0,
+            "message": {"data": {"samsung": 1, "lg": 2, "sony": 3}},
+        }
+
+        result = await client.get_ir_brands_async("tv")
+
+        # 验证调用参数
+        mock_async_call_api.assert_called_once_with(
+            "GetBrands", {"category": "tv"}, api_path="/irapi"
+        )
+
+        # 验证返回结果
+        expected_brands = {"samsung": 1, "lg": 2, "sony": 3}
+        assert result == expected_brands, "应该返回品牌字典"
+
+    @pytest.mark.asyncio
+    async def test_get_ir_codes_async_with_keys(self, mock_async_call_api, client):
+        """测试获取红外码 API（带按键参数）。"""
+        # 设置预期响应
+        mock_async_call_api.return_value = {
+            "code": 0,
+            "message": {
+                "power": {"param": {"data": "ABC123", "type": 1}},
+                "volume_up": {"param": {"data": "DEF456", "type": 1}},
+            },
+        }
+
+        result = await client.get_ir_codes_async(
+            "tv", "samsung", "1", ["power", "volume_up"]
+        )
+
+        # 验证调用参数
+        expected_params = {
+            "category": "tv",
+            "brand": "samsung",
+            "idx": "1",
+            "keys": json.dumps(["power", "volume_up"]),
+        }
+        mock_async_call_api.assert_called_once_with(
+            "GetCodes", expected_params, api_path="/irapi"
+        )
+
+        # 验证返回结果
+        expected_codes = {
+            "power": {"param": {"data": "ABC123", "type": 1}},
+            "volume_up": {"param": {"data": "DEF456", "type": 1}},
+        }
+        assert result == expected_codes, "应该返回红外码字典"
+
+    @pytest.mark.asyncio
+    async def test_get_ir_ac_codes_async_default_params(
+        self, mock_async_call_api, client
+    ):
+        """测试获取空调红外码 API（使用默认参数）。"""
+        # 设置预期响应
+        mock_async_call_api.return_value = {
+            "code": 0,
+            "message": [{"param": {"data": "AABBCC", "type": 1}}],
+        }
+
+        result = await client.get_ir_ac_codes_async("ac", "daikin", "1")
+
+        # 验证调用参数 - 应该使用默认值
+        expected_params = {
+            "category": "ac",
+            "brand": "daikin",
+            "idx": "1",
+            "key": "power",
+            "power": 1,
+            "mode": 1,
+            "temp": 25,
+            "wind": 0,
+            "swing": 0,
+        }
+        mock_async_call_api.assert_called_once_with(
+            "GetACCodes", expected_params, api_path="/irapi"
+        )
+
+
+class TestInfraredControlLogic:
+    """测试红外控制逻辑，包括 SendKeys 和 SendACKeys API 调用。"""
+
+    @pytest.mark.asyncio
+    async def test_async_ir_control_regular_device(self, mock_async_call_api, client):
+        """测试普通设备的红外控制。"""
+        # 设置 _send_ir_keys_api 的 mock
+        with patch.object(client, "_send_ir_keys_api", return_value=0) as mock_send_ir:
+            options = {
+                "agt": "hub1",
+                "me": "spot1",
+                "category": "tv",
+                "brand": "samsung",
+                "keys": ["power", "volume_up"],
+            }
+
+            result = await client._async_ir_control("spot1", options)
+
+            # 验证调用了普通红外 API
+            mock_send_ir.assert_called_once_with(options)
+            assert result == 0, "应该返回成功码"
+
+    @pytest.mark.asyncio
+    async def test_async_ir_control_ac_device(self, mock_async_call_api, client):
+        """测试空调设备的红外控制。"""
+        # 设置 _send_ac_keys_api 的 mock
+        with patch.object(client, "_send_ac_keys_api", return_value=0) as mock_send_ac:
+            options = {
+                "agt": "hub1",
+                "me": "spot1",
+                "category": "ac",
+                "brand": "daikin",
+                "key": "power",
+                "power": 1,
+                "mode": 1,
+                "temp": 26,
+            }
+
+            result = await client._async_ir_control("spot1", options)
+
+            # 验证调用了空调红外 API
+            mock_send_ac.assert_called_once_with(options)
+            assert result == 0, "应该返回成功码"
+
+    @pytest.mark.asyncio
+    async def test_send_ir_keys_api_key_formatting(self, mock_async_call_api, client):
+        """测试普通红外 API 的按键格式化逻辑。"""
+        # 测试字符串按键
+        options = {
+            "agt": "hub1",
+            "me": "spot1",
+            "category": "tv",
+            "brand": "samsung",
+            "keys": "power",
+        }
+
+        await client._send_ir_keys_api(options)
+
+        # 验证字符串被转换为 JSON 数组格式
+        call_args = mock_async_call_api.call_args[0][1]
+        assert call_args["keys"] == '["power"]', "字符串按键应该被转换为 JSON 数组"
+
+        mock_async_call_api.reset_mock()
+
+        # 测试列表按键
+        options["keys"] = ["power", "volume_up", "channel_up"]
+        await client._send_ir_keys_api(options)
+
+        call_args = mock_async_call_api.call_args[0][1]
+        assert (
+            call_args["keys"] == '["power", "volume_up", "channel_up"]'
+        ), "列表按键应该被序列化为 JSON"
+
+    @pytest.mark.asyncio
+    async def test_send_ac_keys_api_default_values(self, mock_async_call_api, client):
+        """测试空调红外 API 的默认值设置。"""
+        options = {
+            "agt": "hub1",
+            "me": "spot1",
+            "category": "ac",
+            "brand": "mitsubishi",
+        }
+
+        result = await client._send_ac_keys_api(options)
+
+        # 验证所有参数都使用了默认值
+        call_args = mock_async_call_api.call_args[0][1]
+        assert call_args["key"] == "power", "默认按键应该是 power"
+        assert call_args["power"] == 1, "默认电源状态应该是 1"
+        assert call_args["mode"] == 1, "默认模式应该是 1"
+        assert call_args["temp"] == 25, "默认温度应该是 25"
+        assert call_args["wind"] == 0, "默认风速应该是 0"
+        assert call_args["swing"] == 0, "默认摆风应该是 0"
+
+
+class TestRawInfraredCodeSending:
+    """测试原始红外码发送功能。"""
+
+    @pytest.mark.asyncio
+    async def test_async_send_ir_code_with_bytes(self, mock_async_call_api, client):
+        """测试使用字节数据发送原始红外码。"""
+        ir_data = b"\xab\xcd\xef\x12"
+
+        result = await client._async_send_ir_code("spot1", ir_data)
+
+        # 验证调用参数
+        call_args = mock_async_call_api.call_args[0][1]
+        keys_data = json.loads(call_args["keys"])
+
+        assert (
+            keys_data[0]["param"]["data"] == "ABCDEF12"
+        ), "字节数据应该被转换为大写十六进制"
+        assert keys_data[0]["param"]["type"] == 1, "类型应该设置为 1"
+
+    @pytest.mark.asyncio
+    async def test_async_send_ir_code_with_list(self, mock_async_call_api, client):
+        """测试使用列表数据发送原始红外码。"""
+        ir_data = [171, 205, 239, 18]  # 对应 0xAB, 0xCD, 0xEF, 0x12
+
+        result = await client._async_send_ir_code("spot1", ir_data)
+
+        # 验证调用参数
+        call_args = mock_async_call_api.call_args[0][1]
+        keys_data = json.loads(call_args["keys"])
+
+        assert (
+            keys_data[0]["param"]["data"] == "ABCDEF12"
+        ), "列表数据应该被转换为大写十六进制"
