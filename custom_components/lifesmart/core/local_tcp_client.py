@@ -416,11 +416,15 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
             result = await self.set_scene_async(scene_name)
             if result != 0:
                 from homeassistant.exceptions import HomeAssistantError
-                raise HomeAssistantError(f"Failed to execute scene {scene_name} via RunA")
+
+                raise HomeAssistantError(
+                    f"Failed to execute scene {scene_name} via RunA"
+                )
             return result
         except Exception as e:
             _LOGGER.error("本地场景执行失败: %s", e)
             from homeassistant.exceptions import HomeAssistantError
+
             raise HomeAssistantError(f"Local scene execution failed: {e}") from e
 
     async def _async_send_ir_key(
@@ -433,14 +437,9 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         if not self._factory:
             _LOGGER.error("本地客户端工厂未初始化，无法发送红外指令。")
             return -1
-        
+
         # 本地协议中红外按键通过红外控制场景实现
-        ir_options = {
-            "ai": ai,
-            "category": category, 
-            "brand": brand,
-            "keys": keys
-        }
+        ir_options = {"ai": ai, "category": category, "brand": brand, "keys": keys}
         pkt = self._factory.build_ir_control_packet(me, ir_options)
         return await self._send_packet(pkt)
 
@@ -464,6 +463,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         本地协议不支持场景列表查询，设备将被标记为不可用。
         """
         from homeassistant.exceptions import PlatformNotReady
+
         _LOGGER.error("本地协议不支持场景列表查询功能")
         raise PlatformNotReady("Local protocol does not support scene list queries")
 
@@ -473,6 +473,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         本地协议不支持房间列表查询，设备将被标记为不可用。
         """
         from homeassistant.exceptions import PlatformNotReady
+
         _LOGGER.error("本地协议不支持房间列表查询功能")
         raise PlatformNotReady("Local protocol does not support room list queries")
 
@@ -492,14 +493,18 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         """
         return await self.change_icon_async(device_id, icon)
 
-    async def _async_set_device_eeprom(self, device_id: str, key: str, value: Any) -> int:
+    async def _async_set_device_eeprom(
+        self, device_id: str, key: str, value: Any
+    ) -> int:
         """
         [本地实现] 设置设备EEPROM。
         此方法通过调用 set_eeprom_async 来实现基类的抽象方法。
         """
         return await self.set_eeprom_async(device_id, key, value)
 
-    async def _async_add_device_timer(self, device_id: str, cron_info: str, key: str) -> int:
+    async def _async_add_device_timer(
+        self, device_id: str, cron_info: str, key: str
+    ) -> int:
         """
         [本地实现] 为设备添加定时器。
         此方法通过调用 add_timer_async 来实现基类的抽象方法。
@@ -533,6 +538,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         本地协议不支持红外遥控器列表查询，相关实体将被标记为不可用。
         """
         from homeassistant.exceptions import PlatformNotReady
+
         _LOGGER.error("本地协议不支持红外遥控器列表查询功能")
         raise PlatformNotReady("Local protocol does not support IR remote list queries")
 

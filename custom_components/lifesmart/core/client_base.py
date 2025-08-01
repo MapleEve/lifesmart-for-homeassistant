@@ -145,7 +145,9 @@ class LifeSmartClientBase(ABC):
         """
         return await self._async_change_device_icon(device_id, icon)
 
-    async def async_set_device_eeprom(self, device_id: str, key: str, value: Any) -> int:
+    async def async_set_device_eeprom(
+        self, device_id: str, key: str, value: Any
+    ) -> int:
         """
         设置设备EEPROM的公共接口。
 
@@ -153,7 +155,9 @@ class LifeSmartClientBase(ABC):
         """
         return await self._async_set_device_eeprom(device_id, key, value)
 
-    async def async_add_device_timer(self, device_id: str, cron_info: str, key: str) -> int:
+    async def async_add_device_timer(
+        self, device_id: str, cron_info: str, key: str
+    ) -> int:
         """
         为设备添加定时器的公共接口。
 
@@ -268,12 +272,16 @@ class LifeSmartClientBase(ABC):
         pass
 
     @abstractmethod
-    async def _async_set_device_eeprom(self, device_id: str, key: str, value: Any) -> int:
+    async def _async_set_device_eeprom(
+        self, device_id: str, key: str, value: Any
+    ) -> int:
         """[抽象方法] 设置设备EEPROM。"""
         pass
 
     @abstractmethod
-    async def _async_add_device_timer(self, device_id: str, cron_info: str, key: str) -> int:
+    async def _async_add_device_timer(
+        self, device_id: str, cron_info: str, key: str
+    ) -> int:
         """[抽象方法] 为设备添加定时器。"""
         pass
 
