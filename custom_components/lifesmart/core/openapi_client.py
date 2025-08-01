@@ -636,6 +636,10 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
                 )
                 return -1
 
+            # 确保options中包含正确的me参数
+            options = dict(options)  # 创建副本避免修改原始字典
+            options["me"] = me
+
             # 如果是空调类型，使用SendACKeys API
             if category == "ac":
                 return await self._send_ac_keys_api(options)
