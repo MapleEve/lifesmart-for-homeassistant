@@ -478,12 +478,37 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
     async def _async_set_scene(self, agt: str, scene_name: str) -> int:
         """
         [云端实现] 激活一个场景。(API: SceneSet)
-        此方法通过调用底层的 _async_call_api 来实现基类的抽象方法。
+
+        由于云端API需要场景ID而不是名字，这里会先获取场景列表，
+        根据场景名字查找对应的ID，然后触发场景。
         """
-        response = await self._async_call_api(
-            "SceneSet", {HUB_ID_KEY: agt, "id": scene_name}, api_path="/api"
-        )
-        return self._get_code_from_response(response, "SceneSet")
+        try:
+            # 首先获取场景列表以找到对应的场景ID
+            scenes = await self._async_get_scene_list(agt)
+
+            scene_id = next(
+                (
+                    scene.get("id")
+                    for scene in scenes
+                    if scene.get("name") == scene_name
+                ),
+                None,
+            )
+            if not scene_id:
+                _LOGGER.error("未找到名为 '%s' 的场景", scene_name)
+                return -1
+
+            _LOGGER.info("找到场景 '%s'，ID: %s，正在触发...", scene_name, scene_id)
+
+            # 使用场景ID触发场景
+            response = await self._async_call_api(
+                "SceneSet", {HUB_ID_KEY: agt, "id": scene_id}, api_path="/api"
+            )
+            return self._get_code_from_response(response, "SceneSet")
+
+        except Exception as e:
+            _LOGGER.error("云端场景触发失败: %s", e, exc_info=True)
+            return -1
 
     async def _async_send_ir_key(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
@@ -524,17 +549,42 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
     async def _async_delete_scene(self, agt: str, scene_name: str) -> int:
         """
         [云端实现] 删除场景。
+
+        由于云端API需要场景ID而不是名字，这里会先获取场景列表，
+        根据场景名字查找对应的ID，然后删除场景。
         注意：此方法可能需要特殊权限，如果API不支持将返回错误。
         """
         try:
+            # 首先获取场景列表以找到对应的场景ID
+            scenes = await self._async_get_scene_list(agt)  # 使用带缓存的场景列表获取方法
+
+            scene_id = next(
+                (
+                    scene.get("id")
+                    for scene in scenes
+                    if scene.get("name") == scene_name
+                ),
+                None,
+            )
+            if not scene_id:
+                _LOGGER.error("未找到名为 '%s' 的场景", scene_name)
+                return -1
+
+            _LOGGER.info("找到场景 '%s'，ID: %s，正在删除...", scene_name, scene_id)
+
+            # 使用场景ID删除场景
             params = {
                 HUB_ID_KEY: agt,
-                "id": scene_name,
+                "id": scene_id,
             }
             response = await self._async_call_api("SceneDel", params, api_path="/api")
             return self._get_code_from_response(response, "SceneDel")
+
         except LifeSmartAPIError as e:
             _LOGGER.warning("场景删除可能不被支持: %s", e)
+            return -1
+        except Exception as e:
+            _LOGGER.error("云端场景删除失败: %s", e)
             return -1
 
     async def _async_get_scene_list(self, agt: str) -> list[dict[str, Any]]:

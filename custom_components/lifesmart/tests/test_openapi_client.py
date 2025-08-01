@@ -464,13 +464,6 @@ class TestAPIWrapperMethods:
             ("get_scene_list_async", "SceneGet", ("hub1",), {"agt": "hub1"}, "/api"),
             ("get_room_list_async", "RoomGet", ("hub1",), {"agt": "hub1"}, "/api"),
             (
-                "async_set_scene",
-                "SceneSet",
-                ("hub1", "s1"),
-                {"agt": "hub1", "id": "s1"},
-                "/api",
-            ),
-            (
                 "get_epget_async",
                 "EpGet",
                 ("hub1", "dev1"),
@@ -505,7 +498,6 @@ class TestAPIWrapperMethods:
             "GetAllDevices",
             "GetSceneList",
             "GetRoomList",
-            "SetScene",
             "GetEpDetails",
             "GetIRRemoteList",
             "SendIRKey",
@@ -623,6 +615,72 @@ class TestAPIWrapperMethods:
         mock_async_call_api.return_value = {"code": 0, "message": []}
         result = await client.get_epget_async("hub1", "dev1")
         assert result == {}, "空列表应该返回空字典"
+
+    @pytest.mark.asyncio
+    async def test_async_set_scene_method(self, mock_async_call_api, client):
+        """测试云端场景触发的两步骤逻辑：先获取场景列表，再根据ID触发场景。"""
+        # 模拟场景列表返回
+        scene_list = [
+            {"id": "scene_001", "name": "morning_scene"},
+            {"id": "scene_002", "name": "evening_scene"},
+            {"id": "scene_003", "name": "test_scene"},
+        ]
+
+        # 设置SceneGet API返回的场景列表
+        scene_get_response = {"code": 0, "message": scene_list}
+        # 设置SceneSet API返回成功
+        scene_set_response = {"code": 0, "message": "success"}
+
+        # 配置mock按顺序返回不同响应
+        mock_async_call_api.side_effect = [scene_get_response, scene_set_response]
+
+        # 测试触发存在的场景
+        result = await client._async_set_scene("test_agt", "test_scene")
+
+        # 验证返回值
+        assert result == 0, "场景触发成功应该返回0"
+
+        # 验证API调用顺序和参数
+        assert mock_async_call_api.call_count == 2, "应该调用两次API"
+
+        # 验证第一次调用是SceneGet
+        first_call = mock_async_call_api.call_args_list[0]
+        assert first_call[0][0] == "SceneGet", "第一次调用应该是SceneGet"
+        assert first_call[0][1] == {"agt": "test_agt"}, "SceneGet应该传递正确的参数"
+        assert first_call[1]["api_path"] == "/api", "应该使用正确的API路径"
+
+        # 验证第二次调用是SceneSet
+        second_call = mock_async_call_api.call_args_list[1]
+        assert second_call[0][0] == "SceneSet", "第二次调用应该是SceneSet"
+        assert second_call[0][1] == {
+            "agt": "test_agt",
+            "id": "scene_003",
+        }, "SceneSet应该使用找到的场景ID"
+        assert second_call[1]["api_path"] == "/api", "应该使用正确的API路径"
+
+    @pytest.mark.asyncio
+    async def test_async_set_scene_scene_not_found(self, mock_async_call_api, client):
+        """测试场景不存在时的处理逻辑。"""
+        # 模拟场景列表不包含目标场景
+        scene_list = [
+            {"id": "scene_001", "name": "morning_scene"},
+            {"id": "scene_002", "name": "evening_scene"},
+        ]
+
+        scene_get_response = {"code": 0, "message": scene_list}
+        mock_async_call_api.return_value = scene_get_response
+
+        # 测试触发不存在的场景
+        result = await client._async_set_scene("test_agt", "nonexistent_scene")
+
+        # 验证返回值
+        assert result == -1, "场景不存在时应该返回-1"
+
+        # 验证只调用了SceneGet，没有调用SceneSet
+        assert mock_async_call_api.call_count == 1, "场景不存在时只应该调用一次SceneGet"
+
+        call = mock_async_call_api.call_args_list[0]
+        assert call[0][0] == "SceneGet", "调用应该是SceneGet"
 
 
 # ==================== 设备控制辅助方法测试类 ====================
