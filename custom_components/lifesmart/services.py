@@ -36,11 +36,17 @@ class LifeSmartServiceManager:
         """注册所有 LifeSmart 服务。"""
         # 只在服务不存在时注册，避免多个配置条目时的冲突
         if not self.hass.services.has_service(DOMAIN, "send_ir_keys"):
-            self.hass.services.async_register(DOMAIN, "send_ir_keys", self._send_ir_keys)
+            self.hass.services.async_register(
+                DOMAIN, "send_ir_keys", self._send_ir_keys
+            )
         if not self.hass.services.has_service(DOMAIN, "trigger_scene"):
-            self.hass.services.async_register(DOMAIN, "trigger_scene", self._trigger_scene)
+            self.hass.services.async_register(
+                DOMAIN, "trigger_scene", self._trigger_scene
+            )
         if not self.hass.services.has_service(DOMAIN, "press_switch"):
-            self.hass.services.async_register(DOMAIN, "press_switch", self._press_switch)
+            self.hass.services.async_register(
+                DOMAIN, "press_switch", self._press_switch
+            )
         _LOGGER.info("LifeSmart 服务已注册完成。")
 
     async def _send_ir_keys(self, call: ServiceCall) -> None:
