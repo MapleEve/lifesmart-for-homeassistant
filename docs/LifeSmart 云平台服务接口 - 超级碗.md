@@ -1,7 +1,7 @@
 本文档由 LifeSmart提供，@MapleEve 重构为 Markdown 格式
 此文档对应 1.12，Jon Fan 在 2019 年 5 月 17 日更新的官方文档
 
-# 1.前言
+## 1.前言
 
 LifeSmart超级碗(SPOT)，是LifeSmart公司推出的一款高颜值家居产品，它通过学习生活中红外遥控器将繁杂的遥控超级碗揽括其中，让用户体验便捷的生活。
 
@@ -13,7 +13,7 @@ LifeSmart超级碗(SPOT)，是LifeSmart公司推出的一款高颜值家居产�
 其中GetCategory、GetBrands、GetRemoteldxs、GetCodes、GetACCodes方法不涉及对用户的操作，故其签名中的userid和usertoken使用默认值userid="
 10001"，usertoken="10001"
 
-# 2.LifeSmart超级碗(SPOT)OpenAPI交互流程图
+## 2.LifeSmart超级碗(SPOT)OpenAPI交互流程图
 
 **超级碗 SPOT交互流程：**
 
@@ -92,7 +92,7 @@ sequenceDiagram
 
 推荐第三方应用使用SendKeys和SendACKeys，当需要深入定制时，才使用GetCodes、GetACCodes、和SendCodes方法对超级碗进行控制。
 
-# 3.LifeSmart遥控器API介绍
+## 3.LifeSmart遥控器API介绍
 
 ## 3.1.GetCategory 获取支持的遥控器种类
 
@@ -131,10 +131,16 @@ sign为SIGN_xXXXXXXX, 实际需要填写真实签名数据；
 
 ```json
 {
-"id": 957,
-"method": "GetCategory",   
-"system":{ "ver": "1.0", "lang":"en", "userid": "10001", "appkey":"APPKEY_xxxxxxxx", "time": 1447641115, "sign":"SIGN_xxxxxxxx"   
-}
+  "id": 957,
+  "method": "GetCategory",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "10001",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447641115,
+    "sign": "SIGN_xxxxxxxx"
+  }
 ```
 
 • 签名原始字符串：
@@ -193,19 +199,19 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 ```json
 {
-"id": 957,
-"method": "GetBrands",   
-"params": { 
-  "category": "tv"
-},   
-"system": { 
-  "ver": "1.0", 
-  "lang": "en", 
-  "userid": "10001", 
-  "appkey": "APPKEY_xxxxxxxx", 
-  "time": 1447641115, 
-  "sign": "SIGN_xxxxxxxx"   
-}
+  "id": 957,
+  "method": "GetBrands",
+  "params": {
+    "category": "tv"
+  },
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "10001",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447641115,
+    "sign": "SIGN_xxxxxxxx"
+  }
 }
 ```
 
@@ -264,21 +270,21 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 • 请求信息：
 
 ```json
-{ 
-"id": 957, 
-"method": "GetRemoteIdxs", 
-"params": { 
-  "category": "tv", 
-  "brand": "tcl" 
-}, 
-"system": { 
-  "ver": "1.0", 
-  "lang": "en", 
-  "userid": "10001", 
-  "appkey": "APPKEY_xxxxxxxx", 
-  "time": 1447641115, 
-  "sign": "SIGN_xxxxxxxx" 
-}
+{
+  "id": 957,
+  "method": "GetRemoteIdxs",
+  "params": {
+    "category": "tv",
+    "brand": "tcl"
+  },
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "10001",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447641115,
+    "sign": "SIGN_xxxxxxxx"
+  }
 }
 ```
 
@@ -290,13 +296,21 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 • 回复信息：
 
 ```json
-{ 
-"code": 0, 
-"id": 957, 
-"message": { 
-  "data": ["186.irxs", "205.irxs", "066.irxs", ...], 
-  "params": {"category": "tv", "brand": "tcl"} 
-}
+{
+  "code": 0,
+  "id": 957,
+  "message": {
+    "data": [
+      "186.irxs",
+      "205.irxs",
+      "066.irxs",
+      ...
+    ],
+    "params": {
+      "category": "tv",
+      "brand": "tcl"
+    }
+  }
 }
 ```
 
@@ -340,19 +354,19 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 ```json
 {
-"id": 957,   
-"method": "GetRemoteList",   
-"params": { 
-  "agt": "_3MAAG1nYTAwMDA"   
-},   
-"system": { 
-  "ver": "1.0", 
-  "lang": "en", 
-  "userid": "1111111", 
-  "appkey": "APPKEY_xxxxxxxx", 
-  "time": 1447641115, 
-  "sign": "SIGN_xxxxxxxx" 
-}
+  "id": 957,
+  "method": "GetRemoteList",
+  "params": {
+    "agt": "_3MAAG1nYTAwMDA"
+  },
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447641115,
+    "sign": "SIGN_xxxxxxxx"
+  }
 }
 ```
 
@@ -365,29 +379,29 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 ```json
 {
-"code": 0,   
-"id": 957,   
-"message": { 
-  "AI_IR_2718_1470020360": {
-    "category": "box",
-    "brand": "apple", 
-    "name": "Apple Box RC", 
-    "ts": 1470020360
-  }, 
-  "AI_IR_2718_1470020405": {
-    "category": "tv", 
-    "brand": "tcl",
-    "name": "TCL Remote", 
-    "ts": 1470020405
-  }, 
-  "AI_IR_2718_1470027934": { 
-    "category": "tv", 
-    "brand": "tcl", 
-    "name": "TCL Remote", 
-    "ts": 1470027934, 
-    "ext_loc": "{\"key\":\"Ls\",\"location\":\"HangZhou\"}" 
-  } 
-}
+  "code": 0,
+  "id": 957,
+  "message": {
+    "AI_IR_2718_1470020360": {
+      "category": "box",
+      "brand": "apple",
+      "name": "Apple Box RC",
+      "ts": 1470020360
+    },
+    "AI_IR_2718_1470020405": {
+      "category": "tv",
+      "brand": "tcl",
+      "name": "TCL Remote",
+      "ts": 1470020405
+    },
+    "AI_IR_2718_1470027934": {
+      "category": "tv",
+      "brand": "tcl",
+      "name": "TCL Remote",
+      "ts": 1470027934,
+      "ext_loc": "{\"key\":\"Ls\",\"location\":\"HangZhou\"}"
+    }
+  }
 }
 ```
 
@@ -625,11 +639,12 @@ sign为SIGN_xXxXXXXX, 实际需要填写真实签名数据；
 }
 ```
 
-提示:如何修改遥控器器的ext_loc属性?
-SetRemoteName接⼝口⽀支持修改 ̃遥控器器的ext_loc属性的值。 若需要修改遥控器器ext_loc值，请指明 `{agt,id,ext_loc}` 属性;
-例例 如 `{agt="_3MAAG1nYTAwMDA",id="AI_IR_2718_1470028017", ext_loc="{\"key\": \"LS\", \"location\": "HangZhou"}"}`
-说明要把遥控器器的 ext_loc属性修改为 `"{\"key\": \"LS\", \"location\": "HangZhou"}";` 注意:
-ext_loc属性可以与name属性⼀一起修改，同时指明它们的值即可。
+提示：如何修改遥控器的ext_loc属性？
+
+SetRemoteName接口支持修改遥控器的ext_loc属性的值。若需要修改遥控器ext_loc值，请指明 `{agt,id,ext_loc}` 属性；
+例如 `{agt="_3MAAG1nYTAwMDA",id="AI_IR_2718_1470028017", ext_loc="{\"key\": \"LS\", \"location\": \"HangZhou\"}"}`
+说明要把遥控器的ext_loc属性修改为 `"{\"key\": \"LS\", \"location\": \"HangZhou\"}"`;
+注意：ext_loc属性可以与name属性一起修改，同时指明它们的值即可。
 
 ## 3.8.SendKeys 发送普通遥控器的按键指令
 
@@ -789,7 +804,7 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 ### 3.9.2.范例
 
-# ⚫ 我们假定：
+⚫ 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -997,32 +1012,32 @@ keys：填入需要发送的遥控器信息和按键信息，如：
 
 ```json
 "keys": [
-  {
-    "category": "tv",
-    "brand": "changhong",
-    "ai": "AI_IR_2735_1503631196",
-    "delay": 1,
-    "keys": ["POWER", "MENU"]
-  },
-  {
-    "category": "ac",
-    "brand": "daikin",
-    "ai": "AI_IR_2735_1503631219",
-    "delay": 1.2,
-    "key": "power",
-    "power": 1,
-    "mode": 0,
-    "temp": 27,
-    "wind": 2,
-    "swing": 0
-  },
-  {
-    "category": "fan",
-    "brand": "灿坤",
-    "ai": "AI_IR_2735_1503631206",
-    "delay": 1,
-    "keys": ["POWER", "WIND"]
-  }
+{
+"category": "tv",
+"brand": "changhong",
+"ai": "AI_IR_2735_1503631196",
+"delay": 1,
+"keys": ["POWER", "MENU"]
+},
+{
+"category": "ac",
+"brand": "daikin",
+"ai": "AI_IR_2735_1503631219",
+"delay": 1.2,
+"key": "power",
+"power": 1,
+"mode": 0,
+"temp": 27,
+"wind": 2,
+"swing": 0
+},
+{
+"category": "fan",
+"brand": "灿坤",
+"ai": "AI_IR_2735_1503631206",
+"delay": 1,
+"keys": ["POWER", "WIND"]
+}
 ]
 ```
 
@@ -1057,7 +1072,10 @@ keys：填入需要发送的遥控器信息和按键信息，如：
         "brand": "changhong",
         "ai": "AI_IR_2735_1503631196",
         "delay": 1,
-        "keys": ["POWER", "MENU"]
+        "keys": [
+          "POWER",
+          "MENU"
+        ]
       },
       {
         "category": "ac",
@@ -1076,7 +1094,10 @@ keys：填入需要发送的遥控器信息和按键信息，如：
         "brand": "灿坤",
         "ai": "AI_IR_2735_1503631206",
         "delay": 1,
-        "keys": ["POWER", "WIND"]
+        "keys": [
+          "POWER",
+          "WIND"
+        ]
       }
     ]
   },
@@ -1148,10 +1169,10 @@ keys：相应遥控器的按键键值
 
 ```json
 "params": {
-  "category": "tv",
-  "brand": "tcl",
-  "idx": "005.irxs",
-  "keys": "[\"POWER\",\"1\",\"2\",\"3\"]"
+"category": "tv",
+"brand": "tcl",
+"idx": "005.irxs",
+"keys": "[\"POWER\",\"1\",\"2\",\"3\"]"
 }
 ```
 
@@ -1159,9 +1180,9 @@ keys：相应遥控器的按键键值
 
 ```json
 "params": {
-  "category": "tv",
-  "brand": "tcl",
-  "idx": "005.irxs"
+"category": "tv",
+"brand": "tcl",
+"idx": "005.irxs"
 }
 ```
 
@@ -1396,9 +1417,9 @@ keys：相应遥控器的按键键值
 
 ```json
 "keys": "[
-  {\"param\":{\"data\":\"018B4F0538016F4F3E57FF57FF7FFDD554FF0001AD8B0360014F6F0340C2\",\"type\":1}},
-  {\"param\":{\"data\":\"018B4F0538016F4F3E57FF57FF7FFDD554FF0001AD8B0360014F6F0340C2\",\"type\":1}},
-  {\"param\":{\"data\":\"018B4F0538016F4F3E57FF57FF7FFDD554FF0001AD8B0360014F6F0340C2\",\"type\":1}}
+{\"param\":{\"data\":\"018B4F0538016F4F3E57FF57FF7FFDD554FF0001AD8B0360014F6F0340C2\",\"type\":1}},
+{\"param\":{\"data\":\"018B4F0538016F4F3E57FF57FF7FFDD554FF0001AD8B0360014F6F0340C2\",\"type\":1}},
+{\"param\":{\"data\":\"018B4F0538016F4F3E57FF57FF7FFDD554FF0001AD8B0360014F6F0340C2\",\"type\":1}}
 ]"
 ```
 
@@ -1538,7 +1559,10 @@ keys：相应遥控器的按键键值
     "category": "tv",
     "brand": "lg",
     "ts": 1537175081,
-    "keys": ["POWER", "MUTE"],
+    "keys": [
+      "POWER",
+      "MUTE"
+    ],
     "codes": {
       "POWER": {
         "type": 1,
