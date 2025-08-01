@@ -106,7 +106,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             # 2. 获取并清理 Hub
             hub_data = hass.data[DOMAIN].get(entry_id, {})
             if "hub" in hub_data:
-                await hub_data["hub"].async_unload()
+                try:
+                    await hub_data["hub"].async_unload()
+                except Exception as e:
+                    _LOGGER.error("卸载 Hub 时发生错误: %s", e)
 
             # 3. 移除配置更新监听器
             if UPDATE_LISTENER in hub_data:
@@ -115,9 +118,16 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             # 4. 清理 hass.data
             hass.data[DOMAIN].pop(entry_id)
 
-            # 如果这是最后一个配置条目，清理整个域
+            # 如果这是最后一个配置条目，清理整个域和服务
             if not hass.data[DOMAIN]:
                 hass.data.pop(DOMAIN)
+                # 清理服务
+                if hass.services.has_service(DOMAIN, "send_ir_keys"):
+                    hass.services.async_remove(DOMAIN, "send_ir_keys")
+                if hass.services.has_service(DOMAIN, "trigger_scene"):
+                    hass.services.async_remove(DOMAIN, "trigger_scene")
+                if hass.services.has_service(DOMAIN, "press_switch"):
+                    hass.services.async_remove(DOMAIN, "press_switch")
 
         _LOGGER.info("LifeSmart 集成卸载完成。")
         return unload_ok
