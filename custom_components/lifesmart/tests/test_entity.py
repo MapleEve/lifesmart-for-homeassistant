@@ -54,12 +54,12 @@ class TestLifeSmartEntity:
         """测试实体的基本初始化。"""
         entity = LifeSmartEntity(sample_device_data, mock_client)
 
-        assert entity._raw_device == sample_device_data
-        assert entity._device_name == "测试设备"
-        assert entity._agt == "test_hub_123"
-        assert entity._me == "test_device_456"
-        assert entity._devtype == "SL_SW_IF3"
-        assert entity._client == mock_client
+        assert entity._raw_device == sample_device_data, "原始设备数据应该被正确保存"
+        assert entity._device_name == "测试设备", "设备名称应该被正确解析"
+        assert entity._agt == "test_hub_123", "Hub ID应该被正确设置"
+        assert entity._me == "test_device_456", "设备ID应该被正确设置"
+        assert entity._devtype == "SL_SW_IF3", "设备类型应该被正确设置"
+        assert entity._client == mock_client, "客户端应该被正确设置"
 
     def test_entity_initialization_without_name(
         self, mock_client, sample_device_without_name
@@ -67,7 +67,7 @@ class TestLifeSmartEntity:
         """测试没有名称的设备初始化。"""
         entity = LifeSmartEntity(sample_device_without_name, mock_client)
 
-        assert entity._device_name == "Unnamed SL_SW_IF3"
+        assert entity._device_name == "Unnamed SL_SW_IF3", "无名设备应该使用默认名称"
 
     def test_entity_initialization_empty_device_type(self, mock_client):
         """测试空设备类型的初始化。"""
@@ -78,8 +78,8 @@ class TestLifeSmartEntity:
 
         entity = LifeSmartEntity(device_data, mock_client)
 
-        assert entity._device_name == "Unnamed Device"
-        assert entity._devtype is None
+        assert entity._device_name == "Unnamed Device", "无类型设备应该使用通用默认名称"
+        assert entity._devtype is None, "设备类型应该为None"
 
     def test_extra_state_attributes(self, mock_client, sample_device_data):
         """测试额外状态属性。"""
@@ -87,31 +87,31 @@ class TestLifeSmartEntity:
 
         attributes = entity.extra_state_attributes
 
-        assert attributes[HUB_ID_KEY] == "test_hub_123"
-        assert attributes[DEVICE_ID_KEY] == "test_device_456"
-        assert attributes[DEVICE_TYPE_KEY] == "SL_SW_IF3"
+        assert attributes[HUB_ID_KEY] == "test_hub_123", "Hub ID应该在属性中"
+        assert attributes[DEVICE_ID_KEY] == "test_device_456", "设备ID应该在属性中"
+        assert attributes[DEVICE_TYPE_KEY] == "SL_SW_IF3", "设备类型应该在属性中"
 
     def test_property_accessors(self, mock_client, sample_device_data):
         """测试属性访问器。"""
         entity = LifeSmartEntity(sample_device_data, mock_client)
 
-        assert entity.agt == "test_hub_123"
-        assert entity.me == "test_device_456"
-        assert entity.devtype == "SL_SW_IF3"
+        assert entity.agt == "test_hub_123", "agt属性应该返回Hub ID"
+        assert entity.me == "test_device_456", "me属性应该返回设备ID"
+        assert entity.devtype == "SL_SW_IF3", "devtype属性应该返回设备类型"
 
     def test_assumed_state_property(self, mock_client, sample_device_data):
         """测试假定状态属性。"""
         entity = LifeSmartEntity(sample_device_data, mock_client)
 
         # LifeSmart 集成不使用假定状态
-        assert entity.assumed_state is False
+        assert entity.assumed_state is False, "assumed_state应该默认为False"
 
     def test_should_poll_property(self, mock_client, sample_device_data):
         """测试轮询属性。"""
         entity = LifeSmartEntity(sample_device_data, mock_client)
 
         # LifeSmart 集成通过实时推送接收更新，不需要轮询
-        assert entity.should_poll is False
+        assert entity.should_poll is False, "should_poll应该默认为False"
 
     def test_attributes_with_none_values(self, mock_client):
         """测试包含 None 值的属性。"""
@@ -123,10 +123,10 @@ class TestLifeSmartEntity:
 
         entity = LifeSmartEntity(device_data, mock_client)
 
-        assert entity.agt is None
-        assert entity.me is None
-        assert entity.devtype is None
-        assert entity._device_name == "Unnamed None"
+        assert entity.agt is None, "空设备的agt应该为None"
+        assert entity.me is None, "空设备的me应该为None"
+        assert entity.devtype is None, "空设备的devtype应该为None"
+        assert entity._device_name == "Unnamed None", "空设备的名称应该是Unnamed None"
 
     def test_attributes_initialization(self, mock_client, sample_device_data):
         """测试属性字典的正确初始化。"""
@@ -139,10 +139,12 @@ class TestLifeSmartEntity:
             DEVICE_TYPE_KEY: "SL_SW_IF3",
         }
 
-        assert entity._attributes == expected_attributes
+        assert entity._attributes == expected_attributes, "实体属性应该被正确设置"
 
         # 确保 extra_state_attributes 返回相同的字典
-        assert entity.extra_state_attributes == expected_attributes
+        assert (
+            entity.extra_state_attributes == expected_attributes
+        ), "extra_state_attributes应该返回正确的属性"
 
     def test_entity_inheritance_compatibility(self, mock_client, sample_device_data):
         """测试实体继承兼容性。"""
@@ -151,12 +153,14 @@ class TestLifeSmartEntity:
         # 验证它是 Home Assistant Entity 的实例
         from homeassistant.helpers.entity import Entity
 
-        assert isinstance(entity, Entity)
+        assert isinstance(entity, Entity), "应该是Entity的实例"
 
         # 验证必要的方法存在
-        assert hasattr(entity, "extra_state_attributes")
-        assert hasattr(entity, "assumed_state")
-        assert hasattr(entity, "should_poll")
+        assert hasattr(
+            entity, "extra_state_attributes"
+        ), "应该有extra_state_attributes方法"
+        assert hasattr(entity, "assumed_state"), "应该有assumed_state属性"
+        assert hasattr(entity, "should_poll"), "应该有should_poll属性"
 
     @pytest.mark.parametrize(
         "device_data,expected_name",
@@ -194,4 +198,4 @@ class TestLifeSmartEntity:
         )
 
         entity = LifeSmartEntity(device_data, mock_client)
-        assert entity._device_name == expected_name
+        assert entity._device_name == expected_name, f"设备名称应该为{expected_name}"

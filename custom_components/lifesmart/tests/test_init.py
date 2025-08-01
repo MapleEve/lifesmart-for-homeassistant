@@ -75,27 +75,37 @@ async def test_setup_and_unload_success_cloud_mode(
                 "custom_components.lifesmart.hub.LifeSmartHub.get_client",
                 return_value=mock_client,
             ):
-                assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+                assert await hass.config_entries.async_setup(
+                    mock_config_entry.entry_id
+                ), "应该成功设置配置条目"
                 await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert (
+        mock_config_entry.state == ConfigEntryState.LOADED
+    ), "配置条目状态应该为已加载"
     entry_data = hass.data[DOMAIN][mock_config_entry.entry_id]
-    assert "hub" in entry_data
-    assert entry_data["client"] == mock_client
-    assert entry_data["devices"] == mock_lifesmart_devices
+    assert "hub" in entry_data, "条目数据中应包含hub"
+    assert entry_data["client"] == mock_client, "条目数据中的客户端应该正确"
+    assert entry_data["devices"] == mock_lifesmart_devices, "条目数据中的设备应该正确"
 
     # 测试卸载
     with patch(
         "custom_components.lifesmart.hub.LifeSmartHub.async_unload"
     ) as mock_hub_unload:
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        assert await hass.config_entries.async_unload(
+            mock_config_entry.entry_id
+        ), "应该成功卸载配置条目"
         await hass.async_block_till_done()
         mock_hub_unload.assert_called_once()
 
     await asyncio.sleep(0)  # 给予事件循环一个机会来完成所有后台清理任务
 
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
-    assert mock_config_entry.entry_id not in hass.data.get(DOMAIN, {})
+    assert (
+        mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    ), "卸载后配置条目状态应该为未加载"
+    assert mock_config_entry.entry_id not in hass.data.get(
+        DOMAIN, {}
+    ), "卸载后应该清理hass.data中的条目数据"
 
 
 @pytest.mark.asyncio
@@ -141,13 +151,15 @@ async def test_setup_success_local_mode(hass: HomeAssistant, mock_client: MagicM
             ):
                 assert await hass.config_entries.async_setup(
                     mock_config_entry_local.entry_id
-                )
+                ), "本地模式应该成功设置"
                 await hass.async_block_till_done()
 
-    assert mock_config_entry_local.state == ConfigEntryState.LOADED
+    assert (
+        mock_config_entry_local.state == ConfigEntryState.LOADED
+    ), "本地模式配置条目状态应该为已加载"
     entry_data = hass.data[DOMAIN][mock_config_entry_local.entry_id]
-    assert "hub" in entry_data
-    assert entry_data["client"] == mock_client
+    assert "hub" in entry_data, "本地模式条目数据中应包含hub"
+    assert entry_data["client"] == mock_client, "本地模式条目数据中的客户端应该正确"
 
 
 @pytest.mark.asyncio
@@ -157,7 +169,7 @@ async def test_setup_success_local_mode(hass: HomeAssistant, mock_client: MagicM
         LifeSmartAuthError("Invalid credentials"),
         ConfigEntryNotReady("Network timeout"),
     ],
-    ids=["auth_error", "not_ready"],
+    ids=["AuthenticationError", "NetworkTimeoutError"],
 )
 async def test_setup_failure_path(
     hass: HomeAssistant,
@@ -186,6 +198,10 @@ async def test_setup_failure_path(
         await hass.async_block_till_done()
 
     if isinstance(exception_instance, ConfigEntryNotReady):
-        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert (
+            mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+        ), "网络超时时配置条目状态应该为重试"
     else:
-        assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+        assert (
+            mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+        ), "认证错误时配置条目状态应该为设置错误"

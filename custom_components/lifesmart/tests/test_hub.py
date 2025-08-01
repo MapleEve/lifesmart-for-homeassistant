@@ -78,20 +78,22 @@ def mock_config_entry_local():
 class TestLifeSmartHub:
     """测试 LifeSmartHub 类的核心功能。"""
 
+    @pytest.mark.asyncio
     async def test_hub_initialization(
         self, hass: HomeAssistant, mock_config_entry_oapi
     ):
         """测试 Hub 的基本初始化。"""
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
 
-        assert hub.hass == hass
-        assert hub.config_entry == mock_config_entry_oapi
-        assert hub.client is None
-        assert hub.devices == []
-        assert hub._state_manager is None
-        assert hub._local_task is None
-        assert hub._refresh_task_unsub is None
+        assert hub.hass == hass, "Hub的hass实例应该正确"
+        assert hub.config_entry == mock_config_entry_oapi, "Hub的配置条目应该正确"
+        assert hub.client is None, "初始化时客户端应该为None"
+        assert hub.devices == [], "初始化时设备列表应该为空"
+        assert hub._state_manager is None, "初始化时状态管理器应该为None"
+        assert hub._local_task is None, "初始化时本地任务应该为None"
+        assert hub._refresh_task_unsub is None, "初始化时刷新任务取消器应该为None"
 
+    @pytest.mark.asyncio
     async def test_hub_setup_oapi_success(
         self, hass: HomeAssistant, mock_config_entry_oapi
     ):
@@ -118,21 +120,25 @@ class TestLifeSmartHub:
             with patch(
                 "custom_components.lifesmart.hub.LifeSmartStateManager"
             ) as mock_state_manager_class:
-                # 确保 state_manager 的方法是 AsyncMock
-                mock_state_manager_instance = AsyncMock()
+                # 创建正确的mock实例，区分同步和异步方法
+                mock_state_manager_instance = MagicMock()
+                mock_state_manager_instance.set_token_expiry = MagicMock()  # 同步方法
+                mock_state_manager_instance.start = MagicMock()  # 同步方法
+                mock_state_manager_instance.stop = AsyncMock()  # 异步方法
                 mock_state_manager_class.return_value = mock_state_manager_instance
 
                 result = await hub.async_setup()
 
-                assert result is True
-                assert hub.client == mock_client
-                assert hub.devices == mock_devices
-                assert hub._state_manager is not None
+                assert result is True, "云端模式设置应该成功"
+                assert hub.client == mock_client, "Hub的客户端应该被正确设置"
+                assert hub.devices == mock_devices, "Hub的设备列表应该被正确设置"
+                assert hub._state_manager is not None, "状态管理器应该被创建"
                 mock_state_manager_instance.start.assert_called_once()
 
                 # 清理资源
                 await hub.async_unload()
 
+    @pytest.mark.asyncio
     async def test_hub_setup_local_success(
         self, hass: HomeAssistant, mock_config_entry_local
     ):
@@ -157,14 +163,15 @@ class TestLifeSmartHub:
             with patch.object(hass, "async_create_task", return_value=real_task):
                 result = await hub.async_setup()
 
-                assert result is True
-                assert hub.client == mock_client
-                assert hub.devices == mock_devices
-                assert hub._local_task == real_task
+                assert result is True, "本地模式设置应该成功"
+                assert hub.client == mock_client, "Hub的客户端应该被正确设置"
+                assert hub.devices == mock_devices, "Hub的设备列表应该被正确设置"
+                assert hub._local_task == real_task, "本地任务应该被正确设置"
 
                 # 清理资源
                 await hub.async_unload()
 
+    @pytest.mark.asyncio
     async def test_hub_setup_auth_error(
         self, hass: HomeAssistant, mock_config_entry_oapi
     ):
@@ -182,6 +189,7 @@ class TestLifeSmartHub:
             with pytest.raises(ConfigEntryNotReady):
                 await hub.async_setup()
 
+    @pytest.mark.asyncio
     async def test_hub_get_methods(self, hass: HomeAssistant, mock_config_entry_oapi):
         """测试 Hub 的便利方法。"""
         # 添加配置条目到 hass
@@ -201,16 +209,17 @@ class TestLifeSmartHub:
         )
 
         # 测试 get_client
-        assert hub.get_client() == mock_client
+        assert hub.get_client() == mock_client, "get_client应该返回正确的客户端"
 
         # 测试 get_devices
-        assert hub.get_devices() == mock_devices
+        assert hub.get_devices() == mock_devices, "get_devices应该返回正确的设备列表"
 
         # 测试 get_exclude_config
         exclude_devices, exclude_hubs = hub.get_exclude_config()
-        assert exclude_devices == {"dev1", "dev2"}
-        assert exclude_hubs == {"hub2"}
+        assert exclude_devices == {"dev1", "dev2"}, "排除设备列表应该正确解析"
+        assert exclude_hubs == {"hub2"}, "排除Hub列表应该正确解析"
 
+    @pytest.mark.asyncio
     async def test_data_update_handler(
         self, hass: HomeAssistant, mock_config_entry_oapi
     ):
@@ -256,6 +265,7 @@ class TestLifeSmartHub:
             await hub.data_update_handler(ai_data)
             mock_ai_handler.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_hub_unload(self, hass: HomeAssistant, mock_config_entry_oapi):
         """测试 Hub 的卸载功能。"""
         import asyncio
@@ -292,7 +302,7 @@ class TestLifeSmartHub:
             mock_local_client.return_value.disconnect.assert_called_once()
 
             # 验证任务被取消
-            assert real_task.cancelled()
+            assert real_task.cancelled(), "任务应该被取消"
 
 
 class TestLifeSmartStateManager:
@@ -314,6 +324,7 @@ class TestLifeSmartStateManager:
             entry_id="test_entry",
         )
 
+    @pytest.mark.asyncio
     async def test_state_manager_initialization(
         self, hass: HomeAssistant, mock_config_entry, mock_oapi_client
     ):
@@ -337,6 +348,7 @@ class TestLifeSmartStateManager:
         assert manager.refresh_callback == refresh_callback
         assert manager._should_stop is False
 
+    @pytest.mark.asyncio
     async def test_state_manager_token_expiry(
         self, hass: HomeAssistant, mock_config_entry, mock_oapi_client
     ):
@@ -357,6 +369,7 @@ class TestLifeSmartStateManager:
         assert manager._token_expiry_time == expiry_time
         assert manager._token_refresh_event.is_set()
 
+    @pytest.mark.asyncio
     async def test_periodic_refresh(self, hass: HomeAssistant, mock_config_entry_oapi):
         """测试定时刷新功能。"""
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
@@ -374,6 +387,7 @@ class TestLifeSmartStateManager:
             assert hub.devices == mock_devices
             mock_dispatcher.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_periodic_refresh_with_error(
         self, hass: HomeAssistant, mock_config_entry_oapi
     ):

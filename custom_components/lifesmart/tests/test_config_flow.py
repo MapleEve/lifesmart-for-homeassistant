@@ -98,8 +98,8 @@ async def test_user_step_shows_form(hass: HomeAssistant):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "user", "步骤ID应该是user"
 
 
 @pytest.mark.asyncio
@@ -113,8 +113,8 @@ async def test_user_step_routes_to_cloud(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "cloud"
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "cloud", "步骤ID应该是cloud"
 
 
 @pytest.mark.asyncio
@@ -128,8 +128,8 @@ async def test_user_step_routes_to_local(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "local"
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "local", "步骤ID应该是local"
 
 
 # endregion
@@ -154,7 +154,7 @@ async def test_cloud_flow_token_auth_success(hass: HomeAssistant, mock_validate)
         result["flow_id"],
         {**MOCK_USER_INPUT_CLOUD_BASE, CONF_LIFESMART_AUTH_METHOD: "token"},
     )
-    assert result["step_id"] == "cloud_token"
+    assert result["step_id"] == "cloud_token", "应该转到云端Token认证步骤"
 
     # 3. Provide token and finish
     result = await hass.config_entries.flow.async_configure(
@@ -162,9 +162,11 @@ async def test_cloud_flow_token_auth_success(hass: HomeAssistant, mock_validate)
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "LifeSmart (mock_userid)"
-    assert result["data"][CONF_LIFESMART_USERTOKEN] == "mock_usertoken"
+    assert result["type"] == FlowResultType.CREATE_ENTRY, "应该创建配置条目"
+    assert result["title"] == "LifeSmart (mock_userid)", "配置条目标题应该正确"
+    assert (
+        result["data"][CONF_LIFESMART_USERTOKEN] == "mock_usertoken"
+    ), "应该保存用户提供的Token"
 
 
 @pytest.mark.asyncio
@@ -183,7 +185,7 @@ async def test_cloud_flow_password_auth_success(hass: HomeAssistant, mock_valida
         result["flow_id"],
         {**MOCK_USER_INPUT_CLOUD_BASE, CONF_LIFESMART_AUTH_METHOD: "password"},
     )
-    assert result["step_id"] == "cloud_password"
+    assert result["step_id"] == "cloud_password", "应该转到云端密码认证步骤"
 
     # 2. Provide password and finish
     result = await hass.config_entries.flow.async_configure(
@@ -191,8 +193,10 @@ async def test_cloud_flow_password_auth_success(hass: HomeAssistant, mock_valida
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_LIFESMART_USERTOKEN] == "newly_fetched_token"
+    assert result["type"] == FlowResultType.CREATE_ENTRY, "应该创建配置条目"
+    assert (
+        result["data"][CONF_LIFESMART_USERTOKEN] == "newly_fetched_token"
+    ), "应该保存新获取的Token"
 
 
 @pytest.mark.asyncio
@@ -214,12 +218,12 @@ async def test_cloud_flow_auth_error(hass: HomeAssistant, mock_validate):
         result["flow_id"], {CONF_LIFESMART_USERTOKEN: "invalid_token"}
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "cloud_token"
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "cloud_token", "应该停留在cloud_token步骤"
     assert (
         result["errors"]["base"]
         == "请检查用户令牌(UserToken)是否正确，或到LifeSmart平台检查授权。"
-    )
+    ), "应该显示认证错误信息"
 
 
 @pytest.mark.asyncio
@@ -241,8 +245,8 @@ async def test_cloud_flow_connection_error(hass: HomeAssistant, mock_validate):
         result["flow_id"], {CONF_LIFESMART_USERTOKEN: "any_token"}
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "cannot_connect"
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["errors"]["base"] == "cannot_connect", "应该显示连接错误信息"
 
 
 # endregion
@@ -256,8 +260,8 @@ async def test_local_flow_success(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "user", "步骤ID应该是user"
 
     # 步骤 2: 选择本地连接类型
     result2 = await hass.config_entries.flow.async_configure(
@@ -266,8 +270,8 @@ async def test_local_flow_success(hass: HomeAssistant):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "local"
+    assert result2["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result2["step_id"] == "local", "步骤ID应该是local"
 
     # 步骤 3: 模拟 check_login 成功，并提供本地连接信息
     # 我们 patch check_login 以避免实际的网络调用，并确保它能成功
@@ -293,26 +297,30 @@ async def test_local_flow_success(hass: HomeAssistant):
         await hass.async_block_till_done()
 
         # 步骤 4: 断言流程成功并创建了配置条目
-        assert result3["type"] == FlowResultType.CREATE_ENTRY
-        assert result3["title"] == "Local Hub (1.1.1.1)"
+        assert result3["type"] == FlowResultType.CREATE_ENTRY, "应该创建配置条目"
+        assert result3["title"] == "Local Hub (1.1.1.1)", "配置条目标题应该正确"
         assert result3["data"] == {
             CONF_TYPE: config_entries.CONN_CLASS_LOCAL_PUSH,
             CONF_HOST: "1.1.1.1",
             CONF_PORT: 9876,
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "password",
-        }
+        }, "配置数据应该正确保存"
 
         # 确保 async_setup_entry 被调用了一次
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1, "async_setup_entry应该被调用一次"
 
         entry = hass.config_entries.async_entries(DOMAIN)[0]
         # 卸载它，这将调用我们 patch 过的 async_unload_entry
-        assert await hass.config_entries.async_unload(entry.entry_id)
+        assert await hass.config_entries.async_unload(
+            entry.entry_id
+        ), "应该能够成功卸载配置条目"
         await hass.async_block_till_done()
 
         # 确保 async_unload_entry 也被调用了
-        assert len(mock_unload_entry.mock_calls) == 1
+        assert (
+            len(mock_unload_entry.mock_calls) == 1
+        ), "async_unload_entry应该被调用一次"
 
 
 @pytest.mark.asyncio
@@ -330,9 +338,9 @@ async def test_local_flow_failure(hass: HomeAssistant, mock_validate_local):
         result["flow_id"], MOCK_USER_INPUT_LOCAL
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "local"
-    assert result["errors"]["base"] == "cannot_connect"
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "local", "应该停留在local步骤"
+    assert result["errors"]["base"] == "cannot_connect", "应该显示连接错误信息"
 
 
 # endregion
@@ -355,8 +363,8 @@ async def test_reauth_flow_success(
         },
         data=mock_config_entry.data,
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "cloud"
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "cloud", "步骤ID应该是cloud"
 
     # 模拟用户在第一步选择密码认证
     user_input_step1 = {
@@ -370,7 +378,7 @@ async def test_reauth_flow_success(
         result["flow_id"],
         user_input_step1,
     )
-    assert result["step_id"] == "cloud_password"
+    assert result["step_id"] == "cloud_password", "应该转到云端密码认证步骤"
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
@@ -381,10 +389,14 @@ async def test_reauth_flow_success(
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
-        assert mock_config_entry.data[CONF_LIFESMART_USERTOKEN] == "newly_fetched_token"
-        mock_reload.assert_called_once_with(mock_config_entry.entry_id)
+        assert result["type"] == FlowResultType.ABORT, "重新认证完成后应该中止流程"
+        assert result["reason"] == "reauth_successful", "中止原因应该是重新认证成功"
+        assert (
+            mock_config_entry.data[CONF_LIFESMART_USERTOKEN] == "newly_fetched_token"
+        ), "配置条目应该更新为新Token"
+        mock_reload.assert_called_once_with(
+            mock_config_entry.entry_id
+        ), "应该重新加载配置条目"
 
 
 @pytest.mark.asyncio
@@ -393,15 +405,15 @@ async def test_options_flow(hass: HomeAssistant, mock_config_entry):
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] == FlowResultType.MENU
-    assert result["step_id"] == "init"
+    assert result["type"] == FlowResultType.MENU, "应该返回菜单类型的结果"
+    assert result["step_id"] == "init", "步骤ID应该是init"
 
     # 模拟用户选择 "main_params" 菜单项
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"next_step_id": "main_params"}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "main_params"
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "main_params", "应该转到main_params步骤"
 
     new_exclude_list = "dev1,dev2"
     new_exclude_hubs = "hub1"
@@ -416,9 +428,13 @@ async def test_options_flow(hass: HomeAssistant, mock_config_entry):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options[CONF_EXCLUDE_ITEMS] == new_exclude_list
-    assert mock_config_entry.options[CONF_EXCLUDE_AGTS] == new_exclude_hubs
+    assert result["type"] == FlowResultType.CREATE_ENTRY, "应该创建选项条目"
+    assert (
+        mock_config_entry.options[CONF_EXCLUDE_ITEMS] == new_exclude_list
+    ), "排除设备列表应该被正确更新"
+    assert (
+        mock_config_entry.options[CONF_EXCLUDE_AGTS] == new_exclude_hubs
+    ), "排除Hub列表应该被正确更新"
 
 
 # endregion
@@ -460,8 +476,8 @@ async def test_flow_aborts_if_already_configured(
         )
 
     # 4. 断言流程被正确中止
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] == FlowResultType.ABORT, "已存在相同配置时应该中止流程"
+    assert result["reason"] == "already_configured", "中止原因应该是已配置"
 
 
 # endregion

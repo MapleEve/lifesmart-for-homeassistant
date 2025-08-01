@@ -131,19 +131,21 @@ class TestLifeSmartProtocolDataTypes:
         original_message = [{"key": value}]
         encoded_packet = protocol.encode(original_message)
         _, decoded_list = protocol.decode(encoded_packet)
-        assert decoded_list == original_message
+        assert decoded_list == original_message, "解码后的数据应该与原始数据一致"
 
     def test_dict_with_special_keys_roundtrip(self, protocol: LifeSmartProtocol):
         value_enum_prefix = {"enum:key": "val", "num": 123}
         expected_normalized = {"key": "val", "num": 123}
         encoded_packet1 = protocol.encode([value_enum_prefix])
         _, decoded_list1 = protocol.decode(encoded_packet1)
-        assert decoded_list1 == [expected_normalized]
+        assert decoded_list1 == [
+            expected_normalized
+        ], "带有enum前缀的键应该被解码为简化的格式"
 
         value_to_be_enum = {"key": "val", "num": 123}
         encoded_packet2 = protocol.encode([value_to_be_enum])
         _, decoded_list2 = protocol.decode(encoded_packet2)
-        assert decoded_list2 == [value_to_be_enum]
+        assert decoded_list2 == [value_to_be_enum], "不含有enum前缀的数据应该保持不变"
 
     def test_timestamp_type_handling(self, protocol: LifeSmartProtocol):
         timestamp_value = 16318742
@@ -154,12 +156,12 @@ class TestLifeSmartProtocolDataTypes:
         assert (
             isinstance(decoded_obj, LSTimestamp)
             and decoded_obj.value == timestamp_value
-        )
+        ), "解码后的对象应该是LSTimestamp类型且值正确"
 
         normalized_packet = protocol._normalize_structure([{"ts": decoded_obj}])
         encoded_packet = protocol.encode(normalized_packet)
         _, decoded_packet = protocol.decode(encoded_packet)
-        assert decoded_packet == [{"ts": timestamp_value}]
+        assert decoded_packet == [{"ts": timestamp_value}], "时间戳应该被正确编码和解码"
 
 
 class TestLifeSmartProtocolPacketHandling:
@@ -168,9 +170,11 @@ class TestLifeSmartProtocolPacketHandling:
     def test_simple_packet_roundtrip(self, protocol: LifeSmartProtocol):
         original_packet_list = [{"a": 1, "type": "test"}, {"b": [2, 3]}]
         encoded_data = protocol.encode(original_packet_list)
-        assert encoded_data.startswith(b"GL00")
+        assert encoded_data.startswith(b"GL00"), "数据包应该以GL00头部开始"
         remaining, decoded_packet = protocol.decode(encoded_data)
-        assert not remaining and decoded_packet == original_packet_list
+        assert (
+            not remaining and decoded_packet == original_packet_list
+        ), "解码后应该没有剩余数据且内容正确"
 
     def test_encode_unsupported_type(self, protocol: LifeSmartProtocol, caplog):
         """
@@ -182,20 +186,26 @@ class TestLifeSmartProtocolPacketHandling:
             pass
 
         protocol.encode([{"key": UnsupportedObject()}])
-        assert "不支持的打包类型" in caplog.text
+        assert "不支持的打包类型" in caplog.text, "应该记录不支持类型的警告"
 
     def test_compressed_packet_roundtrip(self, protocol: LifeSmartProtocol):
         large_object = [{"data": "X" * 2048}]
         encoded_data = protocol.encode(large_object)
-        assert encoded_data.startswith(b"ZZ00")
+        assert encoded_data.startswith(
+            b"ZZ00"
+        ), "大数据包应该以ZZ00头部开始（压缩标识）"
         remaining, decoded_packet = protocol.decode(encoded_data)
-        assert not remaining and decoded_packet == large_object
+        assert (
+            not remaining and decoded_packet == large_object
+        ), "解码后的压缩数据应该与原始数据一致"
 
     def test_multi_packet_stream_decoding(self, protocol: LifeSmartProtocol):
         packet1, packet2 = [{"msg": "first"}], [{"msg": "second"}]
         encoded1, encoded2 = protocol.encode(packet1), protocol.encode(packet2)
         remaining, decoded1 = protocol.decode(encoded1 + encoded2)
-        assert decoded1 == packet1 and remaining == encoded2
+        assert (
+            decoded1 == packet1 and remaining == encoded2
+        ), "应该正确解码第一个数据包并保留第二个数据包"
 
     def test_decode_string_with_insufficient_data(self, protocol: LifeSmartProtocol):
         """
@@ -313,8 +323,10 @@ class TestPacketFactoryCoverage:
         _, decoded = protocol.decode(packet)
 
         # 验证基本结构
-        assert isinstance(decoded, list) and len(decoded) == 2
-        assert "args" in decoded[1]
+        assert (
+            isinstance(decoded, list) and len(decoded) == 2
+        ), "解码后应该是两个元素的列表"
+        assert "args" in decoded[1], "第二个元素应该包含args键"
 
 
 class TestPacketFactoryUnit:
@@ -329,16 +341,16 @@ class TestPacketFactoryUnit:
         packet = factory.build_multi_epset_packet("dev456", io_list)
         args = self._decode_and_get_args(protocol, packet)
         val_list = args["val"]
-        assert isinstance(val_list, list)
+        assert isinstance(val_list, list), "值列表应该是列表类型"
         # Note: The factory translates 'idx' to 'key'
-        assert val_list[0] == {"key": "RGBW", "val": 12345}
-        assert val_list[1] == {"key": "DYN", "val": 0}
+        assert val_list[0] == {"key": "RGBW", "val": 12345}, "第一个元素应该正确转换"
+        assert val_list[1] == {"key": "DYN", "val": 0}, "第二个元素应该正确转换"
 
     def test_ir_control_packet_roundtrip(self, protocol, factory):
         packet = factory.build_ir_control_packet("ir_dev", {"keys": "power"})
         args = self._decode_and_get_args(protocol, packet)
-        assert args["cron_name"] == "AI_IR_ir_dev"
-        assert args["opt"] == {"keys": "power"}
+        assert args["cron_name"] == "AI_IR_ir_dev", "生成的cron_name应该正确"
+        assert args["opt"] == {"keys": "power"}, "选项参数应该正确传递"
 
 
 # ====================================================================
@@ -419,12 +431,14 @@ class TestTCPClientIntegration:
             "devtype": "SL_SW_IF1",
             **client.devices["d1"]["data"]["L1"],  # 包含所有子设备属性
         }
-        callback.assert_any_call({"type": "io", "msg": expected_msg})
+        callback.assert_any_call(
+            {"type": "io", "msg": expected_msg}
+        ), "应该调用回调函数并传递正确的消息"
 
         # 4. 模拟设备删除事件
         reader.feed_data(DEVICE_DELETED_PKT)
         await asyncio.sleep(0.01)
-        callback.assert_any_call({"reload": True})
+        callback.assert_any_call({"reload": True}), "设备删除时应该触发重新加载"
 
         # 5. 断开连接并验证任务清理
         client.disconnect()
@@ -433,7 +447,7 @@ class TestTCPClientIntegration:
         except asyncio.CancelledError:
             pass  # 任务被取消是预期的行为
 
-        writer.close.assert_called_once()
+        writer.close.assert_called_once(), "应该调用writer.close方法"
         assert connect_task.done(), "后台连接任务在断开后应处于完成状态"
 
     @pytest.mark.asyncio
@@ -449,7 +463,7 @@ class TestTCPClientIntegration:
         reader.feed_data(LOGIN_FAILURE_PKT)
         client_fail = LifeSmartLocalTCPClient("valid.host", 1234, "u", "p")
         await asyncio.wait_for(client_fail.async_connect(None), timeout=1)
-        assert client_fail.disconnected is True
+        assert client_fail.disconnected is True, "登录失败后客户端应该设置为断开状态"
 
     @pytest.mark.asyncio
     async def test_check_login_fails_on_auth_error(self, mock_connection):
@@ -481,8 +495,8 @@ class TestTCPClientIntegration:
         # 运行连接任务，它应该在登录失败后退出循环
         await asyncio.wait_for(client.async_connect(AsyncMock()), timeout=1.0)
 
-        assert "本地登录失败" in caplog.text
-        assert client.disconnected is True
+        assert "本地登录失败" in caplog.text, "应该记录登录失败的错误日志"
+        assert client.disconnected is True, "登录失败后客户端应该设置为断开状态"
 
     @pytest.mark.asyncio
     async def test_get_all_devices_returns_false_on_timeout(self, mock_connection):
@@ -500,7 +514,7 @@ class TestTCPClientIntegration:
 
         # 调用 get_all_device_async 并设置一个很短的超时
         devices = await client.get_all_device_async(timeout=0.2)
-        assert devices is False
+        assert devices is False, "超时时应该返回False"
 
         # 清理
         client.disconnect()
@@ -513,8 +527,10 @@ class TestTCPClientIntegration:
             "custom_components.lifesmart.core.local_tcp_client._LOGGER"
         ) as mock_logger:
             result = await client._send_packet(b"test")
-            assert result == -1
-            mock_logger.error.assert_called_with("本地客户端未连接，无法发送指令。")
+            assert result == -1, "未连接时发送数据包应该返回-1"
+            mock_logger.error.assert_called_with(
+                "本地客户端未连接，无法发送指令。"
+            ), "应该记录错误日志"
 
     @pytest.mark.parametrize(
         "input_dict, expected_dict",
@@ -544,7 +560,7 @@ class TestTCPClientIntegration:
     )
     def test_normalize_device_names(self, input_dict, expected_dict):
         normalized = normalize_device_names(input_dict)
-        assert normalized == expected_dict
+        assert normalized == expected_dict, "设备名称规范化后应该符合预期"
 
     @pytest.mark.asyncio
     async def test_client_keepalive_on_idle(self, mock_connection):
@@ -576,7 +592,7 @@ class TestTCPClientIntegration:
             await asyncio.sleep(0.2)
 
             # 验证：心跳包是否被构建和发送
-            mock_build_heartbeat.assert_any_call(client.node)
+            mock_build_heartbeat.assert_any_call(client.node), "应该调用心跳包构建方法"
 
             # 清理
             client.disconnect()
@@ -734,9 +750,14 @@ class TestTCPClientControlMethods:
             await mocked_client.async_set_climate_hvac_mode(
                 "agt", "dev1", device_type, hvac_mode, current_val
             )
-            assert mock_build.call_count == len(expected_calls)
+            assert mock_build.call_count == len(
+                expected_calls
+            ), "应该调用正确次数的构建方法"
             for i, call_args in enumerate(expected_calls):
-                assert mock_build.call_args_list[i].args == ("dev1", *call_args)
+                assert mock_build.call_args_list[i].args == (
+                    "dev1",
+                    *call_args,
+                ), f"第{i + 1}次调用参数应该正确"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

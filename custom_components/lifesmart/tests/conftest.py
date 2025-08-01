@@ -46,8 +46,6 @@ def prevent_socket_access():
     这是通过 aiohttp 的 `TraceConfig` 实现的，它会在 DNS 解析开始前
     就引发一个运行时错误，从而有效地阻止了 aiodns 定时器的创建，
     这是导致 "Lingering timer" 错误的主要原因。
-
-    此方案是社区中解决 aiodns 问题的最佳实践。
     """
 
     async def _on_dns_resolvehost_start(session, trace_config_ctx, params):
@@ -57,7 +55,6 @@ def prevent_socket_access():
 
     trace_config = aiohttp.TraceConfig()
 
-    # --- 这是被修正的一行 ---
     # 使用 aiohttp 提示的正确属性名 on_dns_resolvehost_start
     trace_config.on_dns_resolvehost_start.append(_on_dns_resolvehost_start)
 

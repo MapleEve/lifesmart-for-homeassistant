@@ -58,15 +58,25 @@ def mock_async_call_api():
 def test_url_and_header_generation(hass):
     """测试 API/WSS URL 和 HTTP Header 的生成逻辑。"""
     client_region = LifeSmartOAPIClient(hass, "cn2", "k", "t", "ut", "uid")
-    assert client_region._get_api_url() == "https://api.cn2.ilifesmart.com/app"
-    assert client_region.get_wss_url() == "wss://api.cn2.ilifesmart.com:8443/wsapp/"
+    assert (
+        client_region._get_api_url() == "https://api.cn2.ilifesmart.com/app"
+    ), "cn2区域API URL应该正确"
+    assert (
+        client_region.get_wss_url() == "wss://api.cn2.ilifesmart.com:8443/wsapp/"
+    ), "cn2区域WSS URL应该正确"
 
     for auto_region in ["AUTO", None, ""]:
         client_auto = LifeSmartOAPIClient(hass, auto_region, "k", "t", "ut", "uid")
-        assert client_auto._get_api_url() == "https://api.ilifesmart.com/app"
-        assert client_auto.get_wss_url() == "wss://api.ilifesmart.com:8443/wsapp/"
+        assert (
+            client_auto._get_api_url() == "https://api.ilifesmart.com/app"
+        ), "默认区域API URL应该正确"
+        assert (
+            client_auto.get_wss_url() == "wss://api.ilifesmart.com:8443/wsapp/"
+        ), "默认区域WSS URL应该正确"
 
-    assert client_region._generate_header() == {"Content-Type": "application/json"}
+    assert client_region._generate_header() == {
+        "Content-Type": "application/json"
+    }, "HTTP头应该正确生成"
 
 
 # endregion
@@ -89,9 +99,13 @@ async def test_async_call_api_signature_and_error_handling(client):
         )
         mock_get_signature.assert_called_once()
         signature_raw_string = mock_get_signature.call_args.args[0]
-        assert "a_param:val_a,z_param:val_z" in signature_raw_string
+        assert (
+            "a_param:val_a,z_param:val_z" in signature_raw_string
+        ), "签名字符串应包含按字母序排列的参数"
         sent_payload_with_params = mock_post.call_args.args[1]
-        assert sent_payload_with_params["system"]["sign"] == "mocked_signature"
+        assert (
+            sent_payload_with_params["system"]["sign"] == "mocked_signature"
+        ), "发送的负载中应包含正确的签名"
 
         # 2. 关键补充：测试不带参数的情况
         mock_get_signature.reset_mock()
@@ -99,10 +113,14 @@ async def test_async_call_api_signature_and_error_handling(client):
         mock_get_signature.assert_called_once()
         signature_raw_string_no_params = mock_get_signature.call_args.args[0]
         # 验证签名字符串中不包含任何参数部分
-        assert "a_param" not in signature_raw_string_no_params
-        assert "z_param" not in signature_raw_string_no_params
+        assert (
+            "a_param" not in signature_raw_string_no_params
+        ), "无参数时签名字符串中不应包含a_param"
+        assert (
+            "z_param" not in signature_raw_string_no_params
+        ), "无参数时签名字符串中不应包含z_param"
         sent_payload_no_params = mock_post.call_args.args[1]
-        assert "params" not in sent_payload_no_params
+        assert "params" not in sent_payload_no_params, "无参数请求中不应包含params字段"
 
     for auth_error_code in [10004, 10005, 10006]:
         with patch.object(
@@ -146,10 +164,16 @@ async def test_post_and_parse_json_failure(client):
 
 def test_get_code_from_response_all_failures(client):
     """测试 _get_code_from_response 的所有失败分支。"""
-    assert client._get_code_from_response(None, "test") == -1
-    assert client._get_code_from_response({"message": "no code"}, "test") == -1
-    assert client._get_code_from_response({"code": "not_an_int"}, "test") == -1
-    assert client._get_code_from_response({"code": None}, "test") == -1
+    assert client._get_code_from_response(None, "test") == -1, "None响应应该返回-1"
+    assert (
+        client._get_code_from_response({"message": "no code"}, "test") == -1
+    ), "缺少code字段的响应应该返回-1"
+    assert (
+        client._get_code_from_response({"code": "not_an_int"}, "test") == -1
+    ), "code非整数的响应应该返回-1"
+    assert (
+        client._get_code_from_response({"code": None}, "test") == -1
+    ), "code为None的响应应该返回-1"
 
 
 # endregion
@@ -173,10 +197,10 @@ async def test_login_async_full_flow(client, mock_async_call_api):
         mock_post.side_effect = mock_async_call_api.side_effect
         result = await client.login_async()
 
-    assert client._usertoken == "new_user_token"
-    assert client._region == "cn1"
-    assert client._userid == "new_user_id"
-    assert result["usertoken"] == "new_user_token"
+    assert client._usertoken == "new_user_token", "客户端应更新为新的用户令牌"
+    assert client._region == "cn1", "客户端应更新为新的区域"
+    assert client._userid == "new_user_id", "客户端应更新为新的用户ID"
+    assert result["usertoken"] == "new_user_token", "返回结果应包含新的用户令牌"
 
     with patch.object(client, "_post_and_parse") as mock_post:
         mock_post.side_effect = LifeSmartAuthError(-1)
@@ -227,8 +251,8 @@ async def test_async_refresh_token_full_flow(client, mock_async_call_api):
         mock_post.return_value = mock_async_call_api.return_value
         result = await client.async_refresh_token()
 
-    assert client._usertoken == "refreshed_token"
-    assert result["usertoken"] == "refreshed_token"
+    assert client._usertoken == "refreshed_token", "客户端令牌应该被刷新"
+    assert result["usertoken"] == "refreshed_token", "返回结果应包含刷新后的令牌"
 
     with patch.object(client, "_post_and_parse") as mock_post:
         mock_post.side_effect = LifeSmartAuthError(-1)
@@ -241,10 +265,10 @@ def test_generate_wss_auth(client):
     client._usertoken = "test_wss_token"
     auth_str = client.generate_wss_auth()
     auth_data = json.loads(auth_str)
-    assert "system" in auth_data
-    assert "usertoken" not in auth_data["system"]
-    assert "sign" in auth_data["system"]
-    assert "userid" in auth_data["system"]
+    assert "system" in auth_data, "WebSocket认证数据应包含system字段"
+    assert "usertoken" not in auth_data["system"], "system字段中不应直接包含用户令牌"
+    assert "sign" in auth_data["system"], "system字段应包含签名"
+    assert "userid" in auth_data["system"], "system字段应包含用户ID"
 
 
 # endregion
@@ -334,16 +358,16 @@ async def test_set_multi_eps_async_wrapper(mock_async_call_api, client):
 async def test_get_wrappers_empty_or_malformed_response(mock_async_call_api, client):
     """测试 GET 类包装方法在收到空或格式错误的 message 时的处理。"""
     mock_async_call_api.return_value = {"code": 0, "message": []}
-    assert await client.async_get_all_devices() == []
+    assert await client.async_get_all_devices() == [], "空消息时应该返回空列表"
 
     mock_async_call_api.return_value = {"code": 0, "message": None}
-    assert await client.get_agt_list_async() == []
-    assert await client.get_agt_details_async("h1") == {}
+    assert await client.get_agt_list_async() == [], "None消息时应该返回空列表"
+    assert await client.get_agt_details_async("h1") == {}, "None消息时应该返回空字典"
 
     mock_async_call_api.return_value = {"code": 0, "message": []}
-    assert await client.get_epget_async("h1", "d1") == {}
+    assert await client.get_epget_async("h1", "d1") == {}, "空消息时应该返回空字典"
     mock_async_call_api.return_value = {"code": 0, "message": ["not_a_dict"]}
-    assert await client.get_epget_async("h1", "d1") == {}
+    assert await client.get_epget_async("h1", "d1") == {}, "非字典消息时应该返回空字典"
 
 
 @pytest.mark.asyncio
@@ -629,10 +653,10 @@ async def test_control_helpers_with_unsupported_device(client, caplog):
     with patch.object(client, "set_single_ep_async") as mock_set:
         # 测试 cover
         result_cover = await client.open_cover_async("agt", "me", "UNSUPPORTED_TYPE")
-        assert result_cover == -1
+        assert result_cover == -1, "不支持的设备类型应该返回-1"
         mock_set.assert_not_called()
-        assert "UNSUPPORTED_TYPE" in caplog.text
-        assert "open_cover" in caplog.text
+        assert "UNSUPPORTED_TYPE" in caplog.text, "应该记录不支持的设备类型"
+        assert "open_cover" in caplog.text, "应该记录操作类型"
 
         caplog.clear()
         mock_set.reset_mock()
@@ -641,7 +665,7 @@ async def test_control_helpers_with_unsupported_device(client, caplog):
         result_temp = await client.async_set_climate_temperature(
             "agt", "me", "UNSUPPORTED_TYPE", 25.0
         )
-        assert result_temp == -1
+        assert result_temp == -1, "不支持的设备类型应该返回-1"
         mock_set.assert_not_called()
         # 注意：这个方法当前没有日志记录，所以我们只验证行为
 
@@ -652,10 +676,10 @@ async def test_control_helpers_with_unsupported_device(client, caplog):
         result_fan = await client.async_set_climate_fan_mode(
             "agt", "me", "UNSUPPORTED_TYPE", FAN_LOW
         )
-        assert result_fan == -1
+        assert result_fan == -1, "不支持的设备类型应该返回-1"
         mock_set.assert_not_called()
-        assert "UNSUPPORTED_TYPE" in caplog.text
-        assert "不支持风扇模式" in caplog.text
+        assert "UNSUPPORTED_TYPE" in caplog.text, "应该记录不支持的设备类型"
+        assert "不支持风扇模式" in caplog.text, "应该记录不支持风扇模式的错误信息"
 
 
 class TestOAPIClientErrorHandling:
@@ -695,10 +719,10 @@ class TestOAPIClientErrorHandling:
         mock_async_call_api.return_value = bad_response
 
         result = await client.get_agt_list_async()
-        assert result == []
+        assert result == [], "格式错误的响应应该返回空列表"
 
         result = await client.async_get_all_devices()
-        assert result == []
+        assert result == [], "格式错误的响应应该返回空列表"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -719,10 +743,10 @@ class TestOAPIClientErrorHandling:
         mock_async_call_api.return_value = bad_response
 
         result = await client.get_agt_details_async("agt1")
-        assert result == {}
+        assert result == {}, "格式错误的响应应该返回空字典"
 
         result = await client.get_epget_async("agt1", "me1")
-        assert result == {}
+        assert result == {}, "格式错误的响应应该返回空字典"
 
     def test_get_code_from_response_handles_all_bad_inputs(
         self, client: LifeSmartOAPIClient
@@ -731,7 +755,13 @@ class TestOAPIClientErrorHandling:
         覆盖场景: _get_code_from_response 收到各种无效输入。
         目的: 100% 覆盖这个工具函数的健壮性。
         """
-        assert client._get_code_from_response(None, "test") == -1
-        assert client._get_code_from_response("not_a_dict", "test") == -1
-        assert client._get_code_from_response({}, "test") == -1  # missing 'code'
-        assert client._get_code_from_response({"code": "not_an_int"}, "test") == -1
+        assert client._get_code_from_response(None, "test") == -1, "None响应应该返回-1"
+        assert (
+            client._get_code_from_response("not_a_dict", "test") == -1
+        ), "非字典响应应该返回-1"
+        assert (
+            client._get_code_from_response({}, "test") == -1
+        ), "缺少code字段的响应应该返回-1"  # missing 'code'
+        assert (
+            client._get_code_from_response({"code": "not_an_int"}, "test") == -1
+        ), "code非整数的响应应该返回-1"

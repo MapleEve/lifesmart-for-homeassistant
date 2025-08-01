@@ -40,41 +40,45 @@ class TestSafeGet:
     def test_dict_access_success(self):
         """测试字典访问成功的情况。"""
         data = {"a": {"b": {"c": "value"}}}
-        assert safe_get(data, "a", "b", "c") == "value"
+        assert safe_get(data, "a", "b", "c") == "value", "应该能正确访问嵌套字典中的值"
 
     def test_dict_access_missing_key(self):
         """测试字典访问键不存在的情况。"""
         data = {"a": {"b": {}}}
-        assert safe_get(data, "a", "b", "missing") is None
-        assert safe_get(data, "a", "b", "missing", default="default") == "default"
+        assert safe_get(data, "a", "b", "missing") is None, "不存在的键应该返回None"
+        assert (
+            safe_get(data, "a", "b", "missing", default="default") == "default"
+        ), "不存在的键应该返回默认值"
 
     def test_list_access_success(self):
         """测试列表访问成功的情况。"""
         data = [1, [2, [3, "value"]]]
-        assert safe_get(data, 1, 1, 0) == 3
+        assert safe_get(data, 1, 1, 0) == 3, "应该能正确访问嵌套列表中的值"
 
     def test_list_access_index_error(self):
         """测试列表访问索引超出范围的情况。"""
         data = [1, 2, 3]
-        assert safe_get(data, 10) is None
-        assert safe_get(data, 10, default="default") == "default"
+        assert safe_get(data, 10) is None, "超出范围的索引应该返回None"
+        assert (
+            safe_get(data, 10, default="default") == "default"
+        ), "超出范围的索引应该返回默认值"
 
     def test_mixed_access(self):
         """测试字典和列表混合访问。"""
         data = {"items": [{"name": "item1"}, {"name": "item2"}]}
-        assert safe_get(data, "items", 1, "name") == "item2"
+        assert safe_get(data, "items", 1, "name") == "item2", "应该能混合访问字典和列表"
 
     def test_invalid_path_type(self):
         """测试无效的路径类型。"""
         data = {"a": "string"}
         # 尝试在字符串上使用键访问
-        assert safe_get(data, "a", "invalid") is None
+        assert safe_get(data, "a", "invalid") is None, "非字典类型上的访问应该返回None"
         # 尝试在字典上使用整数索引
-        assert safe_get({"a": "value"}, 0) is None
+        assert safe_get({"a": "value"}, 0) is None, "字典上使用数字索引应该返回None"
 
     def test_none_data(self):
         """测试传入None数据的情况。"""
-        assert safe_get(None, "key") is None
+        assert safe_get(None, "key") is None, "None对象上的访问应该返回None"
 
 
 class TestDeviceTypeCheckers:
@@ -1063,7 +1067,12 @@ class TestDeviceTypeClassificationParametrized:
         ),
         ("", "agt1", "dev1", "L1", "_agt1_dev1_l1"),
     ],
-    ids=["standard", "no_subkey", "special_chars", "empty_devtype"],
+    ids=[
+        "StandardUniqueIdGeneration",
+        "NoSubkeyParameter",
+        "SpecialCharactersHandling",
+        "EmptyDevtypeHandling",
+    ],
 )
 def test_generate_unique_id(
     devtype: str, agt: str, me: str, sub_key: str, expected_id: str

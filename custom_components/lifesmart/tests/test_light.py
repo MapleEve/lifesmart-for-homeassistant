@@ -41,8 +41,17 @@ from .test_utils import get_entity_unique_id
 # --- 辅助函数测试 ---
 def test_parse_color_value():
     """测试 _parse_color_value 辅助函数。"""
-    assert _parse_color_value(0x00AABBCC, has_white=False) == (0xAA, 0xBB, 0xCC)
-    assert _parse_color_value(0xDDEEFF00, has_white=True) == (0xEE, 0xFF, 0x00, 0xDD)
+    assert _parse_color_value(0x00AABBCC, has_white=False) == (
+        0xAA,
+        0xBB,
+        0xCC,
+    ), "RGB颜色解析应该正确"
+    assert _parse_color_value(0xDDEEFF00, has_white=True) == (
+        0xEE,
+        0xFF,
+        0x00,
+        0xDD,
+    ), "RGBW颜色解析应该正确"
 
 
 # ==================== 测试套件 ====================
@@ -51,29 +60,46 @@ def test_parse_color_value():
 class TestLightSetup:
     """测试灯光平台的设置逻辑。"""
 
+    @pytest.mark.asyncio
     async def test_setup_entry_creates_all_entities(
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ) -> None:
         """测试从共享 fixtures 成功设置所有灯光实体类型。"""
         # 根据 conftest.py 中定义的灯光设备，期望数量为 11
-        assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 11
+        assert (
+            len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 11
+        ), "应该有11个灯光实体"
 
         # 验证所有预期的灯光实体都已创建
-        assert hass.states.get("light.brightness_light_p1") is not None
-        assert hass.states.get("light.dimmer_light") is not None
-        assert hass.states.get("light.quantum_light") is not None
-        assert hass.states.get("light.single_io_rgb_light_rgb") is not None
-        assert hass.states.get("light.dual_io_rgbw_light") is not None
-        assert hass.states.get("light.spot_rgb_light_rgb") is not None
-        assert hass.states.get("light.spot_rgbw_light") is not None
-        assert hass.states.get("light.cover_light_p1") is not None
-        assert hass.states.get("light.wall_outlet_light_p1") is not None
-        assert hass.states.get("light.simple_bulb_p1") is not None
-        assert hass.states.get("light.outdoor_light_p1") is not None
+        assert (
+            hass.states.get("light.brightness_light_p1") is not None
+        ), "亮度灯应该存在"
+        assert hass.states.get("light.dimmer_light") is not None, "调光器灯应该存在"
+        assert hass.states.get("light.quantum_light") is not None, "量子灯应该存在"
+        assert (
+            hass.states.get("light.single_io_rgb_light_rgb") is not None
+        ), "单IO RGB灯应该存在"
+        assert (
+            hass.states.get("light.dual_io_rgbw_light") is not None
+        ), "双IO RGBW灯应该存在"
+        assert (
+            hass.states.get("light.spot_rgb_light_rgb") is not None
+        ), "射灯RGB应该存在"
+        assert hass.states.get("light.spot_rgbw_light") is not None, "射灯RGBW应该存在"
+        assert hass.states.get("light.cover_light_p1") is not None, "窗帘灯应该存在"
+        assert (
+            hass.states.get("light.wall_outlet_light_p1") is not None
+        ), "插座灯应该存在"
+        assert hass.states.get("light.simple_bulb_p1") is not None, "简单灯泡应该存在"
+        assert hass.states.get("light.outdoor_light_p1") is not None, "室外灯应该存在"
 
         # 确认非灯光设备或子项没有被错误创建
-        assert hass.states.get("light.garage_door_p2") is None
-        assert hass.states.get("light.3_gang_switch_l1") is None  # 应为 switch
+        assert (
+            hass.states.get("light.garage_door_p2") is None
+        ), "车库门不应该作为灯光实体"
+        assert (
+            hass.states.get("light.3_gang_switch_l1") is None
+        ), "3路开关不应该作为灯光实体"  # 应为 switch
 
 
 class TestLifeSmartBrightnessLight:
@@ -84,12 +110,16 @@ class TestLifeSmartBrightnessLight:
     HUB_ID = "hub_light"
     SUB_KEY = "P1"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
-        assert state.state == STATE_ON
-        assert state.attributes.get("color_mode") == ColorMode.BRIGHTNESS
-        assert state.attributes.get(ATTR_BRIGHTNESS) == 100
+        assert state.state == STATE_ON, "灯光状态应该为开启"
+        assert (
+            state.attributes.get("color_mode") == ColorMode.BRIGHTNESS
+        ), "颜色模式应该为亮度模式"
+        assert state.attributes.get(ATTR_BRIGHTNESS) == 100, "亮度值应该为100"
 
+    @pytest.mark.asyncio
     async def test_turn_on_off_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -116,6 +146,7 @@ class TestLifeSmartBrightnessLight:
             self.SUB_KEY, self.HUB_ID, self.DEVICE_ME
         )
 
+    @pytest.mark.asyncio
     async def test_attribute_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -132,6 +163,7 @@ class TestLifeSmartBrightnessLight:
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0xCF, 150
         )
 
+    @pytest.mark.asyncio
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         # 场景 1: 灯关闭
@@ -153,6 +185,7 @@ class TestLifeSmartBrightnessLight:
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_BRIGHTNESS) == 75
 
+    @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -186,6 +219,7 @@ class TestLifeSmartDimmerLight:
     DEVICE_ME = "light_dimmer"
     HUB_ID = "hub_light"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
@@ -198,6 +232,7 @@ class TestLifeSmartDimmerLight:
             expected_kelvin, 1
         )
 
+    @pytest.mark.asyncio
     async def test_turn_on_off_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -224,6 +259,7 @@ class TestLifeSmartDimmerLight:
             "P1", self.HUB_ID, self.DEVICE_ME
         )
 
+    @pytest.mark.asyncio
     async def test_attribute_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -260,6 +296,7 @@ class TestLifeSmartDimmerLight:
             ],
         )
 
+    @pytest.mark.asyncio
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
@@ -271,6 +308,7 @@ class TestLifeSmartDimmerLight:
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_OFF
 
+    @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -311,6 +349,7 @@ class TestLifeSmartQuantumLight:
     DEVICE_ME = "light_quantum"
     HUB_ID = "hub_light"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
@@ -318,6 +357,7 @@ class TestLifeSmartQuantumLight:
         assert state.attributes.get(ATTR_RGBW_COLOR) == (1, 2, 3, 1)
         assert state.attributes.get(ATTR_EFFECT) is None
 
+    @pytest.mark.asyncio
     async def test_turn_on_off_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -344,6 +384,7 @@ class TestLifeSmartQuantumLight:
             "P1", self.HUB_ID, self.DEVICE_ME
         )
 
+    @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -369,6 +410,7 @@ class TestLifeSmartQuantumLight:
         assert final_state.attributes.get(ATTR_EFFECT) is None
         assert final_state.attributes.get(ATTR_RGBW_COLOR) == (1, 2, 3, 1)
 
+    @pytest.mark.asyncio
     async def test_attribute_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -402,6 +444,7 @@ class TestLifeSmartQuantumLight:
             [{"idx": "P2", "type": 0xFF, "val": 0x280A141E}],
         )
 
+    @pytest.mark.asyncio
     async def test_service_call_with_brightness_and_color(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -431,6 +474,7 @@ class TestLifeSmartQuantumLight:
             "P1", self.HUB_ID, self.DEVICE_ME
         )
 
+    @pytest.mark.asyncio
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
@@ -453,6 +497,7 @@ class TestLifeSmartSingleIORGBWLight:
     HUB_ID = "hub_light"
     SUB_KEY = "RGB"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
@@ -464,31 +509,32 @@ class TestLifeSmartSingleIORGBWLight:
         ("service_data", "expected_type", "expected_val", "test_id"),
         [
             # 1. 简单开灯
-            ({}, 0x81, 1, "turn_on_simple"),
+            ({}, 0x81, 1, "SimpleTurnOn"),
             # 2. 设置颜色 (同时提供亮度，但协议决定了亮度被忽略)
             (
                 {ATTR_RGBW_COLOR: (10, 20, 30, 40), ATTR_BRIGHTNESS: 128},
                 0xFF,
                 0x280A141E,
-                "set_color_ignores_brightness",
+                "SetColorIgnoresBrightness",
             ),
             # 3. 设置效果
             (
                 {ATTR_EFFECT: "魔力红"},
                 0xFF,
                 DYN_EFFECT_MAP["魔力红"],
-                "set_effect",
+                "SetEffectMagicRed",
             ),
             # 4. 只设置亮度 (应被解释为设置白光)
             (
                 {ATTR_BRIGHTNESS: 200},
                 0xFF,
                 (200 << 24),  # W=200, R=G=B=0
-                "set_brightness_as_white",
+                "SetBrightnessAsWhite",
             ),
         ],
-        ids=lambda x: x[2] if isinstance(x, tuple) else None,
+        ids=lambda x: x[3] if isinstance(x, tuple) else None,
     )
+    @pytest.mark.asyncio
     async def test_turn_on_protocol(
         self,
         hass: HomeAssistant,
@@ -510,6 +556,7 @@ class TestLifeSmartSingleIORGBWLight:
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, expected_type, expected_val
         )
 
+    @pytest.mark.asyncio
     async def test_turn_off_protocol(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -525,6 +572,7 @@ class TestLifeSmartSingleIORGBWLight:
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0x80, 0
         )
 
+    @pytest.mark.asyncio
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         # w_flag = 50 (0x32), round(50 / 100 * 255) = round(127.5) = 128
@@ -539,6 +587,7 @@ class TestLifeSmartSingleIORGBWLight:
         assert state.attributes.get(ATTR_BRIGHTNESS) == 128
         assert state.attributes.get(ATTR_RGBW_COLOR) == (10, 20, 30, 255)
 
+    @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -577,6 +626,7 @@ class TestLifeSmartDualIORGBWLight:
     COLOR_IO = "RGBW"
     EFFECT_IO = "DYN"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
@@ -584,6 +634,7 @@ class TestLifeSmartDualIORGBWLight:
         assert state.attributes.get(ATTR_RGBW_COLOR) == (0, 0, 0, 0)
         assert state.attributes.get(ATTR_EFFECT) is None
 
+    @pytest.mark.asyncio
     async def test_turn_on_off_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -615,6 +666,7 @@ class TestLifeSmartDualIORGBWLight:
             self.COLOR_IO, self.HUB_ID, self.DEVICE_ME
         )
 
+    @pytest.mark.asyncio
     async def test_effect_and_color_priority(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -641,6 +693,7 @@ class TestLifeSmartDualIORGBWLight:
             ],
         )
 
+    @pytest.mark.asyncio
     async def test_service_call_with_brightness_and_color(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -669,6 +722,7 @@ class TestLifeSmartDualIORGBWLight:
             ],
         )
 
+    @pytest.mark.asyncio
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         update_data = {
@@ -684,6 +738,7 @@ class TestLifeSmartDualIORGBWLight:
         assert state.attributes.get(ATTR_EFFECT) == "魔力红"
         assert state.attributes.get(ATTR_RGBW_COLOR) == (0x22, 0x33, 0x44, 0x11)
 
+    @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -721,6 +776,7 @@ class TestLifeSmartSPOTRGBLight:
     HUB_ID = "hub_light"
     SUB_KEY = "RGB"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
@@ -728,6 +784,7 @@ class TestLifeSmartSPOTRGBLight:
         assert state.attributes.get(ATTR_RGB_COLOR) == (255, 128, 64)
         assert state.attributes.get(ATTR_EFFECT) is None
 
+    @pytest.mark.asyncio
     async def test_turn_on_off_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -754,6 +811,7 @@ class TestLifeSmartSPOTRGBLight:
             self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0x81, 1
         )
 
+    @pytest.mark.asyncio
     async def test_attribute_services(
         self,
         hass: HomeAssistant,
@@ -797,36 +855,37 @@ class TestLifeSmartSPOTRGBLight:
             (
                 {ATTR_RGB_COLOR: (255, 128, 64)},
                 0xFF8040,
-                "color_only_full_brightness",
+                "ColorOnlyFullBrightness",
             ),
             # 2. 提供颜色和全亮度
             (
                 {ATTR_BRIGHTNESS: 255, ATTR_RGB_COLOR: (255, 128, 64)},
                 0xFF8040,
-                "color_with_max_brightness",
+                "ColorWithMaxBrightness",
             ),
             # 3. 提供颜色和中等亮度
             (
                 {ATTR_BRIGHTNESS: 128, ATTR_RGB_COLOR: (255, 0, 0)},  # 纯红色
                 0x800000,  # 亮度减半，R分量减半
-                "color_with_medium_brightness",
+                "ColorWithMediumBrightness",
             ),
             # 4. 提供颜色和低亮度
             (
                 {ATTR_BRIGHTNESS: 1, ATTR_RGB_COLOR: (0, 255, 0)},  # 纯绿色
                 0x000100,  # 亮度最低，G分量为1
-                "color_with_min_brightness",
+                "ColorWithMinBrightness",
             ),
             # 5. 复杂的颜色和亮度组合
             # (255, 128, 64) @ 50% brightness -> (128, 64, 32)
             (
                 {ATTR_BRIGHTNESS: 128, ATTR_RGB_COLOR: (255, 128, 64)},
                 0x804020,
-                "complex_color_with_medium_brightness",
+                "ComplexColorWithMediumBrightness",
             ),
         ],
         ids=lambda x: x[2] if isinstance(x, tuple) else None,
     )
+    @pytest.mark.asyncio
     async def test_service_call_with_brightness_and_color(
         self,
         hass: HomeAssistant,
@@ -864,6 +923,7 @@ class TestLifeSmartSPOTRGBLight:
             expected_api_val,
         )
 
+    @pytest.mark.asyncio
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
@@ -876,6 +936,7 @@ class TestLifeSmartSPOTRGBLight:
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_EFFECT) == "海浪"
 
+    @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -909,6 +970,7 @@ class TestLifeSmartSPOTRGBWLight:
     COLOR_IO = "RGBW"
     EFFECT_IO = "DYN"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
@@ -916,6 +978,7 @@ class TestLifeSmartSPOTRGBWLight:
         assert state.attributes.get(ATTR_RGBW_COLOR) == (0x22, 0x33, 0x44, 0x11)
         assert state.attributes.get(ATTR_EFFECT) == "海浪"
 
+    @pytest.mark.asyncio
     async def test_turn_on_off_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -947,6 +1010,7 @@ class TestLifeSmartSPOTRGBWLight:
             self.COLOR_IO, self.HUB_ID, self.DEVICE_ME
         )
 
+    @pytest.mark.asyncio
     async def test_effect_and_color_priority(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -970,6 +1034,7 @@ class TestLifeSmartSPOTRGBWLight:
             ],
         )
 
+    @pytest.mark.asyncio
     async def test_service_call_with_brightness_and_color(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -998,6 +1063,7 @@ class TestLifeSmartSPOTRGBWLight:
             ],
         )
 
+    @pytest.mark.asyncio
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         update_data = {
@@ -1012,6 +1078,7 @@ class TestLifeSmartSPOTRGBWLight:
         assert state.state == STATE_OFF
         assert state.attributes.get(ATTR_EFFECT) is None
 
+    @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -1048,11 +1115,13 @@ class TestLifeSmartCoverLight:
     HUB_ID = "hub_light"
     SUB_KEY = "P1"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.ONOFF
 
+    @pytest.mark.asyncio
     async def test_turn_on_off_services(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -1079,6 +1148,7 @@ class TestLifeSmartCoverLight:
             self.SUB_KEY, self.HUB_ID, self.DEVICE_ME
         )
 
+    @pytest.mark.asyncio
     async def test_state_update(self, hass: HomeAssistant, setup_integration):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
@@ -1087,6 +1157,7 @@ class TestLifeSmartCoverLight:
         await hass.async_block_till_done()
         assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
 
+    @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -1120,7 +1191,9 @@ class TestLifeSmartSimpleOnOffLight:
             ("light.wall_outlet_light_p1", "light_switch", "P1"),
             ("light.simple_bulb_p1", "light_bulb", "P1"),
         ],
+        ids=["WallOutletLightOnOff", "SimpleBulbOnOff"],
     )
+    @pytest.mark.asyncio
     async def test_on_off_and_state(
         self,
         hass: HomeAssistant,
@@ -1157,6 +1230,7 @@ class TestLifeSmartSimpleOnOffLight:
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.ONOFF
 
+    @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -1208,6 +1282,7 @@ class TestLightProtocolAndColorEdgeCases:
     针对灯光协议细节和颜色计算逻辑的深度和边缘情况测试。
     """
 
+    @pytest.mark.asyncio
     async def test_single_io_light_protocol_precision(
         self,
         hass: HomeAssistant,
@@ -1261,6 +1336,7 @@ class TestLightProtocolAndColorEdgeCases:
             DYN_EFFECT_MAP["天上人间"],
         )
 
+    @pytest.mark.asyncio
     async def test_spot_rgb_light_color_brightness_edge_cases(
         self,
         hass: HomeAssistant,
@@ -1320,6 +1396,7 @@ class TestLightProtocolAndColorEdgeCases:
             sub_key, hub_id, device_me
         )
 
+    @pytest.mark.asyncio
     async def test_dual_io_light_state_competition(
         self,
         hass: HomeAssistant,

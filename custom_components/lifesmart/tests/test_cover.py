@@ -45,6 +45,7 @@ from .test_utils import find_test_device, get_entity_unique_id
 class TestCoverSetup:
     """测试 cover 平台的设置和实体创建逻辑。"""
 
+    @pytest.mark.asyncio
     async def test_setup_entry_creates_all_entities(
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ):
@@ -55,12 +56,21 @@ class TestCoverSetup:
         都被成功加载为 Home Assistant 中的 cover 实体。
         """
         # 期望创建: 车库门, Dooya窗帘, 非定位窗帘, 通用控制器窗帘
-        assert len(hass.states.async_entity_ids(COVER_DOMAIN)) == 4
-        assert hass.states.get("cover.garage_door_p2") is not None
-        assert hass.states.get("cover.living_room_curtain_p1") is not None
-        assert hass.states.get("cover.bedroom_curtain_op") is not None
-        assert hass.states.get("cover.generic_controller_curtain_p2") is not None
+        assert (
+            len(hass.states.async_entity_ids(COVER_DOMAIN)) == 4
+        ), "应该创建4个窗帘实体"
+        assert hass.states.get("cover.garage_door_p2") is not None, "车库门实体应该存在"
+        assert (
+            hass.states.get("cover.living_room_curtain_p1") is not None
+        ), "客厅窗帘实体应该存在"
+        assert (
+            hass.states.get("cover.bedroom_curtain_op") is not None
+        ), "卧室窗帘实体应该存在"
+        assert (
+            hass.states.get("cover.generic_controller_curtain_p2") is not None
+        ), "通用控制器窗帘实体应该存在"
 
+    @pytest.mark.asyncio
     async def test_generic_controller_not_as_cover(
         self,
         hass: HomeAssistant,
@@ -94,7 +104,7 @@ class TestCoverSetup:
             mock_hub_instance.async_unload = AsyncMock(return_value=None)
 
             result = await hass.config_entries.async_reload(setup_integration.entry_id)
-            assert result
+            assert result, "应该成功设置控制器窗帘使用通用控制器模式"
             await hass.async_block_till_done()
 
         # 断言：通用控制器的 cover 实体状态应变为 'unavailable'。
@@ -127,6 +137,7 @@ class TestPositionalCover:
         """提供当前测试类的设备字典。"""
         return find_test_device(mock_lifesmart_devices, self.DEVICE_ME)
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         """测试定位窗帘的初始属性。"""
         state = hass.states.get(self.ENTITY_ID)
@@ -149,8 +160,9 @@ class TestPositionalCover:
             (SERVICE_CLOSE_COVER, STATE_CLOSING, "close_cover_async"),
             (SERVICE_STOP_COVER, STATE_OPEN, "stop_cover_async"),
         ],
-        ids=["Open", "Close", "Stop"],
+        ids=["OpenCoverService", "CloseCoverService", "StopCoverService"],
     )
+    @pytest.mark.asyncio
     async def test_basic_services_and_optimistic_update(
         self,
         hass: HomeAssistant,
@@ -173,6 +185,7 @@ class TestPositionalCover:
             self.HUB_ID, self.DEVICE_ME, self.DEVICE_TYPE
         )
 
+    @pytest.mark.asyncio
     async def test_set_position_service(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
@@ -199,8 +212,15 @@ class TestPositionalCover:
             ({"val": 50 | 0x80, "type": 129}, 50, STATE_CLOSING),  # 正在关闭
             ({"val": 50, "type": 129}, 50, STATE_OPENING),  # 正在打开
         ],
-        ids=["Closed", "Open", "StoppedAt50", "Closing", "Opening"],
+        ids=[
+            "CoverFullyClosed",
+            "CoverFullyOpen",
+            "CoverStoppedAtMidpoint",
+            "CoverClosingInProgress",
+            "CoverOpeningInProgress",
+        ],
     )
+    @pytest.mark.asyncio
     async def test_state_update_from_dispatcher(
         self,
         hass: HomeAssistant,
@@ -229,6 +249,7 @@ class TestNonPositionalCover:
     DEVICE_TYPE = "SL_SW_WIN"
     HUB_ID = "hub_cover"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         """
         测试非定位窗帘的初始属性。
@@ -252,8 +273,9 @@ class TestNonPositionalCover:
             (SERVICE_CLOSE_COVER, SERVICE_STOP_COVER, STATE_CLOSED),
             (SERVICE_OPEN_COVER, SERVICE_STOP_COVER, STATE_OPEN),
         ],
-        ids=["CloseThenStop", "OpenThenStop"],
+        ids=["CloseThenStopStateHandling", "OpenThenStopStateHandling"],
     )
+    @pytest.mark.asyncio
     async def test_state_after_stop(
         self,
         hass: HomeAssistant,
@@ -300,6 +322,7 @@ class TestNonPositionalCover:
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == expected_final_state
 
+    @pytest.mark.asyncio
     async def test_update_with_missing_data(
         self, hass: HomeAssistant, setup_integration
     ):

@@ -43,15 +43,19 @@ class TestLifeSmartServiceManager:
         service_manager.client = mock_client
         return service_manager
 
+    @pytest.mark.asyncio
     async def test_service_registration(self, hass: HomeAssistant, service_manager):
         """测试服务注册功能。"""
         service_manager.register_services()
 
         # 验证所有服务都已注册
-        assert hass.services.has_service(DOMAIN, "send_ir_keys")
-        assert hass.services.has_service(DOMAIN, "trigger_scene")
-        assert hass.services.has_service(DOMAIN, "press_switch")
+        assert hass.services.has_service(DOMAIN, "send_ir_keys"), "应该注册红外发送服务"
+        assert hass.services.has_service(
+            DOMAIN, "trigger_scene"
+        ), "应该注册场景触发服务"
+        assert hass.services.has_service(DOMAIN, "press_switch"), "应该注册点动开关服务"
 
+    @pytest.mark.asyncio
     async def test_send_ir_keys_service(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -84,6 +88,7 @@ class TestLifeSmartServiceManager:
             ["power", "volume_up"],
         )
 
+    @pytest.mark.asyncio
     async def test_send_ir_keys_service_with_exception(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -109,6 +114,7 @@ class TestLifeSmartServiceManager:
 
         mock_client.async_send_ir_key.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_trigger_scene_service_success(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -126,6 +132,7 @@ class TestLifeSmartServiceManager:
 
         mock_client.async_set_scene.assert_called_once_with("test_hub", "scene_123")
 
+    @pytest.mark.asyncio
     async def test_trigger_scene_service_missing_agt(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -144,6 +151,7 @@ class TestLifeSmartServiceManager:
         # 不应该调用客户端方法
         mock_client.async_set_scene.assert_not_called()
 
+    @pytest.mark.asyncio
     async def test_trigger_scene_service_missing_id(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -162,6 +170,7 @@ class TestLifeSmartServiceManager:
         # 不应该调用客户端方法
         mock_client.async_set_scene.assert_not_called()
 
+    @pytest.mark.asyncio
     async def test_trigger_scene_service_with_exception(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -182,6 +191,7 @@ class TestLifeSmartServiceManager:
 
         mock_client.async_set_scene.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_press_switch_service_success(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -210,6 +220,7 @@ class TestLifeSmartServiceManager:
             "L1", "test_hub", "test_device", 2000
         )
 
+    @pytest.mark.asyncio
     async def test_press_switch_service_default_duration(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -237,6 +248,7 @@ class TestLifeSmartServiceManager:
             "L1", "test_hub", "test_device", 1000
         )
 
+    @pytest.mark.asyncio
     async def test_press_switch_service_missing_entity_id(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -255,6 +267,7 @@ class TestLifeSmartServiceManager:
         # 不应该调用客户端方法
         mock_client.press_switch_async.assert_not_called()
 
+    @pytest.mark.asyncio
     async def test_press_switch_service_entity_not_found(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -273,6 +286,7 @@ class TestLifeSmartServiceManager:
         # 不应该调用客户端方法
         mock_client.press_switch_async.assert_not_called()
 
+    @pytest.mark.asyncio
     async def test_press_switch_service_missing_attributes(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -294,6 +308,7 @@ class TestLifeSmartServiceManager:
         # 不应该调用客户端方法
         mock_client.press_switch_async.assert_not_called()
 
+    @pytest.mark.asyncio
     async def test_press_switch_service_with_exception(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -322,14 +337,15 @@ class TestLifeSmartServiceManager:
 
         mock_client.press_switch_async.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_service_manager_initialization(
         self, hass: HomeAssistant, mock_client
     ):
         """测试服务管理器的初始化。"""
         manager = LifeSmartServiceManager(hass, mock_client)
 
-        assert manager.hass == hass
-        assert manager.client == mock_client
+        assert manager.hass == hass, "服务管理器的hass实例应该正确"
+        assert manager.client == mock_client, "服务管理器的客户端应该正确"
 
     @pytest.mark.parametrize(
         "service_data,expected_calls",
@@ -360,6 +376,7 @@ class TestLifeSmartServiceManager:
             ),
         ],
     )
+    @pytest.mark.asyncio
     async def test_send_ir_keys_parametrized(
         self,
         hass: HomeAssistant,
@@ -375,7 +392,9 @@ class TestLifeSmartServiceManager:
 
         await service_manager._send_ir_keys(call)
 
-        assert mock_client.async_send_ir_key.call_count == expected_calls
+        assert (
+            mock_client.async_send_ir_key.call_count == expected_calls
+        ), f"期望调用{expected_calls}次，实际调用{mock_client.async_send_ir_key.call_count}次"
         if expected_calls > 0:
             mock_client.async_send_ir_key.assert_called_with(
                 service_data[HUB_ID_KEY],

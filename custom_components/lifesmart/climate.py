@@ -13,7 +13,6 @@
 import logging
 from typing import Any
 
-# 导入 Home Assistant 温控组件所需的核心类和常量
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -23,7 +22,6 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
 )
 from homeassistant.config_entries import ConfigEntry
-# 导入 Home Assistant 的通用常量和核心对象类型
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -48,7 +46,6 @@ from .const import (
     get_f_fan_mode,
     get_tf_fan_mode,
 )
-# 导入项目内部的工具函数和常量
 from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, is_climate, safe_get
 

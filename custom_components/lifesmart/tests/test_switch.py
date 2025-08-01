@@ -94,9 +94,11 @@ class TestStandardSwitch:
 
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
-        assert state is not None
-        assert state.state == STATE_ON
-        assert state.attributes.get("device_class") == SwitchDeviceClass.SWITCH
+        assert state is not None, "开关实体应存在"
+        assert state.state == STATE_ON, "初始状态应为开启"
+        assert (
+            state.attributes.get("device_class") == SwitchDeviceClass.SWITCH
+        ), "设备类别应为开关"
 
     async def test_turn_on_off_and_update(
         self, hass: HomeAssistant, mock_client: AsyncMock, setup_integration
@@ -107,7 +109,9 @@ class TestStandardSwitch:
             {ATTR_ENTITY_ID: self.ENTITY_ID},
             blocking=True,
         )
-        assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
+        assert (
+            hass.states.get(self.ENTITY_ID).state == STATE_OFF
+        ), "关闭服务调用后状态应为关闭"
         mock_client.turn_off_light_switch_async.assert_called_with(
             self.SUB_KEY, self.HUB_ID, self.DEVICE_ME
         )
@@ -117,7 +121,9 @@ class TestStandardSwitch:
             hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"type": 129}
         )
         await hass.async_block_till_done()
-        assert hass.states.get(self.ENTITY_ID).state == STATE_ON
+        assert (
+            hass.states.get(self.ENTITY_ID).state == STATE_ON
+        ), "接收dispatcher更新后状态应为开启"
 
 
 class TestSmartOutlet:
@@ -161,6 +167,11 @@ class TestGenericControllerAsSwitch:
             ("p3", "P3", STATE_OFF),
             ("p4", "P4", STATE_ON),
         ],
+        ids=[
+            "GenControllerChannelP2On",
+            "GenControllerChannelP3Off",
+            "GenControllerChannelP4On",
+        ],
     )
     async def test_channel_behavior(
         self,
@@ -198,6 +209,7 @@ class TestNineWayController:
             ("p8", "P8", STATE_OFF),
             ("p9", "P9", STATE_ON),
         ],
+        ids=["NineWayChannelP1On", "NineWayChannelP8Off", "NineWayChannelP9On"],
     )
     async def test_channel_behavior(
         self,

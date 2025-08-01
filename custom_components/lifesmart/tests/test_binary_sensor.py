@@ -40,10 +40,18 @@ async def test_all_binary_sensors_created(
      *   - 状态机中应存在所有在 `conftest.py` 中定义的、应被创建为二元传感器的实体。
      */
     """
-    assert hass.states.get("binary_sensor.front_door_g") is not None
-    assert hass.states.get("binary_sensor.main_lock_evtlo") is not None
-    assert hass.states.get("binary_sensor.main_lock_alm") is not None
-    assert hass.states.get("binary_sensor.panic_button_p1") is not None
+    assert (
+        hass.states.get("binary_sensor.front_door_g") is not None
+    ), "前门传感器实体应存在"
+    assert (
+        hass.states.get("binary_sensor.main_lock_evtlo") is not None
+    ), "主门锁状态传感器实体应存在"
+    assert (
+        hass.states.get("binary_sensor.main_lock_alm") is not None
+    ), "主门锁报警传感器实体应存在"
+    assert (
+        hass.states.get("binary_sensor.panic_button_p1") is not None
+    ), "紧急按钮传感器实体应存在"
 
 
 @pytest.mark.asyncio
@@ -59,6 +67,17 @@ async def test_all_binary_sensors_created(
         ("bs_lock", "EVTLO", "EVTLO", BinarySensorDeviceClass.LOCK, STATE_ON),
         ("bs_lock", "ALM", "ALM", BinarySensorDeviceClass.PROBLEM, STATE_ON),
         ("bs_button", "P1", "P1", None, STATE_OFF),
+    ],
+    ids=[
+        "DoorSensorProperties",
+        "MotionSensorProperties",
+        "WaterSensorProperties",
+        "DefedSensorProperties",
+        "SmokeSensorProperties",
+        "RadarSensorProperties",
+        "LockStatusSensor",
+        "LockAlarmSensor",
+        "ButtonSensorProperties",
     ],
 )
 async def test_entity_initialization_and_properties(
@@ -93,11 +112,13 @@ async def test_entity_initialization_and_properties(
 
     state = hass.states.get(entity_id)
     assert state, f"实体 '{entity_id}' 不存在"
-    assert state.name == f"{device['name']} {expected_name_suffix}"
+    assert (
+        state.name == f"{device['name']} {expected_name_suffix}"
+    ), f"实体名称应为 {device['name']} {expected_name_suffix}"
     assert state.attributes.get("device_class") == (
         expected_class.value if expected_class else None
-    )
-    assert state.state == initial_state
+    ), f"设备类别应为 {expected_class}"
+    assert state.state == initial_state, f"初始状态应为 {initial_state}"
 
 
 @pytest.mark.asyncio
@@ -123,7 +144,7 @@ async def test_lock_attributes(hass: HomeAssistant, setup_integration: ConfigEnt
 @pytest.mark.parametrize(
     "event_val, expected_event_name",
     [(1, "single_click"), (2, "double_click"), (255, "long_press")],
-    ids=["single_click", "double_click", "long_press"],
+    ids=["SingleClickEvent", "DoubleClickEvent", "LongPressEvent"],
 )
 async def test_momentary_button_events(
     hass: HomeAssistant,
