@@ -39,10 +39,10 @@ class TestSwitchSetup:
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ):
         """测试从conftest中成功设置所有开关实体。
-        
+
         验证所有类型的开关设备都能正确创建和注册：
         - 3个三路开关 (sw_if3)
-        - 1个智能插座 (sw_ol) 
+        - 1个智能插座 (sw_ol)
         - 3个自然风开关 (sw_nature)
         - 3个通用控制器开关模式 (generic_p_switch_mode)
         - 9个九路控制器 (sw_p9)
@@ -62,7 +62,7 @@ class TestSwitchSetup:
         mock_lifesmart_devices: list,
     ):
         """测试设备和Hub可以从设置中排除。
-        
+
         验证排除配置功能：
         - 通过CONF_EXCLUDE_ITEMS排除特定设备
         - 通过CONF_EXCLUDE_AGTS排除特定Hub
@@ -128,7 +128,7 @@ class TestStandardSwitch:
     @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         """测试开关实体的初始属性。
-        
+
         验证：
         - 实体存在性
         - 初始状态正确
@@ -146,7 +146,7 @@ class TestStandardSwitch:
         self, hass: HomeAssistant, mock_client: AsyncMock, setup_integration
     ):
         """测试开关的开启/关闭控制和状态更新。
-        
+
         验证：
         - 关闭服务调用正确传递到客户端
         - 状态正确更新
@@ -189,7 +189,7 @@ class TestSmartOutlet:
     @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         """测试智能插座的初始属性。
-        
+
         验证：
         - 实体存在性
         - 初始状态为开启
@@ -205,7 +205,7 @@ class TestSmartOutlet:
         self, hass: HomeAssistant, mock_client: AsyncMock, setup_integration
     ):
         """测试智能插座的开关控制。
-        
+
         验证关闭服务调用能正确传递到客户端。
         """
         await hass.services.async_call(
@@ -252,10 +252,10 @@ class TestGenericControllerAsSwitch:
         initial_state: str,
     ):
         """测试通用控制器各通道的行为。
-        
+
         验证不同通道：
         - P2通道初始状态为开启
-        - P3通道初始状态为关闭  
+        - P3通道初始状态为关闭
         - P4通道初始状态为开启
         - 关闭服务调用正确传递参数
         """
@@ -302,7 +302,7 @@ class TestNineWayController:
         initial_state: str,
     ):
         """测试九路控制器各通道的行为。
-        
+
         验证不同通道：
         - P1通道初始状态为开启
         - P8通道初始状态为关闭
