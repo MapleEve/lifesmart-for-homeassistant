@@ -123,7 +123,6 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         self._attr_state_class = self._determine_state_class()
         self._attr_native_unit_of_measurement = self._determine_unit()
         self._attr_native_value = self._extract_initial_value()
-        self._attr_extra_state_attributes = self._get_extra_attributes()
 
     @callback
     def _generate_sensor_name(self) -> str | None:
@@ -388,6 +387,22 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         return None
 
     @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra state attributes for this sensor."""
+        # Get base attributes from parent class
+        base_attrs = super().extra_state_attributes
+        # Get sensor-specific extra attributes
+        sensor_attrs = self._get_extra_attributes()
+
+        if sensor_attrs:
+            # Merge base attributes with sensor-specific ones
+            if base_attrs:
+                return {**base_attrs, **sensor_attrs}
+            return sensor_attrs
+
+        return base_attrs
+
+    @property
     def device_info(self) -> DeviceInfo:
         """返回设备信息以链接实体到单个设备。"""
         return DeviceInfo(
@@ -422,9 +437,6 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         """Handle real-time updates."""
         try:
             if not new_data:
-                import logging
-
-                _LOGGER = logging.getLogger(__name__)
                 _LOGGER.warning(
                     "Received empty new_data in _handle_update; possible upstream issue."
                 )
