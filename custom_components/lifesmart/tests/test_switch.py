@@ -1,4 +1,17 @@
-"""Unit tests for the LifeSmart switch platform."""
+"""
+LifeSmart 开关平台测试套件。
+
+此测试套件专门测试 switch.py 中的开关平台功能，包括：
+- 开关实体的设置和初始化
+- 各种开关类型的支持（三路开关、智能插座、通用控制器、九路控制器）
+- 开关状态控制（开启、关闭）
+- 设备排除配置的处理
+- 状态更新和回调处理
+- 不同开关模式和设备类别的验证
+
+测试使用结构化的类组织，每个类专注于特定的开关类型，
+并包含详细的中文注释以确保可维护性。
+"""
 
 from unittest.mock import AsyncMock, MagicMock
 
@@ -15,17 +28,26 @@ from custom_components.lifesmart.switch import async_setup_entry
 from .test_utils import get_entity_unique_id
 
 
-# --- Test `async_setup_entry` and Entity Behavior ---
+# ==================== 开关平台设置测试类 ====================
 
 
 class TestSwitchSetup:
-    """Test the platform setup."""
+    """测试开关平台的设置和初始化功能。"""
 
     @pytest.mark.asyncio
     async def test_setup_all_switches(
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ):
-        """Test successful setup of all switch entities from conftest."""
+        """测试从conftest中成功设置所有开关实体。
+        
+        验证所有类型的开关设备都能正确创建和注册：
+        - 3个三路开关 (sw_if3)
+        - 1个智能插座 (sw_ol) 
+        - 3个自然风开关 (sw_nature)
+        - 3个通用控制器开关模式 (generic_p_switch_mode)
+        - 9个九路控制器 (sw_p9)
+        总计19个开关实体。
+        """
         # 3 (sw_if3) + 1 (sw_ol) + 3 (sw_nature) + 3 (generic_p_switch_mode) + 9 (sw_p9) = 19
         assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 19
 
@@ -39,7 +61,14 @@ class TestSwitchSetup:
         mock_config_data: dict,
         mock_lifesmart_devices: list,
     ):
-        """Test that devices and hubs can be excluded from setup."""
+        """测试设备和Hub可以从设置中排除。
+        
+        验证排除配置功能：
+        - 通过CONF_EXCLUDE_ITEMS排除特定设备
+        - 通过CONF_EXCLUDE_AGTS排除特定Hub
+        - 确保排除的设备不会创建实体
+        - 验证剩余设备正确创建
+        """
         # 1. 创建一个带有自定义排除选项的 ConfigEntry
         custom_options = {
             CONF_EXCLUDE_ITEMS: "sw_ol, sw_p9",  # Exclude Outlet and 9-way
@@ -85,8 +114,11 @@ class TestSwitchSetup:
         assert not any("excluded_hub" in eid for eid in entity_ids)
 
 
+# ==================== 标准三路开关测试类 ====================
+
+
 class TestStandardSwitch:
-    """Test a standard 3-gang switch (SL_SW_IF3)."""
+    """测试标准三路开关 (SL_SW_IF3) 的功能。"""
 
     ENTITY_ID = "switch.3_gang_switch_l1"
     DEVICE_ME = "sw_if3"
@@ -95,6 +127,13 @@ class TestStandardSwitch:
 
     @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+        """测试开关实体的初始属性。
+        
+        验证：
+        - 实体存在性
+        - 初始状态正确
+        - 设备类型正确设置
+        """
         state = hass.states.get(self.ENTITY_ID)
         assert state is not None, "开关实体应存在"
         assert state.state == STATE_ON, "初始状态应为开启"
@@ -106,6 +145,13 @@ class TestStandardSwitch:
     async def test_turn_on_off_and_update(
         self, hass: HomeAssistant, mock_client: AsyncMock, setup_integration
     ):
+        """测试开关的开启/关闭控制和状态更新。
+        
+        验证：
+        - 关闭服务调用正确传递到客户端
+        - 状态正确更新
+        - 通过dispatcher接收更新后状态变化
+        """
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -129,8 +175,11 @@ class TestStandardSwitch:
         ), "接收dispatcher更新后状态应为开启"
 
 
+# ==================== 智能插座测试类 ====================
+
+
 class TestSmartOutlet:
-    """Test a smart outlet (SL_OL)."""
+    """测试智能插座 (SL_OL) 的功能。"""
 
     ENTITY_ID = "switch.smart_outlet_o"
     DEVICE_ME = "sw_ol"
@@ -139,6 +188,13 @@ class TestSmartOutlet:
 
     @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+        """测试智能插座的初始属性。
+        
+        验证：
+        - 实体存在性
+        - 初始状态为开启
+        - 设备类型为插座
+        """
         state = hass.states.get(self.ENTITY_ID)
         assert state is not None
         assert state.state == STATE_ON
@@ -148,6 +204,10 @@ class TestSmartOutlet:
     async def test_turn_on_off(
         self, hass: HomeAssistant, mock_client: AsyncMock, setup_integration
     ):
+        """测试智能插座的开关控制。
+        
+        验证关闭服务调用能正确传递到客户端。
+        """
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
@@ -159,8 +219,11 @@ class TestSmartOutlet:
         )
 
 
+# ==================== 通用控制器开关模式测试类 ====================
+
+
 class TestGenericControllerAsSwitch:
-    """Test a generic controller (SL_P) in 3-way switch mode."""
+    """测试通用控制器 (SL_P) 在三路开关模式下的功能。"""
 
     DEVICE_ME = "generic_p_switch_mode"
     HUB_ID = "hub_sw"
@@ -188,6 +251,14 @@ class TestGenericControllerAsSwitch:
         sub_key: str,
         initial_state: str,
     ):
+        """测试通用控制器各通道的行为。
+        
+        验证不同通道：
+        - P2通道初始状态为开启
+        - P3通道初始状态为关闭  
+        - P4通道初始状态为开启
+        - 关闭服务调用正确传递参数
+        """
         entity_id = f"switch.generic_controller_switch_{entity_id_suffix}"
 
         state = hass.states.get(entity_id)
@@ -202,8 +273,11 @@ class TestGenericControllerAsSwitch:
         )
 
 
+# ==================== 九路控制器测试类 ====================
+
+
 class TestNineWayController:
-    """Test the 9-way switch controller (SL_P_SW)."""
+    """测试九路开关控制器 (SL_P_SW) 的功能。"""
 
     DEVICE_ME = "sw_p9"
     HUB_ID = "hub_sw"
@@ -227,6 +301,14 @@ class TestNineWayController:
         sub_key: str,
         initial_state: str,
     ):
+        """测试九路控制器各通道的行为。
+        
+        验证不同通道：
+        - P1通道初始状态为开启
+        - P8通道初始状态为关闭
+        - P9通道初始状态为开启
+        - 关闭服务调用正确传递到对应通道
+        """
         entity_id = f"switch.9_way_controller_{entity_id_suffix}"
 
         state = hass.states.get(entity_id)
