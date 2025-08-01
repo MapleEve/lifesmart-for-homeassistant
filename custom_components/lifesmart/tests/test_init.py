@@ -78,7 +78,7 @@ def mock_service_call():
         service="trigger_scene",
         data={
             "agt": "test_hub",
-            "id": "test_scene",
+            "name": "test_scene",
         },
     )
 
@@ -670,7 +670,7 @@ class TestServiceRegistration:
         mock_client.async_set_scene = AsyncMock()
         service_data = {
             "agt": "test_hub",
-            "id": "test_scene",
+            "name": "test_scene",
         }
 
         await hass.services.async_call(
