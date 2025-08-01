@@ -119,7 +119,7 @@ sequenceDiagram
 
 ### 3.1.2.范例
 
-⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -141,16 +141,19 @@ sign为SIGN_xXXXXXXX, 实际需要填写真实签名数据；
     "time": 1447641115,
     "sign": "SIGN_xxxxxxxx"
   }
+}
 ```
 
 • 签名原始字符串：
 
-- method:GetCategory, time:1447641115, userid:10001, usertoken:10001, appkey:APPKEY_xxxxxxxX,apptoken:APPTOKEN_xxxxxxxX
+```
+method:GetCategory, time:1447641115, userid:10001, usertoken:10001, appkey:APPKEY_xxxxxxxX, apptoken:APPTOKEN_xxxxxxxX
+```
 
 回复信息：   
 `{ "id": 957, "code": 0, "message":["ac","acl","box","stb","tv",…]`
 
-#### 提示：类型说明
+### 提示：类型说明
 
 ac:空调；  
 acl:空气净化器；  
@@ -217,8 +220,9 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 • 签名原始字符串：
 
-- method:GetBrands, category:tv, time:1447641115, userid:10001, usertoken:10001, appkey:APPKEY_xxxxxxxx, apptoken:
-  APPTOKEN_xxxxxxxx
+```
+method:GetBrands, category:tv, time:1447641115, userid:10001, usertoken:10001, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：   
 `{ "id": 957, "code": 0, "message": { "data":{"tcl":2,"飞歌":3,"bosch":1,"东新宝":4,"ELCo":2,...}, "params":{"category":"tv"} } }`
@@ -231,7 +235,7 @@ params返回的是用户输入参数；
 例如："tcl"：2表示tcl品牌下有2个遥控器，  
 "category"："tv"表示用户输入的参数是查询电视机遥控器。
 
-## 3.3.GetRemoteldxs 获取相应的遥控器索引l列表
+## 3.3.GetRemoteIdxs 获取相应的遥控器索引列表
 
 ### 3.3.1.JSON请求数据格式
 
@@ -290,8 +294,9 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 • 签名原始字符串：
 
-- method:GetRemoteIdxs, brand:tcl, category:tv, time:1447641115, userid:10001, usertoken:10001, appkey:APPKEY_xxxxxxxx,
-  apptoken:APPTOKEN_xxxxxxxx
+```
+method:GetRemoteIdxs, brand:tcl, category:tv, time:1447641115, userid:10001, usertoken:10001, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+``` 
 
 • 回复信息：
 
@@ -304,7 +309,7 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
       "186.irxs",
       "205.irxs",
       "066.irxs",
-      ...
+      "..."
     ],
     "params": {
       "category": "tv",
@@ -341,7 +346,7 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 ### 3.4.2.范例
 
-⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -372,8 +377,9 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 • 签名原始字符串：
 
-- method:GetRemoteList, agt:_3MAAG1nYTAwMDA, time:1447641115, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:
-  APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
+method:GetRemoteList, agt:_3MAAG1nYTAwMDA, time:1447641115, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -420,27 +426,27 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 | Content Type        | application/json | Y  |                                      |
 | HTTP Method         | HTTP POST        | Y  |                                      |
 | **Request Content** | **system**       |    |                                      |
-|                     | `ver`            | Y  | 1.0                                  |
-|                     | `lang`           | Y  | en                                   |
-|                     | `sign`           | Y  | 签名值                                  |
-|                     | `userid`         | Y  | User ID                              |
-|                     | `appkey`         | Y  | appkey                               |
-|                     | `did`            | O  | (可选)终端唯一id                           |
-|                     | `time`           | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒         |
+|                     | &emsp;`ver`      | Y  | 1.0                                  |
+|                     | &emsp;`lang`     | Y  | en                                   |
+|                     | &emsp;`sign`     | Y  | 签名值                                  |
+|                     | &emsp;`userid`   | Y  | User ID                              |
+|                     | &emsp;`appkey`   | Y  | appkey                               |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id                           |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒         |
 |                     | **method**       | Y  | AddRemote                            |
 |                     | **params**       |    |                                      |
-|                     | `agt`            | Y  | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息     |
-|                     | `me`             | Y  | 欲操作的超级碗的me，请查看EpGetAll的返回消息          |
-|                     | `category`       | Y  | 欲添加的遥控器的category，请查看GetCategory的返回消息 |
-|                     | `brand`          | Y  | 欲添加的遥控器的brand，请查看GetBrands的返回消息      |
-|                     | `idx`            | Y  | 欲添加的遥控器的idx，请查看GetRemoteIdxs的返回消息    |
-|                     | `name`           | Y  | 欲添加的遥控器名称                            |
-|                     | `ext_loc`        | O  | 欲设置的遥控器扩展配置                          |
+|                     | &emsp;`agt`      | Y  | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息     |
+|                     | &emsp;`me`       | Y  | 欲操作的超级碗的me，请查看EpGetAll的返回消息          |
+|                     | &emsp;`category` | Y  | 欲添加的遥控器的category，请查看GetCategory的返回消息 |
+|                     | &emsp;`brand`    | Y  | 欲添加的遥控器的brand，请查看GetBrands的返回消息      |
+|                     | &emsp;`idx`      | Y  | 欲添加的遥控器的idx，请查看GetRemoteIdxs的返回消息    |
+|                     | &emsp;`name`     | Y  | 欲添加的遥控器名称                            |
+|                     | &emsp;`ext_loc`  | O  | 欲设置的遥控器扩展配置                          |
 |                     | **id**           | Y  | 消息id号                                |
 
 ### 3.5.2.范例
 
-⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -476,8 +482,9 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 • 签名原始字符串：
 
-- method:AddRemote, agt:_3MAAG1nYTAwMDA, brand:tcl, category:tv, idx:005.irxs, me:2718, name:TCLRemote, time:1447641115,
-  userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
+method:AddRemote, agt:_3MAAG1nYTAwMDA, brand:tcl, category:tv, idx:005.irxs, me:2718, name:TCLRemote, time:1447641115, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -504,22 +511,22 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 | Content Type        | application/json | Y  |                                  |
 | HTTP Method         | HTTP POST        | Y  |                                  |
 | **Request Content** | **system**       |    |                                  |
-|                     | `ver`            | Y  | 1.0                              |
-|                     | `lang`           | Y  | en                               |
-|                     | `sign`           | Y  | 签名值                              |
-|                     | `userid`         | Y  | User ID                          |
-|                     | `appkey`         | Y  | appkey                           |
-|                     | `did`            | O  | (可选)终端唯一id                       |
-|                     | `time`           | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒     |
+|                     | &emsp;`ver`      | Y  | 1.0                              |
+|                     | &emsp;`lang`     | Y  | en                               |
+|                     | &emsp;`sign`     | Y  | 签名值                              |
+|                     | &emsp;`userid`   | Y  | User ID                          |
+|                     | &emsp;`appkey`   | Y  | appkey                           |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id                       |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒     |
 |                     | **method**       | Y  | DelRemote                        |
 |                     | **params**       |    |                                  |
-|                     | `agt`            | Y  | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息 |
-|                     | `id`             | Y  | 欲删除的遥控器的id，请查看GetRemoteList的返回消息 |
+|                     | &emsp;`agt`      | Y  | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息 |
+|                     | &emsp;`id`       | Y  | 欲删除的遥控器的id，请查看GetRemoteList的返回消息 |
 |                     | **id**           | Y  | 消息id号                            |
 
 ### 3.6.2.范例
 
-⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -551,8 +558,9 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 • 签名原始字符串：
 
-- method:DelRemote, agt:_3MAAG1nYTAwMDA, id:AI_IR_2718_1470028017, time:1447641115, userid:1111111, usertoken:
-  USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
+method:DelRemote, agt:_3MAAG1nYTAwMDA, id:AI_IR_2718_1470028017, time:1447641115, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -577,23 +585,23 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 | Content Type        | application/json    | Y  |                                  |
 | HTTP Method         | HTTP POST           | Y  |                                  |
 | **Request Content** | **system**          |    |                                  |
-|                     | `ver`               | Y  | 1.0                              |
-|                     | `lang`              | Y  | en                               |
-|                     | `sign`              | Y  | 签名值                              |
-|                     | `userid`            | Y  | User ID                          |
-|                     | `appkey`            | Y  | appkey                           |
-|                     | `did`               | O  | (可选)终端唯一id                       |
-|                     | `time`              | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒     |
+|                     | &emsp;`ver`         | Y  | 1.0                              |
+|                     | &emsp;`lang`        | Y  | en                               |
+|                     | &emsp;`sign`        | Y  | 签名值                              |
+|                     | &emsp;`userid`      | Y  | User ID                          |
+|                     | &emsp;`appkey`      | Y  | appkey                           |
+|                     | &emsp;`did`         | O  | (可选)终端唯一id                       |
+|                     | &emsp;`time`        | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒     |
 |                     | **method**          | Y  | SetRemoteName                    |
 |                     | **params**          |    |                                  |
-|                     | `agt`               | Y  | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息 |
-|                     | `id`                | Y  | 欲设置的遥控器的id，请查看GetRemoteList的返回消息 |
-|                     | `name`              | Y  | 需设置的遥控器的名称                       |
+|                     | &emsp;`agt`         | Y  | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息 |
+|                     | &emsp;`id`          | Y  | 欲设置的遥控器的id，请查看GetRemoteList的返回消息 |
+|                     | &emsp;`name`        | Y  | 需设置的遥控器的名称                       |
 |                     | **id**              | Y  | 消息id号                            |
 
 ### 3.7.2.范例
 
-⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -626,8 +634,9 @@ sign为SIGN_xXxXXXXX, 实际需要填写真实签名数据；
 
 • 签名原始字符串：
 
-- method:SetRemoteName, agt:_3MAAG1nYTAwMDA, id:AI_IR_2718_1470028017, name:REMOTE_CONTROLLER, time:1447641115, userid:
-  1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
+method:SetRemoteName, agt:_3MAAG1nYTAwMDA, id:AI_IR_2718_1470028017, name:REMOTE_CONTROLLER, time:1447641115, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -659,31 +668,31 @@ SetRemoteName接口支持修改遥控器的ext_loc属性的值。若需要修改
 | Content Type        | application/json | Y  |                                            |
 | HTTP Method         | HTTP POST        | Y  |                                            |
 | **Request Content** | **system**       |    |                                            |
-|                     | `ver`            | Y  | 1.0                                        |
-|                     | `lang`           | Y  | en                                         |
-|                     | `sign`           | Y  | 签名值                                        |
-|                     | `userid`         | Y  | User ID                                    |
-|                     | `appkey`         | Y  | appkey                                     |
-|                     | `did`            | O  | (可选)终端唯一id                                 |
-|                     | `time`           | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒               |
+|                     | &emsp;`ver`      | Y  | 1.0                                        |
+|                     | &emsp;`lang`     | Y  | en                                         |
+|                     | &emsp;`sign`     | Y  | 签名值                                        |
+|                     | &emsp;`userid`   | Y  | User ID                                    |
+|                     | &emsp;`appkey`   | Y  | appkey                                     |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id                                 |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒               |
 |                     | **method**       | Y  | SendKeys                                   |
 |                     | **params**       |    |                                            |
-|                     | `agt`            | Y  | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息           |
-|                     | `me`             | Y  | 欲操作的超级碗的me，请查看EpGetAll的返回消息                |
-|                     | `category`       | Y  | 欲操作的遥控器的category，请查看GetCategory的返回消息       |
-|                     | `brand`          | Y  | 欲操作的遥控器的brand，请查看GetBrands的返回消息            |
-|                     | `idx`            | O  | 欲操作的遥控器的idx，请查看GetRemoteIdxs的返回消息          |
-|                     | `ai`             | O  | 欲操作的遥控器的id（超级碗已经建好的），请查看GetRemoteList的返回消息 |
-|                     | `keys`           | Y  | 相应遥控器的键值，需要列表转化成JSON格式字符串赋值给keys，并参加签名     |
+|                     | &emsp;`agt`      | Y  | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息           |
+|                     | &emsp;`me`       | Y  | 欲操作的超级碗的me，请查看EpGetAll的返回消息                |
+|                     | &emsp;`category` | Y  | 欲操作的遥控器的category，请查看GetCategory的返回消息       |
+|                     | &emsp;`brand`    | Y  | 欲操作的遥控器的brand，请查看GetBrands的返回消息            |
+|                     | &emsp;`idx`      | O  | 欲操作的遥控器的idx，请查看GetRemoteIdxs的返回消息          |
+|                     | &emsp;`ai`       | O  | 欲操作的遥控器的id（超级碗已经建好的），请查看GetRemoteList的返回消息 |
+|                     | &emsp;`keys`     | Y  | 相应遥控器的键值，需要列表转化成JSON格式字符串赋值给keys，并参加签名     |
 |                     | **id**           | Y  | 消息id号                                      |
 
-#### 【Notes】
+### 【Notes】
 
 • keys：可填入多个键值
 
 例如："keys"："[\"POwER\"，\"1\"，\"2\",\"3\"]"表示将向超级碗发送"POWER"，"1"，"2"，"3"四个按键
 
-#### • idx和ai:
+### • idx和ai:
 
 存在ai参数时通过现有遥控器发送键值，不存在ai参数发送idx代表通用库发送键值，两者必须要有一个存在。
 
@@ -693,7 +702,7 @@ SetRemoteName接口支持修改遥控器的ext_loc属性的值。若需要修改
 
 ### 3.8.2.范例
 
-⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据;  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -746,14 +755,15 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 若采用idx方式：
 
-- method:SendKeys, agt:_3MAAG1nYTAwMDA, brand:tcl, category:tv, idx:005.irxs, keys:["POWER", "1", "2", "3"], me:2718,
-  time:1470023215, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
+method:SendKeys, agt:_3MAAG1nYTAwMDA, brand:tcl, category:tv, idx:005.irxs, keys:["POWER", "1", "2", "3"], me:2718, time:1470023215, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 若采用ai方式：
 
-- method:SendKeys, agt:_3MAAG1nYTAwMDA, ai:AI_IR_2713_1477029095, brand:tcl, category:tv, keys:["POWER", "1", "2", "3"],
-  me:2718, time:1470023215, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:
-  APPTOKEN_xxxxxxxx
+```
+method:SendKeys, agt:_3MAAG1nYTAwMDA, ai:AI_IR_2713_1477029095, brand:tcl, category:tv, keys:["POWER", "1", "2", "3"], me:2718, time:1470023215, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -771,40 +781,40 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 ### 接口定义: SendACKeys
 
-| 类型                  | 定义               | 必须 | 描述                                                                                                                                           |
-|:--------------------|:-----------------|:---|:---------------------------------------------------------------------------------------------------------------------------------------------|
-| Interface Name      | SendACKeys       |    | 发送空调遥控器指令                                                                                                                                    |
-| Partial URL         | irapi.SendACKeys | Y  |                                                                                                                                              |
-| Content Type        | application/json | Y  |                                                                                                                                              |
-| HTTP Method         | HTTP POST        | Y  |                                                                                                                                              |
-| **Request Content** | **system**       |    |                                                                                                                                              |
-|                     | `ver`            | Y  | 1.0                                                                                                                                          |
-|                     | `lang`           | Y  | en                                                                                                                                           |
-|                     | `sign`           | Y  | 签名值                                                                                                                                          |
-|                     | `userid`         | Y  | User ID                                                                                                                                      |
-|                     | `appkey`         | Y  | appkey                                                                                                                                       |
-|                     | `did`            | O  | (可选)终端唯一id                                                                                                                                   |
-|                     | `time`           | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                                                                                 |
-|                     | **method**       | Y  | SendACKeys                                                                                                                                   |
-|                     | **params**       |    |                                                                                                                                              |
-|                     | `agt`            | Y  | 超级碗的agt，请查看EpGetAllAgts的返回消息                                                                                                                 |
-|                     | `me`             | Y  | 欲操作的超级碗的me，请查看EpGetAll的返回消息                                                                                                                  |
-|                     | `category`       | Y  | 欲操作的遥控器的category，请查看GetCategory的返回消息                                                                                                         |
-|                     | `brand`          | Y  | 欲操作的遥控器的brand，请查看GetBrands的返回消息                                                                                                              |
-|                     | `idx`            | O  | 欲操作的遥控器的idx，请查看GetRemoteIdxs的返回消息                                                                                                            |
-|                     | `ai`             | O  | 欲操作的遥控器的id（超级碗已经建好的），请查看GetRemoteList的返回消息                                                                                                   |
-|                     | `key`            | Y  | 当前键值操作方式：power:电源开关, mode:模式切换, temp:温度变化, wind:风速变化, swing:风向变化                                                                             |
-|                     | `keyDetail`      | O  | 空调下发一般是全码下发，红外码会包含开关、模式、温度、风速等。但存在一些空调码库，其开关与温度、模式等设置是分离的，这个时候在power为1，key为"power"的情况下，设置keyDetail为"POWER_ONLY"可以只开启空调而不设置温度、风速等。注意：这个属性区分码库 |
-|                     | `power`          | Y  | 开关(2) 1=开；0=关                                                                                                                                |
-|                     | `mode`           | Y  | 运转模式(5) 0=自动 1=制冷 2=除湿 3=送风 4=制热                                                                                                             |
-|                     | `temp`           | Y  | 温度(15)16-30度                                                                                                                                 |
-|                     | `wind`           | Y  | 风速(4) 0=自动 1=风速1 2=风速2 3=风速3                                                                                                                 |
-|                     | `swing`          | Y  | 风向(5) 0=自动 1=风向1 2=风向2 3=风向3 4=风向4                                                                                                           |
-|                     | **id**           | Y  | 消息id号                                                                                                                                        |
+| 类型                  | 定义                | 必须 | 描述                                                                                                                                           |
+|:--------------------|:------------------|:---|:---------------------------------------------------------------------------------------------------------------------------------------------|
+| Interface Name      | SendACKeys        |    | 发送空调遥控器指令                                                                                                                                    |
+| Partial URL         | irapi.SendACKeys  | Y  |                                                                                                                                              |
+| Content Type        | application/json  | Y  |                                                                                                                                              |
+| HTTP Method         | HTTP POST         | Y  |                                                                                                                                              |
+| **Request Content** | **system**        |    |                                                                                                                                              |
+|                     | &emsp;`ver`       | Y  | 1.0                                                                                                                                          |
+|                     | &emsp;`lang`      | Y  | en                                                                                                                                           |
+|                     | &emsp;`sign`      | Y  | 签名值                                                                                                                                          |
+|                     | &emsp;`userid`    | Y  | User ID                                                                                                                                      |
+|                     | &emsp;`appkey`    | Y  | appkey                                                                                                                                       |
+|                     | &emsp;`did`       | O  | (可选)终端唯一id                                                                                                                                   |
+|                     | &emsp;`time`      | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                                                                                 |
+|                     | **method**        | Y  | SendACKeys                                                                                                                                   |
+|                     | **params**        |    |                                                                                                                                              |
+|                     | &emsp;`agt`       | Y  | 超级碗的agt，请查看EpGetAllAgts的返回消息                                                                                                                 |
+|                     | &emsp;`me`        | Y  | 欲操作的超级碗的me，请查看EpGetAll的返回消息                                                                                                                  |
+|                     | &emsp;`category`  | Y  | 欲操作的遥控器的category，请查看GetCategory的返回消息                                                                                                         |
+|                     | &emsp;`brand`     | Y  | 欲操作的遥控器的brand，请查看GetBrands的返回消息                                                                                                              |
+|                     | &emsp;`idx`       | O  | 欲操作的遥控器的idx，请查看GetRemoteIdxs的返回消息                                                                                                            |
+|                     | &emsp;`ai`        | O  | 欲操作的遥控器的id（超级碗已经建好的），请查看GetRemoteList的返回消息                                                                                                   |
+|                     | &emsp;`key`       | Y  | 当前键值操作方式：power:电源开关, mode:模式切换, temp:温度变化, wind:风速变化, swing:风向变化                                                                             |
+|                     | &emsp;`keyDetail` | O  | 空调下发一般是全码下发，红外码会包含开关、模式、温度、风速等。但存在一些空调码库，其开关与温度、模式等设置是分离的，这个时候在power为1，key为"power"的情况下，设置keyDetail为"POWER_ONLY"可以只开启空调而不设置温度、风速等。注意：这个属性区分码库 |
+|                     | &emsp;`power`     | Y  | 开关(2) 1=开；0=关                                                                                                                                |
+|                     | &emsp;`mode`      | Y  | 运转模式(5) 0=自动 1=制冷 2=除湿 3=送风 4=制热                                                                                                             |
+|                     | &emsp;`temp`      | Y  | 温度(15)16-30度                                                                                                                                 |
+|                     | &emsp;`wind`      | Y  | 风速(4) 0=自动 1=风速1 2=风速2 3=风速3                                                                                                                 |
+|                     | &emsp;`swing`     | Y  | 风向(5) 0=自动 1=风向1 2=风向2 3=风向3 4=风向4                                                                                                           |
+|                     | **id**            | Y  | 消息id号                                                                                                                                        |
 
 ### 3.9.2.范例
 
-⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -867,15 +877,15 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 若采用idx方式：
 
-- method:SendACKeys, agt:_3MAAG1nYTAwMDA, brand:aux, category:ac, idx:33.irxs, key:power, me:2718, mode:1, power:1,
-  swing:0, temp:25, wind:3, time:1470026010, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx,
-  apptoken:APPTOKEN_xxxxxxxx
+```
+method:SendACKeys, agt:_3MAAG1nYTAwMDA, brand:aux, category:ac, idx:33.irxs, key:power, me:2718, mode:1, power:1, swing:0, temp:25, wind:3, time:1470026010, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 若采用ai方式：
 
-- method:SendACKeys, agt:_3MAAG1nYTAwMDA, ai:AI_IR_2713_1477029095, brand:aux, category:ac, key:power, me:2718, mode:1,
-  power:1, swing:0, temp:25, wind:3, time:1470026010, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:
-  APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
+method:SendACKeys, agt:_3MAAG1nYTAwMDA, ai:AI_IR_2713_1477029095, brand:aux, category:ac, key:power, me:2718, mode:1, power:1, swing:0, temp:25, wind:3, time:1470026010, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -900,24 +910,24 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 | Content Type        | application/json    | Y  |                                         |
 | HTTP Method         | HTTP POST           | Y  |                                         |
 | **Request Content** | **system**          |    |                                         |
-|                     | `ver`               | Y  | 1.0                                     |
-|                     | `lang`              | Y  | en                                      |
-|                     | `sign`              | Y  | 签名值                                     |
-|                     | `userid`            | Y  | User ID                                 |
-|                     | `appkey`            | Y  | appkey                                  |
-|                     | `did`               | O  | (可选)终端唯一id                              |
-|                     | `time`              | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒            |
+|                     | &emsp;`ver`         | Y  | 1.0                                     |
+|                     | &emsp;`lang`        | Y  | en                                      |
+|                     | &emsp;`sign`        | Y  | 签名值                                     |
+|                     | &emsp;`userid`      | Y  | User ID                                 |
+|                     | &emsp;`appkey`      | Y  | appkey                                  |
+|                     | &emsp;`did`         | O  | (可选)终端唯一id                              |
+|                     | &emsp;`time`        | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒            |
 |                     | **method**          | Y  | GetCustomKeys                           |
 |                     | **params**          |    |                                         |
-|                     | `agt`               | Y  | 超级碗的agt，请查看EpGetAllAgts的返回消息            |
-|                     | `ai`                | Y  | 超级碗上已创建的自定义遥控器的id，请查看GetRemoteList的返回消息 |
-|                     | `category`          | Y  | 遥控器的category，请查看GetRemoteList的返回消息      |
-|                     | `brand`             | Y  | 遥控器的brand，请查看GetRemoteList的返回消息         |
+|                     | &emsp;`agt`         | Y  | 超级碗的agt，请查看EpGetAllAgts的返回消息            |
+|                     | &emsp;`ai`          | Y  | 超级碗上已创建的自定义遥控器的id，请查看GetRemoteList的返回消息 |
+|                     | &emsp;`category`    | Y  | 遥控器的category，请查看GetRemoteList的返回消息      |
+|                     | &emsp;`brand`       | Y  | 遥控器的brand，请查看GetRemoteList的返回消息         |
 |                     | **id**              | Y  | 消息id号                                   |
 
 ### 3.10.2.范例
 
-⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -951,8 +961,9 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 • 签名原始字符串：
 
-- method:GetCustomKeys, agt:_3MAAG1nYTAwMDA, ai:AI_IR_2713_1477029095, brand:custom, category:custom, time:1470028470,
-  userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
+method:GetCustomKeys, agt:_3MAAG1nYTAwMDA, ai:AI_IR_2713_1477029095, brand:custom, category:custom, time:1470028470, userid:1111111, usertoken:USERTOKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -985,26 +996,26 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 ### 3.11.1.JSON请求数据格式
 
-| Type            | Definition            | Must | Description                  |
-|-----------------|-----------------------|------|------------------------------|
-| Interface Name  | SendRemotesKeys       |      | 单次向超级碗下发多个遥控器的多按键指令          |
-| Partial URL     | irapi.SendRemotesKeys | Y    |                              |
-| Content Type    | application/json      | Y    |                              |
-| HTTP Method     | HTTP POST             | Y    | 请求类型                         |
-| Request Content | system                |      |                              |
-|                 | ver                   | Y    | 1.0                          |
-|                 | lang                  | Y    | en                           |
-|                 | sign                  | Y    | 签名值                          |
-|                 | userid                | Y    | User ID                      |
-|                 | appkey                | Y    | appkey                       |
-|                 | did                   | O    | (可选)终端唯一id                   |
-|                 | time                  | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒 |
-|                 | method                | Y    | SendRemotesKeys              |
-|                 | params                |      |                              |
-|                 | agt                   | Y    | 超级碗的agt，请查看EpGetAllAgts的返回消息 |
-|                 | me                    | Y    | 超级碗的me，请查看EpGetAll的返回消息      |
-|                 | keys                  | Y    | 遥控器信息和键值信息，多级表不参加签名          |
-|                 | id                    | Y    | 消息id号                        |
+| 类型                  | 定义                    | 必须 | 描述                           |
+|:--------------------|:----------------------|:---|:-----------------------------|
+| Interface Name      | SendRemotesKeys       |    | 单次向超级碗下发多个遥控器的多按键指令          |
+| Partial URL         | irapi.SendRemotesKeys | Y  |                              |
+| Content Type        | application/json      | Y  |                              |
+| HTTP Method         | HTTP POST             | Y  |                              |
+| **Request Content** | **system**            |    |                              |
+|                     | &emsp;`ver`           | Y  | 1.0                          |
+|                     | &emsp;`lang`          | Y  | en                           |
+|                     | &emsp;`sign`          | Y  | 签名值                          |
+|                     | &emsp;`userid`        | Y  | User ID                      |
+|                     | &emsp;`appkey`        | Y  | appkey                       |
+|                     | &emsp;`did`           | O  | (可选)终端唯一id                   |
+|                     | &emsp;`time`          | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒 |
+|                     | **method**            | Y  | SendRemotesKeys              |
+|                     | **params**            |    |                              |
+|                     | &emsp;`agt`           | Y  | 超级碗的agt，请查看EpGetAllAgts的返回消息 |
+|                     | &emsp;`me`            | Y  | 超级碗的me，请查看EpGetAll的返回消息      |
+|                     | &emsp;`keys`          | Y  | 遥控器信息和键值信息，多级表不参加签名          |
+|                     | **id**                | Y  | 消息id号                        |
 
 **【Notes】**
 
@@ -1116,14 +1127,16 @@ keys：填入需要发送的遥控器信息和按键信息，如：
 
 默认二级表不参与签名
 
-- method:SendRemotesKeys
-- agt:3MAAG1nYTAwMDA
-- me:2735
-- time:1447641115
-- userid:1111111
-- usertoken:USERTOKEN_xxxxxxxx
-- appkey:APPKEY_xxxxxxxx
-- apptoken:APPTOKEN_xxxxxxxx
+```
+method:SendRemotesKeys
+agt:3MAAG1nYTAwMDA
+me:2735
+time:1447641115
+userid:1111111
+usertoken:USERTOKEN_xxxxxxxx
+appkey:APPKEY_xxxxxxxx
+apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -1139,27 +1152,27 @@ keys：填入需要发送的遥控器信息和按键信息，如：
 
 ### 3.12.1.JSON请求数据格式
 
-| Type            | Definition       | Must | Description                                                 |
-|-----------------|------------------|------|-------------------------------------------------------------|
-| Interface Name  | GetCodes         |      | 获取普通遥控器红外码                                                  |
-| Partial URL     | irapi.GetCodes   | Y    |                                                             |
-| Content Type    | application/json | Y    |                                                             |
-| HTTP Method     | HTTP POST        | Y    |                                                             |
-| Request Content | system           |      |                                                             |
-|                 | ver              | Y    | 1.0                                                         |
-|                 | lang             | Y    | en                                                          |
-|                 | sign             | Y    | 签名值                                                         |
-|                 | userid           | Y    | 该接口不涉及用户操作，这里的userid为固定值"10001"，签名时用到的usertoken也为固定值"10001" |
-|                 | appkey           | Y    | appkey                                                      |
-|                 | did              | O    | (可选)终端唯一id                                                  |
-|                 | time             | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                |
-|                 | method           | Y    | GetCodes                                                    |
-|                 | params           |      |                                                             |
-|                 | category         | Y    | 欲查询的遥控器的category，请查看GetCategory的返回消息                        |
-|                 | brand            | Y    | 欲查询的遥控器的brand，请查看GetBrands的返回消息                             |
-|                 | idx              | Y    | 欲查询的遥控器的idx，请查看GetRemoteIdxs的返回消息                           |
-|                 | keys             | Y    | 相应遥控器的键值，需要列表转化成Json格式字符串赋值给keys，参加签名                       |
-|                 | id               | Y    | 消息id号                                                       |
+| 类型                  | 定义               | 必须 | 描述                                                          |
+|:--------------------|:-----------------|:---|:------------------------------------------------------------|
+| Interface Name      | GetCodes         |    | 获取普通遥控器红外码                                                  |
+| Partial URL         | irapi.GetCodes   | Y  |                                                             |
+| Content Type        | application/json | Y  |                                                             |
+| HTTP Method         | HTTP POST        | Y  |                                                             |
+| **Request Content** | **system**       |    |                                                             |
+|                     | &emsp;`ver`      | Y  | 1.0                                                         |
+|                     | &emsp;`lang`     | Y  | en                                                          |
+|                     | &emsp;`sign`     | Y  | 签名值                                                         |
+|                     | &emsp;`userid`   | Y  | 该接口不涉及用户操作，这里的userid为固定值"10001"，签名时用到的usertoken也为固定值"10001" |
+|                     | &emsp;`appkey`   | Y  | appkey                                                      |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id                                                  |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                |
+|                     | **method**       | Y  | GetCodes                                                    |
+|                     | **params**       |    |                                                             |
+|                     | &emsp;`category` | Y  | 欲查询的遥控器的category，请查看GetCategory的返回消息                        |
+|                     | &emsp;`brand`    | Y  | 欲查询的遥控器的brand，请查看GetBrands的返回消息                             |
+|                     | &emsp;`idx`      | Y  | 欲查询的遥控器的idx，请查看GetRemoteIdxs的返回消息                           |
+|                     | &emsp;`keys`     | Y  | 相应遥控器的键值，需要列表转化成Json格式字符串赋值给keys，参加签名                       |
+|                     | **id**           | Y  | 消息id号                                                       |
 
 **【Notes】**
 
@@ -1224,16 +1237,18 @@ keys：相应遥控器的按键键值
 
 • 签名原始字符串：
 
-- method:GetCodes
-- brand:tcl
-- category:tv
-- idx:005.irxs
-- keys:"[\"POWER\",\"1\",\"2\",\"3\"]"
-- time:1470026256
-- userid:10001
-- usertoken:10001
-- appkey:APPKEY_xxxxxxxx
-- apptoken:APPTOKEN_xxxxxxxx
+```
+method:GetCodes
+brand:tcl
+category:tv
+idx:005.irxs
+keys:"[\"POWER\",\"1\",\"2\",\"3\"]"
+time:1470026256
+userid:10001
+usertoken:10001
+appkey:APPKEY_xxxxxxxx
+apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -1274,32 +1289,32 @@ keys：相应遥控器的按键键值
 
 ### 3.13.1.JSON请求数据格式
 
-| Type            | Definition       | Must | Description                                                  |
-|-----------------|------------------|------|--------------------------------------------------------------|
-| Interface Name  | GetACCodes       |      | 获取空调遥控器红外码                                                   |
-| Partial URL     | irapi.GetACCodes | Y    |                                                              |
-| Content Type    | application/json | Y    |                                                              |
-| HTTP Method     | HTTP POST        | Y    |                                                              |
-| Request Content | system           |      |                                                              |
-|                 | ver              | Y    | 1.0                                                          |
-|                 | lang             | Y    | en                                                           |
-|                 | sign             | Y    | 签名值                                                          |
-|                 | userid           | Y    | 该接口不涉及用户操作，这里的userid为固定值"10001"，签名时用到的usertoken也为固定值"10001"  |
-|                 | appkey           | Y    | appkey                                                       |
-|                 | did              | O    | (可选)终端唯一id                                                   |
-|                 | time             | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                 |
-|                 | method           | Y    | GetACCodes                                                   |
-|                 | params           |      |                                                              |
-|                 | category         | Y    | 遥控器的category，请查看GetCategory的返回消息                             |
-|                 | brand            | Y    | 遥控器的brand，请查看GetBrands的返回消息                                  |
-|                 | idx              | Y    | 遥控器的idx，请查看GetRemoteIdxs的返回消息                                |
-|                 | key              | Y    | 当前键值操作方式：power:电源开关 mode:模式切换 temp:温度变化 wind:风速变化 swing:风向变化 |
-|                 | power            | Y    | 开关(2) 1=开；0=关                                                |
-|                 | mode             | Y    | 运转模式(5) 0=自动 1=制冷 2=除湿 3=送风 4=制热                             |
-|                 | temp             | Y    | 温度(15) 16-30度                                                |
-|                 | wind             | Y    | 风速(4) 0=自动 1=风速1 2=风速2 3=风速3                                 |
-|                 | swing            | Y    | 风向(5) 0=自动 1=风向1 2=风向2 3=风向3 4=风向4                           |
-|                 | id               | Y    | 消息id号                                                        |
+| 类型                  | 定义               | 必须 | 描述                                                           |
+|:--------------------|:-----------------|:---|:-------------------------------------------------------------|
+| Interface Name      | GetACCodes       |    | 获取空调遥控器红外码                                                   |
+| Partial URL         | irapi.GetACCodes | Y  |                                                              |
+| Content Type        | application/json | Y  |                                                              |
+| HTTP Method         | HTTP POST        | Y  |                                                              |
+| **Request Content** | **system**       |    |                                                              |
+|                     | &emsp;`ver`      | Y  | 1.0                                                          |
+|                     | &emsp;`lang`     | Y  | en                                                           |
+|                     | &emsp;`sign`     | Y  | 签名值                                                          |
+|                     | &emsp;`userid`   | Y  | 该接口不涉及用户操作，这里的userid为固定值"10001"，签名时用到的usertoken也为固定值"10001"  |
+|                     | &emsp;`appkey`   | Y  | appkey                                                       |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id                                                   |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                 |
+|                     | **method**       | Y  | GetACCodes                                                   |
+|                     | **params**       |    |                                                              |
+|                     | &emsp;`category` | Y  | 遥控器的category，请查看GetCategory的返回消息                             |
+|                     | &emsp;`brand`    | Y  | 遥控器的brand，请查看GetBrands的返回消息                                  |
+|                     | &emsp;`idx`      | Y  | 遥控器的idx，请查看GetRemoteIdxs的返回消息                                |
+|                     | &emsp;`key`      | Y  | 当前键值操作方式：power:电源开关 mode:模式切换 temp:温度变化 wind:风速变化 swing:风向变化 |
+|                     | &emsp;`power`    | Y  | 开关(2) 1=开；0=关                                                |
+|                     | &emsp;`mode`     | Y  | 运转模式(5) 0=自动 1=制冷 2=除湿 3=送风 4=制热                             |
+|                     | &emsp;`temp`     | Y  | 温度(15) 16-30度                                                |
+|                     | &emsp;`wind`     | Y  | 风速(4) 0=自动 1=风速1 2=风速2 3=风速3                                 |
+|                     | &emsp;`swing`    | Y  | 风向(5) 0=自动 1=风向1 2=风向2 3=风向3 4=风向4                           |
+|                     | **id**           | Y  | 消息id号                                                        |
 
 ### 3.13.2.范例
 
@@ -1342,21 +1357,23 @@ keys：相应遥控器的按键键值
 
 • 签名原始字符串：
 
-- method:GetACCodes
-- brand:aux
-- category:ac
-- idx:33.irxs
-- key:power
-- mode:1
-- power:1
-- swing:0
-- temp:25
-- wind:3
-- time:1447641115
-- userid:10001
-- usertoken:10001
-- appkey:APPKEY_xxxxxxxx
-- apptoken:APPTOKEN_xxxxxxxx
+```
+method:GetACCodes
+brand:aux
+category:ac
+idx:33.irxs
+key:power
+mode:1
+power:1
+swing:0
+temp:25
+wind:3
+time:1447641115
+userid:10001
+usertoken:10001
+appkey:APPKEY_xxxxxxxx
+apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -1392,26 +1409,26 @@ keys：相应遥控器的按键键值
 
 ### 3.14.1.JSON请求数据格式
 
-| Type            | Definition       | Must | Description                      |
-|-----------------|------------------|------|----------------------------------|
-| Interface Name  | SendCodes        |      | 超级碗发射红外码                         |
-| Partial URL     | irapi.SendCodes  | Y    |                                  |
-| Content Type    | application/json | Y    |                                  |
-| HTTP Method     | HTTP POST        | Y    |                                  |
-| Request Content | system           |      |                                  |
-|                 | ver              | Y    | 1.0                              |
-|                 | lang             | Y    | en                               |
-|                 | sign             | Y    | 签名值                              |
-|                 | userid           | Y    | User ID                          |
-|                 | appkey           | Y    | appkey                           |
-|                 | did              | O    | (可选)终端唯一id                       |
-|                 | time             | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒     |
-|                 | method           | Y    | SendCodes                        |
-|                 | params           |      |                                  |
-|                 | agt              | Y    | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息 |
-|                 | me               | Y    | 欲操作的超级碗的me，请查看EpGetAll的返回消息      |
-|                 | keys             | Y    | 红外码，需要列表转化成JSON格式字符串赋值给keys，参加签名 |
-|                 | id               | Y    | 消息id号                            |
+| 类型                  | 定义               | 必须 | 描述                               |
+|:--------------------|:-----------------|:---|:---------------------------------|
+| Interface Name      | SendCodes        |    | 超级碗发射红外码                         |
+| Partial URL         | irapi.SendCodes  | Y  |                                  |
+| Content Type        | application/json | Y  |                                  |
+| HTTP Method         | HTTP POST        | Y  |                                  |
+| **Request Content** | **system**       |    |                                  |
+|                     | &emsp;`ver`      | Y  | 1.0                              |
+|                     | &emsp;`lang`     | Y  | en                               |
+|                     | &emsp;`sign`     | Y  | 签名值                              |
+|                     | &emsp;`userid`   | Y  | User ID                          |
+|                     | &emsp;`appkey`   | Y  | appkey                           |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id                       |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒     |
+|                     | **method**       | Y  | SendCodes                        |
+|                     | **params**       |    |                                  |
+|                     | &emsp;`agt`      | Y  | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息 |
+|                     | &emsp;`me`       | Y  | 欲操作的超级碗的me，请查看EpGetAll的返回消息      |
+|                     | &emsp;`keys`     | Y  | 红外码，需要列表转化成JSON格式字符串赋值给keys，参加签名 |
+|                     | **id**           | Y  | 消息id号                            |
 
 **提示：**keys：填入需要发送的一个或多个红外码，如：
 
@@ -1458,15 +1475,17 @@ keys：相应遥控器的按键键值
 
 • 签名原始字符串：
 
-- method:SendCodes
-- agt:3MAAG1nYTAwMDA
-- keys:[{"param":{"data":"018B4F0538016F4F3E57FF57FF7FFDD554FF0001AD8B0360014F6F0340C2","type":1}}]
-- me:2718
-- time:1447641115
-- userid:1111111
-- usertoken:USERTOKEN_xxxxxxxx
-- appkey:APPKEY_xxxxxxxx
-- apptoken:APPTOKEN_xxxxxxxx
+```
+method:SendCodes
+agt:3MAAG1nYTAwMDA
+keys:[{"param":{"data":"018B4F0538016F4F3E57FF57FF7FFDD554FF0001AD8B0360014F6F0340C2","type":1}}]
+me:2718
+time:1447641115
+userid:1111111
+usertoken:USERTOKEN_xxxxxxxx
+appkey:APPKEY_xxxxxxxx
+apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -1482,26 +1501,26 @@ keys：相应遥控器的按键键值
 
 ### 3.15.1.JSON请求数据格式
 
-| Type            | Definition       | Must | Description                                                                              |
-|-----------------|------------------|------|------------------------------------------------------------------------------------------|
-| Interface Name  | GetRemote        |      | 获取超级碗上的遥控器信息                                                                             |
-| Partial URL     | irapi.GetRemote  | Y    |                                                                                          |
-| Content Type    | application/json | Y    |                                                                                          |
-| HTTP Method     | HTTP POST        | Y    |                                                                                          |
-| Request Content | system           |      |                                                                                          |
-|                 | ver              | Y    | 1.0                                                                                      |
-|                 | lang             | Y    | en                                                                                       |
-|                 | sign             | Y    | 签名值                                                                                      |
-|                 | userid           | Y    | User ID                                                                                  |
-|                 | appkey           | Y    | appkey                                                                                   |
-|                 | did              | O    | (可选)终端唯一id                                                                               |
-|                 | time             | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                             |
-|                 | method           | Y    | GetRemote                                                                                |
-|                 | params           |      |                                                                                          |
-|                 | agt              | Y    | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息                                                         |
-|                 | ai               | Y    | 欲查询的遥控器的id，请查看GetRemoteList的返回消息                                                         |
-|                 | needKeys         | Y    | 是否需要返回遥控器键值，参数有如下值：0：不需要返回遥控器键值；1：返回遥控器键名称数组；2：既返回遥控器键名称数组，也返回遥控器键对应的红外码以及名称（自定义遥控器存在名称） |
-|                 | id               | Y    | 消息id号                                                                                    |
+| Type                | Definition       | Must | Description                                                                              |
+|---------------------|------------------|------|------------------------------------------------------------------------------------------|
+| Interface Name      | GetRemote        |      | 获取超级碗上的遥控器信息                                                                             |
+| Partial URL         | irapi.GetRemote  | Y    |                                                                                          |
+| Content Type        | application/json | Y    |                                                                                          |
+| HTTP Method         | HTTP POST        | Y    |                                                                                          |
+| **Request Content** | **system**       |      |                                                                                          |
+|                     | &emsp;`ver`      | Y    | 1.0                                                                                      |
+|                     | &emsp;`lang`     | Y    | en                                                                                       |
+|                     | &emsp;`sign`     | Y    | 签名值                                                                                      |
+|                     | &emsp;`userid`   | Y    | User ID                                                                                  |
+|                     | &emsp;`appkey`   | Y    | appkey                                                                                   |
+|                     | &emsp;`did`      | O    | (可选)终端唯一id                                                                               |
+|                     | &emsp;`time`     | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                             |
+|                     | **method**       | Y    | GetRemote                                                                                |
+|                     | **params**       |      |                                                                                          |
+|                     | &emsp;`agt`      | Y    | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息                                                         |
+|                     | &emsp;`ai`       | Y    | 欲查询的遥控器的id，请查看GetRemoteList的返回消息                                                         |
+|                     | &emsp;`needKeys` | Y    | 是否需要返回遥控器键值，参数有如下值：0：不需要返回遥控器键值；1：返回遥控器键名称数组；2：既返回遥控器键名称数组，也返回遥控器键对应的红外码以及名称（自定义遥控器存在名称） |
+|                     | **id**           | Y    | 消息id号                                                                                    |
 
 ### 3.15.2.范例
 
@@ -1538,15 +1557,17 @@ keys：相应遥控器的按键键值
 
 • 签名原始字符串：
 
-- method:GetRemote
-- agt:A3EAAABtAEwQRzxxxxxxxx
-- ai:AI_IR_2d14_1537154656
-- needKeys:2
-- time:1447641115
-- userid:1111111
-- usertoken:USERTOKEN_xxxxxxxx
-- appkey:APPKEY_xxxxxxxx
-- apptoken:APPTOKEN_xxxxxxxx
+```
+method:GetRemote
+agt:A3EAAABtAEwQRzxxxxxxxx
+ai:AI_IR_2d14_1537154656
+needKeys:2
+time:1447641115
+userid:1111111
+usertoken:USERTOKEN_xxxxxxxx
+appkey:APPKEY_xxxxxxxx
+apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -1586,25 +1607,25 @@ keys：相应遥控器的按键键值
 
 ### 3.16.1.JSON请求数据格式
 
-| Type            | Definition             | Must | Description                      |
-|-----------------|------------------------|------|----------------------------------|
-| Interface Name  | GetACRemoteState       |      | 获取空调遥控器当前设置                      |
-| Partial URL     | irapi.GetACRemoteState | Y    |                                  |
-| Content Type    | application/json       | Y    |                                  |
-| HTTP Method     | HTTP POST              | Y    |                                  |
-| Request Content | system                 |      |                                  |
-|                 | ver                    | Y    | 1.0                              |
-|                 | lang                   | Y    | en                               |
-|                 | sign                   | Y    | 签名值                              |
-|                 | userid                 | Y    | User ID                          |
-|                 | appkey                 | Y    | appkey                           |
-|                 | did                    | O    | (可选)终端唯一id                       |
-|                 | time                   | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒     |
-|                 | method                 | Y    | GetACRemoteState                 |
-|                 | params                 |      |                                  |
-|                 | agt                    | Y    | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息 |
-|                 | ai                     | Y    | 欲查询的遥控器的id，请查看GetRemoteList的返回消息 |
-|                 | id                     | Y    | 消息id号                            |
+| Type                | Definition             | Must | Description                      |
+|---------------------|------------------------|------|----------------------------------|
+| Interface Name      | GetACRemoteState       |      | 获取空调遥控器当前设置                      |
+| Partial URL         | irapi.GetACRemoteState | Y    |                                  |
+| Content Type        | application/json       | Y    |                                  |
+| HTTP Method         | HTTP POST              | Y    |                                  |
+| **Request Content** | **system**             |      |                                  |
+|                     | &emsp;`ver`            | Y    | 1.0                              |
+|                     | &emsp;`lang`           | Y    | en                               |
+|                     | &emsp;`sign`           | Y    | 签名值                              |
+|                     | &emsp;`userid`         | Y    | User ID                          |
+|                     | &emsp;`appkey`         | Y    | appkey                           |
+|                     | &emsp;`did`            | O    | (可选)终端唯一id                       |
+|                     | &emsp;`time`           | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒     |
+|                     | **method**             | Y    | GetACRemoteState                 |
+|                     | **params**             |      |                                  |
+|                     | &emsp;`agt`            | Y    | 欲操作的超级碗的agt，请查看EpGetAllAgts的返回消息 |
+|                     | &emsp;`ai`             | Y    | 欲查询的遥控器的id，请查看GetRemoteList的返回消息 |
+|                     | **id**                 | Y    | 消息id号                            |
 
 ### 3.16.2.范例
 
@@ -1640,14 +1661,16 @@ keys：相应遥控器的按键键值
 
 • 签名原始字符串：
 
-- method:GetACRemoteState
-- agt:A3EAAABtAEwQRzxxxxxxxx
-- ai:AI_IR_2d14_1537154656
-- time:1447641115
-- userid:1111111
-- usertoken:USERTOKEN_xxxxxxxx
-- appkey:APPKEY_xxxxxxxx
-- apptoken:APPTOKEN_xxxxxxxx
+```
+method:GetACRemoteState
+agt:A3EAAABtAEwQRzxxxxxxxx
+ai:AI_IR_2d14_1537154656
+time:1447641115
+userid:1111111
+usertoken:USERTOKEN_xxxxxxxx
+appkey:APPKEY_xxxxxxxx
+apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -1671,28 +1694,28 @@ keys：相应遥控器的按键键值
 
 ### 3.17.1.JSON请求数据格式
 
-| Type            | Definition             | Must | Description                                                                            |
-|-----------------|------------------------|------|----------------------------------------------------------------------------------------|
-| Interface Name  | GetRemoteFeature       |      | 获取遥控器特性。对于空调类遥控器，可以获取其支持的能力，例如是否支持制热，温度设置范围等。对于非空调类遥控器，可以获取其键值集合，例如电视遥控器，其键值有"POWER"等。 |
-| Partial URL     | irapi.GetRemoteFeature | Y    |                                                                                        |
-| Content Type    | application/json       | Y    |                                                                                        |
-| HTTP Method     | HTTP POST              | Y    |                                                                                        |
-| Request Content | system                 |      |                                                                                        |
-|                 | ver                    | Y    | 1.0                                                                                    |
-|                 | lang                   | Y    | en                                                                                     |
-|                 | sign                   | Y    | 签名值                                                                                    |
-|                 | userid                 | Y    | User ID                                                                                |
-|                 | appkey                 | Y    | appkey                                                                                 |
-|                 | did                    | O    | (可选)终端唯一id                                                                             |
-|                 | time                   | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                           |
-|                 | method                 | Y    | GetRemoteFeature                                                                       |
-|                 | params                 |      |                                                                                        |
-|                 | category               | Y    | 遥控器类别                                                                                  |
-|                 | brand                  | Y    | 品牌类别，如果查询已经创建的遥控器，这个参数可以填写空字符串""                                                       |
-|                 | idx                    | O    | 遥控器的idx，如果查询码库里的遥控器特性请提供这个参数，否则提供agt与ai参数                                              |
-|                 | agt                    | O    | 欲查询超级碗的agt，如果查询已经创建的遥控器请提供这个参数，否则提供idx即可                                               |
-|                 | ai                     | O    | 欲查询的遥控器的id，请查看GetRemoteList的返回消息，如果查询已经创建的遥控器请提供这个参数，否则提供idx即可                         |
-|                 | id                     | Y    | 消息id号                                                                                  |
+| Type                | Definition             | Must | Description                                                                            |
+|---------------------|------------------------|------|----------------------------------------------------------------------------------------|
+| Interface Name      | GetRemoteFeature       |      | 获取遥控器特性。对于空调类遥控器，可以获取其支持的能力，例如是否支持制热，温度设置范围等。对于非空调类遥控器，可以获取其键值集合，例如电视遥控器，其键值有"POWER"等。 |
+| Partial URL         | irapi.GetRemoteFeature | Y    |                                                                                        |
+| Content Type        | application/json       | Y    |                                                                                        |
+| HTTP Method         | HTTP POST              | Y    |                                                                                        |
+| **Request Content** | **system**             |      |                                                                                        |
+|                     | &emsp;`ver`            | Y    | 1.0                                                                                    |
+|                     | &emsp;`lang`           | Y    | en                                                                                     |
+|                     | &emsp;`sign`           | Y    | 签名值                                                                                    |
+|                     | &emsp;`userid`         | Y    | User ID                                                                                |
+|                     | &emsp;`appkey`         | Y    | appkey                                                                                 |
+|                     | &emsp;`did`            | O    | (可选)终端唯一id                                                                             |
+|                     | &emsp;`time`           | Y    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                           |
+|                     | **method**             | Y    | GetRemoteFeature                                                                       |
+|                     | **params**             |      |                                                                                        |
+|                     | &emsp;`category`       | Y    | 遥控器类别                                                                                  |
+|                     | &emsp;`brand`          | Y    | 品牌类别，如果查询已经创建的遥控器，这个参数可以填写空字符串""                                                       |
+|                     | &emsp;`idx`            | O    | 遥控器的idx，如果查询码库里的遥控器特性请提供这个参数，否则提供agt与ai参数                                              |
+|                     | &emsp;`agt`            | O    | 欲查询超级碗的agt，如果查询已经创建的遥控器请提供这个参数，否则提供idx即可                                               |
+|                     | &emsp;`ai`             | O    | 欲查询的遥控器的id，请查看GetRemoteList的返回消息，如果查询已经创建的遥控器请提供这个参数，否则提供idx即可                         |
+|                     | **id**                 | Y    | 消息id号                                                                                  |
 
 ### 3.17.2.获取空调遥控器特性范例
 
@@ -1729,15 +1752,17 @@ keys：相应遥控器的按键键值
 
 • 签名原始字符串：
 
-- method:GetRemoteFeature
-- brand:DaiKin
-- category:ac
-- idx:10502
-- time:1447641115
-- userid:1111111
-- usertoken:USERTOKEN_xxxxxxxx
-- appkey:APPKEY_xxxxxxxx
-- apptoken:APPTOKEN_xxxxxxxx
+```
+method:GetRemoteFeature
+brand:DaiKin
+category:ac
+idx:10502
+time:1447641115
+userid:1111111
+usertoken:USERTOKEN_xxxxxxxx
+appkey:APPKEY_xxxxxxxx
+apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
@@ -1856,15 +1881,17 @@ ac"，keys参数填写相应的键，例如："keys":"[\"POWER\",\"COOL\"]"，�
 
 • 签名原始字符串：
 
-- method:GetRemoteFeature
-- brand:sony
-- category:tv
-- idx:2327
-- time:1447641115
-- userid:1111111
-- usertoken:USERTOKEN_xxxxxxxx
-- appkey:APPKEY_xxxxxxxx
-- apptoken:APPTOKEN_xxxxxxxx
+```
+method:GetRemoteFeature
+brand:sony
+category:tv
+idx:2327
+time:1447641115
+userid:1111111
+usertoken:USERTOKEN_xxxxxxxx
+appkey:APPKEY_xxxxxxxx
+apptoken:APPTOKEN_xxxxxxxx
+```
 
 • 回复信息：
 
