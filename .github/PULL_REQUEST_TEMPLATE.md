@@ -15,7 +15,9 @@
 #### 🔀 变更说明 | Description of Change
 
 <!-- Thank you for your Pull Request. Please provide a description above. -->
+@SourceryAI summary
 
 #### 📝 补充信息 | Additional Information
 
 <!-- Add any other context about the Pull Request here. -->
+
