@@ -52,7 +52,7 @@ class LSEncoder(json.JSONEncoder):
     def default(self, obj):
         """重写默认编码方法。"""
         if isinstance(obj, LSTimestamp):
-            return str(obj)
+            return obj.value
         return list(obj) if isinstance(obj, bytes) else super().default(obj)
 
 
@@ -150,8 +150,11 @@ class LifeSmartProtocol:
                 return b"\x11\x08::NULL::"
             if value.startswith("enum:"):
                 key = value[5:]
-                enum_id = int(self.REVERSE_KEY_MAPPING.get(key, key))
-                return struct.pack("BB", 0x13, enum_id)
+                enum_id = self.REVERSE_KEY_MAPPING.get(key)
+                if enum_id is not None:
+                    return struct.pack("BB", 0x13, enum_id)
+                # 如果没有找到对应的enum_id，则作为普通字符串处理
+                return self._string_to_bin(value)
             if isKey and self.REVERSE_KEY_MAPPING.get(value):
                 enum_id = self.REVERSE_KEY_MAPPING.get(value)
                 return struct.pack("BB", 0x13, enum_id)

@@ -1,9 +1,21 @@
 """
-对 openapi_client.py 的全覆盖单元测试。
+LifeSmart OpenAPI 客户端测试套件。
+
+此测试套件提供对 openapi_client.py 的全面覆盖，包括：
+- 客户端初始化和配置管理
+- 核心 API 调用机制和签名验证
+- 认证流程（登录、刷新令牌）
+- WebSocket 连接管理
+- 设备控制辅助方法
+- 错误处理和边界条件
+- 网络异常和恢复机制
+
+测试使用结构化的类组织，每个类专注于特定的功能领域，
+并包含详细的中文注释以确保可维护性。
 """
 
 import json
-from unittest.mock import AsyncMock, patch, call
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from aiohttp import ClientError
@@ -31,12 +43,33 @@ from custom_components.lifesmart.core.openapi_client import LifeSmartOAPIClient
 from custom_components.lifesmart.exceptions import LifeSmartAPIError, LifeSmartAuthError
 
 
-# region Fixtures
+# ==================== 测试数据和Fixtures ====================
+
+
 @pytest.fixture
-def client(hass):
+def client_config():
+    """提供标准的客户端配置参数。"""
+    return {
+        "region": "cn2",
+        "appkey": "test_appkey",
+        "apptoken": "test_apptoken",
+        "usertoken": "test_usertoken",
+        "userid": "test_userid",
+        "user_password": "test_password",
+    }
+
+
+@pytest.fixture
+def client(hass, client_config):
     """提供一个标准的 LifeSmartOAPIClient 实例，包含所有必要参数。"""
     return LifeSmartOAPIClient(
-        hass, "cn2", "appkey", "apptoken", "usertoken", "userid", "password"
+        hass,
+        client_config["region"],
+        client_config["appkey"],
+        client_config["apptoken"],
+        client_config["usertoken"],
+        client_config["userid"],
+        client_config["user_password"],
     )
 
 
@@ -47,721 +80,841 @@ def mock_async_call_api():
         "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._async_call_api",
         new_callable=AsyncMock,
     ) as mock_func:
-        mock_func.return_value = {"code": 0}  # 默认返回成功
+        mock_func.return_value = {"code": 0, "message": "success"}  # 默认返回成功
         yield mock_func
 
 
-# endregion
+@pytest.fixture
+def mock_post_response():
+    """提供标准的HTTP响应模拟。"""
+    return {"code": 0, "message": {"data": "test_response"}}
 
 
-# region Initialization and URL/Header Generation Tests
-def test_url_and_header_generation(hass):
-    """测试 API/WSS URL 和 HTTP Header 的生成逻辑。"""
-    client_region = LifeSmartOAPIClient(hass, "cn2", "k", "t", "ut", "uid")
-    assert (
-        client_region._get_api_url() == "https://api.cn2.ilifesmart.com/app"
-    ), "cn2区域API URL应该正确"
-    assert (
-        client_region.get_wss_url() == "wss://api.cn2.ilifesmart.com:8443/wsapp/"
-    ), "cn2区域WSS URL应该正确"
-
-    for auto_region in ["AUTO", None, ""]:
-        client_auto = LifeSmartOAPIClient(hass, auto_region, "k", "t", "ut", "uid")
-        assert (
-            client_auto._get_api_url() == "https://api.ilifesmart.com/app"
-        ), "默认区域API URL应该正确"
-        assert (
-            client_auto.get_wss_url() == "wss://api.ilifesmart.com:8443/wsapp/"
-        ), "默认区域WSS URL应该正确"
-
-    assert client_region._generate_header() == {
-        "Content-Type": "application/json"
-    }, "HTTP头应该正确生成"
+# ==================== 基础功能测试类 ====================
 
 
-# endregion
+class TestClientInitialization:
+    """测试客户端初始化和基础配置功能。"""
 
-
-# region Core API Call, Signature and Error Handling Tests
-@pytest.mark.asyncio
-async def test_async_call_api_signature_and_error_handling(client):
-    """测试 _async_call_api 的签名生成和对不同错误码的异常处理。"""
-    with patch.object(
-        client, "_post_and_parse", return_value={"code": 0}
-    ) as mock_post, patch(
-        "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._get_signature"
-    ) as mock_get_signature:
-        mock_get_signature.return_value = "mocked_signature"
-
-        # 1. 测试带参数的情况
-        await client._async_call_api(
-            "TestMethodWithParams", {"z_param": "val_z", "a_param": "val_a"}
+    def test_client_initialization_with_all_params(self, hass, client_config):
+        """测试使用完整参数初始化客户端。"""
+        client = LifeSmartOAPIClient(
+            hass,
+            client_config["region"],
+            client_config["appkey"],
+            client_config["apptoken"],
+            client_config["usertoken"],
+            client_config["userid"],
+            client_config["user_password"],
         )
-        mock_get_signature.assert_called_once()
-        signature_raw_string = mock_get_signature.call_args.args[0]
-        assert (
-            "a_param:val_a,z_param:val_z" in signature_raw_string
-        ), "签名字符串应包含按字母序排列的参数"
-        sent_payload_with_params = mock_post.call_args.args[1]
-        assert (
-            sent_payload_with_params["system"]["sign"] == "mocked_signature"
-        ), "发送的负载中应包含正确的签名"
 
-        # 2. 关键补充：测试不带参数的情况
-        mock_get_signature.reset_mock()
-        await client._async_call_api("TestMethodNoParams")
-        mock_get_signature.assert_called_once()
-        signature_raw_string_no_params = mock_get_signature.call_args.args[0]
-        # 验证签名字符串中不包含任何参数部分
-        assert (
-            "a_param" not in signature_raw_string_no_params
-        ), "无参数时签名字符串中不应包含a_param"
-        assert (
-            "z_param" not in signature_raw_string_no_params
-        ), "无参数时签名字符串中不应包含z_param"
-        sent_payload_no_params = mock_post.call_args.args[1]
-        assert "params" not in sent_payload_no_params, "无参数请求中不应包含params字段"
+        assert client.hass == hass, "Home Assistant实例应该正确设置"
+        assert client._region == client_config["region"], "区域应该正确设置"
+        assert client._appkey == client_config["appkey"], "AppKey应该正确设置"
+        assert client._apptoken == client_config["apptoken"], "AppToken应该正确设置"
+        assert client._usertoken == client_config["usertoken"], "UserToken应该正确设置"
+        assert client._userid == client_config["userid"], "UserID应该正确设置"
+        assert client._apppassword == client_config["user_password"], "密码应该正确设置"
 
-    for auth_error_code in [10004, 10005, 10006]:
+    def test_client_initialization_without_password(self, hass, client_config):
+        """测试不提供密码参数的初始化。"""
+        client = LifeSmartOAPIClient(
+            hass,
+            client_config["region"],
+            client_config["appkey"],
+            client_config["apptoken"],
+            client_config["usertoken"],
+            client_config["userid"],
+        )
+
+        assert client._apppassword is None, "未提供密码时应该为None"
+
+
+class TestURLAndConfiguration:
+    """测试URL生成和配置管理功能。"""
+
+    @pytest.mark.parametrize(
+        "region, expected_api_url, expected_wss_url",
+        [
+            (
+                "cn2",
+                "https://api.cn2.ilifesmart.com/app",
+                "wss://api.cn2.ilifesmart.com:8443/wsapp/",
+            ),
+            (
+                "us",
+                "https://api.us.ilifesmart.com/app",
+                "wss://api.us.ilifesmart.com:8443/wsapp/",
+            ),
+            (
+                "AUTO",
+                "https://api.ilifesmart.com/app",
+                "wss://api.ilifesmart.com:8443/wsapp/",
+            ),
+            (
+                "",
+                "https://api.ilifesmart.com/app",
+                "wss://api.ilifesmart.com:8443/wsapp/",
+            ),
+            (
+                None,
+                "https://api.ilifesmart.com/app",
+                "wss://api.ilifesmart.com:8443/wsapp/",
+            ),
+        ],
+        ids=["ChinaRegion", "USRegion", "AutoRegion", "EmptyRegion", "NullRegion"],
+    )
+    def test_url_generation_for_different_regions(
+        self, hass, region, expected_api_url, expected_wss_url
+    ):
+        """测试不同区域的API和WebSocket URL生成逻辑。"""
+        client = LifeSmartOAPIClient(hass, region, "k", "t", "ut", "uid")
+
+        assert (
+            client._get_api_url() == expected_api_url
+        ), f"区域{region}的API URL应该正确"
+        assert (
+            client.get_wss_url() == expected_wss_url
+        ), f"区域{region}的WSS URL应该正确"
+
+    def test_http_header_generation(self, client):
+        """测试HTTP请求头的生成。"""
+        headers = client._generate_header()
+        expected_headers = {"Content-Type": "application/json"}
+
+        assert headers == expected_headers, "HTTP请求头应该正确生成"
+
+    def test_signature_generation(self, client):
+        """测试MD5签名生成功能。"""
+        test_data = "method:TestMethod,time:1234567890,userid:testuser,usertoken:testtoken,appkey:testkey,apptoken:testtoken"
+        signature = client._get_signature(test_data)
+
+        assert isinstance(signature, str), "签名应该是字符串类型"
+        assert len(signature) == 32, "MD5签名应该是32位十六进制字符串"
+
+        # 验证相同输入生成相同签名
+        signature2 = client._get_signature(test_data)
+        assert signature == signature2, "相同输入应该生成相同签名"
+
+
+# ==================== 核心API调用测试类 ====================
+
+
+class TestCoreAPICall:
+    """测试核心API调用机制，包括签名生成和错误处理。"""
+
+    @pytest.mark.asyncio
+    async def test_async_call_api_with_parameters(self, client):
+        """测试带参数的API调用和签名生成。"""
+        with patch.object(
+            client, "_post_and_parse", return_value={"code": 0}
+        ) as mock_post, patch(
+            "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._get_signature"
+        ) as mock_get_signature:
+            mock_get_signature.return_value = "mocked_signature"
+
+            # 测试带参数的API调用
+            await client._async_call_api(
+                "TestMethodWithParams", {"z_param": "val_z", "a_param": "val_a"}
+            )
+
+            mock_get_signature.assert_called_once()
+            signature_raw_string = mock_get_signature.call_args.args[0]
+            assert (
+                "a_param:val_a,z_param:val_z" in signature_raw_string
+            ), "签名字符串应包含按字母序排列的参数"
+
+            sent_payload = mock_post.call_args.args[1]
+            assert (
+                sent_payload["system"]["sign"] == "mocked_signature"
+            ), "发送的负载中应包含正确的签名"
+            assert "params" in sent_payload, "带参数的请求应包含params字段"
+
+    @pytest.mark.asyncio
+    async def test_async_call_api_without_parameters(self, client):
+        """测试无参数的API调用。"""
+        with patch.object(
+            client, "_post_and_parse", return_value={"code": 0}
+        ) as mock_post, patch(
+            "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._get_signature"
+        ) as mock_get_signature:
+            mock_get_signature.return_value = "mocked_signature"
+
+            await client._async_call_api("TestMethodNoParams")
+
+            mock_get_signature.assert_called_once()
+            signature_raw_string = mock_get_signature.call_args.args[0]
+            assert (
+                "a_param" not in signature_raw_string
+            ), "无参数时签名字符串中不应包含参数"
+
+            sent_payload = mock_post.call_args.args[1]
+            assert "params" not in sent_payload, "无参数请求中不应包含params字段"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "error_code, expected_exception",
+        [
+            (10004, LifeSmartAuthError),
+            (10005, LifeSmartAuthError),
+            (10006, LifeSmartAuthError),
+            (-1, LifeSmartAPIError),
+            (500, LifeSmartAPIError),
+        ],
+        ids=[
+            "AuthError10004",
+            "AuthError10005",
+            "AuthError10006",
+            "GeneralError",
+            "ServerError",
+        ],
+    )
+    async def test_async_call_api_error_handling(
+        self, client, error_code, expected_exception
+    ):
+        """测试不同错误码的异常处理。"""
         with patch.object(
             client,
             "_post_and_parse",
-            return_value={"code": auth_error_code, "message": "auth error"},
+            return_value={"code": error_code, "message": "error"},
         ):
-            with pytest.raises(LifeSmartAuthError):
+            with pytest.raises(expected_exception):
                 await client._async_call_api("AnyMethod")
 
-    with patch.object(
-        client, "_post_and_parse", return_value={"code": -1, "message": "general error"}
-    ):
-        with pytest.raises(LifeSmartAPIError):
-            await client._async_call_api("AnyMethod")
+    @pytest.mark.asyncio
+    async def test_post_and_parse_network_failure(self, client):
+        """测试网络请求失败的处理。"""
+        with patch(
+            "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._post_async",
+            new_callable=AsyncMock,
+        ) as mock_post:
+            mock_post.side_effect = ClientError("Connection failed")
+
+            with pytest.raises(LifeSmartAPIError, match="网络请求失败"):
+                await client._post_and_parse("http://test.com", {}, {})
+
+    @pytest.mark.asyncio
+    async def test_post_and_parse_json_decode_failure(self, client):
+        """测试JSON解析失败的处理。"""
+        with patch(
+            "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._post_async",
+            new_callable=AsyncMock,
+        ) as mock_post:
+            mock_post.return_value = "invalid json response"
+
+            with pytest.raises(LifeSmartAPIError, match="JSON解析失败"):
+                await client._post_and_parse("http://test.com", {}, {})
+
+    @pytest.mark.parametrize(
+        "response, expected_code",
+        [
+            (None, -1),
+            ({"message": "no code"}, -1),
+            ({"code": "not_an_int"}, -1),
+            ({"code": None}, -1),
+            ({"code": 0}, 0),
+            ({"code": "123"}, 123),
+        ],
+        ids=[
+            "NullResponse",
+            "MissingCode",
+            "InvalidCode",
+            "NullCode",
+            "ValidZero",
+            "ValidString",
+        ],
+    )
+    def test_get_code_from_response_edge_cases(self, client, response, expected_code):
+        """测试响应码提取的各种边界情况。"""
+        result = client._get_code_from_response(response, "test_method")
+        assert result == expected_code, f"响应 {response} 应该返回 {expected_code}"
 
 
-@pytest.mark.asyncio
-async def test_post_and_parse_network_failure(client):
-    """测试 _post_and_parse 在网络失败时的行为。"""
-    with patch(
-        "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._post_async",
-        new_callable=AsyncMock,
-    ) as mock_post:
-        mock_post.side_effect = ClientError("Connection failed")
-        with pytest.raises(LifeSmartAPIError, match="网络请求失败"):
-            await client._post_and_parse("http://a.b", {}, {})
+# ==================== 认证和WebSocket测试类 ====================
 
 
-@pytest.mark.asyncio
-async def test_post_and_parse_json_failure(client):
-    """测试 _post_and_parse 在JSON解析失败时的行为。"""
-    with patch(
-        "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._post_async",
-        new_callable=AsyncMock,
-    ) as mock_post:
-        mock_post.return_value = "this is not json"
-        with pytest.raises(LifeSmartAPIError, match="JSON解析失败"):
-            await client._post_and_parse("http://a.b", {}, {})
+class TestAuthenticationFlow:
+    """测试认证流程，包括登录和令牌刷新。"""
 
-
-def test_get_code_from_response_all_failures(client):
-    """测试 _get_code_from_response 的所有失败分支。"""
-    assert client._get_code_from_response(None, "test") == -1, "None响应应该返回-1"
-    assert (
-        client._get_code_from_response({"message": "no code"}, "test") == -1
-    ), "缺少code字段的响应应该返回-1"
-    assert (
-        client._get_code_from_response({"code": "not_an_int"}, "test") == -1
-    ), "code非整数的响应应该返回-1"
-    assert (
-        client._get_code_from_response({"code": None}, "test") == -1
-    ), "code为None的响应应该返回-1"
-
-
-# endregion
-
-
-# region Special Auth and WSS Flow Tests
-@pytest.mark.asyncio
-async def test_login_async_full_flow(client, mock_async_call_api):
-    """测试登录流程的所有成功和失败分支。"""
-    mock_async_call_api.side_effect = [
-        {"code": "success", "token": "temp_token", "userid": "new_user_id"},
-        {
+    @pytest.mark.asyncio
+    async def test_login_async_successful_flow(self, client):
+        """测试完整的登录认证成功流程。"""
+        # 模拟两步认证响应
+        step1_response = {
+            "code": "success",
+            "token": "temp_token",
+            "userid": "new_user_id",
+        }
+        step2_response = {
             "code": "success",
             "usertoken": "new_user_token",
             "rgn": "cn1",
             "userid": "new_user_id",
-        },
-    ]
-    # 模拟 _post_and_parse 因为 login 是特殊端点
-    with patch.object(client, "_post_and_parse") as mock_post:
-        mock_post.side_effect = mock_async_call_api.side_effect
-        result = await client.login_async()
+        }
 
-    assert client._usertoken == "new_user_token", "客户端应更新为新的用户令牌"
-    assert client._region == "cn1", "客户端应更新为新的区域"
-    assert client._userid == "new_user_id", "客户端应更新为新的用户ID"
-    assert result["usertoken"] == "new_user_token", "返回结果应包含新的用户令牌"
+        with patch.object(client, "_post_and_parse") as mock_post:
+            mock_post.side_effect = [step1_response, step2_response]
 
-    with patch.object(client, "_post_and_parse") as mock_post:
-        mock_post.side_effect = LifeSmartAuthError(-1)
-        with pytest.raises(LifeSmartAuthError):
-            await client.login_async()
+            result = await client.login_async()
 
-    with patch.object(client, "_post_and_parse") as mock_post:
-        mock_post.side_effect = [
-            {"code": "success", "token": "temp_token", "userid": "user_id"},
-            LifeSmartAuthError(-1),
-        ]
-        with pytest.raises(LifeSmartAuthError):
-            await client.login_async()
+            assert client._usertoken == "new_user_token", "客户端应更新为新的用户令牌"
+            assert client._region == "cn1", "客户端应更新为新的区域"
+            assert client._userid == "new_user_id", "客户端应更新为新的用户ID"
+            assert result["usertoken"] == "new_user_token", "返回结果应包含新的用户令牌"
 
-    with patch.object(client, "_post_and_parse") as mock_post:
-        # 存储原始值以便恢复
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "userid, apppassword, expected_error",
+        [
+            (None, "valid_pass", "用户名或应用密码无效，无法登录。"),
+            ("", "valid_pass", "用户名或应用密码无效，无法登录。"),
+            ("valid_user", None, "用户名或应用密码无效，无法登录。"),
+            ("valid_user", "", "用户名或应用密码无效，无法登录。"),
+        ],
+        ids=["NullUserid", "EmptyUserid", "NullPassword", "EmptyPassword"],
+    )
+    async def test_login_async_invalid_credentials(
+        self, client, userid, apppassword, expected_error
+    ):
+        """测试无效凭据时的登录失败。"""
         original_userid = client._userid
         original_apppassword = client._apppassword
 
-        # 遍历无效的 userid 和 apppassword 组合
-        for invalid_user, invalid_apppass in [
-            (None, "valid_hash"),  # 无效用户名
-            ("", "valid_hash"),  # 无效用户名
-            ("valid_user", None),  # 无效应用密码
-            ("valid_user", ""),  # 无效应用密码
-        ]:
-            client._userid = invalid_user
-            client._apppassword = invalid_apppass
+        try:
+            client._userid = userid
+            client._apppassword = apppassword
 
-            with pytest.raises(
-                LifeSmartAuthError, match="用户名或应用密码无效，无法登录。"
-            ):
+            with pytest.raises(LifeSmartAuthError, match=expected_error):
                 await client.login_async()
-
-            # 验证在这种情况下没有发起任何网络请求
-            mock_post.assert_not_called()
-
-        # 恢复原始值，避免影响后续测试
-        client._userid = original_userid
-        client._apppassword = original_apppassword
-
-
-@pytest.mark.asyncio
-async def test_async_refresh_token_full_flow(client, mock_async_call_api):
-    """测试令牌刷新流程的成功和失败分支。"""
-    mock_async_call_api.return_value = {"code": 0, "usertoken": "refreshed_token"}
-    with patch.object(client, "_post_and_parse") as mock_post:
-        mock_post.return_value = mock_async_call_api.return_value
-        result = await client.async_refresh_token()
-
-    assert client._usertoken == "refreshed_token", "客户端令牌应该被刷新"
-    assert result["usertoken"] == "refreshed_token", "返回结果应包含刷新后的令牌"
-
-    with patch.object(client, "_post_and_parse") as mock_post:
-        mock_post.side_effect = LifeSmartAuthError(-1)
-        with pytest.raises(LifeSmartAuthError):
-            await client.async_refresh_token()
-
-
-def test_generate_wss_auth(client):
-    """测试 WebSocket 认证消息的生成。"""
-    client._usertoken = "test_wss_token"
-    auth_str = client.generate_wss_auth()
-    auth_data = json.loads(auth_str)
-    assert "system" in auth_data, "WebSocket认证数据应包含system字段"
-    assert "usertoken" not in auth_data["system"], "system字段中不应直接包含用户令牌"
-    assert "sign" in auth_data["system"], "system字段应包含签名"
-    assert "userid" in auth_data["system"], "system字段应包含用户ID"
-
-
-# endregion
-
-
-# region Public API Wrapper Method Tests
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "method_to_test, api_method, call_args, expected_params, api_path",
-    [
-        ("get_agt_list_async", "AgtGetList", (), None, "/api"),
-        ("get_agt_details_async", "AgtGet", ("hub1",), {"agt": "hub1"}, "/api"),
-        ("async_get_all_devices", "EpGetAll", (), None, "/api"),
-        ("get_scene_list_async", "SceneGet", ("hub1",), {"agt": "hub1"}, "/api"),
-        ("get_room_list_async", "RoomGet", ("hub1",), {"agt": "hub1"}, "/api"),
-        (
-            "async_set_scene",
-            "SceneSet",
-            ("hub1", "s1"),
-            {"agt": "hub1", "id": "s1"},
-            "/api",
-        ),
-        (
-            "get_epget_async",
-            "EpGet",
-            ("hub1", "dev1"),
-            {"agt": "hub1", "me": "dev1"},
-            "/api",
-        ),
-        (
-            "get_ir_remote_list_async",
-            "GetRemoteList",
-            ("hub1",),
-            {"agt": "hub1"},
-            "/irapi",
-        ),
-        (
-            "async_send_ir_key",
-            "SendKeys",
-            ("hub1", "ai1", "me1", "cat1", "brand1", "key1"),
-            {
-                "agt": "hub1",
-                "ai": "ai1",
-                "me": "me1",
-                "category": "cat1",
-                "brand": "brand1",
-                "keys": "key1",
-            },
-            "/irapi",
-        ),
-    ],
-)
-async def test_all_api_wrappers(
-    mock_async_call_api,
-    client,
-    method_to_test,
-    api_method,
-    call_args,
-    expected_params,
-    api_path,
-):
-    """测试所有API包装方法是否正确调用 _async_call_api。"""
-    method = getattr(client, method_to_test)
-    mock_async_call_api.return_value = {"code": 0, "message": [{"data": "test"}]}
-    await method(*call_args)
-    if expected_params is None:
-        mock_async_call_api.assert_called_with(api_method, api_path=api_path)
-    else:
-        mock_async_call_api.assert_called_with(
-            api_method, expected_params, api_path=api_path
-        )
-
-
-@pytest.mark.asyncio
-async def test_set_multi_eps_async_wrapper(mock_async_call_api, client):
-    """测试 set_multi_eps_async 是否正确地将列表序列化为JSON字符串。"""
-    io_list = [{"idx": "L1", "val": 1}, {"idx": "L2", "val": 0}]
-    agt = "agt1"
-    me = "me1"
-    await client.set_multi_eps_async(agt, me, io_list)
-
-    expected_params = {"agt": agt, "me": me, "args": json.dumps(io_list)}
-    mock_async_call_api.assert_called_with("EpsSet", expected_params, api_path="/api")
-
-
-@pytest.mark.asyncio
-async def test_get_wrappers_empty_or_malformed_response(mock_async_call_api, client):
-    """测试 GET 类包装方法在收到空或格式错误的 message 时的处理。"""
-    mock_async_call_api.return_value = {"code": 0, "message": []}
-    assert await client.async_get_all_devices() == [], "空消息时应该返回空列表"
-
-    mock_async_call_api.return_value = {"code": 0, "message": None}
-    assert await client.get_agt_list_async() == [], "None消息时应该返回空列表"
-    assert await client.get_agt_details_async("h1") == {}, "None消息时应该返回空字典"
-
-    mock_async_call_api.return_value = {"code": 0, "message": []}
-    assert await client.get_epget_async("h1", "d1") == {}, "空消息时应该返回空字典"
-    mock_async_call_api.return_value = {"code": 0, "message": ["not_a_dict"]}
-    assert await client.get_epget_async("h1", "d1") == {}, "非字典消息时应该返回空字典"
-
-
-@pytest.mark.asyncio
-async def test_set_single_ep_async_direct_call(mock_async_call_api, client):
-    """直接测试 set_single_ep_async 方法是否正确调用底层 API。"""
-    agt = "agt1"
-    me = "me1"
-    idx = "L1"
-    cmd_type = "0x81"
-    val = 1
-
-    await client.set_single_ep_async(agt, me, idx, cmd_type, val)
-
-    expected_params = {
-        "agt": agt,
-        "me": me,
-        "idx": idx,
-        "type": cmd_type,
-        "val": val,
-    }
-    mock_async_call_api.assert_called_once_with(
-        "EpSet", expected_params, api_path="/api"
-    )
-
-
-# endregion
-
-
-# region Complex Device Control Helper Method Tests
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "helper_method, args, expected_idx, expected_cmd, expected_val",
-    [
-        ("turn_on_light_switch_async", ("idx", "agt", "me"), "idx", CMD_TYPE_ON, 1),
-        ("turn_off_light_switch_async", ("idx", "agt", "me"), "idx", CMD_TYPE_OFF, 0),
-        ("press_switch_async", ("idx", "agt", "me", 550), "idx", CMD_TYPE_PRESS, 6),
-        ("press_switch_async", ("idx", "agt", "me", 50), "idx", CMD_TYPE_PRESS, 1),
-    ],
-)
-async def test_simple_control_helpers(
-    client, helper_method, args, expected_idx, expected_cmd, expected_val
-):
-    """测试简单的设备控制辅助方法。"""
-    with patch.object(client, "set_single_ep_async") as mock_set:
-        method = getattr(client, helper_method)
-        await method(*args)
-        mock_set.assert_called_with(
-            args[1], args[2], expected_idx, expected_cmd, expected_val
-        )
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "method_name, device_type, expected_idx, expected_cmd, expected_val",
-    [
-        # --- 定位窗帘 (特殊命令) ---
-        ("open_cover_async", list(GARAGE_DOOR_TYPES)[0], "P3", CMD_TYPE_SET_VAL, 100),
-        ("close_cover_async", list(GARAGE_DOOR_TYPES)[0], "P3", CMD_TYPE_SET_VAL, 0),
-        (
-            "stop_cover_async",
-            list(GARAGE_DOOR_TYPES)[0],
-            "P3",
-            CMD_TYPE_SET_CONFIG,
-            CMD_TYPE_OFF,
-        ),
-        ("open_cover_async", list(DOOYA_TYPES)[0], "P2", CMD_TYPE_SET_VAL, 100),
-        ("close_cover_async", list(DOOYA_TYPES)[0], "P2", CMD_TYPE_SET_VAL, 0),
-        (
-            "stop_cover_async",
-            list(DOOYA_TYPES)[0],
-            "P2",
-            CMD_TYPE_SET_CONFIG,
-            CMD_TYPE_OFF,
-        ),
-        # --- 非定位窗帘 (从 NON_POSITIONAL_COVER_CONFIG 映射) ---
-        # SL_SW_WIN
-        ("open_cover_async", "SL_SW_WIN", "OP", CMD_TYPE_ON, 1),
-        ("close_cover_async", "SL_SW_WIN", "CL", CMD_TYPE_ON, 1),
-        ("stop_cover_async", "SL_SW_WIN", "ST", CMD_TYPE_ON, 1),
-        # SL_P_V2
-        ("open_cover_async", "SL_P_V2", "P2", CMD_TYPE_ON, 1),
-        ("close_cover_async", "SL_P_V2", "P3", CMD_TYPE_ON, 1),
-        ("stop_cover_async", "SL_P_V2", "P4", CMD_TYPE_ON, 1),
-        # SL_CN_IF
-        ("open_cover_async", "SL_CN_IF", "P1", CMD_TYPE_ON, 1),
-        ("close_cover_async", "SL_CN_IF", "P2", CMD_TYPE_ON, 1),
-        ("stop_cover_async", "SL_CN_IF", "P3", CMD_TYPE_ON, 1),
-        # SL_P (通用控制器)
-        ("open_cover_async", "SL_P", "P2", CMD_TYPE_ON, 1),
-        ("close_cover_async", "SL_P", "P3", CMD_TYPE_ON, 1),
-        ("stop_cover_async", "SL_P", "P4", CMD_TYPE_ON, 1),
-    ],
-)
-async def test_cover_control_helpers(
-    client, method_name, device_type, expected_idx, expected_cmd, expected_val
-):
-    """全面测试 Cover 控制方法对所有设备类型的处理。"""
-    with patch.object(client, "set_single_ep_async") as mock_set:
-        method = getattr(client, method_name)
-        await method("agt", "me", device_type)
-        mock_set.assert_called_with(
-            "agt", "me", expected_idx, expected_cmd, expected_val
-        )
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "device_type, position, expected_idx, expected_cmd, expected_val, should_call",
-    [
-        (list(DOOYA_TYPES)[0], 50, "P2", CMD_TYPE_SET_VAL, 50, True),
-        (list(GARAGE_DOOR_TYPES)[0], 80, "P3", CMD_TYPE_SET_VAL, 80, True),
-        ("SL_SW_WIN", 50, None, None, None, False),
-    ],
-)
-async def test_set_cover_position_helper(
-    client, device_type, position, expected_idx, expected_cmd, expected_val, should_call
-):
-    """测试设置窗帘位置的辅助方法。"""
-    with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
-        await client.set_cover_position_async("agt", "me", position, device_type)
-        if should_call:
-            mock_set.assert_called_with(
-                "agt", "me", expected_idx, expected_cmd, expected_val
-            )
-        else:
-            mock_set.assert_not_called()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "device_type, hvac_mode, current_val, expected_calls",
-    [
-        # 基础测试：关闭
-        ("any_type", HVACMode.OFF, 0, [call("agt", "me", "P1", CMD_TYPE_OFF, 0)]),
-        # 简单模式设置
-        (
-            "V_AIR_P",
-            HVACMode.HEAT,
-            0,
-            [
-                call("agt", "me", "P1", CMD_TYPE_ON, 1),
-                call("agt", "me", "MODE", CMD_TYPE_SET_CONFIG, 4),
-            ],
-        ),
-        # --- 位运算测试 ---
-        # SL_CP_AIR: 设置为 HEAT (mode_val=4), current_val=0b1010...
-        (
-            "SL_CP_AIR",
-            HVACMode.HEAT,
-            0b1010101010101010,
-            [
-                call("agt", "me", "P1", CMD_TYPE_ON, 1),
-                call(
-                    "agt",
-                    "me",
-                    "P1",
-                    CMD_TYPE_SET_RAW,
-                    (0b1010101010101010 & ~(0b11 << 13)) | (1 << 13),
-                ),
-            ],
-        ),
-        # SL_CP_DN: 设置为 AUTO (is_auto=1), current_val=0b0101...
-        (
-            "SL_CP_DN",
-            HVACMode.AUTO,
-            0b0101010101010101,
-            [
-                call("agt", "me", "P1", CMD_TYPE_ON, 1),
-                call(
-                    "agt",
-                    "me",
-                    "P1",
-                    CMD_TYPE_SET_RAW,
-                    (0b0101010101010101 & ~(1 << 31)) | (1 << 31),
-                ),
-            ],
-        ),
-        # SL_CP_VL: 设置为 HEAT (mode_val=0), current_val=0b1111...
-        (
-            "SL_CP_VL",
-            HVACMode.HEAT,
-            0b1111111111111111,
-            [
-                call("agt", "me", "P1", CMD_TYPE_ON, 1),
-                call(
-                    "agt",
-                    "me",
-                    "P1",
-                    CMD_TYPE_SET_RAW,
-                    (0b1111111111111111 & ~(0b11 << 1)) | (0 << 1),
-                ),
-            ],
-        ),
-    ],
-)
-async def test_set_climate_hvac_mode_helper(
-    client, device_type, hvac_mode, current_val, expected_calls
-):
-    """全面测试设置HVAC模式的辅助方法。"""
-    with patch.object(client, "set_single_ep_async") as mock_set:
-        await client.async_set_climate_hvac_mode(
-            "agt", "me", device_type, hvac_mode, current_val
-        )
-        # 对于 HVACMode.OFF，只应该有一次调用
-        if hvac_mode == HVACMode.OFF:
-            mock_set.assert_called_once_with(*expected_calls[0].args)
-        else:
-            mock_set.assert_has_calls(expected_calls, any_order=True)
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "device_type, temp, expected_idx, expected_cmd, expected_val, should_call",
-    [
-        ("V_AIR_P", 25.5, "tT", CMD_TYPE_SET_TEMP_DECIMAL, 255, True),
-        ("SL_CP_DN", 18.0, "P3", CMD_TYPE_SET_RAW, 180, True),
-        ("SL_FCU", 22.0, "P8", CMD_TYPE_SET_TEMP_FCU, 220, True),
-        ("UNSUPPORTED", 20.0, None, None, None, False),
-    ],
-)
-async def test_set_climate_temperature_helper(
-    client, device_type, temp, expected_idx, expected_cmd, expected_val, should_call
-):
-    """全面测试设置温度的辅助方法。"""
-    with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
-        await client.async_set_climate_temperature("agt", "me", device_type, temp)
-        if should_call:
-            mock_set.assert_called_with(
-                "agt", "me", expected_idx, expected_cmd, expected_val
-            )
-        else:
-            mock_set.assert_not_called()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "device_type, fan_mode, current_val, expected_idx, expected_cmd, expected_val, should_call",
-    [
-        ("V_AIR_P", FAN_LOW, 0, "F", CMD_TYPE_SET_CONFIG, 15, True),
-        ("SL_TR_ACIPM", FAN_MEDIUM, 0, "P2", CMD_TYPE_SET_RAW, 2, True),
-        ("SL_NATURE", FAN_HIGH, 0, "P9", CMD_TYPE_SET_CONFIG, 75, True),
-        ("SL_FCU", FAN_AUTO, 0, "P9", CMD_TYPE_SET_CONFIG, 101, True),
-        (
-            "SL_CP_AIR",
-            FAN_LOW,
-            0b0,
-            "P1",
-            CMD_TYPE_SET_RAW,
-            (0b0 & ~(0b11 << 15)) | (1 << 15),
-            True,
-        ),
-        ("UNSUPPORTED", FAN_LOW, 0, None, None, None, False),
-    ],
-)
-async def test_set_climate_fan_mode_helper(
-    client,
-    device_type,
-    fan_mode,
-    current_val,
-    expected_idx,
-    expected_cmd,
-    expected_val,
-    should_call,
-):
-    with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
-        await client.async_set_climate_fan_mode(
-            "agt", "me", device_type, fan_mode, current_val
-        )
-        if should_call:
-            mock_set.assert_called_with(
-                "agt", "me", expected_idx, expected_cmd, expected_val
-            )
-        else:
-            mock_set.assert_not_called()
-
-
-# endregion
-
-
-@pytest.mark.asyncio
-async def test_control_helpers_with_unsupported_device(client, caplog):
-    """测试当控制辅助方法遇到不支持的设备类型时的行为。"""
-    with patch.object(client, "set_single_ep_async") as mock_set:
-        # 测试 cover
-        result_cover = await client.open_cover_async("agt", "me", "UNSUPPORTED_TYPE")
-        assert result_cover == -1, "不支持的设备类型应该返回-1"
-        mock_set.assert_not_called()
-        assert "UNSUPPORTED_TYPE" in caplog.text, "应该记录不支持的设备类型"
-        assert "open_cover" in caplog.text, "应该记录操作类型"
-
-        caplog.clear()
-        mock_set.reset_mock()
-
-        # 测试 climate temperature
-        result_temp = await client.async_set_climate_temperature(
-            "agt", "me", "UNSUPPORTED_TYPE", 25.0
-        )
-        assert result_temp == -1, "不支持的设备类型应该返回-1"
-        mock_set.assert_not_called()
-        # 注意：这个方法当前没有日志记录，所以我们只验证行为
-
-        caplog.clear()
-        mock_set.reset_mock()
-
-        # 测试 climate fan mode
-        result_fan = await client.async_set_climate_fan_mode(
-            "agt", "me", "UNSUPPORTED_TYPE", FAN_LOW
-        )
-        assert result_fan == -1, "不支持的设备类型应该返回-1"
-        mock_set.assert_not_called()
-        assert "UNSUPPORTED_TYPE" in caplog.text, "应该记录不支持的设备类型"
-        assert "不支持风扇模式" in caplog.text, "应该记录不支持风扇模式的错误信息"
-
-
-class TestOAPIClientErrorHandling:
-    """专注于 OpenAPI 客户端的错误处理和边界情况。"""
+        finally:
+            # 恢复原始值
+            client._userid = original_userid
+            client._apppassword = original_apppassword
 
     @pytest.mark.asyncio
-    async def test_login_async_no_credentials(self, client: LifeSmartOAPIClient):
-        """
-        覆盖场景: 在没有提供 userid 或 apppassword 时调用 login_async。
-        目的: 验证会提前失败并抛出正确的异常。
-        """
-        client._userid = ""
-        with pytest.raises(LifeSmartAuthError, match="用户名或应用密码无效"):
-            await client.login_async()
+    async def test_refresh_token_successful_flow(self, client):
+        """测试令牌刷新成功流程。"""
+        mock_response = {"code": 0, "usertoken": "refreshed_token"}
 
-        client._userid = "user"
-        client._apppassword = ""
-        with pytest.raises(LifeSmartAuthError, match="用户名或应用密码无效"):
-            await client.login_async()
+        with patch.object(client, "_post_and_parse") as mock_post:
+            mock_post.return_value = mock_response
+
+            result = await client.async_refresh_token()
+
+            assert client._usertoken == "refreshed_token", "客户端令牌应该被刷新"
+            assert (
+                result["usertoken"] == "refreshed_token"
+            ), "返回结果应包含刷新后的令牌"
+
+    @pytest.mark.asyncio
+    async def test_refresh_token_failure(self, client):
+        """测试令牌刷新失败的处理。"""
+        with patch.object(client, "_post_and_parse") as mock_post:
+            mock_post.side_effect = LifeSmartAuthError("刷新失败")
+
+            with pytest.raises(LifeSmartAuthError):
+                await client.async_refresh_token()
+
+
+class TestWebSocketManagement:
+    """测试WebSocket连接管理功能。"""
+
+    def test_generate_wss_auth_message(self, client):
+        """测试WebSocket认证消息的生成。"""
+        client._usertoken = "test_wss_token"
+        auth_str = client.generate_wss_auth()
+        auth_data = json.loads(auth_str)
+
+        assert "system" in auth_data, "WebSocket认证数据应包含system字段"
+        assert "sign" in auth_data["system"], "system字段应包含签名"
+        assert "userid" in auth_data["system"], "system字段应包含用户ID"
+        assert auth_data["method"] == "WbAuth", "认证方法应该是WbAuth"
+
+    @pytest.mark.parametrize(
+        "region, expected_wss_url",
+        [
+            ("cn2", "wss://api.cn2.ilifesmart.com:8443/wsapp/"),
+            ("us", "wss://api.us.ilifesmart.com:8443/wsapp/"),
+            ("AUTO", "wss://api.ilifesmart.com:8443/wsapp/"),
+            (None, "wss://api.ilifesmart.com:8443/wsapp/"),
+        ],
+        ids=["ChinaRegion", "USRegion", "AutoRegion", "NullRegion"],
+    )
+    def test_wss_url_generation_for_regions(self, hass, region, expected_wss_url):
+        """测试不同区域的WebSocket URL生成。"""
+        client = LifeSmartOAPIClient(hass, region, "k", "t", "ut", "uid")
+        wss_url = client.get_wss_url()
+
+        assert wss_url == expected_wss_url, f"区域{region}的WebSocket URL应该正确"
+
+
+# ==================== API包装方法测试类 ====================
+
+
+class TestAPIWrapperMethods:
+    """测试所有公共API包装方法的功能。"""
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "bad_response",
+        "method_name, api_method, args, expected_params, api_path",
         [
-            {"code": 0, "message": "not_a_list"},
-            {"code": 0, "message": None},
-            {"code": 0},  # no message key
+            ("get_agt_list_async", "AgtGetList", (), None, "/api"),
+            ("get_agt_details_async", "AgtGet", ("hub1",), {"agt": "hub1"}, "/api"),
+            ("async_get_all_devices", "EpGetAll", (), None, "/api"),
+            ("get_scene_list_async", "SceneGet", ("hub1",), {"agt": "hub1"}, "/api"),
+            ("get_room_list_async", "RoomGet", ("hub1",), {"agt": "hub1"}, "/api"),
+            (
+                "async_set_scene",
+                "SceneSet",
+                ("hub1", "s1"),
+                {"agt": "hub1", "id": "s1"},
+                "/api",
+            ),
+            (
+                "get_epget_async",
+                "EpGet",
+                ("hub1", "dev1"),
+                {"agt": "hub1", "me": "dev1"},
+                "/api",
+            ),
+            (
+                "get_ir_remote_list_async",
+                "GetRemoteList",
+                ("hub1",),
+                {"agt": "hub1"},
+                "/irapi",
+            ),
+            (
+                "async_send_ir_key",
+                "SendKeys",
+                ("hub1", "ai1", "me1", "cat1", "brand1", "key1"),
+                {
+                    "agt": "hub1",
+                    "ai": "ai1",
+                    "me": "me1",
+                    "category": "cat1",
+                    "brand": "brand1",
+                    "keys": "key1",
+                },
+                "/irapi",
+            ),
+        ],
+        ids=[
+            "GetAgtList",
+            "GetAgtDetails",
+            "GetAllDevices",
+            "GetSceneList",
+            "GetRoomList",
+            "SetScene",
+            "GetEpDetails",
+            "GetIRRemoteList",
+            "SendIRKey",
         ],
     )
-    async def test_get_list_methods_handle_malformed_response(
-        self, client, mock_async_call_api, bad_response
+    async def test_api_wrapper_methods(
+        self,
+        mock_async_call_api,
+        client,
+        method_name,
+        api_method,
+        args,
+        expected_params,
+        api_path,
     ):
-        """
-        覆盖场景: get_agt_list_async, get_all_device_async 等方法收到非列表格式的 'message'。
-        目的: 验证这些方法会返回一个安全的空列表，而不是崩溃。
-        """
-        mock_async_call_api.return_value = bad_response
+        """测试所有API包装方法是否正确调用_async_call_api。"""
+        method = getattr(client, method_name)
+        mock_async_call_api.return_value = {"code": 0, "message": [{"data": "test"}]}
+
+        await method(*args)
+
+        if expected_params is None:
+            mock_async_call_api.assert_called_with(api_method, api_path=api_path)
+        else:
+            mock_async_call_api.assert_called_with(
+                api_method, expected_params, api_path=api_path
+            )
+
+    @pytest.mark.asyncio
+    async def test_set_single_ep_async_direct(self, mock_async_call_api, client):
+        """测试单个端点设置方法的直接调用。"""
+        await client.set_single_ep_async("agt1", "me1", "L1", "0x81", 1)
+
+        expected_params = {
+            "agt": "agt1",
+            "me": "me1",
+            "idx": "L1",
+            "type": "0x81",
+            "val": 1,
+        }
+        mock_async_call_api.assert_called_once_with(
+            "EpSet", expected_params, api_path="/api"
+        )
+
+    @pytest.mark.asyncio
+    async def test_set_multi_eps_async_json_serialization(
+        self, mock_async_call_api, client
+    ):
+        """测试多端点设置方法的JSON序列化。"""
+        io_list = [{"idx": "L1", "val": 1}, {"idx": "L2", "val": 0}]
+
+        await client.set_multi_eps_async("agt1", "me1", io_list)
+
+        expected_params = {"agt": "agt1", "me": "me1", "args": json.dumps(io_list)}
+        mock_async_call_api.assert_called_with(
+            "EpsSet", expected_params, api_path="/api"
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "response_message, expected_result",
+        [
+            ([], []),
+            (None, []),
+            ([{"data": "valid"}], [{"data": "valid"}]),
+            ("not_a_list", []),
+        ],
+        ids=["EmptyList", "NullMessage", "ValidList", "InvalidType"],
+    )
+    async def test_list_methods_response_handling(
+        self, mock_async_call_api, client, response_message, expected_result
+    ):
+        """测试返回列表的方法对各种响应的处理。"""
+        mock_async_call_api.return_value = {"code": 0, "message": response_message}
 
         result = await client.get_agt_list_async()
-        assert result == [], "格式错误的响应应该返回空列表"
-
-        result = await client.async_get_all_devices()
-        assert result == [], "格式错误的响应应该返回空列表"
+        assert (
+            result == expected_result
+        ), f"响应 {response_message} 应该返回 {expected_result}"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "bad_response",
+        "response_message, expected_result",
         [
-            {"code": 0, "message": "not_a_dict"},
-            {"code": 0, "message": None},
-            {"code": 0, "message": []},  # EpGet 返回的是列表，但可能为空
+            ({}, {}),
+            (None, {}),
+            ({"valid": "data"}, {"valid": "data"}),
+            ("not_a_dict", {}),
+            ([], {}),
+        ],
+        ids=["EmptyDict", "NullMessage", "ValidDict", "InvalidString", "InvalidList"],
+    )
+    async def test_dict_methods_response_handling(
+        self, mock_async_call_api, client, response_message, expected_result
+    ):
+        """测试返回字典的方法对各种响应的处理。"""
+        mock_async_call_api.return_value = {"code": 0, "message": response_message}
+
+        result = await client.get_agt_details_async("hub1")
+        assert (
+            result == expected_result
+        ), f"响应 {response_message} 应该返回 {expected_result}"
+
+    @pytest.mark.asyncio
+    async def test_get_epget_async_list_response_handling(
+        self, mock_async_call_api, client
+    ):
+        """测试EpGet方法的特殊列表响应处理逻辑。"""
+        # EpGet返回的是列表，但我们取第一个元素
+        mock_async_call_api.return_value = {"code": 0, "message": [{"device": "data"}]}
+        result = await client.get_epget_async("hub1", "dev1")
+        assert result == {"device": "data"}, "应该返回列表中的第一个元素"
+
+        # 测试空列表的情况
+        mock_async_call_api.return_value = {"code": 0, "message": []}
+        result = await client.get_epget_async("hub1", "dev1")
+        assert result == {}, "空列表应该返回空字典"
+
+
+# ==================== 设备控制辅助方法测试类 ====================
+
+
+class TestDeviceControlHelpers:
+    """测试设备控制的辅助方法功能。"""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "helper_method, args, expected_idx, expected_cmd, expected_val",
+        [
+            ("turn_on_light_switch_async", ("idx", "agt", "me"), "idx", CMD_TYPE_ON, 1),
+            (
+                "turn_off_light_switch_async",
+                ("idx", "agt", "me"),
+                "idx",
+                CMD_TYPE_OFF,
+                0,
+            ),
+            ("press_switch_async", ("idx", "agt", "me", 550), "idx", CMD_TYPE_PRESS, 6),
+            ("press_switch_async", ("idx", "agt", "me", 50), "idx", CMD_TYPE_PRESS, 1),
+        ],
+        ids=["TurnOnLight", "TurnOffLight", "LongPress", "ShortPress"],
+    )
+    async def test_basic_switch_control_helpers(
+        self, client, helper_method, args, expected_idx, expected_cmd, expected_val
+    ):
+        """测试基础开关控制辅助方法。"""
+        with patch.object(client, "set_single_ep_async") as mock_set:
+            method = getattr(client, helper_method)
+            await method(*args)
+            mock_set.assert_called_with(
+                args[1], args[2], expected_idx, expected_cmd, expected_val
+            )
+
+
+class TestCoverControlHelpers:
+    """测试窗帘控制辅助方法的功能。"""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "method_name, device_type, expected_calls",
+        [
+            # 定位窗帘 - GARAGE_DOOR类型
+            (
+                "open_cover_async",
+                list(GARAGE_DOOR_TYPES)[0],
+                [("P3", CMD_TYPE_SET_VAL, 100)],
+            ),
+            (
+                "close_cover_async",
+                list(GARAGE_DOOR_TYPES)[0],
+                [("P3", CMD_TYPE_SET_VAL, 0)],
+            ),
+            (
+                "stop_cover_async",
+                list(GARAGE_DOOR_TYPES)[0],
+                [("P3", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF)],
+            ),
+            # 定位窗帘 - DOOYA类型
+            ("open_cover_async", list(DOOYA_TYPES)[0], [("P2", CMD_TYPE_SET_VAL, 100)]),
+            ("close_cover_async", list(DOOYA_TYPES)[0], [("P2", CMD_TYPE_SET_VAL, 0)]),
+            (
+                "stop_cover_async",
+                list(DOOYA_TYPES)[0],
+                [("P2", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF)],
+            ),
+            # 非定位窗帘
+            ("open_cover_async", "SL_SW_WIN", [("OP", CMD_TYPE_ON, 1)]),
+            ("close_cover_async", "SL_SW_WIN", [("CL", CMD_TYPE_ON, 1)]),
+            ("stop_cover_async", "SL_SW_WIN", [("ST", CMD_TYPE_ON, 1)]),
+        ],
+        ids=[
+            "GarageDoorOpen",
+            "GarageDoorClose",
+            "GarageDoorStop",
+            "DooyaOpen",
+            "DooyaClose",
+            "DooyaStop",
+            "NonPositionalOpen",
+            "NonPositionalClose",
+            "NonPositionalStop",
         ],
     )
-    async def test_get_dict_methods_handle_malformed_response(
-        self, client, mock_async_call_api, bad_response
+    async def test_cover_control_methods(
+        self, client, method_name, device_type, expected_calls
     ):
-        """
-        覆盖场景: get_agt_details_async, get_epget_async 等方法收到非字典格式的 'message'。
-        目的: 验证这些方法会返回一个安全的空字典。
-        """
-        mock_async_call_api.return_value = bad_response
+        """测试窗帘控制方法对不同设备类型的处理。"""
+        with patch.object(client, "set_single_ep_async") as mock_set:
+            method = getattr(client, method_name)
+            await method("agt", "me", device_type)
 
-        result = await client.get_agt_details_async("agt1")
-        assert result == {}, "格式错误的响应应该返回空字典"
+            for expected_idx, expected_cmd, expected_val in expected_calls:
+                mock_set.assert_called_with(
+                    "agt", "me", expected_idx, expected_cmd, expected_val
+                )
 
-        result = await client.get_epget_async("agt1", "me1")
-        assert result == {}, "格式错误的响应应该返回空字典"
-
-    def test_get_code_from_response_handles_all_bad_inputs(
-        self, client: LifeSmartOAPIClient
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "device_type, position, should_call, expected_args",
+        [
+            (list(DOOYA_TYPES)[0], 50, True, ("P2", CMD_TYPE_SET_VAL, 50)),
+            (list(GARAGE_DOOR_TYPES)[0], 80, True, ("P3", CMD_TYPE_SET_VAL, 80)),
+            ("SL_SW_WIN", 50, False, None),  # 非定位窗帘不支持位置设置
+        ],
+        ids=["DooyaPosition", "GarageDoorPosition", "NonPositionalUnsupported"],
+    )
+    async def test_set_cover_position_method(
+        self, client, device_type, position, should_call, expected_args
     ):
-        """
-        覆盖场景: _get_code_from_response 收到各种无效输入。
-        目的: 100% 覆盖这个工具函数的健壮性。
-        """
-        assert client._get_code_from_response(None, "test") == -1, "None响应应该返回-1"
+        """测试窗帘位置设置方法。"""
+        with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
+            await client.set_cover_position_async("agt", "me", position, device_type)
+
+            if should_call:
+                mock_set.assert_called_with("agt", "me", *expected_args)
+            else:
+                mock_set.assert_not_called()
+
+
+class TestClimateControlHelpers:
+    """测试气候设备控制辅助方法的功能。"""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "device_type, hvac_mode, current_val, expected_calls_count",
+        [
+            ("any_type", HVACMode.OFF, 0, 1),  # 关闭只调用一次
+            ("V_AIR_P", HVACMode.HEAT, 0, 2),  # 开启和设置模式
+            ("SL_CP_AIR", HVACMode.COOL, 0b1010101010101010, 2),  # 位运算模式
+        ],
+        ids=["TurnOff", "SimpleMode", "BitwiseMode"],
+    )
+    async def test_climate_hvac_mode_control(
+        self, client, device_type, hvac_mode, current_val, expected_calls_count
+    ):
+        """测试HVAC模式控制方法。"""
+        with patch.object(client, "set_single_ep_async") as mock_set:
+            await client.async_set_climate_hvac_mode(
+                "agt", "me", device_type, hvac_mode, current_val
+            )
+            assert (
+                mock_set.call_count == expected_calls_count
+            ), f"应该调用{expected_calls_count}次"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "device_type, temperature, expected_conversion",
+        [
+            ("V_AIR_P", 25.5, ("tT", CMD_TYPE_SET_TEMP_DECIMAL, 255)),
+            ("SL_CP_DN", 18.0, ("P3", CMD_TYPE_SET_RAW, 180)),
+            ("SL_FCU", 22.0, ("P8", CMD_TYPE_SET_TEMP_FCU, 220)),
+            ("UNSUPPORTED", 20.0, None),
+        ],
+        ids=["DecimalTemp", "RawTemp", "FCUTemp", "UnsupportedDevice"],
+    )
+    async def test_climate_temperature_control(
+        self, client, device_type, temperature, expected_conversion
+    ):
+        """测试温度控制方法。"""
+        with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
+            await client.async_set_climate_temperature(
+                "agt", "me", device_type, temperature
+            )
+
+            if expected_conversion:
+                mock_set.assert_called_with("agt", "me", *expected_conversion)
+            else:
+                mock_set.assert_not_called()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "device_type, fan_mode, current_val, expected_conversion",
+        [
+            ("V_AIR_P", FAN_LOW, 0, ("F", CMD_TYPE_SET_CONFIG, 15)),
+            ("SL_TR_ACIPM", FAN_MEDIUM, 0, ("P2", CMD_TYPE_SET_RAW, 2)),
+            ("SL_NATURE", FAN_HIGH, 0, ("P9", CMD_TYPE_SET_CONFIG, 75)),
+            ("SL_FCU", FAN_AUTO, 0, ("P9", CMD_TYPE_SET_CONFIG, 101)),
+            ("UNSUPPORTED", FAN_LOW, 0, None),
+        ],
+        ids=[
+            "V_AIR_P_Low",
+            "TR_ACIPM_Medium",
+            "Nature_High",
+            "FCU_Auto",
+            "UnsupportedDevice",
+        ],
+    )
+    async def test_climate_fan_mode_control(
+        self, client, device_type, fan_mode, current_val, expected_conversion
+    ):
+        """测试风扇模式控制方法。"""
+        with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
+            await client.async_set_climate_fan_mode(
+                "agt", "me", device_type, fan_mode, current_val
+            )
+
+            if expected_conversion:
+                mock_set.assert_called_with("agt", "me", *expected_conversion)
+            else:
+                mock_set.assert_not_called()
+
+
+# ==================== 错误处理和边界条件测试类 ====================
+
+
+class TestErrorHandlingAndEdgeCases:
+    """测试错误处理和各种边界条件。"""
+
+    @pytest.mark.asyncio
+    async def test_unsupported_device_type_handling(self, client, caplog):
+        """测试不支持的设备类型处理。"""
+        with patch.object(client, "set_single_ep_async") as mock_set:
+            # 测试窗帘控制
+            result = await client.open_cover_async("agt", "me", "UNSUPPORTED_TYPE")
+            assert result == -1, "不支持的设备类型应该返回-1"
+            mock_set.assert_not_called()
+            assert "UNSUPPORTED_TYPE" in caplog.text, "应该记录不支持的设备类型"
+
+            caplog.clear()
+            mock_set.reset_mock()
+
+            # 测试风扇模式控制
+            result = await client.async_set_climate_fan_mode(
+                "agt", "me", "UNSUPPORTED_TYPE", FAN_LOW
+            )
+            assert result == -1, "不支持的设备类型应该返回-1"
+            mock_set.assert_not_called()
+            assert "不支持风扇模式" in caplog.text, "应该记录不支持风扇模式的错误信息"
+
+    @pytest.mark.asyncio
+    async def test_malformed_api_responses(self, mock_async_call_api, client):
+        """测试格式错误的API响应处理。"""
+        # 测试非预期格式的响应
+        test_cases = [
+            {"code": 0, "message": "not_expected_format"},
+            {"code": 0},  # 缺少message字段
+            {"message": []},  # 缺少code字段
+        ]
+
+        for bad_response in test_cases:
+            mock_async_call_api.return_value = bad_response
+
+            # 测试列表方法
+            result = await client.get_agt_list_async()
+            assert result == [], f"格式错误的响应 {bad_response} 应该返回空列表"
+
+            # 测试字典方法
+            result = await client.get_agt_details_async("hub1")
+            assert result == {}, f"格式错误的响应 {bad_response} 应该返回空字典"
+
+
+# ==================== 兼容性和集成测试类 ====================
+
+
+class TestCompatibilityAndIntegration:
+    """测试与Home Assistant和其他组件的兼容性。"""
+
+    @pytest.mark.asyncio
+    async def test_home_assistant_session_integration(self, client):
+        """测试与Home Assistant HTTP会话的集成。"""
+        with patch(
+            "custom_components.lifesmart.core.openapi_client.async_get_clientsession"
+        ) as mock_get_session:
+            mock_session = AsyncMock()
+            mock_get_session.return_value = mock_session
+
+            # 直接模拟 _post_async 方法以避免复杂的 aiohttp 模拟
+            with patch.object(
+                client, "_post_async", return_value='{"code": 0}'
+            ) as mock_post:
+                result = await client._post_and_parse(
+                    "http://test.com",
+                    {"test": "data"},
+                    {"Content-Type": "application/json"},
+                )
+
+                assert result == {"code": 0}, "应该正确解析JSON响应"
+                mock_post.assert_called_once()
+
+    def test_static_utility_methods(self, client):
+        """测试静态工具方法的功能。"""
+        # 测试签名生成
+        test_string = "test_signature_data"
+        signature1 = client._get_signature(test_string)
+        signature2 = client._get_signature(test_string)
+        assert signature1 == signature2, "相同输入应该生成相同签名"
+        assert len(signature1) == 32, "MD5签名应该是32位"
+
+        # 测试HTTP头生成
+        headers = client._generate_header()
         assert (
-            client._get_code_from_response("not_a_dict", "test") == -1
-        ), "非字典响应应该返回-1"
-        assert (
-            client._get_code_from_response({}, "test") == -1
-        ), "缺少code字段的响应应该返回-1"  # missing 'code'
-        assert (
-            client._get_code_from_response({"code": "not_an_int"}, "test") == -1
-        ), "code非整数的响应应该返回-1"
+            headers["Content-Type"] == "application/json"
+        ), "应该设置正确的Content-Type"

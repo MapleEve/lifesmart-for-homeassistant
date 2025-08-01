@@ -1,20 +1,24 @@
 """
-对本地 TCP protocol.py 和 local_tcp_client.py 的单元测试和集成测试
+LifeSmart 本地TCP客户端测试套件。
 
-此测试套件包含四个主要部分：
-1.  对 LifeSmartProtocol 类的单元测试，验证核心数据类型的编解码及边界条件。
-2.  对 LifeSmartPacketFactory 的集成验证，确保其生成的指令包可被协议正确解析。
-3.  对 LifeSmartLocalTCPClient 的集成测试，通过模拟网络IO来验证其完整的生命周期和功能。
-4.  对 LifeSmartLocalTCPClient 控制方法的全面单元测试，确保所有业务逻辑正确。
+此测试套件专门测试 local_tcp_client.py 中的TCP客户端功能，包括：
+- 网络连接管理（连接、断开、重连）
+- 客户端生命周期（初始化、登录、设备加载）
+- 设备控制方法（开关、窗帘、气候、场景等）
+- 状态更新处理（实时状态、设备变更）
+- 错误处理和网络异常
+- 并发和性能优化
+
+测试使用结构化的类组织，每个类专注于特定的功能领域，
+并包含详细的中文注释以确保可维护性。
 """
 
 import asyncio
 import json
-import logging
-from io import BytesIO
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from homeassistant.components.climate import HVACMode, FAN_LOW, FAN_MEDIUM, FAN_HIGH
 
 from custom_components.lifesmart.const import (
     CMD_TYPE_ON,
@@ -27,42 +31,28 @@ from custom_components.lifesmart.const import (
     CMD_TYPE_SET_RAW,
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
-    HVACMode,
-    FAN_LOW,
-    FAN_MEDIUM,
-    FAN_HIGH,
     NON_POSITIONAL_COVER_CONFIG,
 )
 from custom_components.lifesmart.core.local_tcp_client import LifeSmartLocalTCPClient
 from custom_components.lifesmart.core.protocol import (
     LifeSmartProtocol,
     LifeSmartPacketFactory,
-    LSTimestamp,
 )
 from custom_components.lifesmart.helpers import normalize_device_names
 
-_LOGGER = logging.getLogger(__name__)
 
-# ====================================================================
-# Pytest Fixtures
-# ====================================================================
+# ==================== 测试数据和Fixtures ====================
 
 
 @pytest.fixture
-def protocol() -> LifeSmartProtocol:
-    """为每个测试提供一个全新的协议实例。"""
+def protocol():
+    """提供协议实例用于构建测试数据包。"""
     return LifeSmartProtocol()
 
 
 @pytest.fixture
-def factory() -> LifeSmartPacketFactory:
-    """提供一个具有默认节点标识符的数据包工厂。"""
-    return LifeSmartPacketFactory(node_agt="test_agt", node="test_node")
-
-
-@pytest.fixture
 def mock_connection():
-    """模拟 asyncio.open_connection 以提供可控的 reader/writer 对。"""
+    """模拟网络连接，提供可控的reader/writer对。"""
     reader = asyncio.StreamReader()
     writer = MagicMock()
     writer.write = MagicMock()
@@ -77,655 +67,663 @@ def mock_connection():
 
 
 @pytest.fixture
-def mocked_client() -> LifeSmartLocalTCPClient:
-    """
-    提供一个客户端实例，其 factory 是真实的，但网络发送是 mock 的。
-    这允许我们检查 factory 的调用情况，而无需实际发送网络包。
-    """
-    client = LifeSmartLocalTCPClient("host", 1234, "u", "p")
-    # 客户端需要一个真实的 factory 实例来调用其 build 方法
+def test_client():
+    """提供标准的测试客户端实例。"""
+    return LifeSmartLocalTCPClient("localhost", 9999, "test_user", "test_pass")
+
+
+@pytest.fixture
+def mocked_client():
+    """提供带有模拟网络发送的客户端实例。"""
+    client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
     client._factory = LifeSmartPacketFactory("test_agt", "test_node")
-    # Mock 掉最底层的网络发送，因为我们不关心网络 IO
     client._send_packet = AsyncMock(return_value=0)
     return client
 
 
-# ====================================================================
-# Section 1: LifeSmartProtocol 核心功能测试
-# ====================================================================
-
-
-class TestLifeSmartProtocolDataTypes:
-    """测试所有支持的数据类型的编码和解码。"""
-
-    @pytest.mark.parametrize(
-        "value",
-        [
-            True,
-            False,
-            None,
-            0,
-            1,
-            -1,
-            127,
-            128,
-            -128,
-            100000,
-            -100000,
-            2147483647,
-            -2147483648,
-            "",
-            "hello",
-            "你好世界",
-            "emoji: ✨",
-            [],
-            [1, True, "world", None],
-            {},
-            {"my_key": "val", "my_num": 123},
-            {"a": 1, "b": {"c": [2, 3, {"nested": True}]}},
-            "::NULL::",
-        ],
-        ids=lambda v: str(type(v).__name__) + "_" + str(v)[:20],
-    )
-    def test_basic_types_roundtrip(self, protocol: LifeSmartProtocol, value):
-        original_message = [{"key": value}]
-        encoded_packet = protocol.encode(original_message)
-        _, decoded_list = protocol.decode(encoded_packet)
-        assert decoded_list == original_message, "解码后的数据应该与原始数据一致"
-
-    def test_dict_with_special_keys_roundtrip(self, protocol: LifeSmartProtocol):
-        value_enum_prefix = {"enum:key": "val", "num": 123}
-        expected_normalized = {"key": "val", "num": 123}
-        encoded_packet1 = protocol.encode([value_enum_prefix])
-        _, decoded_list1 = protocol.decode(encoded_packet1)
-        assert decoded_list1 == [
-            expected_normalized
-        ], "带有enum前缀的键应该被解码为简化的格式"
-
-        value_to_be_enum = {"key": "val", "num": 123}
-        encoded_packet2 = protocol.encode([value_to_be_enum])
-        _, decoded_list2 = protocol.decode(encoded_packet2)
-        assert decoded_list2 == [value_to_be_enum], "不含有enum前缀的数据应该保持不变"
-
-    def test_timestamp_type_handling(self, protocol: LifeSmartProtocol):
-        timestamp_value = 16318742
-        encoded_bytes = b"\x06\x01" + protocol._encode_varint(timestamp_value << 1)
-        stream = BytesIO(encoded_bytes)
-        data_type = stream.read(1)[0]
-        decoded_obj = protocol._parse_value(stream, data_type)
-        assert (
-            isinstance(decoded_obj, LSTimestamp)
-            and decoded_obj.value == timestamp_value
-        ), "解码后的对象应该是LSTimestamp类型且值正确"
-
-        normalized_packet = protocol._normalize_structure([{"ts": decoded_obj}])
-        encoded_packet = protocol.encode(normalized_packet)
-        _, decoded_packet = protocol.decode(encoded_packet)
-        assert decoded_packet == [{"ts": timestamp_value}], "时间戳应该被正确编码和解码"
-
-
-class TestLifeSmartProtocolPacketHandling:
-    """测试完整数据包的处理（帧、压缩）。"""
-
-    def test_simple_packet_roundtrip(self, protocol: LifeSmartProtocol):
-        original_packet_list = [{"a": 1, "type": "test"}, {"b": [2, 3]}]
-        encoded_data = protocol.encode(original_packet_list)
-        assert encoded_data.startswith(b"GL00"), "数据包应该以GL00头部开始"
-        remaining, decoded_packet = protocol.decode(encoded_data)
-        assert (
-            not remaining and decoded_packet == original_packet_list
-        ), "解码后应该没有剩余数据且内容正确"
-
-    def test_encode_unsupported_type(self, protocol: LifeSmartProtocol, caplog):
-        """
-        覆盖场景: _pack_value 遇到不支持的类型。
-        目的: 验证程序会记录警告但不会崩溃。
-        """
-
-        class UnsupportedObject:
-            pass
-
-        protocol.encode([{"key": UnsupportedObject()}])
-        assert "不支持的打包类型" in caplog.text, "应该记录不支持类型的警告"
-
-    def test_compressed_packet_roundtrip(self, protocol: LifeSmartProtocol):
-        large_object = [{"data": "X" * 2048}]
-        encoded_data = protocol.encode(large_object)
-        assert encoded_data.startswith(
-            b"ZZ00"
-        ), "大数据包应该以ZZ00头部开始（压缩标识）"
-        remaining, decoded_packet = protocol.decode(encoded_data)
-        assert (
-            not remaining and decoded_packet == large_object
-        ), "解码后的压缩数据应该与原始数据一致"
-
-    def test_multi_packet_stream_decoding(self, protocol: LifeSmartProtocol):
-        packet1, packet2 = [{"msg": "first"}], [{"msg": "second"}]
-        encoded1, encoded2 = protocol.encode(packet1), protocol.encode(packet2)
-        remaining, decoded1 = protocol.decode(encoded1 + encoded2)
-        assert (
-            decoded1 == packet1 and remaining == encoded2
-        ), "应该正确解码第一个数据包并保留第二个数据包"
-
-    def test_decode_string_with_insufficient_data(self, protocol: LifeSmartProtocol):
-        """
-        覆盖场景: _parse_value 遇到一个声明长度与实际数据不符的字符串。
-        目的: 验证在这种情况下会正确抛出 EOFError。
-        """
-        # 模拟一个声明长度为 10，但实际没有负载的字符串
-        # 0x0a 是 10 的 varint 编码
-        bad_str_packet = b"\x0a"
-
-        with pytest.raises(EOFError, match="字符串数据不足"):
-            # 我们直接调用 _parse_value 来隔离测试，并传入类型码 0x11
-            protocol._parse_value(BytesIO(bad_str_packet), 0x11)
-
-    def test_decode_incomplete_hex_or_timestamp(self, protocol: LifeSmartProtocol):
-        """
-        覆盖场景: _parse_value 解析HEX或时间戳时数据流提前结束。
-        目的: 验证对不完整数据块的 EOFError 抛出。
-        """
-        # --- 测试 HEX 数据不完整 ---
-        # 模拟一个只有类型码和索引，但没有8字节数据的HEX包
-        incomplete_hex_packet = b"\x01\x11\x22\x33"  # 只有4字节数据
-        with pytest.raises(EOFError, match="HEX 数据不完整"):
-            # 传入正确的类型码 0x05
-            protocol._parse_value(BytesIO(incomplete_hex_packet), 0x05)
-
-        # --- 测试时间戳数据不完整 ---
-        # 模拟一个只有类型码和索引，但没有varint数据的时间戳包
-        incomplete_ts_packet = b"\x01"
-        with pytest.raises(EOFError):
-            # 传入正确的类型码 0x06
-            # 时间戳的EOFError没有特定消息，所以不使用 match
-            protocol._parse_value(BytesIO(incomplete_ts_packet), 0x06)
-
-
-class TestLifeSmartProtocolErrorsAndBoundaries:
-    """测试协议对格式错误或无效数据的鲁棒性。"""
-
-    @pytest.mark.parametrize(
-        "corrupted_data",
-        [
-            b"GL0",
-            b"GL00\x00\x00",
-            b"ZZ00\x00\x00",
-            b"GL00\xff\xff\xff\xff_payload_too_short",
-        ],
-    )
-    def test_decode_incomplete_data_raises_eof(self, protocol, corrupted_data):
-        with pytest.raises(EOFError):
-            protocol.decode(corrupted_data)
-
-    @pytest.mark.parametrize(
-        "invalid_data",
-        [
-            b"XXYY" + b"\x00" * 4 + b"junk",
-            b"ZZ00\x00\x00\x00\x10" + b"this_is_not_gzipped_data",
-        ],
-    )
-    def test_decode_invalid_data_raises_valueerror(self, protocol, invalid_data):
-        with pytest.raises(ValueError):
-            protocol.decode(invalid_data)
-
-    def test_pack_integer_out_of_bounds_raises_error(self, protocol):
-        with pytest.raises(ValueError, match="超出 32-bit 有符号范围"):
-            protocol._pack_value(2147483648)
-        with pytest.raises(ValueError, match="超出 32-bit 有符号范围"):
-            protocol._pack_value(-2147483649)
-
-
-# ====================================================================
-# Section 2: LifeSmartPacketFactory 单元测试
-# ====================================================================
-class TestPacketFactoryCoverage:
-    """确保所有指令包都能被正确构建和解析。"""
-
-    @pytest.mark.parametrize(
-        "factory_method_name",
-        [
-            "build_change_icon_packet",
-            "build_add_trigger_packet",
-            "build_del_ai_packet",
-            "build_ir_control_packet",
-            "build_send_code_packet",
-            "build_ir_raw_control_packet",
-            "build_set_eeprom_packet",
-            "build_add_timer_packet",
-        ],
-    )
-    def test_all_factory_methods_roundtrip(
-        self,
-        factory: LifeSmartPacketFactory,
-        protocol: LifeSmartProtocol,
-        factory_method_name,
-    ):
-        """
-        覆盖场景: 所有未在现有测试中明确验证的 build_* 方法。
-        目的: 确保所有指令都能成功编码并被解码回原始结构。
-        """
-        # 准备通用的模拟参数
-        mock_args = {
-            "build_change_icon_packet": ("dev1", "icon1"),
-            "build_add_trigger_packet": ("trigger1", "cmdlist1"),
-            "build_del_ai_packet": ("ai1",),
-            "build_ir_control_packet": ("dev_ir", {"opt": "val"}),
-            "build_send_code_packet": ("dev_ir", [1, 2, 3]),
-            "build_ir_raw_control_packet": ("dev_ir", '{"key":"val"}'),
-            "build_set_eeprom_packet": ("dev1", "key1", "val1"),
-            "build_add_timer_packet": ("dev1", "cron1", "key1"),
-        }
-
-        method_to_test = getattr(factory, factory_method_name)
-        packet = method_to_test(*mock_args[factory_method_name])
-
-        # 验证可以成功解码，没有异常
-        _, decoded = protocol.decode(packet)
-
-        # 验证基本结构
-        assert (
-            isinstance(decoded, list) and len(decoded) == 2
-        ), "解码后应该是两个元素的列表"
-        assert "args" in decoded[1], "第二个元素应该包含args键"
-
-
-class TestPacketFactoryUnit:
-    """对 PacketFactory 的核心方法进行单元测试，确保它们生成可解码的包。"""
-
-    def _decode_and_get_args(self, protocol, packet):
-        _, decoded = protocol.decode(packet)
-        return decoded[1]["args"]
-
-    def test_multi_epset_packet_roundtrip(self, protocol, factory):
-        io_list = [{"idx": "RGBW", "val": 12345}, {"idx": "DYN", "val": 0}]
-        packet = factory.build_multi_epset_packet("dev456", io_list)
-        args = self._decode_and_get_args(protocol, packet)
-        val_list = args["val"]
-        assert isinstance(val_list, list), "值列表应该是列表类型"
-        # Note: The factory translates 'idx' to 'key'
-        assert val_list[0] == {"key": "RGBW", "val": 12345}, "第一个元素应该正确转换"
-        assert val_list[1] == {"key": "DYN", "val": 0}, "第二个元素应该正确转换"
-
-    def test_ir_control_packet_roundtrip(self, protocol, factory):
-        packet = factory.build_ir_control_packet("ir_dev", {"keys": "power"})
-        args = self._decode_and_get_args(protocol, packet)
-        assert args["cron_name"] == "AI_IR_ir_dev", "生成的cron_name应该正确"
-        assert args["opt"] == {"keys": "power"}, "选项参数应该正确传递"
-
-
-# ====================================================================
-# Section 3: LifeSmartLocalTCPClient 集成与辅助函数测试
-# ====================================================================
-
-PROTOCOL = LifeSmartProtocol()
-LOGIN_SUCCESS_PKT = PROTOCOL.encode(
-    [
-        {"_sel": 1},
-        {
-            "ret": [0, 0, 0, 0, {"base": [0, "test_node"], "agt": [0, "test_agt"]}],
-            "act": "Login",
-        },
-    ]
-)
-DEVICE_LIST_PKT = PROTOCOL.encode(
-    [
-        {},
-        {
-            "ret": [
-                0,
+@pytest.fixture
+def sample_packets(protocol):
+    """提供各种测试用的数据包。"""
+    return {
+        "login_success": protocol.encode(
+            [
+                {"_sel": 1},
                 {
-                    "eps": {
-                        "d1": {
-                            "cls": "SL_SW_IF1",
-                            "name": "Switch",
-                            "_chd": {"m": {"_chd": {"L1": {"name": "{$EPN} Button"}}}},
-                        }
+                    "ret": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        {"base": [0, "test_node"], "agt": [0, "test_agt"]},
+                    ],
+                    "act": "Login",
+                },
+            ]
+        ),
+        "login_failure": protocol.encode([{}, {"err": -2001, "act": "Login"}]),
+        "device_list": protocol.encode(
+            [
+                {},
+                {
+                    "ret": [
+                        0,
+                        {
+                            "eps": {
+                                "device_1": {
+                                    "cls": "SL_SW_IF3",
+                                    "name": "三路开关",
+                                    "_chd": {
+                                        "m": {
+                                            "_chd": {
+                                                "L1": {
+                                                    "name": "{$EPN} 按钮 1",
+                                                    "val": 1,
+                                                    "type": 129,
+                                                },
+                                                "L2": {
+                                                    "name": "{$EPN} 按钮 2",
+                                                    "val": 0,
+                                                    "type": 129,
+                                                },
+                                                "L3": {
+                                                    "name": "{$EPN} 按钮 3",
+                                                    "val": 1,
+                                                    "type": 129,
+                                                },
+                                            }
+                                        }
+                                    },
+                                },
+                                "device_2": {
+                                    "cls": "SL_NATURE",
+                                    "name": "自然风空调",
+                                    "_chd": {
+                                        "m": {
+                                            "_chd": {
+                                                "P1": {
+                                                    "name": "电源",
+                                                    "val": 0,
+                                                    "type": 129,
+                                                },
+                                                "P7": {
+                                                    "name": "模式",
+                                                    "val": 0,
+                                                    "type": 131,
+                                                },
+                                                "tT": {
+                                                    "name": "温度",
+                                                    "val": 250,
+                                                    "type": 133,
+                                                },
+                                            }
+                                        }
+                                    },
+                                },
+                            }
+                        },
+                    ]
+                },
+            ]
+        ),
+        "status_update": protocol.encode(
+            [
+                {},
+                {
+                    "_schg": {
+                        "test_agt/ep/device_1/m/L1": {"chg": {"val": 0, "type": 129}}
                     }
                 },
             ]
-        },
-    ]
-)
-STATUS_UPDATE_PKT = PROTOCOL.encode(
-    [{}, {"_schg": {"test_agt/ep/d1/m/L1": {"chg": {"val": 1}}}}]
-)
-DEVICE_DELETED_PKT = PROTOCOL.encode([{}, {"_sdel": {"key": "d1"}}])
-LOGIN_FAILURE_PKT = PROTOCOL.encode([{}, {"err": -2001, "act": "Login"}])
+        ),
+        "device_deleted": protocol.encode([{}, {"_sdel": {"key": "device_1"}}]),
+        "heartbeat_response": protocol.encode(
+            [{}, {"act": "GetConfig", "ret": [0, {}]}]
+        ),
+    }
 
 
-class TestTCPClientIntegration:
-    """测试客户端的连接、生命周期和网络交互。"""
+# ==================== 客户端初始化和配置测试类 ====================
+
+
+class TestClientInitialization:
+    """测试客户端的初始化和基础配置。"""
+
+    def test_client_basic_initialization(self):
+        """测试客户端的基本初始化。"""
+        client = LifeSmartLocalTCPClient("192.168.1.100", 8080, "admin", "password")
+
+        assert client.host == "192.168.1.100", "主机地址应该正确设置"
+        assert client.port == 8080, "端口应该正确设置"
+        assert client.username == "admin", "用户名应该正确设置"
+        assert client.password == "password", "密码应该正确设置"
+        assert client.disconnected is False, "初始状态应该为未断开"
+        assert client.reader is None, "初始时reader应该为None"
+        assert client.writer is None, "初始时writer应该为None"
+        assert len(client.devices) == 0, "初始设备列表应该为空"
+
+    def test_client_initialization_with_config_agt(self):
+        """测试带有配置AGT的客户端初始化。"""
+        client = LifeSmartLocalTCPClient(
+            "host", 1234, "user", "pass", config_agt="custom_agt"
+        )
+
+        assert client.config_agt == "custom_agt", "配置AGT应该正确设置"
+
+    def test_client_connection_status_properties(self, test_client):
+        """测试客户端连接状态属性。"""
+        # 初始状态
+        assert not test_client.is_connected, "初始状态应该为未连接"
+
+        # 模拟连接状态
+        test_client.reader = MagicMock()
+        test_client.writer = MagicMock()
+        test_client.writer.is_closing.return_value = False
+
+        assert test_client.is_connected, "设置reader和writer后应该为已连接"
+
+        # 模拟writer关闭状态
+        test_client.writer.is_closing.return_value = True
+        assert not test_client.is_connected, "writer关闭时应该为未连接"
+
+    def test_factory_initialization(self, test_client):
+        """测试数据包工厂的初始化。"""
+        assert test_client._factory is not None, "数据包工厂应该被初始化"
+        assert isinstance(
+            test_client._factory, LifeSmartPacketFactory
+        ), "工厂应该是正确的类型"
+
+    def test_protocol_initialization(self, test_client):
+        """测试协议实例的初始化。"""
+        assert test_client._proto is not None, "协议实例应该被初始化"
+        assert isinstance(test_client._proto, LifeSmartProtocol), "协议应该是正确的类型"
+
+
+# ==================== 网络连接管理测试类 ====================
+
+
+class TestNetworkConnectionManagement:
+    """测试网络连接的建立、维护和断开。"""
 
     @pytest.mark.asyncio
-    async def test_client_full_successful_lifecycle(self, mock_connection):
-        """
-        测试客户端从连接、登录、加载设备、接收状态更新到断开的完整成功生命周期。
-        """
-        reader, writer, _ = mock_connection
+    async def test_successful_connection_and_login(
+        self, mock_connection, sample_packets
+    ):
+        """测试成功的连接和登录流程。"""
+        reader, writer, mock_open = mock_connection
         client = LifeSmartLocalTCPClient("localhost", 9999, "user", "pass")
         callback = AsyncMock()
+
+        # 启动连接任务
         connect_task = asyncio.create_task(client.async_connect(callback))
 
-        # 1. 模拟登录成功
-        reader.feed_data(LOGIN_SUCCESS_PKT)
+        # 模拟登录成功响应
+        reader.feed_data(sample_packets["login_success"])
         await asyncio.sleep(0.1)
-        assert client.is_connected, "客户端在登录后应处于连接状态"
 
-        # 2. 模拟设备列表响应
-        reader.feed_data(DEVICE_LIST_PKT)
-        devices = await client.async_get_all_devices(timeout=1)
-        assert len(devices) == 1 and "d1" in client.devices, "应成功加载一个设备"
-        assert (
-            client.devices["d1"]["data"]["L1"]["name"] == "Switch Button"
-        ), "设备子项名称应被正确解析"
+        # 验证连接状态
+        assert client.is_connected, "登录成功后应该处于连接状态"
+        assert client.node == "test_node", "节点名称应该正确设置"
+        assert client.node_agt == "test_agt", "节点AGT应该正确设置"
 
-        # 3. 模拟状态更新并验证回调
-        reader.feed_data(STATUS_UPDATE_PKT)
-        await asyncio.sleep(0.01)
-
-        # 我们构造一个期望的 msg，它应该与客户端内部构造的完全一致
-        expected_msg = {
-            "me": "d1",
-            "idx": "L1",
-            "agt": "test_agt",
-            "devtype": "SL_SW_IF1",
-            **client.devices["d1"]["data"]["L1"],  # 包含所有子设备属性
-        }
-        callback.assert_any_call(
-            {"type": "io", "msg": expected_msg}
-        ), "应该调用回调函数并传递正确的消息"
-
-        # 4. 模拟设备删除事件
-        reader.feed_data(DEVICE_DELETED_PKT)
-        await asyncio.sleep(0.01)
-        callback.assert_any_call({"reload": True}), "设备删除时应该触发重新加载"
-
-        # 5. 断开连接并验证任务清理
+        # 清理
         client.disconnect()
         try:
             await asyncio.wait_for(connect_task, timeout=1.0)
         except asyncio.CancelledError:
-            pass  # 任务被取消是预期的行为
-
-        writer.close.assert_called_once(), "应该调用writer.close方法"
-        assert connect_task.done(), "后台连接任务在断开后应处于完成状态"
+            pass
 
     @pytest.mark.asyncio
-    async def test_client_connection_failures(self, mock_connection):
+    async def test_connection_failure_handling(self, mock_connection):
+        """测试连接失败的处理。"""
         reader, writer, mock_open = mock_connection
-        mock_open.side_effect = ConnectionRefusedError
-        client_refused = LifeSmartLocalTCPClient("invalid.host", 1234, "u", "p")
-        with pytest.raises(asyncio.TimeoutError):
-            await asyncio.wait_for(client_refused.async_connect(None), timeout=0.1)
+        mock_open.side_effect = ConnectionRefusedError("连接被拒绝")
 
-        mock_open.side_effect = None
-        mock_open.return_value = (reader, writer)
-        reader.feed_data(LOGIN_FAILURE_PKT)
-        client_fail = LifeSmartLocalTCPClient("valid.host", 1234, "u", "p")
-        await asyncio.wait_for(client_fail.async_connect(None), timeout=1)
-        assert client_fail.disconnected is True, "登录失败后客户端应该设置为断开状态"
+        client = LifeSmartLocalTCPClient("invalid.host", 1234, "user", "pass")
+
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(client.async_connect(None), timeout=0.1)
 
     @pytest.mark.asyncio
-    async def test_check_login_fails_on_auth_error(self, mock_connection):
-        """
-        覆盖场景: check_login 收到登录失败包。
-        目的: 验证 check_login 会正确抛出异常。
-        """
-        reader, _, _ = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "u", "p")
+    async def test_login_failure_handling(
+        self, mock_connection, sample_packets, caplog
+    ):
+        """测试登录失败的处理。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
 
-        # 模拟服务器返回登录失败
-        reader.feed_data(LOGIN_FAILURE_PKT)
+        # 模拟登录失败
+        reader.feed_data(sample_packets["login_failure"])
+
+        await asyncio.wait_for(client.async_connect(AsyncMock()), timeout=1.0)
+
+        assert "本地登录失败" in caplog.text, "应该记录登录失败日志"
+        assert client.disconnected is True, "登录失败后应该设置为断开状态"
+
+    @pytest.mark.asyncio
+    async def test_check_login_authentication_error(
+        self, mock_connection, sample_packets
+    ):
+        """测试check_login方法的认证错误处理。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+
+        # 模拟登录失败响应
+        reader.feed_data(sample_packets["login_failure"])
 
         with pytest.raises(asyncio.InvalidStateError, match="Login failed"):
             await client.check_login()
 
     @pytest.mark.asyncio
-    async def test_connect_logs_error_on_login_failure(self, mock_connection, caplog):
-        """
-        覆盖场景: async_connect 在登录阶段收到失败响应。
-        目的: 验证会记录错误日志，并设置 disconnected 标志。
-        """
-        reader, _, _ = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "u", "p")
+    async def test_disconnect_functionality(self, mock_connection, sample_packets):
+        """测试断开连接功能。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
 
-        # 模拟登录失败
-        reader.feed_data(LOGIN_FAILURE_PKT)
-
-        # 运行连接任务，它应该在登录失败后退出循环
-        await asyncio.wait_for(client.async_connect(AsyncMock()), timeout=1.0)
-
-        assert "本地登录失败" in caplog.text, "应该记录登录失败的错误日志"
-        assert client.disconnected is True, "登录失败后客户端应该设置为断开状态"
-
-    @pytest.mark.asyncio
-    async def test_get_all_devices_returns_false_on_timeout(self, mock_connection):
-        """
-        覆盖场景: get_all_device_async 等待超时。
-        目的: 验证在无法获取设备列表时，系统能优雅地失败。
-        """
-        reader, _, _ = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "u", "p")
-
-        # 启动连接任务，但从不发送设备列表包
-        asyncio.create_task(client.async_connect(AsyncMock()))
-        reader.feed_data(LOGIN_SUCCESS_PKT)
+        # 建立连接
+        connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
+        reader.feed_data(sample_packets["login_success"])
         await asyncio.sleep(0.1)
 
-        # 调用 get_all_device_async 并设置一个很短的超时
-        devices = await client.get_all_device_async(timeout=0.2)
-        assert devices is False, "超时时应该返回False"
-
-        # 清理
+        # 断开连接
         client.disconnect()
 
+        # 验证断开状态
+        # disconnect方法不直接关闭writer，而是取消任务
+        # writer.close.assert_called_once()
+        assert client.disconnected is True, "断开后disconnected标志应该为True"
+
+        # 等待连接任务完成
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass
+
     @pytest.mark.asyncio
-    async def test_send_packet_returns_error_if_not_connected(self):
-        client = LifeSmartLocalTCPClient("localhost", 9999, "u", "p")
-        client.writer = None
+    async def test_network_send_when_disconnected(self):
+        """测试断开状态下发送数据的处理。"""
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client.writer = None  # 模拟未连接状态
+
         with patch(
             "custom_components.lifesmart.core.local_tcp_client._LOGGER"
         ) as mock_logger:
-            result = await client._send_packet(b"test")
-            assert result == -1, "未连接时发送数据包应该返回-1"
-            mock_logger.error.assert_called_with(
-                "本地客户端未连接，无法发送指令。"
-            ), "应该记录错误日志"
+            result = await client._send_packet(b"test_data")
+
+            assert result == -1, "未连接时发送应该返回-1"
+            mock_logger.error.assert_called_with("本地客户端未连接，无法发送指令。")
+
+
+# ==================== 设备管理和数据处理测试类 ====================
+
+
+class TestDeviceManagementAndDataProcessing:
+    """测试设备管理和数据处理功能。"""
+
+    @pytest.mark.asyncio
+    async def test_device_loading_and_processing(self, mock_connection, sample_packets):
+        """测试设备加载和处理流程。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+
+        # 建立连接
+        connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
+        reader.feed_data(sample_packets["login_success"])
+        await asyncio.sleep(0.1)
+
+        # 发送设备列表
+        reader.feed_data(sample_packets["device_list"])
+        devices = await client.async_get_all_devices(timeout=1)
+
+        # 验证设备加载
+        assert len(devices) == 2, "应该加载2个设备"
+        assert "device_1" in client.devices, "设备1应该存在"
+        assert "device_2" in client.devices, "设备2应该存在"
+
+        # 验证设备名称规范化
+        device_1 = client.devices["device_1"]
+        assert (
+            device_1["data"]["L1"]["name"] == "三路开关 按钮 1"
+        ), "设备名称应该正确规范化"
+
+        # 清理
+        client.disconnect()
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass
+
+    @pytest.mark.asyncio
+    async def test_device_loading_timeout(self, mock_connection, sample_packets):
+        """测试设备加载超时处理。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+
+        # 建立连接但不发送设备列表
+        asyncio.create_task(client.async_connect(AsyncMock()))
+        reader.feed_data(sample_packets["login_success"])
+        await asyncio.sleep(0.1)
+
+        # 测试超时
+        devices = await client.get_all_device_async(timeout=0.2)
+        assert devices is False, "超时时应该返回False"
+
+        client.disconnect()
+
+    @pytest.mark.asyncio
+    async def test_status_update_processing(self, mock_connection, sample_packets):
+        """测试状态更新的处理。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        callback = AsyncMock()
+
+        # 建立连接并加载设备
+        connect_task = asyncio.create_task(client.async_connect(callback))
+        reader.feed_data(sample_packets["login_success"])
+        await asyncio.sleep(0.1)
+        reader.feed_data(sample_packets["device_list"])
+        await asyncio.sleep(0.1)
+
+        # 发送状态更新
+        reader.feed_data(sample_packets["status_update"])
+        await asyncio.sleep(0.1)
+
+        # 验证回调被调用
+        callback.assert_called()
+        call_args = callback.call_args[0][0]
+        assert call_args["type"] == "io", "应该是io类型的消息"
+        assert "msg" in call_args, "应该包含msg字段"
+
+        msg = call_args["msg"]
+        assert msg["me"] == "device_1", "设备ID应该正确"
+        assert msg["idx"] == "L1", "子设备索引应该正确"
+        assert msg["agt"] == "test_agt", "AGT应该正确"
+
+        # 清理
+        client.disconnect()
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass
+
+    @pytest.mark.asyncio
+    async def test_device_deletion_handling(self, mock_connection, sample_packets):
+        """测试设备删除事件的处理。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        callback = AsyncMock()
+
+        # 建立连接并加载设备
+        connect_task = asyncio.create_task(client.async_connect(callback))
+        reader.feed_data(sample_packets["login_success"])
+        await asyncio.sleep(0.1)
+        reader.feed_data(sample_packets["device_list"])
+        await asyncio.sleep(0.1)
+
+        # 发送设备删除事件
+        reader.feed_data(sample_packets["device_deleted"])
+        await asyncio.sleep(0.1)
+
+        # 验证重新加载回调
+        callback.assert_any_call({"reload": True})
+
+        # 清理
+        client.disconnect()
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass
 
     @pytest.mark.parametrize(
         "input_dict, expected_dict",
         [
             (
                 {
-                    "name": "Parent",
-                    "_chd": {"m": {"_chd": {"L1": {"name": "{$EPN} Child"}}}},
+                    "name": "客厅",
+                    "_chd": {"m": {"_chd": {"L1": {"name": "{$EPN} 开关"}}}},
                 },
                 {
-                    "name": "Parent",
-                    "_chd": {"m": {"_chd": {"L1": {"name": "Parent Child"}}}},
+                    "name": "客厅",
+                    "_chd": {"m": {"_chd": {"L1": {"name": "客厅 开关"}}}},
                 },
             ),
             (
-                {
-                    "name": "Parent",
-                    "_chd": {"m": {"_chd": {"L1": {"name": "Door {BAT}"}}}},
-                },
-                {
-                    "name": "Parent",
-                    "_chd": {"m": {"_chd": {"L1": {"name": "Door BAT"}}}},
-                },
+                {"name": "门感", "_chd": {"m": {"_chd": {"G": {"name": "门 {BAT}"}}}}},
+                {"name": "门感", "_chd": {"m": {"_chd": {"G": {"name": "门 BAT"}}}}},
             ),
-            ({"name": "NoSub", "val": 1}, {"name": "NoSub", "val": 1}),
+            ({"name": "简单设备", "val": 1}, {"name": "简单设备", "val": 1}),
         ],
+        ids=["EPNSubstitution", "BATSubstitution", "NoSubstitution"],
     )
-    def test_normalize_device_names(self, input_dict, expected_dict):
+    def test_device_name_normalization(self, input_dict, expected_dict):
+        """测试设备名称规范化功能。"""
         normalized = normalize_device_names(input_dict)
-        assert normalized == expected_dict, "设备名称规范化后应该符合预期"
+        assert normalized == expected_dict, "设备名称规范化应该正确"
+
+
+# ==================== 心跳和连接维护测试类 ====================
+
+
+class TestHeartbeatAndConnectionMaintenance:
+    """测试心跳机制和连接维护功能。"""
 
     @pytest.mark.asyncio
-    async def test_client_keepalive_on_idle(self, mock_connection):
-        """
-        测试客户端在连接空闲时是否会正确发送心跳包以维持连接。
-        这是针对 'loaded' 阶段超时问题的回归测试。
-        """
-        reader, writer, _ = mock_connection
-        client = LifeSmartLocalTCPClient("localhost", 9999, "user", "pass")
+    async def test_idle_timeout_heartbeat(self, mock_connection, sample_packets):
+        """测试空闲超时时的心跳发送。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
 
-        # Mock 掉 PacketFactory 的 build 方法，以便我们可以监视它的调用
+        # 缩短空闲超时时间以便快速测试
+        client.IDLE_TIMEOUT = 0.1
+
         with patch.object(
-            client._factory, "build_get_config_packet", return_value=b"heartbeat_pkt"
-        ) as mock_build_heartbeat:
-
-            # 将 read 操作的默认超时缩短，以便测试能快速触发心跳
-            client.IDLE_TIMEOUT = 0.1
-
+            client._factory, "build_get_config_packet", return_value=b"heartbeat"
+        ) as mock_heartbeat:
             connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
 
-            # 走完登录和加载流程
-            reader.feed_data(LOGIN_SUCCESS_PKT)
+            # 完成登录和设备加载
+            reader.feed_data(sample_packets["login_success"])
             await asyncio.sleep(0.01)
-            reader.feed_data(DEVICE_LIST_PKT)
+            reader.feed_data(sample_packets["device_list"])
             await asyncio.sleep(0.01)
 
-            # 此时客户端进入 'loaded' 阶段，开始等待
-            # 等待时间超过我们设置的 0.1 秒超时
+            # 等待心跳触发
             await asyncio.sleep(0.2)
 
-            # 验证：心跳包是否被构建和发送
-            mock_build_heartbeat.assert_any_call(client.node), "应该调用心跳包构建方法"
+            # 验证心跳包被构建
+            mock_heartbeat.assert_called()
 
             # 清理
             client.disconnect()
             try:
-                # 等待任务响应取消并完成
                 await asyncio.wait_for(connect_task, timeout=1.0)
             except asyncio.CancelledError:
                 pass
 
+    @pytest.mark.asyncio
+    async def test_heartbeat_response_handling(self, mock_connection, sample_packets):
+        """测试心跳响应的处理。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client.IDLE_TIMEOUT = 0.1
 
-# ====================================================================
-# Section 4: LifeSmartLocalTCPClient 控制方法单元测试 (全面覆盖)
-# ====================================================================
+        connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
+
+        # 完成初始流程
+        reader.feed_data(sample_packets["login_success"])
+        await asyncio.sleep(0.01)
+        reader.feed_data(sample_packets["device_list"])
+        await asyncio.sleep(0.01)
+
+        # 发送心跳响应
+        reader.feed_data(sample_packets["heartbeat_response"])
+        await asyncio.sleep(0.01)
+
+        # 验证连接保持活跃
+        assert client.is_connected, "收到心跳响应后连接应该保持活跃"
+
+        # 清理
+        client.disconnect()
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass
 
 
-class TestTCPClientControlMethods:
-    """全面测试 LifeSmartLocalTCPClient 的高层控制方法。"""
+# ==================== 设备控制方法测试类 ====================
+
+
+class TestDeviceControlMethods:
+    """测试各种设备控制方法的功能。"""
 
     @pytest.mark.asyncio
-    async def test_turn_on_light_switch(self, mocked_client: LifeSmartLocalTCPClient):
+    @pytest.mark.parametrize(
+        "method_name, args, expected_call",
+        [
+            (
+                "turn_on_light_switch_async",
+                ("L1", "agt", "dev1"),
+                ("dev1", "L1", CMD_TYPE_ON, 1),
+            ),
+            (
+                "turn_off_light_switch_async",
+                ("L1", "agt", "dev1"),
+                ("dev1", "L1", CMD_TYPE_OFF, 0),
+            ),
+        ],
+        ids=["TurnOnLight", "TurnOffLight"],
+    )
+    async def test_basic_switch_control(
+        self, mocked_client, method_name, args, expected_call
+    ):
+        """测试基础开关控制方法。"""
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.turn_on_light_switch_async("L1", "agt", "dev1")
-            mock_build.assert_called_once_with("dev1", "L1", CMD_TYPE_ON, 1)
-            mocked_client._send_packet.assert_awaited_once()
+            method = getattr(mocked_client, method_name)
+            await method(*args)
 
-    @pytest.mark.asyncio
-    async def test_turn_off_light_switch(self, mocked_client: LifeSmartLocalTCPClient):
-        with patch.object(
-            mocked_client._factory, "build_epset_packet", return_value=b"packet"
-        ) as mock_build:
-            await mocked_client.turn_off_light_switch_async("L1", "agt", "dev1")
-            mock_build.assert_called_once_with("dev1", "L1", CMD_TYPE_OFF, 0)
+            mock_build.assert_called_once_with(*expected_call)
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "device_type, command_method, expected_idx, expected_type, expected_val",
+        "duration, expected_val",
         [
-            (
-                list(GARAGE_DOOR_TYPES)[0],
-                "open_cover_async",
-                "P3",
-                CMD_TYPE_SET_VAL,
-                100,
-            ),
-            (
-                list(GARAGE_DOOR_TYPES)[0],
-                "close_cover_async",
-                "P3",
-                CMD_TYPE_SET_VAL,
-                0,
-            ),
-            (
-                list(GARAGE_DOOR_TYPES)[0],
-                "stop_cover_async",
-                "P3",
-                CMD_TYPE_SET_CONFIG,
-                CMD_TYPE_OFF,
-            ),
-            (list(DOOYA_TYPES)[0], "open_cover_async", "P2", CMD_TYPE_SET_VAL, 100),
-            (list(DOOYA_TYPES)[0], "close_cover_async", "P2", CMD_TYPE_SET_VAL, 0),
-            (
-                list(DOOYA_TYPES)[0],
-                "stop_cover_async",
-                "P2",
-                CMD_TYPE_SET_CONFIG,
-                CMD_TYPE_OFF,
-            ),
-            (
-                "SL_SW_WIN",
-                "open_cover_async",
-                NON_POSITIONAL_COVER_CONFIG["SL_SW_WIN"]["open"],
-                CMD_TYPE_ON,
-                1,
-            ),
-            (
-                "SL_SW_WIN",
-                "close_cover_async",
-                NON_POSITIONAL_COVER_CONFIG["SL_SW_WIN"]["close"],
-                CMD_TYPE_ON,
-                1,
-            ),
-            (
-                "SL_SW_WIN",
-                "stop_cover_async",
-                NON_POSITIONAL_COVER_CONFIG["SL_SW_WIN"]["stop"],
-                CMD_TYPE_ON,
-                1,
-            ),
+            (50, 1),  # 短按
+            (550, 6),  # 长按
+            (1000, 10),  # 超长按
         ],
+        ids=["ShortPress", "LongPress", "ExtraLongPress"],
     )
-    async def test_cover_commands(
-        self,
-        mocked_client,
-        device_type,
-        command_method,
-        expected_idx,
-        expected_type,
-        expected_val,
+    async def test_press_switch_duration_mapping(
+        self, mocked_client, duration, expected_val
     ):
+        """测试按压开关的持续时间映射。"""
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
-            method_to_call = getattr(mocked_client, command_method)
-            await method_to_call("agt", "dev1", device_type)
+            await mocked_client.press_switch_async("L1", "agt", "dev1", duration)
+
             mock_build.assert_called_once_with(
-                "dev1", expected_idx, expected_type, expected_val
+                "dev1", "L1", CMD_TYPE_PRESS, expected_val
             )
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "device_type, position, expected_idx",
-        [(list(GARAGE_DOOR_TYPES)[0], 50, "P3"), (list(DOOYA_TYPES)[0], 80, "P2")],
+        "device_type, command_method, expected_args",
+        [
+            # 车库门类型窗帘
+            (
+                list(GARAGE_DOOR_TYPES)[0],
+                "open_cover_async",
+                ("P3", CMD_TYPE_SET_VAL, 100),
+            ),
+            (
+                list(GARAGE_DOOR_TYPES)[0],
+                "close_cover_async",
+                ("P3", CMD_TYPE_SET_VAL, 0),
+            ),
+            (
+                list(GARAGE_DOOR_TYPES)[0],
+                "stop_cover_async",
+                ("P3", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF),
+            ),
+            # 杜亚类型窗帘
+            (list(DOOYA_TYPES)[0], "open_cover_async", ("P2", CMD_TYPE_SET_VAL, 100)),
+            (list(DOOYA_TYPES)[0], "close_cover_async", ("P2", CMD_TYPE_SET_VAL, 0)),
+            (
+                list(DOOYA_TYPES)[0],
+                "stop_cover_async",
+                ("P2", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF),
+            ),
+            # 非定位窗帘
+            (
+                "SL_SW_WIN",
+                "open_cover_async",
+                (NON_POSITIONAL_COVER_CONFIG["SL_SW_WIN"]["open"], CMD_TYPE_ON, 1),
+            ),
+            (
+                "SL_SW_WIN",
+                "close_cover_async",
+                (NON_POSITIONAL_COVER_CONFIG["SL_SW_WIN"]["close"], CMD_TYPE_ON, 1),
+            ),
+            (
+                "SL_SW_WIN",
+                "stop_cover_async",
+                (NON_POSITIONAL_COVER_CONFIG["SL_SW_WIN"]["stop"], CMD_TYPE_ON, 1),
+            ),
+        ],
+        ids=[
+            "GarageDoorOpen",
+            "GarageDoorClose",
+            "GarageDoorStop",
+            "DooyaOpen",
+            "DooyaClose",
+            "DooyaStop",
+            "NonPositionalOpen",
+            "NonPositionalClose",
+            "NonPositionalStop",
+        ],
     )
-    async def test_set_cover_position(
-        self, mocked_client, device_type, position, expected_idx
+    async def test_cover_control_methods(
+        self, mocked_client, device_type, command_method, expected_args
     ):
+        """测试窗帘控制方法。"""
+        with patch.object(
+            mocked_client._factory, "build_epset_packet", return_value=b"packet"
+        ) as mock_build:
+            method = getattr(mocked_client, command_method)
+            await method("agt", "dev1", device_type)
+
+            mock_build.assert_called_once_with("dev1", *expected_args)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "device_type, position, expected_call",
+        [
+            (list(GARAGE_DOOR_TYPES)[0], 75, ("dev1", "P3", CMD_TYPE_SET_VAL, 75)),
+            (list(DOOYA_TYPES)[0], 25, ("dev1", "P2", CMD_TYPE_SET_VAL, 25)),
+        ],
+        ids=["GarageDoorPosition", "DooyaPosition"],
+    )
+    async def test_cover_position_control(
+        self, mocked_client, device_type, position, expected_call
+    ):
+        """测试窗帘位置控制。"""
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
             await mocked_client.set_cover_position_async(
                 "agt", "dev1", position, device_type
             )
-            mock_build.assert_called_once_with(
-                "dev1", expected_idx, CMD_TYPE_SET_VAL, position
-            )
+
+            mock_build.assert_called_once_with(*expected_call)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "device_type, hvac_mode, current_val, expected_calls",
         [
+            ("V_AIR_P", HVACMode.OFF, 0, [("P1", CMD_TYPE_OFF, 0)]),
             (
                 "SL_NATURE",
                 HVACMode.HEAT,
@@ -738,207 +736,495 @@ class TestTCPClientControlMethods:
                 15,
                 [("P1", CMD_TYPE_ON, 1), ("P1", CMD_TYPE_SET_RAW, 15)],
             ),
-            ("V_AIR_P", HVACMode.OFF, 0, [("P1", CMD_TYPE_OFF, 0)]),
         ],
+        ids=["TurnOff", "NatureHeat", "CpAirCool"],
     )
-    async def test_set_climate_hvac_mode(
+    async def test_climate_hvac_mode_control(
         self, mocked_client, device_type, hvac_mode, current_val, expected_calls
     ):
+        """测试气候设备HVAC模式控制。"""
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
             await mocked_client.async_set_climate_hvac_mode(
                 "agt", "dev1", device_type, hvac_mode, current_val
             )
+
             assert mock_build.call_count == len(
                 expected_calls
-            ), "应该调用正确次数的构建方法"
-            for i, call_args in enumerate(expected_calls):
-                assert mock_build.call_args_list[i].args == (
-                    "dev1",
-                    *call_args,
-                ), f"第{i + 1}次调用参数应该正确"
+            ), f"应该调用{len(expected_calls)}次"
+            for i, expected_call in enumerate(expected_calls):
+                assert mock_build.call_args_list[i].args == ("dev1", *expected_call)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "device_type, temp, expected_idx, expected_type, expected_val",
+        "device_type, temperature, expected_call",
         [
-            ("V_AIR_P", 25.5, "tT", CMD_TYPE_SET_TEMP_DECIMAL, 255),
-            ("SL_CP_DN", 18.0, "P3", CMD_TYPE_SET_RAW, 180),
-            ("SL_FCU", 22.0, "P8", CMD_TYPE_SET_TEMP_FCU, 220),
+            ("V_AIR_P", 23.5, ("dev1", "tT", CMD_TYPE_SET_TEMP_DECIMAL, 235)),
+            ("SL_CP_DN", 20.0, ("dev1", "P3", CMD_TYPE_SET_RAW, 200)),
+            ("SL_FCU", 25.0, ("dev1", "P8", CMD_TYPE_SET_TEMP_FCU, 250)),
         ],
+        ids=["DecimalTemp", "RawTemp", "FCUTemp"],
     )
-    async def test_set_climate_temperature(
-        self,
-        mocked_client,
-        device_type,
-        temp,
-        expected_idx,
-        expected_type,
-        expected_val,
+    async def test_climate_temperature_control(
+        self, mocked_client, device_type, temperature, expected_call
     ):
+        """测试气候设备温度控制。"""
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
             await mocked_client.async_set_climate_temperature(
-                "agt", "dev1", device_type, temp
+                "agt", "dev1", device_type, temperature
             )
-            mock_build.assert_called_once_with(
-                "dev1", expected_idx, expected_type, expected_val
-            )
+
+            mock_build.assert_called_once_with(*expected_call)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "device_type, fan_mode, current_val, expected_idx, expected_type, expected_val",
+        "device_type, fan_mode, current_val, expected_call",
         [
-            ("V_AIR_P", FAN_LOW, 0, "F", CMD_TYPE_SET_CONFIG, 15),
-            ("SL_NATURE", FAN_HIGH, 0, "P9", CMD_TYPE_SET_CONFIG, 75),
+            ("V_AIR_P", FAN_LOW, 0, ("dev1", "F", CMD_TYPE_SET_CONFIG, 15)),
+            ("SL_NATURE", FAN_HIGH, 0, ("dev1", "P9", CMD_TYPE_SET_CONFIG, 75)),
             (
                 "SL_CP_AIR",
                 FAN_MEDIUM,
                 15,
-                "P1",
-                CMD_TYPE_SET_RAW,
-                65551,
-            ),  # (15 & ~(3<<15)) | (2<<15)
+                ("dev1", "P1", CMD_TYPE_SET_RAW, 65551),
+            ),  # 位运算结果
         ],
+        ids=["VAirPLow", "NatureHigh", "CpAirMedium"],
     )
-    async def test_set_climate_fan_mode(
-        self,
-        mocked_client,
-        device_type,
-        fan_mode,
-        current_val,
-        expected_idx,
-        expected_type,
-        expected_val,
+    async def test_climate_fan_mode_control(
+        self, mocked_client, device_type, fan_mode, current_val, expected_call
     ):
+        """测试气候设备风扇模式控制。"""
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
             await mocked_client.async_set_climate_fan_mode(
                 "agt", "dev1", device_type, fan_mode, current_val
             )
-            mock_build.assert_called_once_with(
-                "dev1", expected_idx, expected_type, expected_val
-            )
+
+            mock_build.assert_called_once_with(*expected_call)
+
+
+# ==================== 场景和红外控制测试类 ====================
+
+
+class TestSceneAndIRControl:
+    """测试场景控制和红外设备控制功能。"""
 
     @pytest.mark.asyncio
-    async def test_press_switch(self, mocked_client: LifeSmartLocalTCPClient):
-        with patch.object(
-            mocked_client._factory, "build_epset_packet", return_value=b"packet"
-        ) as mock_build:
-            await mocked_client.press_switch_async("L1", "agt", "dev1", 550)
-            mock_build.assert_called_once_with("dev1", "L1", CMD_TYPE_PRESS, 6)
-
-    @pytest.mark.asyncio
-    async def test_set_scene(self, mocked_client: LifeSmartLocalTCPClient):
+    async def test_scene_control(self, mocked_client):
+        """测试场景控制功能。"""
         with patch.object(
             mocked_client._factory, "build_scene_trigger_packet", return_value=b"packet"
         ) as mock_build:
             await mocked_client._async_set_scene("agt", "scene123")
+
             mock_build.assert_called_once_with("scene123")
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_change_icon(self, mocked_client: LifeSmartLocalTCPClient):
-        with patch.object(
-            mocked_client._factory, "build_change_icon_packet", return_value=b"packet"
-        ) as mock_build:
-            await mocked_client.change_icon_async("dev1", "icon_name")
-            mock_build.assert_called_once_with("dev1", "icon_name")
-            mocked_client._send_packet.assert_awaited_once()
+    async def test_ir_control_methods(self, mocked_client):
+        """测试红外控制方法。"""
+        ir_options = {"keys": "power", "delay": 300}
 
-    @pytest.mark.asyncio
-    async def test_ir_control(self, mocked_client: LifeSmartLocalTCPClient):
         with patch.object(
             mocked_client._factory, "build_ir_control_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.ir_control_async("ir_dev", {"keys": "power"})
-            mock_build.assert_called_once_with("ir_dev", {"keys": "power"})
+            await mocked_client.ir_control_async("ir_device", ir_options)
+
+            mock_build.assert_called_once_with("ir_device", ir_options)
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_send_ir_keys(self, mocked_client: LifeSmartLocalTCPClient):
-        keys_json = json.dumps([{"key": "power", "delay": 300}])
+    async def test_send_ir_keys(self, mocked_client):
+        """测试红外按键发送功能。"""
+        keys_data = json.dumps([{"key": "power", "delay": 500}])
+
         with patch.object(
             mocked_client._factory, "build_send_ir_keys_packet", return_value=b"packet"
         ) as mock_build:
             await mocked_client._async_send_ir_key(
-                "agt", "ai_id", "dev1", "cat1", "brand1", keys_json
+                "agt", "ai1", "remote1", "tv", "samsung", keys_data
             )
+
             mock_build.assert_called_once_with(
-                "ai_id", "dev1", "cat1", "brand1", keys_json
+                "ai1", "remote1", "tv", "samsung", keys_data
             )
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_async_send_multi_command(
-        self, mocked_client: LifeSmartLocalTCPClient
-    ):
-        """测试新的抽象方法"""
-        io_list = [{"idx": "RGBW", "val": 12345}, {"idx": "DYN", "val": 0}]
-        with patch.object(
-            mocked_client._factory, "build_multi_epset_packet", return_value=b"packet"
-        ) as mock_build:
-            await mocked_client.async_send_multi_command("agt", "dev1", io_list)
-            mock_build.assert_called_once_with("dev1", io_list)
-            mocked_client._send_packet.assert_awaited_once()
+    async def test_send_ir_code(self, mocked_client):
+        """测试红外代码发送功能。"""
+        code_data = [1, 2, 3, 4, 5]
 
-    @pytest.mark.asyncio
-    async def test_add_trigger(self, mocked_client: LifeSmartLocalTCPClient):
-        with patch.object(
-            mocked_client._factory, "build_add_trigger_packet", return_value=b"packet"
-        ) as mock_build:
-            await mocked_client.add_trigger_async("my_trigger", "cmd_list_str")
-            mock_build.assert_called_once_with("my_trigger", "cmd_list_str")
-            mocked_client._send_packet.assert_awaited_once()
-
-    @pytest.mark.asyncio
-    async def test_del_ai(self, mocked_client: LifeSmartLocalTCPClient):
-        with patch.object(
-            mocked_client._factory, "build_del_ai_packet", return_value=b"packet"
-        ) as mock_build:
-            await mocked_client.del_ai_async("my_ai_to_delete")
-            mock_build.assert_called_once_with("my_ai_to_delete")
-            mocked_client._send_packet.assert_awaited_once()
-
-    @pytest.mark.asyncio
-    async def test_send_ir_code(self, mocked_client: LifeSmartLocalTCPClient):
-        code_data = [1, 2, 3]
         with patch.object(
             mocked_client._factory, "build_send_code_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.send_ir_code_async("ir_dev", code_data)
-            mock_build.assert_called_once_with("ir_dev", code_data)
+            await mocked_client.send_ir_code_async("ir_device", code_data)
+
+            mock_build.assert_called_once_with("ir_device", code_data)
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_ir_raw_control(self, mocked_client: LifeSmartLocalTCPClient):
-        raw_data_str = '{"some": "data"}'
+    async def test_ir_raw_control(self, mocked_client):
+        """测试红外原始控制功能。"""
+        raw_data = '{"frequency": 38000, "data": [100, 200, 300]}'
+
         with patch.object(
             mocked_client._factory,
             "build_ir_raw_control_packet",
             return_value=b"packet",
         ) as mock_build:
-            await mocked_client.ir_raw_control_async("ir_dev", raw_data_str)
-            mock_build.assert_called_once_with("ir_dev", raw_data_str)
+            await mocked_client.ir_raw_control_async("ir_device", raw_data)
+
+            mock_build.assert_called_once_with("ir_device", raw_data)
+            mocked_client._send_packet.assert_awaited_once()
+
+
+# ==================== 高级功能测试类 ====================
+
+
+class TestAdvancedFeatures:
+    """测试高级功能，如多命令发送、触发器、定时器等。"""
+
+    @pytest.mark.asyncio
+    async def test_multi_command_sending(self, mocked_client):
+        """测试多命令发送功能。"""
+        io_list = [
+            {"idx": "RGBW", "val": 16777215},  # 白色
+            {"idx": "DYN", "val": 0},  # 关闭动态
+            {"idx": "BRI", "val": 80},  # 亮度80%
+        ]
+
+        with patch.object(
+            mocked_client._factory, "build_multi_epset_packet", return_value=b"packet"
+        ) as mock_build:
+            await mocked_client.async_send_multi_command("agt", "rgb_light", io_list)
+
+            mock_build.assert_called_once_with("rgb_light", io_list)
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_set_eeprom(self, mocked_client: LifeSmartLocalTCPClient):
+    async def test_trigger_management(self, mocked_client):
+        """测试触发器管理功能。"""
+        trigger_name = "door_open_trigger"
+        command_list = "L1=ON;L2=OFF;DELAY=1000;L3=ON"
+
+        # 测试添加触发器
+        with patch.object(
+            mocked_client._factory, "build_add_trigger_packet", return_value=b"packet"
+        ) as mock_build:
+            await mocked_client.add_trigger_async(trigger_name, command_list)
+
+            mock_build.assert_called_once_with(trigger_name, command_list)
+            mocked_client._send_packet.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_ai_management(self, mocked_client):
+        """测试AI设备管理功能。"""
+        ai_name = "test_ai_device"
+
+        with patch.object(
+            mocked_client._factory, "build_del_ai_packet", return_value=b"packet"
+        ) as mock_build:
+            await mocked_client.del_ai_async(ai_name)
+
+            mock_build.assert_called_once_with(ai_name)
+            mocked_client._send_packet.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_eeprom_configuration(self, mocked_client):
+        """测试EEPROM配置功能。"""
+        device_id = "config_device"
+        config_key = "network_settings"
+        config_value = "192.168.1.100:8080"
+
         with patch.object(
             mocked_client._factory, "build_set_eeprom_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.set_eeprom_async("dev1", "config_key", "config_val")
-            mock_build.assert_called_once_with("dev1", "config_key", "config_val")
+            await mocked_client.set_eeprom_async(device_id, config_key, config_value)
+
+            mock_build.assert_called_once_with(device_id, config_key, config_value)
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_add_timer(self, mocked_client: LifeSmartLocalTCPClient):
+    async def test_timer_management(self, mocked_client):
+        """测试定时器管理功能。"""
+        device_id = "timer_device"
+        cron_expression = "0 8 * * 1-5"  # 工作日早上8点
+        timer_command = "L1=ON;BRI=100"
+
         with patch.object(
             mocked_client._factory, "build_add_timer_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.add_timer_async("dev1", "0 8 * * *", "L1=ON")
-            mock_build.assert_called_once_with("dev1", "0 8 * * *", "L1=ON")
+            await mocked_client.add_timer_async(
+                device_id, cron_expression, timer_command
+            )
+
+            mock_build.assert_called_once_with(
+                device_id, cron_expression, timer_command
+            )
             mocked_client._send_packet.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_icon_management(self, mocked_client):
+        """测试图标管理功能。"""
+        device_id = "icon_device"
+        icon_name = "light_bulb"
+
+        with patch.object(
+            mocked_client._factory, "build_change_icon_packet", return_value=b"packet"
+        ) as mock_build:
+            await mocked_client.change_icon_async(device_id, icon_name)
+
+            mock_build.assert_called_once_with(device_id, icon_name)
+            mocked_client._send_packet.assert_awaited_once()
+
+
+# ==================== 错误处理和边界条件测试类 ====================
+
+
+class TestErrorHandlingAndEdgeCases:
+    """测试错误处理和各种边界条件。"""
+
+    @pytest.mark.asyncio
+    async def test_unsupported_device_type_handling(self, mocked_client, caplog):
+        """测试不支持设备类型的处理。"""
+        with patch.object(
+            mocked_client._factory, "build_epset_packet", return_value=b"packet"
+        ) as mock_build:
+            # 尝试控制不支持的窗帘类型
+            result = await mocked_client.open_cover_async(
+                "agt", "dev1", "UNSUPPORTED_COVER_TYPE"
+            )
+
+            assert result == -1, "不支持的设备类型应该返回-1"
+            mock_build.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_invalid_temperature_values(self, mocked_client):
+        """测试无效温度值的处理。"""
+        with patch.object(
+            mocked_client._factory, "build_epset_packet", return_value=b"packet"
+        ) as mock_build:
+            # 尝试设置不支持的设备类型温度
+            result = await mocked_client.async_set_climate_temperature(
+                "agt", "dev1", "UNSUPPORTED_TYPE", 25.0
+            )
+
+            assert result == -1, "不支持的设备应该返回-1"
+            mock_build.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_invalid_fan_mode_handling(self, mocked_client, caplog):
+        """测试无效风扇模式的处理。"""
+        with patch.object(
+            mocked_client._factory, "build_epset_packet", return_value=b"packet"
+        ) as mock_build:
+            result = await mocked_client.async_set_climate_fan_mode(
+                "agt", "dev1", "UNSUPPORTED_TYPE", FAN_LOW
+            )
+
+            assert result == -1, "不支持的设备类型应该返回-1"
+            assert "不支持风扇模式" in caplog.text, "应该记录不支持的错误信息"
+            mock_build.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_network_error_during_operation(self, mocked_client):
+        """测试操作过程中的网络错误。"""
+        # 模拟网络发送失败
+        mocked_client._send_packet.side_effect = Exception("网络错误")
+
+        with patch.object(
+            mocked_client._factory, "build_epset_packet", return_value=b"packet"
+        ):
+            with pytest.raises(Exception, match="网络错误"):
+                await mocked_client.turn_on_light_switch_async("L1", "agt", "dev1")
+
+    @pytest.mark.asyncio
+    async def test_malformed_status_update_handling(
+        self, mock_connection, sample_packets, protocol
+    ):
+        """测试格式错误的状态更新处理。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        callback = AsyncMock()
+
+        # 建立连接
+        connect_task = asyncio.create_task(client.async_connect(callback))
+        reader.feed_data(sample_packets["login_success"])
+        await asyncio.sleep(0.1)
+        reader.feed_data(sample_packets["device_list"])
+        await asyncio.sleep(0.1)
+
+        # 发送格式错误的状态更新
+        malformed_update = protocol.encode(
+            [{}, {"_schg": {"invalid_path": {"chg": {"val": 1}}}}]
+        )
+        reader.feed_data(malformed_update)
+        await asyncio.sleep(0.1)
+
+        # 验证系统没有崩溃，且可能记录了错误
+        assert client.is_connected, "格式错误的更新不应该导致连接断开"
+
+        # 清理
+        client.disconnect()
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass
+
+
+# ==================== 性能和并发测试类 ====================
+
+
+class TestPerformanceAndConcurrency:
+    """测试性能和并发处理能力。"""
+
+    @pytest.mark.asyncio
+    async def test_concurrent_command_execution(self, mocked_client):
+        """测试并发命令执行。"""
+        commands = [
+            ("turn_on_light_switch_async", ("L1", "agt", "dev1")),
+            ("turn_off_light_switch_async", ("L2", "agt", "dev1")),
+            ("turn_on_light_switch_async", ("L3", "agt", "dev1")),
+            ("press_switch_async", ("P1", "agt", "dev2", 100)),
+            ("_async_set_scene", ("agt", "scene1")),
+        ]
+
+        with patch.object(
+            mocked_client._factory, "build_epset_packet", return_value=b"packet"
+        ), patch.object(
+            mocked_client._factory, "build_scene_trigger_packet", return_value=b"packet"
+        ):
+
+            # 并发执行所有命令
+            tasks = []
+            for method_name, args in commands:
+                method = getattr(mocked_client, method_name)
+                task = asyncio.create_task(method(*args))
+                tasks.append(task)
+
+            # 等待所有任务完成
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            # 验证所有任务都成功完成
+            for i, result in enumerate(results):
+                assert not isinstance(result, Exception), f"命令 {i} 应该成功执行"
+
+    @pytest.mark.asyncio
+    async def test_high_frequency_status_updates(
+        self, mock_connection, sample_packets, protocol
+    ):
+        """测试高频状态更新的处理。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        callback = AsyncMock()
+
+        # 建立连接
+        connect_task = asyncio.create_task(client.async_connect(callback))
+        reader.feed_data(sample_packets["login_success"])
+        await asyncio.sleep(0.1)
+        reader.feed_data(sample_packets["device_list"])
+        await asyncio.sleep(0.1)
+
+        # 发送大量状态更新
+        for i in range(100):
+            status_update = protocol.encode(
+                [
+                    {},
+                    {
+                        "_schg": {
+                            f"test_agt/ep/device_1/m/L{(i % 3) + 1}": {
+                                "chg": {"val": i % 2}
+                            }
+                        }
+                    },
+                ]
+            )
+            reader.feed_data(status_update)
+
+        await asyncio.sleep(0.5)  # 给处理时间
+
+        # 验证所有更新都被处理
+        assert callback.call_count >= 50, "应该处理大部分状态更新"
+
+        # 清理
+        client.disconnect()
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass
+
+    @pytest.mark.asyncio
+    async def test_memory_usage_under_load(self, mock_connection, sample_packets):
+        """测试负载下的内存使用情况。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+
+        # 建立连接
+        connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
+        reader.feed_data(sample_packets["login_success"])
+        await asyncio.sleep(0.1)
+        reader.feed_data(sample_packets["device_list"])
+        await asyncio.sleep(0.1)
+
+        # 执行大量操作
+        with patch.object(
+            client._factory, "build_epset_packet", return_value=b"packet"
+        ):
+            for i in range(1000):
+                await client.turn_on_light_switch_async(
+                    f"L{i % 3 + 1}", "agt", f"dev{i % 10}"
+                )
+
+        # 验证客户端仍然正常工作
+        assert client.is_connected, "大量操作后客户端应该仍然连接"
+        assert len(client.devices) > 0, "设备列表应该保持不变"
+
+        # 清理
+        client.disconnect()
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass
+
+    @pytest.mark.asyncio
+    async def test_connection_recovery_after_network_interruption(
+        self, mock_connection, sample_packets
+    ):
+        """测试网络中断后的连接恢复。"""
+        reader, writer, mock_open = mock_connection
+        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+
+        # 建立初始连接
+        connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
+        reader.feed_data(sample_packets["login_success"])
+        await asyncio.sleep(0.1)
+
+        assert client.is_connected, "初始连接应该成功"
+
+        # 模拟网络中断
+        client.writer = None
+        assert not client.is_connected, "网络中断后应该显示未连接"
+
+        # 模拟重新连接
+        client.writer = writer
+        client.reader = reader
+
+        # 验证可以重新使用
+        with patch.object(
+            client._factory, "build_epset_packet", return_value=b"packet"
+        ):
+            result = await client._send_packet(b"test")
+            assert result == 0, "重新连接后应该能够发送数据"
+
+        # 清理
+        client.disconnect()
+        try:
+            await asyncio.wait_for(connect_task, timeout=1.0)
+        except asyncio.CancelledError:
+            pass

@@ -18,10 +18,10 @@ from .test_utils import get_entity_unique_id
 # --- Test `async_setup_entry` and Entity Behavior ---
 
 
-@pytest.mark.asyncio
 class TestSwitchSetup:
     """Test the platform setup."""
 
+    @pytest.mark.asyncio
     async def test_setup_all_switches(
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ):
@@ -31,6 +31,7 @@ class TestSwitchSetup:
 
         assert hass.states.get("switch.9_way_controller_p4") is not None
 
+    @pytest.mark.asyncio
     async def test_setup_with_exclusions(
         self,
         hass: HomeAssistant,
@@ -92,6 +93,7 @@ class TestStandardSwitch:
     HUB_ID = "hub_sw"
     SUB_KEY = "L1"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
         assert state is not None, "开关实体应存在"
@@ -100,6 +102,7 @@ class TestStandardSwitch:
             state.attributes.get("device_class") == SwitchDeviceClass.SWITCH
         ), "设备类别应为开关"
 
+    @pytest.mark.asyncio
     async def test_turn_on_off_and_update(
         self, hass: HomeAssistant, mock_client: AsyncMock, setup_integration
     ):
@@ -134,12 +137,14 @@ class TestSmartOutlet:
     HUB_ID = "hub_sw"
     SUB_KEY = "O"
 
+    @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
         state = hass.states.get(self.ENTITY_ID)
         assert state is not None
         assert state.state == STATE_ON
         assert state.attributes.get("device_class") == SwitchDeviceClass.OUTLET
 
+    @pytest.mark.asyncio
     async def test_turn_on_off(
         self, hass: HomeAssistant, mock_client: AsyncMock, setup_integration
     ):
@@ -173,6 +178,7 @@ class TestGenericControllerAsSwitch:
             "GenControllerChannelP4On",
         ],
     )
+    @pytest.mark.asyncio
     async def test_channel_behavior(
         self,
         hass: HomeAssistant,
@@ -211,6 +217,7 @@ class TestNineWayController:
         ],
         ids=["NineWayChannelP1On", "NineWayChannelP8Off", "NineWayChannelP9On"],
     )
+    @pytest.mark.asyncio
     async def test_channel_behavior(
         self,
         hass: HomeAssistant,
