@@ -364,9 +364,19 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
         """Handle re-authentication."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        # 检查上下文中是否有 entry_id
+        entry_id = self.context.get("entry_id")
+        if not entry_id:
+            _LOGGER.error("重新认证失败：上下文中缺少 entry_id")
+            return self.async_abort(reason="reauth_entry_not_found")
+
+        self._reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
+
+        # 检查配置条目是否存在
+        if self._reauth_entry is None:
+            _LOGGER.error("重新认证失败：无法找到配置条目 %s", entry_id)
+            return self.async_abort(reason="reauth_entry_not_found")
+
         # 将现有数据预填充到流程中
         self.config_data = self._reauth_entry.data.copy()
         # 直接进入云端配置的第一步
@@ -393,9 +403,19 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the option menu."""
+        # 根据连接类型决定显示的菜单选项
+        menu_options = ["main_params"]
+
+        # 只有云端模式才显示认证参数选项
+        if (
+            self.config_entry.data.get(CONF_TYPE)
+            == config_entries.CONN_CLASS_CLOUD_PUSH
+        ):
+            menu_options.append("auth_params")
+
         return self.async_show_menu(
             step_id="init",
-            menu_options=["main_params", "auth_params"],
+            menu_options=menu_options,
         )
 
     async def async_step_main_params(
@@ -432,6 +452,13 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle authentication settings update (Step 1)."""
+        # 检查是否为本地TCP模式，如果是则不应该显示认证参数选项
+        if (
+            self.config_entry.data.get(CONF_TYPE)
+            == config_entries.CONN_CLASS_LOCAL_PUSH
+        ):
+            return self.async_abort(reason="local_no_auth_params")
+
         self.temp_data = self.config_entry.data.copy()
 
         if user_input is not None:

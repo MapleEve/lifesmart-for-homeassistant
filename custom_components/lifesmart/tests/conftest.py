@@ -144,7 +144,11 @@ def mock_config_data_fixture():
     这个 Fixture 封装了一套标准的云端模式配置信息，用于在测试中创建
     `MockConfigEntry`。这确保了所有测试都使用一致的凭据，简化了测试的编写。
     """
+    from homeassistant.const import CONF_TYPE
+    from homeassistant import config_entries
+    
     return {
+        CONF_TYPE: config_entries.CONN_CLASS_CLOUD_PUSH,  # 明确设置为云端模式
         CONF_LIFESMART_APPKEY: "mock_appkey",
         CONF_LIFESMART_APPTOKEN: "mock_apptoken",
         CONF_LIFESMART_USERID: "mock_userid",

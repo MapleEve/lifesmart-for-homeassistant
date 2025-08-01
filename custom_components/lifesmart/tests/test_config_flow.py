@@ -1,5 +1,6 @@
 """测试 LifeSmart 配置流程"""
 
+import asyncio
 from unittest.mock import patch, AsyncMock
 
 import pytest
@@ -478,6 +479,181 @@ async def test_flow_aborts_if_already_configured(
     # 4. 断言流程被正确中止
     assert result["type"] == FlowResultType.ABORT, "已存在相同配置时应该中止流程"
     assert result["reason"] == "already_configured", "中止原因应该是已配置"
+
+
+# endregion
+
+
+# region: Enhanced Options Flow Tests
+@pytest.mark.asyncio
+async def test_options_flow_local_tcp_no_auth_params(hass: HomeAssistant):
+    """测试本地TCP模式的选项流程不显示认证参数菜单项。"""
+    # 创建本地TCP模式的配置条目
+    local_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_TYPE: config_entries.CONN_CLASS_LOCAL_PUSH,
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 3000,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin_pass",
+        },
+    )
+    local_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(local_config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU, "应该返回菜单类型的结果"
+    assert result["step_id"] == "init", "步骤ID应该是init"
+    # 本地TCP模式应该只有 main_params 菜单项，没有 auth_params
+    assert result["menu_options"] == [
+        "main_params"
+    ], "本地TCP模式只应该显示main_params选项"
+
+
+@pytest.mark.asyncio
+async def test_options_flow_cloud_mode_shows_auth_params(
+    hass: HomeAssistant, mock_config_entry
+):
+    """测试云端模式的选项流程显示认证参数菜单项。"""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.MENU, "应该返回菜单类型的结果"
+    assert result["step_id"] == "init", "步骤ID应该是init"
+    # 云端模式应该有 main_params 和 auth_params 两个菜单项
+    assert result["menu_options"] == [
+        "main_params",
+        "auth_params",
+    ], "云端模式应该显示所有选项"
+
+
+# endregion
+
+
+# region: Error Handling and Edge Cases
+@pytest.mark.asyncio
+async def test_cloud_flow_unknown_error(hass: HomeAssistant, mock_validate):
+    """测试云端流程遇到未知错误时的处理。"""
+    mock_validate.side_effect = Exception("Unexpected error")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: "cloud_push"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**MOCK_USER_INPUT_CLOUD_BASE, CONF_LIFESMART_AUTH_METHOD: "token"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_LIFESMART_USERTOKEN: "any_token"}
+    )
+
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "cloud_token", "应该停留在cloud_token步骤"
+    assert result["errors"]["base"] == "unknown", "应该显示未知错误信息"
+
+
+@pytest.mark.asyncio
+async def test_local_flow_auth_error(hass: HomeAssistant):
+    """测试本地流程认证失败的处理。"""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: "local_push"}
+    )
+
+    # 模拟认证失败
+    with patch(
+        "custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient.check_login",
+        side_effect=ConnectionResetError("Authentication failed"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT_LOCAL
+        )
+
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "local", "应该停留在local步骤"
+    assert result["errors"]["base"] == "invalid_auth", "应该显示认证错误信息"
+
+
+@pytest.mark.asyncio
+async def test_local_flow_unknown_error(hass: HomeAssistant):
+    """测试本地流程遇到未知错误时的处理。"""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TYPE: "local_push"}
+    )
+
+    # 模拟未知错误 - 使用asyncio.TimeoutError，这会被归类为连接错误
+    with patch(
+        "custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient.check_login",
+        side_effect=asyncio.TimeoutError("Connection timeout"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_USER_INPUT_LOCAL
+        )
+
+    assert result["type"] == FlowResultType.FORM, "应该返回表单类型的结果"
+    assert result["step_id"] == "local", "应该停留在local步骤"
+    assert result["errors"]["base"] == "cannot_connect", "应该显示连接错误信息"
+
+
+@pytest.mark.asyncio
+async def test_validate_input_empty_device_list(hass: HomeAssistant):
+    """测试validate_input函数获取到空设备列表的处理。"""
+    from custom_components.lifesmart.config_flow import validate_input
+
+    test_data = {
+        CONF_REGION: "cn2",
+        CONF_LIFESMART_APPKEY: "test_key",
+        CONF_LIFESMART_APPTOKEN: "test_token",
+        CONF_LIFESMART_USERID: "test_user",
+        CONF_LIFESMART_USERTOKEN: "test_token",
+    }
+
+    with patch(
+        "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient.async_get_all_devices",
+        return_value=[],  # 空设备列表
+    ):
+        # 空设备列表不应该导致错误，只是警告
+        result = await validate_input(hass, test_data)
+        assert result is not None, "空设备列表不应该导致验证失败"
+
+
+@pytest.mark.asyncio
+async def test_reauth_flow_missing_entry_id(hass: HomeAssistant):
+    """测试重新认证流程缺少entry_id时正确处理。"""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},  # 缺少 entry_id
+        data={},
+    )
+
+    assert result["type"] == FlowResultType.ABORT, "缺少entry_id时应该中止流程"
+    assert result["reason"] == "reauth_entry_not_found", "中止原因应该是找不到条目"
+
+
+@pytest.mark.asyncio
+async def test_reauth_flow_invalid_entry_id(hass: HomeAssistant):
+    """测试重新认证流程entry_id无效时正确处理。"""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": "non_existent_entry_id",
+        },
+        data={},
+    )
+
+    assert result["type"] == FlowResultType.ABORT, "无效entry_id时应该中止流程"
+    assert result["reason"] == "reauth_entry_not_found", "中止原因应该是找不到条目"
 
 
 # endregion

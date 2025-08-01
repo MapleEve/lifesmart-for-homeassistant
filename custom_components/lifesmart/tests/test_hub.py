@@ -176,6 +176,9 @@ class TestLifeSmartHub:
         self, hass: HomeAssistant, mock_config_entry_oapi
     ):
         """测试 Hub 设置时的认证错误。"""
+        # 确保配置条目被添加到 hass 中，这样重新认证流程才能找到它
+        mock_config_entry_oapi.add_to_hass(hass)
+
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
 
         with patch(
