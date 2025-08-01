@@ -506,7 +506,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             return self._get_code_from_response(response, "SceneSet")
 
         except Exception as e:
-            _LOGGER.error("云端场景触发失败: %s", e)
+            _LOGGER.error("云端场景触发失败: %s", e, exc_info=True)
             return -1
 
     async def _async_send_ir_key(
