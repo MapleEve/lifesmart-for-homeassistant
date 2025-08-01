@@ -13,7 +13,6 @@
 import logging
 from typing import Any
 
-# 导入 Home Assistant 温控组件所需的核心类和常量
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -23,27 +22,20 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
 )
 from homeassistant.config_entries import ConfigEntry
-# 导入 Home Assistant 的通用常量和核心对象类型
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-# 导入项目内部的工具函数和常量
-from . import generate_unique_id, LifeSmartDevice
 from .const import (
     DOMAIN,
     MANUFACTURER,
     HUB_ID_KEY,
     DEVICE_ID_KEY,
-    DEVICE_TYPE_KEY,
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
-    CLIMATE_TYPES,
-    CONF_EXCLUDE_ITEMS,
-    CONF_EXCLUDE_AGTS,
     LIFESMART_HVAC_MODE_MAP,
     LIFESMART_CP_AIR_HVAC_MODE_MAP,
     LIFESMART_CP_AIR_FAN_MAP,
@@ -54,6 +46,8 @@ from .const import (
     get_f_fan_mode,
     get_tf_fan_mode,
 )
+from .entity import LifeSmartEntity
+from .helpers import generate_unique_id, is_climate, safe_get
 
 # 初始化模块级日志记录器
 _LOGGER = logging.getLogger(__name__)
@@ -71,21 +65,11 @@ async def async_setup_entry(
     它会从 hass.data 中获取已发现的设备列表，并筛选出温控设备，
     然后为每个温控设备创建一个 LifeSmartClimate 实体实例。
     """
-    entry_id = config_entry.entry_id
-    devices = hass.data[DOMAIN][entry_id]["devices"]
-    client = hass.data[DOMAIN][entry_id]["client"]
-    # 从配置选项中获取需要排除的设备和网关列表
-    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
-    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
-
-    # 解析排除列表字符串为集合，以提高查找效率
-    exclude_devices = {
-        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-    }
-    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
+    hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
+    exclude_devices, exclude_hubs = hub.get_exclude_config()
 
     climates = []
-    for device in devices:
+    for device in hub.get_devices():
         # 如果设备或其所属网关在排除列表中，则跳过
         if (
             device[DEVICE_ID_KEY] in exclude_devices
@@ -93,13 +77,13 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用辅助函数判断是否为温控设备
-        if _is_climate_device(device):
+        # 使用helpers中的统一判断函数
+        if is_climate(device):
             climates.append(
                 LifeSmartClimate(
                     raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
+                    client=hub.get_client(),
+                    entry_id=config_entry.entry_id,
                 )
             )
 
@@ -107,27 +91,7 @@ async def async_setup_entry(
     async_add_entities(climates)
 
 
-def _is_climate_device(device: dict) -> bool:
-    """
-    判断一个设备是否为有效的温控实体。
-
-    此函数包含特殊业务逻辑：
-    - 对于 'SL_NATURE' (超能面板)，它不仅仅是一个温控设备，也可能是开关面板。
-      必须通过检查其 'P5' IO口的值来区分。如果 P5 的低8位值为3，则为温控版。
-    - 对于其他设备，直接检查其 devtype 是否在 CLIMATE_TYPES 集合中。
-    """
-    device_type = device[DEVICE_TYPE_KEY]
-
-    if device_type == "SL_NATURE":
-        # 温控版 SL_NATURE 必须存在 P5 且值为 3
-        p5_data = device.get(DEVICE_DATA_KEY, {}).get("P5", {})
-        # 使用位与操作 `& 0xFF` 确保只比较低8位，增加代码健壮性
-        return p5_data.get("val", 0) & 0xFF == 3
-
-    return device_type in CLIMATE_TYPES
-
-
-class LifeSmartBaseClimate(LifeSmartDevice, ClimateEntity):
+class LifeSmartBaseClimate(LifeSmartEntity, ClimateEntity):
     """
     LifeSmart 温控设备基类。
 
@@ -334,7 +298,7 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             | ClimateEntityFeature.TURN_OFF
         )
         # 根据 P6(CFG) 的值动态确定支持的 HVAC 模式
-        p6_cfg = self._raw_device.get(DEVICE_DATA_KEY, {}).get("P6", {}).get("val", 0)
+        p6_cfg = safe_get(self._raw_device, DEVICE_DATA_KEY, "P6", "val", default=0)
         cfg_mode = (p6_cfg >> 6) & 0x7
         modes_map = {
             1: [HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT],
@@ -425,77 +389,74 @@ class LifeSmartClimate(LifeSmartBaseClimate):
 
     def _update_v_air_p(self, data: dict):
         """更新 V_AIR_P 空调面板的状态。"""
-        if (o_data := data.get("O")) is not None:
-            is_on = o_data.get("type", 0) % 2 == 1
-            if is_on:
-                if (mode_data := data.get("MODE")) is not None:
-                    self._attr_hvac_mode = LIFESMART_HVAC_MODE_MAP.get(
-                        mode_data.get("val")
-                    )
-            else:
-                self._attr_hvac_mode = HVACMode.OFF
+        o_type = safe_get(data, "O", "type", default=0)
+        is_on = o_type % 2 == 1
+        if is_on:
+            mode_val = safe_get(data, "MODE", "val")
+            if mode_val is not None:
+                self._attr_hvac_mode = LIFESMART_HVAC_MODE_MAP.get(mode_val)
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
 
-        if (t_data := data.get("T")) is not None:
-            self._attr_current_temperature = t_data.get("v")
-        if (tt_data := data.get("tT")) is not None:
-            self._attr_target_temperature = tt_data.get("v")
-        if (f_data := data.get("F")) is not None:
-            self._attr_fan_mode = get_f_fan_mode(f_data.get("val", 0))
+        if (temp := safe_get(data, "T", "v")) is not None:
+            self._attr_current_temperature = temp
+        if (target_temp := safe_get(data, "tT", "v")) is not None:
+            self._attr_target_temperature = target_temp
+        if (fan_val := safe_get(data, "F", "val", default=0)) is not None:
+            self._attr_fan_mode = get_f_fan_mode(fan_val)
 
     def _update_sl_uaccb(self, data: dict):
         """更新 SL_UACCB 状态 (其逻辑与 V_AIR_P 几乎相同)。"""
-        if (p1_data := data.get("P1")) is not None:
-            is_on = p1_data.get("type", 0) % 2 == 1
-            if is_on:
-                if (p2_data := data.get("P2")) is not None:
-                    self._attr_hvac_mode = LIFESMART_HVAC_MODE_MAP.get(
-                        p2_data.get("val")
-                    )
-            else:
-                self._attr_hvac_mode = HVACMode.OFF
+        p1_type = safe_get(data, "P1", "type", default=0)
+        is_on = p1_type % 2 == 1
+        if is_on:
+            p2_val = safe_get(data, "P2", "val")
+            if p2_val is not None:
+                self._attr_hvac_mode = LIFESMART_HVAC_MODE_MAP.get(p2_val)
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
 
-        if (p6_data := data.get("P6")) is not None:
-            self._attr_current_temperature = p6_data.get("v")
-        if (p3_data := data.get("P3")) is not None:
-            self._attr_target_temperature = p3_data.get("v")
-        if (p4_data := data.get("P4")) is not None:
-            self._attr_fan_mode = get_f_fan_mode(p4_data.get("val", 0))
+        if (temp := safe_get(data, "P6", "v")) is not None:
+            self._attr_current_temperature = temp
+        if (target_temp := safe_get(data, "P3", "v")) is not None:
+            self._attr_target_temperature = target_temp
+        if (fan_val := safe_get(data, "P4", "val", default=0)) is not None:
+            self._attr_fan_mode = get_f_fan_mode(fan_val)
 
     def _update_sl_cp_vl(self, data: dict):
         """更新 SL_CP_VL 温控阀门状态。"""
-        if (p1_data := data.get("P1")) is not None:
-            self._p1_val = p1_data.get("val", 0)
-            self._attr_is_on = p1_data.get("type", 0) % 2 == 1
-            if self._attr_is_on:
-                mode_val = (self._p1_val >> 1) & 0b11
-                mode_map = {0: HVACMode.HEAT, 1: HVACMode.HEAT, 2: HVACMode.AUTO}
-                self._attr_hvac_mode = mode_map.get(mode_val, HVACMode.HEAT)
-            else:
-                self._attr_hvac_mode = HVACMode.OFF
+        self._p1_val = safe_get(data, "P1", "val", default=0)
+        p1_type = safe_get(data, "P1", "type", default=0)
+        self._attr_is_on = p1_type % 2 == 1
+        if self._attr_is_on:
+            mode_val = (self._p1_val >> 1) & 0b11
+            mode_map = {0: HVACMode.HEAT, 1: HVACMode.HEAT, 2: HVACMode.AUTO}
+            self._attr_hvac_mode = mode_map.get(mode_val, HVACMode.HEAT)
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
 
-        if (p4_data := data.get("P4")) is not None:
-            self._attr_current_temperature = p4_data.get("v")
-        if (p3_data := data.get("P3")) is not None:
-            self._attr_target_temperature = p3_data.get("v")
+        if (temp := safe_get(data, "P4", "v")) is not None:
+            self._attr_current_temperature = temp
+        if (target_temp := safe_get(data, "P3", "v")) is not None:
+            self._attr_target_temperature = target_temp
 
     def _update_sl_nature(self, data: dict):
         """更新 SL_NATURE 超能面板的状态。"""
-        if (p1_data := data.get("P1")) is not None:
-            is_on = p1_data.get("type", 0) % 2 == 1
-            if is_on:
-                if (p7_data := data.get("P7")) is not None:
-                    self._attr_hvac_mode = LIFESMART_HVAC_MODE_MAP.get(
-                        p7_data.get("val")
-                    )
-            else:
-                self._attr_hvac_mode = HVACMode.OFF
+        p1_type = safe_get(data, "P1", "type", default=0)
+        is_on = p1_type % 2 == 1
+        if is_on:
+            p7_val = safe_get(data, "P7", "val")
+            if p7_val is not None:
+                self._attr_hvac_mode = LIFESMART_HVAC_MODE_MAP.get(p7_val)
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
 
-        if (p4_data := data.get("P4")) is not None:
-            self._attr_current_temperature = p4_data.get("v")
-        if (p8_data := data.get("P8")) is not None:
-            self._attr_target_temperature = p8_data.get("v")
-        if (p10_data := data.get("P10")) is not None:
-            self._attr_fan_mode = get_tf_fan_mode(p10_data.get("val", 0))
+        if (temp := safe_get(data, "P4", "v")) is not None:
+            self._attr_current_temperature = temp
+        if (target_temp := safe_get(data, "P8", "v")) is not None:
+            self._attr_target_temperature = target_temp
+        if (fan_val := safe_get(data, "P10", "val", default=0)) is not None:
+            self._attr_fan_mode = get_tf_fan_mode(fan_val)
 
     def _update_sl_fcu(self, data: dict):
         """更新 SL_FCU 状态 (其逻辑与 SL_NATURE 相同)。"""
@@ -503,57 +464,57 @@ class LifeSmartClimate(LifeSmartBaseClimate):
 
     def _update_sl_cp_dn(self, data: dict):
         """更新 SL_CP_DN 地暖温控器状态。"""
-        if (p1_data := data.get("P1")) is not None:
-            self._p1_val = p1_data.get("val", 0)
-            self._attr_is_on = p1_data.get("type", 0) % 2 == 1
-            if self._attr_is_on:
-                is_auto_mode = (self._p1_val >> 31) & 0b1
-                self._attr_hvac_mode = HVACMode.AUTO if is_auto_mode else HVACMode.HEAT
-            else:
-                self._attr_hvac_mode = HVACMode.OFF
+        self._p1_val = safe_get(data, "P1", "val", default=0)
+        p1_type = safe_get(data, "P1", "type", default=0)
+        self._attr_is_on = p1_type % 2 == 1
+        if self._attr_is_on:
+            is_auto_mode = (self._p1_val >> 31) & 0b1
+            self._attr_hvac_mode = HVACMode.AUTO if is_auto_mode else HVACMode.HEAT
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
 
-        if (p4_data := data.get("P4")) is not None:
-            self._attr_current_temperature = p4_data.get("v")
-        if (p3_data := data.get("P3")) is not None:
-            self._attr_target_temperature = p3_data.get("v")
+        if (temp := safe_get(data, "P4", "v")) is not None:
+            self._attr_current_temperature = temp
+        if (target_temp := safe_get(data, "P3", "v")) is not None:
+            self._attr_target_temperature = target_temp
 
     def _update_sl_cp_air(self, data: dict):
         """更新 SL_CP_AIR 风机盘管状态。"""
-        if (p1_data := data.get("P1")) is not None:
-            self._p1_val = p1_data.get("val", 0)
-            self._attr_is_on = p1_data.get("type", 0) % 2 == 1
-            if self._attr_is_on:
-                mode_val = (self._p1_val >> 13) & 0b11
-                fan_val = (self._p1_val >> 15) & 0b11
-                self._attr_hvac_mode = LIFESMART_CP_AIR_HVAC_MODE_MAP.get(mode_val)
-                self._attr_fan_mode = REVERSE_LIFESMART_CP_AIR_FAN_MAP.get(fan_val)
-            else:
-                self._attr_hvac_mode = HVACMode.OFF
+        self._p1_val = safe_get(data, "P1", "val", default=0)
+        p1_type = safe_get(data, "P1", "type", default=0)
+        self._attr_is_on = p1_type % 2 == 1
+        if self._attr_is_on:
+            mode_val = (self._p1_val >> 13) & 0b11
+            fan_val = (self._p1_val >> 15) & 0b11
+            self._attr_hvac_mode = LIFESMART_CP_AIR_HVAC_MODE_MAP.get(mode_val)
+            self._attr_fan_mode = REVERSE_LIFESMART_CP_AIR_FAN_MAP.get(fan_val)
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
 
-        if (p5_data := data.get("P5")) is not None:
-            self._attr_current_temperature = p5_data.get("v")
-        if (p4_data := data.get("P4")) is not None:
-            self._attr_target_temperature = p4_data.get("v")
+        if (temp := safe_get(data, "P5", "v")) is not None:
+            self._attr_current_temperature = temp
+        if (target_temp := safe_get(data, "P4", "v")) is not None:
+            self._attr_target_temperature = target_temp
 
     def _update_sl_tr_acipm(self, data: dict):
         """更新 SL_TR_ACIPM 新风系统状态。"""
-        if (p1_data := data.get("P1")) is not None:
-            is_on = p1_data.get("type", 0) % 2 == 1
-            self._attr_hvac_mode = HVACMode.FAN_ONLY if is_on else HVACMode.OFF
-            fan_val = p1_data.get("val", 0)
-            self._attr_fan_mode = next(
-                (k for k, v in LIFESMART_ACIPM_FAN_MAP.items() if v == fan_val), None
-            )
+        p1_type = safe_get(data, "P1", "type", default=0)
+        is_on = p1_type % 2 == 1
+        self._attr_hvac_mode = HVACMode.FAN_ONLY if is_on else HVACMode.OFF
+        fan_val = safe_get(data, "P1", "val", default=0)
+        self._attr_fan_mode = next(
+            (k for k, v in LIFESMART_ACIPM_FAN_MAP.items() if v == fan_val), None
+        )
 
     def _update_v_fresh_p(self, data: dict):
         """更新 V_FRESH_P 新风系统状态。"""
-        if (o_data := data.get("O")) is not None:
-            is_on = o_data.get("type", 0) % 2 == 1
-            self._attr_hvac_mode = HVACMode.FAN_ONLY if is_on else HVACMode.OFF
-        if (f1_data := data.get("F1")) is not None:
-            self._attr_fan_mode = get_f_fan_mode(f1_data.get("val", 0))
-        if (t_data := data.get("T")) is not None:
-            self._attr_current_temperature = t_data.get("v")
+        o_type = safe_get(data, "O", "type", default=0)
+        is_on = o_type % 2 == 1
+        self._attr_hvac_mode = HVACMode.FAN_ONLY if is_on else HVACMode.OFF
+        if (f1_val := safe_get(data, "F1", "val", default=0)) is not None:
+            self._attr_fan_mode = get_f_fan_mode(f1_val)
+        if (temp := safe_get(data, "T", "v")) is not None:
+            self._attr_current_temperature = temp
 
     # --- 控制方法 ---
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

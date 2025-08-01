@@ -16,12 +16,10 @@
     这种方法对于测试复杂的状态机（如风机盘管的模式切换）至关重要。
 """
 
-import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.components.climate import (
-    # 导入 Home Assistant 温控组件所需的核心常量和服务名称
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -38,14 +36,11 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-# 导入项目内部的工具函数和常量
-from custom_components.lifesmart import generate_unique_id
 from custom_components.lifesmart.const import *
-
-
-def find_device(devices: list, me: str):
-    """一个辅助函数，用于根据设备的 'me' ID 从模拟设备列表中查找特定设备。"""
-    return next((d for d in devices if d.get(DEVICE_ID_KEY) == me), None)
+from custom_components.lifesmart.helpers import (
+    generate_unique_id,
+)
+from .test_utils import find_test_device
 
 
 def get_entity_unique_id(device: dict) -> str:
@@ -69,22 +64,24 @@ async def setup_integration_fancoil_only(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
     mock_device_climate_fancoil: dict,  # 直接从 conftest.py 注入单个设备
 ):
     """一个专用的 setup fixture，只加载风机盘管这一个设备。"""
     mock_config_entry.add_to_hass(hass)
     # 只使用注入的单个设备来创建测试环境了
     devices = [mock_device_climate_fancoil]
-    create_client_return_value = (
-        mock_client,
-        devices,
-        {"expiredtime": int(time.time()) + 3600},
-    )
-    with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
-    ):
+
+    # 创建一个模拟的 hub 对象
+    from unittest.mock import AsyncMock
+
+    mock_hub = MagicMock()
+    mock_hub.async_setup = AsyncMock(return_value=True)
+    mock_hub.get_devices.return_value = devices
+    mock_hub.get_client.return_value = mock_client
+    mock_hub.get_exclude_config.return_value = (set(), set())
+    mock_hub.async_unload = AsyncMock(return_value=None)
+
+    with patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -96,21 +93,23 @@ async def setup_integration_floorheat_only(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
     mock_device_climate_floor_heat: dict,
 ):
     """一个专用的 setup fixture，只加载地暖这一个设备。"""
     mock_config_entry.add_to_hass(hass)
     devices = [mock_device_climate_floor_heat]
-    create_client_return_value = (
-        mock_client,
-        devices,
-        {"expiredtime": int(time.time()) + 3600},
-    )
-    with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
-    ):
+
+    # 创建一个模拟的 hub 对象
+    from unittest.mock import AsyncMock
+
+    mock_hub = MagicMock()
+    mock_hub.async_setup = AsyncMock(return_value=True)
+    mock_hub.get_devices.return_value = devices
+    mock_hub.get_client.return_value = mock_client
+    mock_hub.get_exclude_config.return_value = (set(), set())
+    mock_hub.async_unload = AsyncMock(return_value=None)
+
+    with patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -122,21 +121,23 @@ async def setup_integration_nature_fancoil_mode(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
-    mock_state_manager_class: MagicMock,
     mock_device_climate_nature_fancoil: dict,
 ):
-    """一个专用的 setup fixture，只加载配置为“风机盘管模式”的 Nature Panel。"""
+    """一个专用的 setup fixture，只加载配置为"风机盘管模式"的 Nature Panel。"""
     mock_config_entry.add_to_hass(hass)
     devices = [mock_device_climate_nature_fancoil]
-    create_client_return_value = (
-        mock_client,
-        devices,
-        {"expiredtime": int(time.time()) + 3600},
-    )
-    with patch(
-        "custom_components.lifesmart._async_create_client_and_get_devices",
-        return_value=create_client_return_value,
-    ):
+
+    # 创建一个模拟的 hub 对象
+    from unittest.mock import AsyncMock
+
+    mock_hub = MagicMock()
+    mock_hub.async_setup = AsyncMock(return_value=True)
+    mock_hub.get_devices.return_value = devices
+    mock_hub.get_client.return_value = mock_client
+    mock_hub.get_exclude_config.return_value = (set(), set())
+    mock_hub.async_unload = AsyncMock(return_value=None)
+
+    with patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -155,6 +156,7 @@ class TestClimateSetup:
     会加载 `conftest.py` 中定义的所有设备。
     """
 
+    @pytest.mark.asyncio
     async def test_setup_entry_creates_correct_entities(
         self,
         hass: HomeAssistant,
@@ -166,45 +168,55 @@ class TestClimateSetup:
         这是一个“快乐路径”测试，确保在标准配置下，所有在模拟设备列表中
         定义的温控设备都被成功加载为 Home Assistant 中的 climate 实体。
         """
-        assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
-        assert hass.states.get("climate.nature_panel_thermo") is not None
-        assert hass.states.get("climate.floor_heating") is not None
-        assert hass.states.get("climate.fan_coil_unit") is not None
-        assert hass.states.get("climate.air_panel") is not None
-        assert hass.states.get("climate.air_system") is not None
+        assert (
+            len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
+        ), "应该创建5个温控实体"
+        assert (
+            hass.states.get("climate.nature_panel_thermo") is not None
+        ), "超能面板温控实体应存在"
+        assert hass.states.get("climate.floor_heating") is not None, "地暖实体应存在"
+        assert (
+            hass.states.get("climate.fan_coil_unit") is not None
+        ), "风机盘管实体应存在"
+        assert hass.states.get("climate.air_panel") is not None, "空调面板实体应存在"
+        assert hass.states.get("climate.air_system") is not None, "新风系统实体应存在"
 
+    @pytest.mark.asyncio
     async def test_nature_panel_is_not_climate_after_reload(
         self,
         hass: HomeAssistant,
         mock_lifesmart_devices: list,
         mock_client: AsyncMock,
-        mock_state_manager_class: MagicMock,
         setup_integration: ConfigEntry,  # 使用全局 setup
     ):
         """
         边界测试：验证在重载后，非温控版的 SL_NATURE 面板不再作为 climate 实体活动。
         """
-        assert hass.states.get("climate.nature_panel_thermo") is not None
-        assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
+        assert (
+            hass.states.get("climate.nature_panel_thermo") is not None
+        ), "超能面板温控实体初始应存在"
+        assert (
+            len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
+        ), "应该有5个温控实体"
 
         # 模拟将 Nature Panel 的模式从温控(P5=3)改为开关(P5=1)
-        nature_switch = find_device(mock_lifesmart_devices, "climate_nature_thermo")
+        nature_switch = find_test_device(
+            mock_lifesmart_devices, "climate_nature_thermo"
+        )
         nature_switch["data"]["P5"]["val"] = 1
 
-        # 模拟重载过程
-        mock_client.get_all_device_async.return_value = mock_lifesmart_devices
-        initial_state_manager_instance = mock_state_manager_class.return_value
-        initial_state_manager_instance.start.reset_mock()
+        # 模拟重载过程 - 使用新的 Hub 架构
+        with patch("custom_components.lifesmart.LifeSmartHub") as MockHubClass:
+            mock_hub_instance = MockHubClass.return_value
+            # async_setup 需要返回 AsyncMock
+            from unittest.mock import AsyncMock
 
-        create_client_return_value = (
-            mock_client,
-            mock_lifesmart_devices,
-            {"expiredtime": int(time.time()) + 3600},
-        )
-        with patch(
-            "custom_components.lifesmart._async_create_client_and_get_devices",
-            return_value=create_client_return_value,
-        ):
+            mock_hub_instance.async_setup = AsyncMock(return_value=True)
+            mock_hub_instance.get_devices.return_value = mock_lifesmart_devices
+            mock_hub_instance.get_client.return_value = mock_client
+            mock_hub_instance.get_exclude_config.return_value = (set(), set())
+            mock_hub_instance.async_unload = AsyncMock(return_value=None)
+
             assert await hass.config_entries.async_reload(setup_integration.entry_id)
             await hass.async_block_till_done()
 
@@ -213,8 +225,6 @@ class TestClimateSetup:
         assert reloaded_state is not None
         assert reloaded_state.state == "unavailable"
         assert hass.states.get("switch.nature_panel_thermo_p1") is not None
-        initial_state_manager_instance.stop.assert_awaited_once()
-        initial_state_manager_instance.start.assert_called_once()
 
 
 class TestClimateEntity:
@@ -287,8 +297,15 @@ class TestClimateEntity:
                 | ClimateEntityFeature.TURN_OFF,
             ),
         ],
-        ids=["NatureThermo", "FloorHeating", "FanCoil", "AirPanel", "AirSystem"],
+        ids=[
+            "NatureThermostaat",
+            "FloorHeatingSystem",
+            "FanCoilUnit",
+            "AirPanelControl",
+            "AirSystemControl",
+        ],
     )
+    @pytest.mark.asyncio
     async def test_entity_state_and_attributes(
         self,
         hass: HomeAssistant,
@@ -361,8 +378,14 @@ class TestClimateEntity:
                 ),
             ),
         ],
-        ids=["SetTemp", "SetHvacSimple", "SetHvacBitmask", "SetFanMode"],
+        ids=[
+            "SetTemperatureService",
+            "SetSimpleHvacMode",
+            "SetBitmaskHvacMode",
+            "SetFanModeService",
+        ],
     )
+    @pytest.mark.asyncio
     async def test_service_calls(
         self,
         hass: HomeAssistant,
@@ -412,8 +435,14 @@ class TestClimateEntity:
                 {"current_temperature": 23.0},
             ),
         ],
-        ids=["FanCoilUpdate", "FloorHeatUpdate", "AirPanelUpdate", "MissingDataKey"],
+        ids=[
+            "FanCoilStateUpdate",
+            "FloorHeatStateUpdate",
+            "AirPanelStateUpdate",
+            "MissingDataKeyHandling",
+        ],
     )
+    @pytest.mark.asyncio
     async def test_entity_update_from_dispatcher(
         self,
         hass: HomeAssistant,
@@ -431,7 +460,7 @@ class TestClimateEntity:
         方法能否正确解析各种复杂数据（特别是位掩码），并更新实体的状态。
         同时，它也测试了代码在面对不完整数据时的容错能力。
         """
-        device = find_device(mock_lifesmart_devices, me)
+        device = find_test_device(mock_lifesmart_devices, me)
         assert device is not None
         entity_id = f"climate.{device['name'].lower().replace(' ', '_')}"
         unique_id = get_entity_unique_id(device)
@@ -455,6 +484,7 @@ class TestComplexClimateScenarios:
     只包含当前测试所需设备的纯净环境。
     """
 
+    @pytest.mark.asyncio
     async def test_fancoil_state_machine_transition(
         self,
         hass: HomeAssistant,
@@ -534,6 +564,7 @@ class TestComplexClimateScenarios:
             hub_id, me, devtype, HVACMode.OFF, val_after_fan_change
         )
 
+    @pytest.mark.asyncio
     async def test_nature_panel_dynamic_features(
         self,
         hass: HomeAssistant,
@@ -558,6 +589,7 @@ class TestComplexClimateScenarios:
         assert sorted(state.attributes.get("hvac_modes")) == sorted(expected_hvac_modes)
         assert sorted(state.attributes.get("fan_modes")) == sorted(expected_fan_modes)
 
+    @pytest.mark.asyncio
     async def test_floor_heating_turn_on_from_off(
         self,
         hass: HomeAssistant,

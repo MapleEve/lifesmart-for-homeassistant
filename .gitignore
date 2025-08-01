@@ -1,13 +1,60 @@
-custom_components/lifesmart/__pycache__/*
-*/.idea
-.idea/*
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.tox/
+.cache
+.pytest_cache/
+.hypothesis/
+test_cache
 
+# Coverage reports
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+nosetests.xml
+
+# Virtual environments
+/venv/
+.env
+
+# IDE
+.idea/
+.idea_modules/
+.vscode/
 *.iws
 *.iml
+*.swp
+*.swo
+*~
 
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+ehthumbs.db
+Thumbs.db
+
+# Project specific
 /out/
-/venv
 
-.idea_modules/
-__pycache__
-.pytest_cache
+# Auto-generated .gitignore files
+**/.gitignore
+# But keep the root one
+!/.gitignore
+
+# Exceptions (keep these)
+!/.claude/
+!/htmlcov/

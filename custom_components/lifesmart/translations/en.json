@@ -49,6 +49,8 @@
       "already_in_progress": "Configuration is already in progress.",
       "reauth_successful": "Re-authentication successful. Please reload the integration.",
       "already_configured": "This device is already configured.",
+      "reauth_entry_not_found": "Re-authentication failed, config entry not found",
+      "local_no_auth_params": "Local TCP mode does not support authentication parameter modification",
       "unknown_error": "An unknown error occurred. Please check the logs."
     },
     "error": {

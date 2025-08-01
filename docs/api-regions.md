@@ -1,1 +1,0 @@
-![LifeSmart服务器备选](region-server.png)

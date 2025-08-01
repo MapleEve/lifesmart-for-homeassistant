@@ -26,7 +26,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LifeSmartDevice, generate_unique_id
 from .const import (
     # 核心常量
     DOMAIN,
@@ -38,11 +37,7 @@ from .const import (
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
-    # 配置选项常量
-    CONF_EXCLUDE_ITEMS,
-    CONF_EXCLUDE_AGTS,
     # --- 设备类型常量导入 ---
-    ALL_SENSOR_TYPES,
     EV_SENSOR_TYPES,
     ENVIRONMENT_SENSOR_TYPES,
     GAS_SENSOR_TYPES,
@@ -50,15 +45,14 @@ from .const import (
     POWER_METER_PLUG_TYPES,
     SMART_PLUG_TYPES,
     POWER_METER_TYPES,
-    LOCK_TYPES,
-    COVER_TYPES,
     DEFED_SENSOR_TYPES,
     SMOKE_SENSOR_TYPES,
     WATER_SENSOR_TYPES,
     SUPPORTED_SWITCH_TYPES,
-    GARAGE_DOOR_TYPES,
     CLIMATE_TYPES,
 )
+from .entity import LifeSmartEntity
+from .helpers import generate_unique_id, get_sensor_subdevices, safe_get
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,140 +63,35 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LifeSmart from a config entry."""
-    entry_id = config_entry.entry_id
-    devices = hass.data[DOMAIN][entry_id]["devices"]
-    client = hass.data[DOMAIN][entry_id]["client"]
-    exclude_devices_str = config_entry.options.get(CONF_EXCLUDE_ITEMS, "")
-    exclude_hubs_str = config_entry.options.get(CONF_EXCLUDE_AGTS, "")
-    exclude_devices = {
-        dev.strip() for dev in exclude_devices_str.split(",") if dev.strip()
-    }
-    exclude_hubs = {hub.strip() for hub in exclude_hubs_str.split(",") if hub.strip()}
+    hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
+    exclude_devices, exclude_hubs = hub.get_exclude_config()
 
     sensors = []
-    for device in devices:
+    for device in hub.get_devices():
         if (
             device[DEVICE_ID_KEY] in exclude_devices
             or device[HUB_ID_KEY] in exclude_hubs
         ):
             continue
 
-        device_type = device[DEVICE_TYPE_KEY]
-
-        if device_type == "SL_NATURE":
-            p5_val = device.get(DEVICE_DATA_KEY, {}).get("P5", {}).get("val", 1) & 0xFF
-            if p5_val == 3 and "P4" in device[DEVICE_DATA_KEY]:
-                sensors.append(
-                    LifeSmartSensor(
-                        raw_device=device,
-                        client=client,
-                        entry_id=entry_id,
-                        sub_device_key="P4",
-                        sub_device_data=device[DEVICE_DATA_KEY]["P4"],
-                    )
-                )
-            continue  # 处理完 SL_NATURE，跳过
-
-        if device_type not in ALL_SENSOR_TYPES:
-            continue
-
-        for sub_key, sub_data in device[DEVICE_DATA_KEY].items():
-            if not _is_sensor_subdevice(device_type, sub_key):
-                continue
-
+        # 使用helpers中的统一逻辑获取所有有效的传感器子设备
+        subdevice_keys = get_sensor_subdevices(device)
+        for sub_key in subdevice_keys:
+            sub_device_data = safe_get(device, DEVICE_DATA_KEY, sub_key, default={})
             sensors.append(
                 LifeSmartSensor(
                     raw_device=device,
-                    client=client,
-                    entry_id=entry_id,
+                    client=hub.get_client(),
+                    entry_id=config_entry.entry_id,
                     sub_device_key=sub_key,
-                    sub_device_data=sub_data,
+                    sub_device_data=sub_device_data,
                 )
             )
 
     async_add_entities(sensors)
 
 
-def _is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
-    """判断一个子设备是否为有效的数值传感器。"""
-    if device_type in CLIMATE_TYPES:
-        # 温控设备的温度/阀门等状态由 climate 实体内部管理
-        if device_type == "SL_CP_DN" and sub_key == "P5":
-            return True
-        if device_type == "SL_CP_VL" and sub_key == "P6":
-            return True
-        if device_type == "SL_TR_ACIPM" and sub_key in {"P4", "P5"}:
-            return True
-        return False
-
-    # 环境感应器（包括温度、湿度、光照、电压）
-    if device_type in EV_SENSOR_TYPES and sub_key in {
-        "T",
-        "H",
-        "Z",
-        "V",
-        "P1",
-        "P2",
-        "P3",
-        "P4",
-        "P5",
-    }:
-        return True
-
-    # TVOC, CO2, CH2O 传感器
-    if device_type in ENVIRONMENT_SENSOR_TYPES and sub_key in {"P1", "P3", "P4"}:
-        return True
-
-    # 气体感应器
-    if device_type in GAS_SENSOR_TYPES and sub_key in {"P1", "P2"}:
-        return True
-
-    # 门锁电量
-    if device_type in LOCK_TYPES and sub_key == "BAT":
-        return True
-
-    # 窗帘位置
-    if device_type in COVER_TYPES and sub_key == "P8":
-        return True
-
-    # 智能插座
-    if device_type in POWER_METER_PLUG_TYPES and sub_key in {"P2", "P3", "P4"}:
-        return True
-
-    # 智能插座 (非计量版，但也可能带计量功能)
-    if device_type in SMART_PLUG_TYPES and sub_key in {"EV", "EI", "EP", "EPA"}:
-        return True
-
-    # 噪音感应器
-    if device_type in NOISE_SENSOR_TYPES and sub_key in {"P1", "P2"}:
-        return True
-
-    # ELIQ电量计量器
-    if device_type in POWER_METER_TYPES and sub_key in {"EPA", "EE", "EP"}:
-        return True
-
-    # 云防系列传感器
-    if device_type in DEFED_SENSOR_TYPES and sub_key in {"T", "V"}:
-        return True
-
-    # 烟雾传感器
-    if device_type in SMOKE_SENSOR_TYPES and sub_key == "P2":
-        return True
-    # 水浸传感器（只保留电压）
-    if device_type in WATER_SENSOR_TYPES and sub_key == "V":
-        return True
-
-    # SL_SC_BB_V2 的 P2 是电量传感器
-    if device_type == "SL_SC_BB_V2" and sub_key == "P2":
-        return True
-
-    if device_type in GARAGE_DOOR_TYPES:
-        return False
-
-    return False
-
-
-class LifeSmartSensor(LifeSmartDevice, SensorEntity):
+class LifeSmartSensor(LifeSmartEntity, SensorEntity):
     """LifeSmart sensor entity with enhanced compatibility."""
 
     def __init__(
@@ -234,7 +123,6 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         self._attr_state_class = self._determine_state_class()
         self._attr_native_unit_of_measurement = self._determine_unit()
         self._attr_native_value = self._extract_initial_value()
-        self._attr_extra_state_attributes = self._get_extra_attributes()
 
     @callback
     def _generate_sensor_name(self) -> str | None:
@@ -499,6 +387,22 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         return None
 
     @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra state attributes for this sensor."""
+        # Get base attributes from parent class
+        base_attrs = super().extra_state_attributes
+        # Get sensor-specific extra attributes
+        sensor_attrs = self._get_extra_attributes()
+
+        if sensor_attrs:
+            # Merge base attributes with sensor-specific ones
+            if base_attrs:
+                return {**base_attrs, **sensor_attrs}
+            return sensor_attrs
+
+        return base_attrs
+
+    @property
     def device_info(self) -> DeviceInfo:
         """返回设备信息以链接实体到单个设备。"""
         return DeviceInfo(
@@ -533,9 +437,6 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
         """Handle real-time updates."""
         try:
             if not new_data:
-                import logging
-
-                _LOGGER = logging.getLogger(__name__)
                 _LOGGER.warning(
                     "Received empty new_data in _handle_update; possible upstream issue."
                 )
@@ -601,7 +502,7 @@ class LifeSmartSensor(LifeSmartDevice, SensorEntity):
                     self.async_write_ha_state()
                 return
 
-            new_sub_data = current_device.get(DEVICE_DATA_KEY, {}).get(self._sub_key)
+            new_sub_data = safe_get(current_device, DEVICE_DATA_KEY, self._sub_key)
             if new_sub_data is None:
                 if self.available:
                     _LOGGER.warning(

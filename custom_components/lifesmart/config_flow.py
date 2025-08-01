@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import SelectSelectorMode
 
-from . import LifeSmartClient
+import custom_components.lifesmart.core.local_tcp_client
 from .const import (
     CONF_AI_INCLUDE_AGTS,
     CONF_AI_INCLUDE_ITEMS,
@@ -33,9 +33,10 @@ from .const import (
     DOMAIN,
     LIFESMART_REGION_OPTIONS,
 )
-from .core import lifesmart_protocol
+from .core.openapi_client import LifeSmartOAPIClient
 from .diagnostics import get_error_advice
 from .exceptions import LifeSmartAuthError
+from .helpers import safe_get
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     # 注意：这个函数现在只在成功时返回值，失败时直接抛出异常
     # 错误处理逻辑移至调用方 (各个 step 中)
     try:
-        client = LifeSmartClient(
+        client = LifeSmartOAPIClient(
             hass,
             data.get(CONF_REGION),
             data.get(CONF_LIFESMART_APPKEY),
@@ -74,7 +75,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
                     "userid", data.get(CONF_LIFESMART_USERID, "")
                 )
 
-        devices = await client.get_all_device_async()
+        devices = await client.async_get_all_devices()
 
         if not isinstance(devices, list):
             _LOGGER.error("API did not return a valid device list: %s", devices)
@@ -99,7 +100,7 @@ async def validate_local_input(
 ) -> dict[str, Any]:
     """Validate the user input for local connection."""
     try:
-        dev = lifesmart_protocol.LifeSmartLocalClient(
+        dev = custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient(
             data[CONF_HOST],
             data[CONF_PORT],
             data[CONF_USERNAME],
@@ -142,16 +143,17 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # 检查是否处于重新认证流程
         if self._reauth_entry:
             _LOGGER.info("重新认证成功，正在更新配置条目...")
-            self.hass.config_entries.async_update_entry(
-                self._reauth_entry, data=validation_result["data"]
-            )
+            data = safe_get(validation_result, "data", default={})
+            self.hass.config_entries.async_update_entry(self._reauth_entry, data=data)
             # 更新后需要重新加载集成以使新凭据生效
             await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
             # 中止流程，并向用户显示成功消息
             return self.async_abort(reason="reauth_successful")
 
         # 检查此用户是否已配置
-        await self.async_set_unique_id(validation_result["data"][CONF_LIFESMART_USERID])
+        userid = safe_get(validation_result, "data", CONF_LIFESMART_USERID, default="")
+        if userid:
+            await self.async_set_unique_id(userid)
         self._abort_if_unique_id_configured()
 
         # 首次设置，创建新的配置条目
@@ -362,9 +364,19 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
         """Handle re-authentication."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        # 检查上下文中是否有 entry_id
+        entry_id = self.context.get("entry_id")
+        if not entry_id:
+            _LOGGER.error("重新认证失败：上下文中缺少 entry_id")
+            return self.async_abort(reason="reauth_entry_not_found")
+
+        self._reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
+
+        # 检查配置条目是否存在
+        if self._reauth_entry is None:
+            _LOGGER.error("重新认证失败：无法找到配置条目 %s", entry_id)
+            return self.async_abort(reason="reauth_entry_not_found")
+
         # 将现有数据预填充到流程中
         self.config_data = self._reauth_entry.data.copy()
         # 直接进入云端配置的第一步
@@ -391,9 +403,19 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the option menu."""
+        # 根据连接类型决定显示的菜单选项
+        menu_options = ["main_params"]
+
+        # 只有云端模式才显示认证参数选项
+        if (
+            self.config_entry.data.get(CONF_TYPE)
+            == config_entries.CONN_CLASS_CLOUD_PUSH
+        ):
+            menu_options.append("auth_params")
+
         return self.async_show_menu(
             step_id="init",
-            menu_options=["main_params", "auth_params"],
+            menu_options=menu_options,
         )
 
     async def async_step_main_params(
@@ -430,6 +452,13 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle authentication settings update (Step 1)."""
+        # 检查是否为本地TCP模式，如果是则不应该显示认证参数选项
+        if (
+            self.config_entry.data.get(CONF_TYPE)
+            == config_entries.CONN_CLASS_LOCAL_PUSH
+        ):
+            return self.async_abort(reason="local_no_auth_params")
+
         self.temp_data = self.config_entry.data.copy()
 
         if user_input is not None:

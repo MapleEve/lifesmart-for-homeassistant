@@ -39,6 +39,7 @@ from ..const import (
     REVERSE_LIFESMART_HVAC_MODE_MAP,
     REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
 )
+from ..helpers import safe_get
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,166 @@ class LifeSmartClientBase(ABC):
     """
     LifeSmart 客户端的抽象基类，定义了通用的设备控制接口和共享的业务逻辑。
     """
+
+    # --- 公共接口 (Public API) ---
+    async def async_get_all_devices(self, timeout=10) -> list[dict[str, Any]]:
+        """
+        获取所有设备信息的公共接口。
+
+        此方法为上层代码（如 hub.py）提供一个稳定的调用入口。
+        它会调用内部的、由具体子类实现的 _async_get_all_devices 方法。
+        """
+        return await self._async_get_all_devices()
+
+    async def async_send_single_command(
+        self, agt: str, me: str, idx: str, command_type: str, val: Any
+    ) -> int:
+        """
+        发送单个IO口命令的公共接口。
+
+        由具体客户端子类实现的 _async_send_single_command 方法完成实际操作。
+        """
+        return await self._async_send_single_command(agt, me, idx, command_type, val)
+
+    async def async_send_multi_command(
+        self, agt: str, me: str, io_list: list[dict]
+    ) -> int:
+        """
+        同时发送多个IO口命令的公共接口。
+
+        由具体客户端子类实现的 _async_send_multi_command 方法完成实际操作。
+        """
+        return await self._async_send_multi_command(agt, me, io_list)
+
+    async def async_set_scene(self, agt: str, scene_name: str) -> int:
+        """
+        激活一个场景的公共接口。
+
+        由具体客户端子类实现的 _async_set_scene 方法完成实际操作。
+        """
+        return await self._async_set_scene(agt, scene_name)
+
+    async def async_send_ir_key(
+        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+    ) -> int:
+        """
+        发送红外按键命令的公共接口。
+
+        由具体客户端子类实现的 send_ir_key_async 方法完成实际操作。
+        """
+        return await self._async_send_ir_key(agt, ai, me, category, brand, keys)
+
+    async def async_add_scene(self, agt: str, scene_name: str, actions: str) -> int:
+        """
+        创建新场景的公共接口。
+
+        由具体客户端子类实现的 _async_add_scene 方法完成实际操作。
+        """
+        return await self._async_add_scene(agt, scene_name, actions)
+
+    async def async_delete_scene(self, agt: str, scene_name: str) -> int:
+        """
+        删除场景的公共接口。
+
+        由具体客户端子类实现的 _async_delete_scene 方法完成实际操作。
+        """
+        return await self._async_delete_scene(agt, scene_name)
+
+    async def async_get_scene_list(self, agt: str) -> list[dict[str, Any]]:
+        """
+        获取场景列表的公共接口。
+
+        由具体客户端子类实现的 _async_get_scene_list 方法完成实际操作。
+        """
+        return await self._async_get_scene_list(agt)
+
+    async def async_get_room_list(self, agt: str) -> list[dict[str, Any]]:
+        """
+        获取房间列表的公共接口。
+
+        由具体客户端子类实现的 _async_get_room_list 方法完成实际操作。
+        """
+        return await self._async_get_room_list(agt)
+
+    async def async_get_hub_list(self) -> list[dict[str, Any]]:
+        """
+        获取中枢列表的公共接口。
+
+        由具体客户端子类实现的 _async_get_hub_list 方法完成实际操作。
+        """
+        return await self._async_get_hub_list()
+
+    async def async_change_device_icon(self, device_id: str, icon: str) -> int:
+        """
+        修改设备图标的公共接口。
+
+        由具体客户端子类实现的 _async_change_device_icon 方法完成实际操作。
+        """
+        return await self._async_change_device_icon(device_id, icon)
+
+    async def async_set_device_eeprom(
+        self, device_id: str, key: str, value: Any
+    ) -> int:
+        """
+        设置设备EEPROM的公共接口。
+
+        由具体客户端子类实现的 _async_set_device_eeprom 方法完成实际操作。
+        """
+        return await self._async_set_device_eeprom(device_id, key, value)
+
+    async def async_add_device_timer(
+        self, device_id: str, cron_info: str, key: str
+    ) -> int:
+        """
+        为设备添加定时器的公共接口。
+
+        由具体客户端子类实现的 _async_add_device_timer 方法完成实际操作。
+        """
+        return await self._async_add_device_timer(device_id, cron_info, key)
+
+    async def async_ir_control(self, device_id: str, options: dict) -> int:
+        """
+        通过场景控制红外设备的公共接口。
+
+        由具体客户端子类实现的 _async_ir_control 方法完成实际操作。
+        """
+        return await self._async_ir_control(device_id, options)
+
+    async def async_send_ir_code(self, device_id: str, ir_data: list | bytes) -> int:
+        """
+        发送原始红外码的公共接口。
+
+        由具体客户端子类实现的 _async_send_ir_code 方法完成实际操作。
+        """
+        return await self._async_send_ir_code(device_id, ir_data)
+
+    async def async_ir_raw_control(self, device_id: str, raw_data: str) -> int:
+        """
+        发送原始红外控制数据的公共接口。
+
+        由具体客户端子类实现的 _async_ir_raw_control 方法完成实际操作。
+        """
+        return await self._async_ir_raw_control(device_id, raw_data)
+
+    async def async_get_ir_remote_list(self, agt: str) -> dict[str, Any]:
+        """
+        获取红外遥控器列表的公共接口。
+
+        由具体客户端子类实现的 _async_get_ir_remote_list 方法完成实际操作。
+        """
+        return await self._async_get_ir_remote_list(agt)
+
+    # --- 受保护的抽象方法 (Protected Abstract Methods) ---
+    @abstractmethod
+    async def _async_get_all_devices(self, timeout=10) -> list[dict[str, Any]]:
+        """
+        [抽象方法] 获取所有设备信息，带超时控制
+
+        每个具体的客户端（云端、本地TCP等）都必须实现此方法。
+        它应该返回一个包含所有设备信息的列表。
+        如果获取失败，应返回一个空列表或引发适当的异常。
+        """
+        pass
 
     @abstractmethod
     async def _async_send_single_command(
@@ -69,15 +230,79 @@ class LifeSmartClientBase(ABC):
         pass
 
     @abstractmethod
-    async def set_scene_async(self, agt: str, scene_id: str) -> int:
+    async def _async_set_scene(self, agt: str, scene_name: str) -> int:
         """[抽象方法] 激活一个场景。"""
         pass
 
     @abstractmethod
-    async def send_ir_key_async(
+    async def _async_send_ir_key(
         self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
     ) -> int:
         """[抽象方法] 发送一个红外按键命令。"""
+        pass
+
+    @abstractmethod
+    async def _async_add_scene(self, agt: str, scene_name: str, actions: str) -> int:
+        """[抽象方法] 创建新场景。"""
+        pass
+
+    @abstractmethod
+    async def _async_delete_scene(self, agt: str, scene_name: str) -> int:
+        """[抽象方法] 删除场景。"""
+        pass
+
+    @abstractmethod
+    async def _async_get_scene_list(self, agt: str) -> list[dict[str, Any]]:
+        """[抽象方法] 获取场景列表。"""
+        pass
+
+    @abstractmethod
+    async def _async_get_room_list(self, agt: str) -> list[dict[str, Any]]:
+        """[抽象方法] 获取房间列表。"""
+        pass
+
+    @abstractmethod
+    async def _async_get_hub_list(self) -> list[dict[str, Any]]:
+        """[抽象方法] 获取中枢列表。"""
+        pass
+
+    @abstractmethod
+    async def _async_change_device_icon(self, device_id: str, icon: str) -> int:
+        """[抽象方法] 修改设备图标。"""
+        pass
+
+    @abstractmethod
+    async def _async_set_device_eeprom(
+        self, device_id: str, key: str, value: Any
+    ) -> int:
+        """[抽象方法] 设置设备EEPROM。"""
+        pass
+
+    @abstractmethod
+    async def _async_add_device_timer(
+        self, device_id: str, cron_info: str, key: str
+    ) -> int:
+        """[抽象方法] 为设备添加定时器。"""
+        pass
+
+    @abstractmethod
+    async def _async_ir_control(self, device_id: str, options: dict) -> int:
+        """[抽象方法] 通过场景控制红外设备。"""
+        pass
+
+    @abstractmethod
+    async def _async_send_ir_code(self, device_id: str, ir_data: list | bytes) -> int:
+        """[抽象方法] 发送原始红外码。"""
+        pass
+
+    @abstractmethod
+    async def _async_ir_raw_control(self, device_id: str, raw_data: str) -> int:
+        """[抽象方法] 发送原始红外控制数据。"""
+        pass
+
+    @abstractmethod
+    async def _async_get_ir_remote_list(self, agt: str) -> dict[str, Any]:
+        """[抽象方法] 获取红外遥控器列表。"""
         pass
 
     # --- 通用开关/灯光控制 ---
@@ -110,7 +335,10 @@ class LifeSmartClientBase(ABC):
                 agt, me, "P2", CMD_TYPE_SET_VAL, 100
             )
         if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["open"]
+            cmd_idx = safe_get(NON_POSITIONAL_COVER_CONFIG, device_type, "open")
+            if cmd_idx is None:
+                _LOGGER.warning("设备类型 %s 缺少 'open' 配置", device_type)
+                return -1
             return await self._async_send_single_command(
                 agt, me, cmd_idx, CMD_TYPE_ON, 1
             )
@@ -128,7 +356,10 @@ class LifeSmartClientBase(ABC):
                 agt, me, "P2", CMD_TYPE_SET_VAL, 0
             )
         if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["close"]
+            cmd_idx = safe_get(NON_POSITIONAL_COVER_CONFIG, device_type, "close")
+            if cmd_idx is None:
+                _LOGGER.warning("设备类型 %s 缺少 'close' 配置", device_type)
+                return -1
             return await self._async_send_single_command(
                 agt, me, cmd_idx, CMD_TYPE_ON, 1
             )
@@ -146,7 +377,10 @@ class LifeSmartClientBase(ABC):
                 agt, me, "P2", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
             )
         if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = NON_POSITIONAL_COVER_CONFIG[device_type]["stop"]
+            cmd_idx = safe_get(NON_POSITIONAL_COVER_CONFIG, device_type, "stop")
+            if cmd_idx is None:
+                _LOGGER.warning("设备类型 %s 缺少 'stop' 配置", device_type)
+                return -1
             return await self._async_send_single_command(
                 agt, me, cmd_idx, CMD_TYPE_ON, 1
             )
