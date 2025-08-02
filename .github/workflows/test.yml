@@ -15,7 +15,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.12" ]
+        # 测试四个关键版本：Python各版本全面支持的节点 + 最新版本
+        homeassistant-version: ["2023.6.0", "2024.2.0", "2024.12.0", "2025.7.4"]
+        include:
+          - homeassistant-version: "2023.6.0"
+            python-version: "3.11"  # 首个支持Python 3.11的HA版本
+          - homeassistant-version: "2024.2.0"
+            python-version: "3.12"  # Python 3.12全面支持（所有安装方式）
+          - homeassistant-version: "2024.12.0"
+            python-version: "3.13"  # Python 3.13全面支持（所有安装方式）
+          - homeassistant-version: "2025.7.4"
+            python-version: "3.13"  # 最新版本
 
     steps:
       - name: Checkout the repository
@@ -29,13 +39,36 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-asyncio pytest-cov pytest-homeassistant-custom-component flake8
+          # 先安装指定版本的HA，使用预编译wheel避免编译问题
+          pip install homeassistant==${{ matrix.homeassistant-version }} --only-binary=all
+          
+          # 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
+          # 确保使用正确的版本约束避免依赖冲突
+          if [[ "${{ matrix.homeassistant-version }}" == "2023.6.0" ]]; then
+            # HA 2023.6.0 + Python 3.11 兼容版本 - 使用确认兼容的精确版本
+            pip install "pytest>=7.2.1,<8.0.0" "pytest-homeassistant-custom-component==0.13.39"
+          elif [[ "${{ matrix.homeassistant-version }}" == "2024.2.0" ]]; then
+            # HA 2024.2.0 + Python 3.12 兼容版本  
+            pip install "pytest>=7.4.0,<8.0.0" "pytest-homeassistant-custom-component>=0.13.0,<0.14.0"
+          elif [[ "${{ matrix.homeassistant-version }}" == "2024.12.0" ]]; then
+            # HA 2024.12.0 + Python 3.13 兼容版本
+            pip install "pytest>=8.0.0,<9.0.0" "pytest-homeassistant-custom-component>=0.13.100,<0.14.0"
+          elif [[ "${{ matrix.homeassistant-version }}" == "2025.7.4" ]]; then
+            # HA 2025.7.4 + Python 3.13 最新版本
+            pip install "pytest>=8.0.0" "pytest-homeassistant-custom-component>=0.13.200"
+          else
+            # 回退到通用版本
+            pip install pytest pytest-homeassistant-custom-component
+          fi
+          
+          # 安装其他测试依赖
+          pip install pytest-asyncio pytest-cov flake8
 
       - name: Run Flake8 Lint
         run: |
           flake8 --count --show-source --statistics custom_components/lifesmart
 
-      - name: Run unit tests with pytest
+      - name: Run unit tests with pytest (HA ${{ matrix.homeassistant-version }})
         env:
           PYTHONPATH: .
         run: |
@@ -44,7 +77,7 @@ jobs:
             --cov \
             --cov-branch \
             --cov-report=xml \
-            --junitxml=junit.xml -o junit_family=legacy
+            --junitxml=junit-${{ matrix.homeassistant-version }}.xml -o junit_family=legacy
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}

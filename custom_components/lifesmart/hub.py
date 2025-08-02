@@ -19,7 +19,6 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 import aiohttp
-from aiohttp import ClientWSTimeout
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -36,6 +35,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
+# aiohttp 版本兼容性处理
+from .compatibility import get_ws_timeout
 from .const import (
     CONF_AI_INCLUDE_AGTS,
     CONF_AI_INCLUDE_ITEMS,
@@ -590,7 +591,7 @@ class LifeSmartStateManager:
                 self.ws_url,
                 heartbeat=25,
                 compress=15,
-                timeout=ClientWSTimeout(ws_close=30),
+                timeout=get_ws_timeout(30),
             )
         except aiohttp.ClientConnectorCertificateError as e:
             _LOGGER.error("SSL 证书验证失败，请检查服务器区域设置: %s", e)

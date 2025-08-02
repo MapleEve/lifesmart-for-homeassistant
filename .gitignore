@@ -47,8 +47,33 @@ nosetests.xml
 ehthumbs.db
 Thumbs.db
 
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Ubuntu/Debian specific
+*.deb
+*.orig
+*.rej
+
+# CentOS/RHEL/Fedora specific
+*.rpm
+*.src.rpm
+
 # Project specific
 /out/
+
+# Testing artifacts
+/.testing/
+*test*.sh
+*test*.txt
+*compatibility*.md
+*test*results*.md
+*logs*.txt
+venv-*/
 
 # Auto-generated .gitignore files
 **/.gitignore
@@ -58,3 +83,4 @@ Thumbs.db
 # Exceptions (keep these)
 !/.claude/
 !/htmlcov/
+/CLAUDE.md

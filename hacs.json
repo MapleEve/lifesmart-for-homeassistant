@@ -1,5 +1,9 @@
 {
   "name": "LifeSmart IoT HACS",
+  "content_in_root": false,
+  "zip_release": true,
+  "filename": "lifesmart.zip",
   "render_readme": true,
-  "homeassistant": "2024.2.0"
+  "homeassistant": "2023.6.0"
 }
+

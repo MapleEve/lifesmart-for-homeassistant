@@ -5,12 +5,12 @@
 运行，包含了两种类型的测试：
 
 1.  通用集成测试 (使用全局 `setup_integration` Fixture):
-    这些测试在一个加载了所有模拟设备（温控器、开关等）的“完整”环境中运行。
+    这些测试在一个加载了所有模拟设备（温控器、开关等）的"完整"环境中运行。
     它们旨在验证平台的基本功能，如正确的实体创建、多设备环境下的服务调用
     和状态更新。
 
 2.  隔离场景测试 (使用本文件中定义的专用 `setup_*_only` Fixtures):
-    这些测试是为特定设备或特定复杂场景设计的。它们在一个“纯净”的环境中运行，
+    这些测试是为特定设备或特定复杂场景设计的。它们在一个"纯净"的环境中运行，
     该环境只加载当前测试所必需的一个设备。这通过为每个场景定义一个独立的
     setup fixture 来实现，确保了测试的精确性和稳定性，避免了其他设备状态的干扰。
     这种方法对于测试复杂的状态机（如风机盘管的模式切换）至关重要。
@@ -18,13 +18,17 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+# 兼容性模块导入 - 获取兼容的气候实体功能常量
+from custom_components.lifesmart.compatibility import get_climate_entity_features
+
+CLIMATE_FEATURES = get_climate_entity_features()
+
 import pytest
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
-    ClimateEntityFeature,
 )
 from homeassistant.components.climate.const import (
     # ATTR_* 常量位于 homeassistant.components.climate.const 中
@@ -245,10 +249,10 @@ class TestClimateEntity:
                 "SL_NATURE",
                 HVACMode.AUTO,
                 {"current_temperature": 28.0, "temperature": 26.0, "fan_mode": FAN_LOW},
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.FAN_MODE
-                | ClimateEntityFeature.TURN_ON
-                | ClimateEntityFeature.TURN_OFF,
+                CLIMATE_FEATURES["TARGET_TEMPERATURE"]
+                | CLIMATE_FEATURES["FAN_MODE"]
+                | CLIMATE_FEATURES["TURN_ON"]
+                | CLIMATE_FEATURES["TURN_OFF"],
             ),
             (
                 "climate.floor_heating",
@@ -257,9 +261,9 @@ class TestClimateEntity:
                 "SL_CP_DN",
                 HVACMode.AUTO,
                 {"current_temperature": 22.5, "temperature": 25.0},
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.TURN_ON
-                | ClimateEntityFeature.TURN_OFF,
+                CLIMATE_FEATURES["TARGET_TEMPERATURE"]
+                | CLIMATE_FEATURES["TURN_ON"]
+                | CLIMATE_FEATURES["TURN_OFF"],
             ),
             (
                 "climate.fan_coil_unit",
@@ -268,10 +272,10 @@ class TestClimateEntity:
                 "SL_CP_AIR",
                 HVACMode.HEAT,
                 {"fan_mode": FAN_LOW, "temperature": 24.0, "current_temperature": 26.0},
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.FAN_MODE
-                | ClimateEntityFeature.TURN_ON
-                | ClimateEntityFeature.TURN_OFF,
+                CLIMATE_FEATURES["TARGET_TEMPERATURE"]
+                | CLIMATE_FEATURES["FAN_MODE"]
+                | CLIMATE_FEATURES["TURN_ON"]
+                | CLIMATE_FEATURES["TURN_OFF"],
             ),
             (
                 "climate.air_panel",
@@ -280,10 +284,10 @@ class TestClimateEntity:
                 "V_AIR_P",
                 HVACMode.OFF,
                 {"current_temperature": 23.0, "temperature": 25.0, "fan_mode": FAN_LOW},
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.FAN_MODE
-                | ClimateEntityFeature.TURN_ON
-                | ClimateEntityFeature.TURN_OFF,
+                CLIMATE_FEATURES["TARGET_TEMPERATURE"]
+                | CLIMATE_FEATURES["FAN_MODE"]
+                | CLIMATE_FEATURES["TURN_ON"]
+                | CLIMATE_FEATURES["TURN_OFF"],
             ),
             (
                 "climate.air_system",
@@ -292,9 +296,9 @@ class TestClimateEntity:
                 "SL_TR_ACIPM",
                 HVACMode.FAN_ONLY,
                 {"fan_mode": FAN_LOW},
-                ClimateEntityFeature.FAN_MODE
-                | ClimateEntityFeature.TURN_ON
-                | ClimateEntityFeature.TURN_OFF,
+                CLIMATE_FEATURES["FAN_MODE"]
+                | CLIMATE_FEATURES["TURN_ON"]
+                | CLIMATE_FEATURES["TURN_OFF"],
             ),
         ],
         ids=[
@@ -316,7 +320,7 @@ class TestClimateEntity:
         devtype: str,
         expected_state: HVACMode,
         expected_attrs: dict,
-        expected_features: ClimateEntityFeature,
+        expected_features: int,
     ):
         """
         参数化测试：验证不同设备类型在初始化后的实体状态和属性是否正确。
