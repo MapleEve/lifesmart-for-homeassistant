@@ -44,7 +44,7 @@ jobs:
           
           # 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
           # 确保使用正确的版本约束避免依赖冲突
-          if [[ "${{ matrix.homeassistant-version }}" == "2023.6.0" ]]; then
+          if [[ "${{ matrix.homeassistant-version }}" == "2023.6.3" ]]; then
             # HA 2023.6.3 + Python 3.11 兼容版本 - 使用确认兼容的精确版本
             pip install "pytest>=7.2.1,<8.0.0" "pytest-homeassistant-custom-component==0.13.39"
           elif [[ "${{ matrix.homeassistant-version }}" == "2024.2.0" ]]; then
