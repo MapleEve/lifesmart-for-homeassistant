@@ -519,9 +519,7 @@ class TestCompatibilityEdgeCases:
         with patch("custom_components.lifesmart.compatibility.hasattr") as mock_hasattr:
             # 让TURN_ON不存在，但TARGET_HUMIDITY存在
             def hasattr_side_effect(obj, attr):
-                if attr == "TURN_ON":
-                    return False  # 触发兼容路径
-                return True
+                return attr != "TURN_ON"
 
             mock_hasattr.side_effect = hasattr_side_effect
 
