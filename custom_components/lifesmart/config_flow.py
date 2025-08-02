@@ -396,6 +396,29 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
+        super().__init__()
+
+        # 兼容性：处理不同HA版本的config_entry访问方式
+        # HA 2025.7.4+: config_entry属性存在但在init期间不可访问
+        # HA 2024.12.0: config_entry属性存在且可访问
+        # HA 2024.2.0及以下: config_entry属性不存在，需要手动设置
+        config_entry_available = False
+        try:
+            # 尝试检查config_entry是否可用（但不访问它，因为可能抛出ValueError）
+            if hasattr(self, "config_entry"):
+                # 属性存在，但可能在init期间不可访问
+                config_entry_available = True
+        except (AttributeError, ValueError):
+            # 属性不存在或不可访问
+            pass
+
+        # 只有在config_entry不可用时才手动设置
+        if not config_entry_available:
+            self.config_entry = config_entry
+
+        # 保存config_entry引用，用于后续访问
+        self._config_entry_ref = config_entry
+
         self.options_data = dict(config_entry.options)
         self.temp_data = {}
 
@@ -407,10 +430,14 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         menu_options = ["main_params"]
 
         # 只有云端模式才显示认证参数选项
-        if (
-            self.config_entry.data.get(CONF_TYPE)
-            == config_entries.CONN_CLASS_CLOUD_PUSH
-        ):
+        # 使用保存的引用以避免在新版本HA中的访问限制
+        try:
+            config_data = self.config_entry.data
+        except (AttributeError, ValueError):
+            # 如果无法访问config_entry，使用保存的引用
+            config_data = self._config_entry_ref.data
+
+        if config_data.get(CONF_TYPE) == config_entries.CONN_CLASS_CLOUD_PUSH:
             menu_options.append("auth_params")
 
         return self.async_show_menu(
@@ -453,13 +480,17 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Handle authentication settings update (Step 1)."""
         # 检查是否为本地TCP模式，如果是则不应该显示认证参数选项
-        if (
-            self.config_entry.data.get(CONF_TYPE)
-            == config_entries.CONN_CLASS_LOCAL_PUSH
-        ):
+        # 使用保存的引用以避免在新版本HA中的访问限制
+        try:
+            config_data = self.config_entry.data
+        except (AttributeError, ValueError):
+            # 如果无法访问config_entry，使用保存的引用
+            config_data = self._config_entry_ref.data
+
+        if config_data.get(CONF_TYPE) == config_entries.CONN_CLASS_LOCAL_PUSH:
             return self.async_abort(reason="local_no_auth_params")
 
-        self.temp_data = self.config_entry.data.copy()
+        self.temp_data = config_data.copy()
 
         if user_input is not None:
             self.temp_data.update(user_input)
@@ -492,8 +523,14 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
             self.temp_data.update(user_input)
             try:
                 await validate_input(self.hass, self.temp_data)
+                # 使用保存的引用以避免在新版本HA中的访问限制
+                try:
+                    config_entry = self.config_entry
+                except (AttributeError, ValueError):
+                    config_entry = self._config_entry_ref
+
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=self.temp_data
+                    config_entry, data=self.temp_data
                 )
                 return self.async_create_entry(title="", data={})
             except ConfigEntryAuthFailed as e:
@@ -516,8 +553,14 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
             self.temp_data.update(user_input)
             try:
                 await validate_input(self.hass, self.temp_data)
+                # 使用保存的引用以避免在新版本HA中的访问限制
+                try:
+                    config_entry = self.config_entry
+                except (AttributeError, ValueError):
+                    config_entry = self._config_entry_ref
+
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=self.temp_data
+                    config_entry, data=self.temp_data
                 )
                 return self.async_create_entry(title="", data={})
             except ConfigEntryAuthFailed as e:

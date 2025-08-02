@@ -16,9 +16,9 @@ jobs:
       fail-fast: false
       matrix:
         # 测试四个关键版本：Python各版本全面支持的节点 + 最新版本
-        homeassistant-version: ["2023.6.0", "2024.2.0", "2024.12.0", "2025.7.4"]
+        homeassistant-version: [ "2023.6.3", "2024.2.0", "2024.12.0", "2025.7.4" ]
         include:
-          - homeassistant-version: "2023.6.0"
+          - homeassistant-version: "2023.6.3"
             python-version: "3.11"  # 首个支持Python 3.11的HA版本
           - homeassistant-version: "2024.2.0"
             python-version: "3.12"  # Python 3.12全面支持（所有安装方式）
@@ -45,7 +45,7 @@ jobs:
           # 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
           # 确保使用正确的版本约束避免依赖冲突
           if [[ "${{ matrix.homeassistant-version }}" == "2023.6.0" ]]; then
-            # HA 2023.6.0 + Python 3.11 兼容版本 - 使用确认兼容的精确版本
+            # HA 2023.6.3 + Python 3.11 兼容版本 - 使用确认兼容的精确版本
             pip install "pytest>=7.2.1,<8.0.0" "pytest-homeassistant-custom-component==0.13.39"
           elif [[ "${{ matrix.homeassistant-version }}" == "2024.2.0" ]]; then
             # HA 2024.2.0 + Python 3.12 兼容版本  

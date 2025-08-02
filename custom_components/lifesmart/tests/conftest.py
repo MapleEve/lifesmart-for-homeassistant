@@ -54,15 +54,9 @@ def pytest_configure(config):
 
 
 # 设置兼容性支持
-from custom_components.lifesmart.compatibility import (
-    ensure_script_compatibility,
-    ensure_restore_state_compatibility,
-    ensure_async_create_task_compatibility,
-)
+from custom_components.lifesmart.compatibility import setup_logging
 
-ensure_script_compatibility()
-ensure_restore_state_compatibility()
-ensure_async_create_task_compatibility()
+setup_logging()
 
 
 @pytest.fixture(autouse=True)
