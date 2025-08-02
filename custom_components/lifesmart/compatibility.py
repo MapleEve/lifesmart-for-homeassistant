@@ -175,13 +175,12 @@ def create_service_call(
                 data=service_data or {},
                 hass=hass,
             )
-        else:
-            # 如果仍然失败，使用最基本的方式
-            call = object.__new__(ServiceCall)
-            call.domain = domain
-            call.service = service
-            call.data = service_data or {}
-            return call
+        # 如果仍然失败，使用最基本的方式
+        call = object.__new__(ServiceCall)
+        call.domain = domain
+        call.service = service
+        call.data = service_data or {}
+        return call
 
 
 def setup_logging():
