@@ -415,8 +415,8 @@ class TestCompatibilityEdgeCases:
         features = get_climate_entity_features()
         assert features is not None
 
-        # 测试直接属性访问
-        temp_feature = features.TARGET_TEMPERATURE
+            # 测试直接属性访问
+            temp_feature = features.TARGET_TEMPERATURE
         fan_feature = features.FAN_MODE
 
         # 测试通过getitem访问（如果支持）
