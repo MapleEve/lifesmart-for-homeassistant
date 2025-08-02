@@ -446,7 +446,7 @@ class TestCompatibilityEdgeCases:
 
     def test_climate_features_target_humidity_branch(self):
         """测试气候功能TARGET_HUMIDITY分支"""
-        # 这个测试主要验证函数的健壷性和属性存在
+        # 这个测试主要验证函数的健壮性和属性存在
         features = get_climate_entity_features()
 
         assert features is not None
