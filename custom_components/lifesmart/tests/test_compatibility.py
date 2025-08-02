@@ -460,7 +460,7 @@ class TestCompatibilityEdgeCases:
             assert isinstance(features.TARGET_HUMIDITY, int)
 
     def test_compatibility_all_import_errors(self):
-        """测试兼容性函数的健墮性"""
+        """测试兼容性函数的健壮性"""
         # 测试所有兼容性函数都能正常工作
         ws_result = get_ws_timeout(30.0)
         assert ws_result is not None
