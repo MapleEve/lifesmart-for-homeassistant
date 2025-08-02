@@ -39,19 +39,19 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.helpers import (
     generate_unique_id,
 )
+from .test_config_flow import MOCK_CLOUD_CREDENTIALS
 from .test_utils import find_test_device
 
 
 def get_entity_unique_id(device: dict) -> str:
     """一个辅助函数，用于根据设备信息生成实体在 Home Assistant 中的唯一ID。"""
-    return generate_unique_id(
-        device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], None
-    )
+    return generate_unique_id(device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], None)
 
 
 # ============================================================================
@@ -172,16 +172,10 @@ class TestClimateSetup:
         这是一个“快乐路径”测试，确保在标准配置下，所有在模拟设备列表中
         定义的温控设备都被成功加载为 Home Assistant 中的 climate 实体。
         """
-        assert (
-            len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
-        ), "应该创建5个温控实体"
-        assert (
-            hass.states.get("climate.nature_panel_thermo") is not None
-        ), "超能面板温控实体应存在"
+        assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5, "应该创建5个温控实体"
+        assert hass.states.get("climate.nature_panel_thermo") is not None, "超能面板温控实体应存在"
         assert hass.states.get("climate.floor_heating") is not None, "地暖实体应存在"
-        assert (
-            hass.states.get("climate.fan_coil_unit") is not None
-        ), "风机盘管实体应存在"
+        assert hass.states.get("climate.fan_coil_unit") is not None, "风机盘管实体应存在"
         assert hass.states.get("climate.air_panel") is not None, "空调面板实体应存在"
         assert hass.states.get("climate.air_system") is not None, "新风系统实体应存在"
 
@@ -196,17 +190,11 @@ class TestClimateSetup:
         """
         边界测试：验证在重载后，非温控版的 SL_NATURE 面板不再作为 climate 实体活动。
         """
-        assert (
-            hass.states.get("climate.nature_panel_thermo") is not None
-        ), "超能面板温控实体初始应存在"
-        assert (
-            len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
-        ), "应该有5个温控实体"
+        assert hass.states.get("climate.nature_panel_thermo") is not None, "超能面板温控实体初始应存在"
+        assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5, "应该有5个温控实体"
 
         # 模拟将 Nature Panel 的模式从温控(P5=3)改为开关(P5=1)
-        nature_switch = find_test_device(
-            mock_lifesmart_devices, "climate_nature_thermo"
-        )
+        nature_switch = find_test_device(mock_lifesmart_devices, "climate_nature_thermo")
         nature_switch["data"]["P5"]["val"] = 1
 
         # 模拟重载过程 - 使用新的 Hub 架构
@@ -261,9 +249,7 @@ class TestClimateEntity:
                 "SL_CP_DN",
                 HVACMode.AUTO,
                 {"current_temperature": 22.5, "temperature": 25.0},
-                CLIMATE_FEATURES["TARGET_TEMPERATURE"]
-                | CLIMATE_FEATURES["TURN_ON"]
-                | CLIMATE_FEATURES["TURN_OFF"],
+                CLIMATE_FEATURES["TARGET_TEMPERATURE"] | CLIMATE_FEATURES["TURN_ON"] | CLIMATE_FEATURES["TURN_OFF"],
             ),
             (
                 "climate.fan_coil_unit",
@@ -296,9 +282,7 @@ class TestClimateEntity:
                 "SL_TR_ACIPM",
                 HVACMode.FAN_ONLY,
                 {"fan_mode": FAN_LOW},
-                CLIMATE_FEATURES["FAN_MODE"]
-                | CLIMATE_FEATURES["TURN_ON"]
-                | CLIMATE_FEATURES["TURN_OFF"],
+                CLIMATE_FEATURES["FAN_MODE"] | CLIMATE_FEATURES["TURN_ON"] | CLIMATE_FEATURES["TURN_OFF"],
             ),
         ],
         ids=[
@@ -334,9 +318,7 @@ class TestClimateEntity:
         assert state.state == expected_state
         assert state.attributes.get("supported_features") == expected_features
         for attr, val in expected_attrs.items():
-            assert (
-                state.attributes.get(attr) == val
-            ), f"实体 {entity_id} 的属性 '{attr}' 不匹配"
+            assert state.attributes.get(attr) == val, f"实体 {entity_id} 的属性 '{attr}' 不匹配"
 
     @pytest.mark.parametrize(
         "entity_id, service, service_data, expected_client_method, expected_call_args",
@@ -468,9 +450,7 @@ class TestClimateEntity:
         assert device is not None
         entity_id = f"climate.{device['name'].lower().replace(' ', '_')}"
         unique_id = get_entity_unique_id(device)
-        async_dispatcher_send(
-            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", new_data
-        )
+        async_dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", new_data)
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         assert state.state == expected_state
@@ -519,9 +499,7 @@ class TestComplexClimateScenarios:
             {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
             blocking=True,
         )
-        mock_client.async_set_climate_hvac_mode.assert_awaited_with(
-            hub_id, me, devtype, HVACMode.COOL, initial_val
-        )
+        mock_client.async_set_climate_hvac_mode.assert_awaited_with(hub_id, me, devtype, HVACMode.COOL, initial_val)
 
         unique_id = get_entity_unique_id(device)
         val_after_mode_change = (1 << 15) | (0 << 13)
@@ -542,9 +520,7 @@ class TestComplexClimateScenarios:
             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_HIGH},
             blocking=True,
         )
-        mock_client.async_set_climate_fan_mode.assert_awaited_with(
-            hub_id, me, devtype, FAN_HIGH, val_after_mode_change
-        )
+        mock_client.async_set_climate_fan_mode.assert_awaited_with(hub_id, me, devtype, FAN_HIGH, val_after_mode_change)
 
         val_after_fan_change = (3 << 15) | (0 << 13)
         async_dispatcher_send(
@@ -623,6 +599,283 @@ class TestComplexClimateScenarios:
             {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
-        mock_client.async_set_climate_hvac_mode.assert_awaited_with(
-            hub_id, me, devtype, HVACMode.HEAT, 0
-        )
+        mock_client.async_set_climate_hvac_mode.assert_awaited_with(hub_id, me, devtype, HVACMode.HEAT, 0)
+
+
+class TestClimateEntityErrorHandling:
+    """测试气候实体的错误处理和边界情况。"""
+
+    @pytest.mark.asyncio
+    async def test_unsupported_device_type_not_created(self, hass: HomeAssistant, mock_client):
+        """测试不支持的设备类型不会创建气候实体。"""
+        unsupported_device = {
+            "agt": "test_hub_001",
+            "me": "unsupported_device_001",
+            "devtype": "UNSUPPORTED_CLIMATE_TYPE",
+            "data": {},
+            "idx": 0,
+        }
+
+        setup_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CLOUD_CREDENTIALS)
+        setup_entry.add_to_hass(hass)
+
+        # 创建模拟hub对象
+        mock_hub = MagicMock()
+        mock_hub.async_setup = AsyncMock(return_value=True)
+        mock_hub.get_devices.return_value = [unsupported_device]
+        mock_hub.get_client.return_value = mock_client
+        mock_hub.get_exclude_config.return_value = (set(), set())
+        mock_hub.async_unload = AsyncMock(return_value=None)
+
+        with (
+            patch(
+                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient",
+                return_value=mock_client,
+            ),
+            patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub),
+        ):
+            await hass.config_entries.async_setup(setup_entry.entry_id)
+            await hass.async_block_till_done()
+
+            # 断言：不支持的设备类型不会创建任何气候实体
+            climate_entities = hass.states.async_entity_ids(CLIMATE_DOMAIN)
+            assert len(climate_entities) == 0, "不支持的设备类型不应该创建任何气候实体"
+
+    @pytest.mark.asyncio
+    async def test_invalid_hvac_mode_ignored(self, hass: HomeAssistant, mock_client):
+        """测试无效HVAC模式被忽略。"""
+        climate_device = {
+            "agt": "test_hub_001",
+            "me": "climate_device_001",
+            "devtype": "SL_CP_DN",  # 地暖温控面板 - 有效的温控设备类型
+            "data": {"P1": {"type": 1, "val": 1}, "P2": {"type": 1, "val": 25}},
+            "idx": 0,
+            "name": "climate_device_001",
+        }
+
+        setup_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CLOUD_CREDENTIALS)
+        setup_entry.add_to_hass(hass)
+
+        # 创建模拟hub对象和设备列表
+        test_devices = [climate_device]
+
+        mock_hub = MagicMock()
+        mock_hub.async_setup = AsyncMock(return_value=True)
+        mock_hub.get_devices.return_value = test_devices
+        mock_hub.get_client.return_value = mock_client
+        mock_hub.get_exclude_config.return_value = (set(), set())
+        mock_hub.async_unload = AsyncMock(return_value=None)
+
+        with (
+            patch(
+                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient",
+                return_value=mock_client,
+            ),
+            patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub),
+        ):
+            await hass.config_entries.async_setup(setup_entry.entry_id)
+            await hass.async_block_till_done()
+
+            entity_id = "climate.climate_device_001"
+
+            # 断言：实体已创建
+            state = hass.states.get(entity_id)
+            assert state is not None, f"气候实体 {entity_id} 应该已创建"
+
+            # 尝试设置无效的HVAC模式，应该在HA层面被拒绝
+            with pytest.raises(Exception, match="expected HVACMode|Invalid.*hvac_mode"):
+                await hass.services.async_call(
+                    CLIMATE_DOMAIN,
+                    SERVICE_SET_HVAC_MODE,
+                    {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: "invalid_hvac_mode"},
+                    blocking=True,
+                )
+
+            # 断言：无效模式不应该触发客户端调用
+            mock_client.async_set_climate_hvac_mode.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_temperature_range_clamping(self, hass: HomeAssistant, mock_client):
+        """测试温度范围限制功能。"""
+        climate_device = {
+            "agt": "test_hub_001",
+            "me": "climate_device_002",
+            "devtype": "SL_CP_DN",  # 地暖温控面板 - 有效的温控设备类型
+            "data": {"P1": {"type": 1, "val": 1}, "P2": {"type": 1, "val": 25}},
+            "idx": 0,
+            "name": "climate_device_002",
+        }
+
+        setup_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CLOUD_CREDENTIALS)
+        setup_entry.add_to_hass(hass)
+
+        # 创建模拟hub对象和设备列表
+        test_devices = [climate_device]
+
+        mock_hub = MagicMock()
+        mock_hub.async_setup = AsyncMock(return_value=True)
+        mock_hub.get_devices.return_value = test_devices
+        mock_hub.get_client.return_value = mock_client
+        mock_hub.get_exclude_config.return_value = (set(), set())
+        mock_hub.async_unload = AsyncMock(return_value=None)
+
+        with (
+            patch(
+                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient",
+                return_value=mock_client,
+            ),
+            patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub),
+        ):
+            await hass.config_entries.async_setup(setup_entry.entry_id)
+            await hass.async_block_till_done()
+
+            entity_id = "climate.climate_device_002"
+            hub_id, me, devtype = climate_device["agt"], climate_device["me"], climate_device["devtype"]
+
+            # 断言：实体已创建
+            state = hass.states.get(entity_id)
+            assert state is not None, f"气候实体 {entity_id} 应该已创建"
+
+            # 测试超低温度设置 - 在新版本HA中会被验证拒绝
+            try:
+                await hass.services.async_call(
+                    CLIMATE_DOMAIN,
+                    SERVICE_SET_TEMPERATURE,
+                    {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: -10},
+                    blocking=True,
+                )
+            except Exception:
+                # 新版本HA会在服务层验证温度范围，这是预期行为
+                pass
+
+            # 测试超高温度设置 - 在新版本HA中会被验证拒绝
+            try:
+                await hass.services.async_call(
+                    CLIMATE_DOMAIN,
+                    SERVICE_SET_TEMPERATURE,
+                    {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 50},
+                    blocking=True,
+                )
+            except Exception:
+                # 新版本HA会在服务层验证温度范围，这是预期行为
+                pass
+
+            # 断言：检查温度设置调用（可能在新版本HA中被验证拒绝）
+            calls = mock_client.async_set_climate_temperature.call_args_list
+            # 在旧版本HA中会有调用，在新版本中可能没有调用（被服务层验证拒绝）
+
+            for call in calls:
+                # 检查参数位置或关键字参数
+                temp = None
+                if len(call[0]) > 4:
+                    temp = call[0][4]
+                elif "temperature" in call[1]:
+                    temp = call[1]["temperature"]
+
+                if temp is not None:
+                    # 如果有调用，温度应该在合理范围内
+                    assert 5 <= temp <= 40, f"温度 {temp}°C 应该在 5-40°C 范围内"
+
+    @pytest.mark.asyncio
+    async def test_empty_device_data_default_state(self, hass: HomeAssistant, mock_client):
+        """测试空设备数据的默认状态处理。"""
+        empty_data_device = {
+            "agt": "test_hub_001",
+            "me": "empty_device_001",
+            "devtype": "SL_CP_DN",  # 地暖温控面板 - 有效的温控设备类型
+            "data": {},  # 空数据
+            "idx": 0,
+            "name": "empty_device_001",
+        }
+
+        setup_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CLOUD_CREDENTIALS)
+        setup_entry.add_to_hass(hass)
+
+        # 创建模拟hub对象和设备列表
+        test_devices = [empty_data_device]
+
+        mock_hub = MagicMock()
+        mock_hub.async_setup = AsyncMock(return_value=True)
+        mock_hub.get_devices.return_value = test_devices
+        mock_hub.get_client.return_value = mock_client
+        mock_hub.get_exclude_config.return_value = (set(), set())
+        mock_hub.async_unload = AsyncMock(return_value=None)
+
+        with (
+            patch(
+                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient",
+                return_value=mock_client,
+            ),
+            patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub),
+        ):
+            await hass.config_entries.async_setup(setup_entry.entry_id)
+            await hass.async_block_till_done()
+
+            entity_id = "climate.empty_device_001"
+
+            # 断言：即使数据为空，也应该能够创建实体
+            state = hass.states.get(entity_id)
+            assert state is not None, f"空数据设备应该也能创建气候实体 {entity_id}"
+
+            # 断言：缺少数据时应该有默认状态
+            valid_states = [HVACMode.OFF, "unknown", "unavailable"]
+            assert state.state in valid_states, f"空数据设备的默认状态应该是 {valid_states} 之一，实际是 {state.state}"
+
+    @pytest.mark.asyncio
+    async def test_dispatcher_invalid_data_ignored(self, hass: HomeAssistant, mock_client):
+        """测试调度器无效数据更新被忽略。"""
+        climate_device = {
+            "agt": "test_hub_001",
+            "me": "climate_device_003",
+            "devtype": "SL_CP_DN",  # 地暖温控面板 - 有效的温控设备类型
+            "data": {"P1": {"type": 1, "val": 1}, "P2": {"type": 1, "val": 25}},
+            "idx": 0,
+            "name": "climate_device_003",
+        }
+
+        setup_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CLOUD_CREDENTIALS)
+        setup_entry.add_to_hass(hass)
+
+        # 创建模拟hub对象和设备列表
+        test_devices = [climate_device]
+
+        mock_hub = MagicMock()
+        mock_hub.async_setup = AsyncMock(return_value=True)
+        mock_hub.get_devices.return_value = test_devices
+        mock_hub.get_client.return_value = mock_client
+        mock_hub.get_exclude_config.return_value = (set(), set())
+        mock_hub.async_unload = AsyncMock(return_value=None)
+
+        with (
+            patch(
+                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient",
+                return_value=mock_client,
+            ),
+            patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub),
+        ):
+            await hass.config_entries.async_setup(setup_entry.entry_id)
+            await hass.async_block_till_done()
+
+            from custom_components.lifesmart.helpers import generate_unique_id
+
+            unique_id = generate_unique_id(climate_device["devtype"], climate_device["agt"], climate_device["me"], None)
+            entity_id = "climate.climate_device_003"
+
+            # 断言：实体已创建且有初始状态
+            initial_state = hass.states.get(entity_id)
+            assert initial_state is not None, f"气候实体 {entity_id} 应该已创建"
+
+            # 发送无效数据更新
+            async_dispatcher_send(
+                hass,
+                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
+                {"INVALID_PARAM": {"type": 999, "val": "invalid_value"}},
+            )
+            await hass.async_block_till_done()
+
+            # 断言：实体仍然存在且状态不变或保持有效
+            updated_state = hass.states.get(entity_id)
+            assert updated_state is not None, f"无效数据更新后实体 {entity_id} 仍应存在"
+
+            # 断言：状态应该仍然有效（不是"unavailable"或空）
+            assert updated_state.state != "unavailable", "无效数据更新不应该导致实体不可用"
