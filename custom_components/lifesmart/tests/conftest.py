@@ -29,8 +29,40 @@ from custom_components.lifesmart.const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-# 自动为所有测试加载 Home Assistant 的 pytest 插件
-pytest_plugins = "pytest_homeassistant_custom_component"
+# 动态配置pytest-asyncio以避免版本兼容性警告
+def pytest_configure(config):
+    """动态配置pytest以避免不同版本的asyncio警告"""
+    try:
+        # 检查pytest-asyncio版本是否支持asyncio_default_fixture_loop_scope
+        import pytest_asyncio
+
+        version = getattr(pytest_asyncio, "__version__", "0.0.0")
+        parts = version.split(".")
+        major, minor = int(parts[0]), int(parts[1]) if len(parts) > 1 else 0
+
+        # pytest-asyncio >= 0.21.0 支持 asyncio_default_fixture_loop_scope
+        if major > 0 or (major == 0 and minor >= 21):
+            # 新版本，直接设置配置来避免deprecation warning
+            config.option.asyncio_default_fixture_loop_scope = "function"
+            _LOGGER.debug(
+                f"Set asyncio_default_fixture_loop_scope=function for pytest-asyncio {version}"
+            )
+    except (ImportError, AttributeError, ValueError) as e:
+        # 如果无法检测版本，则不设置 (老版本会被warning过滤器处理)
+        _LOGGER.debug(f"Unable to set asyncio config: {e}")
+        pass
+
+
+# 设置兼容性支持
+from custom_components.lifesmart.compatibility import (
+    ensure_script_compatibility,
+    ensure_restore_state_compatibility,
+    ensure_async_create_task_compatibility,
+)
+
+ensure_script_compatibility()
+ensure_restore_state_compatibility()
+ensure_async_create_task_compatibility()
 
 
 @pytest.fixture(autouse=True)
