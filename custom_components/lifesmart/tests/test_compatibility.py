@@ -175,7 +175,7 @@ class TestCompatibilityFunctionalBehavior:
         result2 = get_ws_timeout(15.0)
 
         # 相同的输入应该产生相同类型的输出
-        assert type(result1) == type(result2)
+        assert type(result1) is type(result2)
 
         if isinstance(result1, float):
             assert result1 == result2 == 15.0
