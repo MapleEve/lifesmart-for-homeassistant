@@ -125,9 +125,7 @@ def get_scheduled_timer_handles(loop):
         # 旧版本：直接使用HA官方实现的方式
         # 这与HA core中的实现完全一致：loop._scheduled
         try:
-            # 官方实现: handles: list[TimerHandle] = loop._scheduled
-            handles = loop._scheduled  # type: ignore[attr-defined]
-            return handles
+            return loop._scheduled
         except AttributeError:
             # 如果_scheduled属性不存在，返回空列表
             return []
