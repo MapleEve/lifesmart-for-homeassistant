@@ -15,7 +15,6 @@ from typing import Any
 
 from homeassistant.components.climate import (
     ClimateEntity,
-    ClimateEntityFeature,
     HVACMode,
     FAN_HIGH,
     FAN_LOW,
@@ -28,6 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .compatibility import get_climate_entity_features
 from .const import (
     DOMAIN,
     MANUFACTURER,
@@ -48,6 +48,9 @@ from .const import (
 )
 from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, is_climate, safe_get
+
+# 获取兼容的气候实体功能常量
+ClimateEntityFeature = get_climate_entity_features()
 
 # 初始化模块级日志记录器
 _LOGGER = logging.getLogger(__name__)

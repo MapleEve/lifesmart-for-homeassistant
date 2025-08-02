@@ -12,8 +12,9 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
+from custom_components.lifesmart.compatibility import create_service_call
 from custom_components.lifesmart.const import (
     DEVICE_ID_KEY,
     DOMAIN,
@@ -75,7 +76,7 @@ class TestLifeSmartServiceManager:
         }
 
         # 创建服务调用
-        call = ServiceCall(hass, DOMAIN, "send_ir_keys", service_data)
+        call = create_service_call(DOMAIN, "send_ir_keys", service_data, hass)
 
         # 执行服务
         await service_manager._send_ir_keys(call)
@@ -109,7 +110,7 @@ class TestLifeSmartServiceManager:
             "keys": ["power"],
         }
 
-        call = ServiceCall(hass, DOMAIN, "send_ir_keys", service_data)
+        call = create_service_call(DOMAIN, "send_ir_keys", service_data, hass)
 
         # 服务不应该抛出异常，而是记录错误
         await service_manager._send_ir_keys(call)
@@ -139,7 +140,7 @@ class TestLifeSmartServiceManager:
         }
 
         # 创建服务调用
-        call = ServiceCall(hass, DOMAIN, "send_ackeys", service_data)
+        call = create_service_call(DOMAIN, "send_ackeys", service_data, hass)
 
         # 执行服务
         await service_manager._send_ackeys(call)
@@ -186,7 +187,7 @@ class TestLifeSmartServiceManager:
             "swing": 1,
         }
 
-        call = ServiceCall(hass, DOMAIN, "send_ackeys", service_data)
+        call = create_service_call(DOMAIN, "send_ackeys", service_data, hass)
 
         # 服务不应该抛出异常，而是记录错误
         await service_manager._send_ackeys(call)
@@ -205,7 +206,7 @@ class TestLifeSmartServiceManager:
             "name": "scene_123",
         }
 
-        call = ServiceCall(hass, DOMAIN, "trigger_scene", service_data)
+        call = create_service_call(DOMAIN, "trigger_scene", service_data, hass)
 
         await service_manager._trigger_scene(call)
 
@@ -223,7 +224,7 @@ class TestLifeSmartServiceManager:
             # 缺少 agt
         }
 
-        call = ServiceCall(hass, DOMAIN, "trigger_scene", service_data)
+        call = create_service_call(DOMAIN, "trigger_scene", service_data, hass)
 
         await service_manager._trigger_scene(call)
 
@@ -242,7 +243,7 @@ class TestLifeSmartServiceManager:
             # 缺少 name
         }
 
-        call = ServiceCall(hass, DOMAIN, "trigger_scene", service_data)
+        call = create_service_call(DOMAIN, "trigger_scene", service_data, hass)
 
         await service_manager._trigger_scene(call)
 
@@ -263,7 +264,7 @@ class TestLifeSmartServiceManager:
             "name": "scene_123",
         }
 
-        call = ServiceCall(hass, DOMAIN, "trigger_scene", service_data)
+        call = create_service_call(DOMAIN, "trigger_scene", service_data, hass)
 
         # 服务不应该抛出异常
         await service_manager._trigger_scene(call)
@@ -291,7 +292,7 @@ class TestLifeSmartServiceManager:
             "duration": 2000,
         }
 
-        call = ServiceCall(hass, DOMAIN, "press_switch", service_data)
+        call = create_service_call(DOMAIN, "press_switch", service_data, hass)
 
         await service_manager._press_switch(call)
 
@@ -319,7 +320,7 @@ class TestLifeSmartServiceManager:
             # 没有指定 duration，应该使用默认值 1000
         }
 
-        call = ServiceCall(hass, DOMAIN, "press_switch", service_data)
+        call = create_service_call(DOMAIN, "press_switch", service_data, hass)
 
         await service_manager._press_switch(call)
 
@@ -339,7 +340,7 @@ class TestLifeSmartServiceManager:
             # 缺少 entity_id
         }
 
-        call = ServiceCall(hass, DOMAIN, "press_switch", service_data)
+        call = create_service_call(DOMAIN, "press_switch", service_data, hass)
 
         await service_manager._press_switch(call)
 
@@ -358,7 +359,7 @@ class TestLifeSmartServiceManager:
             "duration": 1000,
         }
 
-        call = ServiceCall(hass, DOMAIN, "press_switch", service_data)
+        call = create_service_call(DOMAIN, "press_switch", service_data, hass)
 
         await service_manager._press_switch(call)
 
@@ -380,7 +381,7 @@ class TestLifeSmartServiceManager:
             "duration": 1000,
         }
 
-        call = ServiceCall(hass, DOMAIN, "press_switch", service_data)
+        call = create_service_call(DOMAIN, "press_switch", service_data, hass)
 
         await service_manager._press_switch(call)
 
@@ -409,7 +410,7 @@ class TestLifeSmartServiceManager:
             "duration": 1000,
         }
 
-        call = ServiceCall(hass, DOMAIN, "press_switch", service_data)
+        call = create_service_call(DOMAIN, "press_switch", service_data, hass)
 
         # 服务不应该抛出异常
         await service_manager._press_switch(call)
@@ -467,7 +468,7 @@ class TestLifeSmartServiceManager:
         """参数化测试红外按键服务。"""
         service_manager.register_services()
 
-        call = ServiceCall(hass, DOMAIN, "send_ir_keys", service_data)
+        call = create_service_call(DOMAIN, "send_ir_keys", service_data, hass)
 
         await service_manager._send_ir_keys(call)
 

@@ -5,18 +5,14 @@
 将所有核心的模拟设备、客户端和配置项统一定义在此处，以确保所有测试用例都在可预测和标准化的基础上运行。
 """
 
-import asyncio
 import logging
-import threading
-from typing import Generator
 from unittest.mock import AsyncMock, patch, MagicMock
 
 import aiohttp
 import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_REGION
-from homeassistant.core import HomeAssistant, HassJob
-from homeassistant.util.async_ import get_scheduled_timer_handles
+from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.const import (
@@ -33,8 +29,56 @@ from custom_components.lifesmart.const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-# 自动为所有测试加载 Home Assistant 的 pytest 插件
-pytest_plugins = "pytest_homeassistant_custom_component"
+# 动态配置pytest-asyncio以避免版本兼容性警告
+def pytest_configure(config):
+    """动态配置pytest以避免不同版本的asyncio警告"""
+    try:
+        # 检查pytest-asyncio版本是否支持asyncio_default_fixture_loop_scope
+        import pytest_asyncio
+
+        version = getattr(pytest_asyncio, "__version__", "0.0.0")
+        parts = version.split(".")
+        major, minor = int(parts[0]), int(parts[1]) if len(parts) > 1 else 0
+
+        # pytest-asyncio >= 0.21.0 支持 asyncio_default_fixture_loop_scope
+        if major > 0 or (major == 0 and minor >= 21):
+            # 新版本，直接设置配置来避免deprecation warning
+            config.option.asyncio_default_fixture_loop_scope = "function"
+            _LOGGER.debug(
+                f"Set asyncio_default_fixture_loop_scope=function for pytest-asyncio {version}"
+            )
+    except (ImportError, AttributeError, ValueError) as e:
+        # 如果无法检测版本，则不设置 (老版本会被warning过滤器处理)
+        _LOGGER.debug(f"Unable to set asyncio config: {e}")
+        pass
+
+
+# 设置兼容性支持
+from custom_components.lifesmart.compatibility import setup_logging
+
+setup_logging()
+
+
+@pytest.fixture(autouse=True)
+def expected_lingering_timers() -> bool:
+    """
+    为旧版本HA提供兼容性：允许定时器残留以避免兼容性问题。
+
+    这是因为旧版本HA (如2024.2.0及以下) 没有提供get_scheduled_timer_handles函数，
+    而pytest-homeassistant-custom-component插件的verify_cleanup直接访问loop._scheduled，
+    这可能在某些情况下导致测试性能问题。
+
+    通过返回True，我们允许定时器残留，让插件的verify_cleanup只是警告而不是失败。
+    """
+    try:
+        # 检查是否有新版本的定时器处理函数
+        from homeassistant.util.async_ import get_scheduled_timer_handles
+
+        # 新版本HA有官方支持，可以进行严格检查
+        return False
+    except ImportError:
+        # 旧版本HA没有官方支持，允许定时器残留以避免兼容性问题
+        return True
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -70,69 +114,6 @@ def prevent_socket_access():
 
     with patch("aiohttp.ClientSession", new=patched_client_session):
         yield
-
-
-@pytest.fixture(autouse=True)
-def verify_cleanup(
-    event_loop: asyncio.AbstractEventLoop,
-    expected_lingering_tasks: bool,
-    expected_lingering_timers: bool,
-) -> Generator[None, None, None]:
-    """
-    一个被覆盖的清理验证 fixture，用于确保测试之间没有资源泄露。
-
-    此 fixture 在每个测试运行前后执行，用于捕获并报告任何未被正确清理的
-    异步任务、定时器或线程。这对于维护一个稳定、可靠的测试套件至关重要，
-    可以防止一个测试的副作用影响到后续的测试。
-
-    覆盖原因:
-    1. 移除了对 `pytest-homeassistant-custom-component` 内部变量 'INSTANCES'
-       的脆弱依赖，以增强健壮性。
-    2. 移除了可能导致导入错误的 'long_repr_strings' 上下文管理器。
-    3. 在线程检查中断言中，明确允许名为 '_run_safe_shutdown_loop' 的线程存在，
-       这是为了解决在某些 CI 环境下顽固的线程泄露断言失败问题。
-    """
-    # 记录测试开始前的状态
-    threads_before = frozenset(threading.enumerate())
-    tasks_before = asyncio.all_tasks(event_loop)
-
-    yield  # 执行测试用例
-
-    # --- 测试结束后的清理与验证 ---
-    event_loop.run_until_complete(event_loop.shutdown_default_executor())
-
-    # 检查并警告/失败于残留的异步任务
-    tasks = asyncio.all_tasks(event_loop) - tasks_before
-    for task in tasks:
-        if expected_lingering_tasks:
-            _LOGGER.warning("Lingering task after test %r", task)
-        else:
-            pytest.fail(f"Lingering task after test {task!r}")
-        task.cancel()
-    if tasks:
-        event_loop.run_until_complete(asyncio.wait(tasks))
-
-    # 检查并警告/失败于残留的定时器
-    for handle in get_scheduled_timer_handles(event_loop):
-        if not handle.cancelled():
-            if expected_lingering_timers:
-                _LOGGER.warning("Lingering timer after test %r", handle)
-            elif handle._args and isinstance(job := handle._args[-1], HassJob):
-                if job.cancel_on_shutdown:
-                    continue
-                pytest.fail(f"Lingering timer after job {job!r}")
-            else:
-                pytest.fail(f"Lingering timer after test {handle!r}")
-            handle.cancel()
-
-    # 验证没有泄露的线程
-    threads = frozenset(threading.enumerate()) - threads_before
-    for thread in threads:
-        assert (
-            isinstance(thread, threading._DummyThread)
-            or thread.name.startswith("waitpid-")
-            or "_run_safe_shutdown_loop" in thread.name
-        ), f"Leaked thread: {thread.name}"
 
 
 # --- 统一的模拟配置 ---
