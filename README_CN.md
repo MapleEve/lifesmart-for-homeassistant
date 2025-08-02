@@ -22,9 +22,26 @@ Assistant。支持云端与本地两种模式，自动发现设备，并通过 H
 
 ## 主要特性
 
-支持云端与本地模式（可选 LifeSmart API 或本地中枢），自动发现设备，广泛支持开关、传感器、门锁、控制器、插座、窗帘电机、灯光、SPOT
-超级碗、摄像头等。支持 Home Assistant 服务（红外遥控、场景触发、开关点动），多区域（中国、北美、欧洲、日本、亚太、全球自动），中英文双语界面。近期优化包括设备注册、WebSocket
-SSL 支持、自动错误处理、代码结构优化。
+- **双连接模式**：云端与本地模式（可选 LifeSmart API 或本地中枢）
+- **全面设备支持**：开关、传感器、门锁、控制器、插座、窗帘电机、灯光、SPOT、摄像头
+- **高级服务功能**：红外遥控（包括空调）、场景触发、开关点动
+- **多区域支持**：中国、北美、欧洲、日本、亚太、全球自动
+- **双语界面**：中英文 UI 支持
+- **强力测试**：667+ 全面测试确保可靠性
+- **版本兼容**：Home Assistant 2023.6.3+ 自动兼容层
+
+### 近期重大改进 (2025年8月)
+
+- **🔧 兼容性层**：新增 Home Assistant 2023.6.3 到 2025.1.4+ 版本的全面兼容支持
+- **🧪 增强测试**：全面重写兼容性测试，包含14个专用测试用例
+- **🏗️ 代码架构**：重大重构 -
+  统一客户端接口，分离本地/OAPI客户端 ([#66](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/66))
+- **🐛 Bug修复**：修复 OAPI 场景激活和删除功能 ([#73](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/73))
+- **🐛 本地模式修复**：修复本地模式下设备状态更新问题 ([#65](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/65))
+- **⚡ 性能优化**：用集合替换列表以提高查找速度 ([#55](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/55))
+- **🛠️ 开发体验**：添加全面的 PR 模板和自动 PR 摘要
+- **📊 代码质量**：集成 Black 代码格式化和 Flake8 代码检查，行长度120
+- **🏷️ 许可证合规**：添加 FOSSA 许可证扫描和徽章 ([#60](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/60))
 
 ---
 
@@ -111,9 +128,74 @@ SPOT 超级碗：MSL_IRCTL、OD_WE_IRCTL、SL_SPOT、SL_P_IR、SL_P_IR_V2
 
 ---
 
-## 图例
+## 兼容性与测试
 
-以下为文档引用的示例图例和截图，请确保这些图片已存在于仓库或根据需要补充。
+### Home Assistant 版本支持
+
+本集成已在多个 Home Assistant 版本中进行全面测试：
+
+| 环境       | Python  | Home Assistant | aiohttp | 测试状态               |
+|----------|---------|----------------|---------|--------------------|
+| **环境1**  | 3.11.13 | **2023.6.3**   | 3.8.4   | ✅ **667/667 测试通过** |
+| **环境2**  | 3.12.11 | **2024.2.4**   | 3.9.3   | ✅ **667/667 测试通过** |
+| **当前环境** | 3.12.11 | **2025.1.4**   | 3.11.11 | ✅ **667/667 测试通过** |
+
+### 兼容性特性
+
+- **自动版本检测**：无缝适配不同的 Home Assistant 和 aiohttp 版本
+- **WebSocket 超时处理**：同时支持旧版本 float 超时和现代 ClientWSTimeout 对象
+- **气候实体功能**：为 TURN_ON/TURN_OFF 属性提供向后兼容性
+- **服务调用兼容**：处理新旧版本 Home Assistant 服务调用构造函数
+
+### 代码质量标准
+
+- **Black 代码格式化**：一致的代码风格，行长度120字符
+- **Flake8 代码检查**：全面的代码质量检查
+- **全面测试**：667+ 单元测试，包含14个专用兼容性测试
+- **CI/CD 流水线**：跨多个 Python 和 Home Assistant 版本的自动化测试
+
+---
+
+## 开发与贡献
+
+### 开发环境设置
+
+```bash
+# 克隆仓库
+git clone https://github.com/MapleEve/lifesmart-HACS-for-hass.git
+cd lifesmart-HACS-for-hass
+
+# 设置开发环境
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 安装开发工具
+pip install black flake8 pytest
+
+# 运行测试
+pytest custom_components/lifesmart/tests/
+
+# 格式化代码
+black custom_components/lifesmart/
+
+# 检查代码质量
+flake8 custom_components/lifesmart/
+```
+
+### 贡献指南
+
+- 遵循现有代码风格（Black 格式化，120字符行长度）
+- 为新功能添加全面测试
+- 为面向用户的更改更新文档
+- 使用约定式提交消息
+- 在拉取请求中引用相关问题
+
+详细的贡献指南请参见我们的 [PR 模板](.github/PULL_REQUEST_TEMPLATE.md)。
+
+---
+
+## 图例
 
 **LifeSmart 服务器区域**
 
