@@ -24,13 +24,25 @@ Installation and updates are available via HACS.
 
 ## Features
 
-- Cloud and Local modes (choose between LifeSmart API or local Hub)
-- Device discovery and broad device support (switches, sensors, locks, controllers, sockets, curtain motors, lights,
-  SPOT, cameras)
-- Home Assistant services: send IR keys (including A/C), trigger LifeSmart scenes, momentary switch press
-- Multi-region support: China, North America, Europe, Japan, Asia Pacific, Global Auto
-- Bilingual UI (English/Chinese)
-- Recent improvements: device registration, SSL WebSocket, error handling, code structure
+- **Dual Connection Modes**: Cloud and Local modes (choose between LifeSmart API or local Hub)
+- **Comprehensive Device Support**: Switches, sensors, locks, controllers, sockets, curtain motors, lights, SPOT, cameras
+- **Advanced Services**: Send IR keys (including A/C), trigger LifeSmart scenes, momentary switch press
+- **Multi-region Support**: China, North America, Europe, Japan, Asia Pacific, Global Auto
+- **Bilingual Interface**: English/Chinese UI support
+- **Robust Testing**: 667+ comprehensive tests ensuring reliability
+- **Version Compatibility**: Home Assistant 2023.6.3+ with automated compatibility layers
+
+### Recent Major Improvements (August 2025)
+
+- **🔧 Compatibility Layer**: Added comprehensive compatibility support for Home Assistant versions 2023.6.3 to 2025.1.4+
+- **🧪 Enhanced Testing**: Completely rewritten compatibility tests with 14 dedicated test cases
+- **🏗️ Code Architecture**: Major refactoring - unified client interfaces, split local/OAPI clients ([#66](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/66))
+- **🐛 Bug Fixes**: Fixed OAPI scene activation and deletion by name ([#73](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/73))
+- **🐛 Local Mode Fixes**: Fixed device state updates in Local Mode ([#65](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/65))
+- **⚡ Performance**: Replaced lists with sets for faster lookups ([#55](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/55))
+- **🛠️ Developer Experience**: Added comprehensive PR templates and automated PR summaries
+- **📊 Code Quality**: Integrated Black code formatter and Flake8 linting with line-length 120
+- **🏷️ License Compliance**: Added FOSSA license scanning and badges ([#60](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/60))
 
 ---
 
@@ -128,10 +140,74 @@ the [supported devices section in the codebase](https://github.com/MapleEve/life
 
 ---
 
-## Diagrams
+## Compatibility & Testing
 
-Below are example diagrams and screenshots referenced in the documentation. Please ensure these images exist in the
-repository or update as needed.
+### Home Assistant Version Support
+
+This integration is thoroughly tested across multiple Home Assistant versions:
+
+| Environment | Python | Home Assistant | aiohttp | Test Status |
+|-------------|--------|----------------|---------|-------------|
+| **Environment 1** | 3.11.13 | **2023.6.3** | 3.8.4 | ✅ **667/667 tests** |
+| **Environment 2** | 3.12.11 | **2024.2.4** | 3.9.3 | ✅ **667/667 tests** |
+| **Current** | 3.12.11 | **2025.1.4** | 3.11.11 | ✅ **667/667 tests** |
+
+### Compatibility Features
+
+- **Automatic Version Detection**: Seamlessly adapts to different Home Assistant and aiohttp versions
+- **WebSocket Timeout Handling**: Supports both legacy float timeouts and modern ClientWSTimeout objects
+- **Climate Entity Features**: Provides backward compatibility for TURN_ON/TURN_OFF attributes
+- **Service Call Compatibility**: Handles both legacy and modern Home Assistant service call constructors
+
+### Code Quality Standards
+
+- **Black Code Formatting**: Consistent code style with 120 character line length
+- **Flake8 Linting**: Comprehensive code quality checks
+- **Comprehensive Testing**: 667+ unit tests with 14 dedicated compatibility tests
+- **CI/CD Pipeline**: Automated testing across multiple Python and Home Assistant versions
+
+---
+
+## Development & Contributing
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/MapleEve/lifesmart-HACS-for-hass.git
+cd lifesmart-HACS-for-hass
+
+# Set up development environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# Install development tools
+pip install black flake8 pytest
+
+# Run tests
+pytest custom_components/lifesmart/tests/
+
+# Format code
+black custom_components/lifesmart/
+
+# Check code quality
+flake8 custom_components/lifesmart/
+```
+
+### Contributing Guidelines
+
+- Follow the existing code style (Black formatting, 120 char lines)
+- Add comprehensive tests for new features
+- Update documentation for user-facing changes
+- Use conventional commit messages
+- Reference relevant issues in pull requests
+
+For detailed contributing guidelines, see our [PR template](.github/PULL_REQUEST_TEMPLATE.md).
+
+---
+
+## Diagrams
 
 **LifeSmart Server Regions**
 
