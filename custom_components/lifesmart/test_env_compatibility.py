@@ -23,7 +23,7 @@ def ensure_script_compatibility():
         
         # 检查是否已经有新版本函数名
         if hasattr(script_module, '_schedule_stop_scripts_after_shutdown'):
-            return  # 新版本，无需处理
+            return
             
         # 检查是否有旧版本函数名
         if hasattr(script_module, '_async_stop_scripts_after_shutdown'):
@@ -57,7 +57,7 @@ def ensure_restore_state_compatibility():
         
         # 检查是否已经有async_load函数
         if hasattr(rs_module, 'async_load'):
-            return  # 新版本，无需处理
+            return
             
         # 为旧版本创建一个dummy async_load函数
         async def _dummy_async_load(hass):
@@ -93,20 +93,20 @@ def ensure_async_create_task_compatibility():
         if 'name' in params:
             # 新版本，无需处理
             return
-            
+
         _LOGGER.debug("Patching HomeAssistant.async_create_task for HA 2023.3.0 compatibility")
-        
+
         # 保存原始方法
         original_async_create_task = HomeAssistant.async_create_task
-        
+
         def patched_async_create_task(self, coroutine, name=None):
             """兼容性封装，忽略name参数"""
             return original_async_create_task(self, coroutine)
-            
+
         # 替换方法
         HomeAssistant.async_create_task = patched_async_create_task
         _LOGGER.info("Successfully patched HomeAssistant.async_create_task for HA 2023.3.0")
-        
+
     except Exception as e:
         _LOGGER.error(f"Failed to patch async_create_task: {e}")
 
