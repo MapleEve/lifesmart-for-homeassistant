@@ -257,7 +257,7 @@ class TestCompatibilityMockedScenarios:
         assert hasattr(result, "FAN_MODE")
 
     def test_get_scheduled_timer_handles_import_error_path(self):
-        """测试定时器句柄函数的健墮性"""
+        """测试定时器句柄函数的健壮性"""
         import asyncio
 
         loop = asyncio.new_event_loop()
