@@ -57,17 +57,28 @@ class MockLifeSmartClient(LifeSmartClientBase):
     async def _async_get_all_devices(self, timeout=10) -> List[Dict[str, Any]]:
         return await self._mock_get_all_devices(timeout)
 
-    async def _async_send_single_command(self, agt: str, me: str, idx: str, command_type: int, val: Any) -> int:
+    async def _async_send_single_command(
+        self, agt: str, me: str, idx: str, command_type: int, val: Any
+    ) -> int:
         return await self._mock_send_single_command(agt, me, idx, command_type, val)
 
-    async def _async_send_multi_command(self, agt: str, me: str, io_list: List[Dict]) -> int:
+    async def _async_send_multi_command(
+        self, agt: str, me: str, io_list: List[Dict]
+    ) -> int:
         return await self._mock_send_multi_command(agt, me, io_list)
 
     async def _async_set_scene(self, agt: str, scene_name: str) -> int:
         return await self._mock_set_scene(agt, scene_name)
 
     async def _async_send_ir_key(
-        self, agt: str, me: str, category: str, brand: str, keys: str, ai: str = "", idx: str = ""
+        self,
+        agt: str,
+        me: str,
+        category: str,
+        brand: str,
+        keys: str,
+        ai: str = "",
+        idx: str = "",
     ) -> int:
         return await self._mock_send_ir_key(agt, me, category, brand, keys, ai, idx)
 
@@ -89,10 +100,14 @@ class MockLifeSmartClient(LifeSmartClientBase):
     async def _async_change_device_icon(self, device_id: str, icon: str) -> int:
         return await self._mock_change_device_icon(device_id, icon)
 
-    async def _async_set_device_eeprom(self, device_id: str, key: str, value: Any) -> int:
+    async def _async_set_device_eeprom(
+        self, device_id: str, key: str, value: Any
+    ) -> int:
         return await self._mock_set_device_eeprom(device_id, key, value)
 
-    async def _async_add_device_timer(self, device_id: str, cron_info: str, key: str) -> int:
+    async def _async_add_device_timer(
+        self, device_id: str, cron_info: str, key: str
+    ) -> int:
         return await self._mock_add_device_timer(device_id, cron_info, key)
 
     async def _async_ir_control(self, device_id: str, options: Dict) -> int:
@@ -132,7 +147,9 @@ class TestConstantsImport:
         assert CMD_TYPE_PRESS is not None, "CMD_TYPE_PRESS 常量应该存在"
         assert CMD_TYPE_SET_VAL is not None, "CMD_TYPE_SET_VAL 常量应该存在"
         assert CMD_TYPE_SET_CONFIG is not None, "CMD_TYPE_SET_CONFIG 常量应该存在"
-        assert CMD_TYPE_SET_TEMP_DECIMAL is not None, "CMD_TYPE_SET_TEMP_DECIMAL 常量应该存在"
+        assert (
+            CMD_TYPE_SET_TEMP_DECIMAL is not None
+        ), "CMD_TYPE_SET_TEMP_DECIMAL 常量应该存在"
         assert CMD_TYPE_SET_RAW is not None, "CMD_TYPE_SET_RAW 常量应该存在"
         assert CMD_TYPE_SET_TEMP_FCU is not None, "CMD_TYPE_SET_TEMP_FCU 常量应该存在"
 
@@ -146,7 +163,9 @@ class TestConstantsImport:
 
         assert DOOYA_TYPES is not None, "DOOYA_TYPES 常量应该存在"
         assert GARAGE_DOOR_TYPES is not None, "GARAGE_DOOR_TYPES 常量应该存在"
-        assert NON_POSITIONAL_COVER_CONFIG is not None, "NON_POSITIONAL_COVER_CONFIG 常量应该存在"
+        assert (
+            NON_POSITIONAL_COVER_CONFIG is not None
+        ), "NON_POSITIONAL_COVER_CONFIG 常量应该存在"
 
     def test_hvac_mode_mapping_constants(self):
         """测试HVAC模式映射常量的导入。"""
@@ -156,9 +175,15 @@ class TestConstantsImport:
             REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
         )
 
-        assert REVERSE_F_HVAC_MODE_MAP is not None, "REVERSE_F_HVAC_MODE_MAP 常量应该存在"
-        assert REVERSE_LIFESMART_HVAC_MODE_MAP is not None, "REVERSE_LIFESMART_HVAC_MODE_MAP 常量应该存在"
-        assert REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP is not None, "REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP 常量应该存在"
+        assert (
+            REVERSE_F_HVAC_MODE_MAP is not None
+        ), "REVERSE_F_HVAC_MODE_MAP 常量应该存在"
+        assert (
+            REVERSE_LIFESMART_HVAC_MODE_MAP is not None
+        ), "REVERSE_LIFESMART_HVAC_MODE_MAP 常量应该存在"
+        assert (
+            REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP is not None
+        ), "REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP 常量应该存在"
 
     def test_fan_mode_mapping_constants(self):
         """测试风扇模式映射常量的导入。"""
@@ -171,8 +196,12 @@ class TestConstantsImport:
 
         assert LIFESMART_F_FAN_MAP is not None, "LIFESMART_F_FAN_MAP 常量应该存在"
         assert LIFESMART_TF_FAN_MAP is not None, "LIFESMART_TF_FAN_MAP 常量应该存在"
-        assert LIFESMART_ACIPM_FAN_MAP is not None, "LIFESMART_ACIPM_FAN_MAP 常量应该存在"
-        assert LIFESMART_CP_AIR_FAN_MAP is not None, "LIFESMART_CP_AIR_FAN_MAP 常量应该存在"
+        assert (
+            LIFESMART_ACIPM_FAN_MAP is not None
+        ), "LIFESMART_ACIPM_FAN_MAP 常量应该存在"
+        assert (
+            LIFESMART_CP_AIR_FAN_MAP is not None
+        ), "LIFESMART_CP_AIR_FAN_MAP 常量应该存在"
 
 
 class TestAbstractBaseClass:
@@ -190,8 +219,12 @@ class TestAbstractBaseClass:
         """测试模拟客户端的创建。"""
         mock_client = MockLifeSmartClient()
         assert mock_client is not None, "模拟客户端应该能够成功创建"
-        assert hasattr(mock_client, "_mock_get_all_devices"), "模拟客户端应该包含_mock_get_all_devices属性"
-        assert hasattr(mock_client, "_mock_send_single_command"), "模拟客户端应该包含_mock_send_single_command属性"
+        assert hasattr(
+            mock_client, "_mock_get_all_devices"
+        ), "模拟客户端应该包含_mock_get_all_devices属性"
+        assert hasattr(
+            mock_client, "_mock_send_single_command"
+        ), "模拟客户端应该包含_mock_send_single_command属性"
 
 
 class TestClientBasePublicInterfaces:
@@ -216,10 +249,14 @@ class TestClientBasePublicInterfaces:
         mock_client = MockLifeSmartClient()
         mock_client._mock_send_single_command.return_value = 0
 
-        result = await mock_client.async_send_single_command("agt1", "dev1", "P1", CMD_TYPE_ON, 1)
+        result = await mock_client.async_send_single_command(
+            "agt1", "dev1", "P1", CMD_TYPE_ON, 1
+        )
 
         assert result == 0, "命令发送应该返回成功状态码"
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "dev1", "P1", CMD_TYPE_ON, 1)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "dev1", "P1", CMD_TYPE_ON, 1
+        )
 
     async def test_async_send_multi_command_interface(self):
         """测试发送多个命令的公共接口。"""
@@ -230,7 +267,9 @@ class TestClientBasePublicInterfaces:
         result = await mock_client.async_send_multi_command("agt1", "dev1", io_list)
 
         assert result == 0, "多命令发送应该返回成功状态码"
-        mock_client._mock_send_multi_command.assert_called_once_with("agt1", "dev1", io_list)
+        mock_client._mock_send_multi_command.assert_called_once_with(
+            "agt1", "dev1", io_list
+        )
 
 
 class TestLightSwitchControl:
@@ -246,7 +285,9 @@ class TestLightSwitchControl:
         result = await mock_client.turn_on_light_switch_async("P1", "agt1", "switch1")
 
         assert result == 0, "开启灯光开关应该返回成功状态码"
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "switch1", "P1", CMD_TYPE_ON, 1)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "switch1", "P1", CMD_TYPE_ON, 1
+        )
 
     async def test_turn_off_light_switch_async(self):
         """测试关闭灯光或开关。"""
@@ -258,7 +299,9 @@ class TestLightSwitchControl:
         result = await mock_client.turn_off_light_switch_async("P2", "agt1", "switch1")
 
         assert result == 0, "关闭灯光开关应该返回成功状态码"
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "switch1", "P2", CMD_TYPE_OFF, 0)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "switch1", "P2", CMD_TYPE_OFF, 0
+        )
 
     async def test_press_switch_async_basic_duration(self):
         """测试点动操作的基本持续时间。"""
@@ -271,7 +314,9 @@ class TestLightSwitchControl:
 
         assert result == 0, "点动操作应该返回成功状态码"
         # 500ms / 100 = 5
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "switch1", "P3", CMD_TYPE_PRESS, 5)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "switch1", "P3", CMD_TYPE_PRESS, 5
+        )
 
     async def test_press_switch_async_minimum_duration(self):
         """测试点动操作的最小持续时间处理。"""
@@ -284,7 +329,9 @@ class TestLightSwitchControl:
 
         assert result == 0, "最小持续时间的点动操作应该返回成功状态码"
         # max(1, round(50/100)) = max(1, 1) = 1
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "switch1", "P1", CMD_TYPE_PRESS, 1)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "switch1", "P1", CMD_TYPE_PRESS, 1
+        )
 
     async def test_press_switch_async_very_short_duration(self):
         """测试点动操作的极短持续时间处理。"""
@@ -297,7 +344,9 @@ class TestLightSwitchControl:
 
         assert result == 0, "极短持续时间的点动操作应该返回成功状态码"
         # max(1, round(10/100)) = max(1, 0) = 1，确保最小值为1
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "switch1", "P1", CMD_TYPE_PRESS, 1)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "switch1", "P1", CMD_TYPE_PRESS, 1
+        )
 
 
 class TestCoverControl:
@@ -305,7 +354,10 @@ class TestCoverControl:
 
     async def test_open_cover_garage_door(self):
         """测试开启车库门类型的窗帘。"""
-        from custom_components.lifesmart.const import GARAGE_DOOR_TYPES, CMD_TYPE_SET_VAL
+        from custom_components.lifesmart.const import (
+            GARAGE_DOOR_TYPES,
+            CMD_TYPE_SET_VAL,
+        )
 
         mock_client = MockLifeSmartClient()
         mock_client._mock_send_single_command.return_value = 0
@@ -314,7 +366,9 @@ class TestCoverControl:
         result = await mock_client.open_cover_async("agt1", "cover1", garage_door_type)
 
         assert result == 0, "开启车库门应该返回成功状态码"
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "cover1", "P3", CMD_TYPE_SET_VAL, 100)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "cover1", "P3", CMD_TYPE_SET_VAL, 100
+        )
 
     async def test_open_cover_dooya_type(self):
         """测试开启杜亚类型的窗帘。"""
@@ -327,11 +381,16 @@ class TestCoverControl:
         result = await mock_client.open_cover_async("agt1", "cover1", dooya_type)
 
         assert result == 0, "开启杜亚窗帘应该返回成功状态码"
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "cover1", "P2", CMD_TYPE_SET_VAL, 100)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "cover1", "P2", CMD_TYPE_SET_VAL, 100
+        )
 
     async def test_open_cover_non_positional_type(self):
         """测试开启非位置控制类型的窗帘。"""
-        from custom_components.lifesmart.const import NON_POSITIONAL_COVER_CONFIG, CMD_TYPE_ON
+        from custom_components.lifesmart.const import (
+            NON_POSITIONAL_COVER_CONFIG,
+            CMD_TYPE_ON,
+        )
 
         mock_client = MockLifeSmartClient()
         mock_client._mock_send_single_command.return_value = 0
@@ -341,21 +400,30 @@ class TestCoverControl:
             result = await mock_client.open_cover_async("agt1", "cover1", "TEST_COVER")
 
             assert result == 0, "开启非位置控制窗帘应该返回成功状态码"
-            mock_client._mock_send_single_command.assert_called_once_with("agt1", "cover1", "O1", CMD_TYPE_ON, 1)
+            mock_client._mock_send_single_command.assert_called_once_with(
+                "agt1", "cover1", "O1", CMD_TYPE_ON, 1
+            )
 
     async def test_open_cover_unsupported_type(self):
         """测试开启不支持的窗帘类型。"""
         mock_client = MockLifeSmartClient()
 
-        with patch("custom_components.lifesmart.core.client_base._LOGGER") as mock_logger:
-            result = await mock_client.open_cover_async("agt1", "cover1", "UNSUPPORTED_TYPE")
+        with patch(
+            "custom_components.lifesmart.core.client_base._LOGGER"
+        ) as mock_logger:
+            result = await mock_client.open_cover_async(
+                "agt1", "cover1", "UNSUPPORTED_TYPE"
+            )
 
             assert result == -1, "不支持的窗帘类型应该返回错误状态码"
             assert mock_logger.warning.called, "应该记录警告信息"
 
     async def test_close_cover_garage_door(self):
         """测试关闭车库门类型的窗帘。"""
-        from custom_components.lifesmart.const import GARAGE_DOOR_TYPES, CMD_TYPE_SET_VAL
+        from custom_components.lifesmart.const import (
+            GARAGE_DOOR_TYPES,
+            CMD_TYPE_SET_VAL,
+        )
 
         mock_client = MockLifeSmartClient()
         mock_client._mock_send_single_command.return_value = 0
@@ -364,27 +432,40 @@ class TestCoverControl:
         result = await mock_client.close_cover_async("agt1", "cover1", garage_door_type)
 
         assert result == 0, "关闭车库门应该返回成功状态码"
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "cover1", "P3", CMD_TYPE_SET_VAL, 0)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "cover1", "P3", CMD_TYPE_SET_VAL, 0
+        )
 
     async def test_set_cover_position_garage_door(self):
         """测试设置车库门类型窗帘的位置。"""
-        from custom_components.lifesmart.const import GARAGE_DOOR_TYPES, CMD_TYPE_SET_VAL
+        from custom_components.lifesmart.const import (
+            GARAGE_DOOR_TYPES,
+            CMD_TYPE_SET_VAL,
+        )
 
         mock_client = MockLifeSmartClient()
         mock_client._mock_send_single_command.return_value = 0
         garage_door_type = list(GARAGE_DOOR_TYPES)[0]
 
-        result = await mock_client.set_cover_position_async("agt1", "cover1", 75, garage_door_type)
+        result = await mock_client.set_cover_position_async(
+            "agt1", "cover1", 75, garage_door_type
+        )
 
         assert result == 0, "设置车库门位置应该返回成功状态码"
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "cover1", "P3", CMD_TYPE_SET_VAL, 75)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "cover1", "P3", CMD_TYPE_SET_VAL, 75
+        )
 
     async def test_set_cover_position_unsupported_type(self):
         """测试设置不支持位置控制的窗帘类型。"""
         mock_client = MockLifeSmartClient()
 
-        with patch("custom_components.lifesmart.core.client_base._LOGGER") as mock_logger:
-            result = await mock_client.set_cover_position_async("agt1", "cover1", 50, "UNSUPPORTED_TYPE")
+        with patch(
+            "custom_components.lifesmart.core.client_base._LOGGER"
+        ) as mock_logger:
+            result = await mock_client.set_cover_position_async(
+                "agt1", "cover1", 50, "UNSUPPORTED_TYPE"
+            )
 
             assert result == -1, "不支持位置控制的窗帘类型应该返回错误状态码"
             assert mock_logger.warning.called, "应该记录警告信息"
@@ -401,10 +482,14 @@ class TestClimateControl:
         mock_client = MockLifeSmartClient()
         mock_client._mock_send_single_command.return_value = 0
 
-        result = await mock_client.async_set_climate_hvac_mode("agt1", "climate1", "SL_NATURE", HVACMode.OFF)
+        result = await mock_client.async_set_climate_hvac_mode(
+            "agt1", "climate1", "SL_NATURE", HVACMode.OFF
+        )
 
         assert result == 0, "设置HVAC模式为关闭应该返回成功状态码"
-        mock_client._mock_send_single_command.assert_called_once_with("agt1", "climate1", "P1", CMD_TYPE_OFF, 0)
+        mock_client._mock_send_single_command.assert_called_once_with(
+            "agt1", "climate1", "P1", CMD_TYPE_OFF, 0
+        )
 
     async def test_set_climate_temperature_v_air_p(self):
         """测试设置V_AIR_P设备的温度。"""
@@ -413,7 +498,9 @@ class TestClimateControl:
         mock_client = MockLifeSmartClient()
         mock_client._mock_send_single_command.return_value = 0
 
-        result = await mock_client.async_set_climate_temperature("agt1", "climate1", "V_AIR_P", 25.5)
+        result = await mock_client.async_set_climate_temperature(
+            "agt1", "climate1", "V_AIR_P", 25.5
+        )
 
         assert result == 0, "设置V_AIR_P设备温度应该返回成功状态码"
         # 25.5 * 10 = 255
@@ -425,21 +512,31 @@ class TestClimateControl:
         """测试设置不支持设备类型的温度。"""
         mock_client = MockLifeSmartClient()
 
-        result = await mock_client.async_set_climate_temperature("agt1", "climate1", "UNSUPPORTED_TYPE", 25.0)
+        result = await mock_client.async_set_climate_temperature(
+            "agt1", "climate1", "UNSUPPORTED_TYPE", 25.0
+        )
 
         assert result == -1, "不支持的设备类型应该返回错误状态码"
-        assert not mock_client._mock_send_single_command.called, "不应该调用发送命令方法"
+        assert (
+            not mock_client._mock_send_single_command.called
+        ), "不应该调用发送命令方法"
 
     async def test_set_climate_fan_mode_unsupported_device(self):
         """测试设置不支持设备类型的风扇模式。"""
         mock_client = MockLifeSmartClient()
 
-        with patch("custom_components.lifesmart.core.client_base._LOGGER") as mock_logger:
-            result = await mock_client.async_set_climate_fan_mode("agt1", "climate1", "UNSUPPORTED_TYPE", "auto")
+        with patch(
+            "custom_components.lifesmart.core.client_base._LOGGER"
+        ) as mock_logger:
+            result = await mock_client.async_set_climate_fan_mode(
+                "agt1", "climate1", "UNSUPPORTED_TYPE", "auto"
+            )
 
             assert result == -1, "不支持的风扇模式设备类型应该返回错误状态码"
             assert mock_logger.warning.called, "应该记录警告信息"
-            assert not mock_client._mock_send_single_command.called, "不应该调用发送命令方法"
+            assert (
+                not mock_client._mock_send_single_command.called
+            ), "不应该调用发送命令方法"
 
 
 class TestClientBaseEdgeCases:
@@ -464,12 +561,18 @@ class TestClientBaseEdgeCases:
         mock_client = MockLifeSmartClient()
 
         with patch.dict(LIFESMART_F_FAN_MAP, {}, clear=True):
-            with patch("custom_components.lifesmart.core.client_base._LOGGER") as mock_logger:
-                result = await mock_client.async_set_climate_fan_mode("agt1", "climate1", "V_AIR_P", "auto")
+            with patch(
+                "custom_components.lifesmart.core.client_base._LOGGER"
+            ) as mock_logger:
+                result = await mock_client.async_set_climate_fan_mode(
+                    "agt1", "climate1", "V_AIR_P", "auto"
+                )
 
                 assert result == -1, "没有映射的风扇模式应该返回错误状态码"
                 assert mock_logger.warning.called, "应该记录警告信息"
-                assert not mock_client._mock_send_single_command.called, "不应该调用发送命令方法"
+                assert (
+                    not mock_client._mock_send_single_command.called
+                ), "不应该调用发送命令方法"
 
 
 def main():
@@ -495,7 +598,9 @@ def main():
         print(f"\n--- {class_name} ---")
 
         # 获取测试方法
-        test_methods = [method for method in dir(test_class) if method.startswith("test_")]
+        test_methods = [
+            method for method in dir(test_class) if method.startswith("test_")
+        ]
 
         for method_name in test_methods:
             test_method = getattr(test_class, method_name)

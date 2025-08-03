@@ -206,11 +206,14 @@ class TestCoreAPICall:
     @pytest.mark.asyncio
     async def test_async_call_api_with_parameters(self, client):
         """测试带参数的API调用和签名生成。"""
-        with patch.object(
-            client, "_post_and_parse", return_value={"code": 0}
-        ) as mock_post, patch(
-            "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._get_signature"
-        ) as mock_get_signature:
+        with (
+            patch.object(
+                client, "_post_and_parse", return_value={"code": 0}
+            ) as mock_post,
+            patch(
+                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._get_signature"
+            ) as mock_get_signature,
+        ):
             mock_get_signature.return_value = "mocked_signature"
 
             # 测试带参数的API调用
@@ -233,11 +236,14 @@ class TestCoreAPICall:
     @pytest.mark.asyncio
     async def test_async_call_api_without_parameters(self, client):
         """测试无参数的API调用。"""
-        with patch.object(
-            client, "_post_and_parse", return_value={"code": 0}
-        ) as mock_post, patch(
-            "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._get_signature"
-        ) as mock_get_signature:
+        with (
+            patch.object(
+                client, "_post_and_parse", return_value={"code": 0}
+            ) as mock_post,
+            patch(
+                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._get_signature"
+            ) as mock_get_signature,
+        ):
             mock_get_signature.return_value = "mocked_signature"
 
             await client._async_call_api("TestMethodNoParams")
@@ -480,14 +486,14 @@ class TestAPIWrapperMethods:
             (
                 "async_send_ir_key",
                 "SendKeys",
-                ("hub1", "ai1", "me1", "cat1", "brand1", "key1"),
+                ("hub1", "me1", "cat1", "brand1", "key1", "ai1"),
                 {
                     "agt": "hub1",
-                    "ai": "ai1",
                     "me": "me1",
                     "category": "cat1",
                     "brand": "brand1",
                     "keys": "key1",
+                    "ai": "ai1",
                 },
                 "/irapi",
             ),

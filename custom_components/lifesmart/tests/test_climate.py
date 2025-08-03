@@ -51,7 +51,9 @@ from .test_utils import find_test_device
 
 def get_entity_unique_id(device: dict) -> str:
     """一个辅助函数，用于根据设备信息生成实体在 Home Assistant 中的唯一ID。"""
-    return generate_unique_id(device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], None)
+    return generate_unique_id(
+        device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], None
+    )
 
 
 # ============================================================================
@@ -172,10 +174,16 @@ class TestClimateSetup:
         这是一个“快乐路径”测试，确保在标准配置下，所有在模拟设备列表中
         定义的温控设备都被成功加载为 Home Assistant 中的 climate 实体。
         """
-        assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5, "应该创建5个温控实体"
-        assert hass.states.get("climate.nature_panel_thermo") is not None, "超能面板温控实体应存在"
+        assert (
+            len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
+        ), "应该创建5个温控实体"
+        assert (
+            hass.states.get("climate.nature_panel_thermo") is not None
+        ), "超能面板温控实体应存在"
         assert hass.states.get("climate.floor_heating") is not None, "地暖实体应存在"
-        assert hass.states.get("climate.fan_coil_unit") is not None, "风机盘管实体应存在"
+        assert (
+            hass.states.get("climate.fan_coil_unit") is not None
+        ), "风机盘管实体应存在"
         assert hass.states.get("climate.air_panel") is not None, "空调面板实体应存在"
         assert hass.states.get("climate.air_system") is not None, "新风系统实体应存在"
 
@@ -190,11 +198,17 @@ class TestClimateSetup:
         """
         边界测试：验证在重载后，非温控版的 SL_NATURE 面板不再作为 climate 实体活动。
         """
-        assert hass.states.get("climate.nature_panel_thermo") is not None, "超能面板温控实体初始应存在"
-        assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5, "应该有5个温控实体"
+        assert (
+            hass.states.get("climate.nature_panel_thermo") is not None
+        ), "超能面板温控实体初始应存在"
+        assert (
+            len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 5
+        ), "应该有5个温控实体"
 
         # 模拟将 Nature Panel 的模式从温控(P5=3)改为开关(P5=1)
-        nature_switch = find_test_device(mock_lifesmart_devices, "climate_nature_thermo")
+        nature_switch = find_test_device(
+            mock_lifesmart_devices, "climate_nature_thermo"
+        )
         nature_switch["data"]["P5"]["val"] = 1
 
         # 模拟重载过程 - 使用新的 Hub 架构
@@ -249,7 +263,9 @@ class TestClimateEntity:
                 "SL_CP_DN",
                 HVACMode.AUTO,
                 {"current_temperature": 22.5, "temperature": 25.0},
-                CLIMATE_FEATURES["TARGET_TEMPERATURE"] | CLIMATE_FEATURES["TURN_ON"] | CLIMATE_FEATURES["TURN_OFF"],
+                CLIMATE_FEATURES["TARGET_TEMPERATURE"]
+                | CLIMATE_FEATURES["TURN_ON"]
+                | CLIMATE_FEATURES["TURN_OFF"],
             ),
             (
                 "climate.fan_coil_unit",
@@ -282,7 +298,9 @@ class TestClimateEntity:
                 "SL_TR_ACIPM",
                 HVACMode.FAN_ONLY,
                 {"fan_mode": FAN_LOW},
-                CLIMATE_FEATURES["FAN_MODE"] | CLIMATE_FEATURES["TURN_ON"] | CLIMATE_FEATURES["TURN_OFF"],
+                CLIMATE_FEATURES["FAN_MODE"]
+                | CLIMATE_FEATURES["TURN_ON"]
+                | CLIMATE_FEATURES["TURN_OFF"],
             ),
         ],
         ids=[
@@ -318,7 +336,9 @@ class TestClimateEntity:
         assert state.state == expected_state
         assert state.attributes.get("supported_features") == expected_features
         for attr, val in expected_attrs.items():
-            assert state.attributes.get(attr) == val, f"实体 {entity_id} 的属性 '{attr}' 不匹配"
+            assert (
+                state.attributes.get(attr) == val
+            ), f"实体 {entity_id} 的属性 '{attr}' 不匹配"
 
     @pytest.mark.parametrize(
         "entity_id, service, service_data, expected_client_method, expected_call_args",
@@ -450,7 +470,9 @@ class TestClimateEntity:
         assert device is not None
         entity_id = f"climate.{device['name'].lower().replace(' ', '_')}"
         unique_id = get_entity_unique_id(device)
-        async_dispatcher_send(hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", new_data)
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", new_data
+        )
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         assert state.state == expected_state
@@ -499,7 +521,9 @@ class TestComplexClimateScenarios:
             {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
             blocking=True,
         )
-        mock_client.async_set_climate_hvac_mode.assert_awaited_with(hub_id, me, devtype, HVACMode.COOL, initial_val)
+        mock_client.async_set_climate_hvac_mode.assert_awaited_with(
+            hub_id, me, devtype, HVACMode.COOL, initial_val
+        )
 
         unique_id = get_entity_unique_id(device)
         val_after_mode_change = (1 << 15) | (0 << 13)
@@ -520,7 +544,9 @@ class TestComplexClimateScenarios:
             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_HIGH},
             blocking=True,
         )
-        mock_client.async_set_climate_fan_mode.assert_awaited_with(hub_id, me, devtype, FAN_HIGH, val_after_mode_change)
+        mock_client.async_set_climate_fan_mode.assert_awaited_with(
+            hub_id, me, devtype, FAN_HIGH, val_after_mode_change
+        )
 
         val_after_fan_change = (3 << 15) | (0 << 13)
         async_dispatcher_send(
@@ -599,7 +625,9 @@ class TestComplexClimateScenarios:
             {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
             blocking=True,
         )
-        mock_client.async_set_climate_hvac_mode.assert_awaited_with(hub_id, me, devtype, HVACMode.HEAT, 0)
+        mock_client.async_set_climate_hvac_mode.assert_awaited_with(
+            hub_id, me, devtype, HVACMode.HEAT, 0
+        )
 
 
 # ==================== 共享的错误处理测试 Fixtures ====================
@@ -636,7 +664,9 @@ def climate_error_test_devices():
 
 
 @pytest.fixture
-async def setup_climate_entity_for_errors(hass: HomeAssistant, mock_client, climate_error_test_devices):
+async def setup_climate_entity_for_errors(
+    hass: HomeAssistant, mock_client, climate_error_test_devices
+):
     """设置用于错误处理测试的气候实体。"""
 
     async def _setup_entity(device_key: str):
@@ -674,7 +704,9 @@ class TestClimateEntityErrorHandling:
         self, hass: HomeAssistant, mock_client, setup_climate_entity_for_errors
     ):
         """测试不支持的设备类型不会创建气候实体。"""
-        device, setup_entry = await setup_climate_entity_for_errors("unsupported_device")
+        device, setup_entry = await setup_climate_entity_for_errors(
+            "unsupported_device"
+        )
 
         # 断言：不支持的设备类型不会创建任何气候实体
         climate_entities = hass.states.async_entity_ids(CLIMATE_DOMAIN)
@@ -699,7 +731,9 @@ class TestClimateEntityErrorHandling:
         expected_error_pattern,
     ):
         """测试无效HVAC模式被Home Assistant的schema验证正确拒绝。"""
-        device, setup_entry = await setup_climate_entity_for_errors("valid_climate_device")
+        device, setup_entry = await setup_climate_entity_for_errors(
+            "valid_climate_device"
+        )
         entity_id = f"climate.{device['name']}"
 
         # 断言：实体已创建
@@ -716,7 +750,9 @@ class TestClimateEntityErrorHandling:
             )
 
         # 验证错误信息包含预期的模式
-        assert expected_error_pattern in str(exc_info.value), f"错误信息应包含 '{expected_error_pattern}'"
+        assert expected_error_pattern in str(
+            exc_info.value
+        ), f"错误信息应包含 '{expected_error_pattern}'"
 
         # 断言：无效模式不应该触发客户端调用
         mock_client.async_set_climate_hvac_mode.assert_not_called()
@@ -732,10 +768,17 @@ class TestClimateEntityErrorHandling:
     )
     @pytest.mark.asyncio
     async def test_temperature_range_validation(
-        self, hass: HomeAssistant, mock_client, setup_climate_entity_for_errors, temperature, expected_behavior
+        self,
+        hass: HomeAssistant,
+        mock_client,
+        setup_climate_entity_for_errors,
+        temperature,
+        expected_behavior,
     ):
         """测试温度范围验证功能。"""
-        device, setup_entry = await setup_climate_entity_for_errors("valid_climate_device")
+        device, setup_entry = await setup_climate_entity_for_errors(
+            "valid_climate_device"
+        )
         entity_id = f"climate.{device['name']}"
         hub_id, me, devtype = device["agt"], device["me"], device["devtype"]
 
@@ -759,7 +802,9 @@ class TestClimateEntityErrorHandling:
             # 正常温度应该被接受
             assert not exception_caught, f"正常温度 {temperature}°C 不应该被拒绝"
             # 验证客户端调用
-            mock_client.async_set_climate_temperature.assert_called_with(hub_id, me, devtype, temperature)
+            mock_client.async_set_climate_temperature.assert_called_with(
+                hub_id, me, devtype, temperature
+            )
         elif expected_behavior == "rejected_or_clamped":
             # 超出范围的温度可能被拒绝或限制在合理范围内
             calls = mock_client.async_set_climate_temperature.call_args_list
@@ -778,7 +823,11 @@ class TestClimateEntityErrorHandling:
 
     @pytest.mark.asyncio
     async def test_empty_device_data_default_state(
-        self, hass: HomeAssistant, mock_client, climate_error_test_devices, setup_climate_entity_for_errors
+        self,
+        hass: HomeAssistant,
+        mock_client,
+        climate_error_test_devices,
+        setup_climate_entity_for_errors,
     ):
         """测试空设备数据的默认状态处理。"""
         device, setup_entry = await setup_climate_entity_for_errors("empty_data_device")
@@ -790,19 +839,29 @@ class TestClimateEntityErrorHandling:
 
         # 断言：缺少数据时应该有默认状态
         valid_states = [HVACMode.OFF, "unknown", "unavailable"]
-        assert state.state in valid_states, f"空数据设备的默认状态应该是 {valid_states} 之一，实际是 {state.state}"
+        assert (
+            state.state in valid_states
+        ), f"空数据设备的默认状态应该是 {valid_states} 之一，实际是 {state.state}"
 
     @pytest.mark.asyncio
     async def test_dispatcher_invalid_data_ignored(
-        self, hass: HomeAssistant, mock_client, climate_error_test_devices, setup_climate_entity_for_errors
+        self,
+        hass: HomeAssistant,
+        mock_client,
+        climate_error_test_devices,
+        setup_climate_entity_for_errors,
     ):
         """测试调度器无效数据更新被忽略。"""
-        device, setup_entry = await setup_climate_entity_for_errors("valid_climate_device")
+        device, setup_entry = await setup_climate_entity_for_errors(
+            "valid_climate_device"
+        )
         entity_id = f"climate.{device['name']}"
 
         from custom_components.lifesmart.helpers import generate_unique_id
 
-        unique_id = generate_unique_id(device["devtype"], device["agt"], device["me"], None)
+        unique_id = generate_unique_id(
+            device["devtype"], device["agt"], device["me"], None
+        )
 
         # 断言：实体已创建且有初始状态
         initial_state = hass.states.get(entity_id)
