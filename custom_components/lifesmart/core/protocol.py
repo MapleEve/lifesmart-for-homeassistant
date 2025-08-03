@@ -500,7 +500,7 @@ class LifeSmartPacketFactory:
         return self._proto.encode(config_data)
 
     def build_epset_packet(
-        self, devid: str, idx: str, command_type: str, val: Any
+        self, devid: str, idx: str, command_type: int, val: Any
     ) -> bytes:
         """构建一个标准的单IO口控制指令包 (EpSet)。"""
         args = {

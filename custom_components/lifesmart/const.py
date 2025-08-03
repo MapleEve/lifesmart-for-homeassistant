@@ -32,7 +32,9 @@ SUBDEVICE_INDEX_KEY = "idx"  # 子设备或IO口的索引键，如 'L1', 'P1'
 # ================= WebSocket 及更新机制常量 =================
 # --- Home Assistant 信号 (Dispatcher Signals) ---
 UPDATE_LISTENER = "update_listener"  # 用于在 hass.data 中存储配置更新监听器的键
-LIFESMART_STATE_MANAGER = "lifesmart_wss"  # 用于在 hass.data 中存储 WebSocket 管理器实例的键
+LIFESMART_STATE_MANAGER = (
+    "lifesmart_wss"  # 用于在 hass.data 中存储 WebSocket 管理器实例的键
+)
 LIFESMART_SIGNAL_UPDATE_ENTITY = "lifesmart_updated"  # 用于在集成内部进行事件通知的信号
 
 # ================= 配置常量 (Configuration Constants) =================
@@ -357,7 +359,9 @@ LIFESMART_CP_AIR_HVAC_MODE_MAP = {
     1: HVACMode.HEAT,
     2: HVACMode.FAN_ONLY,
 }
-REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {v: k for k, v in LIFESMART_CP_AIR_HVAC_MODE_MAP.items()}
+REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {
+    v: k for k, v in LIFESMART_CP_AIR_HVAC_MODE_MAP.items()
+}
 
 # --- SL_TR_ACIPM (新风) 风速映射 ---
 LIFESMART_ACIPM_FAN_MAP = {
@@ -516,6 +520,7 @@ SUPPORTED_PLATFORMS = {
     Platform.COVER,
     Platform.LIGHT,
     Platform.CLIMATE,
+    Platform.REMOTE,
     # Platform.CAMERA, # 摄像头平台当前未实现
 }
 

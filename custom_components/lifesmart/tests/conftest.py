@@ -44,7 +44,9 @@ def pytest_configure(config):
         if major > 0 or (major == 0 and minor >= 21):
             # 新版本，直接设置配置来避免deprecation warning
             config.option.asyncio_default_fixture_loop_scope = "function"
-            _LOGGER.debug(f"Set asyncio_default_fixture_loop_scope=function for pytest-asyncio {version}")
+            _LOGGER.debug(
+                f"Set asyncio_default_fixture_loop_scope=function for pytest-asyncio {version}"
+            )
     except (ImportError, AttributeError, ValueError) as e:
         # 如果无法检测版本，则不设置 (老版本会被warning过滤器处理)
         _LOGGER.debug(f"Unable to set asyncio config: {e}")
@@ -91,7 +93,9 @@ def prevent_socket_access():
     """
 
     async def _on_dns_resolvehost_start(session, trace_config_ctx, params):
-        raise RuntimeError(f"Socket access is disabled for tests. Tried to resolve {params.host}")
+        raise RuntimeError(
+            f"Socket access is disabled for tests. Tried to resolve {params.host}"
+        )
 
     trace_config = aiohttp.TraceConfig()
 
@@ -104,7 +108,9 @@ def prevent_socket_access():
 
     def patched_client_session(*args, **kwargs):
         existing_trace_configs = kwargs.get("trace_configs") or []
-        return original_client_session(*args, **kwargs, trace_configs=[*existing_trace_configs, trace_config])
+        return original_client_session(
+            *args, **kwargs, trace_configs=[*existing_trace_configs, trace_config]
+        )
 
     with patch("aiohttp.ClientSession", new=patched_client_session):
         yield
@@ -612,7 +618,9 @@ def mock_hub_class():
     这允许我们验证其方法（如 `async_setup`, `async_unload`）是否在集成的生命周期中
     （设置、卸载、重载）被正确调用。
     """
-    with patch("custom_components.lifesmart.hub.LifeSmartHub", autospec=True) as mock_class:
+    with patch(
+        "custom_components.lifesmart.hub.LifeSmartHub", autospec=True
+    ) as mock_class:
         # 获取实例的 mock，以便我们可以配置和断言它的方法
         instance = mock_class.return_value
         instance.async_setup = AsyncMock(return_value=True)

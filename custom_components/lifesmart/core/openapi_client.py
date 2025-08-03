@@ -440,6 +440,57 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         message = response.get("message")
         return message if isinstance(message, list) else []
 
+    async def get_ir_custom_keys_async(
+        self, agt: str, ai: str, category: str, brand: str
+    ) -> dict[str, str]:
+        """获取自定义遥控器按键列表。(API: GetCustomKeys)"""
+        params = {
+            HUB_ID_KEY: agt,
+            "ai": ai,
+            "category": category,
+            "brand": brand,
+        }
+        response = await self._async_call_api(
+            "GetCustomKeys", params, api_path="/irapi"
+        )
+        message = response.get("message", {})
+        return message.get("data", {}) if isinstance(message, dict) else {}
+
+    async def get_ir_remote_feature_async(
+        self,
+        category: str,
+        brand: str,
+        idx: str = "",
+        agt: str = "",
+        ai: str = "",
+    ) -> dict[str, Any]:
+        """获取遥控器特性。(API: GetRemoteFeature)
+
+        Args:
+            category: 遥控器类别
+            brand: 品牌类别，查询已创建遥控器时可为空字符串
+            idx: 遥控器索引，查询码库遥控器时必需
+            agt: 中枢ID，查询已创建遥控器时必需
+            ai: 遥控器ID，查询已创建遥控器时必需
+        """
+        params = {"category": category, "brand": brand}
+
+        if idx:
+            # 查询码库遥控器特性
+            params["idx"] = idx
+        elif agt and ai:
+            # 查询已创建遥控器特性
+            params[HUB_ID_KEY] = agt
+            params["ai"] = ai
+        else:
+            raise ValueError("必须提供idx参数或agt+ai参数组合")
+
+        response = await self._async_call_api(
+            "GetRemoteFeature", params, api_path="/irapi"
+        )
+        message = response.get("message")
+        return message if isinstance(message, dict) else {}
+
     # ====================================================================
     # 基类抽象方法的实现
     # ====================================================================
