@@ -205,9 +205,9 @@ install_compatible_test_deps() {
   # 构建pip安装参数
   local pip_args=""
   if [ "$no_cache" = "true" ]; then
-    pip_args="--no-cache-dir --only-binary=all"
+    pip_args="--no-cache-dir"
     if [ "$quiet" != "true" ]; then
-      echo "Using no-cache installation with binary-only packages"
+      echo "Using no-cache installation"
     fi
   fi
 
@@ -268,8 +268,8 @@ install_compatible_test_deps() {
     ;;
   esac
 
-  # 安装其他通用测试依赖
-  pip install $pip_args pytest-asyncio pytest-cov flake8
+  # 安装其他通用测试依赖（不包括pytest-asyncio pytest-cov，它由pytest-homeassistant-custom-component管理）
+  pip install $pip_args flake8
 
   # 显示实际安装的HA版本并验证
   if [ "$quiet" != "true" ]; then
