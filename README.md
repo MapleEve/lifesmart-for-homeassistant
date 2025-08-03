@@ -46,7 +46,7 @@ Installation and updates are available via HACS.
 - **⚡ Performance**: Replaced lists with sets for faster
   lookups ([#55](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/55))
 - **🛠️ Developer Experience**: Added comprehensive PR templates and automated PR summaries
-- **📊 Code Quality**: Integrated Black code formatter and Flake8 linting with line-length 120
+- **📊 Code Quality**: Integrated Black code formatter and Flake8 linting with line-length 88
 - **🏷️ License Compliance**: Added FOSSA license scanning and
   badges ([#60](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/60))
 
@@ -175,7 +175,7 @@ This integration is thoroughly tested across multiple Home Assistant versions us
 
 ### Code Quality Standards
 
-- **Black Code Formatting**: Consistent code style with 120 character line length
+- **Black Code Formatting**: Consistent code style with 88 character line length
 - **Flake8 Linting**: Comprehensive code quality checks
 - **Comprehensive Testing**: 667+ unit tests with 14 dedicated compatibility tests
 - **CI/CD Pipeline**: Automated testing across multiple Python and Home Assistant versions
@@ -236,8 +236,8 @@ conda activate ci-test-ha2023.6.0-py3.11
 ### Code Quality
 
 ```bash
-# Format code with Black (line length 120)
-black custom_components/lifesmart/ --line-length 120
+# Format code with Black (line length 88)
+black custom_components/lifesmart/ --line-length 88
 
 # Run linting
 flake8 custom_components/lifesmart/
@@ -254,7 +254,7 @@ flake8 custom_components/lifesmart/
 
 ### Contributing Guidelines
 
-- Follow the existing code style (Black formatting, 120 char lines)
+- Follow the existing code style (Black formatting, 88 char lines)
 - Add comprehensive tests for new features
 - Update documentation for user-facing changes
 - Use conventional commit messages

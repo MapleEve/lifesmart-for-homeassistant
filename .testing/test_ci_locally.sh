@@ -377,19 +377,19 @@ echo 'Installing fresh dependencies...' &&
 "
 
   if [[ "$ha_version" == "2023.6.0" ]]; then
-    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest>=7.2.1,<8.0.0' 'pytest-homeassistant-custom-component==0.13.36' &&"
+    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest-homeassistant-custom-component==0.13.36' &&"
   elif [[ "$ha_version" == "2024.2.0" ]]; then
-    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest>=7.4.0,<8.0.0' 'pytest-homeassistant-custom-component==0.13.99' &&"
+    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest-homeassistant-custom-component==0.13.99' &&"
   elif [[ "$ha_version" == "2024.12.0" ]]; then
-    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest>=8.0.0,<9.0.0' 'pytest-homeassistant-custom-component==0.13.190' &&"
+    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest-homeassistant-custom-component==0.13.190' &&"
   elif [[ "$ha_version" == "latest" ]]; then
-    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest' 'pytest-homeassistant-custom-component' &&"
+    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest-homeassistant-custom-component' &&"
   else
-    install_cmd+="pip install --no-cache-dir --force-reinstall pytest pytest-homeassistant-custom-component &&"
+    install_cmd+="pip install --no-cache-dir --force-reinstall pytest-homeassistant-custom-component &&"
   fi
 
   install_cmd+="
-# 5. 安装其他测试依赖（与GitHub CI一致，pytest-asyncio pytest-cov由pytest-homeassistant-custom-component管理）
+# 5. 安装其他测试依赖（pytest-asyncio和pytest-cov由pytest-homeassistant-custom-component管理）
 pip install --no-cache-dir --force-reinstall flake8 &&
 
 # 6. 验证安装

@@ -41,18 +41,18 @@ jobs:
           python -m pip install --upgrade pip
           
           # 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
-          # 让pytest插件自动安装正确的HA版本
+          # pytest-homeassistant-custom-component插件会自动安装pytest和HA
           if [[ "${{ matrix.homeassistant-version }}" == "2023.6.0" ]]; then
-            # HA 2023.6.0 - 使用插件 0.13.36
+            # HA 2023.6.0 - 使用插件 0.13.36 (自动安装pytest和HA)
             pip install "pytest-homeassistant-custom-component==0.13.36"
           elif [[ "${{ matrix.homeassistant-version }}" == "2024.2.0" ]]; then
-            # HA 2024.2.0 - 使用插件 0.13.99
+            # HA 2024.2.0 - 使用插件 0.13.99 (自动安装pytest和HA)
             pip install "pytest-homeassistant-custom-component==0.13.99"
           elif [[ "${{ matrix.homeassistant-version }}" == "2024.12.0" ]]; then
-            # HA 2024.12.0 - 使用插件 0.13.190
+            # HA 2024.12.0 - 使用插件 0.13.190 (自动安装pytest和HA)
             pip install "pytest-homeassistant-custom-component==0.13.190"
           elif [[ "${{ matrix.homeassistant-version }}" == "latest" ]]; then
-            # HA 最新 - 使用最新插件
+            # HA 最新 - 使用最新插件 (自动安装pytest和HA)
             pip install "pytest-homeassistant-custom-component"
           else
             # 回退到通用版本
