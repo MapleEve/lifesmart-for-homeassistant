@@ -415,11 +415,11 @@ class TestCompatibilityEdgeCases:
         features = get_climate_entity_features()
         assert features is not None
 
-            # 测试直接属性访问
-            temp_feature = features.TARGET_TEMPERATURE
+        # Test direct attribute access
+        temp_feature = features.TARGET_TEMPERATURE
         fan_feature = features.FAN_MODE
 
-        # 测试通过getitem访问（如果支持）
+        # Test getitem access (if supported)
         if hasattr(features, "__getitem__"):
             try:
                 temp_feature_via_getitem = features["TARGET_TEMPERATURE"]

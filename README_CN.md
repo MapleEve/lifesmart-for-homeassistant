@@ -27,7 +27,7 @@ Assistant。支持云端与本地两种模式，自动发现设备，并通过 H
 - **高级服务功能**：红外遥控（包括空调）、场景触发、开关点动
 - **多区域支持**：中国、北美、欧洲、日本、亚太、全球自动
 - **双语界面**：中英文 UI 支持
-- **强力测试**：667+ 全面测试确保可靠性
+- **强力测试**：704+ 全面测试确保可靠性
 - **版本兼容**：Home Assistant 2023.6.3+ 自动兼容层
 
 ### 近期重大改进 (2025年8月)
@@ -132,13 +132,21 @@ SPOT 超级碗：MSL_IRCTL、OD_WE_IRCTL、SL_SPOT、SL_P_IR、SL_P_IR_V2
 
 ### Home Assistant 版本支持
 
-本集成已在多个 Home Assistant 版本中进行全面测试：
+本集成已在多个 Home Assistant 版本中使用conda环境进行全面测试：
 
-| 环境       | Python  | Home Assistant | aiohttp | 测试状态               |
-|----------|---------|----------------|---------|--------------------|
-| **环境1**  | 3.11.13 | **2023.6.3**   | 3.8.4   | ✅ **667/667 测试通过** |
-| **环境2**  | 3.12.11 | **2024.2.4**   | 3.9.3   | ✅ **667/667 测试通过** |
-| **当前环境** | 3.12.11 | **2025.1.4**   | 3.11.11 | ✅ **667/667 测试通过** |
+| 环境       | Python  | Home Assistant | pytest | pytest-ha-custom | aiohttp | 测试状态               |
+|----------|---------|----------------|--------|------------------|---------|--------------------|
+| **环境1**  | 3.11.13 | **2023.6.0**   | 7.3.1  | 0.13.36          | 3.8.4   | ✅ **704/704 测试通过** |
+| **环境2**  | 3.12.11 | **2024.2.0**   | 7.4.4  | 0.13.99          | 3.9.3   | ✅ **704/704 测试通过** |
+| **环境3**  | 3.13.5  | **2024.12.0**  | 8.3.3  | 0.13.190         | 3.11.9  | ✅ **704/704 测试通过** |
+| **当前环境** | 3.13.5  | **2025.8.0b1** | 8.4.1  | 0.13.266         | 3.12.15 | ✅ **704/704 测试通过** |
+
+### 测试基础设施
+
+- **Conda环境**: 为每个HA版本预配置的conda环境
+- **自动化测试**: 本地CI脚本 (`.testing/test_ci_locally.sh`) 提供交互式界面
+- **全面覆盖**: 704+ 单元测试，包含14个专用兼容性测试
+- **CI/CD流水线**: 跨多个Python和Home Assistant版本的自动化测试
 
 ### 兼容性特性
 
@@ -165,13 +173,50 @@ SPOT 超级碗：MSL_IRCTL、OD_WE_IRCTL、SL_SPOT、SL_P_IR、SL_P_IR_V2
 git clone https://github.com/MapleEve/lifesmart-HACS-for-hass.git
 cd lifesmart-HACS-for-hass
 
-# 设置开发环境
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+# 设置conda测试环境（推荐）
+# 首先安装conda/anaconda，然后创建测试环境：
+conda create -n ci-test-ha2023.6.0-py3.11 python=3.11
+conda create -n ci-test-ha2024.2.0-py3.12 python=3.12
+conda create -n ci-test-ha2024.12.0-py3.13 python=3.13
+conda create -n ci-test-ha-latest-py3.13 python=3.13
 
-# 安装开发工具
-pip install black flake8 pytest
+# 为每个环境安装依赖（以HA 2023.6.0为例）：
+conda activate ci-test-ha2023.6.0-py3.11
+pip install "pytest>=7.2.1,<8.0.0" "pytest-homeassistant-custom-component==0.13.36"
+pip install pytest-asyncio pytest-cov flake8 black
+```
+
+### 测试
+
+项目使用支持conda环境的综合测试脚本：
+
+```bash
+# 运行交互式测试脚本
+./.testing/test_ci_locally.sh
+
+# 可用选项：
+# 1) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)
+# 2) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)  
+# 3) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)
+# 4) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)
+# 5) 完整CI矩阵测试（所有环境）
+
+# 在指定环境运行测试
+conda activate ci-test-ha2023.6.0-py3.11
+./.testing/test_ci_locally.sh --current
+
+# 运行所有环境测试
+./.testing/test_ci_locally.sh --all
+```
+
+### 代码质量
+
+```bash
+# 使用Black格式化代码（行长度120）
+black custom_components/lifesmart/ --line-length 120
+
+# 运行代码检查
+flake8 custom_components/lifesmart/
 
 # 运行测试
 pytest custom_components/lifesmart/tests/
@@ -196,10 +241,6 @@ flake8 custom_components/lifesmart/
 ---
 
 ## 图例
-
-**LifeSmart 服务器区域**
-
-![LifeSmart 服务器区域](./docs/region-server.png)
 
 **配置示例截图**
 

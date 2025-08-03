@@ -32,9 +32,7 @@ SUBDEVICE_INDEX_KEY = "idx"  # 子设备或IO口的索引键，如 'L1', 'P1'
 # ================= WebSocket 及更新机制常量 =================
 # --- Home Assistant 信号 (Dispatcher Signals) ---
 UPDATE_LISTENER = "update_listener"  # 用于在 hass.data 中存储配置更新监听器的键
-LIFESMART_STATE_MANAGER = (
-    "lifesmart_wss"  # 用于在 hass.data 中存储 WebSocket 管理器实例的键
-)
+LIFESMART_STATE_MANAGER = "lifesmart_wss"  # 用于在 hass.data 中存储 WebSocket 管理器实例的键
 LIFESMART_SIGNAL_UPDATE_ENTITY = "lifesmart_updated"  # 用于在集成内部进行事件通知的信号
 
 # ================= 配置常量 (Configuration Constants) =================
@@ -149,6 +147,7 @@ SMART_PLUG_TYPES = {
     "SL_OL_DE",  # 智慧插座 (德标)
     "SL_OL_UK",  # 智慧插座 (英标)
     "SL_OL_UL",  # 智慧插座 (美标)
+    "SL_OL_W",  # 入墙插座 (从灯光开关移动过来，应该是插座)
     "OD_WE_OT1",  # Wi-Fi插座
 }
 
@@ -160,10 +159,6 @@ POWER_METER_PLUG_TYPES = {
 }
 
 # ================= 灯光系列 (Light Series) =================
-# --- 灯光开关 (在HA中作为light实体) ---
-LIGHT_SWITCH_TYPES = {
-    "SL_OL_W",  # 入墙插座 (其开关行为被视为灯)
-}
 # --- 调光调色灯/控制器 ---
 LIGHT_DIMMER_TYPES = {
     "SL_LI_WW",  # 白光智能灯泡
@@ -194,17 +189,18 @@ OUTDOOR_LIGHT_TYPES = {
     "SL_LI_GD1",  # 调光壁灯 (门廊壁灯)
     "SL_LI_UG1",  # 花园地灯
 }
-# --- 智能灯泡 ---
-LIGHT_BULB_TYPES = {
-    "SL_LI_BL",  # 智能灯泡
-}
 
 # ================= 窗帘系列 (Cover Series) =================
 DOOYA_TYPES = {
     "SL_DOOYA",  # DOOYA窗帘电机
-    "SL_DOOYA_V2",  # DOOYA窗帘电机 V2
+    "SL_DOOYA_V2",  # 速接窗帘电机
     "SL_DOOYA_V3",  # 卷帘电机
     "SL_DOOYA_V4",  # 卷帘电机电池版
+    "SL_DOOYA_V5",  # 智能梦幻窗帘电机
+    "SL_DOOYA_V6",  # 超静音智能卷帘电机
+    "SL_DOOYA_V7",  # 窗帘电机(锂电池)，同速接窗帘电机
+    "SL_DOOYA_V8",  # 卷帘电机
+    "SL_DOOYA_V9",  # 智能梦幻窗帘电机
 }
 
 COVER_TYPES = {
@@ -270,11 +266,39 @@ ENVIRONMENT_SENSOR_TYPES = {
 # --- 燃气感应器 ---
 GAS_SENSOR_TYPES = {"SL_SC_CP"}  # 气体感应器(燃气)
 # --- 噪音感应器 ---
-NOISE_SENSOR_TYPES = {"SL_SC_CN"}  # 噪音感应器
+NOISE_SENSOR_TYPES = {"SL_SC_CN"}  # 噪音感应器 (恢复原来的名称)
 # --- 电量计量器 ---
 POWER_METER_TYPES = {"ELIQ_EM", "V_DLT645_P"}  # ELIQ电量计量器, DLT电量计量器
 # --- 语音小Q ---
 VOICE_SENSOR_TYPES = {"SL_SC_CV"}  # 语音小Q
+
+# ================= 空气净化器系列 (Air Purifier Series) =================
+AIR_PURIFIER_TYPES = {
+    "OD_MFRESH_M8088",  # 空气净化器
+}
+
+# ================= 485控制器系列 (485 Controller Series) =================
+CONTROLLER_485_TYPES = {
+    "V_485_P",  # 485控制器
+}
+
+# ================= 报警器系列 (Alarm Series) =================
+ALARM_TYPES = {
+    "SL_ALM",  # 智能报警器(CoSS版)
+    "LSSSMINIV1",  # 多功能报警器
+}
+
+# ================= 第三方设备通过控制器接入 (Third-party Devices) =================
+THIRD_PARTY_CONTROLLER_TYPES = {
+    "V_AIR_P",  # 已在温控系列中定义，支持多种第三方空调控制器
+    "V_FRESH_P",  # 已在温控系列中定义，支持多种第三方新风控制器
+    "V_485_P",  # 485控制器（支持多种第三方传感器和控制器）
+    "V_SZJSXR_P",  # 新风系统 (深圳建设新风)
+    "V_T8600_P",  # YORK温控器
+    "V_DUNJIA_P",  # X100人脸识别可视门锁
+    "V_HG_L",  # 极速开关组
+    "V_HG_XX",  # 极速虚拟设备
+}
 
 # ================= 温控系列 (Climate Series) =================
 CLIMATE_TYPES = {
@@ -288,6 +312,9 @@ CLIMATE_TYPES = {
     "SL_NATURE",  # 超能面板PRO(温控) / 星玉温控面板
     "SL_FCU",  # ⻛机盘管 (星玉温控面板)
     "SL_DN",  # 星⽟地暖 TODO: 暂不支持
+    # 第三方温控设备
+    "V_SZJSXR_P",  # 新风系统 (深圳建设新风)，参考V_AIR_P属性
+    "V_T8600_P",  # YORK温控器，参考V_AIR_P属性
 }
 
 # ================= 温控器映射 (Climate Mappings) =================
@@ -330,9 +357,7 @@ LIFESMART_CP_AIR_HVAC_MODE_MAP = {
     1: HVACMode.HEAT,
     2: HVACMode.FAN_ONLY,
 }
-REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {
-    v: k for k, v in LIFESMART_CP_AIR_HVAC_MODE_MAP.items()
-}
+REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {v: k for k, v in LIFESMART_CP_AIR_HVAC_MODE_MAP.items()}
 
 # --- SL_TR_ACIPM (新风) 风速映射 ---
 LIFESMART_ACIPM_FAN_MAP = {
@@ -401,6 +426,7 @@ LOCK_TYPES = {
     "SL_LK_SWIFTE",  # SWIFTE ⻔锁模块
     "SL_LK_TY",  # 智能门锁 C100
     "SL_LK_DJ",  # 智能门锁 C200 / C210
+    # 注意：文档中提到的LK_YL可能是SL_LK_YL的别名或旧版本
 }
 # 门锁解锁方式映射
 UNLOCK_METHOD = {
@@ -427,20 +453,20 @@ ALL_SWITCH_TYPES = (
     | POWER_METER_PLUG_TYPES
     | GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含开关等多种类型
     | VOLTAGE_SWITCH_TYPES  # 带电压的开关
+    | CONTROLLER_485_TYPES  # 485控制器可能包含开关
 )
 
 # --- 总灯光列表 ---
 ALL_LIGHT_TYPES = (
-    LIGHT_SWITCH_TYPES
-    | LIGHT_DIMMER_TYPES
+    LIGHT_DIMMER_TYPES
     | RGB_LIGHT_TYPES
     | RGBW_LIGHT_TYPES
     | QUANTUM_TYPES
     | OUTDOOR_LIGHT_TYPES
-    | LIGHT_BULB_TYPES
     | BRIGHTNESS_LIGHT_TYPES
     | SPOT_TYPES  # 超级碗的流光灯
     | GARAGE_DOOR_TYPES  # 车库门灯
+    # LIGHT_BULB_TYPES 已删除，因为是空集合且相关设备已归类到其他类型中
 )
 
 # --- 总二元传感器列表 ---
@@ -451,6 +477,7 @@ ALL_BINARY_SENSOR_TYPES = (
     | RADAR_SENSOR_TYPES
     | DEFED_SENSOR_TYPES
     | LOCK_TYPES
+    | ALARM_TYPES  # 报警器可以作为二元传感器
     | GENERIC_CONTROLLER_TYPES  # 通用控制器有时也作为二元传感器
     | BUTTON_SWITCH_TYPES  # 按钮开关也可以作为二元传感器
 )
@@ -463,6 +490,8 @@ ALL_SENSOR_TYPES = (
     | NOISE_SENSOR_TYPES
     | POWER_METER_TYPES
     | VOICE_SENSOR_TYPES
+    | AIR_PURIFIER_TYPES  # 空气净化器传感器
+    | CONTROLLER_485_TYPES  # 485控制器传感器
     | ALL_BINARY_SENSOR_TYPES  # 二元传感器也可能提供电量等数值
     | COVER_TYPES  # 窗帘电机电量
     | BUTTON_SWITCH_TYPES  # 按钮开关也可能提供电量等数值
@@ -476,6 +505,7 @@ ALL_COVER_TYPES = (
     | DOOYA_TYPES
     | GARAGE_DOOR_TYPES
     | GENERIC_CONTROLLER_TYPES  # 通用控制器是动态的，他可能包含窗帘
+    | CONTROLLER_485_TYPES  # 485控制器可能包含窗帘控制
 )
 
 # --- Home Assistant 支持的平台列表 ---

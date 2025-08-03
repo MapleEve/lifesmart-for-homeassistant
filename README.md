@@ -25,24 +25,30 @@ Installation and updates are available via HACS.
 ## Features
 
 - **Dual Connection Modes**: Cloud and Local modes (choose between LifeSmart API or local Hub)
-- **Comprehensive Device Support**: Switches, sensors, locks, controllers, sockets, curtain motors, lights, SPOT, cameras
+- **Comprehensive Device Support**: Switches, sensors, locks, controllers, sockets, curtain motors, lights, SPOT,
+  cameras
 - **Advanced Services**: Send IR keys (including A/C), trigger LifeSmart scenes, momentary switch press
 - **Multi-region Support**: China, North America, Europe, Japan, Asia Pacific, Global Auto
 - **Bilingual Interface**: English/Chinese UI support
-- **Robust Testing**: 667+ comprehensive tests ensuring reliability
+- **Robust Testing**: 704+ comprehensive tests ensuring reliability
 - **Version Compatibility**: Home Assistant 2023.6.3+ with automated compatibility layers
 
 ### Recent Major Improvements (August 2025)
 
 - **🔧 Compatibility Layer**: Added comprehensive compatibility support for Home Assistant versions 2023.6.3 to 2025.1.4+
 - **🧪 Enhanced Testing**: Completely rewritten compatibility tests with 14 dedicated test cases
-- **🏗️ Code Architecture**: Major refactoring - unified client interfaces, split local/OAPI clients ([#66](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/66))
-- **🐛 Bug Fixes**: Fixed OAPI scene activation and deletion by name ([#73](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/73))
-- **🐛 Local Mode Fixes**: Fixed device state updates in Local Mode ([#65](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/65))
-- **⚡ Performance**: Replaced lists with sets for faster lookups ([#55](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/55))
+- **🏗️ Code Architecture**: Major refactoring - unified client interfaces, split local/OAPI
+  clients ([#66](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/66))
+- **🐛 Bug Fixes**: Fixed OAPI scene activation and deletion by
+  name ([#73](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/73))
+- **🐛 Local Mode Fixes**: Fixed device state updates in Local
+  Mode ([#65](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/65))
+- **⚡ Performance**: Replaced lists with sets for faster
+  lookups ([#55](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/55))
 - **🛠️ Developer Experience**: Added comprehensive PR templates and automated PR summaries
 - **📊 Code Quality**: Integrated Black code formatter and Flake8 linting with line-length 120
-- **🏷️ License Compliance**: Added FOSSA license scanning and badges ([#60](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/60))
+- **🏷️ License Compliance**: Added FOSSA license scanning and
+  badges ([#60](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/60))
 
 ---
 
@@ -144,13 +150,21 @@ the [supported devices section in the codebase](https://github.com/MapleEve/life
 
 ### Home Assistant Version Support
 
-This integration is thoroughly tested across multiple Home Assistant versions:
+This integration is thoroughly tested across multiple Home Assistant versions using conda environments:
 
-| Environment | Python | Home Assistant | aiohttp | Test Status |
-|-------------|--------|----------------|---------|-------------|
-| **Environment 1** | 3.11.13 | **2023.6.3** | 3.8.4 | ✅ **667/667 tests** |
-| **Environment 2** | 3.12.11 | **2024.2.4** | 3.9.3 | ✅ **667/667 tests** |
-| **Current** | 3.12.11 | **2025.1.4** | 3.11.11 | ✅ **667/667 tests** |
+| Environment       | Python  | Home Assistant | pytest | pytest-ha-custom | aiohttp | Test Status         |
+|-------------------|---------|----------------|--------|------------------|---------|---------------------|
+| **Environment 1** | 3.11.13 | **2023.6.0**   | 7.3.1  | 0.13.36          | 3.8.4   | ✅ **704/704 tests** |
+| **Environment 2** | 3.12.11 | **2024.2.0**   | 7.4.4  | 0.13.99          | 3.9.3   | ✅ **704/704 tests** |
+| **Environment 3** | 3.13.5  | **2024.12.0**  | 8.3.3  | 0.13.190         | 3.11.9  | ✅ **704/704 tests** |
+| **Current**       | 3.13.5  | **2025.8.0b1** | 8.4.1  | 0.13.266         | 3.12.15 | ✅ **704/704 tests** |
+
+### Test Infrastructure
+
+- **Conda Environments**: Pre-configured conda environments for each HA version
+- **Automated Testing**: Local CI script (`.testing/test_ci_locally.sh`) with interactive interface
+- **Comprehensive Coverage**: 704+ unit tests with 14 dedicated compatibility tests
+- **CI/CD Pipeline**: Automated testing across multiple Python and Home Assistant versions
 
 ### Compatibility Features
 
@@ -177,13 +191,56 @@ This integration is thoroughly tested across multiple Home Assistant versions:
 git clone https://github.com/MapleEve/lifesmart-HACS-for-hass.git
 cd lifesmart-HACS-for-hass
 
-# Set up development environment
+# Set up conda environments for testing (recommended)
+# Install conda/anaconda first, then create test environments:
+conda create -n ci-test-ha2023.6.0-py3.11 python=3.11
+conda create -n ci-test-ha2024.2.0-py3.12 python=3.12
+conda create -n ci-test-ha2024.12.0-py3.13 python=3.13
+conda create -n ci-test-ha-latest-py3.13 python=3.13
+
+# Install dependencies for each environment (example for HA 2023.6.0):
+conda activate ci-test-ha2023.6.0-py3.11
+pip install "pytest>=7.2.1,<8.0.0" "pytest-homeassistant-custom-component==0.13.36"
+pip install pytest-asyncio pytest-cov flake8 black
+
+# Or use traditional venv setup
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# Install development tools
 pip install black flake8 pytest
+```
+
+### Testing
+
+The project uses a comprehensive testing script that works with conda environments:
+
+```bash
+# Run the interactive testing script
+./.testing/test_ci_locally.sh
+
+# Available options:
+# 1) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)
+# 2) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)  
+# 3) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)
+# 4) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)
+# 5) Full CI matrix test (all environments)
+
+# Run tests in specific environment
+conda activate ci-test-ha2023.6.0-py3.11
+./.testing/test_ci_locally.sh --current
+
+# Run tests for all environments
+./.testing/test_ci_locally.sh --all
+```
+
+### Code Quality
+
+```bash
+# Format code with Black (line length 120)
+black custom_components/lifesmart/ --line-length 120
+
+# Run linting
+flake8 custom_components/lifesmart/
 
 # Run tests
 pytest custom_components/lifesmart/tests/
@@ -209,10 +266,6 @@ For detailed contributing guidelines, see our [PR template](.github/PULL_REQUEST
 
 ## Diagrams
 
-**LifeSmart Server Regions**
-
-![LifeSmart Server Regions](./docs/region-server.png)
-
 **Example Configuration Screenshots**
 
 ![Example Configuration](./docs/example-configuration.png)
@@ -221,6 +274,6 @@ For detailed contributing guidelines, see our [PR template](.github/PULL_REQUEST
 ![Example Image 3](./docs/example-image-3.png)
 ![Example Image 4](./docs/example-image-4.png)
 
-
 ## License
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FMapleEve%2Flifesmart-for-homeassistant.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FMapleEve%2Flifesmart-for-homeassistant?ref=badge_large)
