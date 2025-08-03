@@ -44,9 +44,7 @@ def pytest_configure(config):
         if major > 0 or (major == 0 and minor >= 21):
             # 新版本，直接设置配置来避免deprecation warning
             config.option.asyncio_default_fixture_loop_scope = "function"
-            _LOGGER.debug(
-                f"Set asyncio_default_fixture_loop_scope=function for pytest-asyncio {version}"
-            )
+            _LOGGER.debug(f"Set asyncio_default_fixture_loop_scope=function for pytest-asyncio {version}")
     except (ImportError, AttributeError, ValueError) as e:
         # 如果无法检测版本，则不设置 (老版本会被warning过滤器处理)
         _LOGGER.debug(f"Unable to set asyncio config: {e}")
@@ -93,9 +91,7 @@ def prevent_socket_access():
     """
 
     async def _on_dns_resolvehost_start(session, trace_config_ctx, params):
-        raise RuntimeError(
-            f"Socket access is disabled for tests. Tried to resolve {params.host}"
-        )
+        raise RuntimeError(f"Socket access is disabled for tests. Tried to resolve {params.host}")
 
     trace_config = aiohttp.TraceConfig()
 
@@ -108,9 +104,7 @@ def prevent_socket_access():
 
     def patched_client_session(*args, **kwargs):
         existing_trace_configs = kwargs.get("trace_configs") or []
-        return original_client_session(
-            *args, **kwargs, trace_configs=[*existing_trace_configs, trace_config]
-        )
+        return original_client_session(*args, **kwargs, trace_configs=[*existing_trace_configs, trace_config])
 
     with patch("aiohttp.ClientSession", new=patched_client_session):
         yield
@@ -169,6 +163,14 @@ def mock_lifesmart_devices_fixture():
             "devtype": "SL_OL",
             "name": "Smart Outlet",
             "data": {"O": {"type": 129}},
+        },
+        # 2.1. 入墙插座 (SL_OL_W) - 现在归类为插座而非灯光
+        {
+            "agt": "hub_sw",
+            "me": "wall_outlet",
+            "devtype": "SL_OL_W",
+            "name": "Wall Outlet",
+            "data": {"P1": {"type": 129}},
         },
         # 3. 计量插座 (POWER_METER_PLUG_TYPES) - 位于被排除的 hub
         {
@@ -291,22 +293,8 @@ def mock_lifesmart_devices_fixture():
             "name": "Cover Light",
             "data": {"P1": {"type": 129}},
         },
-        # 9. LIGHT_SWITCH_TYPES -> SL_OL_W
-        {
-            "agt": "hub_light",
-            "me": "light_switch",
-            "devtype": "SL_OL_W",
-            "name": "Wall Outlet Light",
-            "data": {"P1": {"type": 129}},
-        },
-        # 10. LIGHT_BULB_TYPES -> SL_LI_BL
-        {
-            "agt": "hub_light",
-            "me": "light_bulb",
-            "devtype": "SL_LI_BL",
-            "name": "Simple Bulb",
-            "data": {"P1": {"type": 128}},
-        },
+        # 9. SL_OL_W 已移动到插座类型，此处删除灯光设备定义
+        # 10. 简单灯泡类型已删除，因为LIGHT_BULB_TYPES不存在
         # 11. OUTDOOR_LIGHT_TYPES -> SL_LI_UG1
         {
             "agt": "hub_light",
@@ -624,9 +612,7 @@ def mock_hub_class():
     这允许我们验证其方法（如 `async_setup`, `async_unload`）是否在集成的生命周期中
     （设置、卸载、重载）被正确调用。
     """
-    with patch(
-        "custom_components.lifesmart.hub.LifeSmartHub", autospec=True
-    ) as mock_class:
+    with patch("custom_components.lifesmart.hub.LifeSmartHub", autospec=True) as mock_class:
         # 获取实例的 mock，以便我们可以配置和断言它的方法
         instance = mock_class.return_value
         instance.async_setup = AsyncMock(return_value=True)
