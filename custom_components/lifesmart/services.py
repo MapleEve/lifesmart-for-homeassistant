@@ -59,9 +59,16 @@ class LifeSmartServiceManager:
             call: 服务调用对象，包含必要的参数
         """
         try:
+            # 处理ai和idx参数（二选一）
+            ai = call.data.get("ai")
+            idx = call.data.get("idx")
+
+            if not ai and not idx:
+                _LOGGER.error("发送红外按键失败：'ai' 和 'idx' 参数必须提供其中一个")
+                return
             await self.client.async_send_ir_key(
                 call.data[HUB_ID_KEY],
-                call.data["ai"],
+                ai or "",  # ai参数，可能为空
                 call.data[DEVICE_ID_KEY],
                 call.data["category"],
                 call.data["brand"],
@@ -82,20 +89,37 @@ class LifeSmartServiceManager:
             call: 服务调用对象，包含空调相关参数
         """
         try:
+            # 处理ai和idx参数（二选一）
+            ai = call.data.get("ai")
+            idx = call.data.get("idx")
+
+            if not ai and not idx:
+                _LOGGER.error("发送空调按键失败：'ai' 和 'idx' 参数必须提供其中一个")
+                return
             # 准备空调控制选项
             ac_options = {
                 "agt": call.data[HUB_ID_KEY],
                 "me": call.data[DEVICE_ID_KEY],
-                "ai": call.data["ai"],
                 "category": call.data["category"],
                 "brand": call.data["brand"],
-                "key": call.data["keys"],
+                "key": call.data.get("key")
+                or call.data.get("keys"),  # 兼容key和keys参数
                 "power": call.data["power"],
                 "mode": call.data["mode"],
                 "temp": call.data["temp"],
                 "wind": call.data["wind"],
                 "swing": call.data["swing"],
             }
+
+            # 只在有值时才添加ai和idx参数
+            if ai:
+                ac_options["ai"] = ai
+            if idx:
+                ac_options["idx"] = idx
+
+            # 处理可选的keyDetail参数
+            if "keyDetail" in call.data:
+                ac_options["keyDetail"] = call.data["keyDetail"]
 
             # 使用红外控制接口发送空调命令
             await self.client.async_ir_control(call.data[DEVICE_ID_KEY], ac_options)
@@ -115,16 +139,30 @@ class LifeSmartServiceManager:
         """
         agt = call.data.get(HUB_ID_KEY)
         scene_name = call.data.get("name")
+        scene_id = call.data.get("id")
 
-        if not agt or not scene_name:
-            _LOGGER.error("触发场景失败：'agt' 和 'name' 参数不能为空。")
+        if not agt:
+            _LOGGER.error("触发场景失败：'agt' 参数不能为空。")
+            return
+
+        if not scene_name and not scene_id:
+            _LOGGER.error("触发场景失败：'name' 和 'id' 参数必须提供其中一个。")
             return
 
         try:
-            _LOGGER.info(
-                "正在通过服务调用触发场景: Hub=%s, SceneName=%s", agt, scene_name
-            )
-            await self.client.async_set_scene(agt, scene_name)
+            if scene_id:
+                # 优先使用场景ID
+                _LOGGER.info(
+                    "正在通过服务调用触发场景: Hub=%s, SceneID=%s", agt, scene_id
+                )
+                await self.client.async_set_scene(agt, scene_id)
+            else:
+                # 使用场景名称
+                _LOGGER.info(
+                    "正在通过服务调用触发场景: Hub=%s, SceneName=%s", agt, scene_name
+                )
+                await self.client.async_set_scene(agt, scene_name)
+
             _LOGGER.info("场景触发成功。")
         except PlatformNotReady as e:
             _LOGGER.warning("场景触发功能暂时不可用: %s", e)

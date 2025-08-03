@@ -45,7 +45,6 @@ class TestLifeSmartServiceManager:
         service_manager.client = mock_client
         return service_manager
 
-    @pytest.mark.asyncio
     async def test_service_registration(self, hass: HomeAssistant, service_manager):
         """测试服务注册功能。"""
         service_manager.register_services()
@@ -58,7 +57,6 @@ class TestLifeSmartServiceManager:
         ), "应该注册场景触发服务"
         assert hass.services.has_service(DOMAIN, "press_switch"), "应该注册点动开关服务"
 
-    @pytest.mark.asyncio
     async def test_send_ir_keys_service(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -91,7 +89,6 @@ class TestLifeSmartServiceManager:
             ["power", "volume_up"],
         )
 
-    @pytest.mark.asyncio
     async def test_send_ir_keys_service_with_exception(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
