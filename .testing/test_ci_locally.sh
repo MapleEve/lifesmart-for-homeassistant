@@ -389,8 +389,8 @@ echo 'Installing fresh dependencies...' &&
   fi
 
   install_cmd+="
-# 5. 安装其他测试依赖（与GitHub CI一致）
-pip install --no-cache-dir --force-reinstall pytest-asyncio pytest-cov flake8 &&
+# 5. 安装其他测试依赖（与GitHub CI一致，pytest-asyncio pytest-cov由pytest-homeassistant-custom-component管理）
+pip install --no-cache-dir --force-reinstall flake8 &&
 
 # 6. 验证安装
 echo 'Verifying installations...' &&
