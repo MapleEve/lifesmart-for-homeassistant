@@ -150,7 +150,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             if sub_key == "P5":
                 return (
                     SensorDeviceClass.TEMPERATURE
-                    if device_type in ("SL_CP_DN")
+                    if device_type in ("SL_CP_DN", "SL_NATURE")
                     else SensorDeviceClass.PM25
                 )
             if sub_key == "P6":
@@ -367,9 +367,10 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
         # 对于其他类型的传感器，保持原有逻辑
         if device_type in CLIMATE_TYPES:
-            if (device_type == "SL_CP_DN" and self._sub_key in ("P5", "P4")) or (
-                device_type == "SL_TR_ACIPM" and self._sub_key == "P4"
-            ):
+            if (
+                device_type in ("SL_CP_DN", "SL_NATURE")
+                and self._sub_key in ("P5", "P4")
+            ) or (device_type == "SL_TR_ACIPM" and self._sub_key == "P4"):
                 return numeric_raw_value / 10.0
             return numeric_raw_value
 
