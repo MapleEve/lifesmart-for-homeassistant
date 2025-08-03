@@ -112,24 +112,18 @@ class TestIntegrationLifecycle:
                     "custom_components.lifesmart.hub.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
-                    result = await hass.config_entries.async_setup(
-                        mock_config_entry.entry_id
-                    )
+                    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
                     await hass.async_block_till_done()
 
                     assert result is True, "云端模式设置应该成功"
-                    assert (
-                        mock_config_entry.state == ConfigEntryState.LOADED
-                    ), "配置条目状态应该为已加载"
+                    assert mock_config_entry.state == ConfigEntryState.LOADED, "配置条目状态应该为已加载"
                     mock_hub_setup.assert_called_once()
 
         # 验证数据结构
         entry_data = hass.data[DOMAIN][mock_config_entry.entry_id]
         assert "hub" in entry_data, "条目数据中应包含hub"
         assert entry_data["client"] == mock_client, "条目数据中的客户端应该正确"
-        assert (
-            entry_data["devices"] == mock_lifesmart_devices
-        ), "条目数据中的设备应该正确"
+        assert entry_data["devices"] == mock_lifesmart_devices, "条目数据中的设备应该正确"
 
     @pytest.mark.asyncio
     async def test_local_mode_setup_success(
@@ -154,15 +148,11 @@ class TestIntegrationLifecycle:
                     "custom_components.lifesmart.hub.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
-                    result = await hass.config_entries.async_setup(
-                        mock_local_config_entry.entry_id
-                    )
+                    result = await hass.config_entries.async_setup(mock_local_config_entry.entry_id)
                     await hass.async_block_till_done()
 
                     assert result is True, "本地模式设置应该成功"
-                    assert (
-                        mock_local_config_entry.state == ConfigEntryState.LOADED
-                    ), "本地模式配置条目状态应该为已加载"
+                    assert mock_local_config_entry.state == ConfigEntryState.LOADED, "本地模式配置条目状态应该为已加载"
                     mock_hub_setup.assert_called_once()
 
         # 验证本地模式数据
@@ -194,12 +184,8 @@ class TestIntegrationLifecycle:
                     "custom_components.lifesmart.hub.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
-                    with patch.object(
-                        hass.config_entries, "async_forward_entry_setups"
-                    ) as mock_forward:
-                        await hass.config_entries.async_setup(
-                            mock_config_entry.entry_id
-                        )
+                    with patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward:
+                        await hass.config_entries.async_setup(mock_config_entry.entry_id)
                         await hass.async_block_till_done()
 
                         # 验证所有平台被转发设置
@@ -213,14 +199,10 @@ class TestIntegrationLifecycle:
                         }
                         mock_forward.assert_called_once()
                         call_args = mock_forward.call_args[0]
-                        assert (
-                            call_args[0] == mock_config_entry
-                        ), "应该传递正确的配置条目"
+                        assert call_args[0] == mock_config_entry, "应该传递正确的配置条目"
                         # 验证平台集合是否匹配（不关心顺序）
                         actual_platforms = (
-                            set(call_args[1])
-                            if isinstance(call_args[1], (list, set))
-                            else {call_args[1]}
+                            set(call_args[1]) if isinstance(call_args[1], (list, set)) else {call_args[1]}
                         )
                         assert (
                             actual_platforms == expected_platforms
@@ -254,28 +236,20 @@ class TestIntegrationLifecycle:
                     await hass.async_block_till_done()
 
         # 测试卸载
-        with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_unload"
-        ) as mock_hub_unload:
+        with patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload") as mock_hub_unload:
             with patch.object(
                 hass.config_entries, "async_unload_platforms", return_value=True
             ) as mock_unload_platforms:
-                result = await hass.config_entries.async_unload(
-                    mock_config_entry.entry_id
-                )
+                result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
                 await hass.async_block_till_done()
 
                 assert result is True, "卸载应该成功"
-                assert (
-                    mock_config_entry.state == ConfigEntryState.NOT_LOADED
-                ), "卸载后配置条目状态应该为未加载"
+                assert mock_config_entry.state == ConfigEntryState.NOT_LOADED, "卸载后配置条目状态应该为未加载"
                 mock_hub_unload.assert_called_once()
                 mock_unload_platforms.assert_called_once()
 
         # 验证数据清理
-        assert mock_config_entry.entry_id not in hass.data.get(
-            DOMAIN, {}
-        ), "卸载后应该清理hass.data中的条目数据"
+        assert mock_config_entry.entry_id not in hass.data.get(DOMAIN, {}), "卸载后应该清理hass.data中的条目数据"
 
     @pytest.mark.asyncio
     async def test_reload_entry(
@@ -305,17 +279,18 @@ class TestIntegrationLifecycle:
                     await hass.async_block_till_done()
 
         # 重新加载
-        with patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload"), patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
-            return_value=True,
+        with (
+            patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload"),
+            patch(
+                "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+                return_value=True,
+            ),
         ):
             result = await hass.config_entries.async_reload(mock_config_entry.entry_id)
             await hass.async_block_till_done()
 
             assert result is True, "重新加载应该成功"
-            assert (
-                mock_config_entry.state == ConfigEntryState.LOADED
-            ), "重新加载后状态应该为已加载"
+            assert mock_config_entry.state == ConfigEntryState.LOADED, "重新加载后状态应该为已加载"
 
 
 # ==================== 错误处理和恢复测试类 ====================
@@ -394,12 +369,8 @@ class TestErrorHandlingAndRecovery:
             "custom_components.lifesmart.hub.LifeSmartHub.async_unload",
             side_effect=Exception("卸载错误"),
         ):
-            with patch.object(
-                hass.config_entries, "async_unload_platforms", return_value=True
-            ):
-                result = await hass.config_entries.async_unload(
-                    mock_config_entry.entry_id
-                )
+            with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
+                result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
                 await hass.async_block_till_done()
 
             # 即使hub卸载失败，整体卸载应该继续进行
@@ -407,14 +378,12 @@ class TestErrorHandlingAndRecovery:
             assert "卸载错误" in caplog.text, "应该记录卸载错误"
 
     @pytest.mark.asyncio
-    async def test_hub_creation_failure(
-        self, hass: HomeAssistant, mock_config_entry: MockConfigEntry
-    ):
+    async def test_hub_creation_failure(self, hass: HomeAssistant, mock_config_entry: MockConfigEntry):
         """测试Hub创建失败的处理。"""
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.__init__.LifeSmartHub",
+            "custom_components.lifesmart.hub.LifeSmartHub",
             side_effect=Exception("Hub创建失败"),
         ):
             result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -442,9 +411,7 @@ class TestErrorHandlingAndRecovery:
 
         assert result is False, "配置数据不完整时设置应该失败"
         # 空配置会导致网络错误，变成SETUP_RETRY而不是SETUP_ERROR
-        assert (
-            incomplete_entry.state == ConfigEntryState.SETUP_RETRY
-        ), "配置数据缺失应该导致设置重试状态"
+        assert incomplete_entry.state == ConfigEntryState.SETUP_RETRY, "配置数据缺失应该导致设置重试状态"
 
 
 # ==================== 平台加载测试类 ====================
@@ -481,9 +448,7 @@ class TestPlatformLoading:
                         "async_forward_entry_setups",
                         return_value=True,
                     ) as mock_forward:
-                        result = await hass.config_entries.async_setup(
-                            mock_config_entry.entry_id
-                        )
+                        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
                         await hass.async_block_till_done()
 
                         assert result is True, "平台转发设置应该成功"
@@ -491,9 +456,7 @@ class TestPlatformLoading:
 
                         # 验证转发的平台列表
                         called_args = mock_forward.call_args[0]
-                        assert (
-                            called_args[0] == mock_config_entry
-                        ), "应该传递正确的配置条目"
+                        assert called_args[0] == mock_config_entry, "应该传递正确的配置条目"
                         platforms = called_args[1]
                         expected_platforms = {
                             "binary_sensor",
@@ -503,9 +466,7 @@ class TestPlatformLoading:
                             "sensor",
                             "switch",
                         }
-                        assert (
-                            set(platforms) == expected_platforms
-                        ), "应该转发所有支持的平台"
+                        assert set(platforms) == expected_platforms, "应该转发所有支持的平台"
 
     @pytest.mark.asyncio
     async def test_platform_forward_setup_failure(
@@ -535,9 +496,7 @@ class TestPlatformLoading:
                         "async_forward_entry_setups",
                         side_effect=Exception("平台设置失败"),
                     ):
-                        result = await hass.config_entries.async_setup(
-                            mock_config_entry.entry_id
-                        )
+                        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
                         await hass.async_block_till_done()
 
                         assert result is False, "平台设置失败时整体设置应该失败"
@@ -579,9 +538,7 @@ class TestPlatformLoading:
                 "async_unload_platforms",
                 return_value=True,
             ) as mock_unload:
-                result = await hass.config_entries.async_unload(
-                    mock_config_entry.entry_id
-                )
+                result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
                 await hass.async_block_till_done()
 
                 assert result is True, "平台卸载应该成功"
@@ -635,9 +592,7 @@ class TestServiceRegistration:
                     await hass.async_block_till_done()
 
         # 验证服务是否注册
-        assert hass.services.has_service(
-            DOMAIN, "trigger_scene"
-        ), "应该注册场景设置服务"
+        assert hass.services.has_service(DOMAIN, "trigger_scene"), "应该注册场景设置服务"
         assert hass.services.has_service(DOMAIN, "send_ir_keys"), "应该注册红外发送服务"
 
     @pytest.mark.asyncio
@@ -673,9 +628,7 @@ class TestServiceRegistration:
             "name": "test_scene",
         }
 
-        await hass.services.async_call(
-            DOMAIN, "trigger_scene", service_data, blocking=True
-        )
+        await hass.services.async_call(DOMAIN, "trigger_scene", service_data, blocking=True)
 
         mock_client.async_set_scene.assert_called_once_with("test_hub", "test_scene")
 
@@ -716,9 +669,7 @@ class TestServiceRegistration:
             "keys": "power",
         }
 
-        await hass.services.async_call(
-            DOMAIN, "send_ir_keys", service_data, blocking=True
-        )
+        await hass.services.async_call(DOMAIN, "send_ir_keys", service_data, blocking=True)
 
         mock_client.async_send_ir_key.assert_called_once_with(
             "test_hub", "ir_device", "remote_id", "tv", "samsung", "power"
@@ -794,16 +745,12 @@ class TestServiceRegistration:
 
         # 卸载集成
         with patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload"):
-            with patch.object(
-                hass.config_entries, "async_unload_platforms", return_value=True
-            ):
+            with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
                 await hass.config_entries.async_unload(mock_config_entry.entry_id)
                 await hass.async_block_till_done()
 
         # 验证服务已取消注册
-        assert not hass.services.has_service(
-            DOMAIN, "trigger_scene"
-        ), "卸载后服务应该被取消注册"
+        assert not hass.services.has_service(DOMAIN, "trigger_scene"), "卸载后服务应该被取消注册"
 
 
 # ==================== 配置条目生命周期测试类 ====================
@@ -866,9 +813,7 @@ class TestConfigEntryLifecycle:
                     "custom_components.lifesmart.hub.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
-                    result1 = await hass.config_entries.async_setup(
-                        cloud_entry.entry_id
-                    )
+                    result1 = await hass.config_entries.async_setup(cloud_entry.entry_id)
                     await hass.async_block_till_done()
 
         assert result1 is True, "云端配置条目应该设置成功"
@@ -892,9 +837,7 @@ class TestConfigEntryLifecycle:
 
         # 验证本地配置条目的创建不会导致错误
         assert local_entry.entry_id == "local_entry", "本地条目ID应该正确"
-        assert (
-            local_entry.data[CONF_TYPE] == CONN_CLASS_LOCAL_PUSH
-        ), "本地条目类型应该正确"
+        assert local_entry.data[CONF_TYPE] == CONN_CLASS_LOCAL_PUSH, "本地条目类型应该正确"
 
         # 由于HomeAssistant的限制，我们只能验证配置条目可以被创建
         # 实际的多配置条目设置在真实环境中是支持的
@@ -911,9 +854,7 @@ class TestConfigEntryLifecycle:
         mock_config_entry.add_to_hass(hass)
 
         # 初始状态
-        assert (
-            mock_config_entry.state == ConfigEntryState.NOT_LOADED
-        ), "初始状态应该是未加载"
+        assert mock_config_entry.state == ConfigEntryState.NOT_LOADED, "初始状态应该是未加载"
 
         # 设置过程中状态
         async def slow_setup():
@@ -932,9 +873,7 @@ class TestConfigEntryLifecycle:
                     "custom_components.lifesmart.hub.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
-                    setup_task = hass.async_create_task(
-                        hass.config_entries.async_setup(mock_config_entry.entry_id)
-                    )
+                    setup_task = hass.async_create_task(hass.config_entries.async_setup(mock_config_entry.entry_id))
                     await asyncio.sleep(0.05)  # 给设置过程一些时间开始
 
                     # 设置过程中状态可能是 LOADING
@@ -943,9 +882,7 @@ class TestConfigEntryLifecycle:
                     await hass.async_block_till_done()
 
         # 最终状态
-        assert (
-            mock_config_entry.state == ConfigEntryState.LOADED
-        ), "设置完成后状态应该是已加载"
+        assert mock_config_entry.state == ConfigEntryState.LOADED, "设置完成后状态应该是已加载"
 
     @pytest.mark.asyncio
     async def test_entry_options_update_handling(
@@ -1028,19 +965,14 @@ class TestConcurrencyAndPerformance:
                     "custom_components.lifesmart.hub.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
-                    setup_tasks = [
-                        hass.config_entries.async_setup(entry.entry_id)
-                        for entry in entries
-                    ]
+                    setup_tasks = [hass.config_entries.async_setup(entry.entry_id) for entry in entries]
                     results = await asyncio.gather(*setup_tasks)
                     await hass.async_block_till_done()
 
                     # 验证所有设置都成功
                     assert all(results), "所有并发设置都应该成功"
                     for entry in entries:
-                        assert (
-                            entry.state == ConfigEntryState.LOADED
-                        ), f"条目 {entry.entry_id} 应该已加载"
+                        assert entry.state == ConfigEntryState.LOADED, f"条目 {entry.entry_id} 应该已加载"
                         assert entry.entry_id in hass.data[DOMAIN], "条目数据应该存在"
 
     @pytest.mark.asyncio
@@ -1117,9 +1049,7 @@ class TestConcurrencyAndPerformance:
             await hass.async_block_till_done()
 
         # 验证内存清理
-        assert mock_config_entry.entry_id not in hass.data.get(
-            DOMAIN, {}
-        ), "卸载后应该清理所有数据"
+        assert mock_config_entry.entry_id not in hass.data.get(DOMAIN, {}), "卸载后应该清理所有数据"
         if DOMAIN in hass.data and not hass.data[DOMAIN]:
             # 如果域数据为空，也应该被清理
             pass  # 这是正常的清理行为
@@ -1150,21 +1080,15 @@ class TestConcurrencyAndPerformance:
                         "custom_components.lifesmart.hub.LifeSmartHub.get_client",
                         return_value=mock_client,
                     ):
-                        result = await hass.config_entries.async_setup(
-                            mock_config_entry.entry_id
-                        )
+                        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
                         await hass.async_block_till_done()
                         assert result is True, f"循环 {cycle}: 设置应该成功"
 
             # 卸载
             with patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload"):
-                result = await hass.config_entries.async_unload(
-                    mock_config_entry.entry_id
-                )
+                result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
                 await hass.async_block_till_done()
                 assert result is True, f"循环 {cycle}: 卸载应该成功"
 
             # 验证状态
-            assert (
-                mock_config_entry.state == ConfigEntryState.NOT_LOADED
-            ), f"循环 {cycle}: 卸载后状态应该正确"
+            assert mock_config_entry.state == ConfigEntryState.NOT_LOADED, f"循环 {cycle}: 卸载后状态应该正确"
