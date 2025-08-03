@@ -326,7 +326,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         return message if isinstance(message, list) else []
 
     async def set_single_ep_async(
-        self, agt: str, me: str, idx: str, command_type: str, val: Any
+        self, agt: str, me: str, idx: str, command_type: int, val: Any
     ) -> int:
         params = {
             HUB_ID_KEY: agt,
@@ -458,7 +458,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         return []
 
     async def _async_send_single_command(
-        self, agt: str, me: str, idx: str, command_type: str, val: Any
+        self, agt: str, me: str, idx: str, command_type: int, val: Any
     ) -> int:
         """
         [云端实现] 发送单个IO口命令。
@@ -511,7 +511,14 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             return -1
 
     async def _async_send_ir_key(
-        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+        self,
+        agt: str,
+        me: str,
+        category: str,
+        brand: str,
+        keys: str,
+        ai: str = "",
+        idx: str = "",
     ) -> int:
         """
         [云端实现] 发送一个红外按键命令。(API: SendKeys)
@@ -519,12 +526,20 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         """
         params = {
             HUB_ID_KEY: agt,
-            "ai": ai,
             DEVICE_ID_KEY: me,
             "category": category,
             "brand": brand,
             "keys": keys,
         }
+
+        # 根据官方API文档，ai和idx二选一
+        if ai:
+            params["ai"] = ai
+        elif idx:
+            params["idx"] = idx
+        else:
+            raise ValueError("ai和idx参数必须提供其中一个")
+
         response = await self._async_call_api("SendKeys", params, api_path="/irapi")
         return self._get_code_from_response(response, "SendKeys")
 
@@ -556,7 +571,9 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         """
         try:
             # 首先获取场景列表以找到对应的场景ID
-            scenes = await self._async_get_scene_list(agt)  # 使用带缓存的场景列表获取方法
+            scenes = await self._async_get_scene_list(
+                agt
+            )  # 使用带缓存的场景列表获取方法
 
             scene_id = next(
                 (
@@ -742,6 +759,10 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             "wind": options.get("wind", 0),
             "swing": options.get("swing", 0),
         }
+
+        # 处理可选的keyDetail参数 (根据官方API文档)
+        if "keyDetail" in options:
+            ac_params["keyDetail"] = options["keyDetail"]
 
         # 如果指定了ai参数，使用已有遥控器
         if "ai" in options:
