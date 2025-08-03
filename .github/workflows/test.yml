@@ -3,10 +3,11 @@ name: LS Union Tests CI
 on:
   push:
     branches:
-      - main
+      - '**'  # 任意分支推送都触发测试
   pull_request:
     branches:
-      - main
+      - '**'  # 任意分支的PR都触发测试
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   test:
