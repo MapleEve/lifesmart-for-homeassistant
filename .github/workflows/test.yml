@@ -5,7 +5,7 @@ on:
     branches:
       - '**'
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
   workflow_dispatch:  # 允许手动触发
 
 jobs:
@@ -44,23 +44,23 @@ jobs:
           # 让pytest插件自动安装正确的HA版本
           if [[ "${{ matrix.homeassistant-version }}" == "2023.6.0" ]]; then
             # HA 2023.6.0 - 使用插件 0.13.36
-            pip install "pytest>=7.2.1,<8.0.0" "pytest-homeassistant-custom-component==0.13.36"
+            pip install "pytest-homeassistant-custom-component==0.13.36"
           elif [[ "${{ matrix.homeassistant-version }}" == "2024.2.0" ]]; then
             # HA 2024.2.0 - 使用插件 0.13.99
-            pip install "pytest>=7.4.0,<8.0.0" "pytest-homeassistant-custom-component==0.13.99"
+            pip install "pytest-homeassistant-custom-component==0.13.99"
           elif [[ "${{ matrix.homeassistant-version }}" == "2024.12.0" ]]; then
             # HA 2024.12.0 - 使用插件 0.13.190
-            pip install "pytest>=8.0.0,<9.0.0" "pytest-homeassistant-custom-component==0.13.190"
+            pip install "pytest-homeassistant-custom-component==0.13.190"
           elif [[ "${{ matrix.homeassistant-version }}" == "latest" ]]; then
             # HA 最新 - 使用最新插件
-            pip install "pytest" "pytest-homeassistant-custom-component"
+            pip install "pytest-homeassistant-custom-component"
           else
             # 回退到通用版本
-            pip install pytest pytest-homeassistant-custom-component
+            pip install pytest-homeassistant-custom-component
           fi
           
           # 安装其他测试依赖
-          pip install pytest-asyncio pytest-cov flake8
+          pip install flake8
 
       - name: Run Flake8 Lint
         run: |
@@ -84,7 +84,7 @@ jobs:
               --tb=line > pytest_output.log 2>&1
             pytest_exit_code=$?
             set -e  # 重新启用错误退出
-            
+          
             # 检查是否只是teardown错误但测试都通过了
             if [ $pytest_exit_code -ne 0 ]; then
               if grep -q "passed.*error.*in.*s" pytest_output.log && grep -qE "(Thread.*_run_safe_shutdown_loop|SyncWorker)" pytest_output.log; then
