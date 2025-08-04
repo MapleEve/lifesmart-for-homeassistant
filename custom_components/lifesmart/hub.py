@@ -429,7 +429,10 @@ class LifeSmartHub:
 
         # 清理本地连接
         if self.client and hasattr(self.client, "disconnect"):
-            self.client.disconnect()
+            # 检查 disconnect 方法是否是协程，如果是则等待
+            disconnect_result = self.client.disconnect()
+            if asyncio.iscoroutine(disconnect_result):
+                await disconnect_result
             if self._local_task:
                 self._local_task.cancel()
                 try:

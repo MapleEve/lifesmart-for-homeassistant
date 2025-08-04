@@ -26,6 +26,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+
+def create_mock_oapi_client():
+    """创建正确配置的OAPI客户端mock，区分同步和异步方法。"""
+    mock_client = MagicMock()
+
+    # 异步方法使用AsyncMock
+    mock_client.async_refresh_token = AsyncMock()
+    mock_client.async_get_all_devices = AsyncMock()
+    mock_client.login_async = AsyncMock()
+
+    # 同步方法使用普通Mock（返回值）
+    mock_client.get_wss_url = MagicMock(return_value="wss://test.com/ws")
+    mock_client.generate_wss_auth = MagicMock(return_value='{"auth": "test"}')
+
+    return mock_client
+
+
 from custom_components.lifesmart.const import (
     CONF_LIFESMART_APPKEY,
     CONF_LIFESMART_APPTOKEN,
@@ -127,7 +144,7 @@ class TestLifeSmartHub:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_cls:
-            mock_client = AsyncMock()
+            mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
                 "usertoken": "test_usertoken",
@@ -150,7 +167,7 @@ class TestLifeSmartHub:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_cls:
-            mock_client = AsyncMock()
+            mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
                 "usertoken": "test_usertoken",
@@ -189,15 +206,14 @@ class TestLifeSmartHub:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_cls:
-            mock_client = AsyncMock()
+            mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
                 "usertoken": "test_usertoken",
                 "expiredtime": 9999999999,
             }
             mock_client.async_get_all_devices.return_value = []
-            # Mock the get_wss_url method to return a string
-            mock_client.get_wss_url.return_value = "wss://test.com/ws"
+            # get_wss_url is already properly mocked in create_mock_oapi_client()
 
             with patch(
                 "custom_components.lifesmart.hub.LifeSmartStateManager"
@@ -263,7 +279,7 @@ class TestLifeSmartHub:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_cls:
-            mock_client = AsyncMock()
+            mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
                 "usertoken": "test_usertoken",
@@ -292,7 +308,7 @@ class TestLifeSmartHub:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_cls:
-            mock_client = AsyncMock()
+            mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
                 "usertoken": "test_usertoken",
@@ -322,15 +338,14 @@ class TestLifeSmartHub:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_cls:
-            mock_client = AsyncMock()
+            mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
                 "usertoken": "test_usertoken",
                 "expiredtime": 9999999999,
             }
             mock_client.async_get_all_devices.return_value = []
-            # Mock the get_wss_url method to return a string
-            mock_client.get_wss_url.return_value = "wss://test.com/ws"
+            # get_wss_url is already properly mocked in create_mock_oapi_client()
 
             # Instead of testing get_ws_timeout call, test that the state manager is created
             with patch(
@@ -380,15 +395,14 @@ class TestLifeSmartHub:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_class:
-            mock_client = mock_client_class.return_value
-            mock_client.async_get_all_devices = AsyncMock(return_value=mock_devices)
-            mock_client.async_refresh_token = AsyncMock(
-                return_value={
-                    "usertoken": "new_token",
-                    "expiredtime": 9999999999,
-                }
-            )
-            mock_client.get_wss_url.return_value = "wss://test.com/ws"
+            mock_client = create_mock_oapi_client()
+            mock_client_class.return_value = mock_client
+            mock_client.async_get_all_devices.return_value = mock_devices
+            mock_client.async_refresh_token.return_value = {
+                "usertoken": "new_token",
+                "expiredtime": 9999999999,
+            }
+            # get_wss_url is already properly mocked in create_mock_oapi_client()
 
             with patch(
                 "custom_components.lifesmart.hub.LifeSmartStateManager"
@@ -457,7 +471,8 @@ class TestLifeSmartHub:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_class:
-            mock_client = mock_client_class.return_value
+            mock_client = create_mock_oapi_client()
+            mock_client_class.return_value = mock_client
             mock_client.async_refresh_token.side_effect = LifeSmartAuthError(
                 "Auth failed"
             )
@@ -909,7 +924,7 @@ class TestLifeSmartStateManager:
     async def test_periodic_refresh(self, hass: HomeAssistant, mock_config_entry_oapi):
         """测试定时刷新功能。"""
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
-        mock_client = AsyncMock()
+        mock_client = create_mock_oapi_client()
         mock_devices = [{"agt": "hub1", "me": "dev1"}]
 
         hub.client = mock_client
@@ -929,7 +944,7 @@ class TestLifeSmartStateManager:
     ):
         """测试定时刷新遇到错误的情况。"""
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
-        mock_client = AsyncMock()
+        mock_client = create_mock_oapi_client()
 
         hub.client = mock_client
         mock_client.async_get_all_devices.side_effect = LifeSmartAPIError("API Error")
@@ -988,7 +1003,8 @@ class TestLifeSmartStateManager:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_class:
-            mock_client = mock_client_class.return_value
+            mock_client = create_mock_oapi_client()
+            mock_client_class.return_value = mock_client
             mock_client.login_async.side_effect = LifeSmartAuthError("Login failed")
 
             with pytest.raises(ConfigEntryNotReady):
@@ -1004,7 +1020,8 @@ class TestLifeSmartStateManager:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_class:
-            mock_client = mock_client_class.return_value
+            mock_client = create_mock_oapi_client()
+            mock_client_class.return_value = mock_client
             mock_client.async_refresh_token.side_effect = LifeSmartAPIError("API Error")
 
             with pytest.raises(ConfigEntryNotReady):
@@ -1158,16 +1175,15 @@ class TestLifeSmartStateManager:
         with patch(
             "custom_components.lifesmart.hub.LifeSmartOAPIClient"
         ) as mock_client_class:
-            mock_client = mock_client_class.return_value
-            mock_client.async_get_all_devices = AsyncMock(return_value=[])
+            mock_client = create_mock_oapi_client()
+            mock_client_class.return_value = mock_client
+            mock_client.async_get_all_devices.return_value = []
             # 模拟令牌刷新返回新令牌
-            mock_client.async_refresh_token = AsyncMock(
-                return_value={
-                    "usertoken": "updated_token",
-                    "expiredtime": 9999999999,
-                }
-            )
-            mock_client.get_wss_url.return_value = "wss://test.com/ws"
+            mock_client.async_refresh_token.return_value = {
+                "usertoken": "updated_token",
+                "expiredtime": 9999999999,
+            }
+            # get_wss_url is already properly mocked in create_mock_oapi_client()
 
             with patch(
                 "custom_components.lifesmart.hub.LifeSmartStateManager"
