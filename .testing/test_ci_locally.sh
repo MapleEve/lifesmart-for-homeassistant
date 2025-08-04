@@ -551,6 +551,16 @@ python -m pip install --upgrade pip &&
 export CC=clang &&
 export CXX=clang++ &&
 
+# 4.1. 尝试预先安装有问题的包
+echo 'Pre-installing problematic packages...' &&
+
+# 对于lru-dict，尝试使用预编译版本或直接跳过编译问题
+pip install --no-deps lru-dict==1.3.0 --no-cache-dir --force-reinstall 2>/dev/null || (
+  echo 'lru-dict failed, trying alternative approach...' &&
+  pip install --upgrade --no-cache-dir pip setuptools wheel &&
+  pip install lru-dict==1.3.0 --no-cache-dir --force-reinstall --no-build-isolation
+) &&
+
 # 5. 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
 # 完全复制GitHub CI的逻辑，使用--no-cache-dir --force-reinstall
 echo 'Installing fresh dependencies...' &&
