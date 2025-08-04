@@ -64,15 +64,19 @@ class LifeSmartServiceManager:
             idx = call.data.get("idx")
 
             if not ai and not idx:
-                _LOGGER.error("发送红外按键失败：'ai' 和 'idx' 参数必须提供其中一个")
-                return
+                from homeassistant.exceptions import HomeAssistantError
+
+                raise HomeAssistantError(
+                    "发送红外按键失败：'ai' 和 'idx' 参数必须提供其中一个"
+                )
             await self.client.async_send_ir_key(
                 call.data[HUB_ID_KEY],
-                ai or "",  # ai参数，可能为空
                 call.data[DEVICE_ID_KEY],
                 call.data["category"],
                 call.data["brand"],
                 call.data["keys"],
+                ai or "",  # ai参数，可能为空
+                idx or "",  # idx参数，可能为空
             )
             _LOGGER.info("红外命令发送成功: %s", call.data)
         except PlatformNotReady as e:
@@ -142,12 +146,16 @@ class LifeSmartServiceManager:
         scene_id = call.data.get("id")
 
         if not agt:
-            _LOGGER.error("触发场景失败：'agt' 参数不能为空。")
-            return
+            from homeassistant.exceptions import HomeAssistantError
+
+            raise HomeAssistantError("触发场景失败：'agt' 参数不能为空。")
 
         if not scene_name and not scene_id:
-            _LOGGER.error("触发场景失败：'name' 和 'id' 参数必须提供其中一个。")
-            return
+            from homeassistant.exceptions import HomeAssistantError
+
+            raise HomeAssistantError(
+                "触发场景失败：'name' 和 'id' 参数必须提供其中一个。"
+            )
 
         try:
             if scene_id:

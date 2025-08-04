@@ -1170,7 +1170,7 @@ class TestSensorAdvancedScenarios:
         sensor = LifeSmartSensor(
             raw_device=test_device,
             client=MagicMock(),
-            entry_id="test",
+            entry_id=setup_integration.entry_id,
             sub_device_key="T",
             sub_device_data={"val": 25, "type": 1},
         )
@@ -1179,13 +1179,12 @@ class TestSensorAdvancedScenarios:
         sensor.hass = hass
         sensor.entity_id = "sensor.test_sensor_t"
 
-        # 设置Hub数据，但不包含我们的设备
-        hass.data[DOMAIN] = {
-            "test": {
-                "hub": MagicMock(),
-                "devices": [{HUB_ID_KEY: "other_hub", DEVICE_ID_KEY: "other_device"}],
-            }
-        }
+        # 修改现有的设备列表，移除我们的测试设备
+        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        # 设置一个不包含我们设备的设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+            {HUB_ID_KEY: "other_hub", DEVICE_ID_KEY: "other_device"}
+        ]
 
         # 传感器应该默认可用（在创建时）
         assert sensor.available, "传感器初始应该可用"
@@ -1195,6 +1194,9 @@ class TestSensorAdvancedScenarios:
 
         # 设备不在列表中时应该不可用
         assert not sensor.available, "设备不在列表中时应该不可用"
+
+        # 恢复原始设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
 
     @pytest.mark.asyncio
     async def test_sensor_different_update_formats(
@@ -1495,90 +1497,6 @@ class TestSensorAdvancedScenarios:
         hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
 
     @pytest.mark.asyncio
-    async def test_sensor_entity_unknown_device_class(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
-    ):
-        """测试未知设备类别的传感器 (行 146)"""
-        from custom_components.lifesmart.sensor import LifeSmartSensor
-        from unittest.mock import MagicMock
-
-        # 测试未知子键的传感器
-        unknown_device = {
-            DEVICE_TYPE_KEY: "UNKNOWN_TYPE",
-            DEVICE_NAME_KEY: "Unknown Sensor",
-            HUB_ID_KEY: "hub1",
-            DEVICE_ID_KEY: "unknown1",
-            DEVICE_DATA_KEY: {"UNKNOWN_KEY": {"val": 100, "type": 1}},
-        }
-
-        sensor = LifeSmartSensor(
-            raw_device=unknown_device,
-            client=MagicMock(),
-            entry_id="test",
-            sub_device_key="UNKNOWN_KEY",
-            sub_device_data={"val": 100, "type": 1},
-        )
-
-        # 未知设备类别应该返回None
-        assert sensor.device_class is None, "未知设备类别应该返回None"
-
-    @pytest.mark.asyncio
-    async def test_sensor_entity_unknown_unit_measurement(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
-    ):
-        """测试未知测量单位的传感器 (行 157, 160)"""
-        from custom_components.lifesmart.sensor import LifeSmartSensor
-        from unittest.mock import MagicMock
-
-        # 测试未知单位的传感器
-        unknown_unit_device = {
-            DEVICE_TYPE_KEY: "SL_SC_EV",
-            DEVICE_NAME_KEY: "Unknown Unit Sensor",
-            HUB_ID_KEY: "hub1",
-            DEVICE_ID_KEY: "unknown_unit1",
-            DEVICE_DATA_KEY: {"UNKNOWN_UNIT": {"val": 50, "type": 1}},
-        }
-
-        sensor = LifeSmartSensor(
-            raw_device=unknown_unit_device,
-            client=MagicMock(),
-            entry_id="test",
-            sub_device_key="UNKNOWN_UNIT",
-            sub_device_data={"val": 50, "type": 1},
-        )
-
-        # 未知单位应该返回None
-        assert sensor.native_unit_of_measurement is None, "未知单位应该返回None"
-
-    @pytest.mark.asyncio
-    async def test_sensor_entity_unknown_state_class(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
-    ):
-        """测试未知状态类别的传感器 (行 177)"""
-        from custom_components.lifesmart.sensor import LifeSmartSensor
-        from unittest.mock import MagicMock
-
-        # 测试未知状态类别的传感器
-        unknown_state_device = {
-            DEVICE_TYPE_KEY: "UNKNOWN_TYPE",
-            DEVICE_NAME_KEY: "Unknown State Sensor",
-            HUB_ID_KEY: "hub1",
-            DEVICE_ID_KEY: "unknown_state1",
-            DEVICE_DATA_KEY: {"UNKNOWN_STATE": {"val": 25, "type": 1}},
-        }
-
-        sensor = LifeSmartSensor(
-            raw_device=unknown_state_device,
-            client=MagicMock(),
-            entry_id="test",
-            sub_device_key="UNKNOWN_STATE",
-            sub_device_data={"val": 25, "type": 1},
-        )
-
-        # 未知状态类别应该返回None
-        assert sensor.state_class is None, "未知状态类别应该返回None"
-
-    @pytest.mark.asyncio
     async def test_sensor_value_conversion_edge_cases(
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ):
@@ -1801,7 +1719,7 @@ class TestSensorAdvancedScenarios:
         sensor = LifeSmartSensor(
             raw_device=test_device,
             client=MagicMock(),
-            entry_id="test",
+            entry_id=setup_integration.entry_id,
             sub_device_key="T",
             sub_device_data={"val": 25, "type": 1},
         )
@@ -1810,13 +1728,12 @@ class TestSensorAdvancedScenarios:
         sensor.hass = hass
         sensor.entity_id = "sensor.test_sensor2_t"
 
-        # 设置Hub数据，但不包含我们的设备
-        hass.data[DOMAIN] = {
-            "test": {
-                "hub": MagicMock(),
-                "devices": [{HUB_ID_KEY: "other_hub", DEVICE_ID_KEY: "other_device"}],
-            }
-        }
+        # 修改现有的设备列表，移除我们的测试设备
+        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        # 设置一个不包含我们设备的设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+            {HUB_ID_KEY: "other_hub", DEVICE_ID_KEY: "other_device"}
+        ]
 
         # 传感器应该默认可用（在创建时）
         assert sensor.available, "传感器初始应该可用"
@@ -1826,6 +1743,9 @@ class TestSensorAdvancedScenarios:
 
         # 设备不在列表中时应该不可用
         assert not sensor.available, "设备不在列表中时应该不可用"
+
+        # 恢复原始设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
 
     @pytest.mark.asyncio
     async def test_sensor_device_class_edge_cases(

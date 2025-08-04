@@ -451,7 +451,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
         # 检查参数有效性
         if not ai and not idx:
             _LOGGER.error("ai和idx参数必须提供其中一个")
-            return -1
+            raise ValueError("ai和idx参数必须提供其中一个")
 
         # 本地协议中红外按键通过红外控制场景实现
         ir_options = {"category": category, "brand": brand, "keys": keys}

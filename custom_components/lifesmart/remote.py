@@ -165,6 +165,10 @@ class LifeSmartRemoteEntity(RemoteEntity):
             _LOGGER.warning("遥控器 %s 处于关闭状态，无法发送命令", self._attr_name)
             return
 
+        if not command:
+            _LOGGER.warning("遥控器 %s 收到空命令列表，未发送任何命令", self._attr_name)
+            return
+
         try:
             if self._category == "ac":
                 # 空调设备使用特殊的控制方法
@@ -187,14 +191,28 @@ class LifeSmartRemoteEntity(RemoteEntity):
 
     async def _send_ir_keys(self, commands: list[str]) -> None:
         """发送普通红外按键命令。"""
-        await self._client.async_send_ir_key(
-            agt=self._hub_id,
-            ai="",  # 使用通用码库，不需要ai
-            me=self._device_id,
-            category=self._category,
-            brand=self._brand,
-            keys=commands,
-        )
+        # 根据遥控器配置选择合适的 ai 或 idx 参数
+        if self._idx:
+            # 虚拟遥控器使用 idx 参数
+            await self._client.async_send_ir_key(
+                agt=self._hub_id,
+                me=self._device_id,
+                category=self._category,
+                brand=self._brand,
+                keys=commands,
+                ai="",
+                idx=self._idx,
+            )
+        else:
+            # 通用码库使用空 ai 参数
+            await self._client.async_send_ir_key(
+                agt=self._hub_id,
+                me=self._device_id,
+                category=self._category,
+                brand=self._brand,
+                keys=commands,
+                ai="",
+            )
 
     async def _send_ac_command(self, commands: list[str], **kwargs: Any) -> None:
         """发送空调控制命令。"""
@@ -240,8 +258,19 @@ class LifeSmartRemoteEntity(RemoteEntity):
         # 从API返回的features中提取按键列表
         if isinstance(features, dict):
             keys = features.get("keys", [])
+            # 处理 keys 为字符串（如逗号分隔）或列表的情况
             if isinstance(keys, list):
-                return keys
+                # 确保所有元素为字符串
+                return [
+                    str(k).strip() for k in keys if isinstance(k, (str, int, float))
+                ]
+            elif isinstance(keys, str):
+                # 逗号分隔字符串转为列表
+                return [k.strip() for k in keys.split(",") if k.strip()]
+            elif isinstance(keys, (int, float)):
+                # 单个数字转为字符串列表
+                return [str(keys)]
+            # 其他类型不处理，走默认
 
         # 如果无法解析，返回默认按键
         return self._get_default_keys()
