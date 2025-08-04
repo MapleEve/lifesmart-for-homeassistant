@@ -774,6 +774,7 @@ class TestSensorAdvancedScenarios:
         ), "温度传感器状态类型应该是测量类型"
 
         # 测试能耗传感器的TOTAL_INCREASING状态类别
+        # 说明：SL_OE_3C 是 LifeSmart 的能耗计量设备类型，用于测试能耗传感器逻辑
         energy_device = {
             DEVICE_TYPE_KEY: "SL_OE_3C",
             DEVICE_NAME_KEY: "Energy Meter",
