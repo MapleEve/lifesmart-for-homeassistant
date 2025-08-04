@@ -611,64 +611,65 @@ def mock_hub_class():
 
 
 @pytest.fixture(autouse=True)
-def auto_mock_lifesmart_hub_setup():
+def auto_prevent_thread_creation(request):
     """
-    自动fixture：防止测试中意外创建真实的Hub实例。
+    精准的autouse fixture：只防止线程/定时器创建，不影响业务逻辑。
 
-    这个fixture会自动应用到所有lifesmart测试中，使用autouse=True。
-    它模拟Hub的关键方法，防止创建真实的网络连接和线程。
+    设计原则：
+    1. 只mock会产生线程残留的基础设施组件
+    2. 完全保留业务逻辑，允许测试验证真实的成功/失败场景
+    3. 从根源解决线程残留问题，而不是"允许残留"
+    4. 对于Hub单元测试，提供更精细的控制
 
-    设计理念：
-    1. 默认提供安全的mock行为
-    2. 测试可以根据需要override特定的行为
-    3. 避免在每个测试中重复相同的mock代码
+    被mock的组件：
+    - async_track_time_interval: Hub中用于令牌刷新的定时任务
+    - LifeSmartStateManager: WebSocket连接管理器，会创建异步任务
 
-    注意：如果测试需要模拟失败场景，可以在测试中重新patch:
+    不被mock的组件：
+    - Hub的所有业务方法 (async_setup, get_devices等)
+    - 客户端的所有API调用
+    - 配置和数据处理逻辑
 
-    @patch("custom_components.lifesmart.hub.LifeSmartHub.async_setup",
-           side_effect=ConfigEntryNotReady("测试失败"))
-    async def test_setup_failure(self, mock_setup):
-        # 这会override autouse fixture中的mock
-        ...
+    特殊处理：
+    - test_hub.py 中的测试需要验证真实的定时器和状态管理器创建
+    - 但prevent_socket_access已经阻止了网络访问，所以只需要跳过线程mock
     """
-    with (
-        patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
-            return_value=True,
-        ),
-        patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
-            return_value=[],
-        ),
-        patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.get_client",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_unload",
-            return_value=True,
-        ),
-        patch(
-            # 防止创建真实的定时器任务
-            "homeassistant.helpers.event.async_track_time_interval",
-            return_value=MagicMock(),
-        ),
-        patch(
-            # 防止创建真实的WebSocket状态管理器
-            "custom_components.lifesmart.hub.LifeSmartStateManager",
-            return_value=MagicMock(),
-        ),
-    ):
+    # 检查是否在test_hub.py中运行
+    if "test_hub.py" in request.fspath.basename:
+        # test_hub.py需要测试真实的Hub逻辑，包括定时器和状态管理器的创建
+        # prevent_socket_access fixture已经处理了网络访问阻止
+        # 所以这里只需要让测试正常运行，不添加额外的mock
         yield
+    else:
+        # 其他测试文件使用完整的线程防护
+        with (
+            patch(
+                # 防止创建真实的定时器任务（线程残留的根源）
+                "homeassistant.helpers.event.async_track_time_interval",
+                return_value=MagicMock(),
+            ),
+            patch(
+                # 防止创建真实的WebSocket状态管理器（异步任务残留的根源）
+                "custom_components.lifesmart.hub.LifeSmartStateManager",
+                return_value=MagicMock(),
+            ),
+        ):
+            yield
 
 
 @pytest.fixture
-def mock_setup_entry():
+def mock_hub_for_testing():
     """
-    显式fixture：用于需要更细粒度控制的测试。
+    显式fixture：为需要完全控制Hub行为的测试提供mock。
 
-    这个fixture返回mock对象，允许测试验证调用或修改行为。
-    对于大多数测试，auto_mock_lifesmart_hub_setup 已经足够。
+    使用场景：
+    - 测试集成的设置/卸载流程
+    - 需要验证Hub方法调用的测试
+    - 需要模拟特定设备列表的测试
+
+    与auto_prevent_thread_creation的区别：
+    - 这个fixture mock业务逻辑，那个只mock基础设施
+    - 这个是显式使用，那个是自动应用
     """
     with (
         patch(
@@ -683,8 +684,12 @@ def mock_setup_entry():
             "custom_components.lifesmart.hub.LifeSmartHub.get_client",
             return_value=MagicMock(),
         ) as mock_get_client,
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.async_unload",
+            return_value=True,
+        ) as mock_hub_unload,
     ):
-        yield mock_hub_setup, mock_get_devices, mock_get_client
+        yield mock_hub_setup, mock_get_devices, mock_get_client, mock_hub_unload
 
 
 @pytest.fixture

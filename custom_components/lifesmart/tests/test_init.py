@@ -137,7 +137,7 @@ class TestIntegrationLifecycle:
         hass: HomeAssistant,
         mock_local_config_entry: MockConfigEntry,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试本地模式的成功设置流程。"""
         mock_local_config_entry.add_to_hass(hass)
@@ -179,7 +179,7 @@ class TestIntegrationLifecycle:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试设置过程创建所有支持的平台。"""
         mock_config_entry.add_to_hass(hass)
@@ -236,7 +236,7 @@ class TestIntegrationLifecycle:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试成功卸载集成。"""
         mock_config_entry.add_to_hass(hass)
@@ -288,7 +288,7 @@ class TestIntegrationLifecycle:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试配置条目重新加载功能。"""
         mock_config_entry.add_to_hass(hass)
@@ -349,7 +349,7 @@ class TestErrorHandlingAndRecovery:
         mock_config_entry: MockConfigEntry,
         exception_type: Exception,
         expected_state: ConfigEntryState,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试设置过程中的各种错误处理。"""
         mock_config_entry.add_to_hass(hass)
@@ -378,7 +378,7 @@ class TestErrorHandlingAndRecovery:
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
         caplog,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试卸载过程中的错误处理。"""
         mock_config_entry.add_to_hass(hass)
@@ -418,12 +418,15 @@ class TestErrorHandlingAndRecovery:
 
     @pytest.mark.asyncio
     async def test_hub_creation_failure(
-        self, hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+        mock_hub_for_testing,
     ):
         """测试Hub创建失败的处理。"""
         mock_config_entry.add_to_hass(hass)
 
-        # 由于我们已经有了 mock_setup_entry，这个测试实际上测试的是集成设置本身失败的情况
+        # 由于我们已经有了 mock_hub_for_testing，这个测试实际上测试的是集成设置本身失败的情况
         # 我们 mock async_setup_entry 失败来模拟集成设置失败
         with patch(
             "custom_components.lifesmart.async_setup_entry",
@@ -441,7 +444,7 @@ class TestErrorHandlingAndRecovery:
 
     @pytest.mark.asyncio
     async def test_missing_config_data_handling(
-        self, hass: HomeAssistant, mock_setup_entry
+        self, hass: HomeAssistant, mock_hub_for_testing
     ):
         """测试配置数据缺失的处理。"""
         incomplete_entry = MockConfigEntry(
@@ -479,7 +482,7 @@ class TestPlatformLoading:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试平台转发设置成功。"""
         mock_config_entry.add_to_hass(hass)
@@ -535,7 +538,7 @@ class TestPlatformLoading:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试平台转发设置失败的处理。"""
         mock_config_entry.add_to_hass(hass)
@@ -574,7 +577,7 @@ class TestPlatformLoading:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试平台卸载成功。"""
         mock_config_entry.add_to_hass(hass)
@@ -639,7 +642,7 @@ class TestServiceRegistration:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试服务注册功能。"""
         mock_config_entry.add_to_hass(hass)
@@ -672,7 +675,7 @@ class TestServiceRegistration:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试场景设置服务调用。"""
         mock_config_entry.add_to_hass(hass)
@@ -712,7 +715,7 @@ class TestServiceRegistration:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试红外发送服务调用。"""
         mock_config_entry.add_to_hass(hass)
@@ -758,7 +761,7 @@ class TestServiceRegistration:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试服务调用验证错误处理。"""
         mock_config_entry.add_to_hass(hass)
@@ -797,7 +800,7 @@ class TestServiceRegistration:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试卸载时服务取消注册。"""
         mock_config_entry.add_to_hass(hass)
@@ -846,7 +849,7 @@ class TestConfigEntryLifecycle:
         self,
         hass: HomeAssistant,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试多个配置条目的设置。"""
         # 为不同的配置条目使用不同的设备数据，避免实体ID冲突
@@ -936,7 +939,7 @@ class TestConfigEntryLifecycle:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试配置条目状态转换。"""
         mock_config_entry.add_to_hass(hass)
@@ -985,7 +988,7 @@ class TestConfigEntryLifecycle:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试配置条目选项更新处理。"""
         mock_config_entry.add_to_hass(hass)
@@ -1026,7 +1029,7 @@ class TestConcurrencyAndPerformance:
         hass: HomeAssistant,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试并发设置操作。"""
         # 创建多个配置条目
@@ -1083,7 +1086,7 @@ class TestConcurrencyAndPerformance:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试设置超时处理。"""
         mock_config_entry.add_to_hass(hass)
@@ -1118,7 +1121,7 @@ class TestConcurrencyAndPerformance:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试卸载时的内存清理。"""
         mock_config_entry.add_to_hass(hass)
@@ -1166,7 +1169,7 @@ class TestConcurrencyAndPerformance:
         mock_config_entry: MockConfigEntry,
         mock_lifesmart_devices: list,
         mock_client: MagicMock,
-        mock_setup_entry,
+        mock_hub_for_testing,
     ):
         """测试快速的设置-卸载循环。"""
         mock_config_entry.add_to_hass(hass)

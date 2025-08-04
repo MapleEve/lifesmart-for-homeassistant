@@ -651,7 +651,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试状态管理器的初始化。"""
@@ -686,7 +686,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试状态管理器的令牌过期时间设置。"""
@@ -713,7 +713,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试状态管理器的启动和停止。"""
@@ -742,7 +742,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试WebSocket创建时的错误处理。"""
@@ -769,7 +769,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试WebSocket认证失败的处理。"""
@@ -796,7 +796,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试消息消费循环中的错误处理。"""
@@ -826,7 +826,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试文本消息处理。"""
@@ -867,7 +867,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试重试调度逻辑。"""
@@ -897,7 +897,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试令牌刷新处理器。"""
@@ -931,7 +931,7 @@ class TestLifeSmartStateManager:
         hass: HomeAssistant,
         mock_config_entry,
         mock_oapi_client,
-        mock_setup_entry,
+        mock_hub_for_testing,
         mock_state_manager_class,
     ):
         """测试认证成功后的断线恢复逻辑。"""
@@ -955,7 +955,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_periodic_refresh(
-        self, hass: HomeAssistant, mock_config_entry_oapi, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试定时刷新功能 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -979,7 +979,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_periodic_refresh_with_error(
-        self, hass: HomeAssistant, mock_config_entry_oapi, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试定时刷新遇到错误的情况 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1001,7 +1001,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_hub_setup_local_connection_failure(
-        self, hass: HomeAssistant, mock_config_entry_local, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_local, mock_hub_for_testing
     ):
         """测试本地模式连接失败的处理 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1016,7 +1016,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_hub_setup_local_exception(
-        self, hass: HomeAssistant, mock_config_entry_local, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_local, mock_hub_for_testing
     ):
         """测试本地模式设置时的异常处理 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1031,7 +1031,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_hub_setup_oapi_auth_error_password_login(
-        self, hass: HomeAssistant, mock_config_entry_oapi, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试密码登录时的认证错误处理 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1056,7 +1056,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_hub_setup_api_error(
-        self, hass: HomeAssistant, mock_config_entry_oapi, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试 API 错误的处理 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1071,7 +1071,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_data_update_handler_filtered_device(
-        self, hass: HomeAssistant, mock_config_entry_oapi, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试被过滤设备的数据更新处理 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1106,7 +1106,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_data_update_handler_error_handling(
-        self, hass: HomeAssistant, mock_config_entry_oapi, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试数据更新处理中的错误处理 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1137,7 +1137,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_handle_ai_event(
-        self, hass: HomeAssistant, mock_config_entry_oapi, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试 AI 事件处理 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1171,7 +1171,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_async_register_hubs(
-        self, hass: HomeAssistant, mock_config_entry_oapi, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试中枢设备注册功能 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1192,7 +1192,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_cleanup_local_task(
-        self, hass: HomeAssistant, mock_config_entry_local, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_local, mock_hub_for_testing
     ):
         """测试本地任务清理功能 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1208,7 +1208,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_hub_setup_token_update(
-        self, hass: HomeAssistant, mock_config_entry_oapi, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试设置过程中的令牌更新 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
@@ -1229,7 +1229,7 @@ class TestLifeSmartStateManager:
 
     @pytest.mark.asyncio
     async def test_local_update_callback(
-        self, hass: HomeAssistant, mock_config_entry_local, mock_setup_entry
+        self, hass: HomeAssistant, mock_config_entry_local, mock_hub_for_testing
     ):
         """测试本地更新回调 - 使用Hub类的单元测试。"""
         with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:

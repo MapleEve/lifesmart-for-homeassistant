@@ -115,7 +115,7 @@ def mock_config_entry():
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry():
+def mock_hub_for_testing():
     """
     模拟集成的 async_setup_entry 函数，防止 Config Flow 测试触发真实的集成设置。
 
