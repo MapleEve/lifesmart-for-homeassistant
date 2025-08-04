@@ -45,11 +45,7 @@ jobs:
           # 为Python 3.11应用PEP 517解决方案解决lru-dict编译问题
           if [[ "${{ matrix.homeassistant-version }}" == "2023.6.0" ]]; then
             # HA 2023.6.0 - 使用插件 0.13.36 (自动安装pytest和HA)  
-            if [[ "${{ matrix.python-version }}" == "3.11" ]]; then
-              pip install --use-pep517 --no-build-isolation "pytest-homeassistant-custom-component==0.13.36"
-            else
-              pip install "pytest-homeassistant-custom-component==0.13.36"  
-            fi
+            pip install "pytest-homeassistant-custom-component==0.13.36"
           elif [[ "${{ matrix.homeassistant-version }}" == "2024.2.0" ]]; then
             # HA 2024.2.0 - 使用插件 0.13.99 (自动安装pytest和HA)
             pip install "pytest-homeassistant-custom-component==0.13.99"
