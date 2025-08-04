@@ -12,6 +12,126 @@
 
 set -e
 
+# 项目根目录自动检测和切换 (支持Windows/Linux/macOS/WSL/WSL2)
+auto_detect_and_switch_to_project_root() {
+  # 获取脚本所在目录的绝对路径
+  local script_dir
+  
+  # 检测不同平台环境
+  if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ -n "${MSYSTEM:-}" ]]; then
+    # Windows环境 (Git Bash/MSYS2/Cygwin)
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -W 2>/dev/null || pwd)"
+  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if grep -qE "(Microsoft|microsoft)" /proc/version 2>/dev/null; then
+      # WSL/WSL2环境
+      script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+      # WSL路径可能需要特殊处理，但通常标准pwd即可
+    else
+      # 标准Linux环境
+      script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    fi
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS环境
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  else
+    # 其他环境，使用标准方法
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  fi
+  
+  # 推导项目根目录 (.testing目录的父目录)
+  local project_root="$(dirname "$script_dir")"
+  
+  # 验证项目根目录的有效性 (检查关键文件/目录是否存在)
+  local validation_failed=false
+  local missing_items=()
+  
+  if [ ! -d "$project_root/custom_components" ]; then
+    validation_failed=true
+    missing_items+=("custom_components/")
+  fi
+  
+  if [ ! -d "$project_root/custom_components/lifesmart" ]; then
+    validation_failed=true
+    missing_items+=("custom_components/lifesmart/")
+  fi
+  
+  if [ ! -f "$project_root/custom_components/lifesmart/manifest.json" ]; then
+    validation_failed=true
+    missing_items+=("custom_components/lifesmart/manifest.json")
+  fi
+  
+  if [ ! -f "$project_root/hacs.json" ]; then
+    validation_failed=true
+    missing_items+=("hacs.json")
+  fi
+  
+  # 如果验证失败，显示错误信息
+  if [ "$validation_failed" = true ]; then
+    echo -e "${RED}❌ 项目根目录验证失败！${NC}"
+    echo -e "${YELLOW}推导的项目根目录: $project_root${NC}"
+    echo -e "${YELLOW}缺少以下关键文件/目录:${NC}"
+    for item in "${missing_items[@]}"; do
+      echo -e "${RED}  - $item${NC}"
+    done
+    echo ""
+    echo -e "${BLUE}请确保从LifeSmart HACS项目目录或其子目录运行此脚本${NC}"
+    echo -e "${BLUE}预期的项目结构:${NC}"
+    echo "  project-root/"
+    echo "  ├── custom_components/lifesmart/"
+    echo "  ├── .testing/                  ← 脚本位置"
+    echo "  ├── hacs.json"
+    echo "  └── ..."
+    exit 1
+  fi
+  
+  # 获取当前工作目录
+  local current_dir
+  if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ -n "${MSYSTEM:-}" ]]; then
+    # Windows环境使用特殊的pwd
+    current_dir="$(pwd -W 2>/dev/null || pwd)"
+  else
+    # Linux/macOS/WSL使用标准pwd
+    current_dir="$(pwd)"
+  fi
+  
+  # 规范化路径比较 (处理Windows/WSL路径差异)
+  local normalized_current normalized_project
+  
+  if [[ "$OSTYPE" == "linux-gnu"* ]] && grep -qE "(Microsoft|microsoft)" /proc/version 2>/dev/null; then
+    # WSL环境：可能存在/mnt/c路径和Windows路径的混合
+    normalized_current="$(realpath "$current_dir" 2>/dev/null || echo "$current_dir")"
+    normalized_project="$(realpath "$project_root" 2>/dev/null || echo "$project_root")"
+  else
+    # 其他环境使用标准路径
+    normalized_current="$current_dir"
+    normalized_project="$project_root"
+  fi
+  
+  # 检查是否需要切换目录
+  if [ "$normalized_current" != "$normalized_project" ]; then
+    echo -e "${YELLOW}📁 自动切换工作目录:${NC}"
+    echo -e "${YELLOW}   从: $current_dir${NC}"
+    echo -e "${YELLOW}   到: $project_root${NC}"
+    
+    # 切换到项目根目录
+    if cd "$project_root"; then
+      echo -e "${GREEN}✓ 已切换到项目根目录${NC}"
+    else
+      echo -e "${RED}❌ 无法切换到项目根目录: $project_root${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${GREEN}✓ 当前已在项目根目录: $project_root${NC}"
+  fi
+  
+  # 设置全局变量供脚本其他部分使用
+  PROJECT_ROOT="$project_root"
+  SCRIPT_DIR="$script_dir"
+}
+
+# 执行项目根目录检测和切换
+auto_detect_and_switch_to_project_root
+
 # 检查 bash 版本兼容性，如果是老版本尝试找新版本
 if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
     echo "当前 bash 版本过低: ${BASH_VERSION}"
@@ -169,8 +289,7 @@ exec_in_conda_env() {
 # 初始化环境检测
 detect_os_and_env
 
-# 获取脚本目录并导入版本映射函数
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# 导入版本映射函数 (使用自动检测设置的SCRIPT_DIR)
 source "$SCRIPT_DIR/version_mapping.sh"
 
 # 测试配置 - 与GitHub Actions完全一致
