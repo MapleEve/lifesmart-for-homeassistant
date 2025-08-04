@@ -1,10 +1,53 @@
-LifeSmart 云平台服务接口(v1.38)
+# LifeSmart 云平台服务接口(v1.38)
 
-<table><tr><td>版本</td><td>修订日期</td><td>修订人</td><td>修订内容</td></tr><tr><td>1.0</td><td>2015/10/20</td><td>Alexcheng</td><td></td></tr><tr><td>1.01</td><td>2015/10/28</td><td>AlexCheng</td><td>修改返回信息。返回字段status修改为code，其值 为错误代码。增加错误码列表</td></tr><tr><td>1.02</td><td>2015/11/4</td><td>AlexCheng</td><td>修改签名串例子中的错误格式</td></tr><tr><td>1.03</td><td>2015/11/9</td><td>Alexcheng</td><td>1：添加灯带/灯泡颜色控制 2：添加入墙开关控制 3：添加新增／删除智慧设备接口 4：添加注册用户接口</td></tr><tr><td>1.04</td><td>2015/11/19</td><td>Lewis Li</td><td>1. 修改EpGetAll/EpSet/EpGet范例 2．添加EpAdd/EpRemove接口范例 3．细化注册用户接口 4.添加灯带动态设置</td></tr><tr><td>1.05</td><td>2016/10/26</td><td>xiao Ye</td><td>1.添加Epsset， SceneGet， Sceneset接口；</td></tr><tr><td>1.06</td><td>2016/11/3</td><td>xiao Ye</td><td>1. 添加unregisterUser接口;</td></tr><tr><td>1.07</td><td>2017/1/10</td><td>Alexcheng</td><td>1：支持状态更新；2：支持多终端访问</td></tr><tr><td>1.08</td><td>2017/4/5</td><td>AlexCheng</td><td>支持多区域访问</td></tr><tr><td>1.10</td><td>2017/10/09</td><td>Jon Fan/ Pretty Ju</td><td>第二版整理</td></tr><tr><td>1.11</td><td>2018/04/20</td><td>Jon Fan</td><td>添加webSocket事件详细说明</td></tr><tr><td>1.12</td><td>2018/09/20 2018/10/08</td><td>Jon Fan Jon Fan</td><td>添加EpAdd扩展参数说明/ 添加EpSet扩展参数说明 修正文档描述不合理的部分 添加EpUpgradeAgt，EpRebootAgt,</td></tr><tr><td></td><td></td><td></td><td>设备属性增加lHeart，lDbm说明； 增加设备模型说明； EpSet增加修改Ep/Io名称的说明；</td></tr><tr><td>1.14</td><td>2018/11/25</td><td>Jon Fan</td><td>增加EpSearchsmart，EpAddsmart接□</td></tr></table>
+## 版本历史
 
-<table><tr><td>1.15</td><td>2018/12/05</td><td>Jon Fan</td><td>增加EpCmd，EpGetAgtState接口说明，以及修 改EpGetAll接口描述，增加agt_self以及智慧设 备的描述。</td></tr><tr><td>1.16</td><td>2018/12/12</td><td>Jon Fan</td><td>WebSocket增加aI事件通知描述</td></tr><tr><td>1.17</td><td>2019/01/24</td><td>Jon Fan</td><td>增加设备/AI的ext_loc属性说明</td></tr><tr><td>1.18</td><td>2019/02/14</td><td>Jon Fan</td><td>增加EpGetAttrs(获取设备扩展属性)接□</td></tr><tr><td>1.19</td><td>2019/03/01</td><td>Jon Fan</td><td>增加EpSet接口修改智慧中心名称说明 增加EpTestRssi(测试射频设备信号强度)接口</td></tr><tr><td>1.20</td><td>2019/06/03</td><td>Jon Fan</td><td>增加EpGet/EpGetAll接口返回的设备Io属性里面v 值的说明。增加授权返回的svrrgnid属性说明。 增加EpBatchset接口</td></tr><tr><td>1.21</td><td>2019/10/18</td><td>Jon Fan</td><td>增加EpSearchIDev，EpAddIDev接口说明</td></tr><tr><td>1.22</td><td>2019/12/30</td><td>Jon Fan</td><td>增加EpMaintotaFiles， EpMaintOtaTasks接□ 说明</td></tr><tr><td>1.23</td><td>2020/01/07</td><td>Jon Fan</td><td>增加EpMaintAgtRM接口说明</td></tr><tr><td>1.24</td><td>2020/03/11</td><td>Jon Fan</td><td>增加EpSetVar接口说明</td></tr><tr><td></td><td></td><td></td><td>EpUpgradeAgt接口增加HTTP升级方式说明</td></tr><tr><td>1.25</td><td>2020/04/08</td><td>Jon Fan</td><td>增加EpConfigAgt接口说明</td></tr><tr><td>1.26</td><td>2020/04/21</td><td>Jon Fan</td><td>设备模型增加ful1Cls描述</td></tr><tr><td>1.27</td><td>2020/07/01</td><td>Jon Fan</td><td>EpConfigAgt接口增加timezone设置</td></tr><tr><td></td><td></td><td></td><td>EpCmd接口增加云视户外摄像头声光警报设置</td></tr><tr><td>1.28</td><td>2021/06/10</td><td></td><td>更新附录1</td></tr><tr><td>1.29</td><td>2021/07/14</td><td>Jon Fan</td><td>&quot;设备模型说明”增加新属性说明</td></tr><tr><td>1.30</td><td>2022/02/08</td><td>Jon Fan</td><td>EpConfigAgt接口增加nIF配置</td></tr><tr><td>1.31</td><td>2022/03/02</td><td>Jon Fan</td><td>EpConfigAgt接口文档重新整理并增加本地互联接 口说明</td></tr><tr><td>1.32</td><td>2022/06/23</td><td>Pretty Ju</td><td>去掉Headers[&quot;X-LS-SVRRGNID&quot;]；更新附录1和 附录2；细节描述优化；</td></tr><tr><td>1.33</td><td>2022/07/27</td><td>Jon Fan</td><td>EpConfigAgt接口增加resetRfModule配置</td></tr><tr><td>1.34</td><td>2022/08/02</td><td>Pretty Ju</td><td>增加NatureCtl接口说明</td></tr><tr><td>1.35</td><td>2022/10/22</td><td>Jon Fan</td><td></td></tr><tr><td></td><td></td><td></td><td>EpMaintOtaFiles、EpMaintOtaTasks接□增加 扩展指令说明</td></tr></table>
+| 版本   | 修订日期                     | 修订人                | 修订内容                                                                                                                                        |
+|------|--------------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| 1.0  | 2015/10/20               | Alexcheng          |                                                                                                                                             |
+| 1.01 | 2015/10/28               | AlexCheng          | 修改返回信息。返回字段status修改为code，其值为错误代码。增加错误码列表                                                                                                    |
+| 1.02 | 2015/11/4                | AlexCheng          | 修改签名串例子中的错误格式                                                                                                                               |
+| 1.03 | 2015/11/9                | Alexcheng          | 1：添加灯带/灯泡颜色控制<br>2：添加入墙开关控制<br>3：添加新增／删除智慧设备接口<br>4：添加注册用户接口                                                                                |
+| 1.04 | 2015/11/19               | Lewis Li           | 1. 修改EpGetAll/EpSet/EpGet范例<br>2．添加EpAdd/EpRemove接口范例<br>3．细化注册用户接口<br>4. 添加灯带动态设置                                                          |
+| 1.05 | 2016/10/26               | xiao Ye            | 1. 添加Epsset， SceneGet， Sceneset接口；                                                                                                          |
+| 1.06 | 2016/11/3                | xiao Ye            | 1. 添加unregisterUser接口;                                                                                                                      |
+| 1.07 | 2017/1/10                | Alexcheng          | 1：支持状态更新；<br>2：支持多终端访问                                                                                                                      |
+| 1.08 | 2017/4/5                 | AlexCheng          | 支持多区域访问                                                                                                                                     |
+| 1.10 | 2017/10/09               | Jon Fan/ Pretty Ju | 第二版整理                                                                                                                                       |
+| 1.11 | 2018/04/20               | Jon Fan            | 添加webSocket事件详细说明                                                                                                                           |
+| 1.12 | 2018/09/20<br>2018/10/08 | Jon Fan<br>Jon Fan | 添加EpAdd扩展参数说明/<br>添加EpSet扩展参数说明<br>修正文档描述不合理的部分<br>添加EpUpgradeAgt，EpRebootAgt，<br>设备属性增加lHeart，lDbm说明；<br>增加设备模型说明；<br>EpSet增加修改Ep/Io名称的说明； |
+| 1.14 | 2018/11/25               | Jon Fan            | 增加EpSearchsmart，EpAddsmart接口                                                                                                                |
 
-<table><tr><td>1.36</td><td>2023/02/08</td><td>Jon Fan</td><td>WebSocket事件增加elog说明</td></tr><tr><td>1.37</td><td>2023/06/26</td><td>Jon Fan</td><td>EpConfigAgt接口增加operExSv配置</td></tr><tr><td>1.38</td><td>2023/08/22</td><td>Jon Fan</td><td>增加EpMaintCartFiles接口说明</td></tr></table>
+| 1.15 | 2018/12/05 | Jon Fan |
+增加EpCmd，EpGetAgtState接口说明，以及修改EpGetAll接口描述，增加agt_self以及智慧设备的描述。 |
+| 1.16 | 2018/12/12 | Jon Fan | WebSocket增加AI事件通知描述 |
+| 1.17 | 2019/01/24 | Jon Fan | 增加设备/AI的ext_loc属性说明 |
+| 1.18 | 2019/02/14 | Jon Fan | 增加EpGetAttrs(获取设备扩展属性)接口 |
+| 1.19 | 2019/03/01 | Jon Fan | 增加EpSet接口修改智慧中心名称说明<br>增加EpTestRssi(测试射频设备信号强度)接口 |
+| 1.20 | 2019/06/03 | Jon Fan | 增加EpGet/EpGetAll接口返回的设备IO属性里面v值的说明。增加授权返回的svrrgnid属性说明。<br>
+增加EpBatchSet接口 |
+| 1.21 | 2019/10/18 | Jon Fan | 增加EpSearchIDev，EpAddIDev接口说明 |
+| 1.22 | 2019/12/30 | Jon Fan | 增加EpMaintOtaFiles，EpMaintOtaTasks接口说明 |
+| 1.23 | 2020/01/07 | Jon Fan | 增加EpMaintAgtRM接口说明 |
+| 1.24 | 2020/03/11 | Jon Fan | 增加EpSetVar接口说明 |
+| | | | EpUpgradeAgt接口增加HTTP升级方式说明 |
+| 1.25 | 2020/04/08 | Jon Fan | 增加EpConfigAgt接口说明 |
+| 1.26 | 2020/04/21 | Jon Fan | 设备模型增加fullCls描述 |
+| 1.27 | 2020/07/01 | Jon Fan | EpConfigAgt接口增加timezone设置 |
+| | | | EpCmd接口增加云视户外摄像头声光警报设置 |
+| 1.28 | 2021/06/10 | | 更新附录1 |
+| 1.29 | 2021/07/14 | Jon Fan | "设备模型说明"增加新属性说明 |
+| 1.30 | 2022/02/08 | Jon Fan | EpConfigAgt接口增加nIF配置 |
+| 1.31 | 2022/03/02 | Jon Fan | EpConfigAgt接口文档重新整理并增加本地互联接口说明 |
+| 1.32 | 2022/06/23 | Pretty Ju | 去掉Headers["X-LS-SVRRGNID"]；更新附录1和附录2；细节描述优化； |
+| 1.33 | 2022/07/27 | Jon Fan | EpConfigAgt接口增加resetRfModule配置 |
+| 1.34 | 2022/08/02 | Pretty Ju | 增加NatureCtl接口说明 |
+| 1.35 | 2022/10/22 | Jon Fan | |
+| | | | EpMaintOtaFiles、EpMaintOtaTasks接口增加扩展指令说明 |
+
+| 1.36 | 2023/02/08 | Jon Fan | WebSocket事件增加elog说明 |
+| 1.37 | 2023/06/26 | Jon Fan | EpConfigAgt接口增加operExSv配置 |
+| 1.38 | 2023/08/22 | Jon Fan | 增加EpMaintCartFiles接口说明 |
 
 ![](images/8440021fa280ff6718ff725551ddfd9b54f1f94a678015e0785edce3498e877a.jpg)
 
@@ -72,7 +115,10 @@ userid 和usertoken以及过期时间expiredtime。 -
 
 智能应用需要使用LifeSmart云平台的服务，必须先在LifeSmart云平台注册，获取appkey和apptoken，注册成功后将获取到如下信息：
 
-<table><tr><td>名称</td><td>备注</td></tr><tr><td>appkey</td><td>应用的key，每个应用必须申请一个属于自己的唯一的key</td></tr><tr><td>apptoken</td><td>应用的token，请妥善保管好该token，不要泄漏</td></tr></table>
+| 名称       | 备注                           |
+|----------|------------------------------|
+| appkey   | 应用的key，每个应用必须申请一个属于自己的唯一的key |
+| apptoken | 应用的token，请妥善保管好该token，不要泄漏   |
 
 Note:注册方式请与LifeSmart公司联系或通过LifeSmart开放平台自主注册并申请第三方应用。
 
@@ -87,7 +133,15 @@ auth.authorize?id $\equiv$ \*\*\*&appkey $=$ \*\*\*&time $: =$ \*\*\*&auth_callb
 
 # 3.2.请求参数
 
-<table><tr><td>参数名</td><td>类型</td><td>备注</td></tr><tr><td>id</td><td>int</td><td>消息id，标识这条消息，调用成功后将原样返回</td></tr><tr><td>appkey</td><td>string</td><td>智能应用申请时获得的appkey</td></tr><tr><td>time</td><td>int</td><td>UTC时间戳，自1970年1月1日起计算的时间，单位为秒</td></tr><tr><td>auth_callback</td><td>string</td><td>授权成功后回调的URL</td></tr><tr><td>sign</td><td>string</td><td>签名值，签名算法见注解</td></tr><tr><td>did</td><td>string</td><td>(可选)终端唯一id，当有多终端的时候用于区分终端</td></tr><tr><td>lang</td><td>string</td><td>显示语言类型，当前支持zh,en,jp，默认为zh</td></tr></table>
+| 参数名           | 类型     | 备注                           |
+|---------------|--------|------------------------------|
+| id            | int    | 消息id，标识这条消息，调用成功后将原样返回       |
+| appkey        | string | 智能应用申请时获得的appkey             |
+| time          | int    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒 |
+| auth_callback | string | 授权成功后回调的URL                  |
+| sign          | string | 签名值，签名算法见注解                  |
+| did           | string | (可选)终端唯一id，当有多终端的时候用于区分终端    |
+| lang          | string | 显示语言类型，当前支持zh,en,jp，默认为zh    |
 
 # Note:
 
@@ -134,7 +188,14 @@ UsER_SEVER_RGNID"
 
 ⚫ 授权失败返回范例： "code":"error", "message":"ERR_MESSAGE"
 
-<table><tr><td>属性名</td><td>类型</td><td>描述</td></tr><tr><td>id</td><td>int</td><td>消息id号，为授权URL时传入数据</td></tr><tr><td>userid</td><td>string</td><td>用户id</td></tr><tr><td>usertoken</td><td>string</td><td>用户授权roken</td></tr><tr><td>expiredtime</td><td>int</td><td>Token失效过期时间，UTC时间戳，自1970年1月1日起计算的时 间，单位为秒</td></tr><tr><td>svrurl</td><td>string</td><td>API服务地址。我们支持多区域多服务，不同用户的数据分布在 不同的服务上面，该服务URL确定操作该用户数据需要访问的服 务地址，调用API操作用户数据的时候请务必以该属性返回的 URL地址为准，否则可能不能正确访问用户数据。</td></tr><tr><td>svrrgnid</td><td>string</td><td>用户所在区域ID，例如 &quot;GS&quot;，由于支持多区域，不同用户的 所在区域可能会不同，该属性标识用户当前所在区域。</td></tr></table>
+| 属性名         | 类型     | 描述                                                                                                            |
+|-------------|--------|---------------------------------------------------------------------------------------------------------------|
+| id          | int    | 消息id号，为授权URL时传入数据                                                                                             |
+| userid      | string | 用户id                                                                                                          |
+| usertoken   | string | 用户授权token                                                                                                     |
+| expiredtime | int    | Token失效过期时间，UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                                      |
+| svrurl      | string | API服务地址。我们支持多区域多服务，不同用户的数据分布在不同的服务上面，该服务URL确定操作该用户数据需要访问的服务地址，调用API操作用户数据的时候请务必以该属性返回的URL地址为准，否则可能不能正确访问用户数据。 |
+| svrrgnid    | string | 用户所在区域ID，例如 "GS"，由于支持多区域，不同用户的所在区域可能会不同，该属性标识用户当前所在区域。                                                        |
 
 # 3.4.usertoken更新
 
@@ -147,16 +208,28 @@ b）HTTP请求为POST方式，内容为JSON格式
 
 c）请求参数：
 
-<table><tr><td>参数名</td><td>类型</td><td>备注</td></tr><tr><td>id</td><td>int</td><td>消息id号，调用成功后将原样返回</td></tr><tr><td>appkey</td><td>string</td><td>智能应用申请时获得的appkey</td></tr></table>
-
-<table><tr><td>time</td><td>int</td><td>UTC时间戳，自1970年1月1日起计算的时间，单位为秒</td></tr><tr><td>userid</td><td>string</td><td>获取授权时得到的用户id</td></tr><tr><td>did</td><td>string</td><td>(可选)终端唯一id</td></tr><tr><td>sign</td><td>string</td><td>签名值，签名算法见注解</td></tr></table>
+| 参数名    | 类型     | 备注                           |
+|--------|--------|------------------------------|
+| id     | int    | 消息id号，调用成功后将原样返回             |
+| appkey | string | 智能应用申请时获得的appkey             |
+| time   | int    | UTC时间戳，自1970年1月1日起计算的时间，单位为秒 |
+| userid | string | 获取授权时得到的用户id                 |
+| did    | string | (可选)终端唯一id                   |
+| sign   | string | 签名值，签名算法见注解                  |
 
 d)签名原始串：appkey=\*\*\*&did $= \star \star \star$ &time $=$ \*\*\*&userid=\*\*\*&apptoken $\displaystyle . =$
 \*\*\*&usertoken=\*\*\*●(签名原始字符串除apptoken和usertoken外其他字段按照字母顺序排序生成)• usertoken为授权时获取的usertoken
 
 e)签名算法与授权一样f）调用成功后返回如下信息（JSON格式）：
 
-<table><tr><td>属性名</td><td>类型</td><td>描述</td></tr><tr><td>id</td><td>int</td><td>消息id号，为授权请求时传入的数据</td></tr><tr><td>code</td><td>string</td><td>0：成功；其他：错误码</td></tr><tr><td>message</td><td>string</td><td>如果code等于o，则为空，否则返回错误信息</td></tr><tr><td>userid</td><td>string</td><td>用户id</td></tr><tr><td>usertoken</td><td>string</td><td>用户授权roken</td></tr><tr><td>expiredtime</td><td>int</td><td>Token失效过期时间，UTC时间戳，自1970年1月1日起计算的时 间，单位为秒</td></tr></table>
+| 属性名         | 类型     | 描述                                       |
+|-------------|--------|------------------------------------------|
+| id          | int    | 消息id号，为授权请求时传入的数据                        |
+| code        | string | 0：成功；其他：错误码                              |
+| message     | string | 如果code等于0，则为空，否则返回错误信息                   |
+| userid      | string | 用户id                                     |
+| usertoken   | string | 用户授权token                                |
+| expiredtime | int    | Token失效过期时间，UTC时间戳，自1970年1月1日起计算的时间，单位为秒 |
 
 g）范例如下：
 
@@ -179,12 +252,16 @@ N_xxxxxxxx&usertoken $\underline { { \underline { { \mathbf { \Pi } } } } } =$ U
 
 # • 回复信息：
 
-"code": 0,   
-"message":"",   
-"id"：12345，   
-"userid": "1111111",   
-"usertoken":"NEW_USERTOKEN_YYYYYYYY",   
-"expiredtime": 1445955713
+```json
+{
+  "code": 0,
+  "message": "",
+  "id": 12345,
+  "userid": "1111111",
+  "usertoken": "NEW_USERTOKEN_YYYYYYYY",
+  "expiredtime": 1445955713
+}
+```
 
 # 4.智能应用API
 
@@ -199,7 +276,18 @@ N_xxxxxxxx&usertoken $\underline { { \underline { { \mathbf { \Pi } } } } } =$ U
 
 # 4.1.2.请求 Body JSON格式
 
-<table><tr><td>id</td><td></td><td>消息序列号</td></tr><tr><td rowspan="7">system</td><td>ver</td><td>Protocol version</td></tr><tr><td>lang</td><td>Ianguage</td></tr><tr><td>userid</td><td>user id</td></tr><tr><td>appkey</td><td>appkey</td></tr><tr><td>did</td><td>(可选)终端唯一id，如果在授权时填写， 则此处必须填入相同id</td></tr><tr><td>time</td><td>UTC时间戳，自1970年1月1日起计算的时 间，单位为秒</td></tr><tr><td>sign</td><td>签名值</td></tr><tr><td>method</td><td></td><td>API request method name</td></tr><tr><td>params</td><td>&lt;attr&gt;:&lt;va1&gt; &lt;attr&gt;:&lt;val&gt;</td><td>方法使用的参数集合</td></tr></table>
+| 字段类别   | 字段名    | 描述                                 |
+|--------|--------|------------------------------------|
+| -      | id     | 消息序列号                              |
+| system | ver    | Protocol version                   |
+| system | lang   | Language                           |
+| system | userid | user id                            |
+| system | appkey | appkey                             |
+| system | did    | (可选)终端唯一id，如果在授权时填写，则此处必须填入相同id    |
+| system | time   | UTC时间戳，自1970年1月1日起计算的时间，单位为秒       |
+| system | sign   | 签名值                                |
+| -      | method | API request method name            |
+| -      | params | 方法使用的参数集合 &lt;attr&gt;:&lt;val&gt; |
 
 请求字段释义如下：
 
@@ -215,9 +303,38 @@ did：设备终端唯一id。如果需要多终端支持时，则必须填入。
 
 method：目前支持的命令方式如下：
 
-<table><tr><td>方法名称</td><td>URL后缀信息</td><td>描述</td></tr><tr><td>EpAddAgt</td><td>api.EpAddAgt</td><td>添加智慧设备</td></tr><tr><td>EpDeleteAgt</td><td>api.EpDeleteAgt</td><td>删除智慧设备</td></tr><tr><td>EpGetAllAgts</td><td>api.EpGetAllAgts</td><td>查询所有的智慧中心</td></tr><tr><td>EpAdd</td><td>api.EpAdd</td><td>添加子设备</td></tr><tr><td>EpRemove</td><td>api.EpRemove</td><td>删除子设备</td></tr><tr><td>Epsearchsmart</td><td>api.Epsearchsmart</td><td>获取智慧中心搜索到的附近其它智慧设备</td></tr><tr><td>EpAddsmart</td><td>api.EpAddsmart</td><td>把搜索到的附近智慧设备添加到智慧中心</td></tr><tr><td>EpSearchIDev</td><td>api.EpSearchIDev</td><td>获取智慧中心搜索到的附近IP网络设备</td></tr><tr><td>EpAddIDev</td><td>api.BpBader</td><td>把搜索到的附近IP网络设备添加到智慧中心</td></tr><tr><td>EpGetAl1</td><td>api.EpGetAl1</td><td>查询该账户下授权给该App的所有智慧设备信 息。若该App没有摄像头权限则返回的设备列表 中不包括摄像头。</td></tr><tr><td>EpGet</td><td>api.EpGet</td><td>获取单个设备信息</td></tr><tr><td>Epset</td><td>api.Epset</td><td>控制单个设备</td></tr><tr><td>Epsset</td><td>api.Epsset</td><td>控制多个设备</td></tr><tr><td>EpCmd</td><td>api.Epcmd</td><td>控制单个设备(高级命令)</td></tr><tr><td>EpSetVar</td><td>api.Epsetvar</td><td>控制单个设备 (低级命令)</td></tr><tr><td>EpBatchset</td><td>api.EpBatchset</td><td>批量快速设置多个设备属性</td></tr><tr><td>EpGetAttrs</td><td>api.EpGetAttrs</td><td>获取设备扩展属性</td></tr><tr><td>EpTestRssi</td><td>api.EpTestRssi</td><td>测试射频设备信息强度</td></tr><tr><td>EpUpgradeAgt</td><td>api.EpupgradeAgt</td><td>升级智慧中心</td></tr><tr><td>EpRebootAgt</td><td>api.EpRebootAgt</td><td>重启智慧中心</td></tr></table>
-
-<table><tr><td>EpGetAgtLatest version</td><td>api.EpGetAgtLates tversion</td><td>获取智慧中心最新版本号</td></tr><tr><td>EpGetAgtstate</td><td>api.EpGetAgtState</td><td>获取智慧设备状态</td></tr><tr><td>EpMaintOtaFile S</td><td>api.EpMaintOtaFil es</td><td>查看或维护智慧中心上的OTA文件列表</td></tr><tr><td>EpMaintOtaTask</td><td>api. EpMaintOtaTas</td><td>查看或维护智慧中心上的OTA任务列表</td></tr><tr><td>EpMaintAgtRM</td><td>api.EpMaintAgtRM</td><td>备份恢复智慧中心的配置，包括子设备以及AI的 所有配置数据</td></tr><tr><td>EpConfigAgt</td><td>api.EpConfigAgt</td><td>设置智慧中心配置，如是否允许本地登录、修改</td></tr><tr><td>SceneGet</td><td>api.SceneGet</td><td>获取场景</td></tr><tr><td>Sceneset</td><td>api.Sceneset</td><td>触发场景</td></tr><tr><td>RegisterUser</td><td>auth.RegisterUser</td><td>注册新用戶</td></tr><tr><td>Unregisteruser</td><td>auth.Unregisterus er</td><td>移除用户的授权，注意：该接口不会删除用户， 只会回收授权。</td></tr></table>
+| 方法名称                  | URL后缀信息                   | 描述                                                  |
+|-----------------------|---------------------------|-----------------------------------------------------|
+| EpAddAgt              | api.EpAddAgt              | 添加智慧设备                                              |
+| EpDeleteAgt           | api.EpDeleteAgt           | 删除智慧设备                                              |
+| EpGetAllAgts          | api.EpGetAllAgts          | 查询所有的智慧中心                                           |
+| EpAdd                 | api.EpAdd                 | 添加子设备                                               |
+| EpRemove              | api.EpRemove              | 删除子设备                                               |
+| EpSearchSmart         | api.EpSearchSmart         | 获取智慧中心搜索到的附近其它智慧设备                                  |
+| EpAddSmart            | api.EpAddSmart            | 把搜索到的附近智慧设备添加到智慧中心                                  |
+| EpSearchIDev          | api.EpSearchIDev          | 获取智慧中心搜索到的附近IP网络设备                                  |
+| EpAddIDev             | api.EpAddIDev             | 把搜索到的附近IP网络设备添加到智慧中心                                |
+| EpGetAll              | api.EpGetAll              | 查询该账户下授权给该App的所有智慧设备信息。若该App没有摄像头权限则返回的设备列表中不包括摄像头。 |
+| EpGet                 | api.EpGet                 | 获取单个设备信息                                            |
+| EpSet                 | api.EpSet                 | 控制单个设备                                              |
+| EpsSet                | api.EpsSet                | 控制多个设备                                              |
+| EpCmd                 | api.EpCmd                 | 控制单个设备(高级命令)                                        |
+| EpSetVar              | api.EpSetVar              | 控制单个设备 (低级命令)                                       |
+| EpBatchSet            | api.EpBatchSet            | 批量快速设置多个设备属性                                        |
+| EpGetAttrs            | api.EpGetAttrs            | 获取设备扩展属性                                            |
+| EpTestRssi            | api.EpTestRssi            | 测试射频设备信号强度                                          |
+| EpUpgradeAgt          | api.EpUpgradeAgt          | 升级智慧中心                                              |
+| EpRebootAgt           | api.EpRebootAgt           | 重启智慧中心                                              |
+| EpGetAgtLatestVersion | api.EpGetAgtLatestVersion | 获取智慧中心最新版本号                                         |
+| EpGetAgtState         | api.EpGetAgtState         | 获取智慧设备状态                                            |
+| EpMaintOtaFiles       | api.EpMaintOtaFiles       | 查看或维护智慧中心上的OTA文件列表                                  |
+| EpMaintOtaTasks       | api.EpMaintOtaTasks       | 查看或维护智慧中心上的OTA任务列表                                  |
+| EpMaintAgtRM          | api.EpMaintAgtRM          | 备份恢复智慧中心的配置，包括子设备以及AI的所有配置数据                        |
+| EpConfigAgt           | api.EpConfigAgt           | 设置智慧中心配置，如是否允许本地登录、修改                               |
+| SceneGet              | api.SceneGet              | 获取场景                                                |
+| SceneSet              | api.SceneSet              | 触发场景                                                |
+| RegisterUser          | auth.RegisterUser         | 注册新用户                                               |
+| UnregisterUser        | auth.UnregisterUser       | 移除用户的授权，注意：该接口不会删除用户，只会回收授权。                        |
 
 params: 命令使用的参数
 
@@ -225,7 +342,11 @@ params: 命令使用的参数
 
 # 4.1.4.应答JSON格式
 
-<table><tr><td>应答字段</td><td>描述</td></tr><tr><td>id</td><td>消息id号，与请求的消息id号相同</td></tr><tr><td>code</td><td>成功：0；错误：详见4.3错误码</td></tr><tr><td>message</td><td>如果code等于o即成功，则返回结果信息；否则返回错误文本信息</td></tr></table>
+| 应答字段    | 描述                              |
+|---------|---------------------------------|
+| id      | 消息id号，与请求的消息id号相同               |
+| code    | 成功：0；错误：详见4.3错误码                |
+| message | 如果code等于0即成功，则返回结果信息；否则返回错误文本信息 |
 
 # 4.2.安全策略
 
@@ -275,17 +396,17 @@ abcdefghijklmnopqrstuvwx, appkey:APPKE Y_xxxxxxxX, apptoken:ABCDEFGHIKJLMJOBPOOF
 
 # 签名值即对上述签名原始串计算MD5值，即：
 
-sign ${ \bf \Phi } _ { . } = { \bf \Phi } _ { . }$ MD5 ("method:TestMethod, param1 :12345, param2:abcde, did:
-DID_xxxxxxxx , time:1445307713,userid:1111111,usertoken:abcdefghijklmnopqrstuvwx, app key:APPKEY_xxxxxxxX, apptoken:
-ABCDEFGHIKJLMJOBPOOFPDFDA")
+```
+sign=MD5("method:TestMethod,param1:12345,param2:abcde,did:DID_XXXXXXXX ,time:1445307713,userid:1111111,usertoken:abcdefghijklmnopqrstuvwx,app key:APPKEY_XXXXXXXX,apptoken:ABCDEFGHIKJLMJOBPOOFPDFDA")
+```
 
 # 最终sign值为:
 
-2602efca4b1924fb1a7e62b78f2285b2
+`2602efca4b1924fb1a7e62b78f2285b2`
 
 # Note:
 
-接口请求中经常遇到的错误返回"signerror'，一般原因如下:
+接口请求中经常遇到的错误返回`signerror`，一般原因如下:
 
 • 仔细查看文档原始签名串的生成方式，留意params中参数的拼接字符是否正确；  
 ● 用户授权获取usertoken时是否传入了did参数，在接口请求时需要将该字段信息保持一致；  
@@ -293,23 +414,53 @@ ABCDEFGHIKJLMJOBPOOFPDFDA")
 
 # 4.3.错误码
 
-<table><tr><td>错误码</td><td>错误信息</td></tr><tr><td>0</td><td>成功 smart</td></tr><tr><td>10001</td><td>请求格式错误</td></tr><tr><td>10002</td><td>Appkey不存在</td></tr><tr><td>10003</td><td>不支持HTTP GET请求</td></tr><tr><td>10004</td><td>签名非法</td></tr><tr><td>10005</td><td>用户没有授权</td></tr><tr><td>10006</td><td>用户授权已经过期</td></tr><tr><td>10007</td><td>非法访问</td></tr><tr><td>10008</td><td>内部错误</td></tr><tr><td>10009</td><td>设置属性失败</td></tr><tr><td>10010</td><td>Method非法</td></tr><tr><td>10011</td><td>操作超时</td></tr><tr><td>10012</td><td>用户名已存在</td></tr><tr><td>10013</td><td>设备没准备好</td></tr><tr><td>10014</td><td>设备已经被其他账户注册</td></tr><tr><td>10015</td><td>权限不够</td></tr><tr><td>10016</td><td>设备不支持该操作</td></tr><tr><td>10017</td><td>数据非法</td></tr><tr><td>10018</td><td>GPS位置非法访问拒绝</td></tr><tr><td>10019</td><td>请求对象不存在</td></tr><tr><td>10020</td><td>设备已经存在账户中</td></tr><tr><td>10022</td><td>请求地址需要重定向</td></tr></table>
+| 错误码   | 错误信息          |
+|-------|---------------|
+| 0     | 成功            |
+| 10001 | 请求格式错误        |
+| 10002 | Appkey不存在     |
+| 10003 | 不支持HTTP GET请求 |
+| 10004 | 签名非法          |
+| 10005 | 用户没有授权        |
+| 10006 | 用户授权已经过期      |
+| 10007 | 非法访问          |
+| 10008 | 内部错误          |
+| 10009 | 设置属性失败        |
+| 10010 | Method非法      |
+| 10011 | 操作超时          |
+| 10012 | 用户名已存在        |
+| 10013 | 设备没准备好        |
+| 10014 | 设备已经被其他账户注册   |
+| 10015 | 权限不够          |
+| 10016 | 设备不支持该操作      |
+| 10017 | 数据非法          |
+| 10018 | GPS位置非法访问拒绝   |
+| 10019 | 请求对象不存在       |
+| 10020 | 设备已经存在账户中     |
+| 10022 | 请求地址需要重定向     |
 
 # 4.4.设备模型说明
 
 为了方便阐述API，这里我们对LifeSmart的设备模型做个简要的说明，对一些术语作出说明。我们以EpGet/EpGetAll请求获取的数据为例：
 
-"name":"smart Switch",   
-"agt"："A3EAAABtAEwQxxxxxxxxxX",   
-"me":"2d11",   
-"devtype":"sL_Sw_IF3",   
-"ful1Cls":"SL_SW_IF3_V2",   
-"stat": 1,   
-"data":{ "L1":{"type":129,"val":1,"name":"Living"}, "L2":{"type":128,"val":0,"name":"study"}, "L3":{"type":129，"val":1,"
-name":"Kid"},   
-"ver": "0.1.6.49",   
-"1Dbm":-42,   
-"lHeart"：1626229661
+```json
+{
+    "name": "Smart Switch",
+    "agt": "A3EAAABtAEwQXXXXXXXXXX",
+    "me": "2d11",
+    "devtype": "SL_SW_IF3",
+    "fullCls": "SL_SW_IF3_V2",
+    "stat": 1,
+    "data": {
+        "L1": {"type": 129, "val": 1,"name": "Living"},
+        "L2": {"type": 128, "val": 0,"name": "Study"},
+        "L3": {"type": 129, "val": 1,"name": "Kid"},
+    }, 
+    "ver": "0.1.6.49",
+    "lDbm": -42,
+    "lHeart": 1626229661
+}
+```
 
 我们定义如下模型：
 
@@ -328,11 +479,30 @@ Ep)使用，加入到智慧中心之后，智慧设备将可以与其它设备�
 
 我们汇总了设备属性定义，如下表：
 
-<table><tr><td>名称</td><td>类型</td><td>描述</td></tr><tr><td>agt</td><td>string</td><td>智慧中心ID</td></tr></table>
+| 名称             | 类型             | 描述                                                                                                                                                                                                              |
+|----------------|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| agt            | string         | 智慧中心ID                                                                                                                                                                                                          |
+| agt_ver        | string         | 智慧中心版本号                                                                                                                                                                                                         |
+| tmzone         | int32          | 智慧中心时区设置                                                                                                                                                                                                        |
+| me             | string         | 设备ID(智慧中心下面唯一)                                                                                                                                                                                                  |
+| devtype        | string         | 设备类型(设备规格)                                                                                                                                                                                                      |
+| fullCls        | string         | 包含版本号的完整的设备类型，一般它的值等于devtype+V[n]，v[n]指明其版本号信息，一般情况下使用devtype即可标识设备类型，在需要区分设备不同版本的特性的时候才需要用到fullCls。如果设备类型没有版本信息，则fullCls可能与devtype相同。                                                                          |
+| name           | string         | 设备名称                                                                                                                                                                                                            |
+| stat           | int32          | 设备在线状态，0:Offline 1:online                                                                                                                                                                                       |
+| data           | collection/map | 设备下的IO口集合，是一个Map字典集合，键为IO口的名称(idx)，值为IO口的数据                                                                                                                                                                     |
+| data[idx].type | int32          | 特定IO口的值类型                                                                                                                                                                                                       |
+| data[idx].val  | int32          | 特定IO口的值                                                                                                                                                                                                         |
+| data[idx].v    | int32/float32  | 特定IO口的友好值。友好值指的是用户容易理解的值。例如温度：val返回的是235，其友好值v为23.5，指示当前温度为23.5摄氏度；也可以参考《LifeSmart智慧设备规格属性说明》文档，基于type、val值同样可以计算出实际友好值来。调用EpSet系列接口控制设备的时候，仍然需要取val值，例如设置空调的温度为26度，tr的val需设置为260，具体请参考《LifeSmart智慧设备规格属性说明》文档。 |
+| data[idx].name | string         | 特定IO口的名称(注意：如果IO口没有命名过，则不会返回这个属性值)                                                                                                                                                                              |
+| lHeart         | int32          | 设备最近一次心跳时间，UTC时间戳，自1970年1月1日起计算的时间，单位为秒。                                                                                                                                                                        |
+| lDbm           | int32          | 设备的dBm值，其值为负值，值越接近0表明信号质量越好。注意该属性指的是射频类设备的信号强度，Wi-Fi类设备不会有此值。                                                                                                                                                   |
 
-<table><tr><td colspan="3"></td></tr><tr><td>名称</td><td>类型</td><td>描述</td></tr><tr><td>agt_ver</td><td>string</td><td>智慧中心版本号</td></tr><tr><td>tmzone</td><td>int32</td><td>智慧中心时区设置</td></tr><tr><td>me</td><td>string</td><td>设备ID(智慧中心下面唯一)</td></tr><tr><td>devtype</td><td>string</td><td>设备类型 (设备规格)</td></tr><tr><td>fullCls</td><td>string</td><td>包含版本号的完整的设备类型，一般它的值等于 devtype+V[n]，v[n]指明其版本号信息，一般情况下使 用devtype即可标识设备类型，在需要区分设备不同版本的 特性的时候才需要用到fullCls。如果设备类型没有版本信 息，则fullCls可能与devtype相同。</td></tr><tr><td>name</td><td>string</td><td>设备名称</td></tr><tr><td>stat</td><td>int32</td><td>设备在线状态， 0:Offline 1:online</td></tr><tr><td>data</td><td>collection /map</td><td>设备下的rO□集合，是一个Map字典集合，键为ɪO□的名称 (idx)，值为Io口的数据</td></tr><tr><td>data[IDx].type data[IDx].val</td><td>int32</td><td>特定IO口的值类型</td></tr><tr><td>data[IDx].v</td><td>int32 float32</td><td>特定IO口的值 特定IO口的友好值 友好值指的是用户容易理解的值。 例如温度：val返回的是235，其友好值v为23.5，指示</td></tr><tr><td>data [IDx] .name</td><td>注意： 明》文档。</td><td>当前温度为23.5摄氏度； ·也可以参考《LifeSmart 智慧设备规格属性说明》文 档，基于type、val值同样可以计算出实际友好值来。 ·调用EpSet系列接口控制设备的时候，仍然需要取val 值，例如设置空调的温度tr为26度，tr的val需设置为 260，具体请参考《LifeSmart 智慧设备规格属性说</td></tr><tr><td>lHeart int32 -</td><td>string 这个属性值)</td><td>特定IO口的名称(注意：如果IO口没有命名过，则不会返回 设备最近一次心跳时间，UTC时间戳，自1970年1月1日起</td></tr><tr><td>1Dbm</td><td>int32</td><td>计算的时间，单位为秒。 设备的dBm值，其值为负值，值越接近o表明信号质量越 好。注意该属性指的是射频类设备的信号强度，Wi-Fi类设</td></tr></table>
-
-<table><tr><td>名称</td><td>类型</td><td>描述</td></tr><tr><td>agt_self</td><td>string</td><td>智慧设备本身的agt属性。如果一个智慧设备（例如摄像 头，超级碗SPOT）被加入到智慧中心下面做为一个设备使 用，则该智慧设备原先的agt属性将会被隐藏，为了显示这 个属性值，将以agtself属性提供。EpGetAll方法里面 将会返回这个属性值若存在的话。 或者一个设备A级联到其它智慧中心下面做为设备B使用，则 设备B将会有agt_self属性，其值指明设备a自己的agt属</td></tr><tr><td>me_self</td><td>string</td><td>性 智慧设备本身的me属性。如果一个智慧设备（例如摄像头， 超级碗SPOT）被加入到智慧中心下面做为一个设备使用， 则该智慧设备原先的me属性将会被隐藏，为了显示这个属性 值，将以me_self属性提供。EpGetAll方法里面将会返回 这个属性值若存在的话。</td></tr><tr><td>ext_loc</td><td>string</td><td>或者一个设备A级联到其它智慧中心下面做为设备B使用，则 设备B将会有meself属性，其值指明设备A原本的me属性 设备扩展属性，第三方应用可以使用该字段存储需要的扩展 属性。注意：该字段最大长度不能超过512字符，且必须为 字符串类型。 该字段为第三方应用专用，LifeSmart应用不需要使用该</td></tr><tr><td>ver</td><td>string</td><td>字段。 设备固件版本号</td></tr></table>
+| 名称       | 类型     | 描述                                                                                                                                                                                          |
+|----------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| agt_self | string | 智慧设备本身的agt属性。如果一个智慧设备（例如摄像头，超级碗SPOT）被加入到智慧中心下面做为一个设备使用，则该智慧设备原先的agt属性将会被隐藏，为了显示这个属性值，将以agt_self属性提供。EpGetAll方法里面将会返回这个属性值若存在的话。或者一个设备A级联到其它智慧中心下面做为设备B使用，则设备B将会有agt_self属性，其值指明设备A自己的agt属性。 |
+| me_self  | string | 智慧设备本身的me属性。如果一个智慧设备（例如摄像头，超级碗SPOT）被加入到智慧中心下面做为一个设备使用，则该智慧设备原先的me属性将会被隐藏，为了显示这个属性值，将以me_self属性提供。EpGetAll方法里面将会返回这个属性值若存在的话。或者一个设备A级联到其它智慧中心下面做为设备B使用，则设备B将会有me_self属性，其值指明设备A原本的me属性。      |
+| ext_loc  | string | 设备扩展属性，第三方应用可以使用该字段存储需要的扩展属性。注意：该字段最大长度不能超过512字符，且必须为字符串类型。该字段为第三方应用专用，LifeSmart应用不需要使用该字段。                                                                                                 |
+| ver      | string | 设备固件版本号                                                                                                                                                                                     |
 
 # 4.5.接口定义
 
@@ -342,7 +512,25 @@ Ep)使用，加入到智慧中心之后，智慧设备将可以与其它设备�
 
 ![](images/84079aa1aa20eedbba2162e7e343a535858bde13b0926bb8910af9dfb6a03c42.jpg)
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpAddAgt</td><td></td><td>增加智慧中心</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpAddAgt</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td>Request Content</td><td rowspan="8"></td><td>ver</td><td></td><td>1.0</td></tr><tr><td></td><td>lang</td><td>Y</td><td>en</td></tr><tr><td></td><td>sign</td><td></td><td>签名值</td></tr><tr><td></td><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>system did</td><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td></td><td></td><td></td><td>(可选)终端唯—id。如果在授 权时填入了，此处必须填入相 同id</td></tr><tr><td></td><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起 计算的时间，单位为秒</td></tr><tr><td colspan="2">method params sn</td><td>Y</td><td>EpAddAgt</td></tr><tr><td rowspan="2"></td><td>-</td><td>Y</td><td></td><td>通过发现协议获取的AGT字段 或智慧中心背部条码</td></tr><tr><td>name id (</td><td></td><td>Y</td><td>智慧中心名称</td></tr><tr><td colspan="2"></td><td>Y</td><td>消息id号</td><td></td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | EpAddAgt         |    | 增加智慧中心                          |
+| Partial URL         | api.EpAddAgt     | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | EpAddAgt                        |
+|                     | **params**       |    |                                 |
+|                     | &emsp;`sn`       | Y  | 通过发现协议获取的AGT字段或智慧中心背部条码         |
+|                     | &emsp;`name`     | Y  | 智慧中心名称                          |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 4.5.1.2.范例
 
@@ -357,13 +545,24 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 # • 请求信息：
 
-"id":957,   
-"method":"EpAddAgt",   
-"params": { "sn":"xxxxxxxx", "name":"xxx"   
-}，   
-"system":  { "ver":"1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx" "time":1447641115, "sign":"
-sIGN_xxxxxxxx"   
+```json
+{
+  "id": 957,
+  "method": "EpAddAgt",
+  "params": {
+    "sn": "xxxxxxxx",
+    "name": "xxx"
+  },
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447641115,
+    "sign": "sIGN_xxxxxxxx"
+  }
 }
+```
 
 # 签名原始字符串：
 
@@ -380,7 +579,24 @@ APPKEy_xxxxxxxx, apptoken:APPToKE N_XXXXXXXX
 
 # 4.5.2.1.JSON请求数据格式
 
-<table><tr><td colspan="3">Type</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpDeleteAgt</td><td></td><td>删除智慧中心</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpDeleteAgt</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">HTTP POST</td><td></td><td></td></tr><tr><td rowspan="9">Request Content</td><td rowspan="9">system</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey did</td><td>Y</td><td>appkey (可选)终端唯—id。如</td></tr><tr><td>time</td><td>Y</td><td>果在授权时填入了，此 处必须填入相同id UTC时间戳，自1970年1月</td></tr><tr><td></td><td></td><td>1日起计算的时间,单位 为秒</td></tr><tr><td>method agt</td><td>Y</td><td>EpDeleteAgt</td></tr><tr><td>params</td><td>Y</td><td>智慧中心</td></tr><tr><td colspan="2">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | EpDeleteAgt      |    | 删除智慧中心                          |
+| Partial URL         | api.EpDeleteAgt  | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | EpDeleteAgt                     |
+|                     | **params**       |    |                                 |
+|                     | &emsp;`agt`      | Y  | 智慧中心                            |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 4.5.2.2.范例
 
@@ -418,7 +634,22 @@ APPKEY_xxxxxxxx,apptok en:APPTOKEN XXXXXXXX
 
 ![](images/fae5aa1b3ea02dca631c26172cf971df7b232a5926b71bdf460c55d4f6058284.jpg)
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpGetAllAgts</td><td></td><td>获取所有智慧中心</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpGetAllAgts</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td>Request Content</td><td rowspan="8"></td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td></td><td>lang</td><td>Y</td><td>en</td></tr><tr><td></td><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td></td><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>system</td><td>appkey did</td><td>O</td><td>appkey</td></tr><tr><td></td><td></td><td></td><td>(可选)终端唯—id。如果在授 权时填入了，此处必须填入相 同id</td></tr><tr><td>time</td><td></td><td>Y</td><td>UTC时间戳，自1970年1月1日起 计算的时间,单位为秒</td></tr><tr><td colspan="2">method</td><td>Y</td><td>EpGetAllAgts</td></tr><tr><td>id</td><td colspan="2"></td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | EpGetAllAgts     |    | 获取所有智慧中心                        |
+| Partial URL         | api.EpGetAllAgts | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | EpGetAllAgts                    |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 4.5.3.2.范例
 
@@ -454,7 +685,25 @@ APpToKEN_xxxxxxxx
 
 # 4.5.4.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpAdd</td><td></td><td>添加射频设备</td></tr><tr><td>URL</td><td colspan="2">api.EpAdd</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td>Request Content</td><td rowspan="8"></td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td rowspan="7">system</td><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User id</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>did</td><td></td><td>(可选)终端唯一id。如果在授权时填 入了，此处必须填入相同id</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起 计算的 时间,单位为秒</td></tr><tr><td></td><td></td><td>EpAdd</td></tr><tr><td rowspan="2">params</td><td>agt</td><td>Y</td><td>智慧中心Id，为EpGetAllAgts返回 时信息</td></tr><tr><td>optarg</td><td>O</td><td>添加设备额外参数，这是一个可选 的、高级的选项。见后面描述。 数据类型是JSON对象的序列化字符 串。</td></tr><tr><td colspan="2">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                                               |
+|:--------------------|:-----------------|:---|:-------------------------------------------------|
+| Interface Name      | EpAdd            |    | 添加射频设备                                           |
+| Partial URL         | api.EpAdd        | Y  |                                                  |
+| Content Type        | application/json | Y  |                                                  |
+| HTTP Method         | POST             | Y  |                                                  |
+| **Request Content** | **system**       |    |                                                  |
+|                     | &emsp;`ver`      | Y  | 1.0                                              |
+|                     | &emsp;`lang`     | Y  | en                                               |
+|                     | &emsp;`sign`     | Y  | 签名值                                              |
+|                     | &emsp;`userid`   | Y  | User ID                                          |
+|                     | &emsp;`appkey`   | Y  | appkey                                           |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                  |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                     |
+|                     | **method**       | Y  | EpAdd                                            |
+|                     | **params**       |    |                                                  |
+|                     | &emsp;`agt`      | Y  | 智慧中心Id，为EpGetAllAgts返回时信息                        |
+|                     | &emsp;`optarg`   | O  | 添加设备额外参数，这是一个可选的、高级的选项。见后面描述。数据类型是JSON对象的序列化字符串。 |
+|                     | **id**           | Y  | 消息id号                                            |
 
 说明：射频设备需要添加到智慧中心才能工作，射频设备添加的时候需要对码，使得待添加的设备与智慧中心都进入相应通道，识别匹配到对方才算完成。对码过程有个超时时间，时间定义缺省是20秒，因此需要把握好时间，使得字设备进入对码状态与调用EpAdd命令的时间间隔尽可能的短。
 
@@ -544,7 +793,25 @@ optarg $=$ {"cls":"SL_SW_ND1"
 
 # 4.5.5.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpRemove</td><td></td><td>删除设备</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpRemove</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td>Request Content</td><td rowspan="8"></td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td rowspan="7">system</td><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey did</td><td>O</td><td>appkey (可选)终端唯—id。如果在</td></tr><tr><td></td><td></td><td>授权时填入了，此处必须填 入相同id</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日 起 计算的时间,单位为秒</td></tr><tr><td colspan="2">method</td><td>Y EpRemove</td></tr><tr><td rowspan="2">params</td><td>agt</td><td>Y</td><td>欲删除设备的agt， EpGetAll返回时信息</td></tr><tr><td rowspan="2">id</td><td rowspan="2">Y</td><td rowspan="2">Y</td><td rowspan="2">欲删除设备me， 为EpGetAll返回时信息</td></tr><tr><td>me</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | EpRemove         |    | 删除设备                            |
+| Partial URL         | api.EpRemove     | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | EpRemove                        |
+|                     | **params**       |    |                                 |
+|                     | &emsp;`agt`      | Y  | 欲删除设备的agt，为EpGetAll返回时信息        |
+|                     | &emsp;`me`       | Y  | 欲删除设备me，为EpGetAll返回时信息          |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 4.5.5.2.范例
 
@@ -579,7 +846,24 @@ UsERToKEN_xxxxxxxx,appkey:APPkEY_xxxxxxxx, ap ptoken:APPTOKEN_xxxxxxxX
 
 # 4.5.6.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Mus t</td><td colspan="2">Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpGetAll</td><td></td><td colspan="2">查询该账户下授权给appkey的所有设 备信息。设备信息不包括摄像头信息 (若没有摄像头权限)。</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpGetAll</td><td></td><td colspan="2"></td></tr><tr><td>Content Type</td><td colspan="3">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="3">POST</td><td></td><td></td></tr><tr><td>Request Content</td><td rowspan="8">system</td><td rowspan="8">ver sign</td><td>Y</td><td>1.0</td><td colspan="2"></td></tr><tr><td>lang</td><td>V en</td><td colspan="2"></td></tr><tr><td></td><td>Y 签名值</td><td colspan="2"></td></tr><tr><td>userid appkey</td><td>Y Y</td><td colspan="2">User id</td></tr><tr><td>did</td><td>appkey O</td><td colspan="2">(可选)终端唯一id。如果在授权时</td></tr><tr><td></td><td></td><td colspan="2">填入了，此处必须填入相同id</td></tr><tr><td>time</td><td>Y</td><td colspan="2">UTC时间戳，自1970年1月1日起 计算的 时间,单位为秒</td></tr><tr><td colspan="2">method</td><td>Y</td><td colspan="2">EpGetAll</td></tr><tr><td colspan="2" rowspan="2">params id</td><td rowspan="2">degree</td><td rowspan="2">N</td><td rowspan="2">degree：查询返回的详细程度，若不 提供则缺省为2。 0：返回最基本的信息，包括 agt,me, devtype,name,stat</td><td rowspan="2">2：返回agt_ver,lDbm,lHeart</td></tr><tr><td>1：返回data数据 3：返回agt_self Y 消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                                                                                                               |
+|:--------------------|:-----------------|:---|:-----------------------------------------------------------------------------------------------------------------|
+| Interface Name      | EpGetAll         |    | 查询该账户下授权给appkey的所有设备信息。设备信息不包括摄像头信息(若没有摄像头权限)。                                                                   |
+| Partial URL         | api.EpGetAll     | Y  |                                                                                                                  |
+| Content Type        | application/json | Y  |                                                                                                                  |
+| HTTP Method         | POST             | Y  |                                                                                                                  |
+| **Request Content** | **system**       |    |                                                                                                                  |
+|                     | &emsp;`ver`      | Y  | 1.0                                                                                                              |
+|                     | &emsp;`lang`     | Y  | en                                                                                                               |
+|                     | &emsp;`sign`     | Y  | 签名值                                                                                                              |
+|                     | &emsp;`userid`   | Y  | User ID                                                                                                          |
+|                     | &emsp;`appkey`   | Y  | appkey                                                                                                           |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                                                                  |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                                                     |
+|                     | **method**       | Y  | EpGetAll                                                                                                         |
+|                     | **params**       |    |                                                                                                                  |
+|                     | &emsp;`degree`   | N  | degree：查询返回的详细程度，若不提供则缺省为2。0：返回最基本的信息，包括agt,me,devtype,name,stat；1：返回data数据；2：返回agt_ver,lDbm,lHeart；3：返回agt_self |
+|                     | **id**           | Y  | 消息id号                                                                                                            |
 
 # 4.5.6.2.范例
 
@@ -625,9 +909,25 @@ data":{' "L1"：{"type"：129,"val"：1,"name"："客厅"}, "L2"：{"type"：128
 
 # 4.5.7.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="3">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="3">Epset</td><td></td><td colspan="2">控制设备</td></tr><tr><td>Partial URL</td><td colspan="3">api.Epset</td><td></td><td colspan="2"></td></tr><tr><td>Content Type</td><td colspan="3">application/json</td><td></td><td colspan="2"></td></tr><tr><td>HTTP Method</td><td colspan="3">POST</td><td></td><td colspan="2"></td></tr><tr><td rowspan="10"></td><td rowspan="10">system</td><td colspan="2">ver</td><td>Y</td><td colspan="2">1.</td></tr><tr><td colspan="2">lang</td><td>Y</td><td colspan="2">en</td></tr><tr><td colspan="2">sign</td><td>Y</td><td colspan="2">签名值</td></tr><tr><td colspan="2">userid</td><td>Y</td><td colspan="2">User id</td></tr><tr><td colspan="2">appkey did</td><td>Y</td><td colspan="2">appkey (可选)终端唯一id。如果在授权时填入</td></tr><tr><td colspan="2">time Y</td><td></td><td colspan="2">了，此处必须填入相同id UTC时间戳，自1970年1月1日起计算的时</td></tr><tr><td colspan="2">agt</td><td>Y Y</td><td colspan="2">间,单位为秒 EpGet</td></tr><tr><td colspan="2"></td><td>Y</td><td colspan="2">欲设置设备的agt，为EpGetAll返回时 信息 欲设置设备me，为EpGetAll返回时信息</td></tr><tr><td colspan="2">…</td><td>Y</td><td></td><td colspan="2">根据不同设备传入不同参数，具体请</td></tr><tr><td colspan="2">tag</td><td></td><td></td><td colspan="2">见&quot;智慧设备设置属性定义&quot;</td></tr><tr><td rowspan="3"></td><td colspan="2">nonvola tile</td><td>N</td><td colspan="2">控制设备的自定义标记串，可以不填写 是否需要掉电后数据不丢失的设置。等于</td></tr><tr><td colspan="2">ult</td><td>bandRes</td><td>支持这个功能。</td><td colspan="2">1表示需要。注意：仅有部分设备的属性 是否在命令执行完之后在回应 (Response)消息里面攜带Io口最新配 置。等于1表示需要。注意：可能存在部</td></tr><tr><td colspan="3">id</td><td></td><td>配置。 Y 消息id号</td><td colspan="2">分设备在执行完之后不支持返回IO口最新</td></tr></table>
-
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpGet</td><td></td><td>获取设备信息</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpGet</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td>Request Content</td><td rowspan="8"></td><td>ver lang</td><td>Y</td><td>1.0</td></tr><tr><td></td><td>Y Y</td><td>en 签名值</td><td></td></tr><tr><td></td><td>sign</td><td></td><td></td></tr><tr><td></td><td>userid Y appkey</td><td></td><td>User id</td></tr><tr><td>system did</td><td>Y</td><td>appkey</td><td></td></tr><tr><td></td><td></td><td>填入了，此处必须填入相同id</td><td>(可选)终端唯一id。如果在授权时</td></tr><tr><td>time</td><td>Y</td><td></td><td>UTC时间戳，自1970年1月1日起计算的</td></tr><tr><td>method</td><td></td><td></td><td rowspan="2">时间,单位为秒</td></tr><tr><td rowspan="2">params</td><td rowspan="2">agt</td><td>Y</td><td rowspan="2">EpGet 欲查询设备的agt，为EpGetAll返回</td></tr><tr><td>me</td><td>时信息 Y</td></tr><tr><td colspan="3"></td><td>Y</td><td>欲查询设备me，为GetAll返回时信息</td></tr><tr><td colspan="3">Id</td><td></td><td colspan="2">消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | EpGet            |    | 获取设备信息                          |
+| Partial URL         | api.EpGet        | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | EpGet                           |
+|                     | **params**       |    |                                 |
+|                     | &emsp;`agt`      | Y  | 欲查询设备的agt，为EpGetAll返回时信息        |
+|                     | &emsp;`me`       | Y  | 欲查询设备me，为EpGetAll返回时信息          |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 4.5.7.2.范例
 
@@ -667,7 +967,29 @@ type"：129,"val"：1,"name"："客厅"}, "L2"：{"type"：128，"val"：0,"name
 
 # 4.5.8.1.JSON请求数据格式
 
-<table><tr><td rowspan="2">Type Interface Name</td><td colspan="2">Definition</td><td>Must</td><td colspan="2">Description</td></tr><tr><td colspan="2">Epset</td><td></td><td>控制设备</td></tr><tr><td>Partial URL</td><td colspan="2">api.Epset</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="12">system Request Content</td><td rowspan="7"></td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User id</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>did 0</td><td></td><td>(可选)终端唯一id。如果在授权时填入 了，此处必须填入相同id</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起计算的时</td></tr><tr><td colspan="2">method</td><td>Y</td><td>间,单位为秒 EpGet</td></tr><tr><td colspan="2">params</td><td></td><td>设置设备的agt，为EpGetAll返回时</td></tr><tr><td rowspan="3"></td><td>D me</td><td>Y</td><td>欲设置设备me，为EpGetAll返回时信息</td></tr><tr><td></td><td>Y</td><td>根据不同设备传入不同参数，具体请 见&quot;智慧设备设置属性定义&quot;</td></tr><tr><td>bandRes</td><td>O</td><td>是否需要掉电后数据不丢失的设置。等于 1表示需要。注意：仅有部分设备的属性 支持这个功能。 是否在命令执行完之后在回应</td></tr><tr><td></td><td>ult</td><td></td><td>(Response)消息里面携带ro口最新配 置。等于1表示需要。注意：可能存在部 分设备在执行完之后不支持返回IO口最新 配置。</td></tr><tr><td>id</td><td colspan="2"></td><td>Y 消息id号</td><td></td></tr></table>
+| 类型                  | 定义                  | 必须 | 描述                                                                          |
+|:--------------------|:--------------------|:---|:----------------------------------------------------------------------------|
+| Interface Name      | EpSet               |    | 控制设备                                                                        |
+| Partial URL         | api.EpSet           | Y  |                                                                             |
+| Content Type        | application/json    | Y  |                                                                             |
+| HTTP Method         | POST                | Y  |                                                                             |
+| **Request Content** | **system**          |    |                                                                             |
+|                     | &emsp;`ver`         | Y  | 1.0                                                                         |
+|                     | &emsp;`lang`        | Y  | en                                                                          |
+|                     | &emsp;`sign`        | Y  | 签名值                                                                         |
+|                     | &emsp;`userid`      | Y  | User ID                                                                     |
+|                     | &emsp;`appkey`      | Y  | appkey                                                                      |
+|                     | &emsp;`did`         | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                             |
+|                     | &emsp;`time`        | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                |
+|                     | **method**          | Y  | EpSet                                                                       |
+|                     | **params**          |    |                                                                             |
+|                     | &emsp;`agt`         | Y  | 欲设置设备的agt，为EpGetAll返回时信息                                                    |
+|                     | &emsp;`me`          | Y  | 欲设置设备me，为EpGetAll返回时信息                                                      |
+|                     | &emsp;`...`         | Y  | 根据不同设备传入不同参数，具体请见"智慧设备设置属性定义"                                               |
+|                     | &emsp;`tag`         | O  | 控制设备的自定义标记串，可以不填写                                                           |
+|                     | &emsp;`nonvolatile` | N  | 是否需要掉电后数据不丢失的设置。等于1表示需要。注意：仅有部分设备的属性支持这个功能。                                 |
+|                     | &emsp;`bandResult`  | O  | 是否在命令执行完之后在回应(Response)消息里面携带IO口最新配置。等于1表示需要。注意：可能存在部分设备在执行完之后不支持返回IO口最新配置。 |
+|                     | **id**              | Y  | 消息id号                                                                       |
 
 # 4.5.8.2.范例
 
@@ -723,7 +1045,26 @@ EpSet接口支持修改设备的extloc属性的值。
 
 # 4.5.9.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">Epsset</td><td>控制多个设备</td><td></td></tr><tr><td>Partial URL</td><td colspan="3">api.Epsset</td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="3">POST</td><td></td></tr><tr><td rowspan="9">Request Content</td><td rowspan="6">system</td><td>g</td><td>YY</td><td></td></tr><tr><td>sign</td><td></td><td></td></tr><tr><td>userid</td><td>Y Y</td><td>签名值 User ID</td></tr><tr><td>appkey did</td><td>Y</td><td>appkey</td></tr><tr><td>time Y</td><td></td><td>(可选)终端唯一id。如果在授权时填 入了，此处必须填入相同id</td></tr><tr><td></td><td></td><td>UTC时间戳，自1970年1月1日起 计算的 时间,单位为秒</td></tr><tr><td colspan="2">method args</td><td>Y Epsset Y</td><td>欲设置的执行列表，列表中每个内容</td></tr><tr><td rowspan="3">params</td><td></td><td>值给args</td><td>参照EpSet的params参数； 需要将列表转化成JSON格式字符串赋</td></tr><tr><td>nonvolat ile</td><td>O</td><td>是否需要掉电后数据不丢失的设置。 等于1表示需要。注意：仅有部分设备 的属性支持这个功能。</td></tr><tr><td>bandResu O lt</td><td></td><td>是否在命令执行完之后在回 应 (Response)消息里面攜带Io口最新 配置。等于1表示需要。注意：可能存 在部分设备在执行完之后不支持返回 IO口最新配置。</td></tr><tr><td></td><td colspan="2">id Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义                  | 必须 | 描述                                                                          |
+|:--------------------|:--------------------|:---|:----------------------------------------------------------------------------|
+| Interface Name      | EpsSet              |    | 控制多个设备                                                                      |
+| Partial URL         | api.EpsSet          | Y  |                                                                             |
+| Content Type        | application/json    | Y  |                                                                             |
+| HTTP Method         | POST                | Y  |                                                                             |
+| **Request Content** | **system**          |    |                                                                             |
+|                     | &emsp;`ver`         | Y  | 1.0                                                                         |
+|                     | &emsp;`lang`        | Y  | en                                                                          |
+|                     | &emsp;`sign`        | Y  | 签名值                                                                         |
+|                     | &emsp;`userid`      | Y  | User ID                                                                     |
+|                     | &emsp;`appkey`      | Y  | appkey                                                                      |
+|                     | &emsp;`did`         | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                             |
+|                     | &emsp;`time`        | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                |
+|                     | **method**          | Y  | EpsSet                                                                      |
+|                     | **params**          |    |                                                                             |
+|                     | &emsp;`args`        | Y  | 欲设置的执行列表，列表中每个内容参照EpSet的params参数；需要将列表转化成JSON格式字符串赋值给args                   |
+|                     | &emsp;`nonvolatile` | O  | 是否需要掉电后数据不丢失的设置。等于1表示需要。注意：仅有部分设备的属性支持这个功能。                                 |
+|                     | &emsp;`bandResult`  | O  | 是否在命令执行完之后在回应(Response)消息里面携带IO口最新配置。等于1表示需要。注意：可能存在部分设备在执行完之后不支持返回IO口最新配置。 |
+|                     | **id**              | Y  | 消息id号                                                                       |
 
 # 4.5.9.2.范例
 
@@ -760,7 +1101,24 @@ UsERToKEN_xxxxxxxx, appkey:APPKEY_xxx xxxxX,apptoken:APPTOKEN xxxxxxxX
 
 # 4.5.10.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">SceneGet</td><td></td><td>获取场景</td></tr><tr><td>Partial URL</td><td colspan="2">api.SceneGet</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="10">Request Content</td><td rowspan="6">system</td><td>ver</td><td>Y</td><td>0 1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey did</td><td>Y</td><td>appkey</td></tr><tr><td></td><td></td><td rowspan="2">(可选)终端唯一id。如果在授权时填入 了，此处必须填入相同id UTC时间戳，自1970年1月1日起计算的时</td></tr><tr><td>time</td><td>Y</td></tr><tr><td>method</td><td></td><td>Y</td><td>SceneGet</td></tr><tr><td>params</td><td>agt</td><td>Y</td><td>欲查询设备的agt</td></tr><tr><td>id</td><td></td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | SceneGet         |    | 获取场景                            |
+| Partial URL         | api.SceneGet     | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | SceneGet                        |
+|                     | **params**       |    |                                 |
+|                     | &emsp;`agt`      | Y  | 欲查询设备的agt                       |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 4.5.10.2.范例
 
@@ -798,7 +1156,27 @@ message":[ { "id":"aaaaaaaa", "name":"testscene", "desc":"testscenessss" "cls":"
 
 # 4.5.11.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">Sceneset</td><td></td><td>触发场景</td></tr><tr><td>Partial URL</td><td colspan="2">api.sceneset</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td>Request Content</td><td rowspan="8"></td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td rowspan="7">system</td><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>did</td><td></td><td>(可选)终端唯一id。如果在授权时填 入了，此处必须填入相同id</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起 计算的 时间,单位为秒</td></tr><tr><td>method</td><td>Y -</td><td>Sceneset</td></tr><tr><td rowspan="4">params</td><td>agt</td><td>Y</td><td>欲查询设备的agt</td></tr><tr><td rowspan="3">id</td><td></td><td>Y</td><td>欲触发场景的id</td></tr><tr><td>type</td><td></td><td>场景需要设置的参数名字</td></tr><tr><td>RGBW</td><td>0</td><td>场景需要设置的参数名字</td></tr><tr><td colspan="3">id -</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | SceneSet         |    | 触发场景                            |
+| Partial URL         | api.SceneSet     | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | SceneSet                        |
+|                     | **params**       |    |                                 |
+|                     | &emsp;`agt`      | Y  | 欲查询设备的agt                       |
+|                     | &emsp;`id`       | Y  | 欲触发场景的id                        |
+|                     | &emsp;`type`     | O  | 场景需要设置的参数名字                     |
+|                     | &emsp;`RGBW`     | O  | 场景需要设置的参数值                      |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 4.5.11.2.范例
 
@@ -834,13 +1212,41 @@ APPKEY_xxxxxxxx,apptoken :APPTOKEN_XXXXXXXX
 
 场景的cls主要有如下几种，同时执行场景时需要传入相应的参数：
 
-<table><tr><td>cls</td><td>name</td><td>args</td><td>value</td><td>value描述</td><td>desc</td></tr><tr><td>scene</td><td>情景模式</td><td>N/A</td><td>N/A</td><td>N/A$</td><td>-</td></tr><tr><td>groupsw</td><td>一键开关</td><td>args</td><td>type</td><td>0x81:打开 0×80:关闭</td><td>打开或者关闭一组开关/灯 泡</td></tr><tr><td rowspan="2">grouphw</td><td rowspan="2">极速彩灯组</td><td rowspan="2">args</td><td>type</td><td>0x81:打开 0x80:关闭 Oxff：设置颜色并开灯闭，响应速度更快</td><td rowspan="2">设置一组灯泡。此种模式 下以广播方式打开／关</td></tr><tr><td>RGBW</td><td>0xfe:设置颜色并关灯 4byte:WRGB</td></tr><tr><td rowspan="2">grouprgbw</td><td rowspan="2">彩灯组</td><td rowspan="2">args</td><td>type</td><td>0x81:打开 0x80:关闭 0xff:设置颜色并开灯</td><td rowspan="2">打开或者关闭一组开关/灯 泡。</td></tr><tr><td>RGBW</td><td>Oxfe:设置颜色并关灯 4byte:wRGB -</td></tr></table>
+| cls       | name  | args | value | value描述                              | desc                          |
+|:----------|:------|:-----|:------|:-------------------------------------|:------------------------------|
+| scene     | 情景模式  | N/A  | N/A   | N/A                                  | -                             |
+| groupsw   | 一键开关  | args | type  | 0x81:打开<br/>0x80:关闭                  | 打开或者关闭一组开关/灯泡                 |
+| grouphw   | 极速彩灯组 | args | type  | 0x81:打开<br/>0x80:关闭<br/>0xff:设置颜色并开灯 | 设置一组灯泡。此种模式下以广播方式打开/关闭，响应速度更快 |
+|           |       |      | RGBW  | 0xfe:设置颜色并关灯<br/>4byte:WRGB          |                               |
+| grouprgbw | 彩灯组   | args | type  | 0x81:打开<br/>0x80:关闭<br/>0xff:设置颜色并开灯 | 打开或者关闭一组开关/灯泡                 |
+|           |       |      | RGBW  | 0xfe:设置颜色并关灯<br/>4byte:WRGB          |                               |
 
 # 4.5.12.EpUpgradeAgt 升级智慧中心
 
 # 4.5.12.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpUpgradeAgt</td><td></td><td>升级智慧中心</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpupgradeAgt</td><td></td><td></td></tr><tr><td>Content Type HTTP Method</td><td colspan="2">application/json POST</td><td></td><td></td></tr><tr><td rowspan="20">Request</td><td rowspan="8">system</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>did</td><td></td><td>(可选)终端唯一id。如果在授权时填入了，此 处必须填入相同id</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起计算的时间,单</td></tr><tr><td colspan="2">method</td><td>位为秒 Y EpupgradeAgt</td><td></td></tr><tr><td rowspan="6">Content</td><td>params agt</td><td>Y</td><td></td><td>欲操作的智慧中心ID</td></tr><tr><td></td><td>httpUrl</td><td>O</td><td>采用HTTP方式升级提供可供下载的固件文件的 URL，注意：固件文件名称必须以.tar·gz 结尾。</td></tr><tr><td></td><td>httpcert ificate</td><td></td><td>采用HTTP方式升级需要的安全摘要证书内容， 如果采用HTTP方式升级，则该证书必须提供。</td></tr><tr><td></td><td>reboot</td><td></td><td>注意：证书内容需要使用标准Base64编码。 是否在升级完成之后自动重启智慧中心 1表示需要，0表示不需要，缺省为1</td></tr><tr><td></td><td>nonResp</td><td></td><td>是否不需要等待智慧中心执行完成，立即返回 1表示需要，0表示不需要，缺省为1</td></tr><tr><td colspan="2">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义                      | 必须 | 描述                                                                 |
+|:--------------------|:------------------------|:---|:-------------------------------------------------------------------|
+| Interface Name      | EpUpgradeAgt            |    | 升级智慧中心                                                             |
+| Partial URL         | api.EpUpgradeAgt        | Y  |                                                                    |
+| Content Type        | application/json        | Y  |                                                                    |
+| HTTP Method         | POST                    | Y  |                                                                    |
+| **Request Content** | **system**              |    |                                                                    |
+|                     | &emsp;`ver`             | Y  | 1.0                                                                |
+|                     | &emsp;`lang`            | Y  | en                                                                 |
+|                     | &emsp;`sign`            | Y  | 签名值                                                                |
+|                     | &emsp;`userid`          | Y  | User ID                                                            |
+|                     | &emsp;`appkey`          | Y  | appkey                                                             |
+|                     | &emsp;`did`             | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                    |
+|                     | &emsp;`time`            | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                       |
+|                     | **method**              | Y  | EpUpgradeAgt                                                       |
+|                     | **params**              |    |                                                                    |
+|                     | &emsp;`agt`             | Y  | 欲操作的智慧中心ID                                                         |
+|                     | &emsp;`httpUrl`         | O  | 采用HTTP方式升级提供可供下载的固件文件的URL，注意：固件文件名称必须以.tar.gz结尾。                   |
+|                     | &emsp;`httpCertificate` | O  | 采用HTTP方式升级需要的安全摘要证书内容，如果采用HTTP方式升级，则该证书必须提供。注意：证书内容需要使用标准Base64编码。 |
+|                     | &emsp;`reboot`          | O  | 是否在升级完成之后自动重启智慧中心，1表示需要，0表示不需要，缺省为1                                |
+|                     | &emsp;`nonResp`         | O  | 是否不需要等待智慧中心执行完成，立即返回，1表示需要，0表示不需要，缺省为1                             |
+|                     | **id**                  | Y  | 消息id号                                                              |
 
 # 4.5.12.2.范例
 
@@ -896,7 +1302,24 @@ nonResp $\mathbf { \mu = 0 }$ , reboot=o:关注升级结果，升级完成之后
 
 # 4.5.13.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpRebootAgt</td><td></td><td>重启智慧中心</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpRebootAgt</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="9">Request Content</td><td rowspan="9">system</td><td>ver</td><td>Y</td><td>0 1.0</td></tr><tr><td>lang sign</td><td>Y</td><td>en</td></tr><tr><td></td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y Y</td><td>User ID</td></tr><tr><td>appkey did</td><td>0</td><td>appkey (可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td>time</td><td>Y</td><td>处必须填入相同id UTC时间戳，自1970年1月1日起计算的时间,单</td></tr><tr><td></td><td></td><td>位为秒</td></tr><tr><td>method agt</td><td>Y</td><td>EpRebootAgt</td></tr><tr><td>params id</td><td>Y</td><td>欲操作的智慧中心ID</td></tr><tr><td colspan="2">-</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | EpRebootAgt      |    | 重启智慧中心                          |
+| Partial URL         | api.EpRebootAgt  | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | EpRebootAgt                     |
+|                     | **params**       |    |                                 |
+|                     | &emsp;`agt`      | Y  | 欲操作的智慧中心ID                      |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 4.5.13.2.范例
 
@@ -933,7 +1356,24 @@ APPKEr_xxxxxxxx, apptoken:APPToKEN XXXXXXXX
 
 # 4.5.14.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpGetAgtLatestVe rsion</td><td></td><td>获取智慧中心最新版本</td></tr><tr><td>Partial URI</td><td colspan="2">api.EpGetAgtLate stVersion</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="9">Request Content</td><td rowspan="9">system</td><td>ver</td><td>Y</td><td>0 1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey did</td><td>Y 0</td><td>appkey (可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td>time</td><td>Y</td><td>处必须填入相同id</td></tr><tr><td></td><td></td><td>UTC时间戳，自1970年1月1日起计算的时间，单 位为秒</td></tr><tr><td>method</td><td>Y</td><td>EpGetAgtLatestVersion</td></tr><tr><td>params agt</td><td></td><td>欲查询的智慧中心ID</td></tr><tr><td colspan="2">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义                        | 必须 | 描述                              |
+|:--------------------|:--------------------------|:---|:--------------------------------|
+| Interface Name      | EpGetAgtLatestVersion     |    | 获取智慧中心最新版本                      |
+| Partial URL         | api.EpGetAgtLatestVersion | Y  |                                 |
+| Content Type        | application/json          | Y  |                                 |
+| HTTP Method         | POST                      | Y  |                                 |
+| **Request Content** | **system**                |    |                                 |
+|                     | &emsp;`ver`               | Y  | 1.0                             |
+|                     | &emsp;`lang`              | Y  | en                              |
+|                     | &emsp;`sign`              | Y  | 签名值                             |
+|                     | &emsp;`userid`            | Y  | User ID                         |
+|                     | &emsp;`appkey`            | Y  | appkey                          |
+|                     | &emsp;`did`               | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`              | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**                | Y  | EpGetAgtLatestVersion           |
+|                     | **params**                |    |                                 |
+|                     | &emsp;`agt`               | Y  | 欲查询的智慧中心ID                      |
+|                     | **id**                    | Y  | 消息id号                           |
 
 # 4.5.14.2.范例
 
@@ -975,7 +1415,25 @@ stableVersion当前稳定版本。若当前智慧中心版本号低于稳定版�
 
 # 4.5.15.1.JSON请求数据格式
 
-<table><tr><td colspan="3">Type Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">Epsearchsmart</td><td></td><td>获取智慧中心搜索到的附近其它智慧设备 当需要把其它wi-Fi类智慧设备，例如摄像 头、超级碗加入到智慧中心下面，需要先执行 这个接口，再调用EpAddsmart接口把搜索到 的wi-Fi智慧设备添加到智慧中心下面。</td></tr><tr><td>Partial URL</td><td colspan="2">api.Epsearchsmar t</td><td></td><td></td></tr><tr><td>Content Type HTTP Method</td><td colspan="2">application/json POST</td><td></td><td></td></tr><tr><td></td><td colspan="2"></td><td>Y</td><td></td></tr><tr><td rowspan="9">Request Content</td><td rowspan="9">system</td><td>ver lang</td><td>1.0 Y en</td><td></td></tr><tr><td>sign</td><td></td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>did</td><td>0</td><td>(可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td>time</td><td>Y</td><td>处必须填入相同id UTC时间戳，自1970年1月1日起计算的时间,单</td></tr><tr><td>method</td><td>Y</td><td>位为秒 EpSearchsmart</td></tr><tr><td>agt -</td><td>Y</td><td>欲查询的智慧中心ID</td></tr><tr><td>mode</td><td>Y</td><td>查询模式，可以填写：&quot;notexist&quot;/&quot;auto&quot; notexist表示仅返回搜索到的还未添加到智 慧中心下面的附近智慧设备；</td></tr><tr><td>id</td><td></td><td>Y</td><td>auto表示返回所有搜索到的附近智慧设备； 消息id号</td></tr></table>
+| 类型                  | 定义                | 必须 | 描述                                                                                                       |
+|:--------------------|:------------------|:---|:---------------------------------------------------------------------------------------------------------|
+| Interface Name      | EpSearchSmart     |    | 获取智慧中心搜索到的附近其它智慧设备。当需要把其它wi-Fi类智慧设备，例如摄像头、超级碗加入到智慧中心下面，需要先执行这个接口，再调用EpAddSmart接口把搜索到的wi-Fi智慧设备添加到智慧中心下面。 |
+| Partial URL         | api.EpSearchSmart | Y  |                                                                                                          |
+| Content Type        | application/json  | Y  |                                                                                                          |
+| HTTP Method         | POST              | Y  |                                                                                                          |
+| **Request Content** | **system**        |    |                                                                                                          |
+|                     | &emsp;`ver`       | Y  | 1.0                                                                                                      |
+|                     | &emsp;`lang`      | Y  | en                                                                                                       |
+|                     | &emsp;`sign`      | Y  | 签名值                                                                                                      |
+|                     | &emsp;`userid`    | Y  | User ID                                                                                                  |
+|                     | &emsp;`appkey`    | Y  | appkey                                                                                                   |
+|                     | &emsp;`did`       | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                                                          |
+|                     | &emsp;`time`      | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                                             |
+|                     | **method**        | Y  | EpSearchSmart                                                                                            |
+|                     | **params**        |    |                                                                                                          |
+|                     | &emsp;`agt`       | Y  | 欲查询的智慧中心ID                                                                                               |
+|                     | &emsp;`mode`      | Y  | 查询模式，可以填写："notexist"/"auto"。"notexist"表示仅返回搜索到的还未添加到智慧中心下面的附近智慧设备；"auto"表示返回所有搜索到的附近智慧设备                 |
+|                     | **id**            | Y  | 消息id号                                                                                                    |
 
 # 4.5.15.2.范例
 
@@ -1017,7 +1475,27 @@ $\star$ name 被搜索到的智慧设置的名称；
 
 # 4.5.16.1.JSON请求数据格式
 
-<table><tr><td></td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Type Interface Name</td><td colspan="2">EpAddsmart</td><td></td><td>把搜索到的附近智慧设备添加到智慧中心，需 要先执行EpSearchSmart操作获取搜索到的 附近智慧设备列表，才能执行添加操作。具体</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpAddsmart</td><td></td><td>请参考EpSearchsmart接口说明。</td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td></td><td colspan="2">ver</td><td>Y</td><td>1.0</td></tr><tr><td rowspan="12">Request Content</td><td rowspan="6">system</td><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>did</td><td>0</td><td>(可选)终端唯一id。如果在授权时填入了，此 处必须填入相同id</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起计算的时间,单 位为秒</td></tr><tr><td colspan="2">method</td><td>Y</td><td>EpAddsmart</td></tr><tr><td colspan="2">agt 1sid ■</td><td>Y</td><td>智慧中心ID</td></tr><tr><td colspan="2">params</td><td>Y</td><td>欲添加的智慧设备的LifeSmartUuID，从 EpSearchSmart接口返回的智慧设备信息中 获取。</td></tr><tr><td colspan="2">ip name</td><td>Y</td><td>欲添加的智慧设备的IP，从EpSearchSmart 接口返回的智慧设备信息中获取。</td></tr><tr><td colspan="2"></td><td>Y</td><td>欲添加的智慧设备的名称，可以自行命名，并 非一定要等于EpSearchSmart接口返回智慧 设备的名称。</td></tr><tr><td colspan="3">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                                                                                     |
+|:--------------------|:-----------------|:---|:---------------------------------------------------------------------------------------|
+| Interface Name      | EpAddSmart       |    | 把搜索到的附近智慧设备添加到智慧中心，需要先执行EpSearchSmart操作获取搜索到的附近智慧设备列表，才能执行添加操作。具体请参考EpSearchSmart接口说明。 |
+| Partial URL         | api.EpAddSmart   | Y  |                                                                                        |
+| Content Type        | application/json | Y  |                                                                                        |
+| HTTP Method         | POST             | Y  |                                                                                        |
+| **Request Content** | **system**       |    |                                                                                        |
+|                     | &emsp;`ver`      | Y  | 1.0                                                                                    |
+|                     | &emsp;`lang`     | Y  | en                                                                                     |
+|                     | &emsp;`sign`     | Y  | 签名值                                                                                    |
+|                     | &emsp;`userid`   | Y  | User ID                                                                                |
+|                     | &emsp;`appkey`   | Y  | appkey                                                                                 |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                                        |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                           |
+|                     | **method**       | Y  | EpAddSmart                                                                             |
+|                     | **params**       |    |                                                                                        |
+|                     | &emsp;`agt`      | Y  | 智慧中心ID                                                                                 |
+|                     | &emsp;`lsid`     | Y  | 欲添加的智慧设备的LifeSmartUUID，从EpSearchSmart接口返回的智慧设备信息中获取。                                   |
+|                     | &emsp;`ip`       | Y  | 欲添加的智慧设备的IP，从EpSearchSmart接口返回的智慧设备信息中获取。                                              |
+|                     | &emsp;`name`     | Y  | 欲添加的智慧设备的名称，可以自行命名，并非一定要等于EpSearchSmart接口返回智慧设备的名称。                                    |
+|                     | **id**           | Y  | 消息id号                                                                                  |
 
 # 4.5.16.2.范例
 
@@ -1061,7 +1539,24 @@ me”属性值。若该设备已经存在与智慧中心下面，即已经被添
 
 ![](images/965a61c7dee720f70444d00081e83f0b15d069db26700209f4a0914f04d58e8a.jpg)
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Mus t</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpGetAgtState</td><td></td><td>获取智慧中心状态</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpGetAgtState</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="9">Request Content</td><td rowspan="9">system</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey did</td><td>Y</td><td>appkey (可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td>time</td><td>Y</td><td>处必须填入相同id</td></tr><tr><td></td><td></td><td>UTC时间戳，自1970年1月1日起计算的时间，单 位为秒</td></tr><tr><td>method</td><td>Y</td><td>EpGetAgtState</td></tr><tr><td>params agt</td><td>Y</td><td>智慧设备ID</td></tr><tr><td colspan="2">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义                | 必须 | 描述                              |
+|:--------------------|:------------------|:---|:--------------------------------|
+| Interface Name      | EpGetAgtState     |    | 获取智慧中心状态                        |
+| Partial URL         | api.EpGetAgtState | Y  |                                 |
+| Content Type        | application/json  | Y  |                                 |
+| HTTP Method         | POST              | Y  |                                 |
+| **Request Content** | **system**        |    |                                 |
+|                     | &emsp;`ver`       | Y  | 1.0                             |
+|                     | &emsp;`lang`      | Y  | en                              |
+|                     | &emsp;`sign`      | Y  | 签名值                             |
+|                     | &emsp;`userid`    | Y  | User ID                         |
+|                     | &emsp;`appkey`    | Y  | appkey                          |
+|                     | &emsp;`did`       | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`      | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**        | Y  | EpGetAgtState                   |
+|                     | **params**        |    |                                 |
+|                     | &emsp;`agt`       | Y  | 智慧设备ID                          |
+|                     | **id**            | Y  | 消息id号                           |
 
 # 4.5.17.2.范例
 
@@ -1117,7 +1612,27 @@ APPKEy_xxxxxxxx,apptoken:APPTOK EN_XXXXXXXX
 
 # 4.5.18.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Mus t</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpCmd</td><td></td><td>控制设备(高级命令)</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpCmd</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td></td><td rowspan="5">lang</td><td>ver</td><td>Y Y</td><td>0 1.0</td></tr><tr><td></td><td></td><td>en 签名值 -</td><td></td></tr><tr><td></td><td>sign</td><td>Y Y</td><td></td></tr><tr><td>userid system</td><td></td><td>User</td><td>TD</td></tr><tr><td>appkey did</td><td>Y</td><td>appkey</td><td>(可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td rowspan="8">Request Content</td><td rowspan="3"></td><td></td><td>0</td><td>处必须填入相同id</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起计算的时间，单 位为秒</td></tr><tr><td colspan="2">method</td><td>Y</td><td>EpCmd</td></tr><tr><td rowspan="5">params ■</td><td>agt</td><td>Y</td><td>智慧中心ID</td></tr><tr><td>me</td><td>Y</td><td>设备ID</td></tr><tr><td>cmd</td><td>Y</td><td>命令</td></tr><tr><td>cmdargs</td><td></td><td>命令参数，为JSON格式对象的序列化字符串</td></tr><tr><td>-</td><td>Y</td><td></td></tr><tr><td colspan="2">id</td><td></td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | EpCmd            |    | 控制设备(高级命令)                      |
+| Partial URL         | api.EpCmd        | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | EpCmd                           |
+|                     | **params**       |    |                                 |
+|                     | &emsp;`agt`      | Y  | 智慧中心ID                          |
+|                     | &emsp;`me`       | Y  | 设备ID                            |
+|                     | &emsp;`cmd`      | Y  | 命令                              |
+|                     | &emsp;`cmdargs`  | O  | 命令参数，为JSON格式对象的序列化字符串           |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 4.5.18.2.范例
 
@@ -1151,13 +1666,36 @@ EpSet命令一般用于控制设备的属性，属性可以是一个或者多个
 
 具体的指令如下：
 
-<table><tr><td>指令Directive</td><td>设备</td><td>Description</td></tr><tr><td>cmd:&quot;audio&quot;, cmdargs: { adcmd:play&quot;, id:5, opt:{ vol: 95, loop: 2, clear: True, led: True, mute: False cmd:&quot;audio&quot;, cmdargs:{ adcmd: &quot;stop&quot;,</td><td>智慧中心 (MINI)设备 云视·户外摄 像头</td><td>用于控制智慧中心(MINI)设备的报警音播放。 cmd参数请务必填写&quot;audio&quot;; cmdargs参数是JOsN对象的序列化字符串。 其内容如下: •adcmd指明动作类型，有如下值： &quot;play&quot;：开启声音播放 &quot;stop&quot;：停止声音播放 若为停止声音播放，则不需要其它参数。 •id指明播放的声音序号，当前一共有7个声音 序号，其值取值为：[1，7]。 •opt是操作选项，对于play动作类型来说, 有如下属性： vol：指明播放的音量，其取值范围为： [50，100]，值越大声音越响。 loop：指明播放的次数。 clear：指明是否清除正在播放的声音, 开启本次新的声音播放，若值为false则原先正在 播放的声音会与新的声音一起播放。 led：是否开启户外摄像头LED闪烁警 报。 mute：是否静音，一般与led一起使用, 若想只开启LED闪烁而没有声音警报，则可以设置 该参数为rrue。 注：led与mute参数是云视·户外摄像头才有的属</td></tr></table>
+| 指令Directive                                                                                                                                                                                                                                                                                                  | 设备                        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| cmd:"audio"<br/>cmdargs: {<br/>&emsp;adcmd:"play",<br/>&emsp;id:5,<br/>&emsp;opt:{<br/>&emsp;&emsp;vol: 95,<br/>&emsp;&emsp;loop: 2,<br/>&emsp;&emsp;clear: true,<br/>&emsp;&emsp;led: true,<br/>&emsp;&emsp;mute: false<br/>&emsp;}<br/>}<br/><br/>cmd:"audio"<br/>cmdargs: {<br/>&emsp;adcmd: "stop"<br/>} | 智慧中心(MINI)设备<br/>云视·户外摄像头 | 用于控制智慧中心(MINI)设备的报警音播放。<br/>cmd参数请务必填写"audio"；<br/>cmdargs参数是JSON对象的序列化字符串。<br/>其内容如下：<br/>• adcmd指明动作类型，有如下值：<br/>&emsp;"play"：开启声音播放<br/>&emsp;"stop"：停止声音播放<br/>&emsp;若为停止声音播放，则不需要其它参数。<br/>• id指明播放的声音序号，当前一共有7个声音序号，其值取值为：[1,7]。<br/>• opt是操作选项，对于play动作类型来说，有如下属性：<br/>&emsp;vol：指明播放的音量，其取值范围为：[50,100]，值越大声音越响。<br/>&emsp;loop：指明播放的次数。<br/>&emsp;clear：指明是否清除正在播放的声音，开启本次新的声音播放，若值为false则原先正在播放的声音会与新的声音一起播放。<br/>&emsp;led：是否开启户外摄像头LED闪烁警报。<br/>&emsp;mute：是否静音，一般与led一起使用，若想只开启LED闪烁而没有声音警报，则可以设置该参数为true。<br/>注：led与mute参数是云视·户外摄像头才有的属性。 |
 
 # 4.5.19.EpSetVar 控制设备(低级命令)
 
 # 4.5.19.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Mus t</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpSetvar</td><td></td><td>控制设备(低级命令)</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpsetVar</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="11">Request Content</td><td rowspan="8">system</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User 1D</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>did</td><td></td><td>(可选)终端唯一id。如果在授权时填入了，此 处必须填入相同id</td></tr><tr><td>time</td><td></td><td>UTC时间戳，自1970年1月1日起计算的时间，单 位为秒</td></tr><tr><td>method</td><td>Y</td><td>EpSetVar</td></tr><tr><td rowspan="5">params -</td><td>agt</td><td>Y</td><td>智慧中心ID</td></tr><tr><td>me</td><td>Y</td><td>设备ID</td></tr><tr><td>$idx</td><td>Y</td><td>索引号Number类型</td></tr><tr><td>cmd</td><td>Y</td><td>命令号 Number类型</td></tr><tr><td>cmddata</td><td>Y</td><td>命令数据，为JSON数组的序列化字符串， JSON数组成员值为Byte类型</td></tr><tr><td colspan="2">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                                   |
+|:--------------------|:-----------------|:---|:-------------------------------------|
+| Interface Name      | EpSetVar         |    | 控制设备(低级命令)                           |
+| Partial URL         | api.EpSetVar     | Y  |                                      |
+| Content Type        | application/json | Y  |                                      |
+| HTTP Method         | POST             | Y  |                                      |
+| **Request Content** | **system**       |    |                                      |
+|                     | &emsp;`ver`      | Y  | 1.0                                  |
+|                     | &emsp;`lang`     | Y  | en                                   |
+|                     | &emsp;`sign`     | Y  | 签名值                                  |
+|                     | &emsp;`userid`   | Y  | User ID                              |
+|                     | &emsp;`appkey`   | Y  | appkey                               |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id      |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒         |
+|                     | **method**       | Y  | EpSetVar                             |
+|                     | **params**       |    |                                      |
+|                     | &emsp;`agt`      | Y  | 智慧中心ID                               |
+|                     | &emsp;`me`       | Y  | 设备ID                                 |
+|                     | &emsp;`idx`      | Y  | 索引号Number类型                          |
+|                     | &emsp;`cmd`      | Y  | 命令号Number类型                          |
+|                     | &emsp;`cmddata`  | Y  | 命令数据，为JSON数组的序列化字符串，JSON数组成员值为Byte类型 |
+|                     | **id**           | Y  | 消息id号                                |
 
 # 4.5.19.2.范例
 
@@ -1195,7 +1733,9 @@ EpSetVar命令是低级命令，可以对设备完成一些比较低级别的设
 
 当前EpSetVar指令有：
 
-<table><tr><td>指令Directive</td><td>设备</td><td>Description</td></tr><tr><td>idx: 129, cmd：0, cmddata：[0，0，0] 一</td><td>计量插座</td><td>用于清除计量插座的累计用电量。 注意：清零之后直接去查询累计电量仍然存在， 不会马上生效，需要等待下一次变化上报周期到 来才会生效，一般需要等待几分钟。</td></tr></table>
+| 指令Directive                              | 设备   | Description                                                                    |
+|:-----------------------------------------|:-----|:-------------------------------------------------------------------------------|
+| idx: 129<br/>cmd: 0<br/>cmddata: [0,0,0] | 计量插座 | 用于清除计量插座的累计用电量。<br/>注意：清零之后直接去查询累计电量仍然存在，不会马上生效，需要等待下一次变化上报周期到来才会生效，一般需要等待几分钟。 |
 
 注：
 
@@ -1205,7 +1745,26 @@ EpSetVar命令是低级命令，可以对设备完成一些比较低级别的设
 
 # 4.5.20.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Mus t</td><td colspan="2">Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpGetAttrs</td><td></td><td>获取设备扩展属性</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpGetAttrs</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="9">Request Content</td><td rowspan="9">system</td><td>ver</td><td>Y</td><td>0 1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User</td></tr><tr><td>appkey did</td><td>Y 0</td><td>appkey (可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td>time -</td><td></td><td>处必须填入相同id</td></tr><tr><td></td><td>Y</td><td>UTC时间戳，自1970年1月1日起计算的时间，单 位为秒</td></tr><tr><td>method</td><td>Y Y</td><td>EpGetAttrs</td></tr><tr><td rowspan="2">params</td><td>agt</td><td></td><td>智慧中心ID</td></tr><tr><td>me</td><td>Y</td><td>设备ID</td></tr><tr><td>id</td><td>attrNames</td><td>Y</td><td>属性名称数组，为JSON数组的序列化字符串</td></tr><tr><td colspan="2"></td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义                | 必须 | 描述                              |
+|:--------------------|:------------------|:---|:--------------------------------|
+| Interface Name      | EpGetAttrs        |    | 获取设备扩展属性                        |
+| Partial URL         | api.EpGetAttrs    | Y  |                                 |
+| Content Type        | application/json  | Y  |                                 |
+| HTTP Method         | POST              | Y  |                                 |
+| **Request Content** | **system**        |    |                                 |
+|                     | &emsp;`ver`       | Y  | 1.0                             |
+|                     | &emsp;`lang`      | Y  | en                              |
+|                     | &emsp;`sign`      | Y  | 签名值                             |
+|                     | &emsp;`userid`    | Y  | User ID                         |
+|                     | &emsp;`appkey`    | Y  | appkey                          |
+|                     | &emsp;`did`       | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`      | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**        | Y  | EpGetAttrs                      |
+|                     | **params**        |    |                                 |
+|                     | &emsp;`agt`       | Y  | 智慧中心ID                          |
+|                     | &emsp;`me`        | Y  | 设备ID                            |
+|                     | &emsp;`attrNames` | Y  | 属性名称数组，为JSON数组的序列化字符串           |
+|                     | **id**            | Y  | 消息id号                           |
 
 # 4.5.20.2.范例
 
@@ -1253,7 +1812,26 @@ EpAdd) 接口 optarg 参数介绍 部分。
 
 # 4.5.21.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Mus t</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpTestRssi</td><td></td><td>测试射频设备信息强度</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpTestRssi</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td></td><td rowspan="5">lang</td><td>ver</td><td>Y Y</td><td>1.0</td></tr><tr><td></td><td></td><td>en 签名值</td><td></td></tr><tr><td></td><td>sign</td><td>Y Y</td><td></td></tr><tr><td>userid system</td><td>Y</td><td>User</td><td>TD</td></tr><tr><td>appkey did</td><td>0</td><td>appkey</td><td>(可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td rowspan="7">Request Content</td><td>time</td><td></td><td></td><td>处必须填入相同id</td></tr><tr><td></td><td></td><td></td><td>UTC时间戳，自1970年1月1日起计算的时间,单 位为秒</td></tr><tr><td rowspan="4">method</td><td>agt</td><td>Y Y</td><td>EpTestRssi 智慧中心ID</td></tr><tr><td>me params</td><td>N</td><td>设备ID，如果设备ID为空，则表示测试智慧中</td></tr><tr><td>args</td><td>N</td><td>心的射频信号强度</td></tr><tr><td></td><td></td><td>扩展属性，为JSON对象的序列化字符串，当前 不需要填写</td></tr><tr><td>id</td><td></td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | EpTestRssi       |    | 测试射频设备信号强度                      |
+| Partial URL         | api.EpTestRssi   | Y  |                                 |
+| Content Type        | application/json | Y  |                                 |
+| HTTP Method         | POST             | Y  |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | EpTestRssi                      |
+|                     | **params**       |    |                                 |
+|                     | &emsp;`agt`      | Y  | 智慧中心ID                          |
+|                     | &emsp;`me`       | N  | 设备ID，如果设备ID为空，则表示测试智慧中心的射频信号强度  |
+|                     | &emsp;`args`     | N  | 扩展属性，为JSON对象的序列化字符串，当前不需要填写     |
+|                     | **id**           | Y  | 消息id号                           |
 
 该接口获取测试射频设备的信号强度，它仅仅用于现场环境的调试与维护，并非正常使用场景下的接口。
 
@@ -1324,9 +1902,29 @@ signal}signal属性指明智慧中心当前的射频信号强度。其值越大�
 
 该接口会在内部进行优化处理，减少设备处理命令的时间，保证让用户拥有良好的体验。并且该接口支持三种不同速度等级的操作，分别应用于不同的场景需求。
 
-<table><tr><td colspan="4">Type Definition</td><td>Mus t</td><td colspan="3">Description</td></tr><tr><td>Interface</td><td colspan="3">EpBatchset</td><td></td><td colspan="2">批量快速设置同一个智慧中心下的设备属性</td></tr><tr><td>Name Partial URL</td><td colspan="3">api.EpBatchset</td><td></td><td colspan="2"></td></tr><tr><td>Content Type HTTP Method</td><td colspan="3">application/json POST</td><td></td><td colspan="2"></td></tr><tr><td rowspan="10">Request Content</td><td rowspan="10">system</td><td colspan="2">ver</td><td>Y</td><td colspan="2">1.0</td></tr><tr><td colspan="2">lang</td><td>Y</td><td colspan="2">en</td></tr><tr><td colspan="2">sign Y</td><td></td><td colspan="2">签名值</td></tr><tr><td colspan="2">userid</td><td>Y</td><td colspan="2">User ID</td></tr><tr><td colspan="2">appkey</td><td>Y appkey</td><td colspan="2"></td></tr><tr><td colspan="2">did</td><td></td><td colspan="2">(可选)终端唯一id。如果在授权时填入了，此 处必须填入相同id</td></tr><tr><td colspan="2">time</td><td>Y</td><td colspan="2">UTC时间戳，自1970年1月1日起计算的时间,单 位为秒</td></tr><tr><td colspan="2">method agt</td><td>Y</td><td colspan="2">EpBatchSet</td></tr><tr><td colspan="2"></td><td></td><td>Y</td><td colspan="2">智慧中心ID ⅠO属性集合，为JSON数组的序列化字符串。 每条IO属性如下：</td></tr><tr><td rowspan="8"></td><td rowspan="6">params</td><td>ioItems</td><td>Y</td><td colspan="2">{ &quot;me&quot;：&quot;2711&quot;，：标识是哪个设备</td></tr><tr><td></td><td></td><td colspan="2">&quot;idx&quot;：&quot;L1&quot;，：标识设备的Io属性 &quot;type&quot;：0x81，：设置的属性类型 &quot;val&quot;：1：设置的属性值</td></tr><tr><td>speed</td><td>N</td><td colspan="2">速度等级，当前支持三种，分别为： ·o：正常(normal) ·1：快速(fast)</td></tr><tr><td></td><td></td><td colspan="2">·2：极速(extreme) 缺省为0。</td></tr><tr><td></td><td></td><td colspan="2"></td></tr><tr><td>retry</td><td>N</td><td colspan="2">详见后面描述。 重试次数，缺省为2。 在速度为normal、fast方式下才有效。 在由于射频通道拥塞命令执行超时再次尝试的 次数，取值范围为[0，5]。该属性为高级属 性，请谨慎使用。</td></tr></table>
-
-<table><tr><td rowspan="3"></td><td>at</td><td>checkIost N</td><td>是否检查ΙO状态，等于1表示检查ΙO状态。 在速度为normal、fast方式下才有效。 下发命令执行时是否先检查子设备已有的属性 值，若属性值与下发值相等则忽略命令。该属 性为高级属性，请谨慎使用。</td></tr><tr><td>uid</td><td>N</td><td>该次命令的唯一识别码。该参数的作用是用于 标识操作，如果短时间内下发两条相同uid属 性的操作，则第二条操作指令将直接返回EIGN</td></tr><tr><td colspan="2">id</td><td>Y</td><td>错误。这样可以防频繁下发重复指令。 消息id号</td></tr></table>
+| 类型                  | 定义                | 必须 | 描述                                                                               |
+|:--------------------|:------------------|:---|:---------------------------------------------------------------------------------|
+| Interface Name      | EpBatchSet        |    | 批量快速设置同一个智慧中心下的设备属性                                                              |
+| Partial URL         | api.EpBatchSet    | Y  |                                                                                  |
+| Content Type        | application/json  | Y  |                                                                                  |
+| HTTP Method         | POST              | Y  |                                                                                  |
+| **Request Content** | **system**        |    |                                                                                  |
+|                     | &emsp;`ver`       | Y  | 1.0                                                                              |
+|                     | &emsp;`lang`      | Y  | en                                                                               |
+|                     | &emsp;`sign`      | Y  | 签名值                                                                              |
+|                     | &emsp;`userid`    | Y  | User ID                                                                          |
+|                     | &emsp;`appkey`    | Y  | appkey                                                                           |
+|                     | &emsp;`did`       | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                                  |
+|                     | &emsp;`time`      | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                     |
+|                     | **method**        | Y  | EpBatchSet                                                                       |
+|                     | **params**        |    |                                                                                  |
+|                     | &emsp;`agt`       | Y  | 智慧中心ID                                                                           |
+|                     | &emsp;`ioItems`   | Y  | IO属性集合，为JSON数组的序列化字符串。每条IO属性如下：{ "me":"2711", "idx":"L1", "type":0x81, "val":1 } |
+|                     | &emsp;`speed`     | N  | 速度等级，当前支持三种：0-正常(normal)，1-快速(fast)，2-极速(extreme)，缺省为0                           |
+|                     | &emsp;`retry`     | N  | 重试次数，缺省为2。在速度为normal、fast方式下才有效。取值范围为[0,5]                                       |
+|                     | &emsp;`checkIost` | N  | 是否检查IO状态，等于1表示检查IO状态。在速度为normal、fast方式下才有效                                       |
+|                     | &emsp;`uid`       | N  | 该次命令的唯一识别码。防止频繁下发重复指令                                                            |
+|                     | **id**            | Y  | 消息id号                                                                            |
 
 # 4.5.22.2.范例
 
@@ -1389,13 +1987,35 @@ message.failedIoItems属性指明了执行失败的Items列表，若所有的ite
 
 # 4.5.22.3.speed参数说明
 
-<table><tr><td>参数值</td><td>参数描述</td></tr><tr><td></td><td>0 正常(normal) 为缺省方式。 按照正常方式执行命令，所有命令操作串行执行，并且需要等待上一条命令的反 馈结果之后再继续执行下一条命令。 由于需要等待每一条命令的反馈结果，因此子设备得到执行的时间也会变长，并 且用户感官体验上设备执行时间也长。 特点：【用户体验慢，接口执行时间长，保证准确性】 -</td></tr><tr><td>1</td><td>快速(fast) 先对子设备执行一遍不需要等待反馈结果快速下发，然后再执行一遍需要等待反 馈结果的正常下发。 第一遍保证大部分子设备快速得到执行机会，用户感官体验上会很快， 第二遍保证第一次快速执行过程中失败的命令再次得到执行，确保执行结果的准 确性。 由于执行了两次下发，整体命令执行总耗时最长，但第一遍快速下发很好的保证 了用户体验。</td></tr><tr><td>2</td><td>特点：【用户体验快，接口执行时间最长，保证准确性】 极速(extreme) 直接对子设备执行一遍不需要等待反馈结果的快速下发。 由于仅仅对子设备执行一遍快速下发，因此执行时间将最短。 但在子设备列表比较多的情况下，存在部分子设备执行失败的可能性。但该方式 仍然会保证大部分子设备执行是成功的，并且接口调用耗时最短。 特点：【用户体验快，接口执行时间短，不保证准确性】</td></tr></table>
+| 参数值 | 参数描述                                                                                                                                                                                                                         |
+|:----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0   | **正常(normal)** 为缺省方式。<br/>按照正常方式执行命令，所有命令操作串行执行，并且需要等待上一条命令的反馈结果之后再继续执行下一条命令。<br/>由于需要等待每一条命令的反馈结果，因此子设备得到执行的时间也会变长，并且用户感官体验上设备执行时间也长。<br/>**特点：【用户体验慢，接口执行时间长，保证准确性】**                                                      |
+| 1   | **快速(fast)**<br/>先对子设备执行一遍不需要等待反馈结果快速下发，然后再执行一遍需要等待反馈结果的正常下发。<br/>第一遍保证大部分子设备快速得到执行机会，用户感官体验上会很快，<br/>第二遍保证第一次快速执行过程中失败的命令再次得到执行，确保执行结果的准确性。<br/>由于执行了两次下发，整体命令执行总耗时最长，但第一遍快速下发很好的保证了用户体验。<br/>**特点：【用户体验快，接口执行时间最长，保证准确性】** |
+| 2   | **极速(extreme)**<br/>直接对子设备执行一遍不需要等待反馈结果的快速下发。<br/>由于仅仅对子设备执行一遍快速下发，因此执行时间将最短。<br/>但在子设备列表比较多的情况下，存在部分子设备执行失败的可能性。但该方式仍然会保证大部分子设备执行是成功的，并且接口调用耗时最短。<br/>**特点：【用户体验快，接口执行时间短，不保证准确性】**                                         |
 
 # 4.5.23.EpSearchIDev 获取智慧中心搜索到的附近IP网络设备
 
 # 4.5.23.1.JSON请求数据格式
 
-<table><tr><td colspan="3">Type Definition EpSearchIDev</td><td>Must</td><td>Description</td></tr><tr><td colspan="3">Interface Name</td><td></td><td>获取智慧中心搜索到的附近其它IP网络设备 当需要把其它wi-Fi类网络设备，例如IP摄像 头加入到智慧中心下面，需要先执行这个接 □，再调用EpAddIDev接口把搜索到的wi-Fi 网络设备添加到智慧中心下面。</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpSearchIDev</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="9">Request</td><td rowspan="9">system</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign Y</td><td></td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey Y</td><td>。</td><td>appkey</td></tr><tr><td>did</td><td></td><td>(可选)终端唯一id。如果在授权时填入了，此 处必须填入相同id</td></tr><tr><td></td><td>Y</td><td>位时间戳，自1970年1月1日起 计算的时间,单</td></tr><tr><td>method</td><td>Y Y</td><td>EpSearchIDev</td></tr><tr><td>agt mode ■ params</td><td>Y</td><td>欲查询的智慧中心ID 查询模式，可以填写：&quot;notexist&quot;/&quot;auto&quot;</td></tr><tr><td colspan="2">id</td><td>Y</td><td>慧中心下面的附近网络设备； auto表示返回所有搜索到的附近网络设备； 消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                                                                                                      |
+|:--------------------|:-----------------|:---|:--------------------------------------------------------------------------------------------------------|
+| Interface Name      | EpSearchIDev     |    | 获取智慧中心搜索到的附近其它IP网络设备。当需要把其它wi-Fi类网络设备，例如IP摄像头加入到智慧中心下面，需要先执行这个接口，再调用EpAddIDev接口把搜索到的wi-Fi网络设备添加到智慧中心下面。 |
+| Partial URL         | api.EpSearchIDev | Y  |                                                                                                         |
+| Content Type        | application/json | Y  |                                                                                                         |
+| HTTP Method         | POST             | Y  |                                                                                                         |
+| **Request Content** | **system**       |    |                                                                                                         |
+|                     | &emsp;`ver`      | Y  | 1.0                                                                                                     |
+|                     | &emsp;`lang`     | Y  | en                                                                                                      |
+|                     | &emsp;`sign`     | Y  | 签名值                                                                                                     |
+|                     | &emsp;`userid`   | Y  | User ID                                                                                                 |
+|                     | &emsp;`appkey`   | Y  | appkey                                                                                                  |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                                                         |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                                            |
+|                     | **method**       | Y  | EpSearchIDev                                                                                            |
+|                     | **params**       |    |                                                                                                         |
+|                     | &emsp;`agt`      | Y  | 欲查询的智慧中心ID                                                                                              |
+|                     | &emsp;`mode`     | Y  | 查询模式，可以填写："notexist"/"auto"。"notexist"表示仅返回搜索到的还未添加到智慧中心下面的附近网络设备；"auto"表示返回所有搜索到的附近网络设备                |
+|                     | **id**           | Y  | 消息id号                                                                                                   |
 
 # 4.5.23.2.范例
 
@@ -1460,9 +2080,36 @@ $\star$ defPwd搜索到的网络设备的缺省登录账号密码；
 
 # 4.5.24.EpAddIDev 把搜索到的附近IP网络设备添加到智慧中心
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpAddIDev</td><td></td><td>把搜索到的附近IP网络设备添加到智慧中心， 需要先执行EpSearchIDev操作获取搜索到的 附近网络设备列表，才能执行添加操作。具体</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpAddIDev</td><td></td><td>请参考EpSearchIDev接口说明。</td></tr><tr><td>Content Type</td><td colspan="2">application/json POST</td><td></td><td></td></tr><tr><td rowspan="12">HTTP Method Request Content</td><td rowspan="6">system</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey Y</td><td>appkey</td><td></td></tr><tr><td colspan="2">did</td><td>(可选)终端唯一id。如果在授权时填入了，此 处必须填入相同id</td></tr><tr><td>method</td><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起计算的时间,单 位为秒</td></tr><tr><td></td><td>agt</td><td>Y Y</td><td>EpAddIDev</td></tr><tr><td rowspan="8">-</td><td rowspan="8"></td><td></td><td></td><td>智慧中心ID</td></tr><tr><td>uuid</td><td>Y</td><td>欲添加的网络设备的uuID，从EpSearchIDev 接口返回的网络设备信息中获取。</td></tr><tr><td></td><td>Y</td><td>欲添加的网络设备的设备类型，从EpSearch IDev接口返回的网络设备信息中获取。</td></tr><tr><td></td><td>Y</td><td>欲添加的网络设备的Host，从EpSearchIDev</td></tr><tr><td></td><td>Y</td><td>接口返回的络设备信息中获取。 欲添加的网络设备的Port，从EpSearchIDev</td></tr><tr><td>name</td><td>Y</td><td>接口返回的网络设备信息中获取。 欲添加的网络设备的名称，可以自行命名，并</td></tr><tr><td></td><td></td><td>非一定要等于EpSearchIDev接口返回网络设</td></tr><tr><td></td><td></td><td>备的名称。</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                                                                                     |
+|:--------------------|:-----------------|:---|:---------------------------------------------------------------------------------------|
+| Interface Name      | EpAddIDev        |    | 把搜索到的附近IP网络设备添加到智慧中心，需要先执行EpSearchIDev操作获取搜索到的附近网络设备列表，才能执行添加操作。具体请参考EpSearchIDev接口说明。 |
+| Partial URL         | api.EpAddIDev    | Y  |                                                                                        |
+| Content Type        | application/json | Y  |                                                                                        |
+| HTTP Method         | POST             | Y  |                                                                                        |
+| **Request Content** | **system**       |    |                                                                                        |
+|                     | &emsp;`ver`      | Y  | 1.0                                                                                    |
+|                     | &emsp;`lang`     | Y  | en                                                                                     |
+|                     | &emsp;`sign`     | Y  | 签名值                                                                                    |
+|                     | &emsp;`userid`   | Y  | User ID                                                                                |
+|                     | &emsp;`appkey`   | Y  | appkey                                                                                 |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                                        |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                           |
+|                     | **method**       | Y  | EpAddIDev                                                                              |
+|                     | **params**       |    |                                                                                        |
+|                     | &emsp;`agt`      | Y  | 智慧中心ID                                                                                 |
+|                     | &emsp;`uuid`     | Y  | 欲添加的网络设备的uuID，从EpSearchIDev接口返回的网络设备信息中获取。                                             |
+|                     | &emsp;`devType`  | Y  | 欲添加的网络设备的设备类型，从EpSearchIDev接口返回的网络设备信息中获取。                                             |
+|                     | &emsp;`host`     | Y  | 欲添加的网络设备的Host，从EpSearchIDev接口返回的网络设备信息中获取。                                             |
+|                     | &emsp;`port`     | Y  | 欲添加的网络设备的Port，从EpSearchIDev接口返回的网络设备信息中获取。                                             |
+|                     | &emsp;`name`     | Y  | 欲添加的网络设备的名称，可以自行命名，并非一定要等于EpSearchIDev接口返回网络设备的名称。                                     |
 
-<table><tr><td rowspan="2"></td><td rowspan="2">params</td><td>user O</td><td>号，则可以不填写。</td><td>欲添加的网络设备的登录账号，若用户修改了 登录账号，则这里必须填写修改的登录账号， 否则智慧中心将不能正确连接网络设备。若用 户没有修改登录账号则根据EpSearchIDev接 □返回的信息，填写缺省登录账号 (defUser)，若搜索接口没有返回缺省登录账</td></tr><tr><td>pwd</td><td>O</td><td>欲添加的网络设备的登录密码，若用户修改了 登录密码，则这里必须填写修改的登录密码， 否则智慧中心将不能正确连接网络设备。若用 户没有修改登录密码则根据EpSearchIDev接 口返回的信息，填写缺省登录密码 (defPwd)，若搜索接口没有返回缺省登录密</td></tr><tr><td>id</td><td colspan="2"></td><td>Y</td><td>码，则可以不填写。 消息id号</td></tr></table>
+| | &emsp;`user`       | O |
+欲添加的网络设备的登录账号，若用户修改了登录账号，则这里必须填写修改的登录账号，否则智慧中心将不能正确连接网络设备。若用户没有修改登录账号则根据EpSearchIDev接口返回的信息，填写缺省登录账号(
+defUser)，若搜索接口没有返回缺省登录账号，则可以不填写。 |
+| | &emsp;`pwd`        | O |
+欲添加的网络设备的登录密码，若用户修改了登录密码，则这里必须填写修改的登录密码，否则智慧中心将不能正确连接网络设备。若用户没有修改登录密码则根据EpSearchIDev接口返回的信息，填写缺省登录密码(
+defPwd)，若搜索接口没有返回缺省登录密码，则可以不填写。 |
+| | **id**             | Y | 消息id号 |
 
 # 4.5.24.2.范例
 
@@ -1504,9 +2151,34 @@ me”属性值。若该设备已经存在与智慧中心下面，即已经被添
 
 # 4.5.25.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td>Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td>EpMaintOtaFiles</td><td></td><td>查看或维护智慧中心上可供子设备升级固件版 本使用的OTA文件列表</td></tr><tr><td>Partial URL</td><td>api.EpMaintOtaFi les</td><td></td><td></td></tr><tr><td>Content Type</td><td>application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td>POST</td><td></td><td></td></tr><tr><td rowspan="20"></td><td rowspan="8"></td><td>ver Y</td><td>1.0</td><td></td></tr><tr><td>lang Y</td><td>en</td><td></td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey -</td><td>Y appkey</td><td></td></tr><tr><td>did</td><td></td><td>(可选)终端唯一id。如果在授权时填入了，此 处必须填入相同id</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起计算的时间，单 位为秒</td></tr><tr><td></td><td></td><td></td></tr><tr><td>method agt</td><td>Y Y</td><td>EpMaintOtaFiles 智慧中心ID</td></tr><tr><td rowspan="8"></td><td></td><td>Y</td><td>操作指令，类型为字符串，当前可以为如下： ·AddByUrl：告知URL地址，下载oTA文件到</td></tr><tr><td>act ■ -</td><td></td><td>智慧中心；</td></tr><tr><td></td><td></td><td>•AddByBin：直接提供oTA文件的原始数据给 智慧中心； •Query：查询oTA文件信息 •Remove：删除oTA文件 •QueryAvailableEps：查询可以使用该</td></tr></table>
+| 类型                  | 定义                  | 必须 | 描述                                                                                                                                                                              |
+|:--------------------|:--------------------|:---|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Interface Name      | EpMaintOtaFiles     |    | 查看或维护智慧中心上可供子设备升级固件版本使用的OTA文件列表                                                                                                                                                 |
+| Partial URL         | api.EpMaintOtaFiles | Y  |                                                                                                                                                                                 |
+| Content Type        | application/json    | Y  |                                                                                                                                                                                 |
+| HTTP Method         | POST                | Y  |                                                                                                                                                                                 |
+| **Request Content** | **system**          |    |                                                                                                                                                                                 |
+|                     | &emsp;`ver`         | Y  | 1.0                                                                                                                                                                             |
+|                     | &emsp;`lang`        | Y  | en                                                                                                                                                                              |
+|                     | &emsp;`sign`        | Y  | 签名值                                                                                                                                                                             |
+|                     | &emsp;`userid`      | Y  | User ID                                                                                                                                                                         |
+|                     | &emsp;`appkey`      | Y  | appkey                                                                                                                                                                          |
+|                     | &emsp;`did`         | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                                                                                                                                 |
+|                     | &emsp;`time`        | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                                                                                                                    |
+|                     | **method**          | Y  | EpMaintOtaFiles                                                                                                                                                                 |
+|                     | **params**          |    |                                                                                                                                                                                 |
+|                     | &emsp;`agt`         | Y  | 智慧中心ID                                                                                                                                                                          |
+|                     | &emsp;`act`         | Y  | 操作指令，类型为字符串，当前可以为如下：<br/>•AddByUrl：告知URL地址，下载OTA文件到智慧中心；<br/>•AddByBin：直接提供OTA文件的原始数据给智慧中心；<br/>•Query：查询OTA文件信息<br/>•Remove：删除OTA文件<br/>•QueryAvailableEps：查询可以使用该OTA文件升级的设备列表 |
 
-<table><tr><td>Request Content</td><td>params</td><td>actargs</td><td>O</td><td>操作指令参数，数据为JSON对象的序列化字符 串。操作指令参数与操作指令一—对应，定义 如下： •AddByurl：{key，url}，url参数指明可 被下载的oTA文件的地址，url必须为HTTP 或HTTPS协议；key为可选参数，若不提供 key则key为url提供的下载地址中的文件名 称，请谨慎使用key参数，key参数的命名必 须正确，否则升级将可能失败，若无必要， 无需设置key参数，使用缺省名称即可。 •AddByBin: {keY, cont}，key指明该 OTA文件的标识，不同于AddByUrl，这里 key必须提供，不能为空，cont指明oTA文 件内容，为便在JsON中传输，Cont为原始</td></tr><tr><td colspan="4"></td><td>OTA文件的标准Base64编码； •Query：actargs可以不用提供; •Remove：{keys}，keys指明需要移除的 OTa文件，若keys=true则表明删除该智慧 中心下所有的oTA文件，若keys=[&quot;key1&quot;， &quot;key2&quot;]则表示批量删除数组指明的oTA文 件集，若keys=&quot;keyl&quot;则表示删除特定的 OTA文件; • QueryAvailableEps: {keys}, keys指 明需要查询的OTA文件列表，其值为字符串数 组，指明需要查询的OTA文件列表，若不指明 keys则表示查该询智慧中心下所有的oTA文 件。 消息id号</td></tr></table>
+| | &emsp;`actargs`    | O | 操作指令参数，数据为JSON对象的序列化字符串。操作指令参数与操作指令一一对应，定义如下：<br/>
+•AddByUrl：{key，url}，url参数指明可被下载的OTA文件的地址，url必须为HTTP或HTTPS协议；key为可选参数，若不提供key则key为url提供的下载地址中的文件名称，请谨慎使用key参数，key参数的命名必须正确，否则升级将可能失败，若无必要，无需设置key参数，使用缺省名称即可。<br/>
+•AddByBin: {key,
+cont}，key指明该OTA文件的标识，不同于AddByUrl，这里key必须提供，不能为空，cont指明OTA文件内容，为便在JSON中传输，Cont为原始OTA文件的标准Base64编码；<br/>
+•Query：actargs可以不用提供;<br/>
+•Remove：{keys}，keys指明需要移除的OTA文件，若keys=true则表明删除该智慧中心下所有的OTA文件，若keys=["key1", "key2"]
+则表示批量删除数组指明的OTA文件集，若keys="key1"则表示删除特定的OTA文件;<br/>•QueryAvailableEps: {keys},
+keys指明需要查询的OTA文件列表，其值为字符串数组，指明需要查询的OTA文件列表，若不指明keys则表示查询智慧中心下所有的OTA文件。 |
+| | **id**             | Y | 消息id号 |
 
 # 4.5.25.2.范例
 
@@ -1556,9 +2228,32 @@ n:APPTOKEN_XXXXXXXX
 
 # 4.5.26.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpMaintOtaTasks</td><td></td><td>查看或维护智慧中心上当前子设备正在执行 OTA升级的任务列表</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpMaintOtaTa sks</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td>Request</td><td rowspan="5">lang</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td></td><td>Y</td><td>en</td><td></td></tr><tr><td>sign</td><td></td><td>Y 签名值</td><td></td></tr><tr><td>userid system</td><td>Y</td><td>User ID</td><td></td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td><td></td></tr><tr><td rowspan="2"></td><td>did</td><td></td><td>处必须填入相同id</td><td>(可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td>time</td><td>Y</td><td>位为秒</td><td>UTC时间戳，自1970年1月1日起计算的时间，单</td></tr><tr><td>method</td><td colspan="2">agt</td><td>Y</td><td>EpMaintOtaTasks</td></tr><tr><td rowspan="2">-</td><td>act</td><td></td><td>Y Y</td><td>智慧中心ID 操作指令，类型为字符串，当前可以为如下：</td></tr><tr><td></td><td></td><td>·Query：查询oTA任务信息 •Remove：删除已经完成的oTA任务 •Add：新建oTA升级任务</td><td></td></tr></table>
+| 类型                  | 定义                  | 必须 | 描述                                                                                    |
+|:--------------------|:--------------------|:---|:--------------------------------------------------------------------------------------|
+| Interface Name      | EpMaintOtaTasks     |    | 查看或维护智慧中心上当前子设备正在执行OTA升级的任务列表                                                         |
+| Partial URL         | api.EpMaintOtaTasks | Y  |                                                                                       |
+| Content Type        | application/json    | Y  |                                                                                       |
+| HTTP Method         | POST                | Y  |                                                                                       |
+| **Request Content** | **system**          |    |                                                                                       |
+|                     | &emsp;`ver`         | Y  | 1.0                                                                                   |
+|                     | &emsp;`lang`        | Y  | en                                                                                    |
+|                     | &emsp;`sign`        | Y  | 签名值                                                                                   |
+|                     | &emsp;`userid`      | Y  | User ID                                                                               |
+|                     | &emsp;`appkey`      | Y  | appkey                                                                                |
+|                     | &emsp;`did`         | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                                       |
+|                     | &emsp;`time`        | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                          |
+|                     | **method**          | Y  | EpMaintOtaTasks                                                                       |
+|                     | **params**          |    |                                                                                       |
+|                     | &emsp;`agt`         | Y  | 智慧中心ID                                                                                |
+|                     | &emsp;`act`         | Y  | 操作指令，类型为字符串，当前可以为如下：<br/>•Query：查询OTA任务信息<br/>•Remove：删除已经完成的OTA任务<br/>•Add：新建OTA升级任务 |
 
-<table><tr><td rowspan="2">Content</td><td rowspan="2">params</td><td rowspan="2">actargs</td><td rowspan="2">O</td><td>操作指令参数，数据为JSON对象的序列化字符 串。操作指令参数与操作指令一一对应，定义 如下： •Query：actargs可以不用提供; •Remove： {key}，key指明需要移除的oTA 任务，若key=true则表明删除该智慧中心下 所有的已经完成的OTA任务，若</td></tr><tr><td>key=[&quot;key1&quot;, &quot;key2&quot;]则表示批量删除 数组指明的已经完成的OTA任务集，若 key=&quot;keyl&quot;则表示删除特定的已经完成的 OTA任务；注意：只能删除已经升级完成的 OTA任务。 •Add：{me，key}，me指明需要升级的子设 备，key指明升级的orA文件。注意：子设备</td></tr><tr><td colspan="2">id</td><td>Y</td><td>可以调用ＥｐMaｉnｔＯｔaＦｉles接口的 QueryAvailableEps指令查询oTa文件支 持的子设备列表。</td></tr></table>
+| | &emsp;`actargs`    | O | 操作指令参数，数据为JSON对象的序列化字符串。操作指令参数与操作指令一一对应，定义如下：<br/>
+•Query：actargs可以不用提供;<br/>•Remove：
+{key}，key指明需要移除的OTA任务，若key=true则表明删除该智慧中心下所有的已经完成的OTA任务，若key=["key1", "key2"]
+则表示批量删除数组指明的已经完成的OTA任务集，若key="key1"
+则表示删除特定的已经完成的OTA任务；注意：只能删除已经升级完成的OTA任务。<br/>
+•Add：{me，key}，me指明需要升级的子设备，key指明升级的OTA文件。注意：子设备可以调用EpMaintOtaFiles接口的QueryAvailableEps指令查询OTA文件支持的子设备列表。 |
+| | **id**             | Y | 消息id号 |
 
 # 4.5.26.2.范例
 
@@ -1615,9 +2310,30 @@ ts：当前升级任务最近一次反馈的时间，为UTC时间，单位为秒
 
 # 4.5.27.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpMaintAgtRM</td><td></td><td>备份或恢复智慧中心的配置，包括子设备以及</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpMaintAgtRM</td><td></td><td>AI所有的配置数据</td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="12"></td><td colspan="2">ver</td><td>Y</td><td>1.0</td></tr><tr><td rowspan="7">system</td><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>did</td><td></td><td>(可选)终端唯一id。如果在授权时填入了，此 处必须填入相同id</td></tr><tr><td>time</td><td></td><td>UTC时间戳，自1970年1月1日起计算的时间，单 位为秒</td></tr><tr><td>method</td><td>Y</td><td>EpMaintAgtRM</td></tr><tr><td rowspan="2"></td><td>agt</td><td>Y</td><td>智慧中心ID</td></tr><tr><td>act</td><td>Y</td><td>操作指令，类型为字符串，当前可以为如下： •backup：备份智慧中心的配置 •restore：恢复智慧中心的配置</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                                                                |
+|:--------------------|:-----------------|:---|:------------------------------------------------------------------|
+| Interface Name      | EpMaintAgtRM     |    | 备份或恢复智慧中心的配置，包括子设备以及AI所有的配置数据                                     |
+| Partial URL         | api.EpMaintAgtRM | Y  |                                                                   |
+| Content Type        | application/json | Y  |                                                                   |
+| HTTP Method         | POST             | Y  |                                                                   |
+| **Request Content** | **system**       |    |                                                                   |
+|                     | &emsp;`ver`      | Y  | 1.0                                                               |
+|                     | &emsp;`lang`     | Y  | en                                                                |
+|                     | &emsp;`sign`     | Y  | 签名值                                                               |
+|                     | &emsp;`userid`   | Y  | User ID                                                           |
+|                     | &emsp;`appkey`   | Y  | appkey                                                            |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                   |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                      |
+|                     | **method**       | Y  | EpMaintAgtRM                                                      |
+|                     | **params**       |    |                                                                   |
+|                     | &emsp;`agt`      | Y  | 智慧中心ID                                                            |
+|                     | &emsp;`act`      | Y  | 操作指令，类型为字符串，当前可以为如下：<br/>•backup：备份智慧中心的配置<br/>•restore：恢复智慧中心的配置 |
 
-<table><tr><td>Request Content</td><td>params</td><td>actargs Y</td><td>操作指令参数，数据为JSON对象的序列化字符 串。操作指令参数与操作指令一一对应，定义 如下： •backup：{nids，pwd}，nids参数指明 可。pwd参数指明加密密码，下次执行恢复 码； • restore: {cont, pwd,</td></tr><tr><td>id</td><td>V</td><td>消息id号</td><td>必须提供相同的密码。neednids指明用于 仅恢复部分数据，指明仅需要恢复的模块数 据，一般不需要提供该属性。 -</td></tr></table>
+| | &emsp;`actargs`    | Y | 操作指令参数，数据为JSON对象的序列化字符串。操作指令参数与操作指令一一对应，定义如下：<br/>
+•backup：{nids，pwd}，nids参数指明需要备份的模块，一般情况下可以不提供，pwd参数指明加密密码，下次执行恢复时必须提供相同的密码。<br/>
+•restore: {cont, pwd,
+neednids}，cont参数指明备份数据内容，pwd参数指明密码，neednids参数用于仅恢复部分数据，指明仅需要恢复的模块数据，一般不需要提供该属性。 |
+| | **id**             | Y | 消息id号 |
 
 # 4.5.27.2.范例 - Backup
 
@@ -1692,9 +2408,33 @@ APPToKEN_xxxxxxxx
 
 # 4.5.28.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpMaintCartFiles</td><td></td><td>查看或维护智慧中心上的cart文件列表</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpMaintCartF iles</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td></td><td rowspan="5">lang</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>system</td><td>Y Y</td><td>en</td></tr><tr><td>sign</td><td></td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey did</td><td>Y O</td><td rowspan="2">appkey (可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td colspan="3">time</td></tr><tr><td>method</td><td></td><td>Y</td><td colspan="2">UTC时间戳，自1970年1月1日起计算的时间，单 位为秒 EpMaintCartFiles</td></tr><tr><td rowspan="2"></td><td>agt act</td><td>Y</td><td colspan="2">智慧中心ID</td></tr><tr><td>-</td><td colspan="2">Y</td><td>操作指令，类型为字符串，当前可以为如下： ・AddByUrl：告知uRL地址，下载Cart文件 到智慧中心； ・AddByBin：直接提供Cart文件的原始数据</td></tr><tr><td colspan="2"></td><td colspan="2"></td><td>给智慧中心； •Query：查询cart文件信息 •Remove：删除Cart文件</td></tr></table>
+| 类型                  | 定义                   | 必须 | 描述                                                                                                                                       |
+|:--------------------|:---------------------|:---|:-----------------------------------------------------------------------------------------------------------------------------------------|
+| Interface Name      | EpMaintCartFiles     |    | 查看或维护智慧中心上的cart文件列表                                                                                                                      |
+| Partial URL         | api.EpMaintCartFiles | Y  |                                                                                                                                          |
+| Content Type        | application/json     | Y  |                                                                                                                                          |
+| HTTP Method         | POST                 | Y  |                                                                                                                                          |
+| **Request Content** | **system**           |    |                                                                                                                                          |
+|                     | &emsp;`ver`          | Y  | 1.0                                                                                                                                      |
+|                     | &emsp;`lang`         | Y  | en                                                                                                                                       |
+|                     | &emsp;`sign`         | Y  | 签名值                                                                                                                                      |
+|                     | &emsp;`userid`       | Y  | User ID                                                                                                                                  |
+|                     | &emsp;`appkey`       | Y  | appkey                                                                                                                                   |
+|                     | &emsp;`did`          | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id                                                                                                          |
+|                     | &emsp;`time`         | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒                                                                                                             |
+|                     | **method**           | Y  | EpMaintCartFiles                                                                                                                         |
+|                     | **params**           |    |                                                                                                                                          |
+|                     | &emsp;`agt`          | Y  | 智慧中心ID                                                                                                                                   |
+|                     | &emsp;`act`          | Y  | 操作指令，类型为字符串，当前可以为如下：<br/>•AddByUrl：告知URL地址，下载Cart文件到智慧中心；<br/>•AddByBin：直接提供Cart文件的原始数据给智慧中心；<br/>•Query：查询cart文件信息<br/>•Remove：删除Cart文件 |
 
-<table><tr><td>Request Content id</td><td>params</td><td>actargs -</td><td>O 操作指令参数，数据为JSON对象的序列化字符 串。操作指令参数与操作指令一一对应，定义 如下： •AddByurl：{key，url}，url参数指明可 •AddByBin: {keY, •Query：actargs可以不用提供; •Remove：{keys}，keys指明需要移除的 Y 消息id号</td></tr></table>
+| | &emsp;`actargs`    | O | 操作指令参数，数据为JSON对象的序列化字符串。操作指令参数与操作指令一一对应，定义如下：<br/>
+•AddByUrl：{key，url}，url参数指明可被下载的Cart文件的地址，url必须为HTTP或HTTPS协议；key为可选参数，若不提供key则key为url提供的下载地址中的文件名称，请谨慎使用key参数，key参数的命名必须正确，否则操作将可能失败，若无必要，无需设置key参数，使用缺省名称即可。<br/>
+•AddByBin: {key,
+cont}，key指明该Cart文件的标识，不同于AddByUrl，这里key必须提供，不能为空，cont指明Cart文件内容，为便在JSON中传输，cont为原始Cart文件的标准Base64编码；<br/>
+•Query：actargs可以不用提供;<br/>
+•Remove：{keys}，keys指明需要移除的Cart文件，若keys=true则表明删除该智慧中心下所有的Cart文件，若keys=["key1", "key2"]
+则表示批量删除数组指明的Cart文件集，若keys="key1"则表示删除特定的Cart文件; |
+| | **id**             | Y | 消息id号 |
 
 # 4.5.28.2.范例
 
@@ -1736,19 +2476,62 @@ XXXXXXX
 
 # 4.5.29.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">EpConfigAgt</td><td></td><td>设置智慧中心的配置，包括是否允许本地登 录、修改本地登录密码等。</td></tr><tr><td>Partial URL</td><td colspan="2">api.EpConfigAgt</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="9">Request Content</td><td rowspan="9">system</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User</td></tr><tr><td>appkey did</td><td>Y</td><td>appkey (可选)终端唯一id。如果在授权时填入了，此</td></tr><tr><td>time -</td><td></td><td>处必须填入相同id</td></tr><tr><td></td><td>Y</td><td>UTC时间戳，自1970年1月1日起 计算的时间,单位 为秒</td></tr><tr><td>method agt</td><td>Y Y</td><td>EpConfigAgt</td></tr><tr><td rowspan="2">act</td><td>Y</td><td></td><td>智慧中心ID 操作指令，类型为字符串，</td></tr><tr><td>params actargs -</td><td>O</td><td>具体参考4.5.28.2 说明 操作指令参数，为JSON对象的序列化字符串，</td></tr><tr><td colspan="2">id</td><td>Y</td><td>消息id号</td><td>具体参考4.5.28.2 说明</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                                   |
+|:--------------------|:-----------------|:---|:-------------------------------------|
+| Interface Name      | EpConfigAgt      |    | 设置智慧中心的配置，包括是否允许本地登录、修改本地登录密码等。      |
+| Partial URL         | api.EpConfigAgt  | Y  |                                      |
+| Content Type        | application/json | Y  |                                      |
+| HTTP Method         | POST             | Y  |                                      |
+| **Request Content** | **system**       |    |                                      |
+|                     | &emsp;`ver`      | Y  | 1.0                                  |
+|                     | &emsp;`lang`     | Y  | en                                   |
+|                     | &emsp;`sign`     | Y  | 签名值                                  |
+|                     | &emsp;`userid`   | Y  | User ID                              |
+|                     | &emsp;`appkey`   | Y  | appkey                               |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id      |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒         |
+|                     | **method**       | Y  | EpConfigAgt                          |
+|                     | **params**       |    |                                      |
+|                     | &emsp;`agt`      | Y  | 智慧中心ID                               |
+|                     | &emsp;`act`      | Y  | 操作指令，类型为字符串，具体参考4.5.29.2说明           |
+|                     | &emsp;`actargs`  | O  | 操作指令参数，为JSON对象的序列化字符串，具体参考4.5.29.2说明 |
+|                     | **id**           | Y  | 消息id号                                |
 
 # 4.5.29.2.act与actargs参数列表
 
-<table><tr><td>Function 功能</td><td>act 符串</td><td>actargs 操作指令，为字操作指令参数，为JSON对象的序列 化字符串</td><td>Response 返回结果</td></tr><tr><td>查询是否允许 置</td><td></td><td>不要供参数，可以为nul或空地icy指示本地账号策</td><td>{stat, policy},stat 指示特定的状态，当stat 为&quot;locked&quot;即表明禁 止本地登录，ｓtat为 &quot;normal&quot;则表示允许本 略，当值为&quot;[nolsi]&quot; 表明本地互联必须提供正 确的账号/密码，否则不允 许登录。缺省为&quot;&quot;，表 示允许。</td></tr><tr><td></td><td></td><td>{stat，policy}，stat指明是否 允许本地登录，当stat为 &quot;locked&quot;即表明禁止本地登录， stat为&quot;normal&quot;则表示允许本 地登录； policy指明本地账户策略，当值为 &quot;[nolsi]&quot;表明本地互联必须提供 正确的账号/密码，否则不允许登 录。缺省为&quot;&quot;，表示允许。 {pwd}，Pwd指明本地登录admin账</td><td>&quot;success&quot;</td></tr><tr><td>设置本地登录</td><td>setLocalPwd</td><td>号所使用的密码，本地登录admin账 号缺省密码为admin，可以修改为需 要的密码。注意：pwd需要使用标准 Base64编码，例如假定密码设置 为数有要 求，密码是不可逆的加密方式存储在 智慧中心上 设置的密码不允许查询，密码是不可 逆的加密方式存储在智慧中心上，因</td><td>&quot;success&quot;</td></tr><tr><td>时区</td><td>查询智慧中心queryTimezon e</td><td>此没有queryLocalPwd动作 {}，不需要提供参数，可以为null 或空对象</td><td>{tmzone}，tmzone指明 当前所设置的时区</td></tr></table>
+| Function 功能 | act 操作指令字符串          | actargs 操作指令参数                                                                                                                                                                                      | Response 返回结果                                                                                                                               |
+|:------------|:---------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------|
+| 查询是否允许本地登录  | queryLocalPermission | 不需要提供参数，可以为null或空对象                                                                                                                                                                                 | {stat, policy}，stat指示特定的状态，当stat为"locked"即表明禁止本地登录，stat为"normal"则表示允许本地登录；policy指示本地账号策略，当值为"[nolsi]"表明本地互联必须提供正确的账号/密码，否则不允许登录。缺省为""，表示允许。 |
+| 设置本地登录权限    | setLocalPermission   | {stat，policy}，stat指明是否允许本地登录，当stat为"locked"即表明禁止本地登录，stat为"normal"则表示允许本地登录；policy指明本地账户策略，当值为"[nolsi]"表明本地互联必须提供正确的账号/密码，否则不允许登录。缺省为""，表示允许。                                                       | "success"                                                                                                                                   |
+| 设置本地登录密码    | setLocalPwd          | {pwd}，pwd指明本地登录admin账号所使用的密码，本地登录admin账号缺省密码为admin，可以修改为需要的密码。注意：pwd需要使用标准Base64编码，例如假定密码设置为"123456"，则pwd="MTIzNDU2"。密码有长度要求，密码是不可逆的加密方式存储在智慧中心上，设置的密码不允许查询，密码是不可逆的加密方式存储在智慧中心上，因此没有queryLocalPwd动作 | "success"                                                                                                                                   |
+| 查询智慧中心时区    | queryTimezone        | {}，不需要提供参数，可以为null或空对象                                                                                                                                                                              | {tmzone}，tmzone指明当前所设置的时区                                                                                                                   |
 
-<table><tr><td>Function 功能</td><td>act 符串</td><td>actargs 操作指令，为字操作指令参数，为JSON对象的序列 化字符串</td><td>Response 返回结果</td></tr><tr><td>设置智慧中心setTimezone</td><td></td><td></td><td>&quot;success&quot;</td></tr><tr><td>查询智慧中心 地理位置</td><td>queryLoc</td><td>{}，不需要提供参数，可以为nul1 或空对象；</td><td>{lnglat}，lnglat返回 当前设置的地址位置，其 格式为&quot;lng，lat&quot;的字符 串</td></tr><tr><td>设置智慧中心setLoc 地理位置</td><td></td><td>{lnglat,fullsync},lnglat指 明本需要设置的地理位置，类型为字 符串，格式为&quot;lng，lat&quot;，例如 &quot;120.15507，30.274084&quot;为杭州 市经纬度；fullSync=1表示全量 同步，因为Loc实际上除了存储 lnglat之外还可以存储其它地理位 置信息，如果fullSync=1则不包含 在参数里面的其它键值都会被删除，</td><td>&quot;success&quot;</td></tr><tr><td>查询智慧中心querysys Mac、Ip信息</td><td></td><td>缺省ful1Sync=0; {}，不需要提供参数，可以为null 或空对象；</td><td>明智慧中心当前的IP地址 {${exsvc}:{...},},</td></tr><tr><td>询智慧中心queryExSvg</td><td></td><td>{verbose=1/0}，查询扩展服务， ver示返回每务的 并处于使能状态，缺省 verbose=0;</td><td>返回扩展服务当前的配置 以及状态。例如天气预报 扩展服务配喜：， &quot;appkey&quot;: &quot;×xX&quot;,id &quot;&quot;url&quot;:&quot;YYY&quot; } 1</td></tr><tr><td>配置慧心setEx</td><td></td><td>{svId, args={ },reload=1/0} 配置扩展服务。svcId指明扩展服务 Id，args指明扩展服务配置参数, 指展变更后 reload=1表示需要重新加载立即生 效。具体参考4.5.28.4说明</td><td>&quot;success&quot;</td></tr></table>
+| Function 功能      | act 操作指令字符串 | actargs 操作指令参数                                                                                                                                                                          | Response 返回结果                                                                                  |
+|:-----------------|:------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------|
+| 设置智慧中心时区         | setTimezone | {tmzone}，tmzone指明需要设置的时区，例如tmzone=8表示东八区                                                                                                                                                | "success"                                                                                      |
+| 查询智慧中心地理位置       | queryLoc    | {}，不需要提供参数，可以为null或空对象；                                                                                                                                                                 | {lnglat}，lnglat返回当前设置的地址位置，其格式为"lng，lat"的字符串                                                   |
+| 设置智慧中心地理位置       | setLoc      | {lnglat,fullsync}，lnglat指明需要设置的地理位置，类型为字符串，格式为"lng，lat"，例如"120.15507，30.274084"为杭州市经纬度；fullSync=1表示全量同步，因为Loc实际上除了存储lnglat之外还可以存储其它地理位置信息，如果fullSync=1则不包含在参数里面的其它键值都会被删除，缺省fullSync=0; | "success"                                                                                      |
+| 查询智慧中心系统Mac、Ip信息 | querySys    | {}，不需要提供参数，可以为null或空对象；                                                                                                                                                                 | 返回系统信息，说明智慧中心当前的IP地址                                                                           |
+| 查询智慧中心扩展服务       | queryExSvc  | {verbose=1/0}，查询扩展服务，verbose=1表示返回详细的信息，仅显示配置并处于使能状态，缺省verbose=0;                                                                                                                       | 返回扩展服务当前的配置以及状态。例如天气预报扩展服务配置：{"enable": true, "appkey": "XXX", "apptoken": "YYY", "url":"YYY"} |
+| 配置智慧中心扩展服务       | setExSvc    | {svcId, args={}, reload=1/0} 配置扩展服务。svcId指明扩展服务Id，args指明扩展服务配置参数，reload=1表示配置变更后需要重新加载立即生效。具体参考4.5.28.4说明                                                                               | "success"                                                                                      |
 
-<table><tr><td>Function 功能</td><td>act 符串</td><td>actargs 操作指令，为字操作指令参数，为JSON对象的序列 化字符串</td><td>Response 返回结果</td></tr><tr><td>操作智慧中心 扩展服务</td><td>operExSv</td><td>{svId,act,actargs={ }}操作扩 展服务。svcId指明扩展服务Id， act指明操作的指令，值类型为字符 串，actargs指明操作指令的参数, 值类型为对象。具体参考 4.5.28.4说明</td><td>&quot;success&quot;</td></tr><tr><td>查询智慧中心 网络信息</td><td>netInfo</td><td>{ }，不需要提供参数，可以为nul1 或空对象；</td><td>返回网络信息，例如：{ &quot;gateway&quot;:[ &quot;? (192.168.4.1) at 24:fb:65:60:e3:03 [ether] on etho\n&quot; ] } gateway是一个数组，里 面的条目是ARP协议返回的 网关信息，可基于ARP协议 自行解析网关MAC地址。</td></tr><tr><td>询智queryNifCfg</td><td></td><td>{ifn,verbose=1/0}，查询网络 模块配置，verbose=l表示返回详 细的信息，缺省verbose=0。当前 ifn值如下可选: ·&quot;etho&quot;：网卡 &quot;eth1:华为4G Wifi UsB- ·&quot;ppp0&quot;：2g模块 ·&quot;wlan0&quot;:Wi-Fi ·&quot;usbetho&quot;:UsB卡</td><td>{${ifn}:{....}}, 返回查询的ifn当前的配 置，例如：{ &quot;wlan0&quot;:{ &quot;enable&quot;: true, &quot;metric&quot;: 100, &quot;C_NetworkType&quot;: &quot;mode&quot;: &quot;C_WPAPSK&quot;: &quot;12345678&quot;, &quot;C_HWMode&quot;: &quot;PEN&quot; &quot;name&quot;:&quot;wlan0&quot; }</td></tr></table>
+| Function 功能  | act 操作指令字符串 | actargs 操作指令参数                                                                                                                                                                 | Response 返回结果                                                                                                                                                  |
+|:-------------|:------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 操作智慧中心扩展服务   | operExSv    | {svId,act,actargs={}}操作扩展服务。svcId指明扩展服务Id，act指明操作的指令，值类型为字符串，actargs指明操作指令的参数，值类型为对象。具体参考4.5.28.4说明                                                                            | "success"                                                                                                                                                      |
+| 查询智慧中心网络信息   | netInfo     | {}，不需要提供参数，可以为null或空对象；                                                                                                                                                        | 返回网络信息，例如：{"gateway":["? (192.168.4.1) at 24:fb:65:60:e3:03 [ether] on eth0\n"]} gateway是一个数组，里面的条目是ARP协议返回的网关信息，可基于ARP协议自行解析网关MAC地址。                          |
+| 查询智慧中心网络模块配置 | queryNifCfg | {ifn,verbose=1/0}，查询网络模块配置，verbose=1表示返回详细的信息，缺省verbose=0。当前ifn值如下可选：<br/>•"eth0"：网卡<br/>•"eth1"：华为4G Wifi USB-dongle<br/>•"ppp0"：2G模块<br/>•"wlan0"：Wi-Fi<br/>•"usbeth0"：USB网卡 | {${ifn}:{....}} 返回查询的ifn当前的配置，例如：{"wlan0":{"enable": true,"metric": 100,"C_NetworkType":"","mode":"","C_WPAPSK": "12345678","C_HWMode": "PEN","name":"wlan0"}} |
 
-<table><tr><td>Function 功能</td><td>act 操作指令，为字 符串</td><td>actargs 操作指令参数，为JSON对象的序列 化字符串</td><td>Response 返回结果</td></tr><tr><td>设置智慧中心 网络模块</td><td>setNifcfg</td><td>{ifn,enable=true/false},使 能/去使能网络模块。当前ifn值如 下可选： ·&quot;ethO&quot;:网卡 ·&quot;ethl&quot;：华为4G wifi USB- dongle ·&quot;ppp0&quot;：2G模块 ·&quot;wlan0&quot;:Wi-Fi ·&quot;usbetho&quot;：UsB网卡 ·&quot;wwanO&quot;：wwAN-4G模块 4G-CAT4 ·&quot;usb0&quot;:4G-CAT1</td><td>&quot;success&quot;</td></tr><tr><td>查询智慧中心 本地互白名 单</td><td>queryLsiwhit</td><td>{}，不需要提供参数，可以为nul1 或空对象。 有关智慧中心本地互联白名单说明请 参考4.5.28.5说明</td><td>返回当前设置的白名单列 表 [{lsid,user, pwd, add r},...] •lsid 为智慧设备的 LSID（一般等同于智慧 设备的agt属性) •user为智慧设备的登 录账号 •pwd为智慧设备的登录 密码</td></tr></table>
+| Function 功能   | act 操作指令字符串  | actargs 操作指令参数                                                                                                                                                                                             | Response 返回结果                                                                                                        |
+|:--------------|:-------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------|
+| 设置智慧中心网络模块    | setNifCfg    | {ifn,enable=true/false} 使能/去使能网络模块。当前ifn值如下可选：<br/>•"eth0"：网卡<br/>•"eth1"：华为4G wifi USB-dongle<br/>•"ppp0"：2G模块<br/>•"wlan0"：Wi-Fi<br/>•"usbeth0"：USB网卡<br/>•"wwan0"：WWAN-4G模块 4G-CAT4<br/>•"usb0"：4G-CAT1 | "success"                                                                                                            |
+| 查询智慧中心本地互联白名单 | queryLsiWhit | {}，不需要提供参数，可以为null或空对象。有关智慧中心本地互联白名单说明请参考4.5.28.5说明                                                                                                                                                        | 返回当前设置的白名单列表 [{lsid,user,pwd,addr},...] <br/>•lsid为智慧设备的LSID（一般等同于智慧设备的agt属性）<br/>•user为智慧设备的登录账号<br/>•pwd为智慧设备的登录密码 |
 
-<table><tr><td>Function 功能</td><td>act 操作指令，为字 符串</td><td>actargs 操作指令参数，为JSON对象的序列 化字符串</td><td>Response 返回结果</td></tr><tr><td>单</td><td>设智中setsihite ist</td><td>[&#x27;-&#x27;,&#x27;lsid&#x27;], [-1,], [&#x27;+&#x27;, lsid,user, pwd] 设置白名单，支持多条目一起设置。 每个条目为一个JSONArray， •条目第一项为&quot;+&quot;或者 &quot;-&quot;，&quot;+&quot;指示添加白名 单，&quot;-&quot;指示删除白名单; •条目第二项为智慧设备的1sid, 若为删除白名单操作，的第二项值 •条目第三项为智慧设备的登录账 号，只有添加白名单的时候才需 要填写； •条目第三项为智慧设备的登录密 码，只有添加白名单的时候才需 要填写； 提示：Update修改操作与添加操作 参数一样，如果已经存在该lsid的 白名单，则会覆盖该lsid的user、</td><td>[{ret, retMsg}, ...] 返回设置列表项每一项设 置是成功，成功不等 于o，并且retMsg指示具 体的错误信息</td></tr><tr><td>查询智慧中心 本地互联搜索</td><td>queryLsiPoli</td><td>pwd设置。 {}，不需要提供参数，可以为null 或空对象；</td><td>{policy}，policy指示 当前的本地互联策略，其 值可为&quot;whitelist&quot;或 &quot;。 时候只给白名单设备发送 搜索包，否则智慧中心会</td></tr><tr><td>设置智慧中心 策略 模块</td><td>本地互联搜索setLsiPolicy 复位无线射频resetRfModul e</td><td>policy: &#x27;whitelist&#x27; or {}，不需要提供参数，可以为null 或空对象；</td><td>发送组播/广播包。 &quot;success&quot; &quot;success&quot;</td></tr></table>
+| Function 功能    | act 操作指令字符串     | actargs 操作指令参数                                                                                                                                                                                                                                                                                                 | Response 返回结果                                                                              |
+|:---------------|:----------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------------|
+| 设置智慧中心本地互联白名单  | setLsiWhitelist | [["-","lsid"], ["+", lsid,user, pwd]] 设置白名单，支持多条目一起设置。每个条目为一个JSONArray，<br/>•条目第一项为"+"或者"-"，"+"指示添加白名单，"-"指示删除白名单；<br/>•条目第二项为智慧设备的lsid，若为删除白名单操作，则第二项值为要删除的lsid；<br/>•条目第三项为智慧设备的登录账号，只有添加白名单的时候才需要填写；<br/>•条目第四项为智慧设备的登录密码，只有添加白名单的时候才需要填写；<br/>提示：Update修改操作与添加操作参数一样，如果已经存在该lsid的白名单，则会覆盖该lsid的user、pwd设置。 | [{ret, retMsg}, ...] 返回设置列表项每一项设置是否成功，ret不等于0，并且retMsg指示具体的错误信息                            |
+| 查询智慧中心本地互联搜索策略 | queryLsiPolicy  | {}，不需要提供参数，可以为null或空对象；                                                                                                                                                                                                                                                                                        | {policy}，policy指示当前的本地互联策略，其值可为"whitelist"或""。当为"whitelist"时候只给白名单设备发送搜索包，否则智慧中心会发送组播/广播包。 |
+| 设置智慧中心本地互联搜索策略 | setLsiPolicy    | {policy: "whitelist" or ""}                                                                                                                                                                                                                                                                                    | "success"                                                                                  |
+| 复位无线射频模块       | resetRfModule   | {}，不需要提供参数，可以为null或空对象；                                                                                                                                                                                                                                                                                        | "success"                                                                                  |
 
 # 4.5.29.3.范例 - setLocalPermission
 
@@ -1837,13 +2620,37 @@ actargs":"{[\"+\"，\"Naturemini1_agt\"， \"admin\", \"123456\"]，[\"+\"，\"c
 
 ![](images/46d69b4856f895b907df5d5f9648bcc667eab2ae737ed8c254ef9b78ae68e05d.jpg)
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">NatureCtl</td><td></td><td>设置Nature面板首页按键、快捷设备界面、更 多按键页等配置。</td></tr><tr><td>Partial URL</td><td colspan="2">api.NatureCtl</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="19">Request Content</td><td rowspan="6"></td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ID</td></tr><tr><td>appkey did</td><td>Y</td><td>appkey</td></tr><tr><td></td><td></td><td rowspan="2">(可选)终端唯一id。如果在授权时填入了，此 处必须填入相同id UTC时间戳，自1970年1月1日起 计算的时间,单位</td></tr><tr><td>time</td><td>Y</td></tr><tr><td>method</td><td></td><td>Y</td><td>为秒 NatureCtl</td></tr><tr><td rowspan="3">params -</td><td>agt</td><td>Y</td><td>智慧中心ID</td></tr><tr><td>act</td><td>Y</td><td>操作指令，类型为字符串， 具体参考4.5.29.2说明</td></tr><tr><td>actargs</td><td>O</td><td>操作指令参数，为JSON对象的序列化字符串， 具体参考4.5.29.2 说明</td></tr><tr><td colspan="2">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                                   |
+|:--------------------|:-----------------|:---|:-------------------------------------|
+| Interface Name      | NatureCtl        |    | 设置Nature面板首页按键、快捷设备界面、更多按键页等配置。      |
+| Partial URL         | api.NatureCtl    | Y  |                                      |
+| Content Type        | application/json | Y  |                                      |
+| HTTP Method         | POST             | Y  |                                      |
+| **Request Content** | **system**       |    |                                      |
+|                     | &emsp;`ver`      | Y  | 1.0                                  |
+|                     | &emsp;`lang`     | Y  | en                                   |
+|                     | &emsp;`sign`     | Y  | 签名值                                  |
+|                     | &emsp;`userid`   | Y  | User ID                              |
+|                     | &emsp;`appkey`   | Y  | appkey                               |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id      |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒         |
+|                     | **method**       | Y  | NatureCtl                            |
+|                     | **params**       |    |                                      |
+|                     | &emsp;`agt`      | Y  | 智慧中心ID                               |
+|                     | &emsp;`act`      | Y  | 操作指令，类型为字符串，具体参考4.5.30.2说明           |
+|                     | &emsp;`actargs`  | O  | 操作指令参数，为JSON对象的序列化字符串，具体参考4.5.30.2说明 |
+|                     | **id**           | Y  | 消息id号                                |
 
 # 4.5.30.2.act与actargs参数列表
 
-<table><tr><td>Function 功能</td><td>act 操作指令，为字符 串</td><td>actargs 操作指令参数，为JSON对象的序 列化字符串</td><td>Response 返回结果</td></tr><tr><td rowspan="2">基于云端数据 获取当前面板 Favs配置 （快速从云端 缓存数据获 取）</td><td rowspan="2">QueryFavs</td><td rowspan="2">空对象</td><td>{FAV NAME: FAV_√ALUE， ...}, ..} 返回当前查询agt下的 Favs配置。例如： &quot;NM_HOME&quot;:{ / &quot;FAV_b3&quot;: false,</td></tr><tr><td>&quot;icon&quot;: &quot;&quot; &quot;FAV_b2&quot;: false, &quot;FAV_pg1&quot;: &quot;A3EAxxxxxxxxxxxxxx xxx/me/ep/643a&quot;, &quot;FAV_b1&quot;: 不需要供参，可以为n或x/21× &quot;FAV_theme&quot;: &quot;black&quot;, false FAV b4&quot;:</td></tr></table>
+| Function 功能                     | act 操作指令字符串 | actargs 操作指令参数 | Response 返回结果                                                                                                                                                                                                                |
+|:--------------------------------|:------------|:---------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 基于云端数据获取当前面板Favs配置（快速从云端缓存数据获取） | QueryFavs   | 空对象            | {FAV_NAME: FAV_VALUE, ...} 返回当前查询agt下的Favs配置。例如："NM_HOME":{"FAV_b3": false,"icon": "","FAV_b2": false,"FAV_pg1": "A3EAxxxxxxxxxxxxxx/me/ep/643a","FAV_b1": false,"FAV_theme": "black","FAV_b4": false} 常用的配置信息具体参考4.5.30.4说明 |
 
-<table><tr><td>Function 功能</td><td>act 串</td><td>actargs 操作指令，为字符操作指令参数，为JSON对象的序 列化字符串</td><td>Response 返回结果</td></tr><tr><td>基于面板自身 数据远程获取 当前面板 Favs配置从 面板获取数 据）</td><td>QueryFavsOnAgt</td><td>空对象</td><td>{ FAV_ID: {FAV_NAME : FAV_√ALUE， ·..}，..} 返回当前查询agt下的 Favs配置。例如： { &quot;NM_HOME&quot;:{ &quot;FAV_b3&quot;: false, &#x27;&quot;icon&quot;:&quot;&quot;, &quot;FAV_b2&quot;: &quot;FAV_pPg1&quot;: &quot;A3EAxxxxxxxxxxxxxx xxx/me/ep/643a&quot;, 不需要提供参数，可以为nu1或&quot;A3EAxxxxxxxxxxxx &quot;FAV_b4&quot;: false } 1 常用的配置信息具体参考 4.5.29.4 说明 注意： false,</td></tr><tr><td>设置当前面板</td><td>SetFavs</td><td>{favId, items : {FAV_NAME : FAV_VALUE, ...}} 配置，由name：value键值对组 成，常用的配置信息具体参考 4.5.29.4说明</td><td>的配置。实际以查询的数 据为准。</td></tr></table>
+| Function 功能                     | act 操作指令字符串    | actargs 操作指令参数                                                                         | Response 返回结果                                                                                                                                                                                                           |
+|:--------------------------------|:---------------|:---------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 基于面板自身数据远程获取当前面板Favs配置（从面板获取数据） | QueryFavsOnAgt | 空对象，不需要提供参数，可以为null或空对象                                                                | {FAV_ID: {FAV_NAME : FAV_VALUE, ...}, ...} 返回当前查询agt下的Favs配置。例如：{"NM_HOME":{"FAV_b3": false,"icon":"","FAV_b2": false,"FAV_pg1": "A3EAxxxxxxxxxxxxxx/me/ep/643a","FAV_b4": false}} 常用的配置信息具体参考4.5.30.4说明。注意：实际以查询的数据为准。 |
+| 设置当前面板Favs配置                    | SetFavs        | {favId, items : {FAV_NAME : FAV_VALUE, ...}} 配置，由name:value键值对组成，常用的配置信息具体参考4.5.30.4说明 | "success"                                                                                                                                                                                                               |
 
 # 4.5.30.3.范例 - SetFavs
 
@@ -1882,9 +2689,25 @@ UsERToKEN_xxxxxxxX, appkey:APPKEY_x xxxxxxX,apptoken:APPToKEN_xxxxxxxx
 本表格描述了NatureMINI系列设备通过FavId定义面板的主题、快捷按键等信息。  
 查询中若获取的Fav_Name，若未在本表格中提及，则可以先忽略对应的配置。
 
-<table><tr><td>FavId</td><td>Fav_Name</td><td>Fav_Value</td></tr><tr><td rowspan="7">NM_HOME</td><td>FAV_b1 FAVb2 FAV_b3 FAV_b4</td><td>面板首页的4个位置的配置； Fav Value查询: 值为false时，表示显示空位； 值为对象ID时，表示显示对应的对象，形 如：&quot;A3EAxxxxxxxxxxxxxxxx/me/ep/6431&quot;，具体 参考4.5.29.5 说明 Fav Value设置:</td></tr><tr><td>FAV_pg1 FAV_Pg2</td><td>值为对象ID时，表示显示对应的对象，形 如：&quot;A3EAxxxxxxxxxxxxxxxx/me/ep/6431&quot;，具体 参考4.5.29.5说明 面板快捷页面的配置： Fav Value查询: 值为false时，表示显示空位； 值为对象ID时，表示显示对应的对象，形 如：&quot;A3EAxxxxxxxxxxxxxxxx/me/ep/6431&quot; Fav Value设置: 值为“NULL&quot;时，表示清空对应配置，显示空位； 值为对象ID时，表示显示对应的对象，形</td></tr><tr><td>FAV_pg2_enable</td><td>如：&quot;A3EAxxxxxxxxxxxxxxxx/me/ep/6431&quot;，具体 参考4.5.29.5说明 面板快捷页面是否启用FAV_Pg2，默认不启用； 值为false时表示不启用； 值为true时表示启用FAV_Pg2 配置；</td></tr><tr><td>FAV_theme</td><td>设置为“NULL&quot;，表示清空该配置； 面板主题设置，默认为系统默认主题； 当前支持的主题值有： &quot;light&quot;：白昼主题 &quot;black&quot;：暗夜主题 &quot;moon&quot;：红月主题 &quot;cartoon&quot;：卡通主题 设置为“NULL&quot;，表示清空该配置，默认为系统默认主题；</td></tr></table>
+| FavId   | Fav_Name                   | Fav_Value                                                                                                                                                                                                                           |
+|:--------|:---------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| NM_HOME | FAV_b1 FAVb2 FAV_b3 FAV_b4 | 面板首页的4个位置的配置；<br/>Fav Value查询: 值为false时，表示显示空位；值为对象ID时，表示显示对应的对象，形如："A3EAxxxxxxxxxxxxxxxx/me/ep/6431"，具体参考4.5.29.5说明<br/>Fav Value设置: 值为"NULL"时，表示清空对应配置，显示空位；值为对象ID时，表示显示对应的对象，形如："A3EAxxxxxxxxxxxxxxxx/me/ep/6431"，具体参考4.5.29.5说明 |
+|         | FAV_pg1 FAV_Pg2            | 面板快捷页面的配置：<br/>Fav Value查询: 值为false时，表示显示空位；值为对象ID时，表示显示对应的对象，形如："A3EAxxxxxxxxxxxxxxxx/me/ep/6431"<br/>Fav Value设置: 值为"NULL"时，表示清空对应配置，显示空位；值为对象ID时，表示显示对应的对象，形如："A3EAxxxxxxxxxxxxxxxx/me/ep/6431"，具体参考4.5.29.5说明                   |
+|         | FAV_pg2_enable             | 面板快捷页面是否启用FAV_Pg2，默认不启用；<br/>值为false时表示不启用；<br/>值为true时表示启用FAV_Pg2配置；                                                                                                                                                               |
+|         | FAV_theme                  | 面板主题设置，默认为系统默认主题；<br/>当前支持的主题值有：<br/>"light"：白昼主题<br/>"black"：暗夜主题<br/>"moon"：红月主题<br/>"cartoon"：卡通主题<br/>设置为"NULL"，表示清空该配置，默认为系统默认主题；                                                                                              |
 
-<table><tr><td>FavId</td><td>Fav_Name</td><td>Fav_value</td></tr><tr><td rowspan="5"></td><td>FAV_colox_enabl e</td><td>是否使能面板UI自定义。 false表示不使能；true表示使能。</td></tr><tr><td>FAV_cart_ss</td><td>屏保页自自定义uī，值为cart key</td></tr><tr><td>FAV_cart_home</td><td>Home首页自定义ur，值为Cart key</td></tr><tr><td>FAV_cart_scene</td><td>面板首页侧滑第一屏自定义ur，值为cart key</td></tr><tr><td>FAV_cart_scene2</td><td>面板首页侧滑第二屏自定义uI，值为cart key</td></tr><tr><td rowspan="3">NM_SCENE</td><td>FAV_b1 FAVb2 FAVb3 FAV_b4 FAV_ 5 值为&quot;NULL&quot;时，表示清空对应配置，显示空位；</td><td>面板首页侧滑第一屏6个快捷按键页对应的配置； Fav_Value查询： 值为false时，表示显示空位； 值为对象ID时，表示显示对应的对象，形 如：&quot;A3EAxxxxxxxxxxxxxxxx/me/ep/6431&quot;，具体 参考4.5.29.5说明 Fav_Value设置:</td></tr><tr><td>FAV_enable</td><td>值为对象ID时，表示显示对应的对象，形 如：&quot;A3EAxxxxxxxxxxxxxxxx/me/ep/6431&quot;，具体 参考4.5.29.5说明 是否启用NM_SCENE，默认启用； 值为false时表示不启用；</td></tr><tr><td>FAV_b1 FAV_b2 FAV_b3 FAV_b4 FAVb5</td><td>值为true时表示启用NM_SCENE配置； 面板首页侧滑第二屏6个快捷按键页对应的配置； Fav_Value查询: 值为false时，表示显示空位； 值为对象ID时，表示显示对应的对象，形 如：&quot;A3EAxxxxxxxxxxxxxxxx/me/ep/6431&quot;，具体 参考4.5.29.5说明</td></tr><tr><td rowspan="2">NM_SCENE2</td><td>FAV_b6</td><td>Fav Value设置: 值为“NULL&quot;时，表示清空对应配置，显示空位； 值为对象ID时，表示显示对应的对象，形 如：&quot;A3EAxxxxxxxxxxxxxxxx/me/ep/6431&quot;，具体 参考4.5.29.5说明 是否启用NM_SCENE2，默认不启用；</td></tr><tr><td>FAV_enable</td><td>值为false时表示不启用； 值为true时表示启用NM_SCENE2配置； 设置为“NULL&quot;，表示清空该配置；</td></tr></table>
+| FavId     | Fav_Name                          | Fav_Value                                                                                                                                                                                                                                  |
+|:----------|:----------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|           | FAV_colox_enable                  | 是否使能面板UI自定义。false表示不使能；true表示使能。                                                                                                                                                                                                           |
+|           | FAV_cart_ss                       | 屏保页自定义UI，值为cart key                                                                                                                                                                                                                        |
+|           | FAV_cart_home                     | Home首页自定义UI，值为Cart key                                                                                                                                                                                                                     |
+|           | FAV_cart_scene                    | 面板首页侧滑第一屏自定义UI，值为cart key                                                                                                                                                                                                                  |
+|           | FAV_cart_scene2                   | 面板首页侧滑第二屏自定义UI，值为cart key                                                                                                                                                                                                                  |
+| NM_SCENE  | FAV_b1 FAVb2 FAVb3 FAV_b4 FAV_b5  | 面板首页侧滑第一屏6个快捷按键页对应的配置；<br/>Fav_Value查询：值为false时，表示显示空位；值为对象ID时，表示显示对应的对象，形如："A3EAxxxxxxxxxxxxxxxx/me/ep/6431"，具体参考4.5.29.5说明<br/>Fav_Value设置：值为"NULL"时，表示清空对应配置，显示空位；值为对象ID时，表示显示对应的对象，形如："A3EAxxxxxxxxxxxxxxxx/me/ep/6431"，具体参考4.5.29.5说明 |
+|           | FAV_enable                        | 是否启用NM_SCENE，默认启用；<br/>值为false时表示不启用；<br/>值为true时表示启用NM_SCENE配置；                                                                                                                                                                           |
+|           | FAV_b1 FAV_b2 FAV_b3 FAV_b4 FAVb5 | 面板首页侧滑第二屏6个快捷按键页对应的配置；<br/>Fav_Value查询: 值为false时，表示显示空位；值为对象ID时，表示显示对应的对象，形如："A3EAxxxxxxxxxxxxxxxx/me/ep/6431"，具体参考4.5.29.5说明                                                                                                              |
+| NM_SCENE2 | FAV_b6                            | Fav Value设置: 值为"NULL"时，表示清空对应配置，显示空位；值为对象ID时，表示显示对应的对象，形如："A3EAxxxxxxxxxxxxxxxx/me/ep/6431"，具体参考4.5.29.5说明<br/>是否启用NM_SCENE2，默认不启用；                                                                                                        |
+|           | FAV_enable                        | 值为false时表示不启用；<br/>值为true时表示启用NM_SCENE2配置；<br/>设置为"NULL"，表示清空该配置；                                                                                                                                                                          |
 
 # 4.5.30.5.设备或AI对象ID说明
 
@@ -1928,7 +2751,14 @@ OpenAPI接口分为两类，一类是查询设备类，一类是控制设备类�
 《LifeSmart智慧设备规格属性说明》  
 表5-1-1通用属性说明
 
-<table><tr><td>Attribute</td><td>Type</td><td>RW</td><td>Decription</td></tr><tr><td>devtype/cls</td><td>string</td><td>R</td><td>设备类型</td></tr><tr><td>name</td><td>string</td><td>RW</td><td>设备名称</td></tr><tr><td>agt</td><td>string</td><td>R</td><td>设备所属智慧中心ID号</td></tr><tr><td>me</td><td>string</td><td>R</td><td>设备ID (智慧中心下面唯一)</td></tr><tr><td>stat</td><td>int32</td><td>R</td><td>是否处于在线状态 0:offline 1:online</td></tr><tr><td>data</td><td>array</td><td>R</td><td>设备下的Io控制口的信息</td></tr></table>
+| Attribute   | Type   | RW | Description                 |
+|:------------|:-------|:---|:----------------------------|
+| devtype/cls | string | R  | 设备类型                        |
+| name        | string | RW | 设备名称                        |
+| agt         | string | R  | 设备所属智慧中心ID号                 |
+| me          | string | R  | 设备ID (智慧中心下面唯一)             |
+| stat        | int32  | R  | 是否处于在线状态 0:offline 1:online |
+| data        | array  | R  | 设备下的Io控制口的信息                |
 
 当对智慧设备进行控制类接口调用时，请参阅文档：《LifeSmart智慧设备规格属性说明》中对应需要控制的设备规格的属性说明设置控制参数，需要注意的是，其中某些属性没有针对OpenAPI进行开放，且只有标识为RW的属性才具有设置功能。
 
@@ -1936,9 +2766,22 @@ OpenAPI接口分为两类，一类是查询设备类，一类是控制设备类�
 
 发现协议定义了在局域网中发现智慧中心等智慧设备的方法。
 
-<table><tr><td>协议</td><td>UDP</td></tr><tr><td>端口号</td><td>12345</td></tr></table>
+| 项目  | 值     |
+|:----|:------|
+| 协议  | UDP   |
+| 端口号 | 12345 |
 
-<table><tr><td>报文类型</td><td>广播报文</td></tr><tr><td>报文内容</td><td>Z-SEARCH*\r\n</td></tr><tr><td rowspan="6">智慧中心/智慧设备 返回格式</td><td>MOD=xxxx\nSN=xxxx\nNAME=xxxx\n</td></tr><tr><td>或者</td></tr><tr><td>MGAMOD=xxxxx\nLSID=xxxxx\nNAME=xxxxx\n 其中xXXx是智慧设备相应的设置值。</td></tr><tr><td>新版本智慧设备也可能会添加新的属性，会以\n/分割，如果不识别可以</td></tr><tr><td>忽略。</td></tr><tr><td>·MGAMOD或MOD为智慧设备类型； •SN或者LSID为智慧设备序列号；</td></tr></table>
+| 项目            | 值                                      |
+|:--------------|:---------------------------------------|
+| 报文类型          | 广播报文                                   |
+| 报文内容          | Z-SEARCH*\r\n                          |
+| 智慧中心/智慧设备返回格式 | MOD=xxxx\nSN=xxxx\nNAME=xxxx\n         |
+|               | 或者                                     |
+|               | MGAMOD=xxxxx\nLSID=xxxxx\nNAME=xxxxx\n |
+|               | 其中xxxx是智慧设备相应的设置值。                     |
+|               | 新版本智慧设备也可能会添加新的属性，会以\n分割，如果不识别可以忽略。    |
+|               | •MGAMOD或MOD为智慧设备类型；                    |
+|               | •SN或者LSID为智慧设备序列号；                     |
 
 # 7.状态接收
 
@@ -1959,7 +2802,16 @@ RmAuth：WebSocket认证移除，一次移除一个用户，用户数到零时�
 根据不同的用户账号（LifeSmart用户）所在的服务区域，WebSocket服务需要使用对应的服务地址。svrrgnid 为服务分区标记，在户授权成功后将会返回对应的
 svrrgnid信息。根据不同的 svrrgnid 使用以下对应的 WebSocket URL:
 
-<table><tr><td>Service Type</td><td colspan="2">svrrgnid</td><td>URL</td></tr><tr><td rowspan="9">Websocket with ssI</td><td>GS</td><td></td><td>wss://api.ilifesmart.com:8443/wsapp/</td></tr><tr><td>CNO</td><td></td><td>wss://api.cn0.ilifesmart.com:8443/wsapp/</td></tr><tr><td>VIP1</td><td></td><td>wss://api.cn1.ilifesmart.com:8443/wsapp/</td></tr><tr><td>CN2</td><td></td><td>wss://api.cn2.ilifesmart.com:8443/wsapp/</td></tr><tr><td>AME</td><td></td><td>wss://api.us.ilifesmart.com:8443/wsapp/</td></tr><tr><td>EUROPE</td><td>-</td><td>wss://api.eur.ilifesmart.com/wsapp/</td></tr><tr><td>JAP</td><td></td><td>wss://api.jp.ilifesmart.com:8443/wsapp/</td></tr><tr><td>APZ</td><td></td><td>wss://api.apz.ilifesmart.com:8443/wsapp/</td></tr></table>
+| Service Type       | svrrgnid | URL                                      |
+|:-------------------|:---------|:-----------------------------------------|
+| Websocket with SSL | GS       | wss://api.ilifesmart.com:8443/wsapp/     |
+| Websocket with SSL | CN0      | wss://api.cn0.ilifesmart.com:8443/wsapp/ |
+| Websocket with SSL | VIP1     | wss://api.cn1.ilifesmart.com:8443/wsapp/ |
+| Websocket with SSL | CN2      | wss://api.cn2.ilifesmart.com:8443/wsapp/ |
+| Websocket with SSL | AME      | wss://api.us.ilifesmart.com:8443/wsapp/  |
+| Websocket with SSL | EUROPE   | wss://api.eur.ilifesmart.com/wsapp/      |
+| Websocket with SSL | JAP      | wss://api.jp.ilifesmart.com:8443/wsapp/  |
+| Websocket with SSL | APZ      | wss://api.apz.ilifesmart.com:8443/wsapp/ |
 
 # 注意：
 
@@ -1971,7 +2823,20 @@ webSocketURL地址的选择，必须根据用户授权成功后返回的 svrrgni
 
 # 7.3.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">WbAuth</td><td></td><td>Websocketi认证</td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td rowspan="10">Request Content</td><td rowspan="10">system</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User ià</td></tr><tr><td>appkey did</td><td>Y 0</td><td>appkey</td></tr><tr><td>time</td><td>V</td><td>(可选)终端唯一id。如果在授权时填 入了，此处必须填入相同id</td></tr><tr><td></td><td></td><td>UTC时间戳，自1970年1月1日起 计算的 时间,单位为秒</td></tr><tr><td>method</td><td>Y</td><td>WbAuth</td></tr><tr><td>id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | WbAuth           |    | WebSocket认证                     |
+| Content Type        | application/json |    |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | WbAuth                          |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 7.3.2.范例
 
@@ -1999,7 +2864,20 @@ apptoken:APPToKEN_xxxxxxxx
 
 # 7.4.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Mus t</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">RmAuth</td><td></td><td>WebSocket认证用户移除</td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>Request Content</td><td rowspan="6"></td><td>ver</td><td>Y</td><td>1.0 0</td></tr><tr><td rowspan="6">system</td><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>User id</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>did</td><td>O</td><td>(可选)终端唯一id。如果在授权时填入 了，此处必须填入相同id</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日起 计算的时间， 单位为秒</td></tr><tr><td colspan="3">method</td><td>Y RmAuth</td></tr><tr><td colspan="2">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义               | 必须 | 描述                              |
+|:--------------------|:-----------------|:---|:--------------------------------|
+| Interface Name      | RmAuth           |    | WebSocket认证用户移除                 |
+| Content Type        | application/json |    |                                 |
+| **Request Content** | **system**       |    |                                 |
+|                     | &emsp;`ver`      | Y  | 1.0                             |
+|                     | &emsp;`lang`     | Y  | en                              |
+|                     | &emsp;`sign`     | Y  | 签名值                             |
+|                     | &emsp;`userid`   | Y  | User ID                         |
+|                     | &emsp;`appkey`   | Y  | appkey                          |
+|                     | &emsp;`did`      | O  | (可选)终端唯一id。如果在授权时填入了，此处必须填入相同id |
+|                     | &emsp;`time`     | Y  | UTC时间戳，自1970年1月1日起计算的时间，单位为秒    |
+|                     | **method**       | Y  | RmAuth                          |
+|                     | **id**           | Y  | 消息id号                           |
 
 # 7.4.2.范例
 
@@ -2027,17 +2905,40 @@ APPKEY_xxxxxxxx,apptoken:APPToKEN_xxxxxxxx
 
 所有事件数据为JSON 编码，其格式如下：
 
-<table><tr><td>id</td><td>消息id号</td></tr><tr><td>type</td><td>事件类型。type=&#x27;io&#x27;表示ro状态数据更新 -</td></tr><tr><td>msg</td><td>事件体。根据不同事件类型进行不同解析</td></tr></table>
+| 字段名  | 描述                       |
+|:-----|:-------------------------|
+| id   | 消息id号                    |
+| type | 事件类型。type='io'表示IO状态数据更新 |
+| msg  | 事件体。根据不同事件类型进行不同解析       |
 
 # 7.6.事件数据信息
 
 事件内容属性如下：
 
-<table><tr><td>字段名称</td><td>类型</td><td>描述</td></tr><tr><td>userid</td><td>string</td><td>用户ID</td></tr><tr><td>agt</td><td>string</td><td>智慧中心id</td></tr><tr><td rowspan="2">me</td><td rowspan="2">string</td><td>终端设备id</td></tr><tr><td>当为智慧中心级别事件则其值不存在； 当为AI类型事件其值表示的是A的id；</td></tr></table>
+| 字段名称   | 类型     | 描述                                               |
+|:-------|:-------|:-------------------------------------------------|
+| userid | string | 用户ID                                             |
+| agt    | string | 智慧中心id                                           |
+| me     | string | 终端设备id<br/>当为智慧中心级别事件则其值不存在；当为AI类型事件其值表示的是AI的id； |
 
-<table><tr><td>idx</td><td>string</td><td>终端设备IO指示。根据设备类型不同，其内容不一样。与设备属性的 DevType对应，比如r，O等。 idx=&quot;s&quot;是特殊的类型，需要查看其它属性做进一步的判断。 如果有info字段则需要参考info信息做进一步处理，例如设备添加， 设备删除，设备名称修改，AI添加/删除/变化等特定事件；否则即为 设备/智慧中心上下线。</td></tr><tr><td>devtype</td><td>string</td><td>设备类型 当为智慧中心事件则其值固定为&quot;agt&quot;； 当为AI类型事件则其值固定为&quot;ai&quot;； 注：当devtype等于&#x27;elog&quot;则为特殊的事件，具体内容需要参考事件 体内的elog属性(属性值为对象类型)。</td></tr><tr><td>ful1Cls</td><td>string</td><td>包含设备版本号的完整设备类型</td></tr><tr><td>type</td><td>int32</td><td>终端设备o值类型，含义同设备属性定义，当idx=&quot;s&quot;标识特殊事件 的时候，其值无效</td></tr><tr><td>val</td><td>int32</td><td>终端设备IO值，含义同设备属性定义，当idx=&quot;s&quot;标识特殊事件的时 候，其值无效</td></tr><tr><td></td><td>float</td><td>真实有效值。在idx!=&quot;s&quot;情况下，其值是val值的真实友好值，例如 温度变化事件，val=230，v=23.0，表示温度值是23.0摄氏度，在 idx=&quot;s&quot;情况下，其值是特定的值，具体如下： 设备上线，其值=1；</td></tr><tr><td>ts</td><td>int64</td><td>设备下线，其值=2； 事件发生UTC时间．从1970.1.1到现在的毫秒数</td></tr><tr><td>info</td><td>string</td><td>事件扩展信息，其值有：&quot;add&quot;，&quot;del&quot;，&quot;name&quot;，&quot;ioname&quot;， &quot;full&quot;，&quot;chg&quot;等。 add：标识是设备/智慧中心/AI的添加事件； del：标识是设备/智慧中心/AI的删除事件； name：标识是设备名称修改的事件； ioname：标识是设备Io名称修改的事件; full：标识是智慧中心全量同步的事件； chg：标识是AI的修改事件，包括名称，状态，配置；</td></tr><tr><td>name</td><td>string</td><td>仅在名称修改事件有效，包括设备名称/设备IO名称/AI名称的修改事 件，既info=&quot;name&quot;或info=&quot;ioname&quot;或info=&quot;chg&quot;。指示新的 名称。</td></tr><tr><td>io</td><td>string</td><td>仅在设备Io名称修改事件有效，既info=&quot;ioname&quot;。指示设备的哪个 ⅠO发生名称变更。</td></tr><tr><td>stat</td><td>int32</td><td>仅AI事件有效，标识AI的状态发生变更 stat=0 表示AI处于初始态； stat=3 表示 AI正在运行； stat=4表示AI运行完成；</td></tr></table>
+| 字段名称    | 类型     | 描述                                                                                                                                                                                                                      |
+|:--------|:-------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| idx     | string | 终端设备IO指示。根据设备类型不同，其内容不一样。与设备属性的DevType对应，比如L1，O等。idx="s"是特殊的类型，需要查看其它属性做进一步的判断。如果有info字段则需要参考info信息做进一步处理，例如设备添加，设备删除，设备名称修改，AI添加/删除/变化等特定事件；否则即为设备/智慧中心上下线。                                                            |
+| devtype | string | 设备类型<br/>当为智慧中心事件则其值固定为"agt"；<br/>当为AI类型事件则其值固定为"ai"；<br/>注：当devtype等于'elog"则为特殊的事件，具体内容需要参考事件体内的elog属性(属性值为对象类型)。                                                                                                      |
+| fullCls | string | 包含设备版本号的完整设备类型                                                                                                                                                                                                          |
+| type    | int32  | 终端设备IO值类型，含义同设备属性定义，当idx="s"标识特殊事件的时候，其值无效                                                                                                                                                                              |
+| val     | int32  | 终端设备IO值，含义同设备属性定义，当idx="s"标识特殊事件的时候，其值无效                                                                                                                                                                                |
+| v       | float  | 真实有效值。在idx!="s"情况下，其值是val值的真实友好值，例如温度变化事件，val=230，v=23.0，表示温度值是23.0摄氏度，在idx="s"情况下，其值是特定的值，具体如下：<br/>设备上线，其值=1；设备下线，其值=2；                                                                                               |
+| ts      | int64  | 事件发生UTC时间，从1970.1.1到现在的毫秒数                                                                                                                                                                                              |
+| info    | string | 事件扩展信息，其值有："add"，"del"，"name"，"ioname"，"full"，"chg"等。<br/>add：标识是设备/智慧中心/AI的添加事件；<br/>del：标识是设备/智慧中心/AI的删除事件；<br/>name：标识是设备名称修改的事件；<br/>ioname：标识是设备IO名称修改的事件；<br/>full：标识是智慧中心全量同步的事件；<br/>chg：标识是AI的修改事件，包括名称，状态，配置； |
+| name    | string | 仅在名称修改事件有效，包括设备名称/设备IO名称/AI名称的修改事件，既info="name"或info="ioname"或info="chg"。指示新的名称。                                                                                                                                        |
+| io      | string | 仅在设备IO名称修改事件有效，既info="ioname"。指示设备的哪个IO发生名称变更。                                                                                                                                                                          |
+| stat    | int32  | 仅AI事件有效，标识AI的状态发生变更<br/>stat=0 表示AI处于初始态；<br/>stat=3 表示AI正在运行；<br/>stat=4表示AI运行完成；                                                                                                                                      |
 
-<table><tr><td>cmdlist</td><td>bool</td><td></td><td>仅AI事件有效，为True标识Ar的配置发生变更</td></tr><tr><td>elog</td><td>object</td><td>安防事件内容，具体属性定义如下： -3:RED -2:YELLOW -1:GREEN -O:N/A •cgy：string，事件类别(category) -&quot;sys&quot;: System -&quot;alm&quot;:Alarm -&quot;nty&quot;: Notification •cls：string，事件类型(class) -&quot;arm&quot;：布防操作 -&quot;disarm&quot;：撤防操作 -&quot;home&quot;：在家操作 -&quot;alarm&quot;：告警操作 -&quot;m&quot;：指示触发的是MotionIo -&quot;TR&quot;：指示触发的是TRIO -&quot;A&quot;：指示触发的是ALARMIO -&quot;open&quot;：KeyPad用户开锁 -&quot;add[nfc]&quot;：添加KeyPad NFc卡用户 -&quot;add[key]&quot;：添加KeyPad密码用户 -&quot;auth[admin]&quot;：KeyPad管理员认证 是发起请求相关的设备 -&quot;errlock&quot;：KeyPad输入错误锁定/解锁 -其它IO：指示防区内其它设备IO触发事件 •obj：string，相关涉及对象，具体参考elog场景定义举例 •info：string，&quot;0&quot;通常表示成功，&quot;1&quot;通常表示失败 •lc：string，对应的防区ID，格式为&quot;${AGT}/me/lc&quot;，如果 -&quot;msg&quot;: Message</td><td>•lvl：int32，事件告警级别，值越大级别越高，越应该重视 -&quot;fail&quot;：KeyPad认证失败操作，这时候obj是请求的操作，lc</td></tr></table>
+| 字段名称    | 类型     | 描述                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|:--------|:-------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| cmdlist | bool   | 仅AI事件有效，为True标识AI的配置发生变更                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| elog    | object | 安防事件内容，具体属性定义如下：<br/>**告警级别：**<br/>-3:RED -2:YELLOW -1:GREEN -0:N/A<br/>**事件类别(category)：**<br/>•cgy：string，事件类别<br/>&emsp;-"sys": System<br/>&emsp;-"alm": Alarm<br/>&emsp;-"nty": Notification<br/>&emsp;-"msg": Message<br/>**事件类型(class)：**<br/>•cls：string，事件类型<br/>&emsp;-"arm"：布防操作<br/>&emsp;-"disarm"：撤防操作<br/>&emsp;-"home"：在家操作<br/>&emsp;-"alarm"：告警操作<br/>&emsp;-"m"：指示触发的是MotionIO<br/>&emsp;-"TR"：指示触发的是TRIO<br/>&emsp;-"A"：指示触发的是ALARMIO<br/>&emsp;-"open"：KeyPad用户开锁<br/>&emsp;-"add[nfc]"：添加KeyPad NFC卡用户<br/>&emsp;-"add[key]"：添加KeyPad密码用户<br/>&emsp;-"auth[admin]"：KeyPad管理员认证<br/>&emsp;-"fail"：KeyPad认证失败操作<br/>&emsp;-"errlock"：KeyPad输入错误锁定/解锁<br/>&emsp;-其它IO：指示防区内其它设备IO触发事件<br/>**其他属性：**<br/>•obj：string，相关涉及对象，具体参考elog场景定义举例<br/>•info：string，"0"通常表示成功，"1"通常表示失败<br/>•lc：string，对应的防区ID，格式为"${AGT}/me/lc"<br/>•lvl：int32，事件告警级别，值越大级别越高，越应该重视 |
 
 场景定义举例：10变化事件有效字段：userid,agt,me,idx,devtype,type,val,v,ts
 
@@ -2453,7 +3354,27 @@ Note:若第三方应用无此权限，则此接口不能使用。
 
 # 8.1.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">RegisterUser</td><td></td><td>用户注册</td></tr><tr><td>Partial URL</td><td colspan="2">auth.RegisterUser</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="10"></td><td rowspan="5"></td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>UserID,固定&quot;10001&quot;</td></tr><tr><td>appkey time</td><td>Y Y</td><td>appkey</td></tr><tr><td>method</td><td></td><td></td><td>UTC时间戳，自1970年1月1日起 计算的时 间,单位为秒</td></tr><tr><td rowspan="5"></td><td>email</td><td>Y</td><td>Registeruser Email，与手机号二选一</td></tr><tr><td>mobile</td><td>。</td><td>手机号，与email二选一</td></tr><tr><td>pwd</td><td>Y</td><td></td></tr><tr><td>nick</td><td>0</td><td>密码</td></tr><tr><td></td><td></td><td>昵称</td></tr><tr><td>id</td><td>rgn</td><td>Y</td><td>用户所在区域 消息id号</td></tr></table>
+| 类型                  | 定义                | 必须 | 描述                           |
+|:--------------------|:------------------|:---|:-----------------------------|
+| Interface Name      | RegisterUser      |    | 用户注册                         |
+| Partial URL         | auth.RegisterUser |    |                              |
+| Content Type        | application/json  |    |                              |
+| HTTP Method         | POST              |    |                              |
+| **Request Content** | **system**        |    |                              |
+|                     | &emsp;`ver`       | Y  | 1.0                          |
+|                     | &emsp;`lang`      | Y  | en                           |
+|                     | &emsp;`sign`      | Y  | 签名值                          |
+|                     | &emsp;`userid`    | Y  | UserID,固定"10001"             |
+|                     | &emsp;`appkey`    | Y  | appkey                       |
+|                     | &emsp;`time`      | Y  | UTC时间戳，自1970年1月1日起计算的时间,单位为秒 |
+|                     | **method**        | Y  | RegisterUser                 |
+|                     | **params**        |    |                              |
+|                     | &emsp;`email`     | Y  | 注册用户Email，与手机号二选一            |
+|                     | &emsp;`mobile`    | O  | 手机号，与email二选一                |
+|                     | &emsp;`pwd`       | Y  | 密码                           |
+|                     | &emsp;`nick`      | O  | 昵称                           |
+|                     | &emsp;`rgn`       | Y  | 用户所在区域                       |
+|                     | **id**            | Y  | 消息id号                        |
 
 Note:
 
@@ -2514,7 +3435,22 @@ Note:
 
 # 8.2.1.JSON请求数据格式
 
-<table><tr><td>Type</td><td colspan="2">Definition</td><td>Must</td><td>Description</td></tr><tr><td>Interface Name</td><td colspan="2">UnregisterUser</td><td></td><td>解除用户授权</td></tr><tr><td>Partial URL</td><td colspan="2">auth.Unregisteruser</td><td></td><td></td></tr><tr><td>Content Type</td><td colspan="2">application/json</td><td></td><td></td></tr><tr><td>HTTP Method</td><td colspan="2">POST</td><td></td><td></td></tr><tr><td rowspan="8">Request Content</td><td rowspan="8">system</td><td>ver</td><td>Y</td><td>1.0</td></tr><tr><td>lang</td><td>Y</td><td>en</td></tr><tr><td>sign</td><td>Y</td><td>签名值</td></tr><tr><td>userid</td><td>Y</td><td>user id</td></tr><tr><td>appkey</td><td>Y</td><td>appkey</td></tr><tr><td>time</td><td>Y</td><td>UTC时间戳，自1970年1月1日 起 计算的时间,单位为秒</td></tr><tr><td>method</td><td>Y</td><td>UnregisterUser</td></tr><tr><td colspan="2">params</td><td></td><td></td></tr><tr><td colspan="3">id</td><td>Y</td><td>消息id号</td></tr></table>
+| 类型                  | 定义                  | 必须 | 描述                           |
+|:--------------------|:--------------------|:---|:-----------------------------|
+| Interface Name      | UnregisterUser      |    | 解除用户授权                       |
+| Partial URL         | auth.UnregisterUser |    |                              |
+| Content Type        | application/json    |    |                              |
+| HTTP Method         | POST                |    |                              |
+| **Request Content** | **system**          |    |                              |
+|                     | &emsp;`ver`         | Y  | 1.0                          |
+|                     | &emsp;`lang`        | Y  | en                           |
+|                     | &emsp;`sign`        | Y  | 签名值                          |
+|                     | &emsp;`userid`      | Y  | User ID                      |
+|                     | &emsp;`appkey`      | Y  | appkey                       |
+|                     | &emsp;`time`        | Y  | UTC时间戳，自1970年1月1日起计算的时间,单位为秒 |
+|                     | **method**          | Y  | UnregisterUser               |
+|                     | **params**          |    |                              |
+|                     | **id**              | Y  | 消息id号                        |
 
 # 8.2.2.范例
 
@@ -2548,14 +3484,144 @@ APPKEY_xxxxxxxx,apptoken:APPTokEN_xxxxx XXX
 
 # 附录1国家域名缩写以及服务提供映射
 
-<table><tr><td>国际域</td><td colspan="2">国家或地区</td><td>Countries and Regions</td><td>服务提供地</td><td>服务代号</td></tr><tr><td>ae</td><td colspan="2">阿拉伯联合酋长国</td><td>United Arab Emirates</td><td>America</td><td>AME</td></tr><tr><td>ag</td><td colspan="2">安提瓜和巴布达</td><td>Antigua and Barbuda</td><td>America</td><td>AME</td></tr><tr><td>am</td><td colspan="2">亚美尼亚</td><td>Armenia</td><td>Europe</td><td>EUR</td></tr><tr><td>apz</td><td colspan="2">亚太地区</td><td>Asia Pacific</td><td>Asia Pacific</td><td>APZ</td></tr><tr><td>ar</td><td colspan="2">阿根廷</td><td>Argentina</td><td>America</td><td>AME</td></tr><tr><td>at</td><td colspan="2">奥地利</td><td>Austria</td><td>Europe</td><td>EUR</td></tr><tr><td>au</td><td colspan="2">澳大利亚</td><td>Australia</td><td>America</td><td>AME</td></tr><tr><td>bb</td><td colspan="2">巴巴多斯</td><td>Barbados</td><td>America</td><td>AME</td></tr><tr><td>bd</td><td colspan="2">孟加拉国</td><td>Bangladesh</td><td>Asia Pacific</td><td>APZ</td></tr><tr><td>be</td><td colspan="2">比利时</td><td>Belgium</td><td>Europe</td><td>EUR</td></tr><tr><td>bg</td><td colspan="2">保加利亚</td><td>Bulgari</td><td>Europe</td><td>EUR</td></tr><tr><td>bh</td><td colspan="2">巴林</td><td>Bahrain</td><td>America</td><td>AME</td></tr><tr><td>bn</td><td colspan="2">文莱</td><td>Brunei</td><td>Asia Pacific</td><td>APZ</td></tr><tr><td>bo</td><td colspan="2">玻利维亚</td><td>Bolivia</td><td>America</td><td>AME</td></tr><tr><td>br</td><td colspan="2">巴西</td><td>Brazil</td><td>America</td><td>AME</td></tr><tr><td>bs</td><td colspan="2">巴哈马</td><td>Bahamas</td><td>America</td><td>AME</td></tr><tr><td>by</td><td colspan="2">白俄罗斯</td><td>Belarus</td><td>Europe</td><td>EUR</td></tr><tr><td>bz</td><td colspan="2">伯利兹</td><td>Belize</td><td>America</td><td>AME</td></tr><tr><td>ca</td><td colspan="2">加拿大</td><td>canada</td><td>America</td><td>AME</td></tr><tr><td>ch</td><td colspan="2">瑞士 - -</td><td>Switzerland</td><td>Europe</td><td>EUR</td></tr><tr><td>cl</td><td colspan="2"></td><td>Chile</td><td></td><td>AME</td></tr><tr><td></td><td colspan="2">智利</td><td>China</td><td>America China (old)</td><td>CNO</td></tr><tr><td>cn</td><td colspan="2">中国（旧区）</td><td>Hotel and Corporate</td><td></td><td>IP1</td></tr><tr><td>cn1</td><td colspan="2">酒店和公司用户</td><td>users</td><td>China (special)</td><td></td></tr><tr><td>cn2</td><td colspan="2">中国(新区）</td><td>china</td><td>China (new)</td><td>CN2</td></tr><tr><td>co</td><td colspan="2">哥伦比亚</td><td>Colombia</td><td>America</td><td>AME</td></tr><tr><td>cr</td><td colspan="2">哥斯达黎加</td><td>Costa Rica</td><td>America</td><td>AME</td></tr><tr><td>cY</td><td colspan="2">塞浦路斯</td><td>Cyprus</td><td>Europe</td><td>EUR</td></tr></table>
+| 国际域 | 国家或地区    | Countries and Regions     | 服务提供地           | 服务代号 |
+|:----|:---------|:--------------------------|:----------------|:-----|
+| ae  | 阿拉伯联合酋长国 | United Arab Emirates      | America         | AME  |
+| ag  | 安提瓜和巴布达  | Antigua and Barbuda       | America         | AME  |
+| am  | 亚美尼亚     | Armenia                   | Europe          | EUR  |
+| apz | 亚太地区     | Asia Pacific              | Asia Pacific    | APZ  |
+| ar  | 阿根廷      | Argentina                 | America         | AME  |
+| at  | 奥地利      | Austria                   | Europe          | EUR  |
+| au  | 澳大利亚     | Australia                 | America         | AME  |
+| bb  | 巴巴多斯     | Barbados                  | America         | AME  |
+| bd  | 孟加拉国     | Bangladesh                | Asia Pacific    | APZ  |
+| be  | 比利时      | Belgium                   | Europe          | EUR  |
+| bg  | 保加利亚     | Bulgaria                  | Europe          | EUR  |
+| bh  | 巴林       | Bahrain                   | America         | AME  |
+| bn  | 文莱       | Brunei                    | Asia Pacific    | APZ  |
+| bo  | 玻利维亚     | Bolivia                   | America         | AME  |
+| br  | 巴西       | Brazil                    | America         | AME  |
+| bs  | 巴哈马      | Bahamas                   | America         | AME  |
+| by  | 白俄罗斯     | Belarus                   | Europe          | EUR  |
+| bz  | 伯利兹      | Belize                    | America         | AME  |
+| ca  | 加拿大      | Canada                    | America         | AME  |
+| ch  | 瑞士       | Switzerland               | Europe          | EUR  |
+| cl  | 智利       | Chile                     | America         | AME  |
+| cn  | 中国（旧区）   | China (old)               | China (old)     | CNO  |
+| cn1 | 酒店和公司用户  | Hotel and Corporate users | China (special) | VIP1 |
+| cn2 | 中国(新区）   | China (new)               | China (new)     | CN2  |
+| co  | 哥伦比亚     | Colombia                  | America         | AME  |
+| cr  | 哥斯达黎加    | Costa Rica                | America         | AME  |
+| cy  | 塞浦路斯     | Cyprus                    | Europe          | EUR  |
 
-<table><tr><td>CZ</td><td>捷克</td><td>Czech Republic</td><td>Europe</td><td>EUR</td></tr><tr><td>de</td><td>德国</td><td>Germany</td><td>Europe</td><td>EUR</td></tr><tr><td>dk</td><td>丹麦</td><td>Denmark</td><td>Europe</td><td>EUR</td></tr><tr><td>dm</td><td>多米尼克</td><td>Dominica</td><td>America</td><td>AME</td></tr><tr><td>do</td><td>多米尼加共和国</td><td>Dominica Rep</td><td>America</td><td>AME</td></tr><tr><td>dz</td><td>阿尔及利亚</td><td>Algeria</td><td>America</td><td>AME</td></tr><tr><td>ec</td><td>厄瓜尔多</td><td>Ecuador</td><td>America</td><td>AME</td></tr><tr><td>ee</td><td>爱沙尼亚</td><td>Estonia</td><td>Europe</td><td>EUR</td></tr><tr><td>eg</td><td>埃及</td><td>Egypt</td><td>America</td><td>AME</td></tr><tr><td>es</td><td>西班牙</td><td>Spain</td><td>Europe</td><td>EUR</td></tr><tr><td>et</td><td>埃塞俄比亚</td><td>Ethiopia</td><td>America</td><td>AME</td></tr><tr><td>fi</td><td>芬兰</td><td>Finland</td><td>Europe</td><td>EUR</td></tr><tr><td>fr</td><td>法国</td><td>France</td><td>Europe</td><td>EUR</td></tr><tr><td>gb</td><td>英国</td><td>United Kingdom</td><td>Europe</td><td>EUR</td></tr><tr><td>gd</td><td>格林纳达</td><td>Grenada</td><td>America</td><td>AME</td></tr><tr><td>gh</td><td>加纳</td><td>Ghana</td><td>America</td><td>AME</td></tr><tr><td>gr</td><td>希腊</td><td>Greece</td><td>Europe</td><td>EUR</td></tr><tr><td>gt</td><td>危地马拉</td><td>Guatemala</td><td>America</td><td>AME</td></tr><tr><td>gy</td><td>圭亚那</td><td>Guyana</td><td>America</td><td>AME</td></tr><tr><td>hk</td><td>中国香港</td><td>China. HongKong</td><td>America</td><td>AME</td></tr><tr><td>hn</td><td>洪都拉斯</td><td>Honduras</td><td>America</td><td>AME</td></tr><tr><td>hr</td><td>克罗地亚</td><td>Croatia</td><td>Europe</td><td>EUR</td></tr><tr><td>hu</td><td>匈牙利 -</td><td>Hungary</td><td>Europe</td><td>EUR</td></tr><tr><td>id</td><td>印度尼西亚</td><td>Indonesia</td><td>America</td><td>AME</td></tr><tr><td>ie</td><td>爱尔兰</td><td>Ireland</td><td>Europe</td><td>EUR</td></tr><tr><td>i1</td><td>以色列</td><td>Israel</td><td>America</td><td>AME</td></tr><tr><td>in</td><td>印度</td><td>India</td><td>America</td><td>AME</td></tr><tr><td>iq</td><td>伊拉克</td><td>Republic Of Iraq</td><td>Asia Pacific</td><td>APZ</td></tr><tr><td>ir</td><td>伊朗</td><td>Iran</td><td>America</td><td>AME</td></tr><tr><td>is</td><td>冰岛</td><td>Iceland</td><td>Europe</td><td>EUR</td></tr><tr><td>it</td><td>意大利</td><td>taly</td><td>Europe</td><td>EUR</td></tr></table>
+| 国际域 | 国家或地区   | Countries and Regions | 服务提供地        | 服务代号 |
+|:----|:--------|:----------------------|:-------------|:-----|
+| cz  | 捷克      | Czech Republic        | Europe       | EUR  |
+| de  | 德国      | Germany               | Europe       | EUR  |
+| dk  | 丹麦      | Denmark               | Europe       | EUR  |
+| dm  | 多米尼克    | Dominica              | America      | AME  |
+| do  | 多米尼加共和国 | Dominica Rep          | America      | AME  |
+| dz  | 阿尔及利亚   | Algeria               | America      | AME  |
+| ec  | 厄瓜尔多    | Ecuador               | America      | AME  |
+| ee  | 爱沙尼亚    | Estonia               | Europe       | EUR  |
+| eg  | 埃及      | Egypt                 | America      | AME  |
+| es  | 西班牙     | Spain                 | Europe       | EUR  |
+| et  | 埃塞俄比亚   | Ethiopia              | America      | AME  |
+| fi  | 芬兰      | Finland               | Europe       | EUR  |
+| fr  | 法国      | France                | Europe       | EUR  |
+| gb  | 英国      | United Kingdom        | Europe       | EUR  |
+| gd  | 格林纳达    | Grenada               | America      | AME  |
+| gh  | 加纳      | Ghana                 | America      | AME  |
+| gr  | 希腊      | Greece                | Europe       | EUR  |
+| gt  | 危地马拉    | Guatemala             | America      | AME  |
+| gy  | 圭亚那     | Guyana                | America      | AME  |
+| hk  | 中国香港    | China. HongKong       | America      | AME  |
+| hn  | 洪都拉斯    | Honduras              | America      | AME  |
+| hr  | 克罗地亚    | Croatia               | Europe       | EUR  |
+| hu  | 匈牙利     | Hungary               | Europe       | EUR  |
+| id  | 印度尼西亚   | Indonesia             | America      | AME  |
+| ie  | 爱尔兰     | Ireland               | Europe       | EUR  |
+| il  | 以色列     | Israel                | America      | AME  |
+| in  | 印度      | India                 | America      | AME  |
+| iq  | 伊拉克     | Republic Of Iraq      | Asia Pacific | APZ  |
+| ir  | 伊朗      | Iran                  | America      | AME  |
+| is  | 冰岛      | Iceland               | Europe       | EUR  |
+| it  | 意大利     | Italy                 | Europe       | EUR  |
 
-<table><tr><td colspan="6"></td></tr><tr><td>jm</td><td>牙买加</td><td>Jamaica</td><td>America</td><td>AME</td><td></td></tr><tr><td>jo</td><td>约旦</td><td>Jordan</td><td>America</td><td>AME</td><td></td></tr><tr><td>jp</td><td>日本</td><td>Japan</td><td>America</td><td></td><td>AME</td></tr><tr><td>ke</td><td>肯尼亚</td><td>Kenya</td><td>America</td><td>AME</td><td></td></tr><tr><td>kh</td><td>柬埔寨</td><td>Cambodia</td><td>America</td><td>AME</td><td></td></tr><tr><td>kr</td><td>韩国</td><td>Korea</td><td>America</td><td>AME -</td><td></td></tr><tr><td>kw</td><td>科威特</td><td>Kuwait</td><td>America</td><td>AME</td><td></td></tr><tr><td>kz</td><td>哈萨克斯坦</td><td>Kazakhstan</td><td>Asia Pacific</td><td>APZ</td><td></td></tr><tr><td>1c</td><td>圣卢西亚</td><td>st.Lucia</td><td>America</td><td>AME</td><td></td></tr><tr><td>1i</td><td>列士敦士登</td><td>Liechtenstein</td><td>Europe</td><td></td><td>EUR</td></tr><tr><td>1k</td><td>斯里兰卡</td><td>Sri Lanka</td><td>AsiaPacific</td><td></td><td>APZ</td></tr><tr><td>1t</td><td>立陶宛</td><td>Lithuania</td><td>Europe</td><td></td><td>EUR</td></tr><tr><td>1u</td><td>卢森堡</td><td>Luxembourg</td><td>Europe</td><td></td><td>EUR</td></tr><tr><td>1v</td><td>拉脱维亚</td><td>Latvia</td><td>Europe</td><td></td><td>EUR</td></tr><tr><td>ma</td><td>摩洛哥</td><td>Morocco</td><td>America</td><td></td><td>AME</td></tr><tr><td>md</td><td>摩尔多瓦</td><td>Moldova, Republic of</td><td>Europe</td><td></td><td>EUR</td></tr><tr><td>me</td><td>黑山共和国</td><td>Montenegro</td><td>Europe</td><td></td><td>EUR</td></tr><tr><td></td><td></td><td>Macca</td><td></td><td></td><td></td></tr><tr><td></td><td>马其顿</td><td></td><td>Buia Pacific</td><td></td><td></td></tr><tr><td>mn</td><td>蒙古</td><td>Mongolia</td><td>Asia Pacific</td><td></td><td>APZ</td></tr><tr><td>mo</td><td>中国澳门</td><td>China. Macao</td><td>America</td><td></td><td>AME</td></tr><tr><td>mt</td><td>马耳他</td><td>Malta</td><td>Europe</td><td></td><td>EUR</td></tr><tr><td>mu</td><td>毛里求斯</td><td>Mauritius</td><td>America</td><td></td><td>AME</td></tr><tr><td>mx</td><td>墨西哥</td><td>Mexico</td><td>America</td><td></td><td>AME</td></tr><tr><td>my</td><td>马来西亚</td><td>Malaysia</td><td>Asia Pacific</td><td></td><td>APZ</td></tr><tr><td>ng</td><td>尼日利亚</td><td></td><td>America</td><td></td><td>AME</td></tr><tr><td>ni</td><td>尼加拉瓜</td><td>Nicaragua</td><td>America</td><td></td><td>AME</td></tr><tr><td>n1</td><td>荷兰</td><td>Netherlands</td><td>Europe</td><td></td><td>EUR</td></tr><tr><td>no</td><td>挪威</td><td>Norway</td><td>Europe</td><td></td><td>EUR</td></tr><tr><td>np</td><td>尼泊尔</td><td>Nepal</td><td>Asia Pacific</td><td></td><td>APZ</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>nz</td><td>新西兰</td><td>New Zealand</td><td>America</td><td></td><td>AME</td></tr></table>
+| 国际域 | 国家或地区 | Countries and Regions | 服务提供地        | 服务代号 |
+|:----|:------|:----------------------|:-------------|:-----|
+| jm  | 牙买加   | Jamaica               | America      | AME  |
+| jo  | 约旦    | Jordan                | America      | AME  |
+| jp  | 日本    | Japan                 | America      | AME  |
+| ke  | 肯尼亚   | Kenya                 | America      | AME  |
+| kh  | 柬埔寨   | Cambodia              | America      | AME  |
+| kr  | 韩国    | Korea                 | America      | AME  |
+| kw  | 科威特   | Kuwait                | America      | AME  |
+| kz  | 哈萨克斯坦 | Kazakhstan            | Asia Pacific | APZ  |
+| lc  | 圣卢西亚  | st.Lucia              | America      | AME  |
+| li  | 列支敦士登 | Liechtenstein         | Europe       | EUR  |
+| lk  | 斯里兰卡  | Sri Lanka             | Asia Pacific | APZ  |
+| lt  | 立陶宛   | Lithuania             | Europe       | EUR  |
+| lu  | 卢森堡   | Luxembourg            | Europe       | EUR  |
+| lv  | 拉脱维亚  | Latvia                | Europe       | EUR  |
+| ma  | 摩洛哥   | Morocco               | America      | AME  |
+| md  | 摩尔多瓦  | Moldova, Republic of  | Europe       | EUR  |
+| me  | 黑山共和国 | Montenegro            | Europe       | EUR  |
+| mk  | 马其顿   | Macedonia             | Asia Pacific | APZ  |
+| mn  | 蒙古    | Mongolia              | Asia Pacific | APZ  |
+| mo  | 中国澳门  | China. Macao          | America      | AME  |
+| mt  | 马耳他   | Malta                 | Europe       | EUR  |
+| mu  | 毛里求斯  | Mauritius             | America      | AME  |
+| mx  | 墨西哥   | Mexico                | America      | AME  |
+| my  | 马来西亚  | Malaysia              | Asia Pacific | APZ  |
+| ng  | 尼日利亚  | Nigeria               | America      | AME  |
+| ni  | 尼加拉瓜  | Nicaragua             | America      | AME  |
+| nl  | 荷兰    | Netherlands           | Europe       | EUR  |
+| no  | 挪威    | Norway                | Europe       | EUR  |
+| np  | 尼泊尔   | Nepal                 | Asia Pacific | APZ  |
+| nz  | 新西兰   | New Zealand           | America      | AME  |
 
-<table><tr><td>om</td><td>阿曼</td><td>oman</td><td>America</td><td>AME</td></tr><tr><td>pa</td><td>巴拿马</td><td>Panama</td><td>America</td><td>AME</td></tr><tr><td>pe</td><td>秘鲁</td><td>Peru</td><td>America</td><td>AME</td></tr><tr><td>ph</td><td>菲律宾</td><td>Philippines</td><td>Asia Pacific</td><td>APZ</td></tr><tr><td>pk</td><td>巴基斯坦</td><td>Pakistan</td><td>Asia Pacific</td><td>APZ</td></tr><tr><td></td><td>波兰</td><td>Poland</td><td>Europe</td><td>EUR</td></tr><tr><td>pt</td><td>葡萄牙</td><td>Portugal</td><td>Europe</td><td>EUR</td></tr><tr><td></td><td>巴拉圭</td><td>Paraguay</td><td>America</td><td>AME</td></tr><tr><td>qa</td><td>卡塔尔</td><td>Qatar</td><td>America</td><td>AME</td></tr><tr><td>ro</td><td>罗马尼亚</td><td>Romania</td><td>Europe</td><td>EUR</td></tr><tr><td>rs</td><td>塞尔维亚</td><td>Serbia</td><td>Europe</td><td>EUR</td></tr><tr><td>ru</td><td>俄罗斯</td><td>Russia</td><td>Europe</td><td>EUR</td></tr><tr><td>sa</td><td>沙特阿拉伯</td><td>Saudi Arabia</td><td>America</td><td>AME</td></tr><tr><td>se</td><td>瑞典</td><td>Sweden</td><td>Europe</td><td>EUR</td></tr><tr><td>sg</td><td>新加坡</td><td>singapore</td><td>Asia Pacific</td><td>APZ</td></tr><tr><td>si</td><td>斯洛文尼亚</td><td>slovenia</td><td>Europe</td><td>EUR</td></tr><tr><td>sk</td><td>斯洛伐克</td><td>slovakia</td><td>Europe</td><td>EUR</td></tr><tr><td>sr</td><td>苏里南</td><td>Suriname</td><td>America</td><td>AME</td></tr><tr><td></td><td>萨尔瓦多</td><td>EI Salvador</td><td>America</td><td>AME</td></tr><tr><td>th</td><td>泰国</td><td>Thailand</td><td>Asia Pacific</td><td>APZ</td></tr><tr><td>tr</td><td>土耳其</td><td>Turkey</td><td>Europe</td><td>EUR</td></tr><tr><td></td><td>特立尼达和多巴哥</td><td>Trinidad and Tobago</td><td>America</td><td>AME</td></tr><tr><td>tw</td><td>中国台湾省</td><td>China. Taiwan</td><td>America</td><td>AME</td></tr><tr><td>ua</td><td>乌克兰</td><td>ukraine</td><td>Europe</td><td>EUR</td></tr><tr><td>us</td><td>美国</td><td>United states of America</td><td>America</td><td>AME</td></tr><tr><td>uy</td><td>乌拉圭</td><td>Uruguay</td><td>America</td><td>AME</td></tr><tr><td>ve</td><td>委内瑞拉</td><td>venezuela</td><td>America</td><td>AME</td></tr><tr><td>vn</td><td>越南</td><td>vietnam</td><td>Asia Pacific</td><td>APZ</td></tr><tr><td>za</td><td>南非</td><td>South Africa</td><td>America</td><td>AME</td></tr></table>
+| 国际域 | 国家或地区    | Countries and Regions    | 服务提供地        | 服务代号 |
+|:----|:---------|:-------------------------|:-------------|:-----|
+| om  | 阿曼       | Oman                     | America      | AME  |
+| pa  | 巴拿马      | Panama                   | America      | AME  |
+| pe  | 秘鲁       | Peru                     | America      | AME  |
+| ph  | 菲律宾      | Philippines              | Asia Pacific | APZ  |
+| pk  | 巴基斯坦     | Pakistan                 | Asia Pacific | APZ  |
+| pl  | 波兰       | Poland                   | Europe       | EUR  |
+| pt  | 葡萄牙      | Portugal                 | Europe       | EUR  |
+| py  | 巴拉圭      | Paraguay                 | America      | AME  |
+| qa  | 卡塔尔      | Qatar                    | America      | AME  |
+| ro  | 罗马尼亚     | Romania                  | Europe       | EUR  |
+| rs  | 塞尔维亚     | Serbia                   | Europe       | EUR  |
+| ru  | 俄罗斯      | Russia                   | Europe       | EUR  |
+| sa  | 沙特阿拉伯    | Saudi Arabia             | America      | AME  |
+| se  | 瑞典       | Sweden                   | Europe       | EUR  |
+| sg  | 新加坡      | Singapore                | Asia Pacific | APZ  |
+| si  | 斯洛文尼亚    | Slovenia                 | Europe       | EUR  |
+| sk  | 斯洛伐克     | Slovakia                 | Europe       | EUR  |
+| sr  | 苏里南      | Suriname                 | America      | AME  |
+| sv  | 萨尔瓦多     | El Salvador              | America      | AME  |
+| th  | 泰国       | Thailand                 | Asia Pacific | APZ  |
+| tr  | 土耳其      | Turkey                   | Europe       | EUR  |
+| tt  | 特立尼达和多巴哥 | Trinidad and Tobago      | America      | AME  |
+| tw  | 中国台湾省    | China. Taiwan            | America      | AME  |
+| ua  | 乌克兰      | Ukraine                  | Europe       | EUR  |
+| us  | 美国       | United States of America | America      | AME  |
+| uy  | 乌拉圭      | Uruguay                  | America      | AME  |
+| ve  | 委内瑞拉     | Venezuela                | America      | AME  |
+| vn  | 越南       | Vietnam                  | Asia Pacific | APZ  |
+| za  | 南非       | South Africa             | America      | AME  |
 
 # 附录2服务代号及地址对应表
 
-<table><tr><td></td><td>service Typesvrrgnid</td><td>URL</td></tr><tr><td rowspan="8">OpenAPI URL</td><td>GS</td><td>https://api.ilifesmart.com/app/</td></tr><tr><td>CNO</td><td>https://api.cn0.ilifesmart.com/app/</td></tr><tr><td>VIP1</td><td>https://api.cnl.ilifesmart.com/app/</td></tr><tr><td>CN2</td><td>https://api.cn2.ilifesmart.com/app/</td></tr><tr><td>AME</td><td>https://api.us.ilifesmart.com/app/</td></tr><tr><td>EUROPE</td><td>https://api.eur.ilifesmart.com/app/</td></tr><tr><td>JAP</td><td>https://api.jp.ilifesmart.com/app/</td></tr><tr><td>APZ</td><td>https://api.apz.ilifesmart.com/app/</td></tr></table>
+| Service Type | svrrgnid | URL                                 |
+|:-------------|:---------|:------------------------------------|
+| OpenAPI URL  | GS       | https://api.ilifesmart.com/app/     |
+| OpenAPI URL  | CNO      | https://api.cn0.ilifesmart.com/app/ |
+| OpenAPI URL  | VIP1     | https://api.cn1.ilifesmart.com/app/ |
+| OpenAPI URL  | CN2      | https://api.cn2.ilifesmart.com/app/ |
+| OpenAPI URL  | AME      | https://api.us.ilifesmart.com/app/  |
+| OpenAPI URL  | EUROPE   | https://api.eur.ilifesmart.com/app/ |
+| OpenAPI URL  | JAP      | https://api.jp.ilifesmart.com/app/  |
+| OpenAPI URL  | APZ      | https://api.apz.ilifesmart.com/app/ |
