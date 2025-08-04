@@ -450,7 +450,8 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         try:
             if not new_data:
                 _LOGGER.warning(
-                    "Received empty new_data in _handle_update; possible upstream issue."
+                    "Received empty new_data in _handle_update; "
+                    "possible upstream issue."
                 )
                 return
             # 统一处理数据来源
@@ -507,7 +508,8 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             if current_device is None:
                 if self.available:
                     _LOGGER.warning(
-                        "Device %s not found during global refresh, marking as unavailable.",
+                        "Device %s not found during global refresh, "
+                        "marking as unavailable.",
                         self.unique_id,
                     )
                     self._attr_available = False

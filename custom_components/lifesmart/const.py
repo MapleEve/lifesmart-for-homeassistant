@@ -1,6 +1,7 @@
 """由 @MapleEve 实现的 LifeSmart 集成常量模块。
 
-此文件定义了所有与 LifeSmart 平台交互所需的硬编码常量、设备类型代码、API命令码、以及用于在 Home Assistant 和 LifeSmart 之间转换数据的映射。
+此文件定义了所有与 LifeSmart 平台交互所需的硬编码常量、设备类型代码、API命令码、
+以及用于在 Home Assistant 和 LifeSmart 之间转换数据的映射。
 
 维护此文件的准确性和清晰度对于整个集成的稳定和可扩展性至关重要。
 """

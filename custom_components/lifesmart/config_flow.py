@@ -708,7 +708,10 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
 
             # 保存遥控器配置到选项中
             remotes = self.options_data.get("remotes", {})
-            remote_id = f"{self.temp_data['category']}_{self.temp_data['brand']}_{self.temp_data['idx']}"
+            remote_id = (
+                f"{self.temp_data['category']}_"
+                f"{self.temp_data['brand']}_{self.temp_data['idx']}"
+            )
 
             remotes[remote_id] = {
                 "name": self.temp_data["remote_name"],
