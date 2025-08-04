@@ -647,3 +647,22 @@ async def setup_integration_single_io_rgbw_only(
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
+
+
+# 导入MAPLE HOME风格的pytest横幅
+try:
+    from .pytest_maple_banner import pytest_sessionstart
+except ImportError:
+    # 如果导入失败，使用简单的版本显示
+    def pytest_sessionstart(session):
+        """简单的版本信息显示（备用方案）"""
+        try:
+            import homeassistant.const as ha_const
+            import aiohttp
+
+            ha_version = getattr(ha_const, "__version__", "Unknown")
+            aiohttp_version = getattr(aiohttp, "__version__", "Unknown")
+            print(f"🏠 Home Assistant: {ha_version} | 🌐 aiohttp: {aiohttp_version}")
+        except ImportError:
+            print("⚠️  Could not determine Home Assistant version")
+        print()
