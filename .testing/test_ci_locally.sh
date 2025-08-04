@@ -2,6 +2,13 @@
 
 # 本地CI兼容性测试脚本
 # 模拟GitHub Actions环境，测试不同HA版本组合
+# 
+# 特别修复: macOS ARM64 Python 3.11 lru-dict编译问题
+# 使用双fork解决方案：
+# - Fork 1: pytest-homeassistant-custom-component (修复setup.py和版本兼容性)
+# - Fork 2: Home Assistant 2023.6.0 (移除lru-dict依赖冲突)
+# 解决方案详情: https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed/tree/macos-fix-branch
+#              https://github.com/MapleEve/homeassistant-2023.6.0-macos-fix/tree/macos-fix-branch
 
 set -e
 
@@ -548,14 +555,14 @@ if [ \"\$(python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_
   if [[ \"\$OSTYPE\" == \"darwin\"* ]]; then
     # macOS Python 3.11: 使用双fork解决方案修复lru-dict编译问题
     echo 'Using dual-fork solution for macOS ARM64 lru-dict compatibility...'
-    echo 'Step 1: Installing lru-dict==1.3.0...'
+    echo 'Step 1: Installing lru-dict==1.3.0 (compatible version)...'
     pip install -q lru-dict==1.3.0 &&
-    echo 'Step 2: Installing forked HA with dependencies (lru-dict excluded)...'
-    pip install -q git+https://github.com/MapleEve/homeassistant-2023.6.0-macos-fix.git@2023.6.0-macos-fix &&
-    echo 'Step 3: Installing forked pytest plugin...'
-    pip install -q git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@0.13.36-macos-fix
+    echo 'Step 2: Installing forked HA 2023.6.0 (lru-dict dependencies removed)...'
+    timeout 600 pip install -q git+https://github.com/MapleEve/homeassistant-2023.6.0-macos-fix.git@macos-fix-branch &&
+    echo 'Step 3: Installing forked pytest plugin (compatible with our HA fork)...'
+    timeout 600 pip install -q git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@macos-fix-branch
   else
-    pip install --use-pep517 --no-build-isolation --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
+    pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
   fi
 else
   pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
