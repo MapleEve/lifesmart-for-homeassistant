@@ -33,5 +33,38 @@ ensure_newline_before_comments = true
 src_paths = ["custom_components"]
 
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
-build-backend = "setuptools.build_meta"
+requires = ["setuptools >= 42.0.0"]
+build-backend = "[setuptools.build_meta](https://setuptools.pypa.io/en/latest/build_meta.html)"
+
+[project]
+name = "lifesmart-hacs"
+dynamic = ["version"]
+description = "LifeSmart HACS integration for Home Assistant"
+readme = "README.md"
+license = { text = "GPL-v3" }
+authors = [
+    { name = "MapleEve", email = "" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Home Automation",
+]
+requires-python = ">=3.11"
+
+# PEP 517 build configuration for lru-dict compilation compatibility
+# This addresses Python 3.11 compilation issues similar to slate_connect package
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools.packages.find]
+include = ["custom_components*"]
+
+[tool.setuptools.package-data]
+"custom_components.lifesmart" = ["*.json", "*.yaml"]
