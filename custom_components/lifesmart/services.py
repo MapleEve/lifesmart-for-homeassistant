@@ -64,8 +64,6 @@ class LifeSmartServiceManager:
             idx = call.data.get("idx")
 
             if not ai and not idx:
-                from homeassistant.exceptions import HomeAssistantError
-
                 raise HomeAssistantError(
                     "发送红外按键失败：'ai' 和 'idx' 参数必须提供其中一个"
                 )
@@ -146,13 +144,9 @@ class LifeSmartServiceManager:
         scene_id = call.data.get("id")
 
         if not agt:
-            from homeassistant.exceptions import HomeAssistantError
-
             raise HomeAssistantError("触发场景失败：'agt' 参数不能为空。")
 
         if not scene_name and not scene_id:
-            from homeassistant.exceptions import HomeAssistantError
-
             raise HomeAssistantError(
                 "触发场景失败：'name' 和 'id' 参数必须提供其中一个。"
             )

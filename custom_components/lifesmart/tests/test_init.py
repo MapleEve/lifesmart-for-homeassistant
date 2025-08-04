@@ -727,7 +727,7 @@ class TestServiceRegistration:
         )
 
         mock_client.async_send_ir_key.assert_called_once_with(
-            "test_hub", "ir_device", "remote_id", "tv", "samsung", "power"
+            "test_hub", "remote_id", "tv", "samsung", "power", "ir_device", ""
         )
 
     @pytest.mark.asyncio
