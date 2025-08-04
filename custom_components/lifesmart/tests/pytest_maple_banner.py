@@ -7,6 +7,7 @@ import os
 import platform
 import subprocess
 import sys
+from datetime import datetime
 
 
 def get_git_info() -> tuple[str, str]:
@@ -90,14 +91,8 @@ def get_environment_info() -> dict:
     except ImportError:
         info["aiohttp"] = "unknown"
 
-    # asyncio版本
-    try:
-        import asyncio
-
-        # asyncio没有__version__，使用Python版本作为代替
-        info["asyncio_version"] = f"Python {info['python']}"
-    except ImportError:
-        info["asyncio_version"] = "unknown"
+    # 当前测试时间
+    info["test_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # 平台信息
     info["platform"] = platform.system().lower()
@@ -168,29 +163,37 @@ def create_version_table(info: dict) -> str:
         BRIGHT_WHITE = "\033[97m"
         BRIGHT_RED = "\033[91m"
 
-    # 安全的字符串格式化函数
-    def safe_format(value, width=51):
-        """安全的字符串格式化，处理None值"""
+    # 表格宽度常量
+    TABLE_WIDTH = 77  # 总表格宽度
+    LEFT_COL_WIDTH = 25  # 左列宽度（包括边框）
+    RIGHT_COL_WIDTH = TABLE_WIDTH - LEFT_COL_WIDTH - 1  # 右列宽度（51字符）
+
+    # 安全的字符串格式化函数 - 确保精确对齐
+    def safe_format_right_col(value):
+        """安全的右列格式化，确保右边框对齐"""
         if value is None:
             value = "unknown"
-        return f"{str(value):<{width}}"
+        content = str(value)
+        # 确保内容不超过右列最大宽度，并用空格填充到固定宽度
+        if len(content) > RIGHT_COL_WIDTH:
+            content = content[: RIGHT_COL_WIDTH - 3] + "..."
+        return f"{content:<{RIGHT_COL_WIDTH}}"
 
-    # 计算Git信息长度以正确对齐
+    # 特殊处理Git信息，确保对齐
     git_info = f"{info['git_commit']} ({info['git_branch']})"
-    git_padding = 51 - len(git_info)
-    git_padding = max(0, git_padding)  # 确保不为负数
+    git_formatted = safe_format_right_col(git_info)
 
     version_info = f"""
 {Colors.BRIGHT_CYAN}  📊 Test Environment Information:{Colors.RESET}
 {Colors.CYAN}  ┌─────────────────────────┬─────────────────────────────────────────────────────┐{Colors.RESET}
-{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_YELLOW}🐍 Python{Colors.RESET}              {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format(info['python'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
-{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_BLUE}🧪 pytest{Colors.RESET}              {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format(info['pytest'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
-{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_MAGENTA}📝 Git Commit{Colors.RESET}          {Colors.CYAN}│{Colors.RESET} {Colors.YELLOW}{git_info}{' ' * git_padding}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
-{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_GREEN}🏠 Home Assistant{Colors.RESET}      {Colors.CYAN}│{Colors.RESET} {Colors.BRIGHT_GREEN}{safe_format(info['homeassistant'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
-{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_RED}🔌 pytest-HA Plugin{Colors.RESET}    {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format(info['pytest_ha'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
-{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_CYAN}🐍 Conda Environment{Colors.RESET}   {Colors.CYAN}│{Colors.RESET} {Colors.MAGENTA}{safe_format(info['conda_env'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
-{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_WHITE}🌐 aiohttp{Colors.RESET}             {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format(info['aiohttp'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
-{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_YELLOW}⚡ AsyncIO{Colors.RESET}             {Colors.CYAN}│{Colors.RESET} {Colors.CYAN}{safe_format(info['asyncio_version'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
+{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_YELLOW}🐍 Python{Colors.RESET}               {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format_right_col(info['python'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
+{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_BLUE}🧪 Pytest{Colors.RESET}               {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format_right_col(info['pytest'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
+{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_MAGENTA}📝 Git Commit{Colors.RESET}           {Colors.CYAN}│{Colors.RESET} {Colors.YELLOW}{git_formatted}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
+{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_GREEN}🏠 Home Assistant{Colors.RESET}       {Colors.CYAN}│{Colors.RESET} {Colors.BRIGHT_GREEN}{safe_format_right_col(info['homeassistant'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
+{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_RED}🔌 Pytest-HA Plugin{Colors.RESET}     {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format_right_col(info['pytest_ha'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
+{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_CYAN}🐍 Conda Environment{Colors.RESET}    {Colors.CYAN}│{Colors.RESET} {Colors.MAGENTA}{safe_format_right_col(info['conda_env'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
+{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_WHITE}🌐 Aiohttp{Colors.RESET}               {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format_right_col(info['aiohttp'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
+{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_YELLOW}🕐 Test Time{Colors.RESET}            {Colors.CYAN}│{Colors.RESET} {Colors.CYAN}{safe_format_right_col(info['test_time'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
 {Colors.CYAN}  └─────────────────────────┴─────────────────────────────────────────────────────┘{Colors.RESET}
 """
     return version_info
