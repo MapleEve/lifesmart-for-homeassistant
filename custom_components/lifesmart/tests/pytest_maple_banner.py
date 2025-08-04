@@ -192,7 +192,7 @@ def create_version_table(info: dict) -> str:
 {Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_GREEN}🏠 Home Assistant{Colors.RESET}       {Colors.CYAN}│{Colors.RESET} {Colors.BRIGHT_GREEN}{safe_format_right_col(info['homeassistant'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
 {Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_RED}🔌 Pytest-HA Plugin{Colors.RESET}     {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format_right_col(info['pytest_ha'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
 {Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_CYAN}🐍 Conda Environment{Colors.RESET}    {Colors.CYAN}│{Colors.RESET} {Colors.MAGENTA}{safe_format_right_col(info['conda_env'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
-{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_WHITE}🌐 Aiohttp{Colors.RESET}               {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format_right_col(info['aiohttp'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
+{Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_WHITE}🌐 Aiohttp{Colors.RESET}              {Colors.CYAN}│{Colors.RESET} {Colors.GREEN}{safe_format_right_col(info['aiohttp'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
 {Colors.CYAN}  │{Colors.RESET} {Colors.BRIGHT_YELLOW}🕐 Test Time{Colors.RESET}            {Colors.CYAN}│{Colors.RESET} {Colors.CYAN}{safe_format_right_col(info['test_time'])}{Colors.RESET} {Colors.CYAN}│{Colors.RESET}
 {Colors.CYAN}  └─────────────────────────┴─────────────────────────────────────────────────────┘{Colors.RESET}
 """
