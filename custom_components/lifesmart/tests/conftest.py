@@ -11,19 +11,13 @@ from unittest.mock import AsyncMock, patch, MagicMock
 import aiohttp
 import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_REGION
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.const import (
     DOMAIN,
-    CONF_LIFESMART_APPKEY,
-    CONF_LIFESMART_APPTOKEN,
-    CONF_LIFESMART_USERID,
-    CONF_LIFESMART_USERTOKEN,
     CONF_EXCLUDE_ITEMS,
     CONF_EXCLUDE_AGTS,
-    DYN_EFFECT_MAP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,17 +97,9 @@ def mock_config_data_fixture():
     这个 Fixture 封装了一套标准的云端模式配置信息，用于在测试中创建
     `MockConfigEntry`。这确保了所有测试都使用一致的凭据，简化了测试的编写。
     """
-    from homeassistant.const import CONF_TYPE
-    from homeassistant import config_entries
+    from .test_utils import create_mock_config_data
 
-    return {
-        CONF_TYPE: config_entries.CONN_CLASS_CLOUD_PUSH,  # 明确设置为云端模式
-        CONF_LIFESMART_APPKEY: "mock_appkey",
-        CONF_LIFESMART_APPTOKEN: "mock_apptoken",
-        CONF_LIFESMART_USERID: "mock_userid",
-        CONF_LIFESMART_USERTOKEN: "mock_usertoken",
-        CONF_REGION: "cn2",
-    }
+    return create_mock_config_data()
 
 
 # --- 统一的模拟设备列表 ---
@@ -130,369 +116,9 @@ def mock_lifesmart_devices_fixture():
     - 用于测试平台级别的功能，例如，确保 `climate` 平台在初始化时不会错误地创建 `switch` 实体。
     - 用于测试设备排除逻辑。
     """
-    return [
-        # --- Switch Devices ---
-        # 1. 标准三路开关 (SUPPORTED_SWITCH_TYPES)
-        {
-            "agt": "hub_sw",
-            "me": "sw_if3",
-            "devtype": "SL_SW_IF3",
-            "name": "3-Gang Switch",
-            "data": {"L1": {"type": 129}, "L2": {"type": 128}, "L3": {"type": 129}},
-        },
-        # 2. 普通插座 (SMART_PLUG_TYPES)
-        {
-            "agt": "hub_sw",
-            "me": "sw_ol",
-            "devtype": "SL_OL",
-            "name": "Smart Outlet",
-            "data": {"O": {"type": 129}},
-        },
-        # 2.1. 入墙插座 (SL_OL_W) - 现在归类为插座而非灯光
-        {
-            "agt": "hub_sw",
-            "me": "wall_outlet",
-            "devtype": "SL_OL_W",
-            "name": "Wall Outlet",
-            "data": {"P1": {"type": 129}},
-        },
-        # 3. 计量插座 (POWER_METER_PLUG_TYPES) - 位于被排除的 hub
-        {
-            "agt": "excluded_hub",
-            "me": "sw_oe3c",
-            "devtype": "SL_OE_3C",
-            "name": "Power Plug",
-            "data": {"P1": {"type": 129}, "P4": {"type": 128}},
-        },
-        # 4. 超能面板开关版 (SL_NATURE)
-        {
-            "agt": "hub_sw",
-            "me": "sw_nature",
-            "devtype": "SL_NATURE",
-            "name": "Nature Panel Switch",
-            "data": {
-                "P1": {"type": 129},
-                "P2": {"type": 128},
-                "P3": {"type": 129},
-                "P5": {"val": 1},  # P5=1 表示其为开关模式
-            },
-        },
-        # 5 通用控制器（三路开关模式）
-        {
-            "agt": "hub_sw",
-            "me": "generic_p_switch_mode",
-            "devtype": "SL_P",
-            "name": "Generic Controller Switch",
-            "data": {
-                "P1": {"val": (8 << 24)},  # Mode 8: 3-way switch
-                "P2": {"type": 129},
-                "P3": {"type": 128},
-                "P4": {"type": 129},
-            },
-        },
-        # 6. 九路开关控制器 (SL_P_SW)
-        {
-            "agt": "hub_sw",
-            "me": "sw_p9",
-            "devtype": "SL_P_SW",
-            "name": "9-Way Controller",
-            "data": {
-                "P1": {"type": 129},
-                "P2": {"type": 128},
-                "P3": {"type": 129},
-                "P4": {"type": 128},
-                "P5": {"type": 129},
-                "P6": {"type": 128},
-                "P7": {"type": 129},
-                "P8": {"type": 128},
-                "P9": {"type": 129},
-                "P10": {"type": 128},
-            },
-        },
-        # --- Light Devices ---
-        # 1. BRIGHTNESS_LIGHT_TYPES -> SL_SPWM
-        {
-            "agt": "hub_light",
-            "me": "light_bright",
-            "devtype": "SL_SPWM",
-            "name": "Brightness Light",
-            "data": {"P1": {"type": 129, "val": 100}},
-        },
-        # 2. LIGHT_DIMMER_TYPES -> SL_LI_WW_V2
-        {
-            "agt": "hub_light",
-            "me": "light_dimmer",
-            "devtype": "SL_LI_WW_V2",
-            "name": "Dimmer Light",
-            "data": {"P1": {"type": 129, "val": 100}, "P2": {"val": 27}},
-        },
-        # 3. QUANTUM_TYPES -> OD_WE_QUAN
-        {
-            "agt": "hub_light",
-            "me": "light_quantum",
-            "devtype": "OD_WE_QUAN",
-            "name": "Quantum Light",
-            "data": {"P1": {"type": 129, "val": 100}, "P2": {"val": 0x01010203}},
-        },
-        # 4. RGB_LIGHT_TYPES -> SL_SC_RGB
-        {
-            "agt": "hub_light",
-            "me": "light_singlergb",
-            "devtype": "SL_SC_RGB",
-            "name": "Single IO RGB Light",
-            "data": {"RGB": {"type": 129, "val": 0x64010203}},
-        },
-        # 5. RGBW_LIGHT_TYPES -> SL_CT_RGBW
-        {
-            "agt": "hub_light",
-            "me": "light_dualrgbw",
-            "devtype": "SL_CT_RGBW",
-            "name": "Dual IO RGBW Light",
-            "data": {"RGBW": {"type": 129, "val": 0}, "DYN": {"type": 128}},
-        },
-        # 6. SPOT_TYPES -> SL_SPOT (RGB)
-        {
-            "agt": "hub_light",
-            "me": "light_spotrgb",
-            "devtype": "SL_SPOT",
-            "name": "SPOT RGB Light",
-            "data": {"RGB": {"type": 129, "val": 0xFF8040}},
-        },
-        # 7. SPOT_TYPES -> MSL_IRCTL (RGBW)
-        {
-            "agt": "hub_light",
-            "me": "light_spotrgbw",
-            "devtype": "MSL_IRCTL",
-            "name": "SPOT RGBW Light",
-            "data": {
-                "RGBW": {"type": 129, "val": 0x11223344},
-                "DYN": {"type": 129, "val": DYN_EFFECT_MAP["海浪"]},
-            },
-        },
-        # 8. GARAGE_DOOR_TYPES -> SL_ETDOOR
-        {
-            "agt": "hub_light",
-            "me": "light_cover",
-            "devtype": "SL_ETDOOR",
-            "name": "Cover Light",
-            "data": {"P1": {"type": 129}},
-        },
-        # 9. SL_OL_W 已移动到插座类型，此处删除灯光设备定义
-        # 10. 简单灯泡类型已删除，因为LIGHT_BULB_TYPES不存在
-        # 11. OUTDOOR_LIGHT_TYPES -> SL_LI_UG1
-        {
-            "agt": "hub_light",
-            "me": "light_outdoor",
-            "devtype": "SL_LI_UG1",
-            "name": "Outdoor Light",
-            "data": {"P1": {"type": 129, "val": 0x64010203}},
-        },
-        # --- Binary Sensor Devices ---
-        {
-            "agt": "hub_bs",
-            "me": "bs_door",
-            "devtype": "SL_SC_G",
-            "name": "Front Door",
-            "data": {"G": {"val": 0, "type": 0}},
-        },
-        {
-            "agt": "hub_bs",
-            "me": "bs_motion",
-            "devtype": "SL_SC_MHW",
-            "name": "Living Motion",
-            "data": {"M": {"val": 1, "type": 0}},
-        },
-        {
-            "agt": "hub_bs",
-            "me": "bs_water",
-            "devtype": "SL_SC_WA",
-            "name": "Kitchen Water",
-            "data": {"WA": {"val": 50, "type": 0}},
-        },
-        {
-            "agt": "hub_bs",
-            "me": "bs_defed",
-            "devtype": "SL_DF_MM",
-            "name": "Garage DEFED",
-            "data": {"M": {"val": 1, "type": 129}},
-        },
-        {
-            "agt": "hub_bs",
-            "me": "bs_lock",
-            "devtype": "SL_LK_LS",
-            "name": "Main Lock",
-            "data": {"EVTLO": {"val": 4121, "type": 1}, "ALM": {"val": 2}},
-        },
-        {
-            "agt": "hub_bs",
-            "me": "bs_smoke",
-            "devtype": "SL_P_A",
-            "name": "Hallway Smoke",
-            "data": {"P1": {"val": 1, "type": 0}},
-        },
-        {
-            "agt": "hub_bs",
-            "me": "bs_radar",
-            "devtype": "SL_P_RM",
-            "name": "Study Occupancy",
-            "data": {"P1": {"val": 1, "type": 0}},
-        },
-        {
-            "agt": "hub_bs",
-            "me": "bs_button",
-            "devtype": "SL_SC_BB_V2",
-            "name": "Panic Button",
-            "data": {"P1": {"val": 0, "type": 0}},
-        },
-        # --- Sensor Devices ---
-        {
-            "agt": "hub_sensor",
-            "me": "sensor_env",
-            "devtype": "SL_SC_THL",
-            "name": "Living Room Env",
-            "data": {
-                "T": {"v": 25.5},
-                "H": {"v": 60.1},
-                "Z": {"v": 1000},
-                "V": {"val": 95},
-            },
-        },
-        {
-            "agt": "hub_sensor",
-            "me": "sensor_co2",
-            "devtype": "SL_SC_CA",
-            "name": "Study CO2",
-            "data": {"P3": {"val": 800}},
-        },
-        {
-            "agt": "hub_sensor",
-            "me": "sensor_power_plug",
-            "devtype": "SL_OE_3C",
-            "name": "Washing Machine Plug",
-            "data": {"P2": {"v": 1.5}, "P3": {"v": 1200}},
-        },
-        {
-            "agt": "hub_sensor",
-            "me": "sensor_lock_battery",
-            "devtype": "SL_LK_LS",
-            "name": "Main Door Lock",
-            "data": {"BAT": {"val": 88}},
-        },
-        {
-            "agt": "hub_sensor",
-            "me": "sensor_boundary",
-            "devtype": "SL_SC_THL",
-            "name": "Boundary Test Sensor",
-            "data": {"T": {"val": 0}, "H": {}, "Z": {"val": "invalid_string"}},
-        },
-        # --- Cover Devices ---
-        {
-            "agt": "hub_cover",
-            "me": "cover_garage",
-            "devtype": "SL_ETDOOR",
-            "name": "Garage Door",
-            "data": {"P2": {"val": 0, "type": 128}},
-        },
-        {
-            "agt": "hub_cover",
-            "me": "cover_dooya",
-            "devtype": "SL_DOOYA",
-            "name": "Living Room Curtain",
-            "data": {"P1": {"val": 100, "type": 128}},
-        },
-        {
-            "agt": "hub_cover",
-            "me": "cover_nonpos",
-            "devtype": "SL_SW_WIN",
-            "name": "Bedroom Curtain",
-            "data": {"OP": {"type": 128}, "CL": {"type": 128}, "ST": {"type": 128}},
-        },
-        {
-            "agt": "hub_cover",
-            "me": "cover_generic",
-            "devtype": "SL_P",
-            "name": "Generic Controller Curtain",
-            "data": {
-                "P1": {"val": (2 << 24)},
-                "P2": {"type": 128},
-                "P3": {"type": 128},
-                "P4": {"type": 128},
-            },
-        },
-        # --- Climate Devices ---
-        {
-            "agt": "hub_climate",
-            "me": "climate_nature_thermo",
-            "devtype": "SL_NATURE",
-            "name": "Nature Panel Thermo",
-            "data": {
-                "P1": {"type": 129, "val": 1},  # On
-                "P4": {"v": 28.0},  # Current Temp
-                "P5": {"val": 3},  # 关键：标识为温控面板
-                "P6": {"val": (4 << 6)},  # CFG, 4 -> ⻛机盘管（双阀）模式
-                "P7": {"val": 1},  # Mode, 1 -> Auto
-                "P8": {"v": 26.0},  # Target Temp
-                "P10": {"val": 15},  # Fan Speed, 15 -> Low
-            },
-        },
-        {
-            "agt": "hub_climate",
-            "me": "climate_floor_heat",
-            "devtype": "SL_CP_DN",
-            "name": "Floor Heating",
-            "data": {
-                "P1": {"type": 1, "val": 2147483648},
-                "P3": {"v": 25.0},
-                "P4": {"v": 22.5},
-            },
-        },
-        {
-            "agt": "hub_climate",
-            "me": "climate_fancoil",
-            "devtype": "SL_CP_AIR",
-            "name": "Fan Coil Unit",
-            "data": {
-                "P1": {"type": 1, "val": (1 << 15) | (1 << 13)},
-                "P4": {"v": 24.0},
-                "P5": {"v": 26.0},
-            },
-        },
-        {
-            "agt": "hub_climate",
-            "me": "climate_airpanel",
-            "devtype": "V_AIR_P",
-            "name": "Air Panel",
-            "data": {
-                "O": {"type": 0},
-                "MODE": {"val": 1},
-                "F": {"val": 2},
-                "T": {"v": 23.0},
-                "tT": {"v": 25.0},
-            },
-        },
-        {
-            "agt": "hub_climate",
-            "me": "climate_airsystem",
-            "devtype": "SL_TR_ACIPM",
-            "name": "Air System",
-            "data": {"P1": {"type": 1, "val": 1}},
-        },
-        # --- Devices for Exclusion/Special Tests ---
-        {
-            "agt": "hub_bs",
-            "me": "excluded_device",
-            "devtype": "SL_SC_G",
-            "name": "Excluded Sensor",
-            "data": {"G": {"v": 20}},
-        },
-        {
-            "agt": "excluded_hub",
-            "me": "device_on_excluded_hub",
-            "devtype": "SL_SC_THL",
-            "name": "Sensor on Excluded Hub",
-            "data": {"T": {"v": 21}},
-        },
-    ]
+    from .test_utils import create_mock_lifesmart_devices
+
+    return create_mock_lifesmart_devices()
 
 
 @pytest.fixture(autouse=True)
@@ -774,17 +400,9 @@ def mock_device_climate_fancoil() -> dict:
       - `P4`: 目标温度 (target_temperature) 为 24.0。
       - `P5`: 当前温度 (current_temperature) 为 26.0。
     """
-    return {
-        "agt": "hub_climate",
-        "me": "climate_fancoil",
-        "devtype": "SL_CP_AIR",
-        "name": "Fan Coil Unit",
-        "data": {
-            "P1": {"type": 1, "val": (1 << 15) | (1 << 13)},
-            "P4": {"v": 24.0},
-            "P5": {"v": 26.0},
-        },
-    }
+    from .test_utils import create_mock_device_climate_fancoil
+
+    return create_mock_device_climate_fancoil()
 
 
 @pytest.fixture
@@ -814,12 +432,12 @@ def mock_device_climate_floor_heat() -> dict:
 @pytest.fixture
 def mock_device_climate_nature_fancoil() -> dict:
     """
-    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制“风机盘管”。
+    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制"风机盘管"。
 
     SL_NATURE 面板是一个多功能设备，其具体功能由内部数据点决定。
-    - `P5` 的 `val` 为 3: 表示此面板工作在“温控器”模式下。
+    - `P5` 的 `val` 为 3: 表示此面板工作在"温控器"模式下。
     - `P6` 的 `val` 为 `(4 << 6)`: 这是最关键的配置，定义了其控制的设备类型为
-      “风机盘管(双阀)”，这将决定实体支持的 `hvac_modes` 和 `fan_modes`。
+      "风机盘管(双阀)"，这将决定实体支持的 `hvac_modes` 和 `fan_modes`。
     """
     return {
         "agt": "hub_climate",
@@ -841,9 +459,9 @@ def mock_device_climate_nature_fancoil() -> dict:
 @pytest.fixture
 def mock_device_climate_nature_freshair() -> dict:
     """
-    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制“新风”。
+    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制"新风"。
 
-    - `P6` 的 `val` 为 `(0 << 6)`: 定义了其控制的设备类型为“新风”。
+    - `P6` 的 `val` 为 `(0 << 6)`: 定义了其控制的设备类型为"新风"。
     """
     return {
         "agt": "hub_climate",
@@ -865,9 +483,9 @@ def mock_device_climate_nature_freshair() -> dict:
 @pytest.fixture
 def mock_device_climate_nature_floorheat() -> dict:
     """
-    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制“水地暖”。
+    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制"水地暖"。
 
-    - `P6` 的 `val` 为 `(2 << 6)`: 定义了其控制的设备类型为“水地暖”。
+    - `P6` 的 `val` 为 `(2 << 6)`: 定义了其控制的设备类型为"水地暖"。
     """
     return {
         "agt": "hub_climate",
@@ -894,13 +512,9 @@ def mock_device_spot_rgb_light() -> dict:
     - 初始状态: 开，颜色为 (255, 128, 64)。
       - `val` 为 `0xFF8040`。
     """
-    return {
-        "agt": "hub_light",
-        "me": "light_spotrgb",
-        "devtype": "SL_SPOT",
-        "name": "SPOT RGB Light",
-        "data": {"RGB": {"type": 129, "val": 0xFF8040}},
-    }
+    from .test_utils import create_mock_device_spot_rgb_light
+
+    return create_mock_device_spot_rgb_light()
 
 
 @pytest.fixture
@@ -912,13 +526,9 @@ def mock_device_dual_io_rgbw_light() -> dict:
       - `RGBW` 口为开 (`type: 129`)，但值为 0。
       - `DYN` 口为关 (`type: 128`)。
     """
-    return {
-        "agt": "hub_light",
-        "me": "light_dualrgbw",
-        "devtype": "SL_CT_RGBW",
-        "name": "Dual IO RGBW Light",
-        "data": {"RGBW": {"type": 129, "val": 0}, "DYN": {"type": 128}},
-    }
+    from .test_utils import create_mock_device_dual_io_rgbw_light
+
+    return create_mock_device_dual_io_rgbw_light()
 
 
 @pytest.fixture
@@ -930,13 +540,9 @@ def mock_device_single_io_rgbw_light() -> dict:
     - 初始状态: 开，颜色为 (1, 2, 3)，亮度为 100%。
       - `val` 为 `0x64010203` (亮度100, R=1, G=2, B=3)。
     """
-    return {
-        "agt": "hub_light",
-        "me": "light_singlergb",
-        "devtype": "SL_SC_RGB",
-        "name": "Single IO RGB Light",
-        "data": {"RGB": {"type": 129, "val": 0x64010203}},
-    }
+    from .test_utils import create_mock_device_single_io_rgbw_light
+
+    return create_mock_device_single_io_rgbw_light()
 
 
 # ============================================================================
