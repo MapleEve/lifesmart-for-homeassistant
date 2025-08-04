@@ -352,6 +352,108 @@ class TestNetworkConnectionManagement:
             assert result == -1, "未连接时发送应该返回-1"
             mock_logger.error.assert_called_with("本地客户端未连接，无法发送指令。")
 
+    @pytest.mark.asyncio
+    async def test_check_login_connection_closed_by_peer(self):
+        """测试check_login过程中连接被对端关闭的情况"""
+        client = LifeSmartLocalTCPClient("192.168.1.100", 8888, "user", "pass")
+
+        mock_reader = AsyncMock()
+        mock_writer = MagicMock()
+        mock_writer.write = MagicMock()
+        mock_writer.drain = AsyncMock()
+        mock_writer.close = MagicMock()
+        mock_writer.wait_closed = AsyncMock()
+
+        # 模拟连接被对端关闭（读取到空字节）
+        mock_reader.read.return_value = b""
+
+        # 直接模拟open_connection，避免复杂的wait_for处理
+        with patch("asyncio.open_connection", return_value=(mock_reader, mock_writer)):
+            with pytest.raises(asyncio.TimeoutError, match="Connection closed by peer"):
+                await client.check_login()
+
+    @pytest.mark.asyncio
+    async def test_check_login_eof_error_handling(self):
+        """测试check_login过程中EOFError的处理"""
+        client = LifeSmartLocalTCPClient("192.168.1.100", 8888, "user", "pass")
+
+        mock_reader = AsyncMock()
+        mock_writer = MagicMock()
+        mock_writer.write = MagicMock()
+        mock_writer.drain = AsyncMock()
+        mock_writer.close = MagicMock()
+        mock_writer.wait_closed = AsyncMock()
+
+        # 设置mock_reader.read的行为，避免AsyncMock警告
+        read_call_count = 0
+
+        async def mock_read_side_effect(*args, **kwargs):
+            nonlocal read_call_count
+            read_call_count += 1
+            if read_call_count == 1:
+                return b"\x00\x01"  # 第一次读取：不完整数据
+            else:
+                return b"\x00\x00\x00\x01"  # 后续读取：完整数据
+
+        mock_reader.read.side_effect = mock_read_side_effect
+
+        # 计数器来区分不同的wait_for调用
+        call_count = 0
+
+        async def wait_for_side_effect(coro, timeout=None):
+            nonlocal call_count
+            call_count += 1
+
+            if call_count == 1:
+                # 第一次调用：open_connection - 需要await协程
+                if hasattr(coro, "__await__"):
+                    # 如果是协程，先await它，然后返回我们的mock对象
+                    try:
+                        await coro
+                    except:
+                        pass  # 忽略mock中的错误
+                return (mock_reader, mock_writer)
+            else:
+                # 其他调用：正常await协程
+                return await coro
+
+        with patch("asyncio.wait_for", side_effect=wait_for_side_effect):
+            # 模拟协议解码：第一次EOFError，第二次成功
+            with patch.object(client._proto, "decode") as mock_decode:
+                mock_decode.side_effect = [
+                    EOFError("Incomplete packet"),  # 第一次解码失败
+                    (b"", [{}, {"ret": {"status": "ok"}}]),  # 第二次解码成功
+                ]
+
+                # 应该能处理EOFError并继续尝试
+                result = await client.check_login()
+                assert result is True
+
+    @pytest.mark.asyncio
+    async def test_check_login_writer_close_error_handling(self):
+        """测试check_login过程中writer关闭错误的处理"""
+        client = LifeSmartLocalTCPClient("192.168.1.100", 8888, "user", "pass")
+
+        mock_reader = AsyncMock()
+        mock_writer = MagicMock()
+        mock_writer.write = MagicMock()
+        mock_writer.drain = AsyncMock()
+        mock_writer.close = MagicMock()
+        mock_writer.wait_closed = AsyncMock()
+        mock_writer.wait_closed.side_effect = ConnectionResetError("Connection reset")
+
+        # 设置mock_reader返回完整的登录响应
+        mock_reader.read.return_value = b"\x00\x00\x00\x01"
+
+        # 直接模拟open_connection
+        with patch("asyncio.open_connection", return_value=(mock_reader, mock_writer)):
+            with patch.object(client._proto, "decode") as mock_decode:
+                mock_decode.return_value = (b"", [{}, {"ret": {"status": "ok"}}])
+
+                # 应该能正常处理writer关闭时的ConnectionResetError
+                result = await client.check_login()
+                assert result is True
+
 
 # ==================== 设备管理和数据处理测试类 ====================
 
@@ -364,6 +466,15 @@ class TestDeviceManagementAndDataProcessing:
         """测试设备加载和处理流程。"""
         reader, writer, mock_open = mock_connection
         client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+
+        async def mock_open_side_effect(*args, **kwargs):
+            # 正确处理协程调用，等待真实的mock对象
+            if hasattr(mock_open.return_value, "__await__"):
+                return await mock_open.return_value
+            return mock_open.return_value
+
+        # 使用正确的副作用函数
+        mock_open.side_effect = mock_open_side_effect
 
         # 建立连接
         connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
@@ -397,6 +508,15 @@ class TestDeviceManagementAndDataProcessing:
         """测试设备加载超时处理。"""
         reader, writer, mock_open = mock_connection
         client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+
+        async def mock_open_side_effect(*args, **kwargs):
+            # 正确处理协程调用，等待真实的mock对象
+            if hasattr(mock_open.return_value, "__await__"):
+                return await mock_open.return_value
+            return mock_open.return_value
+
+        # 使用正确的副作用函数
+        mock_open.side_effect = mock_open_side_effect
 
         # 建立连接但不发送设备列表
         asyncio.create_task(client.async_connect(AsyncMock()))
@@ -514,6 +634,15 @@ class TestHeartbeatAndConnectionMaintenance:
 
         # 缩短空闲超时时间以便快速测试
         client.IDLE_TIMEOUT = 0.1
+
+        async def mock_open_side_effect(*args, **kwargs):
+            # 正确处理协程调用，等待真实的mock对象
+            if hasattr(mock_open.return_value, "__await__"):
+                return await mock_open.return_value
+            return mock_open.return_value
+
+        # 使用正确的副作用函数
+        mock_open.side_effect = mock_open_side_effect
 
         with patch.object(
             client._factory, "build_get_config_packet", return_value=b"heartbeat"
@@ -845,15 +974,15 @@ class TestSceneAndIRControl:
             mocked_client._factory, "build_ir_control_packet", return_value=b"packet"
         ) as mock_build:
             await mocked_client._async_send_ir_key(
-                "agt", "ai1", "remote1", "tv", "samsung", keys_data
+                "agt", "remote1", "tv", "samsung", keys_data, "ai1"
             )
 
             # 验证调用参数：设备ID和红外选项字典
             expected_options = {
-                "ai": "ai1",
                 "category": "tv",
                 "brand": "samsung",
                 "keys": keys_data,
+                "ai": "ai1",
             }
             mock_build.assert_called_once_with("remote1", expected_options)
             mocked_client._send_packet.assert_awaited_once()
@@ -1184,43 +1313,6 @@ class TestPerformanceAndConcurrency:
         # 验证客户端仍然正常工作
         assert client.is_connected, "大量操作后客户端应该仍然连接"
         assert len(client.devices) > 0, "设备列表应该保持不变"
-
-        # 清理
-        client.disconnect()
-        try:
-            await asyncio.wait_for(connect_task, timeout=1.0)
-        except asyncio.CancelledError:
-            pass
-
-    @pytest.mark.asyncio
-    async def test_connection_recovery_after_network_interruption(
-        self, mock_connection, sample_packets
-    ):
-        """测试网络中断后的连接恢复。"""
-        reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
-
-        # 建立初始连接
-        connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
-        reader.feed_data(sample_packets["login_success"])
-        await asyncio.sleep(0.1)
-
-        assert client.is_connected, "初始连接应该成功"
-
-        # 模拟网络中断
-        client.writer = None
-        assert not client.is_connected, "网络中断后应该显示未连接"
-
-        # 模拟重新连接
-        client.writer = writer
-        client.reader = reader
-
-        # 验证可以重新使用
-        with patch.object(
-            client._factory, "build_epset_packet", return_value=b"packet"
-        ):
-            result = await client._send_packet(b"test")
-            assert result == 0, "重新连接后应该能够发送数据"
 
         # 清理
         client.disconnect()

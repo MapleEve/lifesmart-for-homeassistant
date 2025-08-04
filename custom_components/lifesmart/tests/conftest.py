@@ -29,32 +29,47 @@ from custom_components.lifesmart.const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-# 动态配置pytest-asyncio以避免版本兼容性警告
-def pytest_configure(config):
-    """动态配置pytest以避免不同版本的asyncio警告"""
-    try:
-        # 检查pytest-asyncio版本是否支持asyncio_default_fixture_loop_scope
-        import pytest_asyncio
-
-        version = getattr(pytest_asyncio, "__version__", "0.0.0")
-        parts = version.split(".")
-        major, minor = int(parts[0]), int(parts[1]) if len(parts) > 1 else 0
-
-        # pytest-asyncio >= 0.21.0 支持 asyncio_default_fixture_loop_scope
-        if major > 0 or (major == 0 and minor >= 21):
-            # 新版本，直接设置配置来避免deprecation warning
-            config.option.asyncio_default_fixture_loop_scope = "function"
-            _LOGGER.debug(f"Set asyncio_default_fixture_loop_scope=function for pytest-asyncio {version}")
-    except (ImportError, AttributeError, ValueError) as e:
-        # 如果无法检测版本，则不设置 (老版本会被warning过滤器处理)
-        _LOGGER.debug(f"Unable to set asyncio config: {e}")
-        pass
-
-
 # 设置兼容性支持
 from custom_components.lifesmart.compatibility import setup_logging
 
 setup_logging()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def prevent_socket_access():
+    """
+    一个全局的、自动执行的 Fixture，用于在整个测试会话期间
+    阻止任何意外的网络 socket 连接。
+
+    这是通过 aiohttp 的 `TraceConfig` 实现的，它会在 DNS 解析开始前
+    就引发一个运行时错误，从而有效地阻止了 aiodns 定时器的创建，
+    这是导致 "Lingering timer" 错误的主要原因。
+
+    注意：这个fixture是GH CI必需的，不能删除。
+    """
+
+    async def _on_dns_resolvehost_start(session, trace_config_ctx, params):
+        raise RuntimeError(
+            f"Socket access is disabled for tests. Tried to resolve {params.host}"
+        )
+
+    trace_config = aiohttp.TraceConfig()
+
+    # 使用 aiohttp 提示的正确属性名 on_dns_resolvehost_start
+    trace_config.on_dns_resolvehost_start.append(_on_dns_resolvehost_start)
+
+    # 通过 patch aiohttp.ClientSession，强制所有新创建的会话都使用我们
+    # 配置好的 trace_config，从而阻止 DNS 解析。
+    original_client_session = aiohttp.ClientSession
+
+    def patched_client_session(*args, **kwargs):
+        existing_trace_configs = kwargs.get("trace_configs") or []
+        return original_client_session(
+            *args, **kwargs, trace_configs=[*existing_trace_configs, trace_config]
+        )
+
+    with patch("aiohttp.ClientSession", new=patched_client_session):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +78,7 @@ def expected_lingering_timers() -> bool:
     为旧版本HA提供兼容性：允许定时器残留以避免兼容性问题。
 
     这是因为旧版本HA (如2024.2.0及以下) 没有提供get_scheduled_timer_handles函数，
-    而pytest-homeassistant-custom-component插件的verify_cleanup直接访问loop._scheduled，
+    而pytest-homeassistant-custom-component插件的verify_cleanup directly访问loop._scheduled，
     这可能在某些情况下导致测试性能问题。
 
     通过返回True，我们允许定时器残留，让插件的verify_cleanup只是警告而不是失败。
@@ -77,37 +92,6 @@ def expected_lingering_timers() -> bool:
     except ImportError:
         # 旧版本HA没有官方支持，允许定时器残留以避免兼容性问题
         return True
-
-
-@pytest.fixture(scope="session", autouse=True)
-def prevent_socket_access():
-    """
-    一个全局的、自动执行的 Fixture，用于在整个测试会话期间
-    阻止任何意外的网络 socket 连接。
-
-    这是通过 aiohttp 的 `TraceConfig` 实现的，它会在 DNS 解析开始前
-    就引发一个运行时错误，从而有效地阻止了 aiodns 定时器的创建，
-    这是导致 "Lingering timer" 错误的主要原因。
-    """
-
-    async def _on_dns_resolvehost_start(session, trace_config_ctx, params):
-        raise RuntimeError(f"Socket access is disabled for tests. Tried to resolve {params.host}")
-
-    trace_config = aiohttp.TraceConfig()
-
-    # 使用 aiohttp 提示的正确属性名 on_dns_resolvehost_start
-    trace_config.on_dns_resolvehost_start.append(_on_dns_resolvehost_start)
-
-    # 通过 patch aiohttp.ClientSession，强制所有新创建的会话都使用我们
-    # 配置好的 trace_config，从而阻止 DNS 解析。
-    original_client_session = aiohttp.ClientSession
-
-    def patched_client_session(*args, **kwargs):
-        existing_trace_configs = kwargs.get("trace_configs") or []
-        return original_client_session(*args, **kwargs, trace_configs=[*existing_trace_configs, trace_config])
-
-    with patch("aiohttp.ClientSession", new=patched_client_session):
-        yield
 
 
 # --- 统一的模拟配置 ---
@@ -612,7 +596,9 @@ def mock_hub_class():
     这允许我们验证其方法（如 `async_setup`, `async_unload`）是否在集成的生命周期中
     （设置、卸载、重载）被正确调用。
     """
-    with patch("custom_components.lifesmart.hub.LifeSmartHub", autospec=True) as mock_class:
+    with patch(
+        "custom_components.lifesmart.hub.LifeSmartHub", autospec=True
+    ) as mock_class:
         # 获取实例的 mock，以便我们可以配置和断言它的方法
         instance = mock_class.return_value
         instance.async_setup = AsyncMock(return_value=True)
@@ -622,6 +608,88 @@ def mock_hub_class():
         instance.get_exclude_config = MagicMock(return_value=(set(), set()))
         instance.data_update_handler = AsyncMock()
         yield mock_class
+
+
+@pytest.fixture(autouse=True)
+def auto_prevent_thread_creation(request):
+    """
+    精准的autouse fixture：只防止线程/定时器创建，不影响业务逻辑。
+
+    设计原则：
+    1. 只mock会产生线程残留的基础设施组件
+    2. 完全保留业务逻辑，允许测试验证真实的成功/失败场景
+    3. 从根源解决线程残留问题，而不是"允许残留"
+    4. 对于Hub单元测试，提供更精细的控制
+
+    被mock的组件：
+    - async_track_time_interval: Hub中用于令牌刷新的定时任务
+    - LifeSmartStateManager: WebSocket连接管理器，会创建异步任务
+
+    不被mock的组件：
+    - Hub的所有业务方法 (async_setup, get_devices等)
+    - 客户端的所有API调用
+    - 配置和数据处理逻辑
+
+    特殊处理：
+    - test_hub.py 中的测试需要验证真实的定时器和状态管理器创建
+    - 但prevent_socket_access已经阻止了网络访问，所以只需要跳过线程mock
+    """
+    # 检查是否在test_hub.py中运行
+    if "test_hub.py" in request.fspath.basename:
+        # test_hub.py需要测试真实的Hub逻辑，包括定时器和状态管理器的创建
+        # prevent_socket_access fixture已经处理了网络访问阻止
+        # 所以这里只需要让测试正常运行，不添加额外的mock
+        yield
+    else:
+        # 其他测试文件使用完整的线程防护
+        with (
+            patch(
+                # 防止创建真实的定时器任务（线程残留的根源）
+                "homeassistant.helpers.event.async_track_time_interval",
+                return_value=MagicMock(),
+            ),
+            patch(
+                # 防止创建真实的WebSocket状态管理器（异步任务残留的根源）
+                "custom_components.lifesmart.hub.LifeSmartStateManager",
+                return_value=MagicMock(),
+            ),
+        ):
+            yield
+
+
+@pytest.fixture
+def mock_hub_for_testing():
+    """
+    显式fixture：为需要完全控制Hub行为的测试提供mock。
+
+    使用场景：
+    - 测试集成的设置/卸载流程
+    - 需要验证Hub方法调用的测试
+    - 需要模拟特定设备列表的测试
+
+    与auto_prevent_thread_creation的区别：
+    - 这个fixture mock业务逻辑，那个只mock基础设施
+    - 这个是显式使用，那个是自动应用
+    """
+    with (
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            return_value=True,
+        ) as mock_hub_setup,
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+            return_value=[],
+        ) as mock_get_devices,
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+            return_value=MagicMock(),
+        ) as mock_get_client,
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.async_unload",
+            return_value=True,
+        ) as mock_hub_unload,
+    ):
+        yield mock_hub_setup, mock_get_devices, mock_get_client, mock_hub_unload
 
 
 @pytest.fixture

@@ -60,7 +60,7 @@ class LifeSmartClientBase(ABC):
         return await self._async_get_all_devices()
 
     async def async_send_single_command(
-        self, agt: str, me: str, idx: str, command_type: str, val: Any
+        self, agt: str, me: str, idx: str, command_type: int, val: Any
     ) -> int:
         """
         发送单个IO口命令的公共接口。
@@ -88,14 +88,33 @@ class LifeSmartClientBase(ABC):
         return await self._async_set_scene(agt, scene_name)
 
     async def async_send_ir_key(
-        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+        self,
+        agt: str,
+        me: str,
+        category: str,
+        brand: str,
+        keys: str,
+        ai: str = "",
+        idx: str = "",
     ) -> int:
         """
         发送红外按键命令的公共接口。
 
-        由具体客户端子类实现的 send_ir_key_async 方法完成实际操作。
+        Args:
+            agt: 智慧中心ID
+            me: 设备ID
+            category: 设备类别
+            brand: 品牌
+            keys: 按键列表(JSON字符串)
+            ai: 虚拟遥控器ID (与idx二选一)
+            idx: 通用码库索引 (与ai二选一)
+
+        Returns:
+            操作结果码，0表示成功
+
+        由具体客户端子类实现的 _async_send_ir_key 方法完成实际操作。
         """
-        return await self._async_send_ir_key(agt, ai, me, category, brand, keys)
+        return await self._async_send_ir_key(agt, me, category, brand, keys, ai, idx)
 
     async def async_add_scene(self, agt: str, scene_name: str, actions: str) -> int:
         """
@@ -211,7 +230,7 @@ class LifeSmartClientBase(ABC):
 
     @abstractmethod
     async def _async_send_single_command(
-        self, agt: str, me: str, idx: str, command_type: str, val: Any
+        self, agt: str, me: str, idx: str, command_type: int, val: Any
     ) -> int:
         """
         [抽象方法] 发送单个IO口命令。
@@ -236,9 +255,30 @@ class LifeSmartClientBase(ABC):
 
     @abstractmethod
     async def _async_send_ir_key(
-        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+        self,
+        agt: str,
+        me: str,
+        category: str,
+        brand: str,
+        keys: str,
+        ai: str = "",
+        idx: str = "",
     ) -> int:
-        """[抽象方法] 发送一个红外按键命令。"""
+        """
+        [抽象方法] 发送红外按键命令。
+
+        Args:
+            agt: 智慧中心ID
+            me: 设备ID
+            category: 设备类别
+            brand: 品牌
+            keys: 按键列表(JSON字符串)
+            ai: 虚拟遥控器ID (与idx二选一)
+            idx: 通用码库索引 (与ai二选一)
+
+        Returns:
+            操作结果码，0表示成功
+        """
         pass
 
     @abstractmethod

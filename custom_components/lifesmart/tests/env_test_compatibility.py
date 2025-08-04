@@ -22,21 +22,30 @@ def ensure_script_compatibility():
         import homeassistant.helpers.script as script_module
 
         # 检查是否已经有新版本函数名
-        if hasattr(script_module, '_schedule_stop_scripts_after_shutdown'):
+        if hasattr(script_module, "_schedule_stop_scripts_after_shutdown"):
             return
 
         # 检查是否有旧版本函数名
-        if hasattr(script_module, '_async_stop_scripts_after_shutdown'):
+        if hasattr(script_module, "_async_stop_scripts_after_shutdown"):
             # 创建别名以兼容pytest插件
-            script_module._schedule_stop_scripts_after_shutdown = script_module._async_stop_scripts_after_shutdown
-            _LOGGER.debug("Created script compatibility alias: _schedule_stop_scripts_after_shutdown")
+            script_module._schedule_stop_scripts_after_shutdown = (
+                script_module._async_stop_scripts_after_shutdown
+            )
+            _LOGGER.debug(
+                "Created script compatibility alias: _schedule_stop_scripts_after_shutdown"
+            )
         else:
             # 如果都没有，创建一个空函数以避免AttributeError
             def _dummy_schedule_stop_scripts_after_shutdown(*args, **kwargs):
                 """Dummy function for compatibility"""
                 pass
-            script_module._schedule_stop_scripts_after_shutdown = _dummy_schedule_stop_scripts_after_shutdown
-            _LOGGER.debug("Created dummy script function: _schedule_stop_scripts_after_shutdown")
+
+            script_module._schedule_stop_scripts_after_shutdown = (
+                _dummy_schedule_stop_scripts_after_shutdown
+            )
+            _LOGGER.debug(
+                "Created dummy script function: _schedule_stop_scripts_after_shutdown"
+            )
 
     except ImportError:
         _LOGGER.warning("Unable to import script module for compatibility")
@@ -56,7 +65,7 @@ def ensure_restore_state_compatibility():
         import homeassistant.helpers.restore_state as rs_module
 
         # 检查是否已经有async_load函数
-        if hasattr(rs_module, 'async_load'):
+        if hasattr(rs_module, "async_load"):
             return
 
         # 为旧版本创建一个dummy async_load函数
@@ -87,14 +96,17 @@ def ensure_async_create_task_compatibility():
 
         # 检查async_create_task是否已经支持name参数
         import inspect
+
         sig = inspect.signature(HomeAssistant.async_create_task)
         params = list(sig.parameters.keys())
 
-        if 'name' in params:
+        if "name" in params:
             # 新版本，无需处理
             return
 
-        _LOGGER.debug("Patching HomeAssistant.async_create_task for HA 2023.3.0 compatibility")
+        _LOGGER.debug(
+            "Patching HomeAssistant.async_create_task for HA 2023.3.0 compatibility"
+        )
 
         # 保存原始方法
         original_async_create_task = HomeAssistant.async_create_task
@@ -105,7 +117,9 @@ def ensure_async_create_task_compatibility():
 
         # 替换方法
         HomeAssistant.async_create_task = patched_async_create_task
-        _LOGGER.info("Successfully patched HomeAssistant.async_create_task for HA 2023.3.0")
+        _LOGGER.info(
+            "Successfully patched HomeAssistant.async_create_task for HA 2023.3.0"
+        )
 
     except Exception as e:
         _LOGGER.error(f"Failed to patch async_create_task: {e}")

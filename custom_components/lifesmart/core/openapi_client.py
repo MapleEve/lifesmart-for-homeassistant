@@ -326,7 +326,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         return message if isinstance(message, list) else []
 
     async def set_single_ep_async(
-        self, agt: str, me: str, idx: str, command_type: str, val: Any
+        self, agt: str, me: str, idx: str, command_type: int, val: Any
     ) -> int:
         params = {
             HUB_ID_KEY: agt,
@@ -440,6 +440,57 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         message = response.get("message")
         return message if isinstance(message, list) else []
 
+    async def get_ir_custom_keys_async(
+        self, agt: str, ai: str, category: str, brand: str
+    ) -> dict[str, str]:
+        """获取自定义遥控器按键列表。(API: GetCustomKeys)"""
+        params = {
+            HUB_ID_KEY: agt,
+            "ai": ai,
+            "category": category,
+            "brand": brand,
+        }
+        response = await self._async_call_api(
+            "GetCustomKeys", params, api_path="/irapi"
+        )
+        message = response.get("message", {})
+        return message.get("data", {}) if isinstance(message, dict) else {}
+
+    async def get_ir_remote_feature_async(
+        self,
+        category: str,
+        brand: str,
+        idx: str = "",
+        agt: str = "",
+        ai: str = "",
+    ) -> dict[str, Any]:
+        """获取遥控器特性。(API: GetRemoteFeature)
+
+        Args:
+            category: 遥控器类别
+            brand: 品牌类别，查询已创建遥控器时可为空字符串
+            idx: 遥控器索引，查询码库遥控器时必需
+            agt: 中枢ID，查询已创建遥控器时必需
+            ai: 遥控器ID，查询已创建遥控器时必需
+        """
+        params = {"category": category, "brand": brand}
+
+        if idx:
+            # 查询码库遥控器特性
+            params["idx"] = idx
+        elif agt and ai:
+            # 查询已创建遥控器特性
+            params[HUB_ID_KEY] = agt
+            params["ai"] = ai
+        else:
+            raise ValueError("必须提供idx参数或agt+ai参数组合")
+
+        response = await self._async_call_api(
+            "GetRemoteFeature", params, api_path="/irapi"
+        )
+        message = response.get("message")
+        return message if isinstance(message, dict) else {}
+
     # ====================================================================
     # 基类抽象方法的实现
     # ====================================================================
@@ -458,7 +509,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         return []
 
     async def _async_send_single_command(
-        self, agt: str, me: str, idx: str, command_type: str, val: Any
+        self, agt: str, me: str, idx: str, command_type: int, val: Any
     ) -> int:
         """
         [云端实现] 发送单个IO口命令。
@@ -511,7 +562,14 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             return -1
 
     async def _async_send_ir_key(
-        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+        self,
+        agt: str,
+        me: str,
+        category: str,
+        brand: str,
+        keys: str,
+        ai: str = "",
+        idx: str = "",
     ) -> int:
         """
         [云端实现] 发送一个红外按键命令。(API: SendKeys)
@@ -519,12 +577,20 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         """
         params = {
             HUB_ID_KEY: agt,
-            "ai": ai,
             DEVICE_ID_KEY: me,
             "category": category,
             "brand": brand,
             "keys": keys,
         }
+
+        # 根据官方API文档，ai和idx二选一
+        if ai:
+            params["ai"] = ai
+        elif idx:
+            params["idx"] = idx
+        else:
+            raise ValueError("ai和idx参数必须提供其中一个")
+
         response = await self._async_call_api("SendKeys", params, api_path="/irapi")
         return self._get_code_from_response(response, "SendKeys")
 
@@ -556,7 +622,9 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
         """
         try:
             # 首先获取场景列表以找到对应的场景ID
-            scenes = await self._async_get_scene_list(agt)  # 使用带缓存的场景列表获取方法
+            scenes = await self._async_get_scene_list(
+                agt
+            )  # 使用带缓存的场景列表获取方法
 
             scene_id = next(
                 (
@@ -742,6 +810,10 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
             "wind": options.get("wind", 0),
             "swing": options.get("swing", 0),
         }
+
+        # 处理可选的keyDetail参数 (根据官方API文档)
+        if "keyDetail" in options:
+            ac_params["keyDetail"] = options["keyDetail"]
 
         # 如果指定了ai参数，使用已有遥控器
         if "ai" in options:

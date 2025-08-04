@@ -442,7 +442,13 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            self._attr_color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            min_k, max_k = (
+                self._attr_min_color_temp_kelvin,
+                self._attr_max_color_temp_kelvin,
+            )
+            self._attr_color_temp_kelvin = max(
+                min_k, min(kwargs[ATTR_COLOR_TEMP_KELVIN], max_k)
+            )
         self.async_write_ha_state()
 
         try:
@@ -571,6 +577,9 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
                 effect_val = DYN_EFFECT_MAP.get(self._attr_effect)
                 if effect_val is not None:
                     cmd_type, cmd_val = CMD_TYPE_SET_RAW, effect_val
+                else:
+                    # 效果不存在时，重置cmd_val为None以调用父类方法
+                    cmd_val = None
             elif ATTR_RGB_COLOR in kwargs or ATTR_BRIGHTNESS in kwargs:
                 # 使用乐观更新后的状态来计算最终颜色
                 rgb = self._attr_rgb_color if self._attr_rgb_color else (255, 255, 255)

@@ -124,6 +124,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
                 # 清理服务
                 if hass.services.has_service(DOMAIN, "send_ir_keys"):
                     hass.services.async_remove(DOMAIN, "send_ir_keys")
+                if hass.services.has_service(DOMAIN, "send_ackeys"):
+                    hass.services.async_remove(DOMAIN, "send_ackeys")
                 if hass.services.has_service(DOMAIN, "trigger_scene"):
                     hass.services.async_remove(DOMAIN, "trigger_scene")
                 if hass.services.has_service(DOMAIN, "press_switch"):

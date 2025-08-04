@@ -1022,34 +1022,42 @@ method:GetCustomKeys, agt:_3MAAG1nYTAwMDA, ai:AI_IR_2713_1477029095, brand:custo
 keys：填入需要发送的遥控器信息和按键信息，如：
 
 ```json
-"keys": [
 {
-"category": "tv",
-"brand": "changhong",
-"ai": "AI_IR_2735_1503631196",
-"delay": 1,
-"keys": ["POWER", "MENU"]
-},
-{
-"category": "ac",
-"brand": "daikin",
-"ai": "AI_IR_2735_1503631219",
-"delay": 1.2,
-"key": "power",
-"power": 1,
-"mode": 0,
-"temp": 27,
-"wind": 2,
-"swing": 0
-},
-{
-"category": "fan",
-"brand": "灿坤",
-"ai": "AI_IR_2735_1503631206",
-"delay": 1,
-"keys": ["POWER", "WIND"]
+  "keys": [
+    {
+      "category": "tv",
+      "brand": "changhong",
+      "ai": "AI_IR_2735_1503631196",
+      "delay": 1,
+      "keys": [
+        "POWER",
+        "MENU"
+      ]
+    },
+    {
+      "category": "ac",
+      "brand": "daikin",
+      "ai": "AI_IR_2735_1503631219",
+      "delay": 1.2,
+      "key": "power",
+      "power": 1,
+      "mode": 0,
+      "temp": 27,
+      "wind": 2,
+      "swing": 0
+    },
+    {
+      "category": "fan",
+      "brand": "灿坤",
+      "ai": "AI_IR_2735_1503631206",
+      "delay": 1,
+      "keys": [
+        "POWER",
+        "WIND"
+      ]
+    }
+  ]
 }
-]
 ```
 
 1. keys中每一条列表项必须包含category(遥控器类型),brand(遥控器品牌),ai(遥控器ID)

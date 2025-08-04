@@ -1,9 +1,37 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 本地CI兼容性测试脚本
 # 模拟GitHub Actions环境，测试不同HA版本组合
 
 set -e
+
+# 检查 bash 版本兼容性，如果是老版本尝试找新版本
+if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    echo "当前 bash 版本过低: ${BASH_VERSION}"
+    echo "正在尝试使用更新的 bash 版本..."
+    
+    # 尝试找到更新的 bash 版本
+    NEW_BASH=""
+    for bash_path in /opt/homebrew/bin/bash /usr/local/bin/bash /bin/bash; do
+        if [ -x "$bash_path" ]; then
+            BASH_VERSION_CHECK=$("$bash_path" -c 'echo $BASH_VERSION' 2>/dev/null || echo "")
+            if [[ "$BASH_VERSION_CHECK" =~ ^[4-9]\. ]]; then
+                NEW_BASH="$bash_path"
+                break
+            fi
+        fi
+    done
+    
+    if [ -n "$NEW_BASH" ]; then
+        echo "找到兼容的 bash 版本: $NEW_BASH"
+        echo "重新执行脚本..."
+        exec "$NEW_BASH" "$0" "$@"
+    else
+        echo "错误: 需要 bash 4.0 或更高版本来支持关联数组"
+        echo "请安装更新的 bash 版本: brew install bash"
+        exit 1
+    fi
+fi
 
 # 颜色输出
 RED='\033[0;31m'
@@ -12,17 +40,139 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# 检测操作系统和环境
+detect_os_and_env() {
+  # 检测操作系统
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if grep -qE "(Microsoft|microsoft)" /proc/version 2>/dev/null; then
+      # 进一步区分WSL1和WSL2
+      if grep -q "WSL2" /proc/version 2>/dev/null; then
+        OS_TYPE="wsl2"
+        echo -e "${BLUE}检测到 Windows WSL2 环境${NC}"
+      else
+        OS_TYPE="wsl"
+        echo -e "${BLUE}检测到 Windows WSL 环境${NC}"
+      fi
+      
+      # 检测WSL发行版
+      if [ -f /etc/os-release ]; then
+        WSL_DISTRO=$(grep "^NAME=" /etc/os-release | cut -d'"' -f2)
+        echo -e "${YELLOW}WSL 发行版: $WSL_DISTRO${NC}"
+      fi
+      
+      # 检测Windows路径挂载
+      if mount | grep -q "C:.*on.*type.*drvfs"; then
+        echo -e "${YELLOW}检测到 Windows 文件系统挂载${NC}"
+      fi
+    else
+      OS_TYPE="linux"
+      echo -e "${BLUE}检测到 Linux 环境${NC}"
+    fi
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    OS_TYPE="macos"
+    echo -e "${BLUE}检测到 macOS 环境${NC}"
+  elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
+    OS_TYPE="windows"
+    echo -e "${BLUE}检测到 Windows 环境 (Cygwin/MSYS)${NC}"
+  else
+    OS_TYPE="unknown"
+    echo -e "${YELLOW}未知操作系统: $OSTYPE${NC}"
+  fi
+  
+  # 检测 shell 环境
+  if command -v zsh >/dev/null 2>&1; then
+    SHELL_TYPE="zsh"
+    SHELL_RC="~/.zshrc"
+  elif command -v bash >/dev/null 2>&1; then
+    SHELL_TYPE="bash"
+    SHELL_RC="~/.bashrc"
+  else
+    SHELL_TYPE="sh"
+    SHELL_RC="~/.profile"
+  fi
+  
+  echo -e "${BLUE}使用 shell: $SHELL_TYPE${NC}"
+}
+
+# 获取 conda 命令的包装函数
+get_conda_cmd() {
+  case "$OS_TYPE" in
+    "wsl"|"wsl2"|"linux"|"macos")
+      if [[ "$SHELL_TYPE" == "zsh" ]]; then
+        echo "source ~/.zshrc && conda"
+      else
+        echo "source ~/.bashrc && conda"
+      fi
+      ;;
+    "windows")
+      echo "conda"
+      ;;
+    *)
+      echo "conda"
+      ;;
+  esac
+}
+
+# 执行 conda 命令的包装函数
+exec_conda_cmd() {
+  local cmd="$1"
+  local conda_cmd
+  conda_cmd=$(get_conda_cmd)
+  
+  case "$OS_TYPE" in
+    "wsl"|"wsl2"|"linux"|"macos")
+      if [[ "$SHELL_TYPE" == "zsh" ]]; then
+        zsh -c "$conda_cmd $cmd"
+      else
+        bash -c "$conda_cmd $cmd"
+      fi
+      ;;
+    "windows")
+      cmd.exe /c "conda $cmd"
+      ;;
+    *)
+      conda "$cmd"
+      ;;
+  esac
+}
+
+# 在 conda 环境中执行命令的包装函数
+exec_in_conda_env() {
+  local conda_env="$1"
+  local work_dir="$2"
+  local command="$3"
+  
+  case "$OS_TYPE" in
+    "wsl"|"wsl2"|"linux"|"macos")
+      if [[ "$SHELL_TYPE" == "zsh" ]]; then
+        zsh -c "source ~/.zshrc && conda activate $conda_env && cd '$work_dir' && $command"
+      else
+        bash -c "source ~/.bashrc && conda activate $conda_env && cd '$work_dir' && $command"
+      fi
+      ;;
+    "windows")
+      cmd.exe /c "conda activate $conda_env && cd /d '$work_dir' && $command"
+      ;;
+    *)
+      bash -c "conda activate $conda_env && cd '$work_dir' && $command"
+      ;;
+  esac
+}
+
+# 初始化环境检测
+detect_os_and_env
+
 # 获取脚本目录并导入版本映射函数
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/version_mapping.sh"
 
 # 测试配置 - 与GitHub Actions完全一致
-declare -A test_matrix=(
-  ["2023.6.0"]="3.11"
-  ["2024.2.0"]="3.12"
-  ["2024.12.0"]="3.13"
-  ["latest"]="3.13"
-)
+# 使用更兼容的方式声明关联数组
+declare -A test_matrix
+test_matrix["2023.6.0"]="3.11"
+test_matrix["2024.2.0"]="3.12"
+test_matrix["2024.12.0"]="3.13"
+test_matrix["latest"]="3.13"
 
 LOG_DIR="$SCRIPT_DIR/test_logs"
 
@@ -136,13 +286,13 @@ get_versions_from_env() {
 
 # 函数：交互式环境选择
 interactive_env_selection() {
-  echo -e "${YELLOW}请选择要测试的CI环境:${NC}"
-  echo "1) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)"
-  echo "2) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)"
-  echo "3) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)"
-  echo "4) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)"
-  echo "5) 全部环境测试 (完整CI矩阵)"
-  echo ""
+  echo -e "${YELLOW}请选择要测试的CI环境:${NC}" >&2
+  echo "1) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)" >&2
+  echo "2) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)" >&2
+  echo "3) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)" >&2
+  echo "4) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)" >&2
+  echo "5) 全部环境测试 (完整CI矩阵)" >&2
+  echo "" >&2
   read -p "请输入选择 (1-5): " choice
 
   case $choice in
@@ -162,7 +312,7 @@ interactive_env_selection() {
     echo "all"
     ;;
   *)
-    echo -e "${RED}无效选择，退出${NC}"
+    echo -e "${RED}无效选择，退出${NC}" >&2
     exit 1
     ;;
   esac
@@ -296,11 +446,7 @@ else
       esac
 
       if [ "$single_env_mode" = true ]; then
-        echo ""
-        echo -e "${YELLOW}请先切换环境再重新运行脚本:${NC}"
-        echo -e "${GREEN}conda activate $selected_env${NC}"
-        echo -e "${GREEN}./.testing/test_ci_locally.sh${NC}"
-        exit 1
+        echo -e "${BLUE}=== 管道输入模式: 单环境测试 $selected_env ===${NC}"
       else
         echo -e "${BLUE}=== 管道输入模式: 全部环境测试 ===${NC}"
       fi
@@ -312,17 +458,41 @@ else
         echo -e "${BLUE}=== 交互式模式: 全部环境测试 ===${NC}"
       else
         single_env_mode=true
-        echo ""
-        echo -e "${YELLOW}请先切换环境再重新运行脚本:${NC}"
-        echo -e "${GREEN}conda activate $selected_env${NC}"
-        echo -e "${GREEN}./.testing/test_ci_locally.sh${NC}"
-        exit 1
+        echo -e "${BLUE}=== 交互式模式: 单环境测试 $selected_env ===${NC}"
       fi
     fi
   fi
 fi
 
 echo ""
+
+# 函数：创建 conda 测试环境
+create_conda_env() {
+  local conda_env=$1
+  local py_version=$2
+  
+  echo -e "${YELLOW}Creating conda environment: $conda_env with Python $py_version${NC}"
+  
+  # 检查环境是否已存在
+  if exec_conda_cmd "env list" | grep -q "^$conda_env "; then
+    echo -e "${GREEN}Environment $conda_env already exists${NC}"
+    return 0
+  fi
+  
+  # 配置conda使用仅conda-forge通道以避免TOS问题
+  echo -e "${YELLOW}Configuring conda channels to avoid TOS issues${NC}"
+  exec_conda_cmd "config --set channel_priority strict" || true
+  exec_conda_cmd "config --add channels conda-forge" || true
+  
+  # 创建新环境 (使用conda-forge避免TOS问题)
+  if exec_conda_cmd "create -n '$conda_env' python='$py_version' -c conda-forge --override-channels -y"; then
+    echo -e "${GREEN}✓ Created conda environment: $conda_env${NC}"
+    return 0
+  else
+    echo -e "${RED}✗ Failed to create conda environment: $conda_env${NC}"
+    return 1
+  fi
+}
 
 # 函数：获取对应的conda环境
 get_conda_env() {
@@ -356,43 +526,55 @@ clean_install_dependencies() {
 
   echo -e "${YELLOW}Clean installing dependencies for HA $ha_version (mirroring GitHub CI fresh install)${NC}"
 
-  # 在conda环境中执行清理和安装
-  local install_cmd="
-source ~/.zshrc && conda activate $conda_env &&
+  # 在conda环境中执行清理和安装，根据操作系统选择执行方式
+  local install_cmd_common="
+# 1. 清理pytest缓存和__pycache__（保持测试环境干净）
+echo 'Clearing test cache...' &&
+find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true &&
+find . -name '*.pyc' -delete 2>/dev/null || true &&
+rm -rf .pytest_cache 2>/dev/null || true &&
 
-# 1. 清理pip缓存（模拟GitHub CI全新环境）
-echo 'Clearing pip cache...' &&
-pip cache purge &&
+# 2. 升级pip（与GitHub CI一致）
+python -m pip install --upgrade pip -q &&
 
-# 2. 卸载所有现有的测试相关包
-echo 'Uninstalling existing test packages...' &&
-pip uninstall -y homeassistant pytest pytest-homeassistant-custom-component pytest-asyncio pytest-cov flake8 2>/dev/null || true &&
-
-# 3. 升级pip（与GitHub CI一致）
-python -m pip install --upgrade pip &&
-
-# 4. 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
-# 完全复制GitHub CI的逻辑，使用--no-cache-dir --force-reinstall
+# 3. 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
+# 完全复制GitHub CI的逻辑，使用--force-reinstall提高本地测试效率
 echo 'Installing fresh dependencies...' &&
 "
 
   if [[ "$ha_version" == "2023.6.0" ]]; then
-    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest>=7.2.1,<8.0.0' 'pytest-homeassistant-custom-component==0.13.36' &&"
-  elif [[ "$ha_version" == "2024.2.0" ]]; then
-    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest>=7.4.0,<8.0.0' 'pytest-homeassistant-custom-component==0.13.99' &&"
-  elif [[ "$ha_version" == "2024.12.0" ]]; then
-    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest>=8.0.0,<9.0.0' 'pytest-homeassistant-custom-component==0.13.190' &&"
-  elif [[ "$ha_version" == "latest" ]]; then
-    install_cmd+="pip install --no-cache-dir --force-reinstall 'pytest' 'pytest-homeassistant-custom-component' &&"
+    install_cmd_common+="
+if [ \"\$(python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")')\" = \"3.11\" ]; then
+  if [[ \"\$OSTYPE\" == \"darwin\"* ]]; then
+    # macOS Python 3.11: 使用双fork解决方案修复lru-dict编译问题
+    echo 'Using dual-fork solution for macOS ARM64 lru-dict compatibility...'
+    echo 'Step 1: Installing lru-dict==1.3.0...'
+    pip install -q lru-dict==1.3.0 &&
+    echo 'Step 2: Installing forked HA with dependencies (lru-dict excluded)...'
+    pip install -q git+https://github.com/MapleEve/homeassistant-2023.6.0-macos-fix.git@2023.6.0-macos-fix &&
+    echo 'Step 3: Installing forked pytest plugin...'
+    pip install -q git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@0.13.36-macos-fix
   else
-    install_cmd+="pip install --no-cache-dir --force-reinstall pytest pytest-homeassistant-custom-component &&"
+    pip install --use-pep517 --no-build-isolation --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
+  fi
+else
+  pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
+fi &&"
+  elif [[ "$ha_version" == "2024.2.0" ]]; then
+    install_cmd_common+="pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.99' &&"
+  elif [[ "$ha_version" == "2024.12.0" ]]; then
+    install_cmd_common+="pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.190' &&"
+  elif [[ "$ha_version" == "latest" ]]; then
+    install_cmd_common+="pip install --force-reinstall -q 'pytest-homeassistant-custom-component' &&"
+  else
+    install_cmd_common+="pip install --force-reinstall -q pytest-homeassistant-custom-component &&"
   fi
 
-  install_cmd+="
-# 5. 安装其他测试依赖（与GitHub CI一致）
-pip install --no-cache-dir --force-reinstall pytest-asyncio pytest-cov flake8 &&
+  install_cmd_common+="
+# 4. 安装其他测试依赖（pytest-asyncio和pytest-cov由pytest-homeassistant-custom-component管理）
+pip install -q flake8 &&
 
-# 6. 验证安装
+# 5. 验证安装
 echo 'Verifying installations...' &&
 python --version &&
 python -c 'import homeassistant.const; print(\"HA version:\", homeassistant.const.__version__)' &&
@@ -401,13 +583,41 @@ pip show pytest-homeassistant-custom-component | grep Version &&
 python -c 'import aiohttp; print(\"aiohttp version:\", aiohttp.__version__)'
 "
 
-  if zsh -c "$install_cmd"; then
-    echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
-    return 0
-  else
-    echo -e "${RED}✗ Failed to clean install dependencies${NC}"
-    return 1
-  fi
+  # 根据操作系统和shell类型执行安装命令
+  case "$OS_TYPE" in
+    "wsl"|"wsl2"|"linux"|"macos")
+      if [[ "$SHELL_TYPE" == "zsh" ]]; then
+        local install_cmd="source ~/.zshrc && conda activate $conda_env && $install_cmd_common"
+        if zsh -c "$install_cmd"; then
+          echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
+          return 0
+        fi
+      else
+        local install_cmd="source ~/.bashrc && conda activate $conda_env && $install_cmd_common"
+        if bash -c "$install_cmd"; then
+          echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
+          return 0
+        fi
+      fi
+      ;;
+    "windows")
+      local install_cmd="conda activate $conda_env && $install_cmd_common"
+      if cmd.exe /c "$install_cmd"; then
+        echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
+        return 0
+      fi
+      ;;
+    *)
+      local install_cmd="conda activate $conda_env && $install_cmd_common"
+      if bash -c "$install_cmd"; then
+        echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
+        return 0
+      fi
+      ;;
+  esac
+
+  echo -e "${RED}✗ Failed to clean install dependencies${NC}"
+  return 1
 }
 
 # 函数：运行代码风格检查
@@ -437,29 +647,15 @@ run_pytest() {
   # 设置环境变量
   export PYTHONPATH="."
 
-  # 为HA 2024.12.0+ 添加特殊处理来忽略teardown错误
   local pytest_args="-v --cov --cov-branch --cov-report=xml"
-
-  # 检查HA版本，如果是2024.12.0则增加忽略teardown错误的参数
-  if [[ "$ha_version" == "2024.12.0" ]]; then
-    # 对于HA 2024.12.0，使用--tb=line来减少teardown错误的输出，但不影响实际测试结果
-    pytest_args="$pytest_args --tb=line"
-    echo -e "${YELLOW}Note: Using reduced traceback for HA $ha_version to handle teardown thread cleanup${NC}"
-  fi
 
   if eval "pytest $pytest_args > \"$log_file\" 2>&1"; then
     echo -e "${GREEN}✓ Pytest passed${NC}"
     return 0
   else
-    # 检查是否只是teardown错误但测试都通过了
-    if grep -q "passed.*error.*in.*s" "$log_file" && grep -qE "(Thread.*_run_safe_shutdown_loop|SyncWorker)" "$log_file"; then
-      echo -e "${YELLOW}✓ Pytest passed (with expected teardown thread cleanup in HA $ha_version)${NC}"
-      return 0
-    else
-      echo -e "${RED}✗ Pytest failed${NC}"
-      echo "Check log: $log_file"
-      return 1
-    fi
+    echo -e "${RED}✗ Pytest failed${NC}"
+    echo "Check log: $log_file"
+    return 1
   fi
 }
 
@@ -481,12 +677,13 @@ test_ha_version() {
 
   echo -e "${YELLOW}Using conda environment: $conda_env${NC}"
 
-  # 检查conda环境是否存在
-  if ! zsh -c "source ~/.zshrc && conda env list | grep -q '^$conda_env '"; then
-    echo -e "${RED}Error: Conda environment '$conda_env' not found${NC}"
-    echo -e "${YELLOW}Available environments:${NC}"
-    zsh -c "source ~/.zshrc && conda env list"
-    return 1
+  # 检查conda环境是否存在，如果不存在则创建
+  if ! exec_conda_cmd "env list" | grep -q "^$conda_env "; then
+    echo -e "${YELLOW}Conda environment '$conda_env' not found, creating it...${NC}"
+    if ! create_conda_env "$conda_env" "$py_version"; then
+      echo -e "${RED}✗ Failed to create conda environment${NC}"
+      return 1
+    fi
   fi
 
   # 清理并重新安装依赖（模拟GitHub CI全新安装）
@@ -498,11 +695,35 @@ test_ha_version() {
   # 运行Flake8（在conda环境中）
   echo -e "${YELLOW}Running Flake8 lint check in conda environment $conda_env...${NC}"
   local log_file="$LOG_DIR/flake8_ha_${ha_version}.log"
+  
+  # 获取当前工作目录，支持不同操作系统
+  local work_dir
+  case "$OS_TYPE" in
+    "windows")
+      work_dir="$(pwd | sed 's|/mnt/||' | sed 's|/|:|' | sed 's|:|://|')"
+      ;;
+    *)
+      work_dir="$(pwd)"
+      ;;
+  esac
 
-  if zsh -c "source ~/.zshrc && conda activate $conda_env && cd /mnt/data/lifesmart-HACS-for-hass && flake8 --count --show-source --statistics custom_components/lifesmart" >"$log_file" 2>&1; then
+  # 检查是否是交互模式
+  local flake8_exit_code
+  if [ -t 1 ]; then
+    # 交互模式：显示实时输出并保存到日志
+    exec_in_conda_env "$conda_env" "$work_dir" "flake8 --count --show-source --statistics custom_components/lifesmart" 2>&1 | tee "$log_file"
+    flake8_exit_code=${PIPESTATUS[0]}
+  else
+    # 管道模式：静默运行，只保存到日志
+    exec_in_conda_env "$conda_env" "$work_dir" "flake8 --count --show-source --statistics custom_components/lifesmart" >"$log_file" 2>&1
+    flake8_exit_code=$?
+  fi
+
+  # 根据flake8退出码判断检查结果
+  if [ $flake8_exit_code -eq 0 ]; then
     echo -e "${GREEN}✓ Flake8 passed${NC}"
   else
-    echo -e "${RED}✗ Flake8 failed${NC}"
+    echo -e "${RED}✗ Flake8 failed (exit code: $flake8_exit_code)${NC}"
     echo "Check log: $log_file"
     return 1
   fi
@@ -511,26 +732,27 @@ test_ha_version() {
   echo -e "${YELLOW}Running pytest for HA $ha_version in conda environment $conda_env...${NC}"
   local pytest_log_file="$LOG_DIR/pytest_ha_${ha_version}.log"
 
-  # 为HA 2024.12.0 添加特殊处理来忽略teardown错误
   local pytest_args="-v --cov --cov-branch --cov-report=xml"
 
-  # 检查HA版本，如果是2024.12.0则增加忽略teardown错误的参数
-  if [[ "$ha_version" == "2024.12.0" ]]; then
-    pytest_args="$pytest_args --tb=line"
-    echo -e "${YELLOW}Note: Using reduced traceback for HA $ha_version to handle teardown thread cleanup${NC}"
+  # 检查是否是交互模式
+  local pytest_exit_code
+  if [ -t 1 ]; then
+    # 交互模式：显示实时输出并保存到日志
+    exec_in_conda_env "$conda_env" "$work_dir" "export PYTHONPATH=. && pytest $pytest_args" 2>&1 | tee "$pytest_log_file"
+    pytest_exit_code=${PIPESTATUS[0]}
+  else
+    # 管道模式：静默运行，只保存到日志
+    exec_in_conda_env "$conda_env" "$work_dir" "export PYTHONPATH=. && pytest $pytest_args" >"$pytest_log_file" 2>&1
+    pytest_exit_code=$?
   fi
 
-  if zsh -c "source ~/.zshrc && conda activate $conda_env && cd /mnt/data/lifesmart-HACS-for-hass && export PYTHONPATH=. && pytest $pytest_args" >"$pytest_log_file" 2>&1; then
+  # 根据pytest退出码判断测试结果
+  if [ $pytest_exit_code -eq 0 ]; then
     echo -e "${GREEN}✓ Pytest passed${NC}"
   else
-    # 检查是否只是teardown错误但测试都通过了 (仅对HA 2024.12.0)
-    if [[ "$ha_version" == "2024.12.0" ]] && grep -q "passed.*error.*in.*s" "$pytest_log_file" && grep -qE "(Thread.*_run_safe_shutdown_loop|SyncWorker)" "$pytest_log_file"; then
-      echo -e "${YELLOW}✓ Pytest passed (with expected teardown thread cleanup in HA $ha_version)${NC}"
-    else
-      echo -e "${RED}✗ Pytest failed${NC}"
-      echo "Check log: $pytest_log_file"
-      return 1
-    fi
+    echo -e "${RED}✗ Pytest failed (exit code: $pytest_exit_code)${NC}"
+    echo "Check log: $pytest_log_file"
+    return 1
   fi
 
   echo -e "${GREEN}✓ HA $ha_version test completed successfully${NC}"
@@ -541,7 +763,7 @@ test_ha_version() {
 failed_tests=()
 successful_tests=()
 
-if [ "$single_env_mode" = true ]; then
+if [ "$single_env_mode" = true ] && [ "$selected_env" != "all" ]; then
   # 单环境测试模式
   versions=$(get_versions_from_env "$selected_env")
   ha_version=$(echo $versions | cut -d' ' -f1)

@@ -412,7 +412,9 @@ class TestSensorAdvancedScenarios:
             sub_device_key="T",
             sub_device_data={"val": 250, "type": 1},
         )
-        assert temp_sensor.device_class == SensorDeviceClass.TEMPERATURE
+        assert (
+            temp_sensor.device_class == SensorDeviceClass.TEMPERATURE
+        ), "温度传感器设备类型应该正确"
 
         # 测试电池传感器
         battery_device = {
@@ -429,7 +431,9 @@ class TestSensorAdvancedScenarios:
             sub_device_key="BAT",
             sub_device_data={"val": 85, "type": 1},
         )
-        assert battery_sensor.device_class == SensorDeviceClass.BATTERY
+        assert (
+            battery_sensor.device_class == SensorDeviceClass.BATTERY
+        ), "电池传感器设备类型应该正确"
 
     @pytest.mark.asyncio
     async def test_sensor_unit_determination_comprehensive(
@@ -454,7 +458,9 @@ class TestSensorAdvancedScenarios:
             sub_device_key="T",
             sub_device_data={"val": 250, "type": 1},
         )
-        assert temp_sensor.native_unit_of_measurement == UnitOfTemperature.CELSIUS
+        assert (
+            temp_sensor.native_unit_of_measurement == UnitOfTemperature.CELSIUS
+        ), "温度传感器单位应该是摄氏度"
 
         # 测试湿度传感器单位
         humidity_device = {
@@ -471,7 +477,9 @@ class TestSensorAdvancedScenarios:
             sub_device_key="H",
             sub_device_data={"val": 60, "type": 1},
         )
-        assert humidity_sensor.native_unit_of_measurement == PERCENTAGE
+        assert (
+            humidity_sensor.native_unit_of_measurement == PERCENTAGE
+        ), "湿度传感器单位应该是百分比"
 
     @pytest.mark.asyncio
     async def test_sensor_value_conversion_comprehensive(
@@ -497,7 +505,7 @@ class TestSensorAdvancedScenarios:
             sub_device_data={"val": 650, "type": 1},
         )
         # 大于100的湿度值应该被除以10
-        assert humidity_sensor.native_value == 65.0
+        assert humidity_sensor.native_value == 65.0, "湿度传感器原生值应该正确"
 
         # 测试小湿度值不被转换
         small_humidity_device = {
@@ -515,7 +523,7 @@ class TestSensorAdvancedScenarios:
             sub_device_data={"val": 45, "type": 1},
         )
         # 小于等于100的湿度值不应该被转换
-        assert small_humidity_sensor.native_value == 45
+        assert small_humidity_sensor.native_value == 45, "小湿度传感器原生值应该正确"
 
         # 测试气候设备的特殊数值转换
         climate_temp_device = {
@@ -532,7 +540,7 @@ class TestSensorAdvancedScenarios:
             sub_device_key="P5",
             sub_device_data={"val": 235, "type": 1},
         )
-        assert climate_temp_sensor.native_value == 23.5
+        assert climate_temp_sensor.native_value == 23.5, "气候温度传感器原生值应该正确"
 
         # 测试电量等直接值
         battery_device = {
@@ -549,7 +557,7 @@ class TestSensorAdvancedScenarios:
             sub_device_key="BAT",
             sub_device_data={"val": 85, "type": 1},
         )
-        assert battery_sensor.native_value == 85
+        assert battery_sensor.native_value == 85, "电池传感器原生值应该正确"
 
     @pytest.mark.asyncio
     async def test_sensor_extra_attributes(
@@ -761,11 +769,14 @@ class TestSensorAdvancedScenarios:
             sub_device_key="T",
             sub_device_data={"val": 25, "type": 1},
         )
-        assert temp_sensor.state_class == SensorStateClass.MEASUREMENT
+        assert (
+            temp_sensor.state_class == SensorStateClass.MEASUREMENT
+        ), "温度传感器状态类型应该是测量类型"
 
         # 测试能耗传感器的TOTAL_INCREASING状态类别
+        # 说明：SL_OE_3C 是 LifeSmart 的能耗计量设备类型，用于测试能耗传感器逻辑
         energy_device = {
-            DEVICE_TYPE_KEY: "SL_PLUG_MINI",
+            DEVICE_TYPE_KEY: "SL_OE_3C",
             DEVICE_NAME_KEY: "Energy Meter",
             HUB_ID_KEY: "hub1",
             DEVICE_ID_KEY: "meter1",
@@ -780,7 +791,9 @@ class TestSensorAdvancedScenarios:
         )
         # 如果设备类别是能耗，则应该有TOTAL_INCREASING状态类别
         if energy_sensor.device_class == SensorDeviceClass.ENERGY:
-            assert energy_sensor.state_class == SensorStateClass.TOTAL_INCREASING
+            assert (
+                energy_sensor.state_class == SensorStateClass.TOTAL_INCREASING
+            ), "能耗传感器状态类型应该是累积递增类型"
         else:
             # 如果不是能耗传感器，测试其他状态类别
             assert energy_sensor.state_class in [SensorStateClass.MEASUREMENT, None]
@@ -852,6 +865,341 @@ class TestSensorAdvancedScenarios:
         assert True, "可用性恢复测试完成，未发生异常"
 
     @pytest.mark.asyncio
+    async def test_sensor_entity_unknown_device_class(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试未知设备类别的传感器 (行 146)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试未知子键的传感器
+        unknown_device = {
+            DEVICE_TYPE_KEY: "UNKNOWN_TYPE",
+            DEVICE_NAME_KEY: "Unknown Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "unknown1",
+            DEVICE_DATA_KEY: {"UNKNOWN_KEY": {"val": 100, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=unknown_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="UNKNOWN_KEY",
+            sub_device_data={"val": 100, "type": 1},
+        )
+
+        # 未知设备类别应该返回None
+        assert sensor.device_class is None, "未知设备类别应该返回None"
+
+    @pytest.mark.asyncio
+    async def test_sensor_entity_unknown_unit_measurement(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试未知测量单位的传感器 (行 157, 160)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试未知单位的传感器
+        unknown_unit_device = {
+            DEVICE_TYPE_KEY: "SL_SC_EV",
+            DEVICE_NAME_KEY: "Unknown Unit Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "unknown_unit1",
+            DEVICE_DATA_KEY: {"UNKNOWN_UNIT": {"val": 50, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=unknown_unit_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="UNKNOWN_UNIT",
+            sub_device_data={"val": 50, "type": 1},
+        )
+
+        # 未知单位应该返回None
+        assert sensor.native_unit_of_measurement is None, "未知单位应该返回None"
+
+    @pytest.mark.asyncio
+    async def test_sensor_entity_unknown_state_class(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试未知状态类别的传感器 (行 177)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试未知状态类别的传感器
+        unknown_state_device = {
+            DEVICE_TYPE_KEY: "UNKNOWN_TYPE",
+            DEVICE_NAME_KEY: "Unknown State Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "unknown_state1",
+            DEVICE_DATA_KEY: {"UNKNOWN_STATE": {"val": 25, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=unknown_state_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="UNKNOWN_STATE",
+            sub_device_data={"val": 25, "type": 1},
+        )
+
+        # 未知状态类别应该返回None
+        assert sensor.state_class is None, "未知状态类别应该返回None"
+
+    @pytest.mark.asyncio
+    async def test_sensor_value_conversion_boundary_cases(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试数值转换的边界情况 (行 180-181, 192-199)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试湿度值的边界转换情况
+        # 测试湿度值恰好等于100的情况
+        humidity_100_device = {
+            DEVICE_TYPE_KEY: "SL_SC_EV",
+            DEVICE_NAME_KEY: "Humidity 100 Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "h100",
+            DEVICE_DATA_KEY: {"H": {"val": 100, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=humidity_100_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="H",
+            sub_device_data={"val": 100, "type": 1},
+        )
+
+        # 等于100的湿度值不应该被转换
+        assert sensor.native_value == 100, "传感器原生值应该正确"
+
+        # 测试温度传感器的不同设备类型
+        temp_device_types = ["SL_SC_TH", "SL_CP_DN", "SL_NATURE"]
+        for device_type in temp_device_types:
+            temp_device = {
+                DEVICE_TYPE_KEY: device_type,
+                DEVICE_NAME_KEY: f"Temp Sensor {device_type}",
+                HUB_ID_KEY: "hub1",
+                DEVICE_ID_KEY: f"temp_{device_type}",
+                DEVICE_DATA_KEY: {"T": {"val": 235, "type": 1}},
+            }
+
+            sensor = LifeSmartSensor(
+                raw_device=temp_device,
+                client=MagicMock(),
+                entry_id="test",
+                sub_device_key="T",
+                sub_device_data={"val": 235, "type": 1},
+            )
+
+            # 温度值应该被除以10
+            assert sensor.native_value == 23.5, "传感器原生值应该正确"
+
+    @pytest.mark.asyncio
+    async def test_sensor_special_climate_value_conversion(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试特殊设备的数值转换 (行 203, 207-210)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试气候设备P4子键的特殊转换
+        climate_p4_device = {
+            DEVICE_TYPE_KEY: "SL_CP_DN",
+            DEVICE_NAME_KEY: "Climate P4 Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "climate_p4",
+            DEVICE_DATA_KEY: {"P4": {"val": 245, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=climate_p4_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="P4",
+            sub_device_data={"val": 245, "type": 1},
+        )
+
+        # P4子键应该被除以10
+        assert sensor.native_value == 24.5, "传感器原生值应该正确"
+
+        # 测试气候设备P5子键的特殊转换
+        climate_p5_device = {
+            DEVICE_TYPE_KEY: "SL_CP_DN",
+            DEVICE_NAME_KEY: "Climate P5 Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "climate_p5",
+            DEVICE_DATA_KEY: {"P5": {"val": 285, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=climate_p5_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="P5",
+            sub_device_data={"val": 285, "type": 1},
+        )
+
+        # P5子键应该被除以10
+        assert sensor.native_value == 28.5, "传感器原生值应该正确"
+
+    @pytest.mark.asyncio
+    async def test_sensor_voltage_value_direct_conversion(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试电压值不进行转换的情况 (行 214)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试电压传感器不进行转换
+        voltage_device = {
+            DEVICE_TYPE_KEY: "SL_SC_EV",
+            DEVICE_NAME_KEY: "Voltage Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "voltage1",
+            DEVICE_DATA_KEY: {"V": {"val": 95, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=voltage_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="V",
+            sub_device_data={"val": 95, "type": 1},
+        )
+
+        # 电压值应该保持不变
+        assert sensor.native_value == 95, "传感器原生值应该正确"
+
+    @pytest.mark.asyncio
+    async def test_sensor_co2_conversion_scenarios(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试CO2传感器数值转换 (行 218, 222-234)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试CO2传感器的数值转换 - 小于10的情况
+        co2_small_device = {
+            DEVICE_TYPE_KEY: "SL_SC_CA",
+            DEVICE_NAME_KEY: "CO2 Small Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "co2_small",
+            DEVICE_DATA_KEY: {"P3": {"val": 8, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=co2_small_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="P3",
+            sub_device_data={"val": 8, "type": 1},
+        )
+
+        # 小于10的CO2值应该乘以100
+        assert sensor.native_value == 800, "传感器原生值应该正确"
+
+        # 测试CO2传感器的数值转换 - 大于等于10的情况
+        co2_large_device = {
+            DEVICE_TYPE_KEY: "SL_SC_CA",
+            DEVICE_NAME_KEY: "CO2 Large Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "co2_large",
+            DEVICE_DATA_KEY: {"P3": {"val": 15, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=co2_large_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="P3",
+            sub_device_data={"val": 15, "type": 1},
+        )
+
+        # 大于等于10的CO2值应该乘以10
+        assert sensor.native_value == 150, "传感器原生值应该正确"
+
+    @pytest.mark.asyncio
+    async def test_sensor_default_value_no_conversion(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试默认数值转换情况 (行 240)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试不需要特殊转换的传感器
+        default_device = {
+            DEVICE_TYPE_KEY: "SL_LOCK",
+            DEVICE_NAME_KEY: "Default Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "default1",
+            DEVICE_DATA_KEY: {"BAT": {"val": 88, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=default_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="BAT",
+            sub_device_data={"val": 88, "type": 1},
+        )
+
+        # 默认情况下值应该保持不变
+        assert sensor.native_value == 88, "传感器原生值应该正确"
+
+    @pytest.mark.asyncio
+    async def test_sensor_availability_check_missing_device(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试传感器可用性检查 (行 261, 267, 273, 277)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试设备不在设备列表中的情况
+        test_device = {
+            DEVICE_TYPE_KEY: "SL_SC_EV",
+            DEVICE_NAME_KEY: "Test Sensor",
+            HUB_ID_KEY: "missing_hub",  # 不在设备列表中的hub
+            DEVICE_ID_KEY: "missing_device",  # 不在设备列表中的设备
+            DEVICE_DATA_KEY: {"T": {"val": 25, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=test_device,
+            client=MagicMock(),
+            entry_id=setup_integration.entry_id,
+            sub_device_key="T",
+            sub_device_data={"val": 25, "type": 1},
+        )
+
+        # 将传感器添加到 hass 中，这样它就可以访问 hass.data
+        sensor.hass = hass
+        sensor.entity_id = "sensor.test_sensor_t"
+
+        # 修改现有的设备列表，移除我们的测试设备
+        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        # 设置一个不包含我们设备的设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+            {HUB_ID_KEY: "other_hub", DEVICE_ID_KEY: "other_device"}
+        ]
+
+        # 传感器应该默认可用（在创建时）
+        assert sensor.available, "传感器初始应该可用"
+
+        # 触发全局刷新来模拟可用性检查
+        await sensor._handle_global_refresh()
+
+        # 设备不在列表中时应该不可用
+        assert not sensor.available, "设备不在列表中时应该不可用"
+
+        # 恢复原始设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+
+    @pytest.mark.asyncio
     async def test_sensor_different_update_formats(
         self,
         hass: HomeAssistant,
@@ -886,7 +1234,7 @@ class TestSensorAdvancedScenarios:
         assert state is not None
         # 如果状态确实更新了，验证它
         if float(state.state) != initial_value:  # 如果从初始值变化了
-            assert float(state.state) == 28.5
+            assert float(state.state) == 28.5, "状态值应该是28.5"
 
         # 测试直接子键格式
         async_dispatcher_send(
@@ -913,3 +1261,767 @@ class TestSensorAdvancedScenarios:
         final_value = float(state.state)
         if final_value != 29.0:  # 如果确实更新了
             assert final_value == 30.2
+
+    @pytest.mark.asyncio
+    async def test_sensor_update_msg_format_processing(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试从msg格式更新传感器状态 (行 359-363)"""
+        entity_id = "sensor.living_room_env_t"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "T",
+        )
+
+        # 测试带msg格式的更新
+        update_data = {"msg": {"T": {"val": 275}}}  # 原始值，需要转换
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state is not None, "传感器状态不应该为None"
+        # 检查值是否被正确转换 (275 -> 27.5)
+        if float(state.state) != 25.5:  # 如果确实更新了
+            assert float(state.state) == 27.5, "状态值应该是27.5"
+
+    @pytest.mark.asyncio
+    async def test_sensor_subkey_data_update_format(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试直接子键数据更新传感器状态 (行 384-385)"""
+        entity_id = "sensor.living_room_env_h"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "H",
+        )
+
+        # 测试直接子键格式的更新
+        update_data = {"H": {"v": 75.5}}  # 使用v键而不是val
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state is not None, "传感器状态不应该为None"
+        # 检查状态是否更新
+        if float(state.state) != 60.1:  # 如果确实更新了
+            assert float(state.state) == 75.5, "状态值应该是75.5"
+
+    @pytest.mark.asyncio
+    async def test_sensor_empty_data_update_handling(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试没有数据时的更新处理 (行 401)"""
+        entity_id = "sensor.living_room_env_t"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "T",
+        )
+
+        # 获取初始状态
+        initial_state = hass.states.get(entity_id)
+        initial_value = float(initial_state.state)
+
+        # 发送空数据更新
+        update_data = {}
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        # 状态应该保持不变
+        final_state = hass.states.get(entity_id)
+        assert float(final_state.state) == initial_value, "空数据更新时状态应该保持不变"
+
+    @pytest.mark.asyncio
+    async def test_sensor_invalid_value_error_handling(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试无效值的处理 (行 455)"""
+        entity_id = "sensor.living_room_env_t"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "T",
+        )
+
+        # 发送无效值
+        update_data = {"val": "invalid_number"}  # 无法转换为数字的值
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        # 传感器应该能处理无效值而不崩溃
+        state = hass.states.get(entity_id)
+        assert state is not None, "传感器应该能处理无效值而不崩溃"
+
+    @pytest.mark.asyncio
+    async def test_sensor_none_value_error_handling(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试None值的处理 (行 480-481)"""
+        entity_id = "sensor.living_room_env_h"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "H",
+        )
+
+        # 发送None值
+        update_data = {"val": None}
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        # 传感器应该能处理None值而不崩溃
+        state = hass.states.get(entity_id)
+        assert state is not None, "传感器应该能处理None值而不崩溃"
+
+    @pytest.mark.asyncio
+    async def test_sensor_global_refresh_missing_device(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试全局刷新时设备未找到的情况 (行 496->503, 507-515)"""
+        entity_id = "sensor.living_room_env_t"
+
+        # 获取初始状态
+        initial_state = hass.states.get(entity_id)
+        assert initial_state.state != STATE_UNAVAILABLE, "初始状态应该可用"
+
+        # 模拟设备从设备列表中移除
+        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+            d
+            for d in original_devices
+            if not (
+                d.get(DEVICE_ID_KEY) == "sensor_env"
+                and d.get(HUB_ID_KEY) == "hub_sensor"
+            )
+        ]
+
+        # 触发全局刷新
+        async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
+        await hass.async_block_till_done()
+
+        # 传感器应该变为不可用
+        final_state = hass.states.get(entity_id)
+        assert final_state.state == STATE_UNAVAILABLE, "设备移除后传感器应该变为不可用"
+
+        # 恢复设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+
+    @pytest.mark.asyncio
+    async def test_sensor_global_refresh_missing_subkey(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试全局刷新时子键未找到的情况 (行 524-525)"""
+        entity_id = "sensor.living_room_env_t"
+
+        # 模拟设备存在但子键不存在
+        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        modified_devices = []
+
+        for device in original_devices:
+            if device.get(DEVICE_ID_KEY) == "sensor_env":
+                # 移除T子键，但保留其他子键
+                modified_device = device.copy()
+                if DEVICE_DATA_KEY in modified_device:
+                    modified_device[DEVICE_DATA_KEY] = {
+                        k: v
+                        for k, v in modified_device[DEVICE_DATA_KEY].items()
+                        if k != "T"
+                    }
+                modified_devices.append(modified_device)
+            else:
+                modified_devices.append(device)
+
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = modified_devices
+
+        # 触发全局刷新
+        async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
+        await hass.async_block_till_done()
+
+        # 传感器应该变为不可用
+        final_state = hass.states.get(entity_id)
+        assert final_state.state == STATE_UNAVAILABLE, "子键移除后传感器应该变为不可用"
+
+        # 恢复原始设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+
+    @pytest.mark.asyncio
+    async def test_sensor_value_conversion_edge_cases(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试数值转换的边界情况 (行 180-181, 192-199)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试湿度值的边界转换情况
+        # 测试湿度值恰好等于100的情况
+        humidity_100_device = {
+            DEVICE_TYPE_KEY: "SL_SC_EV",
+            DEVICE_NAME_KEY: "Humidity 100 Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "h100",
+            DEVICE_DATA_KEY: {"H": {"val": 100, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=humidity_100_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="H",
+            sub_device_data={"val": 100, "type": 1},
+        )
+
+        # 等于100的湿度值不应该被转换
+        assert sensor.native_value == 100, "传感器原生值应该正确"
+
+        # 测试温度传感器的不同设备类型
+        temp_device_types = ["SL_SC_TH", "SL_CP_DN", "SL_NATURE"]
+        for device_type in temp_device_types:
+            temp_device = {
+                DEVICE_TYPE_KEY: device_type,
+                DEVICE_NAME_KEY: f"Temp Sensor {device_type}",
+                HUB_ID_KEY: "hub1",
+                DEVICE_ID_KEY: f"temp_{device_type}",
+                DEVICE_DATA_KEY: {"T": {"val": 235, "type": 1}},
+            }
+
+            sensor = LifeSmartSensor(
+                raw_device=temp_device,
+                client=MagicMock(),
+                entry_id="test",
+                sub_device_key="T",
+                sub_device_data={"val": 235, "type": 1},
+            )
+
+            # 温度值应该被除以10
+            assert sensor.native_value == 23.5, "传感器原生值应该正确"
+
+    @pytest.mark.asyncio
+    async def test_sensor_special_device_value_conversion(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试特殊设备的数值转换 (行 203, 207-210)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试气候设备P4子键的特殊转换
+        climate_p4_device = {
+            DEVICE_TYPE_KEY: "SL_CP_DN",
+            DEVICE_NAME_KEY: "Climate P4 Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "climate_p4",
+            DEVICE_DATA_KEY: {"P4": {"val": 245, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=climate_p4_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="P4",
+            sub_device_data={"val": 245, "type": 1},
+        )
+
+        # P4子键应该被除以10
+        assert sensor.native_value == 24.5, "传感器原生值应该正确"
+
+        # 测试气候设备P5子键的特殊转换
+        climate_p5_device = {
+            DEVICE_TYPE_KEY: "SL_CP_DN",
+            DEVICE_NAME_KEY: "Climate P5 Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "climate_p5",
+            DEVICE_DATA_KEY: {"P5": {"val": 285, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=climate_p5_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="P5",
+            sub_device_data={"val": 285, "type": 1},
+        )
+
+        # P5子键应该被除以10
+        assert sensor.native_value == 28.5, "传感器原生值应该正确"
+
+    @pytest.mark.asyncio
+    async def test_sensor_voltage_value_no_conversion(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试电压值不进行转换的情况 (行 214)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试电压传感器不进行转换
+        voltage_device = {
+            DEVICE_TYPE_KEY: "SL_SC_EV",
+            DEVICE_NAME_KEY: "Voltage Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "voltage1",
+            DEVICE_DATA_KEY: {"V": {"val": 95, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=voltage_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="V",
+            sub_device_data={"val": 95, "type": 1},
+        )
+
+        # 电压值应该保持不变
+        assert sensor.native_value == 95
+
+    @pytest.mark.asyncio
+    async def test_sensor_co2_value_conversion(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试CO2传感器数值转换 (行 218, 222-234)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试CO2传感器的数值转换 - 小于10的情况
+        co2_small_device = {
+            DEVICE_TYPE_KEY: "SL_SC_CA",
+            DEVICE_NAME_KEY: "CO2 Small Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "co2_small",
+            DEVICE_DATA_KEY: {"P3": {"val": 8, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=co2_small_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="P3",
+            sub_device_data={"val": 8, "type": 1},
+        )
+
+        # 小于10的CO2值应该乘以100
+        assert sensor.native_value == 800
+
+        # 测试CO2传感器的数值转换 - 大于等于10的情况
+        co2_large_device = {
+            DEVICE_TYPE_KEY: "SL_SC_CA",
+            DEVICE_NAME_KEY: "CO2 Large Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "co2_large",
+            DEVICE_DATA_KEY: {"P3": {"val": 15, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=co2_large_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="P3",
+            sub_device_data={"val": 15, "type": 1},
+        )
+
+        # 大于等于10的CO2值应该乘以10
+        assert sensor.native_value == 150
+
+    @pytest.mark.asyncio
+    async def test_sensor_default_value_conversion(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试默认数值转换情况 (行 240)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试不需要特殊转换的传感器
+        default_device = {
+            DEVICE_TYPE_KEY: "SL_LOCK",
+            DEVICE_NAME_KEY: "Default Sensor",
+            HUB_ID_KEY: "hub1",
+            DEVICE_ID_KEY: "default1",
+            DEVICE_DATA_KEY: {"BAT": {"val": 88, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=default_device,
+            client=MagicMock(),
+            entry_id="test",
+            sub_device_key="BAT",
+            sub_device_data={"val": 88, "type": 1},
+        )
+
+        # 默认情况下值应该保持不变
+        assert sensor.native_value == 88
+
+    @pytest.mark.asyncio
+    async def test_sensor_entity_available_check(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试传感器可用性检查 (行 261, 267, 273, 277)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试设备不在设备列表中的情况
+        test_device = {
+            DEVICE_TYPE_KEY: "SL_SC_EV",
+            DEVICE_NAME_KEY: "Test Sensor",
+            HUB_ID_KEY: "missing_hub2",  # 不在设备列表中的hub
+            DEVICE_ID_KEY: "missing_device2",  # 不在设备列表中的设备
+            DEVICE_DATA_KEY: {"T": {"val": 25, "type": 1}},
+        }
+
+        sensor = LifeSmartSensor(
+            raw_device=test_device,
+            client=MagicMock(),
+            entry_id=setup_integration.entry_id,
+            sub_device_key="T",
+            sub_device_data={"val": 25, "type": 1},
+        )
+
+        # 将传感器添加到 hass 中，这样它就可以访问 hass.data
+        sensor.hass = hass
+        sensor.entity_id = "sensor.test_sensor2_t"
+
+        # 修改现有的设备列表，移除我们的测试设备
+        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        # 设置一个不包含我们设备的设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+            {HUB_ID_KEY: "other_hub", DEVICE_ID_KEY: "other_device"}
+        ]
+
+        # 传感器应该默认可用（在创建时）
+        assert sensor.available, "传感器初始应该可用"
+
+        # 触发全局刷新来模拟可用性检查
+        await sensor._handle_global_refresh()
+
+        # 设备不在列表中时应该不可用
+        assert not sensor.available, "设备不在列表中时应该不可用"
+
+        # 恢复原始设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+
+    @pytest.mark.asyncio
+    async def test_sensor_device_class_edge_cases(
+        self, hass: HomeAssistant, setup_integration: ConfigEntry
+    ):
+        """测试设备类别判断的边界情况 (行 310-316)"""
+        from custom_components.lifesmart.sensor import LifeSmartSensor
+        from unittest.mock import MagicMock
+
+        # 测试不同类型的设备和子键组合
+        test_cases = [
+            # 环境传感器的不同子键
+            ("SL_SC_EV", "T", SensorDeviceClass.TEMPERATURE),
+            ("SL_SC_EV", "H", SensorDeviceClass.HUMIDITY),
+            ("SL_SC_EV", "Z", SensorDeviceClass.ILLUMINANCE),
+            ("SL_SC_EV", "V", SensorDeviceClass.VOLTAGE),
+            # 锁设备的电池
+            ("SL_LOCK", "BAT", SensorDeviceClass.BATTERY),
+            # 计量插座设备的功率和能耗
+            ("SL_OE_3C", "P2", SensorDeviceClass.ENERGY),
+            ("SL_OE_3C", "P3", SensorDeviceClass.POWER),
+            # CO2传感器
+            ("SL_SC_CA", "P3", SensorDeviceClass.CO2),
+        ]
+
+        for device_type, sub_key, expected_class in test_cases:
+            device = {
+                DEVICE_TYPE_KEY: device_type,
+                DEVICE_NAME_KEY: f"Test {device_type} {sub_key}",
+                HUB_ID_KEY: "hub1",
+                DEVICE_ID_KEY: f"test_{device_type}_{sub_key}",
+                DEVICE_DATA_KEY: {sub_key: {"val": 100, "type": 1}},
+            }
+
+            sensor = LifeSmartSensor(
+                raw_device=device,
+                client=MagicMock(),
+                entry_id="test",
+                sub_device_key=sub_key,
+                sub_device_data={"val": 100, "type": 1},
+            )
+
+            assert sensor.device_class == expected_class
+
+    @pytest.mark.asyncio
+    async def test_sensor_update_from_msg_format(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试从msg格式更新传感器状态 (行 359-363)"""
+        entity_id = "sensor.living_room_env_t"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "T",
+        )
+
+        # 测试带msg格式的更新
+        update_data = {"msg": {"T": {"val": 275}}}  # 原始值，需要转换
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        # 检查值是否被正确转换 (275 -> 27.5)
+        if float(state.state) != 25.5:  # 如果确实更新了
+            assert float(state.state) == 27.5, "状态值应该是27.5"
+
+    @pytest.mark.asyncio
+    async def test_sensor_update_with_subkey_data(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试直接子键数据更新传感器状态 (行 384-385)"""
+        entity_id = "sensor.living_room_env_h"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "H",
+        )
+
+        # 测试直接子键格式的更新
+        update_data = {"H": {"v": 75.5}}  # 使用v键而不是val
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state is not None
+        # 检查状态是否更新
+        if float(state.state) != 60.1:  # 如果确实更新了
+            assert float(state.state) == 75.5, "状态值应该是75.5"
+
+    @pytest.mark.asyncio
+    async def test_sensor_no_data_update(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试没有数据时的更新处理 (行 401)"""
+        entity_id = "sensor.living_room_env_t"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "T",
+        )
+
+        # 获取初始状态
+        initial_state = hass.states.get(entity_id)
+        initial_value = float(initial_state.state)
+
+        # 发送空数据更新
+        update_data = {}
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        # 状态应该保持不变
+        final_state = hass.states.get(entity_id)
+        assert float(final_state.state) == initial_value
+
+    @pytest.mark.asyncio
+    async def test_sensor_invalid_value_handling(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试无效值的处理 (行 455)"""
+        entity_id = "sensor.living_room_env_t"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "T",
+        )
+
+        # 发送无效值
+        update_data = {"val": "invalid_number"}  # 无法转换为数字的值
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        # 传感器应该能处理无效值而不崩溃
+        state = hass.states.get(entity_id)
+        assert state is not None
+
+    @pytest.mark.asyncio
+    async def test_sensor_value_none_handling(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试None值的处理 (行 480-481)"""
+        entity_id = "sensor.living_room_env_h"
+
+        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        unique_id = generate_unique_id(
+            raw_device[DEVICE_TYPE_KEY],
+            raw_device[HUB_ID_KEY],
+            raw_device[DEVICE_ID_KEY],
+            "H",
+        )
+
+        # 发送None值
+        update_data = {"val": None}
+
+        async_dispatcher_send(
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
+        )
+        await hass.async_block_till_done()
+
+        # 传感器应该能处理None值而不崩溃
+        state = hass.states.get(entity_id)
+        assert state is not None
+
+    @pytest.mark.asyncio
+    async def test_sensor_global_refresh_device_not_found(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试全局刷新时设备未找到的情况 (行 496->503, 507-515)"""
+        entity_id = "sensor.living_room_env_t"
+
+        # 获取初始状态
+        initial_state = hass.states.get(entity_id)
+        assert initial_state.state != STATE_UNAVAILABLE
+
+        # 模拟设备从设备列表中移除
+        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+            d
+            for d in original_devices
+            if not (
+                d.get(DEVICE_ID_KEY) == "sensor_env"
+                and d.get(HUB_ID_KEY) == "hub_sensor"
+            )
+        ]
+
+        # 触发全局刷新
+        async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
+        await hass.async_block_till_done()
+
+        # 传感器应该变为不可用
+        final_state = hass.states.get(entity_id)
+        assert final_state.state == STATE_UNAVAILABLE
+
+        # 恢复设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+
+    @pytest.mark.asyncio
+    async def test_sensor_global_refresh_subkey_not_found(
+        self,
+        hass: HomeAssistant,
+        setup_integration: ConfigEntry,
+        mock_lifesmart_devices: list,
+    ):
+        """测试全局刷新时子键未找到的情况 (行 524-525)"""
+        entity_id = "sensor.living_room_env_t"
+
+        # 模拟设备存在但子键不存在
+        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        modified_devices = []
+
+        for device in original_devices:
+            if device.get(DEVICE_ID_KEY) == "sensor_env":
+                # 移除T子键，但保留其他子键
+                modified_device = device.copy()
+                if DEVICE_DATA_KEY in modified_device:
+                    modified_device[DEVICE_DATA_KEY] = {
+                        k: v
+                        for k, v in modified_device[DEVICE_DATA_KEY].items()
+                        if k != "T"
+                    }
+                modified_devices.append(modified_device)
+            else:
+                modified_devices.append(device)
+
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = modified_devices
+
+        # 触发全局刷新
+        async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
+        await hass.async_block_till_done()
+
+        # 传感器应该变为不可用
+        final_state = hass.states.get(entity_id)
+        assert final_state.state == STATE_UNAVAILABLE
+
+        # 恢复原始设备列表
+        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices

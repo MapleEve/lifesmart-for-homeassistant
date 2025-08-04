@@ -9,24 +9,24 @@ get_compatible_test_versions() {
 
   case "$ha_version" in
   "2023.6.0")
-    # HA 2023.6.0 - 使用插件 0.13.36
-    echo '"pytest>=7.2.1,<8.0.0" "pytest-homeassistant-custom-component==0.13.36"'
+    # HA 2023.6.0 - 使用插件 0.13.36 (插件会自动安装pytest)
+    echo '"pytest-homeassistant-custom-component==0.13.36"'
     ;;
   "2024.2.0")
-    # HA 2024.2.0 - 使用插件 0.13.99
-    echo '"pytest>=7.4.0,<8.0.0" "pytest-homeassistant-custom-component==0.13.99"'
+    # HA 2024.2.0 - 使用插件 0.13.99 (插件会自动安装pytest)
+    echo '"pytest-homeassistant-custom-component==0.13.99"'
     ;;
   "2024.12.0")
-    # HA 2024.12.0 - 使用插件 0.13.190
-    echo '"pytest>=8.0.0,<9.0.0" "pytest-homeassistant-custom-component==0.13.190"'
+    # HA 2024.12.0 - 使用插件 0.13.190 (插件会自动安装pytest)
+    echo '"pytest-homeassistant-custom-component==0.13.190"'
     ;;
   "latest")
-    # HA 最新版本 - 使用最新插件
-    echo '"pytest" "pytest-homeassistant-custom-component"'
+    # HA 最新版本 - 使用最新插件 (插件会自动安装pytest)
+    echo '"pytest-homeassistant-custom-component"'
     ;;
   *)
-    # 回退
-    echo '"pytest" "pytest-homeassistant-custom-component"'
+    # 回退 (插件会自动安装pytest)
+    echo '"pytest-homeassistant-custom-component"'
     ;;
   esac
 }
@@ -196,7 +196,7 @@ except ImportError:
 }
 
 # 函数：安装兼容的测试依赖
-# 策略：先安装pytest和pytest-homeassistant-custom-component，让插件自动安装兼容的HA版本
+# 策略：只安装pytest-homeassistant-custom-component，让插件自动管理pytest及其他依赖
 install_compatible_test_deps() {
   local ha_version=$1
   local quiet=${2:-false}
@@ -205,9 +205,9 @@ install_compatible_test_deps() {
   # 构建pip安装参数
   local pip_args=""
   if [ "$no_cache" = "true" ]; then
-    pip_args="--no-cache-dir --only-binary=all"
+    pip_args="--no-cache-dir"
     if [ "$quiet" != "true" ]; then
-      echo "Using no-cache installation with binary-only packages"
+      echo "Using no-cache installation"
     fi
   fi
 
@@ -215,61 +215,52 @@ install_compatible_test_deps() {
     pip_args="$pip_args --quiet"
   fi
 
-  # 根据目标HA版本安装对应的pytest插件，让插件决定HA版本
+  # 根据目标HA版本安装对应的pytest插件，让插件自动管理所有依赖
   case "$ha_version" in
   "2023.6.0")
     # HA 2023.6.0 - 使用插件 0.13.36
-    if [ "$quiet" = "true" ]; then
-      echo "Installing pytest and pytest-homeassistant-custom-component 0.13.36 (will auto-install HA 2023.6.0)..."
-    else
-      echo "Installing pytest 7.2.1+ and pytest-homeassistant-custom-component 0.13.36..."
-      echo "  -> This will auto-install HA 2023.6.0"
+    if [ "$quiet" != "true" ]; then
+      echo "Installing pytest-homeassistant-custom-component 0.13.36..."
+      echo "  -> This will auto-install HA 2023.6.0 and pytest"
     fi
-    pip install $pip_args "pytest>=7.2.1,<8.0.0" "pytest-homeassistant-custom-component==0.13.36"
+    pip install $pip_args "pytest-homeassistant-custom-component==0.13.36"
     ;;
   "2024.2.0")
     # HA 2024.2.0 - 使用插件 0.13.99
-    if [ "$quiet" = "true" ]; then
-      echo "Installing pytest and pytest-homeassistant-custom-component 0.13.99 (will auto-install HA 2024.2.0)..."
-    else
-      echo "Installing pytest 7.4.x and pytest-homeassistant-custom-component 0.13.99..."
-      echo "  -> This will auto-install HA 2024.2.0"
+    if [ "$quiet" != "true" ]; then
+      echo "Installing pytest-homeassistant-custom-component 0.13.99..."
+      echo "  -> This will auto-install HA 2024.2.0 and pytest"
     fi
-    pip install $pip_args "pytest>=7.4.0,<8.0.0" "pytest-homeassistant-custom-component==0.13.99"
+    pip install $pip_args "pytest-homeassistant-custom-component==0.13.99"
     ;;
   "2024.12.0")
     # HA 2024.12.0 - 使用插件 0.13.190
-    if [ "$quiet" = "true" ]; then
-      echo "Installing pytest and pytest-homeassistant-custom-component 0.13.190 (will auto-install HA 2024.12.0)..."
-    else
-      echo "Installing pytest 8.x and pytest-homeassistant-custom-component 0.13.190..."
-      echo "  -> This will auto-install HA 2024.12.0"
+    if [ "$quiet" != "true" ]; then
+      echo "Installing pytest-homeassistant-custom-component 0.13.190..."
+      echo "  -> This will auto-install HA 2024.12.0 and pytest"
     fi
-    pip install $pip_args "pytest>=8.0.0,<9.0.0" "pytest-homeassistant-custom-component==0.13.190"
+    pip install $pip_args "pytest-homeassistant-custom-component==0.13.190"
     ;;
   "latest")
     # HA 最新版本 - 使用最新插件
-    if [ "$quiet" = "true" ]; then
-      echo "Installing pytest and latest pytest-homeassistant-custom-component (will auto-install latest HA)..."
-    else
-      echo "Installing pytest and latest pytest-homeassistant-custom-component..."
-      echo "  -> This will auto-install the latest HA version"
+    if [ "$quiet" != "true" ]; then
+      echo "Installing latest pytest-homeassistant-custom-component..."
+      echo "  -> This will auto-install the latest HA version and pytest"
     fi
-    pip install $pip_args "pytest" "pytest-homeassistant-custom-component"
+    pip install $pip_args "pytest-homeassistant-custom-component"
     ;;
   *)
     # 回退到最新版本
-    if [ "$quiet" = "true" ]; then
-      echo "Installing pytest and latest pytest-homeassistant-custom-component (fallback)..."
-    else
-      echo "Installing pytest and latest pytest-homeassistant-custom-component (fallback)..."
+    if [ "$quiet" != "true" ]; then
+      echo "Installing latest pytest-homeassistant-custom-component (fallback)..."
+      echo "  -> This will auto-install HA and pytest"
     fi
-    pip install $pip_args "pytest" "pytest-homeassistant-custom-component"
+    pip install $pip_args "pytest-homeassistant-custom-component"
     ;;
   esac
 
-  # 安装其他通用测试依赖
-  pip install $pip_args pytest-asyncio pytest-cov flake8
+  # 安装其他测试依赖（pytest-asyncio和pytest-cov由pytest-homeassistant-custom-component管理）
+  pip install $pip_args flake8
 
   # 显示实际安装的HA版本并验证
   if [ "$quiet" != "true" ]; then

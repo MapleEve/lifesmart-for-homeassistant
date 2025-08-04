@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from custom_components.lifesmart.compatibility import create_service_call
 from custom_components.lifesmart.const import (
@@ -45,7 +46,6 @@ class TestLifeSmartServiceManager:
         service_manager.client = mock_client
         return service_manager
 
-    @pytest.mark.asyncio
     async def test_service_registration(self, hass: HomeAssistant, service_manager):
         """测试服务注册功能。"""
         service_manager.register_services()
@@ -58,7 +58,6 @@ class TestLifeSmartServiceManager:
         ), "应该注册场景触发服务"
         assert hass.services.has_service(DOMAIN, "press_switch"), "应该注册点动开关服务"
 
-    @pytest.mark.asyncio
     async def test_send_ir_keys_service(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -84,14 +83,14 @@ class TestLifeSmartServiceManager:
         # 验证客户端方法被正确调用
         mock_client.async_send_ir_key.assert_called_once_with(
             "test_hub",
-            "test_ai",
             "test_device",
             "tv",
             "samsung",
             ["power", "volume_up"],
+            "test_ai",
+            "",
         )
 
-    @pytest.mark.asyncio
     async def test_send_ir_keys_service_with_exception(
         self, hass: HomeAssistant, service_manager, mock_client
     ):
@@ -226,7 +225,9 @@ class TestLifeSmartServiceManager:
 
         call = create_service_call(DOMAIN, "trigger_scene", service_data, hass)
 
-        await service_manager._trigger_scene(call)
+        # 应该抛出 HomeAssistantError
+        with pytest.raises(HomeAssistantError, match="'agt' 参数不能为空"):
+            await service_manager._trigger_scene(call)
 
         # 不应该调用客户端方法
         mock_client.async_set_scene.assert_not_called()
@@ -245,7 +246,11 @@ class TestLifeSmartServiceManager:
 
         call = create_service_call(DOMAIN, "trigger_scene", service_data, hass)
 
-        await service_manager._trigger_scene(call)
+        # 应该抛出 HomeAssistantError
+        with pytest.raises(
+            HomeAssistantError, match="'name' 和 'id' 参数必须提供其中一个"
+        ):
+            await service_manager._trigger_scene(call)
 
         # 不应该调用客户端方法
         mock_client.async_set_scene.assert_not_called()
@@ -478,9 +483,10 @@ class TestLifeSmartServiceManager:
         if expected_calls > 0:
             mock_client.async_send_ir_key.assert_called_with(
                 service_data[HUB_ID_KEY],
-                service_data["ai"],
                 service_data[DEVICE_ID_KEY],
                 service_data["category"],
                 service_data["brand"],
                 service_data["keys"],
+                service_data["ai"],
+                "",
             )

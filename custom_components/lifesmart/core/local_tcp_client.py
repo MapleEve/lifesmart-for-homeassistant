@@ -105,6 +105,9 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                 except (ConnectionResetError, BrokenPipeError):
                     # 这是一个预期的异常，如果连接已经被重置，可以忽略
                     pass
+                except Exception:
+                    # 忽略其他连接关闭异常，确保清理过程不会失败
+                    pass
 
     async def get_all_device_async(self, timeout=10):
         """获取所有设备数据，带超时控制"""
@@ -386,7 +389,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
             return []
 
     async def _async_send_single_command(
-        self, agt: str, me: str, idx: str, command_type: str, val: Any
+        self, agt: str, me: str, idx: str, command_type: int, val: Any
     ) -> int:
         """
         [本地实现] 发送单个IO口命令。
@@ -428,18 +431,41 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
             raise HomeAssistantError(f"Local scene execution failed: {e}") from e
 
     async def _async_send_ir_key(
-        self, agt: str, ai: str, me: str, category: str, brand: str, keys: str
+        self,
+        agt: str,
+        me: str,
+        category: str,
+        brand: str,
+        keys: str,
+        ai: str = "",
+        idx: str = "",
     ) -> int:
         """
         [本地实现] 发送一个本地红外按键命令。
         此方法通过调用包工厂构建红外控制包，并发送到TCP Socket。
+
+        注意：本地TCP协议主要支持ai参数（已学习的虚拟遥控器），
+        对idx参数的支持可能有限，取决于设备固件版本。
         """
         if not self._factory:
             _LOGGER.error("本地客户端工厂未初始化，无法发送红外指令。")
             return -1
 
+        # 检查参数有效性
+        if not ai and not idx:
+            _LOGGER.error("ai和idx参数必须提供其中一个")
+            raise ValueError("ai和idx参数必须提供其中一个")
+
         # 本地协议中红外按键通过红外控制场景实现
-        ir_options = {"ai": ai, "category": category, "brand": brand, "keys": keys}
+        ir_options = {"category": category, "brand": brand, "keys": keys}
+
+        # 优先使用ai参数，如果没有则使用idx
+        if ai:
+            ir_options["ai"] = ai
+        elif idx:
+            ir_options["idx"] = idx
+            _LOGGER.warning("本地TCP协议对idx参数支持有限，建议使用ai参数")
+
         pkt = self._factory.build_ir_control_packet(me, ir_options)
         return await self._send_packet(pkt)
 

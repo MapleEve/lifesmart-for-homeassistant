@@ -1,104 +1,276 @@
 send_ir_keys:
   name: "发送红外按键"
-  description: "发送红外按键命令到指定的遥控设备。(Send IR keys to a remote device.)"
+  description: "发送红外按键命令到指定的遥控设备。支持已创建的虚拟遥控器(ai)或通用码库遥控器(idx)。"
   fields:
     agt:
       description: "智慧中心 (网关) 的 agt 标识符。"
       example: "_xXXXXXXXXXXXXXXXXX"
+      required: true
+      selector:
+        text:
     me:
       description: "红外发射器所属设备的 me 标识符。"
       example: "sl_spot_xxxxxxxx"
+      required: true
+      selector:
+        text:
     ai:
-      description: "虚拟遥控器的 ai 标识符。"
+      name: "虚拟遥控器ID (推荐)"
+      description: "已在超级碗APP中创建的虚拟遥控器ID。如果您已经在LifeSmart APP中学习并保存了遥控器，请使用此参数。与idx参数二选一，优先使用ai。"
       example: "AI_IR_xxxx_xxxxxxxx"
+      required: false
+      selector:
+        text:
+    idx:
+      name: "通用码库索引"
+      description: "通用码库中的遥控器索引。如果您的遥控器型号在LifeSmart通用码库中，可使用此参数。需要与category和brand配合使用。与ai参数二选一。"
+      example: "005.irxs"
+      required: false
+      selector:
+        text:
     category:
-      description: "遥控设备的类别，例如 'tv', 'ac', 'custom'。"
-      example: "custom"
+      name: "设备类别"
+      description: "遥控设备的类别。tv=电视机, stb=机顶盒, dvd=录像机, box=网络盒子, fan=风扇, acl=空气净化器, custom=自定义。"
+      example: "tv"
+      required: true
+      selector:
+        select:
+          options:
+            - label: "电视机"
+              value: "tv"
+            - label: "机顶盒"
+              value: "stb"
+            - label: "录像机"
+              value: "dvd"
+            - label: "网络盒子"
+              value: "box"
+            - label: "风扇"
+              value: "fan"
+            - label: "空气净化器"
+              value: "acl"
+            - label: "自定义"
+              value: "custom"
     brand:
-      description: "遥控器的品牌，例如 'custom'。"
-      example: "custom"
+      name: "品牌"
+      description: "遥控器的品牌名称。例如：tcl、sony、samsung等。使用idx参数时必须准确匹配码库中的品牌名。"
+      example: "tcl"
+      required: true
+      selector:
+        text:
     keys:
-      description: "要发送的命令按键，JSON数组格式。例如 '[\"power\"]'。"
-      example: '["power"]'
+      name: "按键列表"
+      description: "要发送的命令按键，JSON数组格式。常用按键：POWER(电源), VOL_UP(音量+), VOL_DOWN(音量-), CH_UP(频道+), CH_DOWN(频道-)等。"
+      example: '["POWER", "VOL_UP"]'
+      required: true
+      selector:
+        text:
 
 send_ackeys:
   name: "发送空调按键"
-  description: "向空调设备发送红外按键指令。"
+  description: "向空调设备发送红外按键指令。支持已创建的虚拟空调遥控器(ai)或通用码库空调遥控器(idx)。"
   fields:
     agt:
       name: "中枢 ID"
-      description: "中枢的 'agt' 标识符。"
+      description: "智慧中心 (网关) 的 agt 标识符。"
       example: "_xXXXXXXXXXXXXXXXXX"
       required: true
+      selector:
+        text:
     me:
       name: "设备 ID"
-      description: "红外发射器所属设备的 'me' 标识符。"
+      description: "红外发射器所属设备的 me 标识符。"
       example: "sl_spot_xxxxxxxx"
       required: true
+      selector:
+        text:
     ai:
-      name: "遥控器 ID"
-      description: "虚拟遥控器的 'ai' 标识符。"
+      name: "虚拟空调遥控器ID (推荐)"
+      description: "已在超级碗APP中创建的虚拟空调遥控器ID。如果您已经在LifeSmart APP中学习并保存了空调遥控器，请使用此参数。与idx参数二选一，优先使用ai。"
       example: "AI_AC_xxxx_xxxxxxxx"
-      required: true
+      required: false
+      selector:
+        text:
+    idx:
+      name: "空调遥控器索引"
+      description: "通用码库中的空调遥控器索引。如果您的空调型号在LifeSmart通用码库中，可使用此参数。需要与category和brand配合使用。与ai参数二选一。"
+      example: "33.irxs"
+      required: false
+      selector:
+        text:
     category:
       name: "类别"
-      description: "目标设备的类别，必须是 'ac'。"
+      description: "目标设备的类别，空调设备必须是 'ac'。"
       example: "ac"
       required: true
+      selector:
+        select:
+          options:
+            - label: "空调"
+              value: "ac"
     brand:
       name: "品牌"
-      description: "目标空调的品牌。"
+      description: "目标空调的品牌名称。例如：Gree、Midea、Haier等。使用idx参数时必须准确匹配码库中的品牌名。"
       example: "Gree"
       required: true
-    keys:
-      name: "按键"
-      description: "要发送的命令按键。"
+      selector:
+        text:
+    key:
+      name: "操作类型"
+      description: "当前键值操作方式。power=电源开关, mode=模式切换, temp=温度变化, wind=风速变化, swing=风向变化。"
       example: "power"
       required: true
+      selector:
+        select:
+          options:
+            - label: "电源开关"
+              value: "power"
+            - label: "模式切换"
+              value: "mode"
+            - label: "温度调节"
+              value: "temp"
+            - label: "风速调节"
+              value: "wind"
+            - label: "摆风控制"
+              value: "swing"
+    keyDetail:
+      name: "按键详情"
+      description: "空调按键详情 (可选)。某些空调支持分离式操作，如仅开机而不设置温度等参数。POWER_ONLY=仅开关机, TEMP_UP=温度上调, TEMP_DOWN=温度下调, MODE_CHANGE=模式切换。"
+      example: "POWER_ONLY"
+      required: false
+      selector:
+        select:
+          options:
+            - label: "仅开关机"
+              value: "POWER_ONLY"
+            - label: "温度上调"
+              value: "TEMP_UP"
+            - label: "温度下调"
+              value: "TEMP_DOWN"
+            - label: "模式切换"
+              value: "MODE_CHANGE"
     power:
-      name: "电源"
-      description: "电源状态 (1代表开, 0代表关)。"
+      name: "电源状态"
+      description: "电源状态设置。1=开机, 0=关机。"
       example: 1
       required: true
+      selector:
+        select:
+          options:
+            - label: "开机"
+              value: 1
+            - label: "关机"
+              value: 0
     mode:
-      name: "模式"
-      description: "运行模式 (例如 cool, heat)。"
-      example: "cool"
+      name: "运行模式"
+      description: "空调运行模式设置。0=自动, 1=制冷, 2=除湿, 3=送风, 4=制热。"
+      example: 1
       required: true
+      selector:
+        select:
+          options:
+            - label: "自动模式"
+              value: 0
+            - label: "制冷模式"
+              value: 1
+            - label: "除湿模式"
+              value: 2
+            - label: "送风模式"
+              value: 3
+            - label: "制热模式"
+              value: 4
     temp:
-      name: "温度"
-      description: "设置温度。"
+      name: "目标温度"
+      description: "设置目标温度 (16-30°C)。根据空调型号不同，支持的温度范围可能有所差异。"
       example: 26
       required: true
+      selector:
+        number:
+          min: 16
+          max: 30
+          mode: slider
+          unit_of_measurement: "°C"
     wind:
-      name: "风速"
-      description: "风扇速度。"
-      example: "auto"
+      name: "风速等级"
+      description: "风扇速度等级设置。0=自动风速, 1=低风速, 2=中风速, 3=高风速。"
+      example: 0
       required: true
+      selector:
+        select:
+          options:
+            - label: "自动风速"
+              value: 0
+            - label: "低风速"
+              value: 1
+            - label: "中风速"
+              value: 2
+            - label: "高风速"
+              value: 3
     swing:
-      name: "扫风模式"
-      description: "摆风/叶片模式。"
-      example: "auto"
+      name: "摆风模式"
+      description: "摆风/叶片方向控制。0=自动摆风, 1=风向1, 2=风向2, 3=风向3, 4=风向4。具体风向含义因空调型号而异。"
+      example: 0
       required: true
+      selector:
+        select:
+          options:
+            - label: "自动摆风"
+              value: 0
+            - label: "风向1"
+              value: 1
+            - label: "风向2"
+              value: 2
+            - label: "风向3"
+              value: 3
+            - label: "风向4"
+              value: 4
 
 trigger_scene:
   name: "触发场景"
-  description: "激活一个 LifeSmart 场景。(Activates a LifeSmart scene.)"
+  description: "激活一个 LifeSmart 场景。可以使用场景名称或场景ID，ID优先级更高。"
   fields:
     agt:
-      description: "定义了该场景的中枢的 'agt' 标识符。"
+      name: "中枢 ID"
+      description: "定义了该场景的智慧中心 (网关) 的 agt 标识符。场景必须在此中枢下创建。"
       example: "_xXXXXXXXXXXXXXXXXX"
+      required: true
+      selector:
+        text:
+    name:
+      name: "场景名称"
+      description: "要触发的场景名称。使用在LifeSmart APP中设置的场景名称。与id参数二选一，当同时提供时id优先。"
+      example: "回家模式"
+      required: false
+      selector:
+        text:
     id:
-      description: "要触发的场景的标识符。"
+      name: "场景 ID (推荐)"
+      description: "要触发的场景ID。比场景名称更精确，建议优先使用。与name参数二选一，当同时提供时id优先。"
       example: "AIxxxxxxxxxxxx"
+      required: false
+      selector:
+        text:
 
 press_switch:
   name: "点动开关"
-  description: "对一个开关实体执行点动操作（按下后在指定时间后自动关闭）。(Performs a momentary press on a switch entity.)"
+  description: "对一个开关实体执行点动操作（按下后在指定时间后自动关闭）。适用于门铃、车库门等需要短暂触发的设备。"
   fields:
     entity_id:
-      description: "要执行点动操作的开关实体的 entity_id。"
+      name: "开关实体"
+      description: "要执行点动操作的开关实体的 entity_id。必须是LifeSmart集成创建的开关实体。"
       example: "switch.my_button_p1"
+      required: true
+      selector:
+        entity:
+          domain: switch
     duration:
-      description: "点动持续时间（毫秒）。默认为1000毫秒（1秒）。"
-      example: 500
+      name: "持续时间"
+      description: "点动持续时间（毫秒）。设备将在此时间后自动关闭。默认为1000毫秒（1秒）。范围：100-10000毫秒。"
+      example: 1000
+      default: 1000
+      required: false
+      selector:
+        number:
+          min: 100
+          max: 10000
+          unit_of_measurement: "ms"
+          mode: box

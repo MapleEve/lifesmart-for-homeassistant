@@ -500,7 +500,7 @@ class LifeSmartPacketFactory:
         return self._proto.encode(config_data)
 
     def build_epset_packet(
-        self, devid: str, idx: str, command_type: str, val: Any
+        self, devid: str, idx: str, command_type: int, val: Any
     ) -> bytes:
         """构建一个标准的单IO口控制指令包 (EpSet)。"""
         args = {
@@ -581,7 +581,10 @@ class LifeSmartPacketFactory:
     def build_add_timer_packet(self, devid: str, croninfo: str, key: str) -> bytes:
         """构建添加设备定时器的指令包。"""
         args = {
-            "cmdlist": f"SCHDEF({{pause=false;}},'0 {croninfo} *',SET,io,'/ep/{devid}',{{{key}}});",
+            "cmdlist": (
+                f"SCHDEF({{pause=false;}},'0 {croninfo} *',"
+                f"SET,io,'/ep/{devid}',{{{key}}});"
+            ),
             "enum:13": f"sys_sch_{devid}_CL",
         }
         return self._build_packet(args, act="SetA", node_suffix=f"{self.node}/me/ai")

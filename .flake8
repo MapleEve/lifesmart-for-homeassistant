@@ -1,6 +1,6 @@
 [flake8]
 # 设置每行最大长度
-max-line-length = 120
+max-line-length = 88
 
 # 忽略特定的错误码
 # E201: 'whitespace after '('

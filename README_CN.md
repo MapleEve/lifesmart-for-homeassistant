@@ -40,7 +40,7 @@ Assistant。支持云端与本地两种模式，自动发现设备，并通过 H
 - **🐛 本地模式修复**：修复本地模式下设备状态更新问题 ([#65](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/65))
 - **⚡ 性能优化**：用集合替换列表以提高查找速度 ([#55](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/55))
 - **🛠️ 开发体验**：添加全面的 PR 模板和自动 PR 摘要
-- **📊 代码质量**：集成 Black 代码格式化和 Flake8 代码检查，行长度120
+- **📊 代码质量**：集成 Black 代码格式化和 Flake8 代码检查，行长度88
 - **🏷️ 许可证合规**：添加 FOSSA 许可证扫描和徽章 ([#60](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/60))
 
 ---
@@ -157,7 +157,7 @@ SPOT 超级碗：MSL_IRCTL、OD_WE_IRCTL、SL_SPOT、SL_P_IR、SL_P_IR_V2
 
 ### 代码质量标准
 
-- **Black 代码格式化**：一致的代码风格，行长度120字符
+- **Black 代码格式化**：一致的代码风格，行长度88字符
 - **Flake8 代码检查**：全面的代码质量检查
 - **全面测试**：667+ 单元测试，包含14个专用兼容性测试
 - **CI/CD 流水线**：跨多个 Python 和 Home Assistant 版本的自动化测试
@@ -212,8 +212,8 @@ conda activate ci-test-ha2023.6.0-py3.11
 ### 代码质量
 
 ```bash
-# 使用Black格式化代码（行长度120）
-black custom_components/lifesmart/ --line-length 120
+# 使用Black格式化代码（行长度88）
+black custom_components/lifesmart/ --line-length 88
 
 # 运行代码检查
 flake8 custom_components/lifesmart/
@@ -230,7 +230,7 @@ flake8 custom_components/lifesmart/
 
 ### 贡献指南
 
-- 遵循现有代码风格（Black 格式化，120字符行长度）
+- 遵循现有代码风格（Black 格式化，88字符行长度）
 - 为新功能添加全面测试
 - 为面向用户的更改更新文档
 - 使用约定式提交消息

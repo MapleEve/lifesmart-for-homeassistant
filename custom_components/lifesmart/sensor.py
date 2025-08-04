@@ -150,14 +150,14 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             if sub_key == "P5":
                 return (
                     SensorDeviceClass.TEMPERATURE
-                    if device_type == "SL_CP_DN"
+                    if device_type in ("SL_CP_DN", "SL_NATURE")
                     else SensorDeviceClass.PM25
                 )
             if sub_key == "P6":
                 return SensorDeviceClass.BATTERY
             if sub_key == "P4":
                 return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
-            return None
+            # 继续到通用子设备键判断，不返回None
 
         # 根据子设备键判断
         if sub_key == "BAT":
@@ -354,11 +354,23 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             else:
                 return numeric_raw_value
 
+        # CO2传感器的特殊转换逻辑
+        if self.device_class == SensorDeviceClass.CO2:
+            # 只对明显过小的值进行转换，合理范围的值保持不变
+            if numeric_raw_value < 10:
+                return numeric_raw_value * 100
+            elif 10 <= numeric_raw_value < 100:
+                return numeric_raw_value * 10
+            else:
+                # 大于等于100的值认为已经是正确的ppm值，不转换
+                return numeric_raw_value
+
         # 对于其他类型的传感器，保持原有逻辑
         if device_type in CLIMATE_TYPES:
-            if (device_type == "SL_CP_DN" and self._sub_key == "P5") or (
-                device_type == "SL_TR_ACIPM" and self._sub_key == "P4"
-            ):
+            if (
+                device_type in ("SL_CP_DN", "SL_NATURE")
+                and self._sub_key in ("P5", "P4")
+            ) or (device_type == "SL_TR_ACIPM" and self._sub_key == "P4"):
                 return numeric_raw_value / 10.0
             return numeric_raw_value
 
@@ -438,7 +450,8 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         try:
             if not new_data:
                 _LOGGER.warning(
-                    "Received empty new_data in _handle_update; possible upstream issue."
+                    "Received empty new_data in _handle_update; "
+                    "possible upstream issue."
                 )
                 return
             # 统一处理数据来源
@@ -495,7 +508,8 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             if current_device is None:
                 if self.available:
                     _LOGGER.warning(
-                        "Device %s not found during global refresh, marking as unavailable.",
+                        "Device %s not found during global refresh, "
+                        "marking as unavailable.",
                         self.unique_id,
                     )
                     self._attr_available = False

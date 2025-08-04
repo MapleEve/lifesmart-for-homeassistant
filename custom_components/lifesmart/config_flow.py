@@ -429,7 +429,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         # 根据连接类型决定显示的菜单选项
         menu_options = ["main_params"]
 
-        # 只有云端模式才显示认证参数选项
+        # 只有云端模式才显示认证参数选项和遥控器配置
         # 使用保存的引用以避免在新版本HA中的访问限制
         try:
             config_data = self.config_entry.data
@@ -439,6 +439,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
 
         if config_data.get(CONF_TYPE) == config_entries.CONN_CLASS_CLOUD_PUSH:
             menu_options.append("auth_params")
+            menu_options.append("add_remote")  # 添加遥控器配置选项
 
         return self.async_show_menu(
             step_id="init",
@@ -579,3 +580,196 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
             ),
             errors=errors,
         )
+
+    async def async_step_add_remote(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """添加遥控器配置 - 第1步：基本信息"""
+        if user_input is not None:
+            self.temp_data = user_input.copy()
+            return await self.async_step_select_category()
+
+        return self.async_show_form(
+            step_id="add_remote",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("remote_name"): str,
+                    vol.Required("hub_id"): str,  # TODO: 后续可改为设备选择器
+                    vol.Required("device_id"): str,  # SPOT设备的me ID
+                }
+            ),
+        )
+
+    async def async_step_select_category(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """选择设备类别"""
+        errors = {}
+
+        if user_input is not None:
+            self.temp_data.update(user_input)
+            return await self.async_step_select_brand()
+
+        try:
+            # 获取云端客户端实例
+            config_data = self._config_entry_ref.data
+            client = LifeSmartOAPIClient(
+                self.hass,
+                config_data.get(CONF_REGION),
+                config_data.get(CONF_LIFESMART_APPKEY),
+                config_data.get(CONF_LIFESMART_APPTOKEN),
+                config_data.get(CONF_LIFESMART_USERTOKEN),
+                config_data.get(CONF_LIFESMART_USERID),
+            )
+
+            categories = await client.get_ir_categories_async()
+
+            # 转换为选择器选项
+            category_options = []
+            for cat in categories:
+                label = self._get_category_label(cat)
+                category_options.append({"value": cat, "label": label})
+
+            return self.async_show_form(
+                step_id="select_category",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required("category"): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=category_options,
+                                mode=SelectSelectorMode.DROPDOWN,
+                            )
+                        )
+                    }
+                ),
+                errors=errors,
+            )
+        except Exception as e:
+            _LOGGER.error("获取设备类别失败: %s", e)
+            errors["base"] = "cannot_connect"
+
+        return self.async_show_form(
+            step_id="select_category",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("category"): str,
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_select_brand(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """选择品牌"""
+        if user_input is not None:
+            self.temp_data.update(user_input)
+            return await self.async_step_select_model()
+
+        try:
+            config_data = self._config_entry_ref.data
+            client = LifeSmartOAPIClient(
+                self.hass,
+                config_data.get(CONF_REGION),
+                config_data.get(CONF_LIFESMART_APPKEY),
+                config_data.get(CONF_LIFESMART_APPTOKEN),
+                config_data.get(CONF_LIFESMART_USERTOKEN),
+                config_data.get(CONF_LIFESMART_USERID),
+            )
+
+            brands = await client.get_ir_brands_async(self.temp_data["category"])
+
+            brand_options = []
+            for brand_name in brands.keys():
+                brand_options.append({"value": brand_name, "label": brand_name})
+
+            return self.async_show_form(
+                step_id="select_brand",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required("brand"): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=brand_options, mode=SelectSelectorMode.DROPDOWN
+                            )
+                        )
+                    }
+                ),
+            )
+        except Exception as e:
+            _LOGGER.error("获取品牌列表失败: %s", e)
+            return self.async_abort(reason="api_error")
+
+    async def async_step_select_model(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """选择遥控器型号"""
+        if user_input is not None:
+            self.temp_data.update(user_input)
+
+            # 保存遥控器配置到选项中
+            remotes = self.options_data.get("remotes", {})
+            remote_id = (
+                f"{self.temp_data['category']}_"
+                f"{self.temp_data['brand']}_{self.temp_data['idx']}"
+            )
+
+            remotes[remote_id] = {
+                "name": self.temp_data["remote_name"],
+                "hub_id": self.temp_data["hub_id"],
+                "device_id": self.temp_data["device_id"],
+                "category": self.temp_data["category"],
+                "brand": self.temp_data["brand"],
+                "idx": self.temp_data["idx"],
+            }
+
+            self.options_data["remotes"] = remotes
+            return self.async_create_entry(title="", data=self.options_data)
+
+        try:
+            config_data = self._config_entry_ref.data
+            client = LifeSmartOAPIClient(
+                self.hass,
+                config_data.get(CONF_REGION),
+                config_data.get(CONF_LIFESMART_APPKEY),
+                config_data.get(CONF_LIFESMART_APPTOKEN),
+                config_data.get(CONF_LIFESMART_USERTOKEN),
+                config_data.get(CONF_LIFESMART_USERID),
+            )
+
+            models = await client.get_ir_remote_indexes_async(
+                self.temp_data["category"], self.temp_data["brand"]
+            )
+
+            model_options = []
+            for idx in models:
+                model_options.append({"value": idx, "label": f"型号 {idx}"})
+
+            return self.async_show_form(
+                step_id="select_model",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required("idx"): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=model_options, mode=SelectSelectorMode.DROPDOWN
+                            )
+                        )
+                    }
+                ),
+            )
+        except Exception as e:
+            _LOGGER.error("获取遥控器型号失败: %s", e)
+            return self.async_abort(reason="api_error")
+
+    def _get_category_label(self, category: str) -> str:
+        """获取设备类别的显示名称"""
+        category_labels = {
+            "tv": "电视机",
+            "ac": "空调",
+            "stb": "机顶盒",
+            "dvd": "录像机",
+            "box": "网络盒子",
+            "fan": "风扇",
+            "acl": "空气净化器",
+            "custom": "自定义",
+        }
+        return category_labels.get(category, category)
