@@ -286,13 +286,13 @@ get_versions_from_env() {
 
 # 函数：交互式环境选择
 interactive_env_selection() {
-  echo -e "${YELLOW}请选择要测试的CI环境:${NC}"
-  echo "1) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)"
-  echo "2) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)"
-  echo "3) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)"
-  echo "4) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)"
-  echo "5) 全部环境测试 (完整CI矩阵)"
-  echo ""
+  echo -e "${YELLOW}请选择要测试的CI环境:${NC}" >&2
+  echo "1) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)" >&2
+  echo "2) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)" >&2
+  echo "3) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)" >&2
+  echo "4) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)" >&2
+  echo "5) 全部环境测试 (完整CI矩阵)" >&2
+  echo "" >&2
   read -p "请输入选择 (1-5): " choice
 
   case $choice in
@@ -312,7 +312,7 @@ interactive_env_selection() {
     echo "all"
     ;;
   *)
-    echo -e "${RED}无效选择，退出${NC}"
+    echo -e "${RED}无效选择，退出${NC}" >&2
     exit 1
     ;;
   esac
@@ -446,11 +446,7 @@ else
       esac
 
       if [ "$single_env_mode" = true ]; then
-        echo ""
-        echo -e "${YELLOW}请先切换环境再重新运行脚本:${NC}"
-        echo -e "${GREEN}conda activate $selected_env${NC}"
-        echo -e "${GREEN}./.testing/test_ci_locally.sh${NC}"
-        exit 1
+        echo -e "${BLUE}=== 管道输入模式: 单环境测试 $selected_env ===${NC}"
       else
         echo -e "${BLUE}=== 管道输入模式: 全部环境测试 ===${NC}"
       fi
@@ -462,11 +458,7 @@ else
         echo -e "${BLUE}=== 交互式模式: 全部环境测试 ===${NC}"
       else
         single_env_mode=true
-        echo ""
-        echo -e "${YELLOW}请先切换环境再重新运行脚本:${NC}"
-        echo -e "${GREEN}conda activate $selected_env${NC}"
-        echo -e "${GREEN}./.testing/test_ci_locally.sh${NC}"
-        exit 1
+        echo -e "${BLUE}=== 交互式模式: 单环境测试 $selected_env ===${NC}"
       fi
     fi
   fi
@@ -536,53 +528,53 @@ clean_install_dependencies() {
 
   # 在conda环境中执行清理和安装，根据操作系统选择执行方式
   local install_cmd_common="
-# 1. 清理pip缓存（模拟GitHub CI全新环境）
-echo 'Clearing pip cache...' &&
-pip cache purge &&
+# 1. 清理pytest缓存和__pycache__（保持测试环境干净）
+echo 'Clearing test cache...' &&
+find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true &&
+find . -name '*.pyc' -delete 2>/dev/null || true &&
+rm -rf .pytest_cache 2>/dev/null || true &&
 
-# 2. 卸载所有现有的测试相关包
-echo 'Uninstalling existing test packages...' &&
-pip uninstall -y homeassistant pytest pytest-homeassistant-custom-component pytest-asyncio pytest-cov flake8 2>/dev/null || true &&
+# 2. 升级pip（与GitHub CI一致）
+python -m pip install --upgrade pip -q &&
 
-# 3. 升级pip（与GitHub CI一致）
-python -m pip install --upgrade pip &&
-
-# 4. 设置编译环境变量以解决lru-dict编译问题
-export CC=clang &&
-export CXX=clang++ &&
-
-# 4.1. 尝试预先安装有问题的包
-echo 'Pre-installing problematic packages...' &&
-
-# 对于lru-dict，尝试使用预编译版本或直接跳过编译问题
-pip install --no-deps lru-dict==1.3.0 --no-cache-dir --force-reinstall 2>/dev/null || (
-  echo 'lru-dict failed, trying alternative approach...' &&
-  pip install --upgrade --no-cache-dir pip setuptools wheel &&
-  pip install lru-dict==1.3.0 --no-cache-dir --force-reinstall --no-build-isolation
-) &&
-
-# 5. 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
-# 完全复制GitHub CI的逻辑，使用--no-cache-dir --force-reinstall
+# 3. 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
+# 完全复制GitHub CI的逻辑，使用--force-reinstall提高本地测试效率
 echo 'Installing fresh dependencies...' &&
 "
 
   if [[ "$ha_version" == "2023.6.0" ]]; then
-    install_cmd_common+="pip install --no-cache-dir --force-reinstall 'pytest-homeassistant-custom-component==0.13.36' &&"
-  elif [[ "$ha_version" == "2024.2.0" ]]; then
-    install_cmd_common+="pip install --no-cache-dir --force-reinstall 'pytest-homeassistant-custom-component==0.13.99' &&"
-  elif [[ "$ha_version" == "2024.12.0" ]]; then
-    install_cmd_common+="pip install --no-cache-dir --force-reinstall 'pytest-homeassistant-custom-component==0.13.190' &&"
-  elif [[ "$ha_version" == "latest" ]]; then
-    install_cmd_common+="pip install --no-cache-dir --force-reinstall 'pytest-homeassistant-custom-component' &&"
+    install_cmd_common+="
+if [ \"\$(python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")')\" = \"3.11\" ]; then
+  if [[ \"\$OSTYPE\" == \"darwin\"* ]]; then
+    # macOS Python 3.11: 使用双fork解决方案修复lru-dict编译问题
+    echo 'Using dual-fork solution for macOS ARM64 lru-dict compatibility...'
+    echo 'Step 1: Installing lru-dict==1.3.0...'
+    pip install -q lru-dict==1.3.0 &&
+    echo 'Step 2: Installing forked HA with dependencies (lru-dict excluded)...'
+    pip install -q git+https://github.com/MapleEve/homeassistant-2023.6.0-macos-fix.git@2023.6.0-macos-fix &&
+    echo 'Step 3: Installing forked pytest plugin...'
+    pip install -q git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@0.13.36-macos-fix
   else
-    install_cmd_common+="pip install --no-cache-dir --force-reinstall pytest-homeassistant-custom-component &&"
+    pip install --use-pep517 --no-build-isolation --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
+  fi
+else
+  pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
+fi &&"
+  elif [[ "$ha_version" == "2024.2.0" ]]; then
+    install_cmd_common+="pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.99' &&"
+  elif [[ "$ha_version" == "2024.12.0" ]]; then
+    install_cmd_common+="pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.190' &&"
+  elif [[ "$ha_version" == "latest" ]]; then
+    install_cmd_common+="pip install --force-reinstall -q 'pytest-homeassistant-custom-component' &&"
+  else
+    install_cmd_common+="pip install --force-reinstall -q pytest-homeassistant-custom-component &&"
   fi
 
   install_cmd_common+="
-# 6. 安装其他测试依赖（pytest-asyncio和pytest-cov由pytest-homeassistant-custom-component管理）
-pip install --no-cache-dir --force-reinstall flake8 &&
+# 4. 安装其他测试依赖（pytest-asyncio和pytest-cov由pytest-homeassistant-custom-component管理）
+pip install -q flake8 &&
 
-# 7. 验证安装
+# 5. 验证安装
 echo 'Verifying installations...' &&
 python --version &&
 python -c 'import homeassistant.const; print(\"HA version:\", homeassistant.const.__version__)' &&
@@ -655,29 +647,15 @@ run_pytest() {
   # 设置环境变量
   export PYTHONPATH="."
 
-  # 为HA 2024.12.0+ 添加特殊处理来忽略teardown错误
   local pytest_args="-v --cov --cov-branch --cov-report=xml"
-
-  # 检查HA版本，如果是2024.12.0则增加忽略teardown错误的参数
-  if [[ "$ha_version" == "2024.12.0" ]]; then
-    # 对于HA 2024.12.0，使用--tb=line来减少teardown错误的输出，但不影响实际测试结果
-    pytest_args="$pytest_args --tb=line"
-    echo -e "${YELLOW}Note: Using reduced traceback for HA $ha_version to handle teardown thread cleanup${NC}"
-  fi
 
   if eval "pytest $pytest_args > \"$log_file\" 2>&1"; then
     echo -e "${GREEN}✓ Pytest passed${NC}"
     return 0
   else
-    # 检查是否只是teardown错误但测试都通过了
-    if grep -q "passed.*error.*in.*s" "$log_file" && grep -qE "(Thread.*_run_safe_shutdown_loop|SyncWorker)" "$log_file"; then
-      echo -e "${YELLOW}✓ Pytest passed (with expected teardown thread cleanup in HA $ha_version)${NC}"
-      return 0
-    else
-      echo -e "${RED}✗ Pytest failed${NC}"
-      echo "Check log: $log_file"
-      return 1
-    fi
+    echo -e "${RED}✗ Pytest failed${NC}"
+    echo "Check log: $log_file"
+    return 1
   fi
 }
 
@@ -729,10 +707,23 @@ test_ha_version() {
       ;;
   esac
 
-  if exec_in_conda_env "$conda_env" "$work_dir" "flake8 --count --show-source --statistics custom_components/lifesmart" >"$log_file" 2>&1; then
+  # 检查是否是交互模式
+  local flake8_exit_code
+  if [ -t 1 ]; then
+    # 交互模式：显示实时输出并保存到日志
+    exec_in_conda_env "$conda_env" "$work_dir" "flake8 --count --show-source --statistics custom_components/lifesmart" 2>&1 | tee "$log_file"
+    flake8_exit_code=${PIPESTATUS[0]}
+  else
+    # 管道模式：静默运行，只保存到日志
+    exec_in_conda_env "$conda_env" "$work_dir" "flake8 --count --show-source --statistics custom_components/lifesmart" >"$log_file" 2>&1
+    flake8_exit_code=$?
+  fi
+
+  # 根据flake8退出码判断检查结果
+  if [ $flake8_exit_code -eq 0 ]; then
     echo -e "${GREEN}✓ Flake8 passed${NC}"
   else
-    echo -e "${RED}✗ Flake8 failed${NC}"
+    echo -e "${RED}✗ Flake8 failed (exit code: $flake8_exit_code)${NC}"
     echo "Check log: $log_file"
     return 1
   fi
@@ -741,26 +732,27 @@ test_ha_version() {
   echo -e "${YELLOW}Running pytest for HA $ha_version in conda environment $conda_env...${NC}"
   local pytest_log_file="$LOG_DIR/pytest_ha_${ha_version}.log"
 
-  # 为HA 2024.12.0 添加特殊处理来忽略teardown错误
   local pytest_args="-v --cov --cov-branch --cov-report=xml"
 
-  # 检查HA版本，如果是2024.12.0则增加忽略teardown错误的参数
-  if [[ "$ha_version" == "2024.12.0" ]]; then
-    pytest_args="$pytest_args --tb=line"
-    echo -e "${YELLOW}Note: Using reduced traceback for HA $ha_version to handle teardown thread cleanup${NC}"
+  # 检查是否是交互模式
+  local pytest_exit_code
+  if [ -t 1 ]; then
+    # 交互模式：显示实时输出并保存到日志
+    exec_in_conda_env "$conda_env" "$work_dir" "export PYTHONPATH=. && pytest $pytest_args" 2>&1 | tee "$pytest_log_file"
+    pytest_exit_code=${PIPESTATUS[0]}
+  else
+    # 管道模式：静默运行，只保存到日志
+    exec_in_conda_env "$conda_env" "$work_dir" "export PYTHONPATH=. && pytest $pytest_args" >"$pytest_log_file" 2>&1
+    pytest_exit_code=$?
   fi
 
-  if exec_in_conda_env "$conda_env" "$work_dir" "export PYTHONPATH=. && pytest $pytest_args" >"$pytest_log_file" 2>&1; then
+  # 根据pytest退出码判断测试结果
+  if [ $pytest_exit_code -eq 0 ]; then
     echo -e "${GREEN}✓ Pytest passed${NC}"
   else
-    # 检查是否只是teardown错误但测试都通过了 (仅对HA 2024.12.0)
-    if [[ "$ha_version" == "2024.12.0" ]] && grep -q "passed.*error.*in.*s" "$pytest_log_file" && grep -qE "(Thread.*_run_safe_shutdown_loop|SyncWorker)" "$pytest_log_file"; then
-      echo -e "${YELLOW}✓ Pytest passed (with expected teardown thread cleanup in HA $ha_version)${NC}"
-    else
-      echo -e "${RED}✗ Pytest failed${NC}"
-      echo "Check log: $pytest_log_file"
-      return 1
-    fi
+    echo -e "${RED}✗ Pytest failed (exit code: $pytest_exit_code)${NC}"
+    echo "Check log: $pytest_log_file"
+    return 1
   fi
 
   echo -e "${GREEN}✓ HA $ha_version test completed successfully${NC}"
@@ -771,7 +763,7 @@ test_ha_version() {
 failed_tests=()
 successful_tests=()
 
-if [ "$single_env_mode" = true ]; then
+if [ "$single_env_mode" = true ] && [ "$selected_env" != "all" ]; then
   # 单环境测试模式
   versions=$(get_versions_from_env "$selected_env")
   ha_version=$(echo $versions | cut -d' ' -f1)

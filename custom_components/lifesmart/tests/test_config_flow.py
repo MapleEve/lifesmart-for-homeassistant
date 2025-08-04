@@ -114,6 +114,21 @@ def mock_config_entry():
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_setup_entry():
+    """
+    模拟集成的 async_setup_entry 函数，防止 Config Flow 测试触发真实的集成设置。
+
+    当 Config Flow 测试调用 async_create_entry 时，Home Assistant 会自动尝试设置集成。
+    这个 fixture 确保 Config Flow 测试只测试配置流程本身，不会触发真实的 Hub 初始化。
+    """
+    with patch(
+        "custom_components.lifesmart.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
 # ==================== 初始用户流程测试 ====================
 
 
@@ -290,7 +305,10 @@ class TestCloudFlow:
 
 
 class TestLocalFlow:
-    """测试本地连接配置流程。"""
+    """
+    测试本地连接配置流程。
+    # 特别注意：测试这个类里面任何东西有失败，必须重新测试整个文件，而不是单个用例
+    """
 
     @pytest.mark.asyncio
     async def test_local_connection_success(self, hass: HomeAssistant):
@@ -338,7 +356,10 @@ class TestLocalFlow:
 
     @pytest.mark.asyncio
     async def test_local_connection_network_error(self, hass: HomeAssistant):
-        """测试本地连接网络错误。"""
+        """
+        测试本地连接网络错误。
+        # 特别注意：测试这个类里面任何东西有失败，必须重新测试整个文件，而不是单个用例
+        """
         result = await self._start_local_flow(hass)
 
         # 模拟连接超时
@@ -352,6 +373,9 @@ class TestLocalFlow:
 
         assert result["type"] == FlowResultType.FORM, "应该重新显示表单"
         assert result["errors"]["base"] == "cannot_connect", "应该显示连接错误"
+
+        # 异步清理现在由 expected_lingering_tasks autouse fixture 自动处理
+        # TimeoutError 的清理已经通过全局 fixture 处理，无需手动清理
 
     async def _start_local_flow(self, hass: HomeAssistant):
         """启动本地配置流程的辅助方法。"""
@@ -1126,7 +1150,7 @@ class TestConfigFlowErrorPaths:
 
             # 应该显示错误
             assert result["type"] == FlowResultType.FORM, "应该显示表单"
-            assert "errors" in result, "结果应包含错误信息" and result["errors"]
+            assert "errors" in result and result["errors"], "结果应包含错误信息"
 
     @pytest.mark.asyncio
     async def test_duplicate_unique_id_abort(self, hass: HomeAssistant):
@@ -1164,8 +1188,6 @@ class TestConfigFlowErrorPaths:
                 result["flow_id"], {CONF_LIFESMART_USERTOKEN: "test_token"}
             )
 
-            # 应该创建配置条目，因为当前的验证逻辑可能没有正确检查重复
-            # 这是测试的限制，而不是代码的问题
             assert result["type"] in [FlowResultType.CREATE_ENTRY, FlowResultType.ABORT]
             if result["type"] == FlowResultType.ABORT:
                 assert result["reason"] == "already_configured"

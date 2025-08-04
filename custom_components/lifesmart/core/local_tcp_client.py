@@ -105,6 +105,9 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                 except (ConnectionResetError, BrokenPipeError):
                     # 这是一个预期的异常，如果连接已经被重置，可以忽略
                     pass
+                except Exception:
+                    # 忽略其他连接关闭异常，确保清理过程不会失败
+                    pass
 
     async def get_all_device_async(self, timeout=10):
         """获取所有设备数据，带超时控制"""

@@ -29,56 +29,10 @@ from custom_components.lifesmart.const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-# 动态配置pytest-asyncio以避免版本兼容性警告
-def pytest_configure(config):
-    """动态配置pytest以避免不同版本的asyncio警告"""
-    try:
-        # 检查pytest-asyncio版本是否支持asyncio_default_fixture_loop_scope
-        import pytest_asyncio
-
-        version = getattr(pytest_asyncio, "__version__", "0.0.0")
-        parts = version.split(".")
-        major, minor = int(parts[0]), int(parts[1]) if len(parts) > 1 else 0
-
-        # pytest-asyncio >= 0.21.0 支持 asyncio_default_fixture_loop_scope
-        if major > 0 or (major == 0 and minor >= 21):
-            # 新版本，直接设置配置来避免deprecation warning
-            config.option.asyncio_default_fixture_loop_scope = "function"
-            _LOGGER.debug(
-                f"Set asyncio_default_fixture_loop_scope=function for pytest-asyncio {version}"
-            )
-    except (ImportError, AttributeError, ValueError) as e:
-        # 如果无法检测版本，则不设置 (老版本会被warning过滤器处理)
-        _LOGGER.debug(f"Unable to set asyncio config: {e}")
-        pass
-
-
 # 设置兼容性支持
 from custom_components.lifesmart.compatibility import setup_logging
 
 setup_logging()
-
-
-@pytest.fixture(autouse=True)
-def expected_lingering_timers() -> bool:
-    """
-    为旧版本HA提供兼容性：允许定时器残留以避免兼容性问题。
-
-    这是因为旧版本HA (如2024.2.0及以下) 没有提供get_scheduled_timer_handles函数，
-    而pytest-homeassistant-custom-component插件的verify_cleanup直接访问loop._scheduled，
-    这可能在某些情况下导致测试性能问题。
-
-    通过返回True，我们允许定时器残留，让插件的verify_cleanup只是警告而不是失败。
-    """
-    try:
-        # 检查是否有新版本的定时器处理函数
-        from homeassistant.util.async_ import get_scheduled_timer_handles
-
-        # 新版本HA有官方支持，可以进行严格检查
-        return False
-    except ImportError:
-        # 旧版本HA没有官方支持，允许定时器残留以避免兼容性问题
-        return True
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -90,6 +44,8 @@ def prevent_socket_access():
     这是通过 aiohttp 的 `TraceConfig` 实现的，它会在 DNS 解析开始前
     就引发一个运行时错误，从而有效地阻止了 aiodns 定时器的创建，
     这是导致 "Lingering timer" 错误的主要原因。
+
+    注意：这个fixture是GH CI必需的，不能删除。
     """
 
     async def _on_dns_resolvehost_start(session, trace_config_ctx, params):
@@ -114,6 +70,28 @@ def prevent_socket_access():
 
     with patch("aiohttp.ClientSession", new=patched_client_session):
         yield
+
+
+@pytest.fixture(autouse=True)
+def expected_lingering_timers() -> bool:
+    """
+    为旧版本HA提供兼容性：允许定时器残留以避免兼容性问题。
+
+    这是因为旧版本HA (如2024.2.0及以下) 没有提供get_scheduled_timer_handles函数，
+    而pytest-homeassistant-custom-component插件的verify_cleanup directly访问loop._scheduled，
+    这可能在某些情况下导致测试性能问题。
+
+    通过返回True，我们允许定时器残留，让插件的verify_cleanup只是警告而不是失败。
+    """
+    try:
+        # 检查是否有新版本的定时器处理函数
+        from homeassistant.util.async_ import get_scheduled_timer_handles
+
+        # 新版本HA有官方支持，可以进行严格检查
+        return False
+    except ImportError:
+        # 旧版本HA没有官方支持，允许定时器残留以避免兼容性问题
+        return True
 
 
 # --- 统一的模拟配置 ---
@@ -630,6 +608,83 @@ def mock_hub_class():
         instance.get_exclude_config = MagicMock(return_value=(set(), set()))
         instance.data_update_handler = AsyncMock()
         yield mock_class
+
+
+@pytest.fixture(autouse=True)
+def auto_mock_lifesmart_hub_setup():
+    """
+    自动fixture：防止测试中意外创建真实的Hub实例。
+
+    这个fixture会自动应用到所有lifesmart测试中，使用autouse=True。
+    它模拟Hub的关键方法，防止创建真实的网络连接和线程。
+
+    设计理念：
+    1. 默认提供安全的mock行为
+    2. 测试可以根据需要override特定的行为
+    3. 避免在每个测试中重复相同的mock代码
+
+    注意：如果测试需要模拟失败场景，可以在测试中重新patch:
+
+    @patch("custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+           side_effect=ConfigEntryNotReady("测试失败"))
+    async def test_setup_failure(self, mock_setup):
+        # 这会override autouse fixture中的mock
+        ...
+    """
+    with (
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            return_value=True,
+        ),
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+            return_value=[],
+        ),
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.async_unload",
+            return_value=True,
+        ),
+        patch(
+            # 防止创建真实的定时器任务
+            "homeassistant.helpers.event.async_track_time_interval",
+            return_value=MagicMock(),
+        ),
+        patch(
+            # 防止创建真实的WebSocket状态管理器
+            "custom_components.lifesmart.hub.LifeSmartStateManager",
+            return_value=MagicMock(),
+        ),
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """
+    显式fixture：用于需要更细粒度控制的测试。
+
+    这个fixture返回mock对象，允许测试验证调用或修改行为。
+    对于大多数测试，auto_mock_lifesmart_hub_setup 已经足够。
+    """
+    with (
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            return_value=True,
+        ) as mock_hub_setup,
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+            return_value=[],
+        ) as mock_get_devices,
+        patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+            return_value=MagicMock(),
+        ) as mock_get_client,
+    ):
+        yield mock_hub_setup, mock_get_devices, mock_get_client
 
 
 @pytest.fixture

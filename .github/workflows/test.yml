@@ -42,9 +42,14 @@ jobs:
           
           # 根据HA版本安装兼容的pytest-homeassistant-custom-component版本
           # pytest-homeassistant-custom-component插件会自动安装pytest和HA
+          # 为Python 3.11应用PEP 517解决方案解决lru-dict编译问题
           if [[ "${{ matrix.homeassistant-version }}" == "2023.6.0" ]]; then
-            # HA 2023.6.0 - 使用插件 0.13.36 (自动安装pytest和HA)
-            pip install "pytest-homeassistant-custom-component==0.13.36"
+            # HA 2023.6.0 - 使用插件 0.13.36 (自动安装pytest和HA)  
+            if [[ "${{ matrix.python-version }}" == "3.11" ]]; then
+              pip install --use-pep517 --no-build-isolation "pytest-homeassistant-custom-component==0.13.36"
+            else
+              pip install "pytest-homeassistant-custom-component==0.13.36"  
+            fi
           elif [[ "${{ matrix.homeassistant-version }}" == "2024.2.0" ]]; then
             # HA 2024.2.0 - 使用插件 0.13.99 (自动安装pytest和HA)
             pip install "pytest-homeassistant-custom-component==0.13.99"
@@ -70,45 +75,13 @@ jobs:
         env:
           PYTHONPATH: .
         run: |
-          # 为HA 2024.12.0 添加特殊处理来忽略teardown错误
-          if [[ "${{ matrix.homeassistant-version }}" == "2024.12.0" ]]; then
-            # 对于HA 2024.12.0，使用--tb=line来减少teardown错误的输出
-            echo "Note: Using reduced traceback for HA ${{ matrix.homeassistant-version }} to handle teardown thread cleanup"
-            set +e  # 暂时允许命令失败
-            pytest \
-              -v \
-              --cov \
-              --cov-branch \
-              --cov-report=xml \
-              --junitxml=junit-${{ matrix.homeassistant-version }}.xml -o junit_family=legacy \
-              --tb=line > pytest_output.log 2>&1
-            pytest_exit_code=$?
-            set -e  # 重新启用错误退出
-          
-            # 检查是否只是teardown错误但测试都通过了
-            if [ $pytest_exit_code -ne 0 ]; then
-              if grep -q "passed.*error.*in.*s" pytest_output.log && grep -qE "(Thread.*_run_safe_shutdown_loop|SyncWorker)" pytest_output.log; then
-                echo "✓ Tests passed (with expected teardown thread cleanup in HA ${{ matrix.homeassistant-version }})"
-                cat pytest_output.log  # 显示输出以供调试
-                exit 0
-              else
-                echo "✗ Tests failed with actual errors"
-                cat pytest_output.log  # 显示错误输出
-                exit 1
-              fi
-            else
-              echo "✓ Tests passed without any errors"
-              cat pytest_output.log  # 显示输出
-            fi
-          else
-            # 对于其他HA版本，使用标准配置
-            pytest \
-              -v \
-              --cov \
-              --cov-branch \
-              --cov-report=xml \
-              --junitxml=junit-${{ matrix.homeassistant-version }}.xml -o junit_family=legacy
-          fi
+          # 对于其他HA版本，使用标准配置
+          pytest \
+            -v \
+            --cov \
+            --cov-branch \
+            --cov-report=xml \
+            --junitxml=junit-${{ matrix.homeassistant-version }}.xml -o junit_family=legacy
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}

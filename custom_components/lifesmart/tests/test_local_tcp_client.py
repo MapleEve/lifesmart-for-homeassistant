@@ -367,12 +367,8 @@ class TestNetworkConnectionManagement:
         # 模拟连接被对端关闭（读取到空字节）
         mock_reader.read.return_value = b""
 
-        with patch("asyncio.wait_for") as mock_wait_for:
-            mock_wait_for.side_effect = [
-                (mock_reader, mock_writer),  # open_connection成功
-                b"",  # reader.read返回空字节
-            ]
-
+        # 直接模拟open_connection，避免复杂的wait_for处理
+        with patch("asyncio.open_connection", return_value=(mock_reader, mock_writer)):
             with pytest.raises(asyncio.TimeoutError, match="Connection closed by peer"):
                 await client.check_login()
 
@@ -388,6 +384,19 @@ class TestNetworkConnectionManagement:
         mock_writer.close = MagicMock()
         mock_writer.wait_closed = AsyncMock()
 
+        # 设置mock_reader.read的行为，避免AsyncMock警告
+        read_call_count = 0
+
+        async def mock_read_side_effect(*args, **kwargs):
+            nonlocal read_call_count
+            read_call_count += 1
+            if read_call_count == 1:
+                return b"\x00\x01"  # 第一次读取：不完整数据
+            else:
+                return b"\x00\x00\x00\x01"  # 后续读取：完整数据
+
+        mock_reader.read.side_effect = mock_read_side_effect
+
         # 计数器来区分不同的wait_for调用
         call_count = 0
 
@@ -396,14 +405,17 @@ class TestNetworkConnectionManagement:
             call_count += 1
 
             if call_count == 1:
-                # 第一次调用：open_connection
+                # 第一次调用：open_connection - 需要await协程
+                if hasattr(coro, "__await__"):
+                    # 如果是协程，先await它，然后返回我们的mock对象
+                    try:
+                        await coro
+                    except:
+                        pass  # 忽略mock中的错误
                 return (mock_reader, mock_writer)
-            elif call_count == 2:
-                # 第二次调用：第一次读取，返回不完整数据
-                return b"\x00\x01"
             else:
-                # 第三次及之后调用：返回完整数据
-                return b"\x00\x00\x00\x01"
+                # 其他调用：正常await协程
+                return await coro
 
         with patch("asyncio.wait_for", side_effect=wait_for_side_effect):
             # 模拟协议解码：第一次EOFError，第二次成功
@@ -430,23 +442,17 @@ class TestNetworkConnectionManagement:
         mock_writer.wait_closed = AsyncMock()
         mock_writer.wait_closed.side_effect = ConnectionResetError("Connection reset")
 
-        login_response = b"\x00\x00\x00\x01"
+        # 设置mock_reader返回完整的登录响应
+        mock_reader.read.return_value = b"\x00\x00\x00\x01"
 
-        with patch("asyncio.wait_for") as mock_wait_for:
-            with patch(
-                "asyncio.open_connection", return_value=(mock_reader, mock_writer)
-            ):
-                mock_wait_for.side_effect = [
-                    (mock_reader, mock_writer),  # 第一次wait_for是open_connection
-                    login_response,  # 第二次wait_for是reader.read
-                ]
+        # 直接模拟open_connection
+        with patch("asyncio.open_connection", return_value=(mock_reader, mock_writer)):
+            with patch.object(client._proto, "decode") as mock_decode:
+                mock_decode.return_value = (b"", [{}, {"ret": {"status": "ok"}}])
 
-                with patch.object(client._proto, "decode") as mock_decode:
-                    mock_decode.return_value = (b"", [{}, {"ret": {"status": "ok"}}])
-
-                    # 应该能正常处理writer关闭时的ConnectionResetError
-                    result = await client.check_login()
-                    assert result is True
+                # 应该能正常处理writer关闭时的ConnectionResetError
+                result = await client.check_login()
+                assert result is True
 
 
 # ==================== 设备管理和数据处理测试类 ====================
@@ -460,6 +466,15 @@ class TestDeviceManagementAndDataProcessing:
         """测试设备加载和处理流程。"""
         reader, writer, mock_open = mock_connection
         client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+
+        async def mock_open_side_effect(*args, **kwargs):
+            # 正确处理协程调用，等待真实的mock对象
+            if hasattr(mock_open.return_value, "__await__"):
+                return await mock_open.return_value
+            return mock_open.return_value
+
+        # 使用正确的副作用函数
+        mock_open.side_effect = mock_open_side_effect
 
         # 建立连接
         connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
@@ -493,6 +508,15 @@ class TestDeviceManagementAndDataProcessing:
         """测试设备加载超时处理。"""
         reader, writer, mock_open = mock_connection
         client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+
+        async def mock_open_side_effect(*args, **kwargs):
+            # 正确处理协程调用，等待真实的mock对象
+            if hasattr(mock_open.return_value, "__await__"):
+                return await mock_open.return_value
+            return mock_open.return_value
+
+        # 使用正确的副作用函数
+        mock_open.side_effect = mock_open_side_effect
 
         # 建立连接但不发送设备列表
         asyncio.create_task(client.async_connect(AsyncMock()))
@@ -610,6 +634,15 @@ class TestHeartbeatAndConnectionMaintenance:
 
         # 缩短空闲超时时间以便快速测试
         client.IDLE_TIMEOUT = 0.1
+
+        async def mock_open_side_effect(*args, **kwargs):
+            # 正确处理协程调用，等待真实的mock对象
+            if hasattr(mock_open.return_value, "__await__"):
+                return await mock_open.return_value
+            return mock_open.return_value
+
+        # 使用正确的副作用函数
+        mock_open.side_effect = mock_open_side_effect
 
         with patch.object(
             client._factory, "build_get_config_packet", return_value=b"heartbeat"
