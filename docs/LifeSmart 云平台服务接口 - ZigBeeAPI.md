@@ -91,9 +91,10 @@ ZigBee设备的添加与删除仍旧使用 EpAdd 与 EpRemove 接口，请参考
 
 我们定义如下模型：
 
-• 智慧中心(Agt)： "A3EAAABtAEwQRzM0Njg5NA"• 设备(EP)： "2d11"，它标识设备，它是一个 SL_SW_IF3 类型的三联开关
-• 设备属性(IO口)： 设备的属性，可以用于读取状态，控制行为，L1、L2、L3它们都是设备的IO口，当然对于只读的IO口例如温度传感器，则只能读取状态，不能控制。
-• 管理对象(MO)： 泛指以上设备的总称，也可以包括AI对象，即MO可以是智慧中心，也可以是设备或者IO口，AI等。
+- **智慧中心(Agt)**： "A3EAAABtAEwQRzM0Njg5NA"
+- **设备(EP)**： "2d11"，它标识设备，它是一个 SL_SW_IF3 类型的三联开关
+- **设备属性(IO口)**： 设备的属性，可以用于读取状态，控制行为，L1、L2、L3它们都是设备的IO口，当然对于只读的IO口例如温度传感器，则只能读取状态，不能控制。
+- **管理对象(MO)**： 泛指以上设备的总称，也可以包括AI对象，即MO可以是智慧中心，也可以是设备或者IO口，AI等。
 
 ## 1.2 ZigBee设备规格
 
@@ -112,9 +113,9 @@ SDS_365p#在获取到ModelName的情况下，将显示ModelName。ModelName的�
 
 在获取不到ModelName的情况下，将显示原始编码类型，具体定义如下：
 
-• AAAA: ManufacturerCode，厂商编码 例如 1152为 Door Lock厂商
-• BBBB: Profile Id 例如 0104为 ZigBee Home Automation
-• CCCC: Device Id, 例如 000A为 Door Lock
+- **AAAA**: ManufacturerCode，厂商编码 例如 1152为 Door Lock厂商
+- **BBBB**: Profile Id 例如 0104为 ZigBee Home Automation
+- **CCCC**: Device Id, 例如 000A为 Door Lock
 
 ### ZigBee设备IO的命名规则
 
@@ -330,9 +331,9 @@ Request参数示例：
 
 返回的数据是JSON对象结构。KEY指示ZigBee设备的nodeId(idx)属性
 
-• 0为ZigBee网关的nodeId，因此"0" KEY特指ZigBee网关的节点信息；  
-• 其它数字类型字符串是ZigBee子设备的nodeId(idx)，例如示例中的 “14537”，其值指示该ZigBee设备的节点信息；  
-• "homeid"是特殊的KEY，指示ZigBee网络的PanID，例如2.1.2示例中的 21463；
+- **0** 为ZigBee网关的nodeId，因此"0" KEY特指ZigBee网关的节点信息
+- 其它数字类型字符串是ZigBee子设备的nodeId(idx)，例如示例中的 "14537"，其值指示该ZigBee设备的节点信息
+- **"homeid"** 是特殊的KEY，指示ZigBee网络的PanID，例如2.1.2示例中的 21463
 
 详细参数请参考2.1.2示例。
 
@@ -395,29 +396,29 @@ Request参数示例：
 }
 ```
 
-• Ieee: 标识ZigBee设备的唯一标识码   
-• name 标识ZigBee设备名称   
-• manufacturerCode 标识生产商编码   
-• manu_name 标识生产商名称   
-• Model_name 标识设备模型名称   
-• Hwver 标识设备硬件版本   
-• LastRSSI/LastLQI 标识设备最近一次信号RSSI/LQI   
-• BVMT Battery Voltage Min Threshold   
-• BVT1 Battery Voltage Threshold1   
-• BVT2 Battery Voltage Threshold 2   
-• BVT3 Battery Voltage Threshold 3   
-• CVer Current File Version   
-• Value 标识ZigBee设备 IOs 信息，可以直接参考EpGet/EpGetAll方法返回的设备data信息   
-• IOLHver IO 门锁 leader 硬件版本号   
-• IOLFver IO 门锁 leader 固件版本号   
-• IODHver IO 门锁 门锁 硬件版本号   
-• IODFver IO 门锁 门锁 硬件版本号   
-• IOBHver IO 门锁 BLE 硬件版本号   
-• IOBFver IO 门锁 BLE 硬件版本号   
-• IOtype IO 门锁 型号   
-• IOserial IO 门锁 序列号   
-• IOBLEmac IO 门锁 BLE MAC   
-• BtLevP 电池电量百分比
+- **Ieee**: 标识ZigBee设备的唯一标识码
+- **name**: 标识ZigBee设备名称
+- **manufacturerCode**: 标识生产商编码
+- **manu_name**: 标识生产商名称
+- **Model_name**: 标识设备模型名称
+- **Hwver**: 标识设备硬件版本
+- **LastRSSI/LastLQI**: 标识设备最近一次信号RSSI/LQI
+- **BVMT**: Battery Voltage Min Threshold
+- **BVT1**: Battery Voltage Threshold1
+- **BVT2**: Battery Voltage Threshold 2
+- **BVT3**: Battery Voltage Threshold 3
+- **CVer**: Current File Version
+- **Value**: 标识ZigBee设备 IOs 信息，可以直接参考EpGet/EpGetAll方法返回的设备data信息
+- **IOLHver**: IO 门锁 leader 硬件版本号
+- **IOLFver**: IO 门锁 leader 固件版本号
+- **IODHver**: IO 门锁 门锁 硬件版本号
+- **IODFver**: IO 门锁 门锁 硬件版本号
+- **IOBHver**: IO 门锁 BLE 硬件版本号
+- **IOBFver**: IO 门锁 BLE 硬件版本号
+- **IOtype**: IO 门锁 型号
+- **IOserial**: IO 门锁 序列号
+- **IOBLEmac**: IO 门锁 BLE MAC
+- **BtLevP**: 电池电量百分比
 
 ### SoftReboot
 
@@ -591,8 +592,10 @@ Topology_start 指明拓扑起始跳数，在拓扑网络很复杂的时候，�
 
 node_tab 为发现的路由表，其参数说明如下：
 
-• Device_Type: 指示设备类型，0:Coordinator; 1:Router; 2:End Device• Relationship: 指示节点关系，0:父节点; 1:子节点; 2:
-兄弟节点• meid: 指示LifeSmart节点Id，等于""指示为网关节点• nodeid: 指示ZigBee节点的nodeid
+- **Device_Type**: 指示设备类型，0:Coordinator; 1:Router; 2:End Device
+- **Relationship**: 指示节点关系，0:父节点; 1:子节点; 2:兄弟节点
+- **meid**: 指示LifeSmart节点Id，等于""指示为网关节点
+- **nodeid**: 指示ZigBee节点的nodeid
 
 | 提示            | 说明                               |
 |:--------------|:---------------------------------|
@@ -604,9 +607,9 @@ node_tab 为发现的路由表，其参数说明如下：
 
 其参数如下：
 
-• zcl: 特定zcl  
-• endpoint: 特定endpoint  
-• attributeId: 指明需要设置的属性ID
+- **zcl**: 特定zcl
+- **endpoint**: 特定endpoint
+- **attributeId**: 指明需要设置的属性ID
 
 例如刷新一个Lock设备的用户密码配置列表，可以下发如下命令：
 
@@ -737,10 +740,10 @@ Request参数示例：
 
 设置门锁密码用户，其参数如下：
 
-• zcl: `0x0101`   
-• endpoint: `1`   
-• command: `5` 指明是设置门锁密码用户   
-• command_data: `[]` 具体数据
+- **zcl**: `0x0101`
+- **endpoint**: `1`
+- **command**: `5` 指明是设置门锁密码用户
+- **command_data**: `[]` 具体数据
 
 Request参数示例：
 
@@ -754,15 +757,16 @@ Request参数示例：
 
 command_data参数说明：
 
-‣ `0x29, 0, 5` : 指明需要操作的UserId，5表示UserId是5。DoorLock的UserId范围在`[1~254]`
-，但具体可以填写的值需要参考门锁说明书，例如有些门锁限定范围是 `[1~240]` 。  
-‣ `0x28,1`: 指明UserStatus，1表示启用；3表示禁用；`0x30,0`: 指明UserType，其定义如下：0 Unrestricted User（默认）；1 Year Day
-Schedule User；2 Week Day Schedule User ；- 3 Master User；- 4 Non Access User
+- **0x29, 0, 5**: 指明需要操作的UserId，5表示UserId是5。DoorLock的UserId范围在`[1~254]`
+  ，但具体可以填写的值需要参考门锁说明书，例如有些门锁限定范围是 `[1~240]` 。
+- **0x28,1**: 指明UserStatus，1表示启用；3表示禁用；**0x30,0**: 指明UserType，其定义如下：0 Unrestricted User（默认）；1 Year
+  Day
+  Schedule User；2 Week Day Schedule User ；- 3 Master User；- 4 Non Access User
 
-‣ `0x10,4`: 指明pin_code长度，4表示其长度为4位。
+- **0x10,4**: 指明pin_code长度，4表示其长度为4位。
 
-‣ 0x10, 0x32, `0x10` , `0x32` , `0x10` , `0x32` , `0x10` , `0x34` : 指明4位pin_codeASCII码值，其格式为 `0x10`
-,ASCII_Value, 0x10,ASCII_Value,...，如果pin_code长度为N，则会有N组 `0x10` , ASCII_Value。
+- **0x10, 0x32, 0x10, 0x32, 0x10, 0x32, 0x10, 0x34**: 指明4位pin_codeASCII码值，其格式为 `0x10`
+  ,ASCII_Value, 0x10,ASCII_Value,...，如果pin_code长度为N，则会有N组 `0x10` , ASCII_Value。
 
 #### 若执行成功则Response如下：
 
@@ -793,10 +797,10 @@ Schedule User；2 Week Day Schedule User ；- 3 Master User；- 4 Non Access Use
 
 一次只能查询一个密码用户的设置信息，必须提供UserID，其参数如下：
 
-• zcl: `0x0101`   
-• endpoint: `1`   
-• command: `6` 指明是查询门锁密码用户   
-• command_data: `[0x29,0,5]`
+- **zcl**: `0x0101`
+- **endpoint**: `1`
+- **command**: `6` 指明是查询门锁密码用户
+- **command_data**: `[0x29,0,5]`
 
 Request参数示例：
 
@@ -841,10 +845,10 @@ command_data参数说明：
 
 删除门锁密码用户，其参数如下：
 
-• zcl: `0x0101`   
-• endpoint: `1`   
-• command: `7` 指明是删除门锁密码用户   
-• command_data: `[0x29,0,5]`
+- **zcl**: `0x0101`
+- **endpoint**: `1`
+- **command**: `7` 指明是删除门锁密码用户
+- **command_data**: `[0x29,0,5]`
 
 Request参数示例：
 
@@ -879,10 +883,10 @@ command_data参数说明：
 
 设置门锁门卡用户，其参数如下：
 
-• zcl: `0x0101`   
-• endpoint: `1`   
-• command: `0x16` 指明是设置门锁门卡用户   
-• command_data: `[]` 具体数据
+- **zcl**: `0x0101`
+- **endpoint**: `1`
+- **command**: `0x16` 指明是设置门锁门卡用户
+- **command_data**: `[]` 具体数据
 
 Request参数示例：
 
@@ -896,15 +900,15 @@ Request参数示例：
 
 command_data参数说明：
 
-‣ 0x29,0,0xF4: 指明需要操作的UserId， `0xF4` 表示UserId是0xF4。DoorLock的UserId范围在 `[1~254]`
-，但具体可以填写的值需要参考门锁说明书，例如有些门锁限定范围是 `[242~250]` 。
+- **0x29,0,0xF4**: 指明需要操作的UserId， `0xF4` 表示UserId是0xF4。DoorLock的UserId范围在 `[1~254]`
+  ，但具体可以填写的值需要参考门锁说明书，例如有些门锁限定范围是 `[242~250]` 。
 
-‣ `0x28, 1` : 指明UserStatus，1表示启用；3表示禁用；  
-‣ `0x30, 0` : 指明UserType，其定义如下：- 0 Unrestricted User（默认）；- 1 Year Day Schedule User；- 2 Week Day Schedule
-User ；- 3 Master User；- 4 Non Access User  
-‣ `0x10, 4` : 指明门卡ID长度，4表示其长度为4位。  
-‣ `0x10` , `0x32` , `0x10` , `0x32` , `0x10` , `0x32` , `0x10` , `0x34` : 指明4位门卡ID的ASCII码值，其格式为 `0x10`
-,ASCII_Value, 0x10,ASCII_Value,...，如果pin_code长度为N，则会有N组 `0x10` , ASCII_Value。
+- **0x28, 1**: 指明UserStatus，1表示启用；3表示禁用；
+- **0x30, 0**: 指明UserType，其定义如下：- 0 Unrestricted User（默认）；- 1 Year Day Schedule User；- 2 Week Day Schedule
+  User ；- 3 Master User；- 4 Non Access User
+- **0x10, 4**: 指明门卡ID长度，4表示其长度为4位。
+- **0x10, 0x32, 0x10, 0x32, 0x10, 0x32, 0x10, 0x34**: 指明4位门卡ID的ASCII码值，其格式为 `0x10`
+  ,ASCII_Value, 0x10,ASCII_Value,...，如果pin_code长度为N，则会有N组 `0x10` , ASCII_Value。
 
 #### 若执行成功则Response如下：
 
@@ -935,10 +939,10 @@ User ；- 3 Master User；- 4 Non Access User
 
 一次只能查询一个门卡用户的设置信息，必须提供UserID，其参数如下：
 
-• zcl: `0x0101`   
-• endpoint: `1`   
-• command: `0x17` 指明是查询门锁门卡用户   
-• command_data: `[0x29,0,0xF4]`
+- **zcl**: `0x0101`
+- **endpoint**: `1`
+- **command**: `0x17` 指明是查询门锁门卡用户
+- **command_data**: `[0x29,0,0xF4]`
 
 Request参数示例：
 
@@ -983,10 +987,10 @@ command_data参数说明：
 
 删除门锁门卡用户，其参数如下：
 
-• zcl: `0x0101`   
-• endpoint: `1`   
-• command: `0x18` 指明是删除门锁门卡用户   
-• command_data: `[0x29,0,0xF4]`
+- **zcl**: `0x0101`
+- **endpoint**: `1`
+- **command**: `0x18` 指明是删除门锁门卡用户
+- **command_data**: `[0x29,0,0xF4]`
 
 Request参数示例：
 
@@ -1023,7 +1027,7 @@ command_data参数说明：
 
 其参数如下：
 
-• channel: 想要设置的ZigBee网络信道，推荐通道为: 11, 15, 20, 25
+- **channel**: 想要设置的ZigBee网络信道，推荐通道为: 11, 15, 20, 25
 
 例如想要切换ZigBee网络信道至20，可以下发如下命令：  
 Request参数示例：
@@ -1073,22 +1077,24 @@ Channel指示当前的网络信道。
 
 设置ZigBee设备特定zcl下相关属性。其参数如下：
 
-• zcl: 特定zcl  
-• endpoint: 特定endpoint  
-• attributeId: 指明需要设置的属性ID  
-• attributeData: 指明需要设置的属性数值
+- **zcl**: 特定zcl
+- **endpoint**: 特定endpoint
+- **attributeId**: 指明需要设置的属性ID
+- **attributeData**: 指明需要设置的属性数值
 
 #### 设置电池类设备的低电压门限，参数选择如下：
 
-• zcl: 固定为 `0x0001` • endpoint: 固定为 1• attributeId: 可选值有如下：
+- **zcl**: 固定为 `0x0001`
+- **endpoint**: 固定为 1
+- **attributeId**: 可选值有如下：
 
-• BatteryVoltageMinThreshold 0x0036  
-• BatteryVoltageThreshold1 0x0037  
-• BatteryVoltageThreshold2 0x0038  
-• BatteryVoltageThreshold3 0x0039
+- **BatteryVoltageMinThreshold**: 0x0036
+- **BatteryVoltageThreshold1**: 0x0037
+- **BatteryVoltageThreshold2**: 0x0038
+- **BatteryVoltageThreshold3**: 0x0039
 
-• attributeData: 为2个bytes值，第一个byte固定为 `0x20` ，第二个byte为需要设置的低电压门限值，其值是电压值，例如 `0x13`
-指明其电压值为 `1.9v` ，当电压低于1.9v就会触发越限。
+- **attributeData**: 为2个bytes值，第一个byte固定为 `0x20` ，第二个byte为需要设置的低电压门限值，其值是电压值，例如 `0x13`
+  指明其电压值为 `1.9v` ，当电压低于1.9v就会触发越限。
 
 例如设置ZigBee设备的低电压门限，可以下发如下命令：
 
@@ -1115,9 +1121,9 @@ Request参数示例：
 
 设置ZigBee设备特定zcl下相关命令。其参数如下：
 
-• zcl: 特定zcl  
-• endpoint: 特定endpoint  
-• commandData: 指明需要设置的命令数值
+- **zcl**: 特定zcl
+- **endpoint**: 特定endpoint
+- **commandData**: 指明需要设置的命令数值
 
 例如设置ZigBee人体存在感应器的指示灯开关（开），可以下发如下命令：
 
@@ -1169,7 +1175,7 @@ SetCommand 命令根据设备的类型进行下发参考：
 
 其参数如下：
 
-• key: 指明ZigBee设备需要升级到的特定的固件版本key
+- **key**: 指明ZigBee设备需要升级到的特定的固件版本key
 
 有关key定义请参考： api.EpMaintOtaFiles 接口描述有关升级状态的查询请参考： api.EpMaintOtaTasks 接口描述
 
@@ -1214,7 +1220,8 @@ Request参数示例：
 
 其参数如下：
 
-• bin: 提供ZigBee模块的固件的内容，其内容为固件的原始内容的Base64编码• url: 指明ZigBee模块的固件的URL地址
+- **bin**: 提供ZigBee模块的固件的内容，其内容为固件的原始内容的Base64编码
+- **url**: 指明ZigBee模块的固件的URL地址
 
 #### 提示：
 
@@ -1259,15 +1266,15 @@ Request参数示例：
   "act": "Native",
   "actargs": "{\"cmd\": \"ctl\", \"proc\": \"get_network_version\"}"
 }
-```
 }
+```
 
 若执行成功则Response如下：
 
 ```json
 {
-"code": 0,
-"message": "LSZG01AGT:0.1.0.7"
+  "code": 0,
+  "message": "LSZG01AGT:0.1.0.7"
 }
 ```
 
@@ -1383,12 +1390,8 @@ optarg参数是添加设备的额外参数，ZigBee设备需要使用optarg才�
 
 #### optarg关于ZigBee设备属性定义如下
 
-"cls":"ZG",   
-"exarg":{ "period": the pairing period, unit is seconds, default is 60(s)
-
-• cls: 必须为 "ZG" ，指明待添加的是ZigBee设备。
-
-• period: 指明调用超时时间，number类型，缺省为60秒，最大值为254秒。
+- **cls**: 必须为 "ZG" ，指明待添加的是ZigBee设备。
+- **period**: 指明调用超时时间，number类型，缺省为60秒，最大值为254秒。
 
 注意：添加是耗时操作，HTTP Client调用必须也设置足够的调用超时时间，否则HTTP调用会提早返回超时错误，导致添加ZigBee设备不能成功。
 
@@ -1495,14 +1498,13 @@ optarg参数是删除设备的额外参数，ZigBee设备需要使用optarg才�
 
 #### optarg关于ZigBee设备属性定义如下
 
-• cls: 必须为 "ZG" ，指明待删除的是ZigBee设备。
-
-• period: 指明调用超时时间，number类型，缺省为30秒，最大值为60秒。
+- **cls**: 必须为 "ZG" ，指明待删除的是ZigBee设备。
+- **period**: 指明调用超时时间，number类型，缺省为30秒，最大值为60秒。
 
 注意：添加是耗时操作，HTTP Client调用必须也设置足够的调用超时时间，否则HTTP调用会提早返回超时错误，导致移除ZigBee设备不能成功。
 
-• idx：ZigBee设备的nodeId，若提供了idx则会使用idx属性，否则会使用me属性确定是哪个ZigBee设备。也即是idx属性的优先级高于me属性。关于me与idx请参考
-2.1.3 动作(act)定义 部分说明。
+- **idx**: ZigBee设备的nodeId，若提供了idx则会使用idx属性，否则会使用me属性确定是哪个ZigBee设备。也即是idx属性的优先级高于me属性。关于me与idx请参考
+  2.1.3 动作(act)定义 部分说明。
 
 ### 2.3.3 范例
 
@@ -1629,8 +1631,8 @@ ALM0009系列告警的Value值定义如下：
 
 Value组成：DEVICE_CLUSTER(2个bytes) + ALARM_CODE(1个byte)，其中DEVICE_CLUSTER为高位，ALARM_CODE为低位。
 
-• DEVICE_CLUSTER特指发生告警的设备类型，例如门锁类设备，其DEVICE_CLUSTER的值为 "0101"  
-• ALARM_CODE 为具体错误码，定义如下：
+- **DEVICE_CLUSTER**: 特指发生告警的设备类型，例如门锁类设备，其DEVICE_CLUSTER的值为 "0101"
+- **ALARM_CODE**: 为具体错误码，定义如下：
 
 | Alarm Code                                 | Alarm Condition                                   |
 |:-------------------------------------------|:--------------------------------------------------|
@@ -1753,10 +1755,10 @@ A警报其IO名称的组成为 "A+endpoint" ，例如： "A1"，"A2"。
 
 设置门锁用户，包括密码与IC门卡用户，其参数如下：
 
-• zcl: `0x0fa0`   
-• endpoint: `1`   
-• command: `0x6031` 指明是设置门锁密码/IC用户   
-• command_data: `[]` 具体数据
+- **zcl**: `0x0fa0`
+- **endpoint**: `1`
+- **command**: `0x6031` 指明是设置门锁密码/IC用户
+- **command_data**: `[]` 具体数据
 
 Request参数示例：
 
@@ -1770,18 +1772,19 @@ Request参数示例：
 
 command_data参数说明：
 
-‣ 0x29 , 0x00 , 0x0b : 指明需要操作的UserId。0x29 : 标识是用户Id数据；0x00 : Master Id，可以为 0x00~0x09 ；0x0b :
-用户Id在Master Id为 0x00 时范围为 0x0a~0x63 ；在Master Id为 0x01~0x09 时范围为 0x00~0x63 ；  
-‣ 0x00 , 0x00 , 0x00 , 0x00 : 指明有效开始时间，为UTC时间戳，单位秒；  
-‣ 0x00 , 0x00 , 0x00 , 0x00 : 指明有效结束时间，为UTC时间戳，单位秒；  
-‣ 0x00 , 0x00 : 保留字节；  
-‣ 0x01 : 操作类型， 0x01 :新添加； 0x02 :变更；  
-‣ 0x05 : 指明认证类型，其定义如下：- 0x01 owner PIN, 认证数据为12bytes；- 0x02 master PIN，认证数据为10bytes；- 0x03 用户IC(
-16bytes) + PIN (3bytes)，认证数据19bytes，如果IC不满16字节，需在后面补0；0x04 用户IC(16bytes)
-，认证数据16bytes，如果不满16字节，需在后面补0；0x05 用户PIN(8bytes)，可以设置为 4~8 字节。PIN的长度可以通过"数据长度"来设置；-
-0x06 一次性 PIN(11bytes)，认证数据11bytes；  
-‣ 0x04 : 指明认证数据长度，4表示其长度为4位。  
-‣ 0x32 , 0x32 , 0x32 , 0x33 : 认证数据，为ASCII码值。
+- **0x29, 0x00, 0x0b**: 指明需要操作的UserId。0x29 : 标识是用户Id数据；0x00 : Master Id，可以为 0x00~0x09 ；0x0b :
+  用户Id在Master Id为 0x00 时范围为 0x0a~0x63 ；在Master Id为 0x01~0x09 时范围为 0x00~0x63 ；
+- **0x00, 0x00, 0x00, 0x00**: 指明有效开始时间，为UTC时间戳，单位秒；
+- **0x00, 0x00, 0x00, 0x00**: 指明有效结束时间，为UTC时间戳，单位秒；
+- **0x00, 0x00**: 保留字节；
+- **0x01**: 操作类型， 0x01 :新添加； 0x02 :变更；
+- **0x05**: 指明认证类型，其定义如下：- 0x01 owner PIN, 认证数据为12bytes；- 0x02 master PIN，认证数据为10bytes；- 0x03
+  用户IC(
+  16bytes) + PIN (3bytes)，认证数据19bytes，如果IC不满16字节，需在后面补0；0x04 用户IC(16bytes)
+  ，认证数据16bytes，如果不满16字节，需在后面补0；0x05 用户PIN(8bytes)，可以设置为 4~8 字节。PIN的长度可以通过"数据长度"来设置；-
+  0x06 一次性 PIN(11bytes)，认证数据11bytes；
+- **0x04**: 指明认证数据长度，4表示其长度为4位。
+- **0x32, 0x32, 0x32, 0x33**: 认证数据，为ASCII码值。
 
 ```json
 {
@@ -1802,20 +1805,20 @@ command_data参数说明：
 cmd指示应答，这里为0x6030；  
 data为3个byte长度的数据，其值说明如下：
 
-‣ 0x01 : 返回值- 0x01 成功- 0x02 已经完成最大用户录入- 0x03 密码重复(对应同一个master下面重复)- 0x04 卡重复(
-对应master下面或者其它master下面已经存在)- 0x0N 其它错误
+- **0x01**: 返回值- 0x01 成功- 0x02 已经完成最大用户录入- 0x03 密码重复(对应同一个master下面重复)- 0x04 卡重复(
+  对应master下面或者其它master下面已经存在)- 0x0N 其它错误
 
-‣ 0x00 : Master Id  
-‣ 0x0b : 用户Id
+- **0x00**: Master Id
+- **0x0b**: 用户Id
 
 #### 2. 查询门锁用户
 
 一次只能查询一个门锁用户的设置信息，必须提供UserID，其参数如下：
 
-• zcl: `0x0fa0`   
-• endpoint: `1`   
-• command: `0x6061` 指明是查询门锁用户   
-• command_data: `[0x29,0x00,0x0b]`
+- **zcl**: `0x0fa0`
+- **endpoint**: `1`
+- **command**: `0x6061` 指明是查询门锁用户
+- **command_data**: `[0x29,0x00,0x0b]`
 
 Request参数示例：
 
@@ -1829,8 +1832,9 @@ Request参数示例：
 
 command_data参数说明：
 
-‣ 0x29, 0x00 , 0x0b : 指明需要操作的UserId。0x29 : 标识是用户Id数据；0x00 : Master Id，可以为 0x00~0x09 ；0x0b : 用户Id在Master
-Id为 0x00 时范围为 0x0a~0x63 ；在Master Id为 0x01~0x09 时范围为 0x00~0x63 ；
+- **0x29, 0x00, 0x0b**: 指明需要操作的UserId。0x29 : 标识是用户Id数据；0x00 : Master Id，可以为 0x00~0x09 ；0x0b :
+  用户Id在Master
+  Id为 0x00 时范围为 0x0a~0x63 ；在Master Id为 0x01~0x09 时范围为 0x00~0x63 ；
 
 若执行成功则Response如下：
 
@@ -1869,25 +1873,25 @@ Id为 0x00 时范围为 0x0a~0x63 ；在Master Id为 0x01~0x09 时范围为 0x00
 
 cmd指示应答，这里为0x6060；data_len指示data数据为19个byte长度的数据，其值说明如下：
 
-‣ 0x01 : 返回值- 0x01 成功- 0x02 Master Id不存在- 0x03 用户Id不存在
+- **0x01**: 返回值- 0x01 成功- 0x02 Master Id不存在- 0x03 用户Id不存在
 
-‣ 0x00 : Master Id  
-‣ 0x0b : 用户Id  
-‣ 0x00 , 0x00 , 0x00 , 0x00 : 指明有效开始时间，为UTC时间戳，单位秒；  
-‣ 0x00 , 0x00 , 0x00 , 0x00 ; 指明有效结束时间，为UTC时间戳，单位秒；  
-‣ 0x00 , 0x00 : 保留字节；  
-‣ 5: 指明认证类型，具体值定义请参考 添加门锁用户 说明  
-‣ 4: 指明认证数据长度  
-‣ `50, 50, 50, 51` : 认证数据(PIN、IC等)
+- **0x00**: Master Id
+- **0x0b**: 用户Id
+- **0x00, 0x00, 0x00, 0x00**: 指明有效开始时间，为UTC时间戳，单位秒；
+- **0x00, 0x00, 0x00, 0x00**: 指明有效结束时间，为UTC时间戳，单位秒；
+- **0x00, 0x00**: 保留字节；
+- **5**: 指明认证类型，具体值定义请参考 添加门锁用户 说明
+- **4**: 指明认证数据长度
+- **50, 50, 50, 51**: 认证数据(PIN、IC等)
 
 #### 3. 删除门锁用户
 
 删除门锁用户，其参数如下：
 
-• zcl: `0x0fa0`   
-• endpoint: `1`   
-• command: `0x6041` 指明是删除门锁用户   
-• command_data: `[0x29,0x00,0x0b]`
+- **zcl**: `0x0fa0`
+- **endpoint**: `1`
+- **command**: `0x6041` 指明是删除门锁用户
+- **command_data**: `[0x29,0x00,0x0b]`
 
 Request参数示例：
 
@@ -1901,8 +1905,8 @@ Request参数示例：
 
 command_data参数说明：
 
-‣ 0x29 , 0x00 , 0x0b : 指明需要操作的UserId。0x29 : 标识是用户Id数据；0x00 : Master Id，可以为 0x00~0x09 ；0x0b :
-用户Id在Master Id为 0x00 时范围为 0x0a~0x63 ；在Master Id为 0x01~0x09 时范围为 0x00~0x63 ；
+- **0x29, 0x00, 0x0b**: 指明需要操作的UserId。0x29 : 标识是用户Id数据；0x00 : Master Id，可以为 0x00~0x09 ；0x0b :
+  用户Id在Master Id为 0x00 时范围为 0x0a~0x63 ；在Master Id为 0x01~0x09 时范围为 0x00~0x63 ；
 
 #### 若执行成功则Response如下：
 
@@ -1923,10 +1927,11 @@ command_data参数说明：
 
 返回数据说明：  
 cmd指示应答，这里为0x6040；  
-data为3个byte长度的数据，其值说明如下：  
-‣ 0x01 : 返回值- 0x01 删除成功- 0x02 Master Id不存在- 0x03 用户Id不存在  
-‣ 0x00 : Master Id  
-‣ 0x0b : 用户Id
+data为3个byte长度的数据，其值说明如下：
+
+- **0x01**: 返回值- 0x01 删除成功- 0x02 Master Id不存在- 0x03 用户Id不存在
+- **0x00**: Master Id
+- **0x0b**: 用户Id
 
 提示：如果删除用户的时候，如果用户Id设置为0xff，则将会删除该Master下所有的用户。
 
@@ -1934,10 +1939,10 @@ data为3个byte长度的数据，其值说明如下：
 
 查询门锁信息，其参数如下：
 
-• zcl: `0x0fa0`  
-• endpoint: `1`  
-• command: `0x6071` 指明是查询门锁信息  
-• command_data: `[]` 具体数据
+- **zcl**: `0x0fa0`
+- **endpoint**: `1`
+- **command**: `0x6071` 指明是查询门锁信息
+- **command_data**: `[]` 具体数据
 
 Request参数示例：
 
@@ -2071,10 +2076,10 @@ cmd指示应答，这里为0x6070；data_len指示data数据为85个byte长度�
 
 查询门锁历史，其参数如下：
 
-• zcl: `0x0fa0`   
-● endpoint: `1`   
-• command: `0x6081` 指明是查询门锁历史   
-• command_data: `[]` 具体数据
+- **zcl**: `0x0fa0`
+- **endpoint**: `1`
+- **command**: `0x6081` 指明是查询门锁历史
+- **command_data**: `[]` 具体数据
 
 Request参数示例：
 
@@ -2161,10 +2166,10 @@ cmd指示应答，这里为0x6080；data_len指示data数据为50个byte长度�
 
 查询门锁状态，其参数如下：
 
-• zcl: `0x0fa0`   
-• endpoint: `1`   
-• command: `0x6091` 指明是查询门锁状态   
-• command_data: `[]` 具体数据
+- **zcl**: `0x0fa0`
+- **endpoint**: `1`
+- **command**: `0x6091` 指明是查询门锁状态
+- **command_data**: `[]` 具体数据
 
 Request参数示例：
 
@@ -2205,10 +2210,10 @@ cmd指示应答，这里为0x6090；data_len指示data数据为2个byte长度的
 
 门锁设置，其参数如下：
 
-• zcl: `0x0fa0`   
-• endpoint: `1`   
-• command: `0x60a1` 指明是门锁设置   
-• command_data: `[]` 具体数据
+- **zcl**: `0x0fa0`
+- **endpoint**: `1`
+- **command**: `0x60a1` 指明是门锁设置
+- **command_data**: `[]` 具体数据
 
 Request参数示例：
 
@@ -2222,16 +2227,16 @@ Request参数示例：
 
 command_data参数说明：
 
-‣ 237,212,128,93: 指明锁时间，为UTC时间戳，单位为秒，低位优先  
-‣ 0x01 : 指明门把手位置， 0x00 :左； 0x01 :右(默认位置)；  
-‣ 0x01 : 指明音量大小， 0x00 :静音； 0x01 :小； 0x02 :中(默认)； 0x03 :大；  
-‣ 0x03 : 指明关锁模式， 0x00 :自动-短(默认)； 0x01 :自动-长； 0x02 :手动； 0x03 :开锁一样；  
-‣ 0x01 : 指明O/C按钮， 0x00 :无效； 0x01 :有效(默认)；  
-‣ 0x00 : 保留字节；  
-‣ 0x00 : 指明分体， 0x00 :主体； 0x01 :分体；  
-‣ 0x01 : 指明操作有无磁铁感应器， 0x00 :无； 0x01 :有；  
-‣ 0x00 : 指明操作锁舌后连续接触设置， 0x00: ON (连续开、默认)；0x01:OFF(连续关)；  
-0x00 : 指明电机电压， 0x00: 4.5v (默认)； 0x01: 6v (强力)；
+- **237,212,128,93**: 指明锁时间，为UTC时间戳，单位为秒，低位优先
+- **0x01**: 指明门把手位置， 0x00 :左； 0x01 :右(默认位置)；
+- **0x01**: 指明音量大小， 0x00 :静音； 0x01 :小； 0x02 :中(默认)； 0x03 :大；
+- **0x03**: 指明关锁模式， 0x00 :自动-短(默认)； 0x01 :自动-长； 0x02 :手动； 0x03 :开锁一样；
+- **0x01**: 指明O/C按钮， 0x00 :无效； 0x01 :有效(默认)；
+- **0x00**: 保留字节；
+- **0x00**: 指明分体， 0x00 :主体； 0x01 :分体；
+- **0x01**: 指明操作有无磁铁感应器， 0x00 :无； 0x01 :有；
+- **0x00**: 指明操作锁舌后连续接触设置， 0x00: ON (连续开、默认)；0x01:OFF(连续关)；
+- **0x00**: 指明电机电压， 0x00: 4.5v (默认)； 0x01: 6v (强力)；
 
 #### 若执行成功则Response如下：
 
@@ -2252,16 +2257,16 @@ command_data参数说明：
 
 cmd指示应答，这里为0x60a0；data为1个byte长度的数据，其值说明如下：
 
-‣ 0x01 : 返回值 - 0x01 成功 - 0x00 失败
+- **0x01**: 返回值 - 0x01 成功 - 0x00 失败
 
 #### 8. 获取门锁设置
 
 获取门锁设置，其参数如下：
 
-• zcl: `0x0fa0`   
-• endpoint: `1`   
-• command: `0x60b1` 指明是获取门锁设置   
-• command_data: `[]` 具体数据
+- **zcl**: `0x0fa0`
+- **endpoint**: `1`
+- **command**: `0x60b1` 指明是获取门锁设置
+- **command_data**: `[]` 具体数据
 
 Request参数示例：
 
