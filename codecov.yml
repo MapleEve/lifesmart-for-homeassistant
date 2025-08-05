@@ -1,6 +1,8 @@
 coverage:
   ignore:
     - "custom_components/lifesmart/tests/**/*"  # 忽略 tests 目录下的所有文件
+    - "custom_components/lifesmart/tests/"      # 额外的忽略模式
+    - "**/tests/**"                             # 通用tests目录忽略
   status:
     project:
       default:
