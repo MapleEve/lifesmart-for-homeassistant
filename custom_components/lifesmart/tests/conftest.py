@@ -649,12 +649,22 @@ async def setup_integration_single_io_rgbw_only(
     yield mock_config_entry
 
 
-# 导入MAPLE HOME风格的pytest横幅
-def pytest_sessionstart(session):
-    """pytest会话开始时显示banner"""
+# 全局标志，确保banner只显示一次
+_BANNER_SHOWN = False
+
+
+def _show_banner_once():
+    """确保banner只显示一次的内部函数"""
+    global _BANNER_SHOWN
+    if _BANNER_SHOWN:
+        return
+
+    _BANNER_SHOWN = True
+
     try:
         from .pytest_maple_banner import pytest_sessionstart as banner_sessionstart
-        banner_sessionstart(session)
+
+        banner_sessionstart(None)
     except Exception as e:
         # 如果banner导入失败，使用简单的版本显示
         try:
@@ -669,12 +679,14 @@ def pytest_sessionstart(session):
         print()
 
 
+def pytest_sessionstart(session):
+    """pytest会话开始时显示banner"""
+    _show_banner_once()
+
+
 # Alternative hook registration for older pytest-homeassistant-custom-component versions
 def pytest_configure(config):
     """Alternative hook that might work better with older versions"""
     # This hook is called after command line options have been parsed
     # and all plugins and initial conftest files been loaded
-    if not getattr(pytest_configure, '_banner_shown', False):
-        pytest_configure._banner_shown = True
-        # Call our sessionstart function manually
-        pytest_sessionstart(None)
+    _show_banner_once()
