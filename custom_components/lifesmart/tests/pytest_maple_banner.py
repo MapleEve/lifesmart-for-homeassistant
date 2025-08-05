@@ -8,9 +8,10 @@ import platform
 import subprocess
 import sys
 from datetime import datetime
+from typing import Tuple, Dict
 
 
-def get_git_info() -> tuple[str, str]:
+def get_git_info() -> Tuple[str, str]:
     """获取Git提交信息"""
     try:
         # 获取当前commit hash (短版本)
@@ -36,7 +37,7 @@ def get_git_info() -> tuple[str, str]:
         return "unknown", "unknown"
 
 
-def get_environment_info() -> dict:
+def get_environment_info() -> Dict[str, str]:
     """收集所有环境信息"""
     info = {}
 
@@ -72,11 +73,15 @@ def get_environment_info() -> dict:
     except (ImportError, AttributeError):
         # 如果没有__version__属性，尝试从包信息获取
         try:
-            import pkg_resources
+            import warnings
 
-            info["pytest_ha"] = pkg_resources.get_distribution(
-                "pytest-homeassistant-custom-component"
-            ).version
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                import pkg_resources
+
+                info["pytest_ha"] = pkg_resources.get_distribution(
+                    "pytest-homeassistant-custom-component"
+                ).version
         except:
             info["pytest_ha"] = "unknown"
 
@@ -138,7 +143,7 @@ def create_maple_home_ascii():
 {Colors.BRIGHT_CYAN}  ██║╚██╔╝██║██╔══██║██╔═══╝ ██║     ██╔══╝      ██╔══██║██║   ██║██║╚██╔╝██║██╔══╝{Colors.RESET}  
 {Colors.BRIGHT_BLUE}  ██║ ╚═╝ ██║██║  ██║██║     ███████╗███████╗    ██║  ██║╚██████╔╝██║ ╚═╝ ██║███████╗{Colors.RESET}
 {Colors.BRIGHT_MAGENTA}  ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚══════╝╚══════╝    ╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝{Colors.RESET}
-{Colors.BRIGHT_WHITE}                           🏠 LifeSmart IoT Integration Test Suite 🏠{Colors.RESET}
+{Colors.BRIGHT_WHITE}                 🏠 LifeSmart IoT Integration Test Suite 🏠{Colors.RESET}
 """
     return ascii_art
 

@@ -535,9 +535,9 @@ def create_mock_device_dual_io_rgbw_light() -> dict:
     }
 
 
-def create_mock_device_single_io_rgbw_light() -> dict:
+def create_mock_device_single_io_rgb_light() -> dict:
     """
-    创建一个单 IO 口 RGBW 灯 (SL_SC_RGB) 的模拟数据。
+    创建一个单 IO 口 RGB 灯 (SL_SC_RGB) 的模拟数据。
 
     此函数用于对该特定设备类型的协议进行精确测试。
     - 初始状态: 开，颜色为 (1, 2, 3)，亮度为 100%。

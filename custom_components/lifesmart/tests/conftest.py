@@ -6,6 +6,7 @@
 """
 
 import logging
+import sys
 from unittest.mock import AsyncMock, patch, MagicMock
 
 import aiohttp
@@ -534,15 +535,15 @@ def mock_device_dual_io_rgbw_light() -> dict:
 @pytest.fixture
 def mock_device_single_io_rgbw_light() -> dict:
     """
-    提供一个单 IO 口 RGBW 灯 (SL_SC_RGB) 的模拟数据。
+    提供一个单 IO 口 RGB 灯 (SL_SC_RGB) 的模拟数据。
 
     此 Fixture 用于对该特定设备类型的协议进行精确测试。
     - 初始状态: 开，颜色为 (1, 2, 3)，亮度为 100%。
       - `val` 为 `0x64010203` (亮度100, R=1, G=2, B=3)。
     """
-    from .test_utils import create_mock_device_single_io_rgbw_light
+    from .test_utils import create_mock_device_single_io_rgb_light
 
-    return create_mock_device_single_io_rgbw_light()
+    return create_mock_device_single_io_rgb_light()
 
 
 # ============================================================================
@@ -625,7 +626,7 @@ async def setup_integration_single_io_rgbw_only(
     mock_device_single_io_rgbw_light: dict,
 ):
     """
-    一个专用的 setup fixture，只加载单 IO 口 RGBW 灯。
+    一个专用的 setup fixture，只加载单 IO 口 RGB 灯。
 
     此 fixture 创建一个只包含单个 SL_SC_RGB 灯的纯净测试环境，
     用于对该设备的服务调用与设备协议的精确匹配进行测试。
@@ -650,12 +651,17 @@ async def setup_integration_single_io_rgbw_only(
 
 
 # 导入MAPLE HOME风格的pytest横幅
-try:
-    from .pytest_maple_banner import pytest_sessionstart
-except ImportError:
-    # 如果导入失败，使用简单的版本显示
-    def pytest_sessionstart(session):
-        """简单的版本信息显示（备用方案）"""
+def pytest_sessionstart(session):
+    """pytest会话开始时显示banner"""
+    # Debug: 记录函数被调用
+    print(f"[DEBUG] pytest_sessionstart called in Python {sys.version_info.major}.{sys.version_info.minor}")
+    try:
+        from .pytest_maple_banner import pytest_sessionstart as banner_sessionstart
+        banner_sessionstart(session)
+        print("[DEBUG] Banner displayed successfully")
+    except Exception as e:
+        # 如果banner导入失败，使用简单的版本显示
+        print(f"[Banner import failed: {e}]")
         try:
             import homeassistant.const as ha_const
             import aiohttp
@@ -663,6 +669,6 @@ except ImportError:
             ha_version = getattr(ha_const, "__version__", "Unknown")
             aiohttp_version = getattr(aiohttp, "__version__", "Unknown")
             print(f"🏠 Home Assistant: {ha_version} | 🌐 aiohttp: {aiohttp_version}")
-        except ImportError:
-            print("⚠️  Could not determine Home Assistant version")
+        except ImportError as import_err:
+            print(f"⚠️  Could not determine Home Assistant version: {import_err}")
         print()
