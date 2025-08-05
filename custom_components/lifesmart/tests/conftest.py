@@ -6,7 +6,6 @@
 """
 
 import logging
-import sys
 from unittest.mock import AsyncMock, patch, MagicMock
 
 import aiohttp
@@ -653,15 +652,11 @@ async def setup_integration_single_io_rgbw_only(
 # 导入MAPLE HOME风格的pytest横幅
 def pytest_sessionstart(session):
     """pytest会话开始时显示banner"""
-    # Debug: 记录函数被调用
-    print(f"[DEBUG] pytest_sessionstart called in Python {sys.version_info.major}.{sys.version_info.minor}")
     try:
         from .pytest_maple_banner import pytest_sessionstart as banner_sessionstart
         banner_sessionstart(session)
-        print("[DEBUG] Banner displayed successfully")
     except Exception as e:
         # 如果banner导入失败，使用简单的版本显示
-        print(f"[Banner import failed: {e}]")
         try:
             import homeassistant.const as ha_const
             import aiohttp
@@ -672,3 +667,14 @@ def pytest_sessionstart(session):
         except ImportError as import_err:
             print(f"⚠️  Could not determine Home Assistant version: {import_err}")
         print()
+
+
+# Alternative hook registration for older pytest-homeassistant-custom-component versions
+def pytest_configure(config):
+    """Alternative hook that might work better with older versions"""
+    # This hook is called after command line options have been parsed
+    # and all plugins and initial conftest files been loaded
+    if not getattr(pytest_configure, '_banner_shown', False):
+        pytest_configure._banner_shown = True
+        # Call our sessionstart function manually
+        pytest_sessionstart(None)
