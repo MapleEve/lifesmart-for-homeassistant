@@ -8,7 +8,7 @@
 # - Fork 1: pytest-homeassistant-custom-component (修复setup.py和版本兼容性)
 # - Fork 2: Home Assistant 2023.6.0 (移除lru-dict依赖冲突)
 # 解决方案详情: https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed/tree/macos-fix-branch
-#              https://github.com/MapleEve/homeassistant-2023.6.0-macos-fix/tree/macos-fix-branch
+#              https://github.com/MapleEve/homeassistant-lru-dict-macos-fix/tree/macos-fix-branch
 
 set -e
 
