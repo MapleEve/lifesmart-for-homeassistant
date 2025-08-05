@@ -295,6 +295,7 @@ source "$SCRIPT_DIR/version_mapping.sh"
 # 测试配置 - 与GitHub Actions完全一致
 # 使用更兼容的方式声明关联数组
 declare -A test_matrix
+test_matrix["2022.10.0"]="3.10"
 test_matrix["2023.6.0"]="3.11"
 test_matrix["2024.2.0"]="3.12"
 test_matrix["2024.12.0"]="3.13"
@@ -379,7 +380,7 @@ detect_current_env() {
 is_valid_ci_env() {
   local env_name=$1
   case "$env_name" in
-  "ci-test-ha2023.6.0-py3.11" | "ci-test-ha2024.2.0-py3.12" | "ci-test-ha2024.12.0-py3.13" | "ci-test-ha-latest-py3.13")
+  "ci-test-ha2022.10.0-py3.10" | "ci-test-ha2023.6.0-py3.11" | "ci-test-ha2024.2.0-py3.12" | "ci-test-ha2024.12.0-py3.13" | "ci-test-ha-latest-py3.13")
     return 0
     ;;
   *)
@@ -392,6 +393,9 @@ is_valid_ci_env() {
 get_versions_from_env() {
   local env_name=$1
   case "$env_name" in
+  "ci-test-ha2022.10.0-py3.10")
+    echo "2022.10.0 3.10"
+    ;;
   "ci-test-ha2023.6.0-py3.11")
     echo "2023.6.0 3.11"
     ;;
@@ -413,28 +417,32 @@ get_versions_from_env() {
 # 函数：交互式环境选择
 interactive_env_selection() {
   echo -e "${YELLOW}请选择要测试的CI环境:${NC}" >&2
-  echo "1) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)" >&2
-  echo "2) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)" >&2
-  echo "3) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)" >&2
-  echo "4) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)" >&2
-  echo "5) 全部环境测试 (完整CI矩阵)" >&2
+  echo "1) ci-test-ha2022.10.0-py3.10 (HA 2022.10.0 + Python 3.10)" >&2
+  echo "2) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)" >&2
+  echo "3) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)" >&2
+  echo "4) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)" >&2
+  echo "5) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)" >&2
+  echo "6) 全部环境测试 (完整CI矩阵)" >&2
   echo "" >&2
-  read -p "请输入选择 (1-5): " choice
+  read -p "请输入选择 (1-6): " choice
 
   case $choice in
   1)
-    echo "ci-test-ha2023.6.0-py3.11"
+    echo "ci-test-ha2022.10.0-py3.10"
     ;;
   2)
-    echo "ci-test-ha2024.2.0-py3.12"
+    echo "ci-test-ha2023.6.0-py3.11"
     ;;
   3)
-    echo "ci-test-ha2024.12.0-py3.13"
+    echo "ci-test-ha2024.2.0-py3.12"
     ;;
   4)
-    echo "ci-test-ha-latest-py3.13"
+    echo "ci-test-ha2024.12.0-py3.13"
     ;;
   5)
+    echo "ci-test-ha-latest-py3.13"
+    ;;
+  6)
     echo "all"
     ;;
   *)
@@ -626,6 +634,9 @@ get_conda_env() {
   local py_version=$2
 
   case "${ha_version}_${py_version}" in
+  "2022.10.0_3.10")
+    echo "ci-test-ha2022.10.0-py3.10"
+    ;;
   "2023.6.0_3.11")
     echo "ci-test-ha2023.6.0-py3.11"
     ;;
@@ -668,7 +679,25 @@ python -m pip install --upgrade pip -q &&
 echo 'Installing fresh dependencies...' &&
 "
 
-  if [[ "$ha_version" == "2023.6.0" ]]; then
+  if [[ "$ha_version" == "2022.10.0" ]]; then
+    install_cmd_common+="
+if [ \"\$(python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")')\" = \"3.10\" ]; then
+  if [[ \"\$OSTYPE\" == \"darwin\"* ]]; then
+    # macOS Python 3.10: 使用双fork解决方案修复lru-dict编译问题 (基于0.12.5)
+    echo 'Using dual-fork solution for macOS ARM64 lru-dict compatibility (2022.10.0)...'
+    echo 'Step 1: Installing lru-dict==1.3.0 (compatible version)...'
+    pip install -q lru-dict==1.3.0 &&
+    echo 'Step 2: Installing forked HA 2022.10.0 (lru-dict dependencies removed)...'
+    timeout 600 pip install git+https://github.com/MapleEve/homeassistant-lru-dict-macos-fix.git@py310-fix-branch &&
+    echo 'Step 3: Installing forked pytest plugin (compatible with our HA fork)...'
+    timeout 600 pip install git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@py310-fix-branch
+  else
+    pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.12.5'
+  fi
+else
+  pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.12.5'
+fi &&"
+  elif [[ "$ha_version" == "2023.6.0" ]]; then
     install_cmd_common+="
 if [ \"\$(python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")')\" = \"3.11\" ]; then
   if [[ \"\$OSTYPE\" == \"darwin\"* ]]; then
@@ -677,9 +706,9 @@ if [ \"\$(python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_
     echo 'Step 1: Installing lru-dict==1.3.0 (compatible version)...'
     pip install -q lru-dict==1.3.0 &&
     echo 'Step 2: Installing forked HA 2023.6.0 (lru-dict dependencies removed)...'
-    timeout 600 pip install -q git+https://github.com/MapleEve/homeassistant-2023.6.0-macos-fix.git@macos-fix-branch &&
+    timeout 600 pip install git+https://github.com/MapleEve/homeassistant-lru-dict-macos-fix.git@macos-fix-branch &&
     echo 'Step 3: Installing forked pytest plugin (compatible with our HA fork)...'
-    timeout 600 pip install -q git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@macos-fix-branch
+    timeout 600 pip install git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@macos-fix-branch
   else
     pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
   fi
