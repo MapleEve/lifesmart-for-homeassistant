@@ -26,23 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-
-def create_mock_oapi_client():
-    """创建正确配置的OAPI客户端mock，区分同步和异步方法。"""
-    mock_client = MagicMock()
-
-    # 异步方法使用AsyncMock
-    mock_client.async_refresh_token = AsyncMock()
-    mock_client.async_get_all_devices = AsyncMock()
-    mock_client.login_async = AsyncMock()
-
-    # 同步方法使用普通Mock（返回值）
-    mock_client.get_wss_url = MagicMock(return_value="wss://test.com/ws")
-    mock_client.generate_wss_auth = MagicMock(return_value='{"auth": "test"}')
-
-    return mock_client
-
-
 from custom_components.lifesmart.const import (
     CONF_LIFESMART_APPKEY,
     CONF_LIFESMART_APPTOKEN,
@@ -61,6 +44,7 @@ from custom_components.lifesmart.const import (
 )
 from custom_components.lifesmart.exceptions import LifeSmartAPIError, LifeSmartAuthError
 from custom_components.lifesmart.hub import LifeSmartHub
+from .test_utils import create_mock_oapi_client
 
 
 @pytest.fixture

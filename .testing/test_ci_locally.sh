@@ -2,8 +2,135 @@
 
 # 本地CI兼容性测试脚本
 # 模拟GitHub Actions环境，测试不同HA版本组合
+# 
+# 特别修复: macOS ARM64 Python 3.11 lru-dict编译问题
+# 使用双fork解决方案：
+# - Fork 1: pytest-homeassistant-custom-component (修复setup.py和版本兼容性)
+# - Fork 2: Home Assistant 2023.6.0 (移除lru-dict依赖冲突)
+# 解决方案详情: https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed/tree/macos-fix-branch
+#              https://github.com/MapleEve/homeassistant-2023.6.0-macos-fix/tree/macos-fix-branch
 
 set -e
+
+# 项目根目录自动检测和切换 (支持Windows/Linux/macOS/WSL/WSL2)
+auto_detect_and_switch_to_project_root() {
+  # 获取脚本所在目录的绝对路径
+  local script_dir
+  
+  # 检测不同平台环境
+  if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ -n "${MSYSTEM:-}" ]]; then
+    # Windows环境 (Git Bash/MSYS2/Cygwin)
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -W 2>/dev/null || pwd)"
+  elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if grep -qE "(Microsoft|microsoft)" /proc/version 2>/dev/null; then
+      # WSL/WSL2环境
+      script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+      # WSL路径可能需要特殊处理，但通常标准pwd即可
+    else
+      # 标准Linux环境
+      script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    fi
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS环境
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  else
+    # 其他环境，使用标准方法
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  fi
+  
+  # 推导项目根目录 (.testing目录的父目录)
+  local project_root="$(dirname "$script_dir")"
+  
+  # 验证项目根目录的有效性 (检查关键文件/目录是否存在)
+  local validation_failed=false
+  local missing_items=()
+  
+  if [ ! -d "$project_root/custom_components" ]; then
+    validation_failed=true
+    missing_items+=("custom_components/")
+  fi
+  
+  if [ ! -d "$project_root/custom_components/lifesmart" ]; then
+    validation_failed=true
+    missing_items+=("custom_components/lifesmart/")
+  fi
+  
+  if [ ! -f "$project_root/custom_components/lifesmart/manifest.json" ]; then
+    validation_failed=true
+    missing_items+=("custom_components/lifesmart/manifest.json")
+  fi
+  
+  if [ ! -f "$project_root/hacs.json" ]; then
+    validation_failed=true
+    missing_items+=("hacs.json")
+  fi
+  
+  # 如果验证失败，显示错误信息
+  if [ "$validation_failed" = true ]; then
+    echo -e "${RED}❌ 项目根目录验证失败！${NC}"
+    echo -e "${YELLOW}推导的项目根目录: $project_root${NC}"
+    echo -e "${YELLOW}缺少以下关键文件/目录:${NC}"
+    for item in "${missing_items[@]}"; do
+      echo -e "${RED}  - $item${NC}"
+    done
+    echo ""
+    echo -e "${BLUE}请确保从LifeSmart HACS项目目录或其子目录运行此脚本${NC}"
+    echo -e "${BLUE}预期的项目结构:${NC}"
+    echo "  project-root/"
+    echo "  ├── custom_components/lifesmart/"
+    echo "  ├── .testing/                  ← 脚本位置"
+    echo "  ├── hacs.json"
+    echo "  └── ..."
+    exit 1
+  fi
+  
+  # 获取当前工作目录
+  local current_dir
+  if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ -n "${MSYSTEM:-}" ]]; then
+    # Windows环境使用特殊的pwd
+    current_dir="$(pwd -W 2>/dev/null || pwd)"
+  else
+    # Linux/macOS/WSL使用标准pwd
+    current_dir="$(pwd)"
+  fi
+  
+  # 规范化路径比较 (处理Windows/WSL路径差异)
+  local normalized_current normalized_project
+  
+  if [[ "$OSTYPE" == "linux-gnu"* ]] && grep -qE "(Microsoft|microsoft)" /proc/version 2>/dev/null; then
+    # WSL环境：可能存在/mnt/c路径和Windows路径的混合
+    normalized_current="$(realpath "$current_dir" 2>/dev/null || echo "$current_dir")"
+    normalized_project="$(realpath "$project_root" 2>/dev/null || echo "$project_root")"
+  else
+    # 其他环境使用标准路径
+    normalized_current="$current_dir"
+    normalized_project="$project_root"
+  fi
+  
+  # 检查是否需要切换目录
+  if [ "$normalized_current" != "$normalized_project" ]; then
+    echo -e "${YELLOW}📁 自动切换工作目录:${NC}"
+    echo -e "${YELLOW}   从: $current_dir${NC}"
+    echo -e "${YELLOW}   到: $project_root${NC}"
+    
+    # 切换到项目根目录
+    if cd "$project_root"; then
+      echo -e "${GREEN}✓ 已切换到项目根目录${NC}"
+    else
+      echo -e "${RED}❌ 无法切换到项目根目录: $project_root${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${GREEN}✓ 当前已在项目根目录: $project_root${NC}"
+  fi
+  
+  # 设置全局变量供脚本其他部分使用
+  PROJECT_ROOT="$project_root"
+  SCRIPT_DIR="$script_dir"
+}
+
+# 执行项目根目录检测和切换
+auto_detect_and_switch_to_project_root
 
 # 检查 bash 版本兼容性，如果是老版本尝试找新版本
 if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
@@ -162,13 +289,13 @@ exec_in_conda_env() {
 # 初始化环境检测
 detect_os_and_env
 
-# 获取脚本目录并导入版本映射函数
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# 导入版本映射函数 (使用自动检测设置的SCRIPT_DIR)
 source "$SCRIPT_DIR/version_mapping.sh"
 
 # 测试配置 - 与GitHub Actions完全一致
 # 使用更兼容的方式声明关联数组
 declare -A test_matrix
+test_matrix["2022.10.0"]="3.10"
 test_matrix["2023.6.0"]="3.11"
 test_matrix["2024.2.0"]="3.12"
 test_matrix["2024.12.0"]="3.13"
@@ -253,7 +380,7 @@ detect_current_env() {
 is_valid_ci_env() {
   local env_name=$1
   case "$env_name" in
-  "ci-test-ha2023.6.0-py3.11" | "ci-test-ha2024.2.0-py3.12" | "ci-test-ha2024.12.0-py3.13" | "ci-test-ha-latest-py3.13")
+  "ci-test-ha2022.10.0-py3.10" | "ci-test-ha2023.6.0-py3.11" | "ci-test-ha2024.2.0-py3.12" | "ci-test-ha2024.12.0-py3.13" | "ci-test-ha-latest-py3.13")
     return 0
     ;;
   *)
@@ -266,6 +393,9 @@ is_valid_ci_env() {
 get_versions_from_env() {
   local env_name=$1
   case "$env_name" in
+  "ci-test-ha2022.10.0-py3.10")
+    echo "2022.10.0 3.10"
+    ;;
   "ci-test-ha2023.6.0-py3.11")
     echo "2023.6.0 3.11"
     ;;
@@ -287,28 +417,32 @@ get_versions_from_env() {
 # 函数：交互式环境选择
 interactive_env_selection() {
   echo -e "${YELLOW}请选择要测试的CI环境:${NC}" >&2
-  echo "1) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)" >&2
-  echo "2) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)" >&2
-  echo "3) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)" >&2
-  echo "4) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)" >&2
-  echo "5) 全部环境测试 (完整CI矩阵)" >&2
+  echo "1) ci-test-ha2022.10.0-py3.10 (HA 2022.10.0 + Python 3.10)" >&2
+  echo "2) ci-test-ha2023.6.0-py3.11  (HA 2023.6.0 + Python 3.11)" >&2
+  echo "3) ci-test-ha2024.2.0-py3.12  (HA 2024.2.0 + Python 3.12)" >&2
+  echo "4) ci-test-ha2024.12.0-py3.13 (HA 2024.12.0 + Python 3.13)" >&2
+  echo "5) ci-test-ha-latest-py3.13   (HA latest + Python 3.13)" >&2
+  echo "6) 全部环境测试 (完整CI矩阵)" >&2
   echo "" >&2
-  read -p "请输入选择 (1-5): " choice
+  read -p "请输入选择 (1-6): " choice
 
   case $choice in
   1)
-    echo "ci-test-ha2023.6.0-py3.11"
+    echo "ci-test-ha2022.10.0-py3.10"
     ;;
   2)
-    echo "ci-test-ha2024.2.0-py3.12"
+    echo "ci-test-ha2023.6.0-py3.11"
     ;;
   3)
-    echo "ci-test-ha2024.12.0-py3.13"
+    echo "ci-test-ha2024.2.0-py3.12"
     ;;
   4)
-    echo "ci-test-ha-latest-py3.13"
+    echo "ci-test-ha2024.12.0-py3.13"
     ;;
   5)
+    echo "ci-test-ha-latest-py3.13"
+    ;;
+  6)
     echo "all"
     ;;
   *)
@@ -500,6 +634,9 @@ get_conda_env() {
   local py_version=$2
 
   case "${ha_version}_${py_version}" in
+  "2022.10.0_3.10")
+    echo "ci-test-ha2022.10.0-py3.10"
+    ;;
   "2023.6.0_3.11")
     echo "ci-test-ha2023.6.0-py3.11"
     ;;
@@ -542,20 +679,38 @@ python -m pip install --upgrade pip -q &&
 echo 'Installing fresh dependencies...' &&
 "
 
-  if [[ "$ha_version" == "2023.6.0" ]]; then
+  if [[ "$ha_version" == "2022.10.0" ]]; then
+    install_cmd_common+="
+if [ \"\$(python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")')\" = \"3.10\" ]; then
+  if [[ \"\$OSTYPE\" == \"darwin\"* ]]; then
+    # macOS Python 3.10: 使用双fork解决方案修复lru-dict编译问题 (基于0.12.5)
+    echo 'Using dual-fork solution for macOS ARM64 lru-dict compatibility (2022.10.0)...'
+    echo 'Step 1: Installing lru-dict==1.3.0 (compatible version)...'
+    pip install -q lru-dict==1.3.0 &&
+    echo 'Step 2: Installing forked HA 2022.10.0 (lru-dict dependencies removed)...'
+    timeout 600 pip install git+https://github.com/MapleEve/homeassistant-lru-dict-macos-fix.git@py310-fix-branch &&
+    echo 'Step 3: Installing forked pytest plugin (compatible with our HA fork)...'
+    timeout 600 pip install git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@py310-fix-branch
+  else
+    pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.12.5'
+  fi
+else
+  pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.12.5'
+fi &&"
+  elif [[ "$ha_version" == "2023.6.0" ]]; then
     install_cmd_common+="
 if [ \"\$(python -c 'import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")')\" = \"3.11\" ]; then
   if [[ \"\$OSTYPE\" == \"darwin\"* ]]; then
     # macOS Python 3.11: 使用双fork解决方案修复lru-dict编译问题
     echo 'Using dual-fork solution for macOS ARM64 lru-dict compatibility...'
-    echo 'Step 1: Installing lru-dict==1.3.0...'
+    echo 'Step 1: Installing lru-dict==1.3.0 (compatible version)...'
     pip install -q lru-dict==1.3.0 &&
-    echo 'Step 2: Installing forked HA with dependencies (lru-dict excluded)...'
-    pip install -q git+https://github.com/MapleEve/homeassistant-2023.6.0-macos-fix.git@2023.6.0-macos-fix &&
-    echo 'Step 3: Installing forked pytest plugin...'
-    pip install -q git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@0.13.36-macos-fix
+    echo 'Step 2: Installing forked HA 2023.6.0 (lru-dict dependencies removed)...'
+    timeout 600 pip install git+https://github.com/MapleEve/homeassistant-lru-dict-macos-fix.git@macos-fix-branch &&
+    echo 'Step 3: Installing forked pytest plugin (compatible with our HA fork)...'
+    timeout 600 pip install git+https://github.com/MapleEve/pytest-homeassistant-custom-component-fixed.git@macos-fix-branch
   else
-    pip install --use-pep517 --no-build-isolation --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
+    pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'
   fi
 else
   pip install --force-reinstall -q 'pytest-homeassistant-custom-component==0.13.36'

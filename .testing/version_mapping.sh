@@ -8,6 +8,10 @@ get_compatible_test_versions() {
   local ha_version=$1
 
   case "$ha_version" in
+  "2022.10.0")
+    # HA 2022.10.0 - 使用插件 0.12.5 (插件会自动安装pytest)
+    echo '"pytest-homeassistant-custom-component==0.12.5"'
+    ;;
   "2023.6.0")
     # HA 2023.6.0 - 使用插件 0.13.36 (插件会自动安装pytest)
     echo '"pytest-homeassistant-custom-component==0.13.36"'
@@ -51,6 +55,32 @@ verify_installed_versions() {
 
   # 根据目标HA版本验证关键依赖
   case "$target_ha_version" in
+  "2022.10.0")
+    # 验证HA版本
+    if [[ "$actual_ha" != "2022.10.0" ]]; then
+      echo "     ❌ HA version mismatch: expected 2022.10.0, got $actual_ha"
+      verification_failed=true
+    fi
+
+    # 验证pytest版本范围 (6.2.5 <= version < 8.0.0)
+    if ! version_in_range "$actual_pytest" "6.2.5" "8.0.0"; then
+      echo "     ❌ pytest version out of range: expected 6.2.5-7.x, got $actual_pytest"
+      verification_failed=true
+    fi
+
+    # 验证pytest-ha-custom版本
+    if [[ "$actual_pytest_ha" != "0.12.5" ]]; then
+      echo "     ❌ pytest-ha-custom version mismatch: expected 0.12.5, got $actual_pytest_ha"
+      verification_failed=true
+    fi
+
+    # 验证aiohttp版本 (应该是3.7.x或3.8.x)
+    if [[ ! "$actual_aiohttp" =~ ^3\.[78]\. ]]; then
+      echo "     ❌ aiohttp version unexpected: expected 3.7.x or 3.8.x, got $actual_aiohttp"
+      verification_failed=true
+    fi
+    ;;
+
   "2023.6.0")
     # 验证HA版本
     if [[ "$actual_ha" != "2023.6.0" ]]; then
@@ -217,6 +247,23 @@ install_compatible_test_deps() {
 
   # 根据目标HA版本安装对应的pytest插件，让插件自动管理所有依赖
   case "$ha_version" in
+  "2022.10.0")
+    # HA 2022.10.0 - 使用插件 0.12.5，需要处理lru-dict兼容性问题
+    if [ "$quiet" != "true" ]; then
+      echo "Installing pytest-homeassistant-custom-component 0.12.5..."
+      echo "  -> This will auto-install HA 2022.10.0 and pytest"
+      echo "  -> Note: May need lru-dict compatibility handling on some platforms"
+    fi
+    # 这里可能需要类似双fork解决方案的特殊处理
+    if [[ "$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')" = "3.10" ]]; then
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS Python 3.10: 检查是否需要特殊处理
+        echo "  -> macOS Python 3.10 detected, installing with potential lru-dict workaround..."
+        pip install $pip_args lru-dict==1.3.0 || echo "  -> Warning: lru-dict installation failed, continuing..."
+      fi
+    fi
+    pip install $pip_args "pytest-homeassistant-custom-component==0.12.5"
+    ;;
   "2023.6.0")
     # HA 2023.6.0 - 使用插件 0.13.36
     if [ "$quiet" != "true" ]; then
@@ -285,6 +332,7 @@ show_version_mapping() {
   echo "=================================================================="
   echo "| HA目标版本  | Python | pytest插件版本        | 实际安装HA版本 |"
   echo "|-------------|--------|---------------------|---------------|"
+  echo "| 2022.10.0   | 3.10   | ==0.12.5            | 2022.10.0     |"
   echo "| 2023.6.0    | 3.11   | ==0.13.36           | 2023.6.0      |"
   echo "| 2024.2.0    | 3.12   | ==0.13.99           | 2024.2.0      |"
   echo "| 2024.12.0   | 3.13   | ==0.13.190          | 2024.12.0     |"
