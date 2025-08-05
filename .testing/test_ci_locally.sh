@@ -2,7 +2,7 @@
 
 # 本地CI兼容性测试脚本
 # 模拟GitHub Actions环境，测试不同HA版本组合
-# 
+#
 # 特别修复: macOS ARM64 Python 3.11 lru-dict编译问题
 # 使用双fork解决方案：
 # - Fork 1: pytest-homeassistant-custom-component (修复setup.py和版本兼容性)
@@ -16,7 +16,7 @@ set -e
 auto_detect_and_switch_to_project_root() {
   # 获取脚本所在目录的绝对路径
   local script_dir
-  
+
   # 检测不同平台环境
   if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ -n "${MSYSTEM:-}" ]]; then
     # Windows环境 (Git Bash/MSYS2/Cygwin)
@@ -37,34 +37,34 @@ auto_detect_and_switch_to_project_root() {
     # 其他环境，使用标准方法
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   fi
-  
+
   # 推导项目根目录 (.testing目录的父目录)
   local project_root="$(dirname "$script_dir")"
-  
+
   # 验证项目根目录的有效性 (检查关键文件/目录是否存在)
   local validation_failed=false
   local missing_items=()
-  
+
   if [ ! -d "$project_root/custom_components" ]; then
     validation_failed=true
     missing_items+=("custom_components/")
   fi
-  
+
   if [ ! -d "$project_root/custom_components/lifesmart" ]; then
     validation_failed=true
     missing_items+=("custom_components/lifesmart/")
   fi
-  
+
   if [ ! -f "$project_root/custom_components/lifesmart/manifest.json" ]; then
     validation_failed=true
     missing_items+=("custom_components/lifesmart/manifest.json")
   fi
-  
+
   if [ ! -f "$project_root/hacs.json" ]; then
     validation_failed=true
     missing_items+=("hacs.json")
   fi
-  
+
   # 如果验证失败，显示错误信息
   if [ "$validation_failed" = true ]; then
     echo -e "${RED}❌ 项目根目录验证失败！${NC}"
@@ -83,7 +83,7 @@ auto_detect_and_switch_to_project_root() {
     echo "  └── ..."
     exit 1
   fi
-  
+
   # 获取当前工作目录
   local current_dir
   if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "cygwin" ]] || [[ -n "${MSYSTEM:-}" ]]; then
@@ -93,10 +93,10 @@ auto_detect_and_switch_to_project_root() {
     # Linux/macOS/WSL使用标准pwd
     current_dir="$(pwd)"
   fi
-  
+
   # 规范化路径比较 (处理Windows/WSL路径差异)
   local normalized_current normalized_project
-  
+
   if [[ "$OSTYPE" == "linux-gnu"* ]] && grep -qE "(Microsoft|microsoft)" /proc/version 2>/dev/null; then
     # WSL环境：可能存在/mnt/c路径和Windows路径的混合
     normalized_current="$(realpath "$current_dir" 2>/dev/null || echo "$current_dir")"
@@ -106,13 +106,13 @@ auto_detect_and_switch_to_project_root() {
     normalized_current="$current_dir"
     normalized_project="$project_root"
   fi
-  
+
   # 检查是否需要切换目录
   if [ "$normalized_current" != "$normalized_project" ]; then
     echo -e "${YELLOW}📁 自动切换工作目录:${NC}"
     echo -e "${YELLOW}   从: $current_dir${NC}"
     echo -e "${YELLOW}   到: $project_root${NC}"
-    
+
     # 切换到项目根目录
     if cd "$project_root"; then
       echo -e "${GREEN}✓ 已切换到项目根目录${NC}"
@@ -123,7 +123,7 @@ auto_detect_and_switch_to_project_root() {
   else
     echo -e "${GREEN}✓ 当前已在项目根目录: $project_root${NC}"
   fi
-  
+
   # 设置全局变量供脚本其他部分使用
   PROJECT_ROOT="$project_root"
   SCRIPT_DIR="$script_dir"
@@ -134,30 +134,30 @@ auto_detect_and_switch_to_project_root
 
 # 检查 bash 版本兼容性，如果是老版本尝试找新版本
 if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
-    echo "当前 bash 版本过低: ${BASH_VERSION}"
-    echo "正在尝试使用更新的 bash 版本..."
-    
-    # 尝试找到更新的 bash 版本
-    NEW_BASH=""
-    for bash_path in /opt/homebrew/bin/bash /usr/local/bin/bash /bin/bash; do
-        if [ -x "$bash_path" ]; then
-            BASH_VERSION_CHECK=$("$bash_path" -c 'echo $BASH_VERSION' 2>/dev/null || echo "")
-            if [[ "$BASH_VERSION_CHECK" =~ ^[4-9]\. ]]; then
-                NEW_BASH="$bash_path"
-                break
-            fi
-        fi
-    done
-    
-    if [ -n "$NEW_BASH" ]; then
-        echo "找到兼容的 bash 版本: $NEW_BASH"
-        echo "重新执行脚本..."
-        exec "$NEW_BASH" "$0" "$@"
-    else
-        echo "错误: 需要 bash 4.0 或更高版本来支持关联数组"
-        echo "请安装更新的 bash 版本: brew install bash"
-        exit 1
+  echo "当前 bash 版本过低: ${BASH_VERSION}"
+  echo "正在尝试使用更新的 bash 版本..."
+
+  # 尝试找到更新的 bash 版本
+  NEW_BASH=""
+  for bash_path in /opt/homebrew/bin/bash /usr/local/bin/bash /bin/bash; do
+    if [ -x "$bash_path" ]; then
+      BASH_VERSION_CHECK=$("$bash_path" -c 'echo $BASH_VERSION' 2>/dev/null || echo "")
+      if [[ "$BASH_VERSION_CHECK" =~ ^[4-9]\. ]]; then
+        NEW_BASH="$bash_path"
+        break
+      fi
     fi
+  done
+
+  if [ -n "$NEW_BASH" ]; then
+    echo "找到兼容的 bash 版本: $NEW_BASH"
+    echo "重新执行脚本..."
+    exec "$NEW_BASH" "$0" "$@"
+  else
+    echo "错误: 需要 bash 4.0 或更高版本来支持关联数组"
+    echo "请安装更新的 bash 版本: brew install bash"
+    exit 1
+  fi
 fi
 
 # 颜色输出
@@ -180,13 +180,13 @@ detect_os_and_env() {
         OS_TYPE="wsl"
         echo -e "${BLUE}检测到 Windows WSL 环境${NC}"
       fi
-      
+
       # 检测WSL发行版
       if [ -f /etc/os-release ]; then
         WSL_DISTRO=$(grep "^NAME=" /etc/os-release | cut -d'"' -f2)
         echo -e "${YELLOW}WSL 发行版: $WSL_DISTRO${NC}"
       fi
-      
+
       # 检测Windows路径挂载
       if mount | grep -q "C:.*on.*type.*drvfs"; then
         echo -e "${YELLOW}检测到 Windows 文件系统挂载${NC}"
@@ -205,7 +205,7 @@ detect_os_and_env() {
     OS_TYPE="unknown"
     echo -e "${YELLOW}未知操作系统: $OSTYPE${NC}"
   fi
-  
+
   # 检测 shell 环境
   if command -v zsh >/dev/null 2>&1; then
     SHELL_TYPE="zsh"
@@ -217,26 +217,26 @@ detect_os_and_env() {
     SHELL_TYPE="sh"
     SHELL_RC="~/.profile"
   fi
-  
+
   echo -e "${BLUE}使用 shell: $SHELL_TYPE${NC}"
 }
 
 # 获取 conda 命令的包装函数
 get_conda_cmd() {
   case "$OS_TYPE" in
-    "wsl"|"wsl2"|"linux"|"macos")
-      if [[ "$SHELL_TYPE" == "zsh" ]]; then
-        echo "source ~/.zshrc && conda"
-      else
-        echo "source ~/.bashrc && conda"
-      fi
-      ;;
-    "windows")
-      echo "conda"
-      ;;
-    *)
-      echo "conda"
-      ;;
+  "wsl" | "wsl2" | "linux" | "macos")
+    if [[ "$SHELL_TYPE" == "zsh" ]]; then
+      echo "source ~/.zshrc && conda"
+    else
+      echo "source ~/.bashrc && conda"
+    fi
+    ;;
+  "windows")
+    echo "conda"
+    ;;
+  *)
+    echo "conda"
+    ;;
   esac
 }
 
@@ -245,21 +245,21 @@ exec_conda_cmd() {
   local cmd="$1"
   local conda_cmd
   conda_cmd=$(get_conda_cmd)
-  
+
   case "$OS_TYPE" in
-    "wsl"|"wsl2"|"linux"|"macos")
-      if [[ "$SHELL_TYPE" == "zsh" ]]; then
-        zsh -c "$conda_cmd $cmd"
-      else
-        bash -c "$conda_cmd $cmd"
-      fi
-      ;;
-    "windows")
-      cmd.exe /c "conda $cmd"
-      ;;
-    *)
-      conda "$cmd"
-      ;;
+  "wsl" | "wsl2" | "linux" | "macos")
+    if [[ "$SHELL_TYPE" == "zsh" ]]; then
+      zsh -c "$conda_cmd $cmd"
+    else
+      bash -c "$conda_cmd $cmd"
+    fi
+    ;;
+  "windows")
+    cmd.exe /c "conda $cmd"
+    ;;
+  *)
+    conda "$cmd"
+    ;;
   esac
 }
 
@@ -268,21 +268,21 @@ exec_in_conda_env() {
   local conda_env="$1"
   local work_dir="$2"
   local command="$3"
-  
+
   case "$OS_TYPE" in
-    "wsl"|"wsl2"|"linux"|"macos")
-      if [[ "$SHELL_TYPE" == "zsh" ]]; then
-        zsh -c "source ~/.zshrc && conda activate $conda_env && cd '$work_dir' && $command"
-      else
-        bash -c "source ~/.bashrc && conda activate $conda_env && cd '$work_dir' && $command"
-      fi
-      ;;
-    "windows")
-      cmd.exe /c "conda activate $conda_env && cd /d '$work_dir' && $command"
-      ;;
-    *)
-      bash -c "conda activate $conda_env && cd '$work_dir' && $command"
-      ;;
+  "wsl" | "wsl2" | "linux" | "macos")
+    if [[ "$SHELL_TYPE" == "zsh" ]]; then
+      zsh -c "source ~/.zshrc && conda activate $conda_env && cd '$work_dir' && $command"
+    else
+      bash -c "source ~/.bashrc && conda activate $conda_env && cd '$work_dir' && $command"
+    fi
+    ;;
+  "windows")
+    cmd.exe /c "conda activate $conda_env && cd /d '$work_dir' && $command"
+    ;;
+  *)
+    bash -c "conda activate $conda_env && cd '$work_dir' && $command"
+    ;;
   esac
 }
 
@@ -604,20 +604,20 @@ echo ""
 create_conda_env() {
   local conda_env=$1
   local py_version=$2
-  
+
   echo -e "${YELLOW}Creating conda environment: $conda_env with Python $py_version${NC}"
-  
+
   # 检查环境是否已存在
   if exec_conda_cmd "env list" | grep -q "^$conda_env "; then
     echo -e "${GREEN}Environment $conda_env already exists${NC}"
     return 0
   fi
-  
+
   # 配置conda使用仅conda-forge通道以避免TOS问题
   echo -e "${YELLOW}Configuring conda channels to avoid TOS issues${NC}"
   exec_conda_cmd "config --set channel_priority strict" || true
   exec_conda_cmd "config --add channels conda-forge" || true
-  
+
   # 创建新环境 (使用conda-forge避免TOS问题)
   if exec_conda_cmd "create -n '$conda_env' python='$py_version' -c conda-forge --override-channels -y"; then
     echo -e "${GREEN}✓ Created conda environment: $conda_env${NC}"
@@ -740,35 +740,35 @@ python -c 'import aiohttp; print(\"aiohttp version:\", aiohttp.__version__)'
 
   # 根据操作系统和shell类型执行安装命令
   case "$OS_TYPE" in
-    "wsl"|"wsl2"|"linux"|"macos")
-      if [[ "$SHELL_TYPE" == "zsh" ]]; then
-        local install_cmd="source ~/.zshrc && conda activate $conda_env && $install_cmd_common"
-        if zsh -c "$install_cmd"; then
-          echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
-          return 0
-        fi
-      else
-        local install_cmd="source ~/.bashrc && conda activate $conda_env && $install_cmd_common"
-        if bash -c "$install_cmd"; then
-          echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
-          return 0
-        fi
-      fi
-      ;;
-    "windows")
-      local install_cmd="conda activate $conda_env && $install_cmd_common"
-      if cmd.exe /c "$install_cmd"; then
+  "wsl" | "wsl2" | "linux" | "macos")
+    if [[ "$SHELL_TYPE" == "zsh" ]]; then
+      local install_cmd="source ~/.zshrc && conda activate $conda_env && $install_cmd_common"
+      if zsh -c "$install_cmd"; then
         echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
         return 0
       fi
-      ;;
-    *)
-      local install_cmd="conda activate $conda_env && $install_cmd_common"
+    else
+      local install_cmd="source ~/.bashrc && conda activate $conda_env && $install_cmd_common"
       if bash -c "$install_cmd"; then
         echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
         return 0
       fi
-      ;;
+    fi
+    ;;
+  "windows")
+    local install_cmd="conda activate $conda_env && $install_cmd_common"
+    if cmd.exe /c "$install_cmd"; then
+      echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
+      return 0
+    fi
+    ;;
+  *)
+    local install_cmd="conda activate $conda_env && $install_cmd_common"
+    if bash -c "$install_cmd"; then
+      echo -e "${GREEN}✓ Dependencies clean installed successfully${NC}"
+      return 0
+    fi
+    ;;
   esac
 
   echo -e "${RED}✗ Failed to clean install dependencies${NC}"
@@ -850,16 +850,16 @@ test_ha_version() {
   # 运行Flake8（在conda环境中）
   echo -e "${YELLOW}Running Flake8 lint check in conda environment $conda_env...${NC}"
   local log_file="$LOG_DIR/flake8_ha_${ha_version}.log"
-  
+
   # 获取当前工作目录，支持不同操作系统
   local work_dir
   case "$OS_TYPE" in
-    "windows")
-      work_dir="$(pwd | sed 's|/mnt/||' | sed 's|/|:|' | sed 's|:|://|')"
-      ;;
-    *)
-      work_dir="$(pwd)"
-      ;;
+  "windows")
+    work_dir="$(pwd | sed 's|/mnt/||' | sed 's|/|:|' | sed 's|:|://|')"
+    ;;
+  *)
+    work_dir="$(pwd)"
+    ;;
   esac
 
   # 检查是否是交互模式
