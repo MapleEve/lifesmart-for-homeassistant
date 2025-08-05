@@ -25,7 +25,7 @@ Note:注册方式请与LifeSmart公司联系或通过LifeSmart开放平台自主
 
 # 3.1.请求URL地址
 
-https://api.ilifesmart.com/app/auth.authorize?id=***&appkey=***&time=***&auth_callback=***&did=***&sign=***&lang=zh
+`https://api.ilifesmart.com/app/auth.authorize?id=***&appkey=***&time=***&auth_callback=***&did=***&sign=***&lang=zh`
 
 # 3.2.请求参数
 
@@ -55,7 +55,7 @@ d) MD5算法必须正确，可用下面字符串进行对比验证：
 
 签名原始串：
 
-appkey=1111111111&auth_callback=http://localhost:8080/CallBack.ashx&time=1445307713&apptoken=ABCDEFGHIJKLMNOPQRSTUVWXYZ
+appkey=1111111111&auth_callback=`http://localhost:8080/CallBack.ashx`&time=1445307713&apptoken=ABCDEFGHIJKLMNOPQRSTUVWXYZ
 
 签名值sign应该为：0972888fac34d1d151e4433c9dc7a102
 
@@ -68,11 +68,7 @@ api.eur.ilifesmart.com 服务地址，当前也可以仍旧使用 api.ilifesmart
 
 输入上面URL后，出现如下界面：
 
-![](images/0c47416b0780a56de4f6db6e1bb4e90fd8fa5529f5b5bf0b400fa7843faebbca.jpg)
-
 输入用户名和密码，验证通过之后跳转到如下页面：
-
-![](images/77bed661b39f0d7b402d2fcf967efb4a031506391c4137a4c841d82ca1110941.jpg)
 
 点击授权之后页面跳转到URL提供的 auth_callback 的URL链接，URL中带有userid和usertoken等参数。智能应用端需要能读取到URL中的usertoken等内容，执行后续操作。
 
@@ -113,7 +109,8 @@ api.eur.ilifesmart.com 服务地址，当前也可以仍旧使用 api.ilifesmart
 usertoken必须在失效时间之前更新，否则就必须重新进行用户授权。
 
 a）令牌刷新地址：用户所在 svrurl + /auth.refreshtoken
-例如：用户A授权成功后所获得的svrurl = \"https://api.ilifesmart.com/app/\"，那么用户A的令牌刷新地址为：https://api.ilifesmart.com/app/auth.refreshtoken
+例如：用户A授权成功后所获得的svrurl = \"
+`https://api.ilifesmart.com/app/`\"，那么用户A的令牌刷新地址为：`https://api.ilifesmart.com/app/auth.refreshtoken`
 
 b）HTTP请求为POST方式，内容为JSON格式
 
@@ -151,7 +148,7 @@ apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；
 usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；  
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-⚫ 请求信息：
+# # • 请求信息：
 
 ```json
 {
@@ -163,11 +160,13 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 }
 ```
 
-⚫ 签名原始字符串为：
+# # 签名原始字符串：
 
+```
 appkey=APPKEY_xxxxxxxx&time=1445307713&userid=1111111&apptoken=APPTOKEN_xxxxxxxx&usertoken=USERTOKEN_XXXXXXXX
+```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -372,20 +371,32 @@ sign=MD5("method:TestMethod,param1:12345,param2:abcde,did:DID_XXXXXXXX ,time:144
 
 ```json
 {
-    "name": "Smart Switch",
-    "agt": "A3EAAABtAEwQXXXXXXXXXX",
-    "me": "2d11",
-    "devtype": "SL_SW_IF3",
-    "fullCls": "SL_SW_IF3_V2",
-    "stat": 1,
-    "data": {
-        "L1": {"type": 129, "val": 1,"name": "Living"},
-        "L2": {"type": 128, "val": 0,"name": "Study"},
-        "L3": {"type": 129, "val": 1,"name": "Kid"}
-    }, 
-    "ver": "0.1.6.49",
-    "lDbm": -42,
-    "lHeart": 1626229661
+  "name": "Smart Switch",
+  "agt": "A3EAAABtAEwQXXXXXXXXXX",
+  "me": "2d11",
+  "devtype": "SL_SW_IF3",
+  "fullCls": "SL_SW_IF3_V2",
+  "stat": 1,
+  "data": {
+    "L1": {
+      "type": 129,
+      "val": 1,
+      "name": "Living"
+    },
+    "L2": {
+      "type": 128,
+      "val": 0,
+      "name": "Study"
+    },
+    "L3": {
+      "type": 129,
+      "val": 1,
+      "name": "Kid"
+    }
+  },
+  "ver": "0.1.6.49",
+  "lDbm": -42,
+  "lHeart": 1626229661
 }
 ```
 
@@ -434,8 +445,6 @@ Ep)使用，加入到智慧中心之后，智慧设备将可以与其它设备�
 
 # 4.5.1.1.JSON请求数据格式
 
-![](images/84079aa1aa20eedbba2162e7e343a535858bde13b0926bb8910af9dfb6a03c42.jpg)
-
 | 类型                  | 定义               | 必须 | 描述                              |
 |:--------------------|:-----------------|:---|:--------------------------------|
 | Interface Name      | EpAddAgt         |    | 增加智慧中心                          |
@@ -458,16 +467,16 @@ Ep)使用，加入到智慧中心之后，智慧设备将可以与其它设备�
 
 # 4.5.1.2.范例
 
-# ⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
 usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；  
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-• 请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.EpAddAgt
+• 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpAddAgt`
 
-# • 请求信息：
+# # • 请求信息：
 
 ```json
 {
@@ -488,13 +497,13 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 }
 ```
 
-# 签名原始字符串：
+# # 签名原始字符串：
 
 ```
 method:EpAddAgt, name:xxx, sn:xxxxxxxx, time:1447641115, userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -534,7 +543,7 @@ method:EpAddAgt, name:xxx, sn:xxxxxxxx, time:1447641115, userid:1111111, usertok
 
 # 4.5.2.2.范例
 
-• 我们假定:
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -543,9 +552,9 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 • 请求地址：svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpDeleteAgt
+`https://api.ilifesmart.com/app/api.EpDeleteAgt`
 
-# • 请求信息：
+# # • 请求信息：
 
 ```json
 {
@@ -565,21 +574,25 @@ https://api.ilifesmart.com/app/api.EpDeleteAgt
 }
 ```
 
-⚫ 签名原始字符串为：
+# # 签名原始字符串：
 
 ```
 method:EpDeleteAgt, agt:A3EAAABdADQQxxxxxxxxxxx, time:1447641115,userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
-![](images/64844d0ae081de9afd55be6e2734ef80d3e0180aa1a6cae16895ab0efbbbe792.jpg)
+```json
+{
+  "id": 957,
+  "code": 0,
+  "message": "success"
+}
+```
 
 # 4.5.3.EpGetAllAgts 获取所有智慧中心
 
 # 4.5.3.1.JSON请求数据格式
-
-![](images/fae5aa1b3ea02dca631c26172cf971df7b232a5926b71bdf460c55d4f6058284.jpg)
 
 | 类型                  | 定义               | 必须 | 描述                              |
 |:--------------------|:-----------------|:---|:--------------------------------|
@@ -609,9 +622,9 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 ⚫ 请求地址：svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpGetAllAgts
+`https://api.ilifesmart.com/app/api.EpGetAllAgts`
 
-# • 请求信息：
+# # • 请求信息：
 
 ```json
 {
@@ -628,18 +641,13 @@ https://api.ilifesmart.com/app/api.EpGetAllAgts
 }
 ```
 
-⚫ 签名原始字符串为：
+# # 签名原始字符串：
 
 ```
+method:EpGetAllAgts, time:1447641115, userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_XXXXXXXX
 ```
 
-method:EpGetAllAgts, time:1447641115, userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:
-APPTOKEN_XXXXXXXX
-
-```
-```
-
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -688,9 +696,9 @@ APPTOKEN_XXXXXXXX
 •
 我们假定：appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-请求地址：Svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.EpAdd
+请求地址：Svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpAdd`
 
-# ● 请求信息：
+# # • 请求信息：
 
 ```json
 {
@@ -710,13 +718,13 @@ APPTOKEN_XXXXXXXX
 }
 ```
 
-⚫ 签名原始字符串为：
+# # 签名原始字符串：
 
 ```
 method:EpAdd, agt:A3EAAABdADQQxxxxxxxxxx, time:1447643442,userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_XXXXXXXX
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -735,24 +743,58 @@ method:EpAdd, agt:A3EAAABdADQQxxxxxxxxxx, time:1447643442,userid:1111111,usertok
 optarg参数是添加设备的额外参数，一般情况下，不使用该参数已经可以很好的工作，但对于有些设备，为了实现灵活的定制，可以使用该参数。  
 该参数与设备类型息息相关，不同的设备有不同的参数，如果设备没有额外参数，则将忽略该参数的值。当前可用的额外参数有如下： -
 
-# 多功能(CUBE)环境感应器
+## 多功能(CUBE)环境感应器
 
-optarg = { "cls":"SL_SC_BE", "exarg":{ "humidity_display":1/2/3, "temperature_display":1/2/3 }   
-11
+```json
+{
+  "cls": "SL_SC_BE",
+  "exarg": {
+    "humidity_display": 1,
+    "temperature_display": 1
+  }
+}
+```
+
+说明：
+
+- humidity_display：湿度显示选项，1=湿度，2=光照，3=湿度与光照
+- temperature_display：温度显示选项，1=摄氏温度，2=华氏温度，3=摄氏与华氏温度
 
 humidity display属性用于确定多功能(CUBE)环境感应器液晶屏显示的内容，可以选择湿度、光照、湿度与光照，分别对应值1、2、3。
 
 temperature_display 属性用于确定多功能(CuBE)环境感应器液晶屏对温度显示类别选择，可以选择摄氏温度、华氏温度、摄氏与华氏温度，分别对应值1、2、3。
 
-# 多功能 (CUBE)动态感应器
+## 多功能(CUBE)动态感应器
 
-optarg = { "cls":"SL_SC_BM", "exarg":{ "warning_duration": [6-814] }
+```json
+{
+  "cls": "SL_SC_BM",
+  "exarg": {
+    "warning_duration": 60
+  }
+}
+```
+
+说明：
+
+- warning_duration：检测到移动后的警报持续时间（单位：秒），可选范围6-814秒
 
 warning_duration 属性用于确定检测到移动后的警报持续时间（单位：秒），缺省为秒，可选范围有6-814秒。 -
 
-# 耶鲁门锁模块
+## 耶鲁门锁模块
 
-optarg = { "cls":"SL_LK_YL", "exarg":{ "enable_remote_unlock":1/0 }
+```json
+{
+  "cls": "SL_LK_YL",
+  "exarg": {
+    "enable_remote_unlock": 1
+  }
+}
+```
+
+说明：
+
+- enable_remote_unlock：是否支持远程开门，1=支持，0=不支持
 
 enable_remote_unlock 属性用于确定耶鲁门锁模块是否支持远程开门，可以选择支持、不支持，分别对应值1、0。
 
@@ -762,7 +804,14 @@ enable_remote_unlock 属性用于确定耶鲁门锁模块是否支持远程开�
 
 同时恒星/辰星/极星开关系列还可以设置工作模式，分别为：速度优先、电量优先。其配置如下：
 
-optarg = { "cls":"sL_MC_ND3_V2", "exarg":{ "mode_selection":"speed" }
+```json
+{
+  "cls": "SL_MC_ND3_V2",
+  "exarg": {
+    "mode_selection": "speed"
+  }
+}
+```
 
 cls指明其为极星三联开关；当前恒星/辰星/极星开关系列c1s定义如下：
 
@@ -781,10 +830,13 @@ PSM：PSM系列SL_P_IR: SPOT (MINI)
 
 我们以恒星开关为例，参数内容如下：
 
-optarg = {"cls":"SL_SW_ND1"}  
-1」
+```json
+{
+  "cls": "SL_SW_ND1"
+}
+```
 
-说明：其参数数据格式是JSOΝ对象的序列化字符串，并且要参与方法签名中。
+说明：其参数数据格式是JSON对象的序列化字符串，并且要参与方法签名中。
 
 # 4.5.5.EpRemove 删除设备
 
@@ -821,34 +873,36 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 • 请求地址：svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpRemove
+`https://api.ilifesmart.com/app/api.EpRemove`
 
-# ● 请求信息：
+# # • 请求信息：
 
+```json
 {
-"id": 46,
-"method": "EpRemove",
-"system": {
-"ver": "1.0",
-"lang": "en",
-"userid": "1111111",
-"appkey": "APPKEY_xxxxxxxx",
-"time": 1447642457,
-"sign": "SIGN_xxxxxxxx"
-},
-"params": {
-"agt": "A3EAAABdADQQxXxxxxxxXX",
-"me": "2832"
+  "id": 46,
+  "method": "EpRemove",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447642457,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "A3EAAABdADQQxXxxxxxxXX",
+    "me": "2832"
+  }
 }
-}
+```
 
-# ⚫ 签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpRemove, agt:A3EAAABdADQQxxxxxxxxxX,me:2832, time:1447642457,userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_XXXXXXXX, apptoken:APPTOKEN_XXXXXXXX
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -886,30 +940,32 @@ method:EpRemove, agt:A3EAAABdADQQxxxxxxxxxX,me:2832, time:1447642457,userid:1111
 •
 我们假定：appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-• 请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.EpGetAll
+• 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpGetAll`
 
-# ● 请求信息：
+# # • 请求信息：
 
+```json
 {
-"id": 144,
-"method": "EpGetAll",
-"system": {
-"ver": "1.0",
-"lang": "en",
-"userid": "1111111",
-"appkey": "APPKEY_xxxxxxxx",
-"time": 1447396020,
-"sign": "SIGN_xxxxxxxx"
+  "id": 144,
+  "method": "EpGetAll",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447396020,
+    "sign": "SIGN_xxxxxxxx"
+  }
 }
-}
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpGetAll, time:1447395539, userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -996,34 +1052,36 @@ apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；
 usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；  
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.EpGet
+请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpGet`
 
-• 请求信息：
+# • 请求信息：
 
+```json
 {
-"id": 974,
-"method": "EpGet",
-"system": {
-"ver": "1.0",
-"lang": "en",
-"userid": "1111111",
-"appkey": "APPKEY_xxxxxxxx",
-"time": 1447639497,
-"sign": "SIGN_xxxxxxxx"
-},
-"params": {
-"agt": "A3EAAABdADQQxxxxxxxxxx",
-"me": "2711"
+  "id": 974,
+  "method": "EpGet",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "A3EAAABdADQQxxxxxxxxxx",
+    "me": "2711"
+  }
 }
-}
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpGet, agt:A3EAAABdADQQxxxxxxxxxX,me:2711, time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -1088,38 +1146,40 @@ method:EpGet, agt:A3EAAABdADQQxxxxxxxxxX,me:2711, time:1447639497,userid:1111111
 •
 我们假定：appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-⚫ 请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.Epset
+⚫ 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.Epset`
 
-# ● 请求信息：
+# # • 请求信息：
 
+```json
 {
-"id": 191,
-"method": "EpSet",
-"system": {
-"ver": "1.0",
-"lang": "en",
-"userid": "1111111",
-"appkey": "APPKEY_xxxxxxxx",
-"time": 1447640772,
-"sign": "SIGN_xxxxxxxx"
-},
-"params": {
-"agt": "A3EAAABdADQQRzMONjg5NA",
-"me": "2832",
-"idx": "RGBW",
-"type": 128,
-"val": 0,
-"tag": "m"
+  "id": 191,
+  "method": "EpSet",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447640772,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "A3EAAABdADQQRzMONjg5NA",
+    "me": "2832",
+    "idx": "RGBW",
+    "type": 128,
+    "val": 0,
+    "tag": "m"
+  }
 }
-}
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpSet, agt:A3EAAABdADQQRzMoNjg5NA,idx:RGBW,me:2832, tag:m, type:128, val:0, time:1447640772, userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -1178,30 +1238,42 @@ EpSet接口支持修改设备的extloc属性的值。
 
 # 4.5.9.2.范例
 
-# ⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
 usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；  
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-⚫ 请求地址：svrurl+PartialURL，例如：
+⚫ 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpsSet`
 
-https://api.ilifesmart.com/app/api.Epsset
+# # • 请求信息：
 
-# • 请求信息：
+```json
+{
+  "id": 191,
+  "method": "EpsSet",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447640772,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "args": "[{\"val\":65535,\"tag\":\"m\",\"agt\":\"_EAAABuADoYRzUyOTc2Mg\",\"me\":\"0011\",\"idx\":\"RGBW\",\"type\":255},{\"val\":0,\"tag\":\"m\",\"agt\":\"_EAAABuADoYRzUyOTc2Mg\",\"me\":\"0011\",\"idx\":\"DYN\",\"type\":128}]"
+  }
+}
+```
 
-"id": 191, "method":"EpsSet", "system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "
-time": 1447640772, "sign":"SIGN_xxxxxxxx" }, "params": { "
-args":"[{\"val\":65535,\"tag\":\"m\",\"agt\":\"_EAAABuADoYRzUyOTc2Mg\",\"me\":\"0011\",\"idx\":\"RGBW\",\"type\":255},{\"val\":0,\"tag\":\"m\",\"agt\":\"_EAAABuADoYRzUyOTc2Mg\",\"me\":\"0011\",\"idx\":\"DYN\",\"type\":128}]" } }
-
-# 签名原始字符串：
+# # 签名原始字符串：
 
 ```
 method:EpsSet, args:[{"val":65535,"tag":"m","agt":"_EAAABuADoYRzUyOTc2Mg", "me":"0011", "idx":"RGBW","type":255},{"val":0, "tag":"m","agt":"_EAAABuADoYRzUyOTc2Mg", "me":"0011","idx":"DYN", "type":128}],time:1447640772,userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_xxxxxxxx
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -1244,22 +1316,35 @@ usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；
 sign为SIGN_XXXXXXXX, 实际需要填写真实签名数据；  
 agt为AGT_XXXXXXXX, 实际需要填写真实数据；
 
-• 请求地址：svrurl+PartialURL，例如：
+• 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.SceneGet`
 
-https://api.ilifesmart.com/app/api.sceneGet
+# # • 请求信息：
 
-# • 请求信息：
+```json
+{
+  "id": 974,
+  "method": "SceneGet",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx"
+  }
+}
+```
 
-"id": 974, "method":"SceneGet", "system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "
-time": 1447639497, "sign":"SIGN_xxxxxxxx" }, "params": { "agt":"AGT_xxxxxxxx" }
-
-⚫ 签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:SceneGet, agt:AGT_xxxxxxxx, time:1447639497,userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -1273,7 +1358,7 @@ method:SceneGet, agt:AGT_xxxxxxxx, time:1447639497,userid:1111111, usertoken:UsE
       "cls": "scene"
     },
     {
-      "id": "bbbbbbb", 
+      "id": "bbbbbbb",
       "name": "testscenel",
       "desc": "testscene2",
       "cls": "scene"
@@ -1319,34 +1404,36 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
-• 请求地址：Svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.sceneset
+• 请求地址：Svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.sceneset`
 
-# • 请求信息：
+# # • 请求信息：
 
+```json
 {
-"id": 974,
-"method": "SceneSet",
-"system": {
-"ver": "1.0",
-"lang": "en",
-"userid": "1111111",
-"appkey": "APPKEY_xxxxxxxx",
-"time": 1447639497,
-"sign": "SIGN_xxxxxxxx"
-},
-"params": {
-"agt": "AGT_xxxxxxxx",
-"id": "aaaaaaaa"
+  "id": 974,
+  "method": "SceneSet",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "id": "aaaaaaaa"
+  }
 }
-}
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:SceneSet, agt:AGT_xxxxxxxx, id:aaaaaaaa, time:1447639497, userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_xxxxxxxx
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -1408,34 +1495,36 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 请求地址：svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpUpgradeAgt
+`https://api.ilifesmart.com/app/api.EpUpgradeAgt`
 
-# • 请求信息：
+# # • 请求信息：
 
+```json
 {
-"id": 974,
-"method": "EpUpgradeAgt",
-"system": {
-"ver": "1.0",
-"lang": "en",
-"userid": "1111111",
-"appkey": "APPKEY_xxxxxxxx",
-"time": 1447639497,
-"sign": "SIGN_xxxxxxxx"
-},
-"params": {
-"agt": "AGT_xxxxxxxx",
-"reboot": "1"
+  "id": 974,
+  "method": "EpUpgradeAgt",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "reboot": "1"
+  }
 }
-}
+```
 
-⚫ 签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpUpgradeAgt, agt:AGT_xxxxxxxx, reboot:1, time:1447639497,userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -1495,25 +1584,35 @@ usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；  
 agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
-• 请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.EpRebootAgt
+• 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpRebootAgt`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method":"EpRebootAgt",   
-"system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time":1447639497, "sign":"
-SIGN_xxxxxxxx"   
-},   
-"params": { "agt":"AGT_xxxxxxxx"   
+```json
+{
+  "id": 974,
+  "method": "EpRebootAgt",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx"
+  }
 }
+```
 
-⚫ 签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpRebootAgt, agt:AGT_xxxxxxxx, time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -1558,25 +1657,35 @@ usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；  
 agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
-⚫ 请求地址：svrurl+PartialURL，例如：
+⚫ 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpGetAgtLatestVersion`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method":"EpGetAgtLatestVersion",   
-"system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time":1447639497, "sign":"
-SIGN_xxxxxxxx"   
-},   
-"params": { "agt":"AGT_xxxxxxxx"   
+```json
+{
+  "id": 974,
+  "method": "EpGetAgtLatestVersion",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx"
+  }
 }
+```
 
-# ⚫ 签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpGetAgtLatestVersion, agt:AGT_xxxxxxxx, time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -1630,20 +1739,36 @@ usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；  
 agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
-• 请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.EpSearchSmart
+• 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpSearchSmart`
 
-# • 请求信息：
+# # • 请求信息：
 
-{ "id": 974, "method":"EpSearchSmart", "system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"
-APPKEY_xxxxxxxx", "time":1447639497, "sign":"SIGN_xxxxxxxx" }, "params":{ "agt":"AGT_xxxxxxxx", "mode":"notexist" } }
+```json
+{
+  "id": 974,
+  "method": "EpSearchSmart",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "mode": "notexist"
+  }
+}
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpSearchSmart,agt:AGT_xxxxxxxx,mode:notexist, time:1447639497, userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_xxxxxxxx
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -1673,8 +1798,6 @@ lsid 被搜索到的智慧设备的uuID;
 • name 被搜索到的智慧设备的名称；  
 ttl 搜索过程的TTL条数，可用户诊断网络；  
 sn 被搜索到的智慧设备的MAC地址，并非所有的都会返回；
-
-![](images/46f07bdfd1fddaaabcbb2229a646c636de299e07fa17f0046fd3c9cdbdf6e1be.jpg)
 
 # 4.5.16.EpAddSmart 把搜索到的附近智慧设备添加到智慧中心
 
@@ -1714,25 +1837,38 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 • 请求地址：svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpAddSmart
+`https://api.ilifesmart.com/app/api.EpAddSmart`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method":"EpAddSmart",   
-"system":{ "ver":"1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time":1447639497, "sign":"
-SIGN_xxxxxxxx"   
-}，   
-"params":{ "agt":"AGT_xxxxxxxx", "lsid":"A9IAAEJDMzQwMDJGMUY3QQ", "ip": "192.168.1.145", "name":"CameraByOpenApi"   
+```json
+{
+  "id": 974,
+  "method": "EpAddSmart",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "lsid": "A9IAAEJDMzQwMDJGMUY3QQ",
+    "ip": "192.168.1.145",
+    "name": "CameraByOpenApi"
+  }
 }
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpAddSmart, agt:AGT_xxxxxxxx,ip:192.168.1.145, lsid:A9IAAEJDMzQwMDJGMUY3QQ,name:CameraByOpenApi, time:1447639497,userid:1111111, usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -1750,8 +1886,6 @@ me”属性值。若该设备已经存在与智慧中心下面，即已经被添
 # 4.5.17.EpGetAgtState 获取智慧中心状态
 
 # 4.5.17.1.JSON请求数据格式
-
-![](images/965a61c7dee720f70444d00081e83f0b15d069db26700209f4a0914f04d58e8a.jpg)
 
 | 类型                  | 定义                | 必须 | 描述                              |
 |:--------------------|:------------------|:---|:--------------------------------|
@@ -1786,25 +1920,35 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpGetAgtstate
+`https://api.ilifesmart.com/app/api.EpGetAgtstate`
 
-# ● 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method":'"EpGetAgtState",   
-"system": { "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time": 1447639497, "sign":"
-SIGN_xxxxxxxx"   
-}，   
-"params":{ "agt":"AGT_xxxxxxxx"   
+```json
+{
+  "id": 974,
+  "method": "EpGetAgtState",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx"
+  }
 }
+```
 
-# 签名原始字符串：
+# # 签名原始字符串：
 
 ```
 method:EpGetAgtState, agt:AGT_xxxxxxxx, time:1447639497, userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -1865,21 +2009,38 @@ appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；apptoken为APPTOKEN_
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；  
 agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
-• 请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.Epcmd
+• 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.Epcmd`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id":974, "method":"Epcmd", "system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"ApPKEY_xxxxxxxx", "
-time": 1447639497, "sign":"SIGN_xxxxxxxx" }， "params": { "agt":"AGT_xxxxxxxx", "me":"2e97", "cmd":"audio", "cmdargs":"
-{\'adcmd\":\"play\"，\"id\":5， \"opt\":{\"vol\": 95, \"loop\":2,\"clear\":true}}" } }
+```json
+{
+  "id": 974,
+  "method": "EpCmd",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "me": "2e97",
+    "cmd": "audio",
+    "cmdargs": "{\"adcmd\": \"play\", \"id\": 5, \"opt\": {\"vol\": 95, \"loop\": 2, \"clear\": true}}"
+  }
+}
+```
 
-# 签名原始字符串：
+# # 签名原始字符串：
 
 ```
 method:EpCmd, agt:AGT_xxxxxxxx,cmd:audio,cmdargs:{"adcmd": "play", "id":5, "opt":{"vol": 95, "loop": 2, "clear": true}},me:2e97, time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_xxxxxxxx
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -1938,25 +2099,39 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 # • 请求地址：
 
-svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.Epsetvar
+svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.Epsetvar`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method":'"EpSetvar",   
-"system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time"：1447639497, "sign":"
-SIGN_xxxxxxxx"   
-}，   
-"params":{ "agt"："AGT_xxxxxxxx", "me":"2e97", "idx": 129, "cmd":0， "cmddata'："[0，0，0]"   
+```json
+{
+  "id": 974,
+  "method": "EpSetVar",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "me": "2e97",
+    "idx": 129,
+    "cmd": 0,
+    "cmddata": "[0, 0, 0]"
+  }
 }
+```
 
-# 签名原始字符串：
+# # 签名原始字符串：
 
 ```
 method:EpSetVar, agt:AGT_xxxxxxxx,cmd:0, cmddata:[0, 0, 0],idx:129,me:2e97,time:1447639497, userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -2005,7 +2180,7 @@ EpSetVar命令是低级命令，可以对设备完成一些比较低级别的设
 
 # 4.5.20.2.范例
 
-# ⚫ 我们假定：
+• 我们假定：
 
 appkey为APPKEY_XXXXXXXX，实际需要填写真实数据；  
 apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；  
@@ -2017,25 +2192,37 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpGetAttrs
+`https://api.ilifesmart.com/app/api.EpGetAttrs`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method":'"EpGetAttrs",   
-"system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time"： 1447639497, "sign":"
-SIGN_xxxxxxxx"   
-}，   
-"params": { "agt"："AGT_xxxxxxxx", "me"："2e97, "attrNames":"[\"PairCfg\"]"   
+```json
+{
+  "id": 974,
+  "method": "EpGetAttrs",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "me": "2e97",
+    "attrNames": "[\"PairCfg\"]"
+  }
 }
+```
 
-# ⚫ 签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpGetAttrs, agt:AGT_xxxxxxxx, attrNames:["PairCfg"],me:2e97, time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -2095,25 +2282,36 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据； ■
 
 • 请求地址：svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpTestRssi
+`https://api.ilifesmart.com/app/api.EpTestRssi`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method": "EpTestRssi",   
-"system":{ "ver":"i.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time":1447639497, "sign":"
-SIGN_xxxxxxxx"   
-}，   
-"params":{ "agt"："AGT_xxxxxxxx", "me"："2e97"   
+```json
+{
+  "id": 974,
+  "method": "EpTestRssi",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "me": "2e97"
+  }
 }
+```
 
-# 签名原始字符串：
+# # 签名原始字符串：
 
 ```
 method:EpTestRssi, agt:AGT_xxxxxxxx,me:2e97, time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -2203,34 +2401,38 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpBatchset
+`https://api.ilifesmart.com/app/api.EpBatchset`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 974, "method":"EpBatchset", "system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"
-APPKEY_xxxxxxxx", "time": 1447639497, "sign":"SIGN_xxxxxxxx" }， "params": { "agt":"AGT_xxxxxxxx", "ioItems":"{{\"me\":
-\"2f14\"，\"idx\":\"L2\"，\"type\":129， \"val\":1}，{\"me\": \"2f14\"，\"idx\":\"L1\"， \"type\":129, \"val\":1}，{\"me\":
-\"2f14\"，\"idx\":\"L3\"，\"type\":129, \"val\"：1}，{\"me\"：\"2f13\"，\"idx\"：\"L1\"，\"type\"：129,
-\"val\"：1}，{\"me\"：\"2f0f\"，\"idx\"：\"L2\"，\"type\"：129, \"val\":1}，{\"me\":\"2f0f\"，\"idx\":\"L1\"，\"type\":129,
-\"val\":1}，{\"me\":\"2f0f\"，\"idx\":\"L3\"，\"type\":129,
+```json
+{
+  "id": 974,
+  "method": "EpBatchSet",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "ioItems": "[{\"me\":\"2f14\",\"idx\":\"L2\",\"type\":129,\"val\":1},{\"me\":\"2f14\",\"idx\":\"L1\",\"type\":129,\"val\":1},{\"me\":\"2f14\",\"idx\":\"L3\",\"type\":129,\"val\":1},{\"me\":\"2f13\",\"idx\":\"L1\",\"type\":129,\"val\":1},{\"me\":\"2f0f\",\"idx\":\"L2\",\"type\":129,\"val\":1},{\"me\":\"2f0f\",\"idx\":\"L1\",\"type\":129,\"val\":1},{\"me\":\"2f0f\",\"idx\":\"L3\",\"type\":129,\"val\":1},{\"me\":\"2f50\",\"idx\":\"L2\",\"type\":129,\"val\":1},{\"me\":\"2f50\",\"idx\":\"L1\",\"type\":129,\"val\":1},{\"me\":\"2f10\",\"idx\":\"L2\",\"type\":129,\"val\":1},{\"me\":\"2f10\",\"idx\":\"L1\",\"type\":129,\"val\":1},{\"me\":\"2f72\",\"idx\":\"L1\",\"type\":129,\"val\":1},{\"me\":\"2f71\",\"idx\":\"L2\",\"type\":129,\"val\":1},{\"me\":\"2f71\",\"idx\":\"L1\",\"type\":129,\"val\":1},{\"me\":\"8141\",\"idx\":\"L\",\"type\":129,\"val\":1}]",
+    "speed": 1,
+    "uid": "TEST"
+  }
+}
+```
 
-\"val\"：1}，{\"me\": \"2f50\"， \"idx\":\"L2\"， \"type\"：129,   
-\"val\":1}，{\"me\":\"2f50\"，\"idx\":\"L1\"，\"type\":129,   
-\"val\":1}，{\"me\":\"2f10\"，\"idx\":\"L2\",\"type\":129,   
-\"val\":1}，{\"me\":\"2f10\"，\"idx\":\"L1\"，\"type\":129，   
-\"val\":1}，{\"me\":\"2f72\",\"idx\":\"L1\",\"type\":129,   
-\"val\":1}，{\"me\":\"2f71\"，\"idx\":\"L2\",\"type\":129,   
-\"val\":1}，{\"me\":\"2f71\",\"idx\":\"Li1\",\"type\":129，   
-\"va1\":1}，{\"me\":\"8141\"，\"idx\":\"L\"，'\"type\":129，'   
-\"val\": 1}]", "speed": 1, "uid":"TEST" }
-
-# ⚫ 签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpBatchSet, agt:AGT_xxxxxxxx,ioItems:[{"me": "2f14", "idx": "L2", "type":129, "val":1}, {"me":"2f14", "idx": "L1", "type": 129, "val":1}, {"me":"2f14", "idx":"L3", "type":129, "val":1}, {"me":"2f13","idx":"L1", "type":129, "val":1}, {"me":"2f0f", "idx":"L2", "type": 129, "val": 1}, {"me":"2f0f", "idx":"L1", "type": 129, "val": 1}, {"me":"2f0f", "idx":"L3", "type": 129, "val": 1}, {"me": "2f50", "idx": "L2", "type": 129, "val": 1}, {"me":"2f50","idx":"L1","type":129,"val":1},{"me":"2f10", "idx": "L2", "type": 129, "val":1}, {"me": "2f10", "idx": "L1", "type":129,"val":1},{"me":"2f72","idx":"L1","type":129, "val": 1}, {"me": "2f71", "idx": "L2", "type": 129, "val": 1}, {"me":"2f71", "idx":"L1", "type":129,"val":1}, {"me":"8141", "idx":"L", "type":129, "val": 1}], speed:1,uid:TEST, time:1550748304, userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -2306,20 +2508,36 @@ usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；  
 agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
-• 请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.EpsearchIDev
+• 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpsearchIDev`
 
-# • 请求信息：
+# # • 请求信息：
 
-{ "id": 974, "method":"EpSearchIDev", "system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"
-APPKEY_xxxxxxxx" "time"：1447639497, "sign":"SIGN_xxxxxxxx" }， "params":{ "agt"："AGT_xxxxxxxx", "mode":"notexist" }
+```json
+{
+  "id": 974,
+  "method": "EpSearchIDev",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "mode": "notexist"
+  }
+}
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpSearchIDev,agt:AGT_xxxxxxxx,mode:notexist,time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_XXXXXXXX, apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -2407,26 +2625,42 @@ usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；  
 agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
-请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/api.EpAddIDev
+请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpAddIDev`
 
-# ● 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method":"EpAddIDev",   
-"system":{ "ver": "1.0", "lang":"en", "userid": "1111111", "appkey": "APPKEY_xxxxxxxx", "time": 1447639497, "sign":"
-SIGN_xxxxxxxx"   
-}1   
-"params":{ "agt"："AGT_xxxxxxxx", "uuid":"4d756c74-694d-xxxx-xxxx-xxxxxxxxxxxx", "devType":"iControl:iCamera2",
+```json
+{
+  "id": 974,
+  "method": "EpAddIDev",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "uuid": "4d756c74-694d-xxxx-xxxx-xxxxxxxxxxxx",
+    "devType": "iControl:iCamera2",
+    "host": "192.168.1.222",
+    "port": 443,
+    "name": "iCamera2BB",
+    "user": "administrator",
+    "pwd": ""
+  }
+}
+```
 
-"host": "192.168.1.222", "port": 443, "name":"iCamera2BB", "user":"administrator", "pwd":"" }
-
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpAddIDev, agt:AGT_xxxxxxxx, devType:iControl:iCamera2,host:192.168.1.222,name:iCamera2BB,port:443,pwd:,user:administrator,uuid:4d756c74-694d-xxxx-xxxxxxxxxxxxxxxx,time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -2486,18 +2720,34 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 请求地址：svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpMaintOtaFiles
+`https://api.ilifesmart.com/app/api.EpMaintOtaFiles`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 974, "method":'"EpMaintOtaFiles", "system":{ "ver":"i.0", "lang":"en", "userid": "1111111", "appkey":"
-APPKEY_xxxxxxxx", "time": 1447639497, "sign":"SIGN_xxxxxxxx" }， "params": { "agt"："AGT_xxxxxxxx", "act":"AddByUrl", "
-actargs":"{\"url\": \"http://www.ilifesmart.com/upgrade/test/ FL01_03040d10_00000631.ota\"}" } }
+```json
+{
+  "id": 974,
+  "method": "EpMaintOtaFiles",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "act": "AddByUrl",
+    "actargs": "{\"url\": \"http://www.ilifesmart.com/upgrade/test/FL01_03040d10_00000631.ota\"}"
+  }
+}
+```
 
-# 签名原始字符串：
+# # 签名原始字符串：
 
 ```
-method:EpMaintOtaFiles,act:AddByUrl, actargs:{"url": "http://www.ilifesmart.com/upgrade/test/FL01_03040d10_00000631.ota"},agt:AGT_xxxxxxxx,time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_XXXXXXXX
+method:EpMaintOtaFiles,act:AddByUrl, actargs:{"url": "`http://www.ilifesmart.com/upgrade/test/FL01_03040d10_00000631.ota`"},agt:AGT_xxxxxxxx,time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_XXXXXXXX
 ```
 
 回复信息：
@@ -2512,17 +2762,65 @@ method:EpMaintOtaFiles,act:AddByUrl, actargs:{"url": "http://www.ilifesmart.com/
 
 # 提示：
 
-若是查询命令，则返回的OTA文件列表如下所示：  
-{ -"code": 0,"message":{"MAXFILELEN"：1048576，指明单个OTA文件允许的最大大小，单位byte"MAXSTORESIZE"
-：5242880，指明整个磁盘空间的最大容量，单位byte"files":{"key"："FL01_zG10370104_00000002.ota"，// 标识该oTA文件"size"
-：165868//指明该oTA文件的大小}1 ...]  
+若是查询命令，则返回的OTA文件列表如下所示：
+
+```json
+{
+  "code": 0,
+  "message": {
+    "MAXFILELEN": 1048576,
+    "MAXSTORESIZE": 5242880,
+    "files": [
+      {
+        "key": "FL01_zG10370104_00000002.ota",
+        "size": 165868
+      }
+    ]
+  }
 }
+```
+
+说明：
+
+- MAXFILELEN：指明单个OTA文件允许的最大大小，单位byte
+- MAXSTORESIZE：指明整个磁盘空间的最大容量，单位byte
+- key：标识该OTA文件
+- size：指明该OTA文件的大小
 
 # 提示：
 
-若是QueryAvailableEps命令，则返回的oTa文件列表如下所示：   
-{ "code": 0, "message":{ "FL0103580000
-00000605.ota"：[/／标识该oTA文件 { "me":"a0db", "ver": "0.1.6.5", "devtype":"sL_LI_ww", "fullCls":"sLLIww V3", "name":"Dimming LEDDriver", "otaVer"："6.5"，//该ora文件版本号 "epVer"："6.4"，//该子设备当前版本号 "supportOta"：true，//该子设备是否支持ora升级 "needota"：true，//该子设备是否需要升级orA "lsid":"AlgAACfu0f7_hDwA w", "rfic":3 } ],
+若是QueryAvailableEps命令，则返回的OTA文件列表如下所示：
+
+```json
+{
+  "code": 0,
+  "message": {
+    "FL0103580000_00000605.ota": [
+      {
+        "me": "a0db",
+        "ver": "0.1.6.5",
+        "devtype": "SL_LI_WW",
+        "fullCls": "SL_LI_WW V3",
+        "name": "Dimming LEDDriver",
+        "otaVer": "6.5",
+        "epVer": "6.4",
+        "supportOta": true,
+        "needOta": true,
+        "lsid": "AlgAACfu0f7_hDwAw",
+        "rfic": 3
+      }
+    ]
+  }
+}
+```
+
+说明：
+
+- 文件名标识该OTA文件
+- otaVer：该OTA文件版本号
+- epVer：该子设备当前版本号
+- supportOta：该子设备是否支持OTA升级
+- needOta：该子设备是否需要升级OTA
 
 # 4.5.26.EpMaintOtaTasks 查看或维护智慧中心上的OTA任务列表
 
@@ -2567,24 +2865,36 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 请求地址：svrurl+PartialURL，例如:
 
-https://api.ilifesmart.com/app/api.EpMaintotaTasks
+`https://api.ilifesmart.com/app/api.EpMaintotaTasks`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method":'"EpMaintOtaTasks",   
-"system": { "ver": "1.0", "lang":"en", "userid": "1111111",
+```json
+{
+  "id": 974,
+  "method": "EpMaintOtaTasks",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "act": "Query"
+  }
+}
+```
 
-"appkey": "APPKEY_xxxxxxxx", "time":1447639497, "sign":"SIGN_xxxxxxxx" }， "params": { "agt":"AGT_xxxxxxxx", "act":"
-Query" }
-
-⚫ 签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpMaintOtaTasks, act:Query,agt:AGT_xxxxxxxx,time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -2661,24 +2971,37 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 # ⚫ 请求地址：
 
-Svrurl+PartialURL，例如： https://api.ilifesmart.com/app/api.EpMaintAgtRM
+Svrurl+PartialURL，例如： `https://api.ilifesmart.com/app/api.EpMaintAgtRM`
 
-# ● 请求信息：
+# # • 请求信息：
 
-"id":974,   
-"method":'"EpMaintAgtRm",   
-"system":{ "lang':"en",
+```json
+{
+  "id": 974,
+  "method": "EpMaintAgtRM",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "act": "backup",
+    "actargs": "{\"pwd\": \"ls0000\"}"
+  }
+}
+```
 
-"userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time":1447639497, "sign":"SIGN_xxxxxxxx" }， "params":{ "agt"："
-AGT_xxxxxxxx", "act":"backup", "actargs":"{\"pwd\":\"ls000o\"}" }
-
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpMaintAgtRM, act:backup,actargs:{"pwd": "ls0000"},agt:AGT_xxxxxxxx, time:1447639497, userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_xxxxxxxx
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -2696,23 +3019,35 @@ method:EpMaintAgtRM, act:backup,actargs:{"pwd": "ls0000"},agt:AGT_xxxxxxxx, time
 
 # 4.5.27.3.范例 - Restore
 
-# ● 请求信息：
+# # • 请求信息：
 
-"id": 974,   
-"method":"EpMaintAgtRM",   
-"system": { "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time"： 1447639497, "sign":"
-SIGN_xxxxxxxx"
+```json
+{
+  "id": 974,
+  "method": "EpMaintAgtRM",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "act": "restore",
+    "actargs": "{\"cont\": \"Q2NfTiRxQB5PLjxfxzlVQ10xLjhPeioiIiA9SBJDUG1......\", \"pwd\": \"ls0000\"}"
+  }
+}
+```
 
-"params": { "agt":"AGT_xxxxxxxx", "act": "restore", "actargs":"{\"cont\":
-\"Q2NfTiRxQB5PLjxfxzlVQ10xLjhPeioiIiA9SBJDUG1......\"，\"pwd\": \"1s0000\"}" } }
-
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpMaintAgtRM, act:restore, actargs:{"cont": "Q2NfTiRxQB5PLjxfXz1VQ10xLjhPeioiIiA9SBJDUG1......","pwd": "ls0000"}, agt:AGT_xxxxxxxx, time:1447639497, userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_xxxxxxxx
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -2778,20 +3113,37 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 ⚫ 请求地址：
 
-svrurl+PartialURL，例如： https://api.ilifesmart.com/app/api.EpMaintCartFiles • 请求信息： "id"： 974, "method":'"
-EpMaintCartFiles",
+svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpMaintCartFiles`
 
-"system": { "ver": "1.0", "lang": "en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx", "time": 1447639497, "sign":"
-SIGN_xxxxxxxx" }， "params": { "agt":"AGT_xxxxxxxx", "act":"AddByUrl", "actargs":"
-{\"uri\":\"https://x.cololight.com/mweb/attach/ upload/coloxxtemp/kt6_9AB807.rom\"}" } }
+# # • 请求信息：
 
-# ⚫ 签名原始字符串：
+```json
+{
+  "id": 974,
+  "method": "EpMaintCartFiles",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "act": "AddByUrl",
+    "actargs": "{\"uri\":\"`https://x.cololight.com/mweb/attach/upload/coloxxtemp/kt6_9AB807.rom`\"}"
+  }
+}
+```
+
+# 签名原始字符串：
 
 ```
-method:EpMaintCartFiles,act:AddByUrl, actargs:{"url": "https://x.cololight.com/mweb/attach/upload/coloxxtemp/kt6_9AB807.rom"},agt:AGT_xxxxxxxx,time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_XXXXXXXX
+method:EpMaintCartFiles,act:AddByUrl, actargs:{"url": "`https://x.cololight.com/mweb/attach/upload/coloxxtemp/kt6_9AB807.rom`"},agt:AGT_xxxxxxxx,time:1447639497,userid:1111111,usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_XXXXXXXX
 ```X
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -2803,10 +3155,30 @@ method:EpMaintCartFiles,act:AddByUrl, actargs:{"url": "https://x.cololight.com/m
 
 # 提示：
 
-若是查询命令，则返回的Cart文件列表如下所示：  
-{"code": 0,"message":{"MAXFILELEN"：1048576，指明单个Cart文件允许的最大大小，单位byte"MAXSTORESIZE"
-：5242880，指明整个磁盘空间的最大容量，单位byte"files":[{"key"："kt6_9AB807.rom"，//标识该cart文件"size"
-：55462/／指明该Cart文件的大小}1 ..
+若是查询命令，则返回的Cart文件列表如下所示：
+
+```json
+{
+  "code": 0,
+  "message": {
+    "MAXFILELEN": 1048576,
+    "MAXSTORESIZE": 5242880,
+    "files": [
+      {
+        "key": "kt6_9AB807.rom",
+        "size": 55462
+      }
+    ]
+  }
+}
+```
+
+说明：
+
+- MAXFILELEN：指明单个Cart文件允许的最大大小，单位byte
+- MAXSTORESIZE：指明整个磁盘空间的最大容量，单位byte
+- key：标识该Cart文件
+- size：指明该Cart文件的大小
 
 # 4.5.29.EpConfigAgt 设置智慧中心配置
 
@@ -2881,21 +3253,37 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 请求地址：svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.EpConfigAgt
+`https://api.ilifesmart.com/app/api.EpConfigAgt`
 
-# ● 请求信息：
+# # • 请求信息：
 
-{ "id": 974, "method":"EpConfigAgt", "system": { "ver":"i.0", "lang":"en", "userid": "1111111", "appkey":"
-APPKEY_xxxxxxxx", "time"： 1447639497, "sign":"SIGN_xXXXXXXX" }， "params":{ "agt"："AGT_xxxxxxxx", "act":"
-setLocalPermission", "actargs":"{\"stat\":\"locked\"}" }
+```json
+{
+  "id": 974,
+  "method": "EpConfigAgt",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "act": "setLocalPermission",
+    "actargs": "{\"stat\": \"locked\"}"
+  }
+}
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:EpConfigAgt,act:setLocalPermission,actargs:{"stat": "locked"}, agt:AGT_xxxxxxxx, time:1447639497, userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_xxxxxxxx
 ```
 
-• 回复信息：
+# • 回复信息：
 
 ```json
 {
@@ -2911,21 +3299,58 @@ method:EpConfigAgt,act:setLocalPermission,actargs:{"stat": "locked"}, agt:AGT_xx
 
 # 4.5.29.4.智慧中心ExSv扩展服务说明
 
-# ·天气服务
+## 天气服务
 
-svId: "weather",  
-args:{"enable"： True/False 是否使能服务"svt"："stylel"服务类型，当前填写"stylel"即可"url"
-：{WEATHER_SERVICE_URL}天气服务URL"appkey"：{APPKEY}天气服务分配的AppKey"apptoken"{APPTOKEN}天气服务分配的AppToken  
-} 1  
-"reload"：1/0 是否重新加载立即生效
+```json
+{
+  "svId": "weather",
+  "args": {
+    "enable": true,
+    "svt": "style1",
+    "url": "{WEATHER_SERVICE_URL}",
+    "appkey": "{APPKEY}",
+    "apptoken": "{APPTOKEN}"
+  },
+  "reload": 1
+}
+```
 
-# ·MDNS搜索服务
+说明：
 
-svId: "lc_mdns",  
-args:{"enable"：True/False 是否使能服务  
-}1  
-"reload"：1/0 是否重新加载立即生效  
-动作定义－添加MAC地址act:"Addone"actargs: { ...}mac：String，MAc地址示例：{"act":"Addone","actargs":{"mac":"70886B14673D"}}
+- enable：true/false 是否使能服务
+- svt：服务类型，当前填写"style1"即可
+- url：天气服务URL
+- appkey：天气服务分配的AppKey
+- apptoken：天气服务分配的AppToken
+- reload：1/0 是否重新加载立即生效
+
+## MDNS搜索服务
+
+```json
+{
+  "svId": "lc_mdns",
+  "args": {
+    "enable": true
+  },
+  "reload": 1
+}
+```
+
+说明：
+
+- enable：true/false 是否使能服务
+- reload：1/0 是否重新加载立即生效
+
+动作定义－添加MAC地址：
+
+```json
+{
+  "act": "Addone",
+  "actargs": {
+    "mac": "70886B14673D"
+  }
+}
+```
 
 # 4.5.29.5.智慧中心本地互联白名单说明
 
@@ -2941,29 +3366,67 @@ args:{"enable"：True/False 是否使能服务
 NatureMinil、摄像头Cameral。假定Agtl的agt属性为"Agtl_agt";假定NatureMinil的lsid/agt属性为"NatureMinil_agt"
 ;假定cameral的lsid/agt属性为"Cameral_agt";
 
-# 调用setLocalPermission指令设置超能面板与摄像头本地访问策略
+## 调用setLocalPermission指令设置超能面板与摄像头本地访问策略
 
-"agt":"NatureMinil_agt", "act":"setLocalPermission", "actargs":"{\"policy\":\"[nolsi]\"}" "agt":"cameral_agt", "act":"
-setLocaipermission", "actargs":"{\"policy\":\"[nolsi]\"}" }
+```json
+{
+  "agt": "NatureMinil_agt",
+  "act": "setLocalPermission",
+  "actargs": "{\"policy\":\"[nolsi]\"}"
+}
+```
 
-调用setLocalPwd指令设置超能面板与摄像头本地访问密码"123456"
+```json
+{
+  "agt": "cameral_agt",
+  "act": "setLocalPermission",
+  "actargs": "{\"policy\":\"[nolsi]\"}"
+}
+```
 
-"agt":"NatureMinil_agt", "act":"setLocalPwd", "actargs":"{\"pwd\":\"mTIzNDu2\"}" "agt":"cameral_agt", "act":"
-setLocaiPwd", "actargs":"{\"pwd\":\"mTIzNDu2\"}" }
+## 调用setLocalPwd指令设置超能面板与摄像头本地访问密码"123456"
 
-# 调用setLsiWhitelist指令设置相关的智慧设备白名单
+```json
+{
+  "agt": "NatureMinil_agt",
+  "act": "setLocalPwd",
+  "actargs": "{\"pwd\":\"MTIzNDU2\"}"
+}
+```
 
-"agt": "Agt1_agt", "act": "setLsiwhitelist", "
-actargs":"{[\"+\"，\"Naturemini1_agt\"， \"admin\", \"123456\"]，[\"+\"，\"camera1_agt\"，\"admin\"，\"123456\"]]" }
+```json
+{
+  "agt": "cameral_agt",
+  "act": "setLocalPwd",
+  "actargs": "{\"pwd\":\"MTIzNDU2\"}"
+}
+```
 
-调用setLsiPolicy 指令设置策略为"whitelist"，只给白名单设备下发检索包 "agt": "Agt1_agt", "act":"setLsiPolicy", "actargs":"
-{\"policy\": \"whitelist\"}"
+## 调用setLsiWhitelist指令设置相关的智慧设备白名单
+
+```json
+{
+  "agt": "Agt1_agt",
+  "act": "setLsiWhitelist",
+  "actargs": "[[\"+ \",\"NatureMini1_agt\",\"admin\",\"123456\"],[\"+ \",\"camera1_agt\",\"admin\",\"123456\"]]"
+}
+```
+
+## 调用setLsiPolicy指令设置策略为"whitelist"
+
+只给白名单设备下发检索包：
+
+```json
+{
+  "agt": "Agt1_agt",
+  "act": "setLsiPolicy",
+  "actargs": "{\"policy\": \"whitelist\"}"
+}
+```
 
 # 4.5.30.NatureCtl 设置Nature面板首页按键等配置
 
 # 4.5.30.1.JSON请求数据格式
-
-![](images/46d69b4856f895b907df5d5f9648bcc667eab2ae737ed8c254ef9b78ae68e05d.jpg)
 
 | 类型                  | 定义               | 必须 | 描述                                   |
 |:--------------------|:-----------------|:---|:-------------------------------------|
@@ -3009,22 +3472,37 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 请求地址：svrurl+PartialURL，例如：
 
-https://api.ilifesmart.com/app/api.NatureCtl
+`https://api.ilifesmart.com/app/api.NatureCtl`
 
-# ● 请求信息：
+# # • 请求信息：
 
-"id": 974, "method":'"NatureCtl", "system":{ "ver": "1.0", "lang":"en", "userid":"1111111", "appkey":"
-APPKEY_xxxxxxxx", "time": 1659345834, "sign":"SIGN_xxxxxxxx" }， "params":{ "agt":"AGT_xxxxxxxx", "act": "setFavs", "
-actargs":"{\"favId\":\"Nm_HOmE\"，\"items\":{\"FAV_b3\": \"A3EAxxxxxxxxxxxxxxxx/me/ep/6431\",\"FAV_b2\"：\"NULL\",
-\"FAV_theme\":\"black\"}}" } }
+```json
+{
+  "id": 974,
+  "method": "NatureCtl",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1659345834,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "act": "setFavs",
+    "actargs": "{\"favId\": \"NM_HOME\", \"items\": {\"FAV_b3\": \"A3EAxxxxxxxxxxxxxxxx/me/ep/6431\", \"FAV_b2\": \"NULL\", \"FAV_theme\": \"black\"}}"
+  }
+}
+```
 
-# 签名原始字符串：
+# # 签名原始字符串：
 
 ```
 method:NatureCtl, act:SetFavs, actargs:{"favId":"NM_HOME", "items":{"FAV_b3":"A3EAxxxxxxxxxxxxxxxx/me/ep/6431", "FAV_b2":"NULL", "FAV_theme":"black"}},agt:AGT_xxxxxxxx, time:1659345834, userid:1111111, usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_xxxxxxxx
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -3142,25 +3620,21 @@ Note:
 wbAuth：WebSocket认证，一次认证一个用户，可以在一个连接多次认证，达到单连接多用户的效果，并且可以持续认证；●
 RmAuth：WebSocket认证移除，一次移除一个用户，用户数到零时，连接自动断开；
 
-# 7.1.流程
-
-![](images/ca87885ed49d63dc9030523f0b1f3476729b0eb86a54dcaf32b59b3191a21fcf.jpg)
-
 # 7.2.URI
 
 根据不同的用户账号（LifeSmart用户）所在的服务区域，WebSocket服务需要使用对应的服务地址。svrrgnid 为服务分区标记，在户授权成功后将会返回对应的
 svrrgnid信息。根据不同的 svrrgnid 使用以下对应的 WebSocket URL:
 
-| Service Type       | svrrgnid | URL                                      |
-|:-------------------|:---------|:-----------------------------------------|
-| Websocket with SSL | GS       | wss://api.ilifesmart.com:8443/wsapp/     |
-| Websocket with SSL | CN0      | wss://api.cn0.ilifesmart.com:8443/wsapp/ |
-| Websocket with SSL | VIP1     | wss://api.cn1.ilifesmart.com:8443/wsapp/ |
-| Websocket with SSL | CN2      | wss://api.cn2.ilifesmart.com:8443/wsapp/ |
-| Websocket with SSL | AME      | wss://api.us.ilifesmart.com:8443/wsapp/  |
-| Websocket with SSL | EUROPE   | wss://api.eur.ilifesmart.com/wsapp/      |
-| Websocket with SSL | JAP      | wss://api.jp.ilifesmart.com:8443/wsapp/  |
-| Websocket with SSL | APZ      | wss://api.apz.ilifesmart.com:8443/wsapp/ |
+| Service Type       | svrrgnid | URL                                        |
+|:-------------------|:---------|:-------------------------------------------|
+| Websocket with SSL | GS       | `wss://api.ilifesmart.com:8443/wsapp/`     |
+| Websocket with SSL | CN0      | `wss://api.cn0.ilifesmart.com:8443/wsapp/` |
+| Websocket with SSL | VIP1     | `wss://api.cn1.ilifesmart.com:8443/wsapp/` |
+| Websocket with SSL | CN2      | `wss://api.cn2.ilifesmart.com:8443/wsapp/` |
+| Websocket with SSL | AME      | `wss://api.us.ilifesmart.com:8443/wsapp/`  |
+| Websocket with SSL | EUROPE   | `wss://api.eur.ilifesmart.com/wsapp/`      |
+| Websocket with SSL | JAP      | `wss://api.jp.ilifesmart.com:8443/wsapp/`  |
+| Websocket with SSL | APZ      | `wss://api.apz.ilifesmart.com:8443/wsapp/` |
 
 # 注意：
 
@@ -3196,18 +3670,27 @@ apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；
 usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；  
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-# ● 请求信息：
+# # • 请求信息：
 
-"id": 957,   
-"method":"wbAuth",   
-"system":{ "ver": "1.0", "lang": "en", "userid": "1111111",
+```json
+{
+  "id": 957,
+  "method": "WbAuth",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447641115,
+    "sign": "SIGN_xxxxxxxx"
+  }
+}
+```
 
-"appkey": "ApPKEy xxxxxxxx", "time": 1447641115, "sign":"SIGN_xxxxxxxx"
+● # 签名原始字符串：
 
-● 签名原始字符串： ```
-method:WbAuth, time:1447641115,userid:1111111, usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:
-APPTOKEN_xxxxxxxx
-
+```
+method:WbAuth, time:1447641115,userid:1111111, usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx, apptoken:APPTOKEN_xxxxxxxx
 ```
 
 回复信息：
@@ -3248,21 +3731,30 @@ apptoken为APPTOKEN_XXXXXXXX，实际需要填写真实数据；
 usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；  
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 957,   
-"method":"RmAuth",   
-"system": { "ver": "1.0", "lang":"en", "userid": "1111111", "appkey":"APPKEY_xxxxxxxx",
-
-"time": 1447641115, "sign":"SIGN_xxxxxxxx"
-
-• 签名原始字符串： ```
-method:RmAuth, time:1447641115,userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:
-APPTOKEN_xxxxxxxx
-
+```json
+{
+  "id": 957,
+  "method": "RmAuth",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447641115,
+    "sign": "SIGN_xxxxxxxx"
+  }
+}
 ```
 
-• 回复信息：
+• # 签名原始字符串：
+
+```
+method:RmAuth, time:1447641115,userid:1111111, usertoken:UsERToKEN_xxxxxxxx,appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_xxxxxxxx
+```
+
+# • 回复信息：
 
 ```json
 {
@@ -3286,134 +3778,386 @@ APPTOKEN_xxxxxxxx
 
 事件内容属性如下：
 
-| 字段名称   | 类型     | 描述                                               |
-|:-------|:-------|:-------------------------------------------------|
-| userid | string | 用户ID                                             |
-| agt    | string | 智慧中心id                                           |
-| me     | string | 终端设备id<br/>当为智慧中心级别事件则其值不存在；当为AI类型事件其值表示的是AI的id； |
-
-| 字段名称    | 类型     | 描述                                                                                                                                                                                                                      |
-|:--------|:-------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| idx     | string | 终端设备IO指示。根据设备类型不同，其内容不一样。与设备属性的DevType对应，比如L1，O等。idx="s"是特殊的类型，需要查看其它属性做进一步的判断。如果有info字段则需要参考info信息做进一步处理，例如设备添加，设备删除，设备名称修改，AI添加/删除/变化等特定事件；否则即为设备/智慧中心上下线。                                                            |
-| devtype | string | 设备类型<br/>当为智慧中心事件则其值固定为"agt"；<br/>当为AI类型事件则其值固定为"ai"；<br/>注：当devtype等于'elog"则为特殊的事件，具体内容需要参考事件体内的elog属性(属性值为对象类型)。                                                                                                      |
-| fullCls | string | 包含设备版本号的完整设备类型                                                                                                                                                                                                          |
-| type    | int32  | 终端设备IO值类型，含义同设备属性定义，当idx="s"标识特殊事件的时候，其值无效                                                                                                                                                                              |
-| val     | int32  | 终端设备IO值，含义同设备属性定义，当idx="s"标识特殊事件的时候，其值无效                                                                                                                                                                                |
-| v       | float  | 真实有效值。在idx!="s"情况下，其值是val值的真实友好值，例如温度变化事件，val=230，v=23.0，表示温度值是23.0摄氏度，在idx="s"情况下，其值是特定的值，具体如下：<br/>设备上线，其值=1；设备下线，其值=2；                                                                                               |
-| ts      | int64  | 事件发生UTC时间，从1970.1.1到现在的毫秒数                                                                                                                                                                                              |
-| info    | string | 事件扩展信息，其值有："add"，"del"，"name"，"ioname"，"full"，"chg"等。<br/>add：标识是设备/智慧中心/AI的添加事件；<br/>del：标识是设备/智慧中心/AI的删除事件；<br/>name：标识是设备名称修改的事件；<br/>ioname：标识是设备IO名称修改的事件；<br/>full：标识是智慧中心全量同步的事件；<br/>chg：标识是AI的修改事件，包括名称，状态，配置； |
-| name    | string | 仅在名称修改事件有效，包括设备名称/设备IO名称/AI名称的修改事件，既info="name"或info="ioname"或info="chg"。指示新的名称。                                                                                                                                        |
-| io      | string | 仅在设备IO名称修改事件有效，既info="ioname"。指示设备的哪个IO发生名称变更。                                                                                                                                                                          |
-| stat    | int32  | 仅AI事件有效，标识AI的状态发生变更<br/>stat=0 表示AI处于初始态；<br/>stat=3 表示AI正在运行；<br/>stat=4表示AI运行完成；                                                                                                                                      |
-
 | 字段名称    | 类型     | 描述                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 |:--------|:-------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| userid  | string | 用户ID                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| agt     | string | 智慧中心id                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| me      | string | 终端设备id<br/>当为智慧中心级别事件则其值不存在；当为AI类型事件其值表示的是AI的id；                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| idx     | string | 终端设备IO指示。根据设备类型不同，其内容不一样。与设备属性的DevType对应，比如L1，O等。idx="s"是特殊的类型，需要查看其它属性做进一步的判断。如果有info字段则需要参考info信息做进一步处理，例如设备添加，设备删除，设备名称修改，AI添加/删除/变化等特定事件；否则即为设备/智慧中心上下线。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| devtype | string | 设备类型<br/>当为智慧中心事件则其值固定为"agt"；<br/>当为AI类型事件则其值固定为"ai"；<br/>注：当devtype等于'elog"则为特殊的事件，具体内容需要参考事件体内的elog属性(属性值为对象类型)。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| fullCls | string | 包含设备版本号的完整设备类型                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| type    | int32  | 终端设备IO值类型，含义同设备属性定义，当idx="s"标识特殊事件的时候，其值无效                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| val     | int32  | 终端设备IO值，含义同设备属性定义，当idx="s"标识特殊事件的时候，其值无效                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| v       | float  | 真实有效值。在idx!="s"情况下，其值是val值的真实友好值，例如温度变化事件，val=230，v=23.0，表示温度值是23.0摄氏度，在idx="s"情况下，其值是特定的值，具体如下：<br/>设备上线，其值=1；设备下线，其值=2；                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ts      | int64  | 事件发生UTC时间，从1970.1.1到现在的毫秒数                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| info    | string | 事件扩展信息，其值有："add"，"del"，"name"，"ioname"，"full"，"chg"等。<br/>add：标识是设备/智慧中心/AI的添加事件；<br/>del：标识是设备/智慧中心/AI的删除事件；<br/>name：标识是设备名称修改的事件；<br/>ioname：标识是设备IO名称修改的事件；<br/>full：标识是智慧中心全量同步的事件；<br/>chg：标识是AI的修改事件，包括名称，状态，配置；                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| name    | string | 仅在名称修改事件有效，包括设备名称/设备IO名称/AI名称的修改事件，既info="name"或info="ioname"或info="chg"。指示新的名称。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| io      | string | 仅在设备IO名称修改事件有效，既info="ioname"。指示设备的哪个IO发生名称变更。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| stat    | int32  | 仅AI事件有效，标识AI的状态发生变更<br/>stat=0 表示AI处于初始态；<br/>stat=3 表示AI正在运行；<br/>stat=4表示AI运行完成；                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | cmdlist | bool   | 仅AI事件有效，为True标识AI的配置发生变更                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | elog    | object | 安防事件内容，具体属性定义如下：<br/>**告警级别：**<br/>-3:RED -2:YELLOW -1:GREEN -0:N/A<br/>**事件类别(category)：**<br/>•cgy：string，事件类别<br/>&emsp;-"sys": System<br/>&emsp;-"alm": Alarm<br/>&emsp;-"nty": Notification<br/>&emsp;-"msg": Message<br/>**事件类型(class)：**<br/>•cls：string，事件类型<br/>&emsp;-"arm"：布防操作<br/>&emsp;-"disarm"：撤防操作<br/>&emsp;-"home"：在家操作<br/>&emsp;-"alarm"：告警操作<br/>&emsp;-"m"：指示触发的是MotionIO<br/>&emsp;-"TR"：指示触发的是TRIO<br/>&emsp;-"A"：指示触发的是ALARMIO<br/>&emsp;-"open"：KeyPad用户开锁<br/>&emsp;-"add[nfc]"：添加KeyPad NFC卡用户<br/>&emsp;-"add[key]"：添加KeyPad密码用户<br/>&emsp;-"auth[admin]"：KeyPad管理员认证<br/>&emsp;-"fail"：KeyPad认证失败操作<br/>&emsp;-"errlock"：KeyPad输入错误锁定/解锁<br/>&emsp;-其它IO：指示防区内其它设备IO触发事件<br/>**其他属性：**<br/>•obj：string，相关涉及对象，具体参考elog场景定义举例<br/>•info：string，"0"通常表示成功，"1"通常表示失败<br/>•lc：string，对应的防区ID，格式为"${AGT}/me/lc"<br/>•lvl：int32，事件告警级别，值越大级别越高，越应该重视 |
 
-场景定义举例：10变化事件有效字段：userid,agt,me,idx,devtype,type,val,v,ts
+场景定义举例：IO变化事件有效字段：userid,agt,me,idx,devtype,type,val,v,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"2ad5","idx":"L1","type":129,"val":1,"
-devtype":"SL_SW_RC","ts":1521455567867},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "2ad5",
+    "idx": "L1",
+    "type": 129,
+    "val": 1,
+    "devtype": "SL_SW_RC",
+    "ts": 1521455567867
+  },
+  "id": 1
+}
+```
 
-例如环境感应器湿度变化事件 {"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"2aca","idx":"H","
-type":95,"val":462,"V":46.2,"devtype":"SL_SC_THL","ts":1521532876138},"id":1}
+例如环境感应器湿度变化事件
 
-# 设备上线事件
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "2aca",
+    "idx": "H",
+    "type": 95,
+    "val": 462,
+    "v": 46.2,
+    "devtype": "SL_SC_THL",
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
+
+## 设备上线事件
 
 有效字段：userid,agt,me,idx="s",devtype,v=1,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"2aca","idx":"s","de vtype":"SL_SF_IF3","V":1,"
-ts":1521532876138},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "2aca",
+    "idx": "s",
+    "devtype": "SL_SF_IF3",
+    "v": 1,
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
 
-# 设备离线事件
+## 设备离线事件
 
 有效字段：userid,agt,me,idx="s",devtype,v=2,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"2aca","idx":"s","de vtype":"SL_SF_IF3", "V":
-2,"ts":1521532876138},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "2aca",
+    "idx": "s",
+    "devtype": "SL_SF_IF3",
+    "v": 2,
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
 
-# 设备名称修改事件
+## 设备名称修改事件
 
 有效字段：userid,agt,me,idx="s",devtype,info="name",name,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"2aca","idx":"s","info":"name","name":"
-NEW_NAME","devtype":"SL_SF_IF3","ts":1521532876138},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "2aca",
+    "idx": "s",
+    "info": "name",
+    "name": "NEW_NAME",
+    "devtype": "SL_SF_IF3",
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
 
-# 10名称修改事件
+## IO名称修改事件
 
 有效字段：userid,agt,me,idx="s",devtype,info="ioname",name,io,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"2aca","idx":"s","info":"ioname","name":"
-NEW_IO_NAME","io":"L2","devtype":"SL_SF_IF3","ts":1521532876138},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "2aca",
+    "idx": "s",
+    "info": "ioname",
+    "name": "NEW_IO_NAME",
+    "io": "L2",
+    "devtype": "SL_SF_IF3",
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
 
-# 设备添加事件
+## 设备添加事件
 
 有效字段：userid,agt,me,idx="s",devtype,info="add",v=0,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"2aca","idx":"s","info":"add","devtype":"
-SL_SF_IF3","V":0,"ts":1521532876138},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "2aca",
+    "idx": "s",
+    "info": "add",
+    "devtype": "SL_SF_IF3",
+    "v": 0,
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
 
-# 设备删除事件
+## 设备删除事件
 
-有效字段：userid,agt,me,idx="s",devtype,info="del",V=-1,ts
+有效字段：userid,agt,me,idx="s",devtype,info="del",v=-1,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"2aca","idx":"s","info":"del","devtype":"
-SL_SF_IF3","V":-1,"ts":1521532876138},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "2aca",
+    "idx": "s",
+    "info": "del",
+    "devtype": "SL_SF_IF3",
+    "v": -1,
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
 
-智慧中心添加事件 有效字段：userid,agt,idx="s",devtype="agt",info="add",v=0,ts
+## 智慧中心添加事件
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","idx":"s","info":"add","devtype":"agt","v":0,"ts":
-1521532876138},"id":1}
+有效字段：userid,agt,idx="s",devtype="agt",info="add",v=0,ts
 
-智慧中心删除事件有效字段：userid,agt,idx="s",devtype="agt",info="del",V=-1,ts
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "idx": "s",
+    "info": "add",
+    "devtype": "agt",
+    "v": 0,
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","idx":"s","info":"del","devtype":"agt","v":-1,"ts":
-1521532876138},"id":1}
+## 智慧中心删除事件
 
-智慧中心上线事件有效字段：userid,agt,idx="s",devtype="agt",v=1,ts
+有效字段：userid,agt,idx="s",devtype="agt",info="del",v=-1,ts
 
-{'type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","idx":"s","devtype":"agt", "V":1,"ts":
-1521532876138},"id":1
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "idx": "s",
+    "info": "del",
+    "devtype": "agt",
+    "v": -1,
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
 
-智慧中心离线事件有效字段：userid,agt,idx="s",devtype="agt",v=2,ts
+## 智慧中心上线事件
 
-{'type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjgsNA","idx":"s","devtype":"agt", "V":2,"ts":
-1521532876138},"id":1}
+有效字段：userid,agt,idx="s",devtype="agt",v=1,ts
 
-智慧中心全量同步事件有效字段：userid,agt,idx="s",devtype="agt",info="full",ts
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "idx": "s",
+    "devtype": "agt",
+    "v": 1,
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","idx":"s","info":"full","dev type":"agt","'ts":
-1521532876138},"id":1}
+## 智慧中心离线事件
 
-# AI添加事件
+有效字段：userid,agt,idx="s",devtype="agt",v=2,ts
+
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "idx": "s",
+    "devtype": "agt",
+    "v": 2,
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
+
+## 智慧中心全量同步事件
+
+有效字段：userid,agt,idx="s",devtype="agt",info="full",ts
+
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "idx": "s",
+    "info": "full",
+    "devtype": "agt",
+    "ts": 1521532876138
+  },
+  "id": 1
+}
+```
+
+## AI添加事件
 
 有效字段：userid,agt,me,idx="s",devtype="ai",info="add",v=0,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"Al1544609170","idx ":"s","info":"add","
-devtype":"ai","v":0,"'ts":1544609170932},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "Al1544609170",
+    "idx": "s",
+    "info": "add",
+    "devtype": "ai",
+    "v": 0,
+    "ts": 1544609170932
+  },
+  "id": 1
+}
+```
 
-# AI删除事件
+## AI删除事件
 
 有效字段：userid,agt,me,idx="s",devtype="ai",info="del",v=-1,ts
 
-{'type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"Al1544609170","idx ":"s","info":"del","
-devtype":"ai”,"v":-1,"ts":1544609265325},"id":1]
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "Al1544609170",
+    "idx": "s",
+    "info": "del",
+    "devtype": "ai",
+    "v": -1,
+    "ts": 1544609265325
+  },
+  "id": 1
+}
+```
 
-# AI变化事件-修改名称
+## AI变化事件-修改名称
 
 有效字段：userid,agt,me,idx="s",devtype="ai",info="chg",name,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"Al1544609170","idx ":"s","info":"chg","
-devtype":"ai","name":"NewName","ts":1544609265325},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "Al1544609170",
+    "idx": "s",
+    "info": "chg",
+    "devtype": "ai",
+    "name": "NewName",
+    "ts": 1544609265325
+  },
+  "id": 1
+}
+```
 
-AI变化事件-修改配置 有效字段：userid,agt,me,idx="s",devtype="ai",info="chg",cmdlist,ts
+## AI变化事件-修改配置
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"Al1544609170","idx ":"s","info":"chg","
-devtype":"ai","cmdlist":True,"ts":1544609265325},"id":1}
+有效字段：userid,agt,me,idx="s",devtype="ai",info="chg",cmdlist,ts
 
-{"type":"io","msg":{"userid":"10001","agt":"A3EAAABtAEwQRzMoNjg5NA","me":"Al1544609170","idx ":"s","info":"chg","
-devtype":"ai","stat":3,"ts":1544609265325},"id":1}
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "Al1544609170",
+    "idx": "s",
+    "info": "chg",
+    "devtype": "ai",
+    "cmdlist": true,
+    "ts": 1544609265325
+  },
+  "id": 1
+}
+```
+
+```json
+{
+  "type": "io",
+  "msg": {
+    "userid": "10001",
+    "agt": "A3EAAABtAEwQRzMoNjg5NA",
+    "me": "Al1544609170",
+    "idx": "s",
+    "info": "chg",
+    "devtype": "ai",
+    "stat": 3,
+    "ts": 1544609265325
+  },
+  "id": 1
+}
+```
 
 # elog场景定义举例:
 
@@ -3427,8 +4171,25 @@ elog字段定义:
 •obj = 设备ID,格式为"\${AGT}/me/ep/\${ME_ID}", lc = 防区ID,格式为"\${AGT}/me/lc"或"\${AGT}/me/lc/sub/\${area_id}"
 ,没有防区则为""
 
-示例：userid="7722454", agt="A3QAAABmAFAGRzczXXXXXX", idx="s", devtype="elog", ts=1675662554000, elog={cgy="alm", cls="
-TR", lv=3, info="0", obj="A3QAAABmAFAGRzczXXXXXX/me/ep/2722", lc="A3QAAABmAFAGRzczXXXXXX/me/lc"}
+示例：
+
+```json
+{
+  "userid": "7722454",
+  "agt": "A3QAAABmAFAGRzczXXXXXX",
+  "idx": "s",
+  "devtype": "elog",
+  "ts": 1675662554000,
+  "elog": {
+    "cgy": "alm",
+    "cls": "TR",
+    "lv": 3,
+    "info": "0",
+    "obj": "A3QAAABmAFAGRzczXXXXXX/me/ep/2722",
+    "lc": "A3QAAABmAFAGRzczXXXXXX/me/lc"
+  }
+}
+```
 
 # 撤防状态下,有安防设备事件产生
 
@@ -3645,8 +4406,6 @@ elog字段定义:
 示例：userid = "7722454", agt="A3QAAABmAFAGRzczXXXXXX", idx = "s", devtype = "elog", ts = 1675662554000, elog = {cgy="
 sys", cls = "errlock", lv = 0, info = "0", obj="", lc = "A3QAAABmAFAGRzczXXXXXX/me/ep/2765"}
 
-![](images/701230270831984a630a86f657693efbb9fbd319920e3d59c960b16e033c33de.jpg)
-
 # 8.智能应用用户API
 
 (此类接口有限开放，非企业级用户以及没用此需求的不建议使用)
@@ -3708,25 +4467,37 @@ BaseURL的选择：具体服务器地址可参照：附录2 服务代号及地�
 
 例如：
 
-https://api.ilifesmart.com/app/auth.Registeruser
+`https://api.ilifesmart.com/app/auth.Registeruser`
 
-# • 请求信息：
+# # • 请求信息：
 
-"id": 963,   
-"method":'"RegisterUser",   
-"system":{ "ver": "1.0", "lang":"en", "userid": "10001", "appkey":"APPkEy_xxxxxxxx", "time"： 1447650170, "sign":"
-SIGN_xxxxxxxx"   
-}，   
-"params": { "pwd":"password_xxx", "email":"d@d.com", "nick":"nickname_xxx"   
+```json
+{
+  "id": 963,
+  "method": "RegisterUser",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "10001",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447650170,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "pwd": "password_xxx",
+    "email": "d@d.com",
+    "nick": "nickname_xxx"
+  }
 }
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:RegisterUser,email:d@d.com,nick:nickname_xxx,pwd:password_xxx,time:1447650170,userid:10001,usertoken:10001,appkey:APPKEY_XXXXXXXX,apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -3774,24 +4545,33 @@ userid为USERID_XXXXXXXX，实际需要填写真实数据；
 usertoken为USERTOKEN_XXXXXXXX，实际需要填写真实数据；  
 sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
-• 请求地址：svrurl+PartialURL，例如：https://api.ilifesmart.com/app/auth.Unregisteruser
+• 请求地址：svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/auth.Unregisteruser`
 
-# ● 请求信息：
+# # • 请求信息：
 
-"id": 963,   
-"method":'"unregisteruser",   
-"system": { "ver": "1.0", "lang":"en", "userid":"usERID_xxxxxxxx", "appkey"："APPKEY_xxxxxxxx", "time"： 1447650170, "
-sign":"SIGN_xxxxxxxx"   
-}，   
-"params": { }
+```json
+{
+  "id": 963,
+  "method": "UnregisterUser",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "USERID_xxxxxxxx",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447650170,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {}
+}
+```
 
-签名原始字符串：
+# 签名原始字符串：
 
 ```
 method:UnregisterUser,time:1447650170,userid:UsERID_xxxxxxxx,usertoken:UsERToKEN_xxxxxxxx, appkey:APPKEY_xxxxxxxx,apptoken:APPTOKEN_XXXXXXXX
 ```
 
-# • 回复信息：
+# # • 回复信息：
 
 ```json
 {
@@ -3934,13 +4714,13 @@ method:UnregisterUser,time:1447650170,userid:UsERID_xxxxxxxx,usertoken:UsERToKEN
 
 # 附录2服务代号及地址对应表
 
-| Service Type | svrrgnid | URL                                 |
-|:-------------|:---------|:------------------------------------|
-| OpenAPI URL  | GS       | https://api.ilifesmart.com/app/     |
-| OpenAPI URL  | CNO      | https://api.cn0.ilifesmart.com/app/ |
-| OpenAPI URL  | VIP1     | https://api.cn1.ilifesmart.com/app/ |
-| OpenAPI URL  | CN2      | https://api.cn2.ilifesmart.com/app/ |
-| OpenAPI URL  | AME      | https://api.us.ilifesmart.com/app/  |
-| OpenAPI URL  | EUROPE   | https://api.eur.ilifesmart.com/app/ |
-| OpenAPI URL  | JAP      | https://api.jp.ilifesmart.com/app/  |
-| OpenAPI URL  | APZ      | https://api.apz.ilifesmart.com/app/ |
+| Service Type | svrrgnid | URL                                   |
+|:-------------|:---------|:--------------------------------------|
+| OpenAPI URL  | GS       | `https://api.ilifesmart.com/app/`     |
+| OpenAPI URL  | CNO      | `https://api.cn0.ilifesmart.com/app/` |
+| OpenAPI URL  | VIP1     | `https://api.cn1.ilifesmart.com/app/` |
+| OpenAPI URL  | CN2      | `https://api.cn2.ilifesmart.com/app/` |
+| OpenAPI URL  | AME      | `https://api.us.ilifesmart.com/app/`  |
+| OpenAPI URL  | EUROPE   | `https://api.eur.ilifesmart.com/app/` |
+| OpenAPI URL  | JAP      | `https://api.jp.ilifesmart.com/app/`  |
+| OpenAPI URL  | APZ      | `https://api.apz.ilifesmart.com/app/` |
