@@ -42,7 +42,7 @@ from .const import (
     SMOKE_SENSOR_TYPES,
     RADAR_SENSOR_TYPES,
     DEFED_SENSOR_TYPES,
-    CUBE_BUTTON_TYPES,
+    BUTTON_SWITCH_TYPES,
     CLIMATE_TYPES,
 )
 from .entity import LifeSmartEntity
@@ -128,7 +128,7 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         self._attrs = self._get_attributes()
 
         # 最后，处理瞬时按钮的特殊重置逻辑
-        if self.devtype in CUBE_BUTTON_TYPES and is_currently_on:
+        if self.devtype in BUTTON_SWITCH_TYPES and is_currently_on:
             # 更新事件相关的属性
             val = data.get("val", 0)
             event_map = {1: "single_click", 2: "double_click", 255: "long_press"}
@@ -308,7 +308,7 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             return {"conductivity_level": val, "water_detected": val != 0}
 
         # 按钮开关类型初始化事件属性
-        if device_type in CUBE_BUTTON_TYPES:
+        if device_type in BUTTON_SWITCH_TYPES:
             return {"last_event": None, "last_event_time": None}
 
         # 为温控阀门的告警传感器添加详细属性
