@@ -38,8 +38,9 @@ from .const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     # --- 设备类型常量导入 ---
+    BASIC_ENV_SENSOR_TYPES,
+    AIR_QUALITY_SENSOR_TYPES,
     EV_SENSOR_TYPES,
-    ENVIRONMENT_SENSOR_TYPES,
     GAS_SENSOR_TYPES,
     NOISE_SENSOR_TYPES,
     POWER_METER_PLUG_TYPES,
@@ -171,12 +172,16 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         if sub_key == "V":
             return SensorDeviceClass.VOLTAGE
 
-        # TVOC 传感器的设备
-        if device_type in ENVIRONMENT_SENSOR_TYPES:
+        # 空气质量传感器的设备
+        if device_type in AIR_QUALITY_SENSOR_TYPES:
             if device_type == "SL_SC_CQ":
-                return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+                if sub_key == "P4":
+                    return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+                if sub_key == "P3":
+                    return SensorDeviceClass.CO2
             if device_type == "SL_SC_CA":
-                return SensorDeviceClass.CO2
+                if sub_key == "P3":
+                    return SensorDeviceClass.CO2
             if device_type == "SL_SC_CH":
                 return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS  # 甲醛也属于VOC
 
@@ -217,21 +222,23 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         if device_type in SMOKE_SENSOR_TYPES and sub_key == "P2":
             return SensorDeviceClass.BATTERY
 
-        # 环境感应器（EV系列）
-        if device_type in EV_SENSOR_TYPES:
+        # 基础环境感应器 (SL_SC_THL等)
+        if device_type in BASIC_ENV_SENSOR_TYPES:
             if sub_key == "T":
                 return SensorDeviceClass.TEMPERATURE
             if sub_key == "H":
-                return SensorDeviceClass.HUMIDITY
+                return SensorDeviceClass.HUMIDITY  
             if sub_key == "V":
                 return SensorDeviceClass.VOLTAGE
             if sub_key == "Z":
                 return SensorDeviceClass.ILLUMINANCE
-            if device_type in ENVIRONMENT_SENSOR_TYPES and device_type != "SL_SC_CH":
-                if sub_key == "P1":
-                    return SensorDeviceClass.TEMPERATURE
-                if sub_key == "P2":
-                    return SensorDeviceClass.HUMIDITY
+
+        # 空气质量传感器 (温湿度数据用于环境补偿)
+        if device_type in AIR_QUALITY_SENSOR_TYPES and device_type != "SL_SC_CH":
+            if sub_key == "P1":
+                return SensorDeviceClass.TEMPERATURE
+            if sub_key == "P2":
+                return SensorDeviceClass.HUMIDITY
 
         # 插座开关等电量传感器
         if (device_type in SUPPORTED_SWITCH_TYPES and sub_key == "P4") or (
