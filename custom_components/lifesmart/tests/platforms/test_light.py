@@ -39,6 +39,7 @@ from ..utils.factories import create_devices_by_category
 from ..utils.helpers import (
     get_entity_unique_id,
     assert_platform_entity_count_matches_devices,
+    find_test_device,
 )
 
 
@@ -69,11 +70,11 @@ class TestLightSetup:
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ) -> None:
         """测试从共享 fixtures 成功设置所有灯光实体类型。"""
-        # 使用自动化验证替代硬编码数量检查
-        devices_list = create_devices_by_category(
+        # 使用工厂函数创建灯光设备
+        mock_lifesmart_devices = create_devices_by_category(
             ["light_basic", "light_dimmer", "light_rgb", "light_rgbw"]
         )
-        assert_platform_entity_count_matches_devices(hass, LIGHT_DOMAIN, devices_list)
+        assert_platform_entity_count_matches_devices(hass, LIGHT_DOMAIN, mock_lifesmart_devices)
 
         # 验证所有预期的灯光实体都已创建（基于真实的工厂数据）
         assert (
@@ -113,6 +114,13 @@ class TestLifeSmartBrightnessLight:
     DEVICE_ME = "light_bright"
     HUB_ID = "hub_light"
     SUB_KEY = "P1"
+
+    @pytest.fixture
+    def device(self):
+        """提供当前测试类的设备字典。"""
+        # 使用工厂函数创建亮度灯设备
+        devices = create_devices_by_category(['light_basic'])
+        return find_test_device(devices, self.DEVICE_ME)
 
     @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):

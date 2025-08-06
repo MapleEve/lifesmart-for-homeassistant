@@ -103,25 +103,7 @@ def mock_config_data_fixture():
     return create_mock_config_data()
 
 
-# --- 统一的模拟设备列表 ---
-@pytest.fixture(name="mock_lifesmart_devices")
-def mock_lifesmart_devices_fixture():
-    """
-    一个全面的模拟设备列表，覆盖所有平台的测试需求。
-
-    这个 Fixture 是许多集成测试的核心。它提供了一个包含各种设备类型
-    （开关、灯、传感器、温控器等）的列表，模拟了一个真实用户的完整家庭环境。
-
-    用途:
-    - 用于 `setup_integration` Fixture，以在 Home Assistant 中创建所有这些设备对应的实体。
-    - 用于测试平台级别的功能，例如，确保 `climate` 平台在初始化时不会错误地创建 `switch` 实体。
-    - 用于测试设备排除逻辑。
-    """
-    from .utils.factories import create_mock_lifesmart_devices
-
-    return create_mock_lifesmart_devices()
-
-
+# --- Mock Hub 和客户端配置 ---
 @pytest.fixture
 def mock_light_devices_only():
     """
@@ -429,7 +411,6 @@ async def setup_integration(
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
     mock_hub_class: MagicMock,
-    mock_lifesmart_devices: list,
 ):
     """
     一个统一的 fixture，用于完整地设置和加载 LifeSmart 集成及其所有平台。
@@ -443,6 +424,13 @@ async def setup_integration(
     6. 在测试结束后，自动执行卸载流程，并验证卸载是否成功。
     """
     mock_config_entry.add_to_hass(hass)
+
+    # 使用工厂函数创建通用的测试设备列表
+    from .utils.factories import create_devices_by_category
+    mock_lifesmart_devices = create_devices_by_category([
+        'switch_basic', 'light_basic', 'sensor_env', 'climate_fancoil', 
+        'cover_dooya', 'binary_sensor_motion'
+    ])
 
     # 使用工厂函数创建mock hub实例并配置排除规则
     hub_instance = create_mock_hub(mock_lifesmart_devices, mock_client)
