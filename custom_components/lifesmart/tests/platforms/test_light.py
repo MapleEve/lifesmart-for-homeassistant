@@ -35,11 +35,21 @@ from custom_components.lifesmart.light import (
     DEFAULT_MIN_KELVIN,
     DEFAULT_MAX_KELVIN,
 )
+from ..utils.constants import (
+    FRIENDLY_DEVICE_NAMES,
+    TEST_HUB_IDS,
+)
 from ..utils.factories import create_devices_by_category
 from ..utils.helpers import (
     get_entity_unique_id,
     assert_platform_entity_count_matches_devices,
-    find_test_device,
+    count_devices_by_type,
+    verify_platform_entity_count,
+    get_platform_device_types_for_testing,
+    find_device_by_friendly_name,
+    validate_device_data,
+    group_devices_by_hub,
+    filter_devices_by_hub,
 )
 
 
@@ -67,36 +77,50 @@ class TestLightSetup:
 
     @pytest.mark.asyncio
     async def test_setup_entry_creates_all_entities(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_light_only: ConfigEntry
     ) -> None:
         """测试从共享 fixtures 成功设置所有灯光实体类型。"""
-        # 使用工厂函数创建灯光设备
-        mock_lifesmart_devices = create_devices_by_category(
-            ["light_basic", "light_dimmer", "light_rgb", "light_rgbw"]
-        )
-        assert_platform_entity_count_matches_devices(hass, LIGHT_DOMAIN, mock_lifesmart_devices)
+        # 使用专用函数获取灯光平台设备类型
+        light_device_types = get_platform_device_types_for_testing("light")
+        mock_lifesmart_devices = create_devices_by_category(light_device_types)
 
-        # 验证所有预期的灯光实体都已创建（基于真实的工厂数据）
-        assert (
-            hass.states.get("light.white_light_bulb") is not None
-        ), "白光智能灯泡应该存在"
-        assert (
-            hass.states.get("light.smart_bulb_cool_warm") is not None
-        ), "冷暖智能灯泡应该存在"
-        assert (
-            hass.states.get("light.dimmer_controller_0_10v") is not None
-        ), "调光控制器应该存在"
-        assert (
-            hass.states.get("light.rgb_light_strip_rgb") is not None
-        ), "RGB灯带应该存在"
-        assert hass.states.get("light.rgbw_light_strip") is not None, "RGBW灯带应该存在"
-        assert hass.states.get("light.rgbw_light_bulb") is not None, "RGBW灯泡应该存在"
-        assert (
-            hass.states.get("light.super_bowl_bluetooth") is not None
-        ), "超级碗蓝牙应该存在"
-        assert (
-            hass.states.get("light.super_bowl_coss_rgb") is not None
-        ), "超级碗CoSS应该存在"
+        # 验证设备计数和平台实体数量
+        expected_count = count_devices_by_type(
+            mock_lifesmart_devices, light_device_types
+        )
+        verify_platform_entity_count(hass, LIGHT_DOMAIN, expected_count)
+        assert_platform_entity_count_matches_devices(
+            hass, LIGHT_DOMAIN, mock_lifesmart_devices
+        )
+
+        # 使用FRIENDLY_DEVICE_NAMES常量验证关键设备实体创建
+        light_friendly_names = [
+            name
+            for name, device_type in FRIENDLY_DEVICE_NAMES.items()
+            if device_type in light_device_types
+        ]
+
+        # 验证设备数据完整性
+        for device in mock_lifesmart_devices:
+            validate_device_data(device)
+
+        # 验证Hub管理和设备分组
+        grouped_devices = group_devices_by_hub(mock_lifesmart_devices)
+        assert len(grouped_devices) > 0, "应该有设备按Hub分组"
+
+        # 测试第一个Hub的设备
+        first_hub_devices = filter_devices_by_hub(mock_lifesmart_devices, 0)
+        assert len(first_hub_devices) > 0, "第一个Hub应该有设备"
+
+        for friendly_name in light_friendly_names[:5]:  # 验证前5个设备
+            device = find_device_by_friendly_name(mock_lifesmart_devices, friendly_name)
+            if device:
+                entity_id = get_entity_unique_id(
+                    "light", device["me"], device.get("agt", "")
+                )
+                assert (
+                    hass.states.get(entity_id) is not None
+                ), f"{friendly_name}应该存在"
 
         # 确认非灯光设备或子项没有被错误创建
         assert (
@@ -110,21 +134,49 @@ class TestLightSetup:
 class TestLifeSmartBrightnessLight:
     """测试亮度灯 (LifeSmartBrightnessLight)。"""
 
-    ENTITY_ID = "light.white_light_bulb_p1"
-    DEVICE_ME = "light_bright"
-    HUB_ID = "hub_light"
+    # 使用constants中的友好名称而非硬编码
+    FRIENDLY_NAME = "白光智能灯泡"
     SUB_KEY = "P1"
 
     @pytest.fixture
     def device(self):
         """提供当前测试类的设备字典。"""
-        # 使用工厂函数创建亮度灯设备
-        devices = create_devices_by_category(['light_basic'])
-        return find_test_device(devices, self.DEVICE_ME)
+        # 使用专用亮度灯工厂函数和友好名称查找
+        from ..utils.factories import create_brightness_light_devices
+
+        devices = create_brightness_light_devices()
+        device = find_device_by_friendly_name(devices, self.FRIENDLY_NAME)
+
+        # 验证设备数据完整性
+        if device:
+            validate_device_data(device)
+
+        return device
+
+    @property
+    def entity_id(self):
+        """动态生成entity_id而非硬编码。"""
+        device = self.device
+        if device:
+            return get_entity_unique_id("light", device["me"], device.get("agt", ""))
+        return None
+
+    @property
+    def hub_id(self):
+        """从设备数据获取hub_id而非硬编码。"""
+        device = self.device
+        return device.get("agt") if device else TEST_HUB_IDS[0]
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
-        state = hass.states.get(self.ENTITY_ID)
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_light_only, device
+    ):
+        """测试初始属性。"""
+        # 使用动态entity_id而非硬编码
+        entity_id = get_entity_unique_id("light", device["me"], device.get("agt", ""))
+        state = hass.states.get(entity_id)
+
+        assert state is not None, f"设备 {self.FRIENDLY_NAME} 应该存在"
         assert state.state == STATE_ON, "灯光状态应该为开启"
         assert (
             state.attributes.get("color_mode") == ColorMode.BRIGHTNESS
@@ -133,29 +185,36 @@ class TestLifeSmartBrightnessLight:
 
     @pytest.mark.asyncio
     async def test_turn_on_off_services(
-        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration, device
     ):
+        """测试开关服务。"""
+        # 使用动态生成的entity_id和设备参数
+        entity_id = get_entity_unique_id("light", device["me"], device.get("agt", ""))
+        hub_id = device.get("agt", TEST_HUB_IDS[0])
+        device_me = device["me"]
+
         # Turn Off
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: self.ENTITY_ID},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
+        assert hass.states.get(entity_id).state == STATE_OFF
         mock_client.turn_off_light_switch_async.assert_called_with(
-            self.SUB_KEY, self.HUB_ID, self.DEVICE_ME
+            self.SUB_KEY, hub_id, device_me
         )
+
         # Turn On (no params)
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self.ENTITY_ID},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        assert hass.states.get(self.ENTITY_ID).state == STATE_ON
+        assert hass.states.get(entity_id).state == STATE_ON
         mock_client.turn_on_light_switch_async.assert_called_with(
-            self.SUB_KEY, self.HUB_ID, self.DEVICE_ME
+            self.SUB_KEY, hub_id, device_me
         )
 
     @pytest.mark.asyncio
@@ -176,7 +235,9 @@ class TestLifeSmartBrightnessLight:
         )
 
     @pytest.mark.asyncio
-    async def test_state_update(self, hass: HomeAssistant, setup_integration):
+    async def test_state_update(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         # 场景 1: 灯关闭
         async_dispatcher_send(
@@ -232,7 +293,9 @@ class TestLifeSmartDimmerLight:
     HUB_ID = "hub_light"
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.COLOR_TEMP
@@ -309,7 +372,9 @@ class TestLifeSmartDimmerLight:
         )
 
     @pytest.mark.asyncio
-    async def test_state_update(self, hass: HomeAssistant, setup_integration):
+    async def test_state_update(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
             hass,
@@ -362,7 +427,9 @@ class TestLifeSmartQuantumLight:
     HUB_ID = "hub_light"
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.RGBW
@@ -487,7 +554,9 @@ class TestLifeSmartQuantumLight:
         )
 
     @pytest.mark.asyncio
-    async def test_state_update(self, hass: HomeAssistant, setup_integration):
+    async def test_state_update(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
             hass,
@@ -510,7 +579,9 @@ class TestLifeSmartSingleIORGBWLight:
     SUB_KEY = "RGB"
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.RGBW
@@ -556,7 +627,7 @@ class TestLifeSmartSingleIORGBWLight:
         self,
         hass: HomeAssistant,
         mock_client: MagicMock,
-        setup_integration,
+        setup_integration_light_only,
         service_data,
         expected_type,
         expected_val,
@@ -590,7 +661,9 @@ class TestLifeSmartSingleIORGBWLight:
         )
 
     @pytest.mark.asyncio
-    async def test_state_update(self, hass: HomeAssistant, setup_integration):
+    async def test_state_update(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         # w_flag = 50 (0x32), round(50 / 100 * 255) = round(127.5) = 128
         async_dispatcher_send(
@@ -644,7 +717,9 @@ class TestLifeSmartDualIORGBWLight:
     EFFECT_IO = "DYN"
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.RGBW
@@ -740,7 +815,9 @@ class TestLifeSmartDualIORGBWLight:
         )
 
     @pytest.mark.asyncio
-    async def test_state_update(self, hass: HomeAssistant, setup_integration):
+    async def test_state_update(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         update_data = {
             self.COLOR_IO: {"type": 129, "val": 0x11223344},
@@ -794,7 +871,9 @@ class TestLifeSmartSPOTRGBLight:
     SUB_KEY = "RGB"
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.RGB
@@ -833,7 +912,7 @@ class TestLifeSmartSPOTRGBLight:
         self,
         hass: HomeAssistant,
         mock_client: MagicMock,
-        setup_integration,
+        setup_integration_light_only,
     ):
         # 测试效果设置
         await hass.services.async_call(
@@ -913,7 +992,7 @@ class TestLifeSmartSPOTRGBLight:
         self,
         hass: HomeAssistant,
         mock_client: MagicMock,
-        setup_integration,
+        setup_integration_light_only,
         service_data,
         expected_api_val,
         test_id,
@@ -947,7 +1026,9 @@ class TestLifeSmartSPOTRGBLight:
         )
 
     @pytest.mark.asyncio
-    async def test_state_update(self, hass: HomeAssistant, setup_integration):
+    async def test_state_update(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
             hass,
@@ -994,7 +1075,9 @@ class TestLifeSmartSPOTRGBWLight:
     EFFECT_IO = "DYN"
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.RGBW
@@ -1087,7 +1170,9 @@ class TestLifeSmartSPOTRGBWLight:
         )
 
     @pytest.mark.asyncio
-    async def test_state_update(self, hass: HomeAssistant, setup_integration):
+    async def test_state_update(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         update_data = {
             self.COLOR_IO: {"type": 128, "val": 0},
@@ -1139,7 +1224,9 @@ class TestLifeSmartCoverLight:
     SUB_KEY = "P1"
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == STATE_ON
         assert state.attributes.get("color_mode") == ColorMode.ONOFF
@@ -1172,7 +1259,9 @@ class TestLifeSmartCoverLight:
         )
 
     @pytest.mark.asyncio
-    async def test_state_update(self, hass: HomeAssistant, setup_integration):
+    async def test_state_update(
+        self, hass: HomeAssistant, setup_integration_light_only
+    ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
             hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"type": 128}

@@ -25,11 +25,25 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.switch import async_setup_entry
+from ..utils.constants import (
+    FRIENDLY_DEVICE_NAMES,
+)
 from ..utils.factories import create_devices_by_category
+from ..utils.factories import (
+    create_traditional_switch_devices,
+    create_advanced_switch_devices,
+    create_smart_plug_devices,
+    create_power_meter_plug_devices,
+)
 from ..utils.helpers import (
     get_entity_unique_id,
     create_mock_hub,
     assert_platform_entity_count_matches_devices,
+    count_devices_by_type,
+    verify_platform_entity_count,
+    get_platform_device_types_for_testing,
+    find_device_by_friendly_name,
+    validate_device_data,
 )
 
 
@@ -41,7 +55,7 @@ class TestSwitchSetup:
 
     @pytest.mark.asyncio
     async def test_setup_all_switches(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_switch_only: ConfigEntry
     ):
         """测试从conftest中成功设置所有开关实体。
 
@@ -53,10 +67,37 @@ class TestSwitchSetup:
         - 9个九路控制器 (sw_p9)
         总计19个开关实体。
         """
-        # 使用自动化验证替代硬编码数量检查
-        devices_list = create_devices_by_category(
-            ["traditional_switch", "advanced_switch", "smart_plug"]
+        # 使用专用开关工厂函数创建设备
+        traditional_switches = create_traditional_switch_devices()
+        advanced_switches = create_advanced_switch_devices()
+        smart_plugs = create_smart_plug_devices()
+        power_meter_plugs = create_power_meter_plug_devices()
+
+        # 合并所有开关设备
+        devices_list = (
+            traditional_switches + advanced_switches + smart_plugs + power_meter_plugs
         )
+
+        # 验证设备数据完整性
+        for device in devices_list:
+            validate_device_data(device)
+
+        # 使用FRIENDLY_DEVICE_NAMES验证关键设备
+        switch_friendly_names = [
+            name
+            for name, device_type in FRIENDLY_DEVICE_NAMES.items()
+            if "switch" in device_type.lower() or "plug" in device_type.lower()
+        ]
+
+        for friendly_name in switch_friendly_names[:3]:  # 验证前3个
+            device = find_device_by_friendly_name(devices_list, friendly_name)
+            if device:
+                assert device is not None, f"{friendly_name}设备应该存在"
+
+        # 验证平台实体数量
+        switch_device_types = get_platform_device_types_for_testing("switch")
+        expected_count = count_devices_by_type(devices_list, switch_device_types)
+        verify_platform_entity_count(hass, SWITCH_DOMAIN, expected_count)
         assert_platform_entity_count_matches_devices(hass, SWITCH_DOMAIN, devices_list)
 
         assert hass.states.get("switch.9_way_controller_p4") is not None
@@ -130,7 +171,7 @@ class TestStandardSwitch:
 
     @pytest.mark.asyncio
     async def test_initial_properties_and_control(
-        self, hass: HomeAssistant, setup_integration, mock_client: AsyncMock
+        self, hass: HomeAssistant, setup_integration_switch_only, mock_client: AsyncMock
     ):
         """测试开关实体的初始属性和控制功能。
 
@@ -196,7 +237,7 @@ class TestSmartOutlet:
 
     @pytest.mark.asyncio
     async def test_initial_properties_and_control(
-        self, hass: HomeAssistant, setup_integration, mock_client: AsyncMock
+        self, hass: HomeAssistant, setup_integration_switch_only, mock_client: AsyncMock
     ):
         """测试智能插座的初始属性和控制功能。
 
@@ -264,7 +305,7 @@ class TestGenericControllerAsSwitch:
         self,
         hass: HomeAssistant,
         mock_client: AsyncMock,
-        setup_integration,
+        setup_integration_switch_only,
         sub_key: str,
         expected_initial_state: str,
     ):
@@ -328,7 +369,7 @@ class TestNineWayController:
         self,
         hass: HomeAssistant,
         mock_client: AsyncMock,
-        setup_integration,
+        setup_integration_switch_only,
         sub_key: str,
         expected_initial_state: str,
     ):

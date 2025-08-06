@@ -53,7 +53,7 @@ class TestCoverSetup:
 
     @pytest.mark.asyncio
     async def test_setup_entry_creates_all_entities(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_cover_only: ConfigEntry
     ):
         """
         测试平台设置是否为所有支持的窗帘设备（包括通用控制器）创建了实体。
@@ -84,7 +84,7 @@ class TestCoverSetup:
         self,
         hass: HomeAssistant,
         mock_client,
-        setup_integration,
+        setup_integration_cover_only,
     ):
         """
         边界测试：验证非窗帘模式的通用控制器在重载后不再作为 cover 实体活动。
@@ -108,7 +108,9 @@ class TestCoverSetup:
             mock_hub_instance = create_mock_hub(mock_lifesmart_devices, mock_client)
             MockHubClass.return_value = mock_hub_instance
 
-            result = await hass.config_entries.async_reload(setup_integration.entry_id)
+            result = await hass.config_entries.async_reload(
+                setup_integration_cover_only.entry_id
+            )
             assert result, "应该成功设置控制器窗帘使用通用控制器模式"
             await hass.async_block_till_done()
 
@@ -145,7 +147,9 @@ class TestPositionalCover:
         return find_test_device(devices, self.DEVICE_ME)
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_cover_only
+    ):
         """测试定位窗帘的初始属性。"""
         state = hass.states.get(self.ENTITY_ID)
         assert state is not None
@@ -174,7 +178,7 @@ class TestPositionalCover:
         self,
         hass: HomeAssistant,
         mock_client: MagicMock,
-        setup_integration,
+        setup_integration_cover_only,
         service,
         optimistic_state,
         client_method,
@@ -203,7 +207,7 @@ class TestPositionalCover:
 
     @pytest.mark.asyncio
     async def test_set_position_service(
-        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration_cover_only
     ):
         """测试设置位置服务及其乐观更新。"""
         # 从100%位置设置到60%，应触发 'closing' 状态
@@ -240,7 +244,7 @@ class TestPositionalCover:
     async def test_state_update_from_dispatcher(
         self,
         hass: HomeAssistant,
-        setup_integration,
+        setup_integration_cover_only,
         update_data,
         expected_pos,
         expected_state,
@@ -266,7 +270,9 @@ class TestNonPositionalCover:
     HUB_ID = "G9KGGGHmFK2WXzSUSpl7TG"
 
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
+    async def test_initial_properties(
+        self, hass: HomeAssistant, setup_integration_cover_only
+    ):
         """
         测试非定位窗帘的初始属性。
 
@@ -295,7 +301,7 @@ class TestNonPositionalCover:
     async def test_state_after_stop(
         self,
         hass: HomeAssistant,
-        setup_integration,
+        setup_integration_cover_only,
         start_service,
         stop_service,
         expected_final_state,
@@ -340,7 +346,7 @@ class TestNonPositionalCover:
 
     @pytest.mark.asyncio
     async def test_update_with_missing_data(
-        self, hass: HomeAssistant, setup_integration
+        self, hass: HomeAssistant, setup_integration_cover_only
     ):
         """边界测试：当 dispatcher 推送的数据不完整时，实体不应报错或状态错乱。"""
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)

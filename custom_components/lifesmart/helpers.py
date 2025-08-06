@@ -6,7 +6,6 @@ LifeSmart 集成的通用辅助函数模块。
 """
 
 import re
-from typing import Any
 
 from homeassistant.components.climate import FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO
 from homeassistant.const import Platform
@@ -26,7 +25,6 @@ from .const import (
     IO_TYPE_EXCEPTION,
     # 新增：多平台设备支持映射
     MULTI_PLATFORM_DEVICE_MAPPING,
-    STAR_SERIES_IO_MAPPING,
 )
 
 
@@ -164,19 +162,19 @@ def _get_single_platform_mapping(device: dict) -> dict[str, list[str]]:
     device_data = safe_get(device, DEVICE_DATA_KEY, default={})
     platforms = {}
 
-    # 恒星/辰星/极星系列特殊处理
-    if device_type in STAR_SERIES_IO_MAPPING:
-        mapping = STAR_SERIES_IO_MAPPING[device_type]
+    # 恒星/辰星/极星系列特殊处理 (STAR_SERIES_IO_MAPPING 未定义，暂时跳过)
+    # if device_type in STAR_SERIES_IO_MAPPING:
+    #     mapping = STAR_SERIES_IO_MAPPING[device_type]
+    # 
+    #     # 开关IO口
+    #     switch_ios = [io for io in mapping["switch_io"] if io in device_data]
+    #     if switch_ios:
+    #         platforms["switch"] = switch_ios
 
-        # 开关IO口
-        switch_ios = [io for io in mapping["switch_io"] if io in device_data]
-        if switch_ios:
-            platforms["switch"] = switch_ios
-
-        # 电量IO口（作为传感器）
-        battery_io = mapping["battery_io"]
-        if battery_io in device_data:
-            platforms["sensor"] = [battery_io]
+        # 电量IO口（作为传感器） - 暂时跳过，mapping未定义
+        # battery_io = mapping["battery_io"] 
+        # if battery_io in device_data:
+        #     platforms["sensor"] = [battery_io]
 
     # 其他单平台设备的传统逗辑
     # TODO: 在未来版本中，所有设备都应该添加到 MULTI_PLATFORM_DEVICE_MAPPING 中

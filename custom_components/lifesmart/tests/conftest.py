@@ -128,14 +128,25 @@ def mock_light_devices_only():
 @pytest.fixture
 def mock_sensor_devices_only():
     """
-    创建仅包含传感器设备的模拟数据列表。
+    创建仅包含数值传感器设备的模拟数据列表。
     使用create_devices_by_category来测试传感器分类功能。
     """
     from .utils.factories import create_devices_by_category
 
     return create_devices_by_category(
-        ["environment_sensor", "binary_sensor", "gas_sensor", "specialized_sensor"]
+        ["environment_sensor", "gas_sensor", "specialized_sensor"]
     )
+
+
+@pytest.fixture
+def mock_binary_sensor_devices_only():
+    """
+    创建仅包含二元传感器设备的模拟数据列表。
+    使用create_devices_by_category来专门测试binary_sensor平台功能。
+    """
+    from .utils.factories import create_devices_by_category
+
+    return create_devices_by_category(["binary_sensor"])
 
 
 @pytest.fixture
@@ -154,10 +165,13 @@ def mock_switch_devices_only():
     """
     创建仅包含开关设备的模拟数据列表。
     使用create_devices_by_category来优化开关平台测试的数据加载。
+    包含传统开关、高级开关和插座设备（插座在switch平台中）。
     """
     from .utils.factories import create_devices_by_category
 
-    return create_devices_by_category(["traditional_switch", "advanced_switch"])
+    return create_devices_by_category(
+        ["traditional_switch", "advanced_switch", "smart_plug", "power_meter_plug"]
+    )
 
 
 @pytest.fixture
@@ -169,17 +183,6 @@ def mock_cover_devices_only():
     from .utils.factories import create_devices_by_category
 
     return create_devices_by_category(["cover"])
-
-
-@pytest.fixture
-def mock_plug_devices_only():
-    """
-    创建仅包含插座设备的模拟数据列表。
-    使用create_devices_by_category来优化插座相关测试的数据加载。
-    """
-    from .utils.factories import create_devices_by_category
-
-    return create_devices_by_category(["smart_plug", "power_meter_plug"])
 
 
 @pytest.fixture(autouse=True)
@@ -405,66 +408,6 @@ def mock_hub_for_testing():
         yield mock_hub_setup, mock_get_devices, mock_get_client, mock_hub_unload
 
 
-@pytest.fixture
-async def setup_integration(
-    hass: HomeAssistant,
-    mock_config_entry: ConfigEntry,
-    mock_client: AsyncMock,
-    mock_hub_class: MagicMock,
-):
-    """
-    一个统一的 fixture，用于完整地设置和加载 LifeSmart 集成及其所有平台。
-
-    这是绝大多数集成测试的入口点。它执行了以下操作：
-    1. 将模拟的 `ConfigEntry` 添加到 Home Assistant。
-    2. Patch 掉真实的 Hub 创建过程，注入模拟数据。
-    3. 触发 `async_setup` 流程。
-    4. 验证集成是否成功加载。
-    5. 将控制权交给测试用例。
-    6. 在测试结束后，自动执行卸载流程，并验证卸载是否成功。
-    """
-    mock_config_entry.add_to_hass(hass)
-
-    # 使用工厂函数创建通用的测试设备列表
-    from .utils.factories import create_devices_by_category
-    mock_lifesmart_devices = create_devices_by_category([
-        'switch_basic', 'light_basic', 'sensor_env', 'climate_fancoil', 
-        'cover_dooya', 'binary_sensor_motion'
-    ])
-
-    # 使用工厂函数创建mock hub实例并配置排除规则
-    hub_instance = create_mock_hub(mock_lifesmart_devices, mock_client)
-    hub_instance.get_exclude_config.return_value = (
-        {"excluded_device"},
-        {"excluded_hub"},
-    )
-
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # 验证集成已成功加载
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-
-    # 验证 Hub 被正确设置
-    mock_hub_class.assert_called_once()
-    hub_instance.async_setup.assert_called_once()
-
-    # 将控制权交给测试用例
-    yield mock_config_entry
-
-    # --- 测试结束后的清理 ---
-    # 卸载集成
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # 验证集成已成功卸载
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
-
-
 # ============================================================================
 # === 平台专用优化设置 Fixtures ===
 #
@@ -596,6 +539,45 @@ async def setup_integration_sensor_only(
 
 
 @pytest.fixture
+async def setup_integration_binary_sensor_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_binary_sensor_devices_only: list,
+):
+    """
+    专用的 setup fixture，仅加载二元传感器设备进行binary_sensor平台测试。
+
+    这个优化版本只加载二元传感器相关设备，减少测试加载开销，
+    提高binary_sensor平台测试的执行效率。
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # 使用工厂函数创建mock hub实例，只包含二元传感器设备
+    hub_instance = create_mock_hub(mock_binary_sensor_devices_only, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
+    with patch(
+        "custom_components.lifesmart.LifeSmartHub",
+        return_value=hub_instance,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    mock_hub_class.assert_called_once()
+    hub_instance.async_setup.assert_called_once()
+
+    yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+@pytest.fixture
 async def setup_integration_switch_only(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
@@ -674,177 +656,6 @@ async def setup_integration_cover_only(
 
 
 # ============================================================================
-# === 为隔离测试专用的原子设备 Fixtures ===
-#
-# 设计说明:
-# 以下 Fixtures 是对您现有 `mock_lifesmart_devices` 的补充，而非替代。
-# 它们提供了独立的、可按需注入的“原材料”，专门用于对特定设备进行深度、
-# 隔离的测试，确保测试的纯净性，不受其他设备干扰。
-#
-# 这种分离的设计，使得测试的意图更加清晰，维护也更加方便。
-# ============================================================================
-
-
-@pytest.fixture
-def mock_device_climate_fancoil() -> dict:
-    """
-    提供一个标准的风机盘管设备 (SL_CP_AIR) 的模拟数据。
-
-    此设备的状态由一个位掩码 (bitmask) `P1` 控制，这是测试的重点。
-    - 初始状态: 制热模式 (Heat) + 低风速 (Low)。
-      - `val` 的第 13 位为 1: 代表制热模式 (HEAT)。
-      - `val` 的第 15 位为 1: 代表低风速 (FAN_LOW)。
-      - 计算: `(1 << 15) | (1 << 13)`
-    - 初始温度:
-      - `P4`: 目标温度 (target_temperature) 为 24.0。
-      - `P5`: 当前温度 (current_temperature) 为 26.0。
-    """
-    from .utils.factories import create_mock_device_climate_fancoil
-
-    return create_mock_device_climate_fancoil()
-
-
-@pytest.fixture
-def mock_device_climate_floor_heat() -> dict:
-    """
-    提供一个标准的地暖设备 (SL_CP_DN) 的模拟数据。
-
-    - 初始状态: 自动模式 (Auto)。
-      - `P1` 的 `val` 为 `2147483648` (0x80000000)，根据协议，这代表自动模式。
-    - 初始温度:
-      - `P3`: 目标温度 (target_temperature) 为 25.0。
-      - `P4`: 当前温度 (current_temperature) 为 22.5。
-    """
-    return {
-        "agt": "hub_climate",
-        "me": "climate_floor_heat",
-        "devtype": "SL_CP_DN",
-        "name": "Floor Heating",
-        "data": {
-            "P1": {"type": 1, "val": 2147483648},
-            "P3": {"v": 25.0},
-            "P4": {"v": 22.5},
-        },
-    }
-
-
-@pytest.fixture
-def mock_device_climate_nature_fancoil() -> dict:
-    """
-    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制"风机盘管"。
-
-    SL_NATURE 面板是一个多功能设备，其具体功能由内部数据点决定。
-    - `P5` 的 `val` 为 3: 表示此面板工作在"温控器"模式下。
-    - `P6` 的 `val` 为 `(4 << 6)`: 这是最关键的配置，定义了其控制的设备类型为
-      "风机盘管(双阀)"，这将决定实体支持的 `hvac_modes` 和 `fan_modes`。
-    """
-    return {
-        "agt": "hub_climate",
-        "me": "climate_nature_thermo",
-        "devtype": "SL_NATURE",
-        "name": "Nature Panel Thermo",
-        "data": {
-            "P1": {"type": 129, "val": 1},
-            "P4": {"v": 28.0},
-            "P5": {"val": 3},
-            "P6": {"val": (4 << 6)},
-            "P7": {"val": 1},
-            "P8": {"v": 26.0},
-            "P10": {"val": 15},
-        },
-    }
-
-
-@pytest.fixture
-def mock_device_climate_nature_freshair() -> dict:
-    """
-    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制"新风"。
-
-    - `P6` 的 `val` 为 `(0 << 6)`: 定义了其控制的设备类型为"新风"。
-    """
-    return {
-        "agt": "hub_climate",
-        "me": "climate_nature_thermo",
-        "devtype": "SL_NATURE",
-        "name": "Nature Panel Thermo",
-        "data": {
-            "P1": {"type": 129, "val": 1},
-            "P4": {"v": 28.0},
-            "P5": {"val": 3},
-            "P6": {"val": (0 << 6)},
-            "P7": {"val": 1},
-            "P8": {"v": 26.0},
-            "P10": {"val": 15},
-        },
-    }
-
-
-@pytest.fixture
-def mock_device_climate_nature_floorheat() -> dict:
-    """
-    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制"水地暖"。
-
-    - `P6` 的 `val` 为 `(2 << 6)`: 定义了其控制的设备类型为"水地暖"。
-    """
-    return {
-        "agt": "hub_climate",
-        "me": "climate_nature_thermo",
-        "devtype": "SL_NATURE",
-        "name": "Nature Panel Thermo",
-        "data": {
-            "P1": {"type": 129, "val": 1},
-            "P4": {"v": 28.0},
-            "P5": {"val": 3},
-            "P6": {"val": (2 << 6)},
-            "P7": {"val": 1},
-            "P8": {"v": 26.0},
-            "P10": {"val": 15},
-        },
-    }
-
-
-@pytest.fixture
-def mock_device_spot_rgb_light() -> dict:
-    """
-    提供一个 SPOT RGB 灯 (SL_SPOT) 的模拟数据。
-
-    - 初始状态: 开，颜色为 (255, 128, 64)。
-      - `val` 为 `0xFF8040`。
-    """
-    from .utils.factories import create_mock_device_spot_rgb_light
-
-    return create_mock_device_spot_rgb_light()
-
-
-@pytest.fixture
-def mock_device_dual_io_rgbw_light() -> dict:
-    """
-    提供一个双 IO 口 RGBW 灯 (SL_CT_RGBW) 的模拟数据。
-
-    - 初始状态: 开，但颜色和效果均未激活。
-      - `RGBW` 口为开 (`type: 129`)，但值为 0。
-      - `DYN` 口为关 (`type: 128`)。
-    """
-    from .utils.factories import create_mock_device_dual_io_rgbw_light
-
-    return create_mock_device_dual_io_rgbw_light()
-
-
-@pytest.fixture
-def mock_device_single_io_rgbw_light() -> dict:
-    """
-    提供一个单 IO 口 RGB 灯 (SL_SC_RGB) 的模拟数据。
-
-    此 Fixture 用于对该特定设备类型的协议进行精确测试。
-    - 初始状态: 开，颜色为 (1, 2, 3)，亮度为 100%。
-      - `val` 为 `0x64010203` (亮度100, R=1, G=2, B=3)。
-    """
-    from .utils.factories import create_mock_device_single_io_rgb_light
-
-    return create_mock_device_single_io_rgb_light()
-
-
-# ============================================================================
 # === 为隔离测试专用的 Setup Fixtures ===
 # ============================================================================
 
@@ -916,7 +727,6 @@ async def setup_integration_single_io_rgbw_only(
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
     mock_hub_class: MagicMock,
-    mock_device_single_io_rgbw_light: dict,
 ):
     """
     一个专用的 setup fixture，只加载单 IO 口 RGB 灯。
@@ -924,10 +734,12 @@ async def setup_integration_single_io_rgbw_only(
     此 fixture 创建一个只包含单个 SL_SC_RGB 灯的纯净测试环境，
     用于对该设备的服务调用与设备协议的精确匹配进行测试。
     """
+    from .utils.factories import create_mock_device_single_io_rgb_light
+
     mock_config_entry.add_to_hass(hass)
 
-    # 使用工厂函数创建mock hub实例
-    devices = [mock_device_single_io_rgbw_light]
+    # 使用专用的单IO RGB灯工厂函数创建设备
+    devices = [create_mock_device_single_io_rgb_light()]
     hub_instance = create_mock_hub(devices, mock_client)
 
     with patch(

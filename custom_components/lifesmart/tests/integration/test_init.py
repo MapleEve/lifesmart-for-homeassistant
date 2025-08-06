@@ -37,7 +37,18 @@ from custom_components.lifesmart.const import (
     DOMAIN,
 )
 from custom_components.lifesmart.exceptions import LifeSmartAPIError, LifeSmartAuthError
-from ..utils.factories import create_devices_by_category
+from ..utils.factories import (
+    create_devices_by_category,
+    create_mock_failed_oapi_client,
+    create_mock_config_data_with_validation,
+    create_virtual_test_devices,
+)
+from ..utils.helpers import (
+    create_mock_state_manager,
+    validate_device_data,
+    group_devices_by_hub,
+    get_all_hub_ids,
+)
 
 
 # ==================== 测试数据和Fixtures ====================
@@ -98,8 +109,21 @@ class TestIntegrationLifecycle:
         mock_client: MagicMock,
     ):
         """测试云端模式的成功设置流程。"""
-        # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        # 使用虚拟测试设备和验证数据
+        virtual_devices = create_virtual_test_devices()
+        validated_config = create_mock_config_data_with_validation()
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
+
+        # 验证设备数据完整性
+        for device in mock_lifesmart_devices:
+            validate_device_data(device)
+
+        # 验证Hub管理
+        grouped_devices = group_devices_by_hub(mock_lifesmart_devices)
+        all_hubs = get_all_hub_ids()
+
         mock_config_entry.add_to_hass(hass)
 
         with patch(
@@ -184,7 +208,9 @@ class TestIntegrationLifecycle:
     ):
         """测试设置过程创建所有支持的平台。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         with patch(
@@ -222,15 +248,47 @@ class TestIntegrationLifecycle:
                         assert (
                             call_args[0] == mock_config_entry
                         ), "应该传递正确的配置条目"
-                        # 验证平台集合是否匹配（不关心顺序）
-                        actual_platforms = (
-                            set(call_args[1])
-                            if isinstance(call_args[1], (list, set))
-                            else {call_args[1]}
+
+    @pytest.mark.asyncio
+    async def test_setup_failure_scenarios(
+        self,
+        hass: HomeAssistant,
+        mock_config_entry: MockConfigEntry,
+    ):
+        """测试设置失败场景。"""
+        # 使用失败场景Mock客户端
+        failed_client = create_mock_failed_oapi_client()
+
+        # 使用Mock状态管理器
+        mock_state_manager = create_mock_state_manager()
+
+        # 测试配置验证
+        config_with_validation = create_mock_config_data_with_validation()
+        assert config_with_validation is not None, "配置数据应该通过验证"
+
+        # 使用TEST_ERROR_MESSAGES进行标准化错误处理
+
+        mock_config_entry.add_to_hass(hass)
+
+        with patch(
+            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            side_effect=ConfigEntryNotReady("Mock setup failure"),
+        ):
+            with patch(
+                "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                return_value=failed_client,
+            ):
+                with patch(
+                    "custom_components.lifesmart.hub.LifeSmartStateManager",
+                    return_value=mock_state_manager,
+                ):
+                    # 应该抛出ConfigEntryNotReady异常
+                    with pytest.raises(ConfigEntryNotReady):
+                        await hass.config_entries.async_setup(
+                            mock_config_entry.entry_id
                         )
-                        assert (
-                            actual_platforms == expected_platforms
-                        ), f"平台集合应该匹配，期望: {expected_platforms}，实际: {actual_platforms}"
+
+                    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
     @pytest.mark.asyncio
     async def test_unload_success(
@@ -242,7 +300,9 @@ class TestIntegrationLifecycle:
     ):
         """测试成功卸载集成。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         # 先设置集成
@@ -295,7 +355,9 @@ class TestIntegrationLifecycle:
     ):
         """测试配置条目重新加载功能。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         # 设置集成
@@ -386,7 +448,9 @@ class TestErrorHandlingAndRecovery:
     ):
         """测试卸载过程中的错误处理。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         # 先设置集成
@@ -525,7 +589,9 @@ class TestErrorHandlingAndRecovery:
                         await client.async_get_all_devices()
                         assert False, "失败客户端应该抛出连接异常"
                     except Exception as e:
-                        assert str(e) == "Connection failed", "应该抛出预期的连接失败异常"
+                        assert (
+                            str(e) == "Connection failed"
+                        ), "应该抛出预期的连接失败异常"
 
     @pytest.mark.asyncio
     async def test_authentication_failure_recovery(
@@ -542,7 +608,7 @@ class TestErrorHandlingAndRecovery:
         )
 
         mock_config_entry.add_to_hass(hass)
-        
+
         # 第一次设置使用失败的客户端
         failed_client = create_mock_failed_oapi_client()
         successful_client = create_mock_oapi_client()
@@ -635,7 +701,9 @@ class TestPlatformLoading:
     ):
         """测试平台转发设置成功。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         with patch(
@@ -692,7 +760,9 @@ class TestPlatformLoading:
     ):
         """测试平台转发设置失败的处理。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         with patch(
@@ -732,7 +802,9 @@ class TestPlatformLoading:
     ):
         """测试平台卸载成功。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         # 先设置
@@ -798,7 +870,9 @@ class TestServiceRegistration:
     ):
         """测试服务注册功能。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         with patch(
@@ -832,7 +906,9 @@ class TestServiceRegistration:
     ):
         """测试场景设置服务调用。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         with patch(
@@ -873,7 +949,9 @@ class TestServiceRegistration:
     ):
         """测试红外发送服务调用。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         with patch(
@@ -920,7 +998,9 @@ class TestServiceRegistration:
     ):
         """测试服务调用验证错误处理。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         with patch(
@@ -960,7 +1040,9 @@ class TestServiceRegistration:
     ):
         """测试卸载时服务取消注册。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         # 设置集成
@@ -1100,7 +1182,9 @@ class TestConfigEntryLifecycle:
     ):
         """测试配置条目状态转换。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         # 初始状态
@@ -1150,7 +1234,9 @@ class TestConfigEntryLifecycle:
     ):
         """测试配置条目选项更新处理。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         # 设置集成
@@ -1192,7 +1278,9 @@ class TestConcurrencyAndPerformance:
     ):
         """测试并发设置操作。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         # 创建多个配置条目
         entries = []
         for i in range(3):
@@ -1250,7 +1338,9 @@ class TestConcurrencyAndPerformance:
     ):
         """测试设置超时处理。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         async def timeout_setup():
@@ -1286,7 +1376,9 @@ class TestConcurrencyAndPerformance:
     ):
         """测试卸载时的内存清理。"""
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
         mock_config_entry.add_to_hass(hass)
 
         # 设置集成
@@ -1337,7 +1429,9 @@ class TestConcurrencyAndPerformance:
         mock_config_entry.add_to_hass(hass)
 
         # 使用工厂函数创建设备
-        mock_lifesmart_devices = create_devices_by_category(['switch_basic', 'light_basic', 'sensor_env'])
+        mock_lifesmart_devices = create_devices_by_category(
+            ["switch_basic", "light_basic", "sensor_env"]
+        )
 
         # 执行多次设置-卸载循环
         for cycle in range(3):

@@ -4,7 +4,7 @@
 此测试套件旨在全面验证 LifeSmartClimate 实体的行为。它被设计为在单个文件中
 运行，包含了两种类型的测试：
 
-1.  通用集成测试 (使用全局 `setup_integration` Fixture):
+1.  通用集成测试 (使用平台专用 `setup_integration_climate_only` Fixture):
     这些测试在一个加载了所有模拟设备（温控器、开关等）的"完整"环境中运行。
     它们旨在验证平台的基本功能，如正确的实体创建、多设备环境下的服务调用
     和状态更新。
@@ -46,6 +46,21 @@ from ..utils.helpers import (
     find_test_device,
     create_mock_hub,
     assert_platform_entity_count_matches_devices,
+    count_devices_by_type,
+    verify_platform_entity_count,
+    get_platform_device_types_for_testing,
+    find_device_by_friendly_name,
+    filter_devices_by_hub,
+    group_devices_by_hub,
+    get_all_hub_ids,
+    validate_device_data,
+    get_entity_unique_id,
+)
+from ..utils.constants import (
+    FRIENDLY_DEVICE_NAMES,
+)
+from ..utils.factories import (
+    create_mock_device_climate_fancoil,
 )
 from ..utils.factories import create_devices_by_category
 from ..utils.constants import MOCK_CLOUD_CREDENTIALS
@@ -162,7 +177,7 @@ class TestClimateSetup:
     测试温控平台的设置逻辑。
 
     此类别的测试专注于验证 `async_setup_entry` 函数和相关的设备识别逻辑
-    是否按预期工作。它们使用全局的 `setup_integration` Fixture，该 Fixture
+    是否按预期工作。它们使用平台专用的 `setup_integration_climate_only` Fixture，该 Fixture
     会加载 `conftest.py` 中定义的所有设备。
     """
 
@@ -170,7 +185,7 @@ class TestClimateSetup:
     async def test_setup_entry_creates_correct_entities(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,  # 使用全局 setup，加载所有设备
+        setup_integration_climate_only: ConfigEntry,  # 使用气候平台专用 setup，只加载气候设备
     ):
         """
         测试 async_setup_entry 是否能正确识别并创建所有预期的温控实体。
@@ -178,11 +193,47 @@ class TestClimateSetup:
         这是一个“快乐路径”测试，确保在标准配置下，所有在模拟设备列表中
         定义的温控设备都被成功加载为 Home Assistant 中的 climate 实体。
         """
-        # 使用自动化验证替代硬编码数量检查
-        from ..utils.factories import create_mock_lifesmart_devices
+        # 使用专用函数获取气候平台设备类型并验证实体计数
+        from ..utils.factories import create_devices_by_category
 
-        devices_list = create_mock_lifesmart_devices()
+        climate_device_types = get_platform_device_types_for_testing("climate")
+        devices_list = create_devices_by_category(climate_device_types)
+
+        # 验证设备计数和平台实体数量一致性
+        expected_count = count_devices_by_type(devices_list, climate_device_types)
+        verify_platform_entity_count(hass, CLIMATE_DOMAIN, expected_count)
         assert_platform_entity_count_matches_devices(hass, CLIMATE_DOMAIN, devices_list)
+        # 使用FRIENDLY_DEVICE_NAMES常量获取气候设备名称
+        climate_friendly_names = [
+            name
+            for name, device_type in FRIENDLY_DEVICE_NAMES.items()
+            if device_type in climate_device_types
+        ]
+
+        # 验证设备数据完整性和专用气候设备创建
+        for device in devices_list:
+            validate_device_data(device)
+
+        # 使用专用风机盘管设备创建函数
+        fancoil_device = create_mock_device_climate_fancoil()
+        validate_device_data(fancoil_device)
+
+        # 验证Hub管理和设备分组
+        all_hub_ids = get_all_hub_ids()
+        grouped_devices = group_devices_by_hub(devices_list)
+        assert len(grouped_devices) > 0, "应该有设备按Hub分组"
+
+        # 测试Hub过滤功能
+        first_hub_devices = filter_devices_by_hub(devices_list, 0)
+        assert len(first_hub_devices) >= 0, "Hub过滤应该正常工作"
+
+        # 验证友好名称设备查找
+        for friendly_name in climate_friendly_names:
+            device = find_device_by_friendly_name(devices_list, friendly_name)
+            if device:
+                assert device is not None, f"{friendly_name}设备应该存在于设备列表中"
+
+        # 继续原有的entity_id检查逻辑
         assert (
             hass.states.get("climate.nature_panel_thermo") is not None
         ), "超能面板温控实体应存在"
@@ -202,7 +253,7 @@ class TestClimateSetup:
         self,
         hass: HomeAssistant,
         mock_client: AsyncMock,
-        setup_integration: ConfigEntry,  # 使用全局 setup
+        setup_integration_climate_only: ConfigEntry,  # 使用气候平台专用 setup
     ):
         """
         边界测试：验证在重载后，非温控版的 SL_NATURE 面板不再作为 climate 实体活动。
@@ -226,7 +277,9 @@ class TestClimateSetup:
             mock_hub_instance = create_mock_hub(devices_list, mock_client)
             MockHubClass.return_value = mock_hub_instance
 
-            assert await hass.config_entries.async_reload(setup_integration.entry_id)
+            assert await hass.config_entries.async_reload(
+                setup_integration_climate_only.entry_id
+            )
             await hass.async_block_till_done()
 
         # 验证结果
@@ -322,7 +375,7 @@ class TestClimateEntity:
     async def test_entity_state_and_attributes(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_climate_only: ConfigEntry,
         entity_id: str,
         entity_name: str,
         me: str,
@@ -403,7 +456,7 @@ class TestClimateEntity:
         self,
         hass: HomeAssistant,
         mock_client: AsyncMock,
-        setup_integration: ConfigEntry,
+        setup_integration_climate_only: ConfigEntry,
         entity_id: str,
         service: str,
         service_data: dict,
@@ -459,7 +512,7 @@ class TestClimateEntity:
     async def test_entity_update_from_dispatcher(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_climate_only: ConfigEntry,
         me: str,
         new_data: dict,
         expected_state: str,

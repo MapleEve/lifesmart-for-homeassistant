@@ -37,10 +37,27 @@ from custom_components.lifesmart.const import *
 from custom_components.lifesmart.helpers import (
     generate_unique_id,
 )
+from ..utils.constants import (
+    SPECIALIZED_TEST_DEVICE_IDS,
+    TEST_HUB_IDS,
+)
 from ..utils.factories import create_devices_by_category
+from ..utils.factories import (
+    create_environment_sensor_devices,
+    create_gas_sensor_devices,
+    create_specialized_sensor_devices,
+    create_air_purifier_devices,
+)
 from ..utils.helpers import (
     find_test_device,
     assert_platform_entity_count_matches_devices,
+    count_devices_by_type,
+    verify_platform_entity_count,
+    get_platform_device_types_for_testing,
+    filter_devices_by_hub,
+    group_devices_by_hub,
+    get_all_hub_ids,
+    validate_device_data,
 )
 
 
@@ -51,23 +68,50 @@ class TestSensorSetup:
     async def test_setup_creates_correct_entities(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试传感器设置是否创建了正确的实体。"""
-        # 使用工厂函数创建传感器设备
-        mock_lifesmart_devices = create_devices_by_category(
-            [
-                "sensor_env",
-                "sensor_quality",
-                "sensor_power",
-                "sensor_battery",
-                "sensor_lock",
-            ]
+        # 使用专用传感器工厂函数创建设备
+        env_sensors = create_environment_sensor_devices()
+        gas_sensors = create_gas_sensor_devices()
+        specialized_sensors = create_specialized_sensor_devices()
+        air_purifier_sensors = create_air_purifier_devices()
+
+        # 合并所有传感器设备
+        mock_lifesmart_devices = (
+            env_sensors + gas_sensors + specialized_sensors + air_purifier_sensors
         )
 
-        # 使用自动化验证替代硬编码数量检查
+        # 验证所有设备数据完整性
+        for device in mock_lifesmart_devices:
+            validate_device_data(device)
+
+        # 验证SPECIALIZED_TEST_DEVICE_IDS的使用
+        for device_type, device_id in SPECIALIZED_TEST_DEVICE_IDS.items():
+            if "sensor" in device_type.lower():
+                device = find_test_device(mock_lifesmart_devices, device_id)
+                if device:
+                    assert device is not None, f"专用设备 {device_type} 应该存在"
+
+        # 验证Hub管理和设备分组
+        all_hubs = get_all_hub_ids()
+        grouped_devices = group_devices_by_hub(mock_lifesmart_devices)
+        assert len(grouped_devices) > 0, "应该有设备按Hub分组"
+
+        # 测试不同Hub的设备过滤
+        for hub_index in range(len(TEST_HUB_IDS)):
+            hub_devices = filter_devices_by_hub(mock_lifesmart_devices, hub_index)
+            # 每个Hub都可能有设备，也可能没有
+            assert isinstance(hub_devices, list), f"Hub {hub_index} 过滤结果应该是列表"
+
+        # 验证平台实体数量
         from homeassistant.const import DOMAIN as SENSOR_DOMAIN
 
+        sensor_device_types = get_platform_device_types_for_testing("sensor")
+        expected_count = count_devices_by_type(
+            mock_lifesmart_devices, sensor_device_types
+        )
+        verify_platform_entity_count(hass, SENSOR_DOMAIN, expected_count)
         assert_platform_entity_count_matches_devices(
             hass, SENSOR_DOMAIN, mock_lifesmart_devices
         )
@@ -103,7 +147,7 @@ class TestSensorSetup:
     async def test_setup_respects_exclusions(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试设置是否正确排除了配置中指定的设备。"""
         # 使用工厂函数创建传感器设备
@@ -223,7 +267,7 @@ class TestSensorEntity:
     async def test_sensor_properties_and_initial_state(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
         device_me,
         sub_key,
         expected_name_suffix,
@@ -265,7 +309,7 @@ class TestSensorEntity:
 
     @pytest.mark.asyncio
     async def test_sensor_boundary_and_invalid_data(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试传感器在边界条件和无效数据时的处理。"""
         # 零值应被正确处理
@@ -293,7 +337,7 @@ class TestSensorEntity:
 
     @pytest.mark.asyncio
     async def test_sensor_becomes_unavailable(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试传感器实体在设备消失时变为不可用状态。"""
         entity_id = "sensor.living_room_env_t"
@@ -304,8 +348,10 @@ class TestSensorEntity:
         ), "实体初始状态不应为不可用"
 
         # 模拟设备从API响应中消失
-        device_list = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+        device_list = hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ]
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id]["devices"] = [
             d for d in device_list if d.get(DEVICE_ID_KEY) != "sensor_env"
         ]
 
@@ -343,7 +389,7 @@ class TestSensorEntity:
     async def test_sensor_update_from_dispatcher(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
         entity_id,
         unique_id_suffix,
         initial_value,
@@ -386,7 +432,7 @@ class TestComplexSensorScenarios:
     async def test_update_with_ambiguous_val_key(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """验证对模糊'val'键的智能处理。"""
         entity_id = "sensor.living_room_env_t"
@@ -430,7 +476,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_device_class_determination_edge_cases(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试设备类别判断的边界情况。"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -476,7 +522,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_unit_determination_comprehensive(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试各种单位判断的完整覆盖。"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -522,7 +568,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_value_conversion_comprehensive(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试数值转换的完整覆盖。"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -600,7 +646,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_extra_attributes(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试传感器的额外属性功能。"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -653,7 +699,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_name_generation(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试传感器名称生成逻辑。"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -714,7 +760,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_error_handling_in_updates(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试传感器更新过程中的错误处理。"""
         entity_id = "sensor.living_room_env_t"
@@ -763,14 +809,16 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_global_refresh_error_handling(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试全局刷新时的错误处理。"""
         entity_id = "sensor.living_room_env_t"
 
         # 模拟设备数据损坏的情况
-        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+        original_devices = hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ]
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id]["devices"] = [
             {"invalid": "device_structure"}  # 损坏的设备数据
         ]
 
@@ -786,11 +834,13 @@ class TestSensorAdvancedScenarios:
         assert state.state in [STATE_UNAVAILABLE, "25.5"] or state.state != "crash"
 
         # 恢复原始数据
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = original_devices
 
     @pytest.mark.asyncio
     async def test_sensor_state_class_comprehensive(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试状态类别判断的完整覆盖。"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -861,7 +911,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_availability_restoration(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试传感器可用性恢复功能。"""
         entity_id = "sensor.living_room_env_t"
@@ -872,9 +922,11 @@ class TestSensorAdvancedScenarios:
         initial_available = initial_state.state != STATE_UNAVAILABLE
 
         # 模拟设备消失
-        device_list = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        device_list = hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ]
         original_devices = device_list.copy()
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id]["devices"] = [
             d for d in device_list if d.get(DEVICE_ID_KEY) != "sensor_env"
         ]
 
@@ -889,7 +941,9 @@ class TestSensorAdvancedScenarios:
             after_removal_available = False
 
         # 恢复设备数据
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = original_devices
 
         # 再次触发全局刷新
         async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
@@ -908,7 +962,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_entity_unknown_device_class(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试未知设备类别的传感器 (行 146)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -936,7 +990,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_entity_unknown_unit_measurement(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试未知测量单位的传感器 (行 157, 160)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -964,7 +1018,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_entity_unknown_state_class(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试未知状态类别的传感器 (行 177)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -992,7 +1046,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_value_conversion_boundary_cases(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试数值转换的边界情况 (行 180-181, 192-199)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1043,7 +1097,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_special_climate_value_conversion(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试特殊设备的数值转换 (行 203, 207-210)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1091,7 +1145,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_voltage_value_direct_conversion(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试电压值不进行转换的情况 (行 214)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1119,7 +1173,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_co2_conversion_scenarios(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试CO2传感器数值转换 (行 218, 222-234)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1167,7 +1221,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_default_value_no_conversion(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试默认数值转换情况 (行 240)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1195,7 +1249,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_availability_check_missing_device(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试传感器可用性检查 (行 261, 267, 273, 277)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1213,7 +1267,7 @@ class TestSensorAdvancedScenarios:
         sensor = LifeSmartSensor(
             raw_device=test_device,
             client=MagicMock(),
-            entry_id=setup_integration.entry_id,
+            entry_id=setup_integration_sensor_only.entry_id,
             sub_device_key="T",
             sub_device_data={"val": 25, "type": 1},
         )
@@ -1223,9 +1277,11 @@ class TestSensorAdvancedScenarios:
         sensor.entity_id = "sensor.test_sensor_t"
 
         # 修改现有的设备列表，移除我们的测试设备
-        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        original_devices = hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ]
         # 设置一个不包含我们设备的设备列表
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id]["devices"] = [
             {HUB_ID_KEY: "other_hub", DEVICE_ID_KEY: "other_device"}
         ]
 
@@ -1239,13 +1295,15 @@ class TestSensorAdvancedScenarios:
         assert not sensor.available, "设备不在列表中时应该不可用"
 
         # 恢复原始设备列表
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = original_devices
 
     @pytest.mark.asyncio
     async def test_sensor_different_update_formats(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试不同格式的状态更新消息。"""
         entity_id = "sensor.living_room_env_t"
@@ -1311,7 +1369,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_update_msg_format_processing(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试从msg格式更新传感器状态 (行 359-363)"""
         entity_id = "sensor.living_room_env_t"
@@ -1346,7 +1404,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_subkey_data_update_format(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试直接子键数据更新传感器状态 (行 384-385)"""
         entity_id = "sensor.living_room_env_h"
@@ -1381,7 +1439,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_empty_data_update_handling(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试没有数据时的更新处理 (行 401)"""
         entity_id = "sensor.living_room_env_t"
@@ -1418,7 +1476,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_invalid_value_error_handling(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试无效值的处理 (行 455)"""
         entity_id = "sensor.living_room_env_t"
@@ -1451,7 +1509,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_none_value_error_handling(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试None值的处理 (行 480-481)"""
         entity_id = "sensor.living_room_env_h"
@@ -1484,7 +1542,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_global_refresh_missing_device(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试全局刷新时设备未找到的情况 (行 496->503, 507-515)"""
         entity_id = "sensor.living_room_env_t"
@@ -1498,8 +1556,10 @@ class TestSensorAdvancedScenarios:
         assert initial_state.state != STATE_UNAVAILABLE, "初始状态应该可用"
 
         # 模拟设备从设备列表中移除
-        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+        original_devices = hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ]
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id]["devices"] = [
             d
             for d in original_devices
             if not (
@@ -1517,13 +1577,15 @@ class TestSensorAdvancedScenarios:
         assert final_state.state == STATE_UNAVAILABLE, "设备移除后传感器应该变为不可用"
 
         # 恢复设备列表
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = original_devices
 
     @pytest.mark.asyncio
     async def test_sensor_global_refresh_missing_subkey(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试全局刷新时子键未找到的情况 (行 524-525)"""
         entity_id = "sensor.living_room_env_t"
@@ -1533,7 +1595,9 @@ class TestSensorAdvancedScenarios:
             ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
         )
         # 模拟设备存在但子键不存在
-        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        original_devices = hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ]
         modified_devices = []
 
         for device in original_devices:
@@ -1550,7 +1614,9 @@ class TestSensorAdvancedScenarios:
             else:
                 modified_devices.append(device)
 
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = modified_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = modified_devices
 
         # 触发全局刷新
         async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
@@ -1561,11 +1627,13 @@ class TestSensorAdvancedScenarios:
         assert final_state.state == STATE_UNAVAILABLE, "子键移除后传感器应该变为不可用"
 
         # 恢复原始设备列表
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = original_devices
 
     @pytest.mark.asyncio
     async def test_sensor_value_conversion_edge_cases(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试数值转换的边界情况 (行 180-181, 192-199)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1616,7 +1684,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_special_device_value_conversion(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试特殊设备的数值转换 (行 203, 207-210)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1664,7 +1732,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_voltage_value_no_conversion(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试电压值不进行转换的情况 (行 214)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1692,7 +1760,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_co2_value_conversion(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试CO2传感器数值转换 (行 218, 222-234)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1740,7 +1808,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_default_value_conversion(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试默认数值转换情况 (行 240)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1768,7 +1836,7 @@ class TestSensorAdvancedScenarios:
 
     @pytest.mark.asyncio
     async def test_sensor_entity_available_check(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试传感器可用性检查 (行 261, 267, 273, 277)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1786,7 +1854,7 @@ class TestSensorAdvancedScenarios:
         sensor = LifeSmartSensor(
             raw_device=test_device,
             client=MagicMock(),
-            entry_id=setup_integration.entry_id,
+            entry_id=setup_integration_sensor_only.entry_id,
             sub_device_key="T",
             sub_device_data={"val": 25, "type": 1},
         )
@@ -1796,9 +1864,11 @@ class TestSensorAdvancedScenarios:
         sensor.entity_id = "sensor.test_sensor2_t"
 
         # 修改现有的设备列表，移除我们的测试设备
-        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        original_devices = hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ]
         # 设置一个不包含我们设备的设备列表
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id]["devices"] = [
             {HUB_ID_KEY: "other_hub", DEVICE_ID_KEY: "other_device"}
         ]
 
@@ -1812,11 +1882,13 @@ class TestSensorAdvancedScenarios:
         assert not sensor.available, "设备不在列表中时应该不可用"
 
         # 恢复原始设备列表
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = original_devices
 
     @pytest.mark.asyncio
     async def test_sensor_device_class_edge_cases(
-        self, hass: HomeAssistant, setup_integration: ConfigEntry
+        self, hass: HomeAssistant, setup_integration_sensor_only: ConfigEntry
     ):
         """测试设备类别判断的边界情况 (行 310-316)"""
         from custom_components.lifesmart.sensor import LifeSmartSensor
@@ -1861,7 +1933,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_update_from_msg_format(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试从msg格式更新传感器状态 (行 359-363)"""
         entity_id = "sensor.living_room_env_t"
@@ -1896,7 +1968,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_update_with_subkey_data(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试直接子键数据更新传感器状态 (行 384-385)"""
         entity_id = "sensor.living_room_env_h"
@@ -1931,7 +2003,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_no_data_update(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试没有数据时的更新处理 (行 401)"""
         entity_id = "sensor.living_room_env_t"
@@ -1968,7 +2040,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_invalid_value_handling(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试无效值的处理 (行 455)"""
         entity_id = "sensor.living_room_env_t"
@@ -2001,7 +2073,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_value_none_handling(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试None值的处理 (行 480-481)"""
         entity_id = "sensor.living_room_env_h"
@@ -2034,7 +2106,7 @@ class TestSensorAdvancedScenarios:
     async def test_sensor_global_refresh_device_not_found(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试全局刷新时设备未找到的情况 (行 496->503, 507-515)"""
         entity_id = "sensor.living_room_env_t"
@@ -2048,8 +2120,10 @@ class TestSensorAdvancedScenarios:
         assert initial_state.state != STATE_UNAVAILABLE
 
         # 模拟设备从设备列表中移除
-        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = [
+        original_devices = hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ]
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id]["devices"] = [
             d
             for d in original_devices
             if not (
@@ -2067,13 +2141,15 @@ class TestSensorAdvancedScenarios:
         assert final_state.state == STATE_UNAVAILABLE
 
         # 恢复设备列表
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = original_devices
 
     @pytest.mark.asyncio
     async def test_sensor_global_refresh_subkey_not_found(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_sensor_only: ConfigEntry,
     ):
         """测试全局刷新时子键未找到的情况 (行 524-525)"""
         entity_id = "sensor.living_room_env_t"
@@ -2083,7 +2159,9 @@ class TestSensorAdvancedScenarios:
             ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
         )
         # 模拟设备存在但子键不存在
-        original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        original_devices = hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ]
         modified_devices = []
 
         for device in original_devices:
@@ -2100,7 +2178,9 @@ class TestSensorAdvancedScenarios:
             else:
                 modified_devices.append(device)
 
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = modified_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = modified_devices
 
         # 触发全局刷新
         async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
@@ -2111,4 +2191,6 @@ class TestSensorAdvancedScenarios:
         assert final_state.state == STATE_UNAVAILABLE
 
         # 恢复原始设备列表
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = original_devices
+        hass.data[DOMAIN][setup_integration_sensor_only.entry_id][
+            "devices"
+        ] = original_devices

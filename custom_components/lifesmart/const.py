@@ -233,7 +233,8 @@ SPOT_TYPES = {
     "SL_P_IR",
     # 红外模块 / 超级碗（Mini版 V2）- 922射频版本
     # IO口: P2(配对按钮状态 R) - 仅指示按钮是否按下,不指示配对状态
-    "SL_P_IR_V2",
+    # 注意: SL_P_IR_V2为版本标识符,通过fullCls="SL_P_IR_V2"区分版本
+    # "SL_P_IR_V2",  # 移除版本设备,使用VERSIONED_DEVICE_TYPES处理
 }
 
 # --- 通用控制器 ---
@@ -840,7 +841,8 @@ BUTTON_SWITCH_TYPES = {
     #   属性值描述：val为原始电压值,v为电量百分比[0,100]
     #   电池管理：同V1版本，但可能采用更高效的电源管理
     #   低电提醒：支持低电量预警，确保设备正常工作
-    "SL_SC_BB_V2",
+    # 注意: SL_SC_BB_V2为版本标识符,通过fullCls="SL_SC_BB_V2"区分版本
+    # "SL_SC_BB_V2",  # 移除版本设备,使用VERSIONED_DEVICE_TYPES处理
 }
 
 # ================= 插座系列 (Outlet/Plug Series) =================
@@ -860,11 +862,13 @@ LIGHT_DIMMER_TYPES = {
     # 智能灯泡(冷暖白) SL_LI_WW_V1 - 同SL_LI_WW规范
     # IO口: P1(亮度控制 RW) P2(色温控制 RW)
     #   IO口功能定义完全同SL_LI_WW,参考上述详细说明
-    "SL_LI_WW_V1",
+    # 注意: SL_LI_WW_V1为版本标识符,通过fullCls="SL_LI_WW_V1"区分版本
+    # "SL_LI_WW_V1",  # 移除版本设备,使用基础设备类型处理
     # 调光调色智控器(0-10V) SL_LI_WW_V2 - 同SL_LI_WW规范
     # IO口: P1(亮度控制 RW) P2(色温控制 RW)
     #   IO口功能定义完全同SL_LI_WW,参考上述详细说明
-    "SL_LI_WW_V2",
+    # 注意: SL_LI_WW_V2为版本标识符,通过fullCls="SL_LI_WW_V2"区分版本
+    # "SL_LI_WW_V2",  # 移除版本设备,使用基础设备类型处理
     # 星玉调光开关(0-10V) SL_SW_WW / SL_SW_WW_V1
     # IO口: P1(亮度控制 RW) P2(色温控制 RW)
     #   IO口功能定义完全同SL_LI_WW,参考上述详细说明
@@ -1020,47 +1024,25 @@ DOOYA_TYPES = {
     # P2(窗帘控制 W) - 完全打开val=100/完全关闭val=0
     #   停止val=0x80/开到百分比val=percent[0,100]
     "SL_DOOYA",
-    # 速接窗帘电机 - SL_DOOYA_V2
-    # IO口: P1(窗帘状态 R) - 同SL_DOOYA规范
-    # P2(窗帘控制 W) - 同SL_DOOYA规范
-    "SL_DOOYA_V2",
-    # 卷帘电机 - SL_DOOYA_V3
-    # IO口: P1(窗帘状态 R) - 同SL_DOOYA规范
-    # P2(窗帘控制 W) - 同SL_DOOYA规范
-    "SL_DOOYA_V3",
-    # 卷帘电机电池版 - SL_DOOYA_V4
-    # IO口: P1(窗帘状态 R) - 同SL_DOOYA规范
-    # P2(窗帘控制 W) - 同SL_DOOYA规范
-    "SL_DOOYA_V4",
-    # 智能梦幻窗帘电机 - SL_DOOYA_V5
-    # IO口: P1(窗帘状态 R) - 同SL_DOOYA规范
-    # P2(窗帘控制 W) - 同SL_DOOYA规范
-    "SL_DOOYA_V5",
-    # 超静音智能卷帘电机 - SL_DOOYA_V6
-    # IO口: P1(窗帘状态 R) - 同SL_DOOYA规范
-    # P2(窗帘控制 W) - 同SL_DOOYA规范
-    "SL_DOOYA_V6",
-    # 窗帘电机(锂电池),同速接窗帘电机 - SL_DOOYA_V7
-    # IO口: P1(窗帘状态 R) - 同SL_DOOYA规范
-    # P2(窗帘控制 W) - 同SL_DOOYA规范
-    "SL_DOOYA_V7",
-    # 卷帘电机 - SL_DOOYA_V8
-    # IO口: P1(窗帘状态 R) - 同SL_DOOYA规范
-    # P2(窗帘控制 W) - 同SL_DOOYA规范
-    "SL_DOOYA_V8",
-    # 智能梦幻窗帘电机 - SL_DOOYA_V9
-    # IO口: P1(窗帘状态 R) - 同SL_DOOYA规范
-    # P2(窗帘控制 W) - 同SL_DOOYA规范
-    "SL_DOOYA_V9",
+    # 注意: SL_DOOYA_V2~V9为版本标识符,通过fullCls区分版本
+    # 所有版本都使用相同的IO口定义: P1(窗帘状态) P2(窗帘控制)
+    # "SL_DOOYA_V2",  # 速接窗帘电机 - 移除版本设备
+    # "SL_DOOYA_V3",  # 卷帘电机 - 移除版本设备
+    # "SL_DOOYA_V4",  # 卷帘电机电池版 - 移除版本设备
+    # "SL_DOOYA_V5",  # 智能梦幻窗帘电机 - 移除版本设备
+    # "SL_DOOYA_V6",  # 超静音智能卷帘电机 - 移除版本设备
+    # "SL_DOOYA_V7",  # 窗帘电机(锂电池) - 移除版本设备
+    # "SL_DOOYA_V8",  # 卷帘电机V8 - 移除版本设备
+    # "SL_DOOYA_V9",  # 智能梦幻窗帘电机V9 - 移除版本设备
 }
 
 COVER_TYPES = {
-    # 智界窗帘电机智控器
+    # 智界窗帘电机智控器 - 注意: SL_P_V2不是版本设备
     # IO口: P2(打开窗帘 RW) - type&1==1表示打开窗帘
     # P3(关闭窗帘 RW) - type&1==1表示关闭窗帘
     # P4(停止窗帘 RW) - type&1==1表示停止当前动作
     # P8(电压 R) - val原始电压值,v为电量百分比[0,100]
-    "SL_P_V2",
+    "SL_P_V2",  # 这不是版本设备，这是真实设备
     # 窗帘控制开关
     # IO口: OP/P1(打开窗帘 RW) - type&1==1表示打开窗帘
     # CL/P3(关闭窗帘 RW) - type&1==1表示关闭窗帘
@@ -1160,7 +1142,7 @@ GUARD_SENSOR_TYPES = {
     #   属性值描述：val为原始电压值,v为电量百分比[0,100]
     #   电池管理：同SL_SC_G规范
     #
-    # KB(按键状态 R) - 物理按键检测
+    # B(按键状态 R) - 物理按键检测
     #   数据类型：整数状态位
     #   属性值描述：val值定义如下: 0:按键未按下状态, 1:按键按下状态
     #   按键功能：可用于手动触发场景或报警,支持短按和长按检测
@@ -1505,12 +1487,6 @@ BASIC_ENV_SENSOR_TYPES = {
     #   属性值描述：val为原始电压值,v为电量百分比[0,100]
     #   电池管理：同SL_SC_THL规范
     "SL_SC_BE",
-    # 环境感应器(基础型) SL_SC_B1
-    # IO口详细说明：
-    # 基础环境监测功能,具体IO口根据产品配置确定
-    # 通常包括温度、湿度等基本环境参数检测
-    # 简化版本,可能不包含光照检测功能
-    "SL_SC_B1",
 }
 
 # --- 空气质量感应器(CO2/TVOC/甲醛) ---
@@ -2387,41 +2363,32 @@ LOCK_TYPES = {
     #   监控建议：定期检查电量状态，建立电池更换提醒机制
     "SL_LK_LS",
     # 智能门锁盖特曼 SL_LK_GTM - 同SL_LK_LS规范
-    # IO口: EVTLO(解锁事件 R) ALM(报警事件 R) BAT(电量 R)
     #   IO口功能定义完全同SL_LK_LS，参考上述详细说明
     "SL_LK_GTM",
     # 智能门锁西勒奇 SL_LK_AG - 同SL_LK_LS规范
-    # IO口: EVTLO(解锁事件 R) ALM(报警事件 R) BAT(电量 R)
     #   IO口功能定义完全同SL_LK_LS，参考上述详细说明
     "SL_LK_AG",
     # 智能门锁思哥 SL_LK_SG - 同SL_LK_LS规范
-    # IO口: EVTLO(解锁事件 R) ALM(报警事件 R) BAT(电量 R)
     #   IO口功能定义完全同SL_LK_LS，参考上述详细说明
     "SL_LK_SG",
     # 智能门锁耶鲁 SL_LK_YL - 同SL_LK_LS规范
-    # IO口: EVTLO(解锁事件 R) ALM(报警事件 R) BAT(电量 R)
     #   IO口功能定义完全同SL_LK_LS，参考上述详细说明
     "SL_LK_YL",
     # 智能门锁必达 SL_P_BDLK - 同SL_LK_LS规范
-    # IO口: EVTLO(解锁事件 R) ALM(报警事件 R) BAT(电量 R)
     #   IO口功能定义完全同SL_LK_LS，参考上述详细说明
     "SL_P_BDLK",
     # 智能门锁九万里 OD_JIUWANLI_LOCK1 - 同SL_LK_LS规范
-    # IO口: EVTLO(解锁事件 R) ALM(报警事件 R) BAT(电量 R)
     #   IO口功能定义完全同SL_LK_LS，参考上述详细说明
     "OD_JIUWANLI_LOCK1",
     # SWIFTE门锁模块 SL_LK_SWIFTE - 同SL_LK_LS规范
-    # IO口: EVTLO(解锁事件 R) ALM(报警事件 R) BAT(电量 R)
     #   IO口功能定义完全同SL_LK_LS，参考上述详细说明
     "SL_LK_SWIFTE",
     # 智能门锁C100 SL_LK_TY - 同SL_LK_LS规范
-    # IO口: EVTLO(解锁事件 R) ALM(报警事件 R) BAT(电量 R)
     #   IO口功能定义完全同SL_LK_LS，参考上述详细说明
     "SL_LK_TY",
     # 智能门锁C200/C210 SL_LK_DJ - 参见VERSIONED_DEVICE_TYPES中的版本区分
     # 提示: 需要查看设备的fullCls属性区分版本
     # fullCls="SL_LK_DJ_V1"为C210版本, fullCls="SL_LK_DJ_V2"为C200版本
-    # IO口: EVTLO(解锁事件 R) ALM(报警事件 R) BAT(电量 R)
     #   IO口功能定义完全同SL_LK_LS，参考上述详细说明
     #   版本差异：C210和C200在功能上基本相同，主要区别在于外观和部分硬件配置
     "SL_LK_DJ",
@@ -2466,46 +2433,6 @@ UNLOCK_METHOD = {
 # 基于设备实际IO口功能的平台支持映射，解决多平台设备问题
 # 每个设备只在一个主要集合中定义，但可支持多个平台
 
-# --- 恒星/辰星/极星系列IO口映射 (Star Series IO Mapping) ---
-# 解决不同键数开关的电量监测IO口差异问题
-STAR_SERIES_IO_MAPPING = {
-    # 单键系列: P1(开关) + P2(电量)
-    "SL_SW_ND1": {
-        "switch_io": ["P1"],
-        "battery_io": "P2",
-        "key_count": 1,
-    },
-    "SL_MC_ND1": {
-        "switch_io": ["P1"],
-        "battery_io": "P2",
-        "key_count": 1,
-    },
-    # 双键系列: P1,P2(开关) + P3(电量)
-    "SL_SW_ND2": {
-        "switch_io": ["P1", "P2"],
-        "battery_io": "P3",
-        "key_count": 2,
-    },
-    "SL_MC_ND2": {
-        "switch_io": ["P1", "P2"],
-        "battery_io": "P3",
-        "key_count": 2,
-    },
-    # 三键系列: P1,P2,P3(开关) + P4(电量)
-    "SL_SW_ND3": {
-        "switch_io": ["P1", "P2", "P3"],
-        "battery_io": "P4",
-        "key_count": 3,
-    },
-    "SL_MC_ND3": {
-        "switch_io": ["P1", "P2", "P3"],
-        "battery_io": "P4",
-        "key_count": 3,
-    },
-}
-
-# --- 多平台设备支持映射 (Multi-Platform Device Support) ---
-# 定义单个设备支持的多个平台和相关IO口
 MULTI_PLATFORM_DEVICE_MAPPING = {
     # 入墙插座 - 同时支持开关和灯光平台
     "SL_OL_W": {
@@ -2556,12 +2483,12 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
         "switch_mode": {
             "condition": "P5&0xFF==1",
             "io": ["P1", "P2", "P3"],
-            "sensor_io": ["P4"],
+            "sensor_io": ["P4", "P5"],
         },
         "climate_mode": {
             "condition": "P5&0xFF in [3,6]",
             "io": ["P1", "P6", "P7", "P8", "P9", "P10"],
-            "sensor_io": ["P4"],
+            "sensor_io": ["P4", "P5"],
         },
     },
     # 通用控制器 - 动态分类：二元传感器/窗帘/开关
@@ -2569,12 +2496,15 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
         "dynamic": True,
         "binary_sensor_mode": {
             "condition": "(P1>>24)&0xE==0",
-            "io": ["P5", "P6", "P7"],
+            "io": ["P1", "P5", "P6", "P7"],
         },
-        "cover_mode": {"condition": "(P1>>24)&0xE in [2,4]", "io": ["P2", "P3", "P4"]},
+        "cover_mode": {
+            "condition": "(P1>>24)&0xE in [2,4]",
+            "io": ["P1", "P2", "P3", "P4"],
+        },
         "switch_mode": {
             "condition": "(P1>>24)&0xE in [8,10]",
-            "io": ["P2", "P3", "P4"],
+            "io": ["P1", "P2", "P3", "P4"],
         },
     },
     # 通用控制器HA版 - 在SL_P基础上额外支持P8/P9/P10独立开关
@@ -2582,12 +2512,15 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
         "dynamic": True,
         "binary_sensor_mode": {
             "condition": "(P1>>24)&0xE==0",
-            "io": ["P5", "P6", "P7"],
+            "io": ["P1", "P5", "P6", "P7"],
         },
-        "cover_mode": {"condition": "(P1>>24)&0xE in [2,4]", "io": ["P2", "P3", "P4"]},
+        "cover_mode": {
+            "condition": "(P1>>24)&0xE in [2,4]",
+            "io": ["P1", "P2", "P3", "P4"],
+        },
         "switch_mode": {
             "condition": "(P1>>24)&0xE in [8,10]",
-            "io": ["P2", "P3", "P4"],
+            "io": ["P1", "P2", "P3", "P4"],
         },
         "always_switch": {
             "io": ["P8", "P9", "P10"],
@@ -2751,13 +2684,21 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
             "description": "指示灯亮度控制",
         },
     },
-    # 动态调光开关/星玉调光开关(可控硅) - P1开关+亮度,P2指示灯亮度,(V1还有P3移动检测,P4环境光照,P5调光设置,P6动态设置)
+    # 动态调光开关/星玉调光开关(可控硅) - 版本化设备，需要根据fullCls区分
     "SL_SW_DM1": {
-        "light": {"io": ["P1", "P2"], "description": "调光开关亮度和指示灯控制"},
-        "binary_sensor": {"io": "P3", "description": "移动检测传感器(仅V1版本)"},
-        "sensor": {
-            "io": ["P4", "P5", "P6"],
-            "description": "环境光照、调光设置和动态设置传感器(仅V1版本)",
+        "versioned": True,
+        "V1": {
+            # SL_SW_DM1_V1 动态调光开关版本 - 具有传感器和智能控制功能
+            "light": {"io": ["P1", "P2"], "description": "调光开关亮度和指示灯控制"},
+            "binary_sensor": {"io": "P3", "description": "移动检测传感器"},
+            "sensor": {
+                "io": ["P4", "P5", "P6"],
+                "description": "环境光照、调光设置和动态设置传感器",
+            },
+        },
+        "V2": {
+            # SL_SW_DM1_V2 星玉调光开关(可控硅)版本 - 基础调光功能
+            "light": {"io": ["P1", "P2"], "description": "调光开关亮度和指示灯控制"},
         },
     },
     # 九路开关控制器
@@ -2767,17 +2708,23 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
             "description": "九路开关控制",
         },
     },
-    # 按钮开关设备（既是开关又是二元传感器）
+    # 按钮开关设备 - 版本化设备，需要根据fullCls区分
     "SL_SC_BB": {
-        "switch": {"io": "P1", "description": "按钮开关控制"},
-        "binary_sensor": {"io": "P1", "description": "按钮状态检测"},
-        "sensor": {"io": "P2", "description": "电量监测"},
+        "versioned": True,
+        "V1": {
+            # SL_SC_BB_V1 基础随心按键 - 简单按键检测
+            "switch": {"io": "B", "description": "按钮开关控制"},
+            "binary_sensor": {"io": "B", "description": "按钮状态检测"},
+            "sensor": {"io": "V", "description": "电量监测"},
+        },
+        "V2": {
+            # SL_SC_BB_V2 高级随心按键 - 支持复杂手势识别
+            "switch": {"io": "P1", "description": "按钮开关控制"},
+            "binary_sensor": {"io": "P1", "description": "按钮状态检测"},
+            "sensor": {"io": "P2", "description": "电量监测"},
+        },
     },
-    "SL_SC_BB_V2": {
-        "switch": {"io": "P1", "description": "按钮开关控制"},
-        "binary_sensor": {"io": "P1", "description": "按钮状态检测"},
-        "sensor": {"io": "P2", "description": "电量监测"},
-    },
+    # SL_SC_BB_V2: 版本标识符,通过fullCls="SL_SC_BB_V2"区分版本,使用VERSIONED_DEVICE_TYPES处理
     # ================= 灯光设备 (Light Devices) =================
     # 白光调光灯
     "SL_SPWM": {
@@ -2786,125 +2733,79 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     "SL_LI_WW": {
         "light": {"io": "_DIMMER", "description": "白光调光控制"},
     },
-    "SL_LI_WW_V1": {
-        "light": {"io": "_DIMMER", "description": "白光调光控制"},
-    },
+    # SL_LI_WW_V1: 版本标识符,通过fullCls="SL_LI_WW_V1"区分版本,使用基础设备类型处理
     # RGB/RGBW灯光设备
     "SL_SC_RGB": {
         "light": {"io": "RGB", "description": "RGB颜色控制"},
     },
     "SL_CT_RGBW": {
-        "light": {"io": "RGBW", "description": "RGBW颜色控制"},
+        "light": {"io": ["RGBW", "DYN"], "description": "RGBW颜色和动态效果控制"},
     },
     "SL_LI_RGBW": {
-        "light": {"io": "_DUAL_RGBW", "description": "双IO RGBW灯控制"},
+        "light": {"io": ["RGBW", "DYN"], "description": "RGBW颜色和动态效果控制"},
     },
     # Spot类型设备
     "SL_SPOT": {
         "light": {"io": "RGB", "description": "Spot RGB灯控制"},
     },
     "MSL_IRCTL": {
-        "light": {"io": "RGBW", "description": "Spot RGBW灯控制"},
+        "light": {"io": ["RGBW", "DYN"], "description": "Spot RGBW颜色和动态效果控制"},
     },
     "OD_WE_IRCTL": {
         "light": {"io": "RGB", "description": "Spot RGB灯控制"},
     },
     # 量子灯
     "OD_WE_QUAN": {
-        "light": {"io": "_QUANTUM", "description": "量子灯控制"},
+        "light": {"io": ["P1", "P2"], "description": "量子灯亮度和颜色控制"},
     },
     # ================= 覆盖物设备 (Cover Devices) =================
     # 杜亚窗帘系列 - 所有变体都使用P1(状态)+P2(控制)
     "SL_DOOYA": {
         "cover": {"io": ["P1", "P2"], "description": "杜亚窗帘位置状态和控制"},
     },
-    "SL_DOOYA_V2": {
-        "cover": {"io": ["P1", "P2"], "description": "速接窗帘电机位置状态和控制"},
-    },
-    "SL_DOOYA_V3": {
-        "cover": {"io": ["P1", "P2"], "description": "卷帘电机位置状态和控制"},
-    },
-    "SL_DOOYA_V4": {
-        "cover": {"io": ["P1", "P2"], "description": "卷帘电机电池版位置状态和控制"},
-    },
-    "SL_DOOYA_V5": {
-        "cover": {"io": ["P1", "P2"], "description": "智能梦幻窗帘电机位置状态和控制"},
-    },
-    "SL_DOOYA_V6": {
-        "cover": {
-            "io": ["P1", "P2"],
-            "description": "超静音智能卷帘电机位置状态和控制",
-        },
-    },
-    "SL_DOOYA_V7": {
-        "cover": {"io": ["P1", "P2"], "description": "窗帘电机锂电池版位置状态和控制"},
-    },
-    "SL_DOOYA_V8": {
-        "cover": {"io": ["P1", "P2"], "description": "卷帘电机V8位置状态和控制"},
-    },
-    "SL_DOOYA_V9": {
-        "cover": {
-            "io": ["P1", "P2"],
-            "description": "智能梦幻窗帘电机V9位置状态和控制",
-        },
-    },
+    # SL_DOOYA_V2~V9: 版本标识符,通过fullCls区分版本,使用基础设备类型SL_DOOYA处理
     # 其他窗帘设备
-    "SL_P_V2": {
-        "cover": {
-            "io": ["P2", "P3", "P4"],
-            "description": "智界窗帘电机打开/关闭/停止控制",
-        },
-        "sensor": {"io": "P8", "description": "电压和电量监测"},
-    },
-    # 非定位窗帘
-    "SL_SW_CU": {
-        "cover": {"io": ["P1", "P2"], "description": "窗帘开关控制"},
-    },
     # ================= 传感器设备 (Sensor Devices) =================
     # 环境传感器 - 多功能设备：既有环境传感器也有门磁功能
     "SL_SC_THL": {
         "sensor": {"io": ["T", "H", "Z", "V"], "description": "温湿度光照电量传感器"},
-        "binary_sensor": {"io": "G", "description": "门磁状态检测"},
     },
     "SL_SC_BE": {
         "sensor": {"io": ["T", "H", "Z", "V"], "description": "环境传感器+电量"},
         # CUBE可能也有其他IO口，需要根据实际情况补充
     },
-    "SL_SC_B1": {
-        "sensor": {"io": ["T", "H"], "description": "基础环境传感器"},
-        # 基础版可能功能较少
-    },
     # 空气质量传感器
     "SL_SC_CA": {
-        "sensor": {"io": ["P1", "P2", "P3"], "description": "TVOC/甲醛/CO2传感器"},
+        "sensor": {
+            "io": ["P1", "P2", "P3", "P4", "P5"],
+            "description": "CO2传感器完整监测",
+        },
     },
     "SL_SC_CQ": {
         "sensor": {
-            "io": ["P1", "P2", "P3", "P4", "P5"],
+            "io": ["P1", "P2", "P3", "P4", "P5", "P6"],
             "description": "CO2传感器多项监测",
         },
     },
-    # 燃气传感器
+    # 燃气传感器 - P1燃气浓度检测和告警,P2告警门限设置,P3警报音控制
     "SL_SC_CP": {
-        "sensor": {"io": "P1", "description": "燃气浓度传感器"},
+        "binary_sensor": {"io": "P1", "description": "燃气浓度告警检测"},
+        "sensor": {"io": ["P1", "P2"], "description": "燃气浓度数值和告警门限监测"},
+        "switch": {"io": "P3", "description": "燃气报警音控制"},
     },
-    # 噪音传感器
+    # 噪音传感器 - P1噪音检测和告警,P2告警门限,P3报警设置,P4噪音校正
     "SL_SC_CN": {
-        "sensor": {"io": "P1", "description": "噪音分贝传感器"},
+        "binary_sensor": {"io": "P1", "description": "噪音告警检测"},
+        "sensor": {
+            "io": ["P1", "P2", "P4"],
+            "description": "噪音分贝、告警门限和校正值监测",
+        },
+        "switch": {"io": "P3", "description": "噪音报警设置控制"},
     },
     # 第三方电量计量器
     "ELIQ_EM": {
         "sensor": {"io": ["EPA", "EE", "EP"], "description": "ELIQ电量监测"},
     },
-    # 语音小Q传感器
-    "SL_Q": {
-        "sensor": {"io": ["T", "H", "Z", "V"], "description": "语音小Q环境监测"},
-    },
-    # 空气净化器传感器
-    "SL_AIR_PU": {
-        "sensor": {"io": ["T", "H", "PM2.5"], "description": "空气净化器环境监测"},
-    },
-    # ================= 更多基础插座设备 =================
     "OD_WE_OT1": {
         "switch": {"io": "P1", "description": "海外版智能插座"},
     },
@@ -2920,21 +2821,28 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     "SL_OL_DE": {
         "switch": {"io": "O", "description": "德式插座开关"},
     },
-    # ================= 更多二元传感器设备 =================
     "SL_BP_MZ": {
-        "binary_sensor": {"io": "P1", "description": "智能按钮检测"},
+        "binary_sensor": {"io": "P1", "description": "PIR人体红外移动检测"},
+        "sensor": {"io": ["P2", "P3"], "description": "环境光照和电量监测"},
     },
     "SL_SC_CM": {
-        "binary_sensor": {"io": "M", "description": "吸顶人感传感器"},
+        "binary_sensor": {"io": "P1", "description": "PIR人体红外检测"},
+        "sensor": {"io": ["P3", "P4"], "description": "主电池电量和USB供电检测"},
     },
     "SL_SC_BG": {
-        "binary_sensor": {"io": "G", "description": "玻璃破碎传感器"},
+        "binary_sensor": {
+            "io": ["G", "B", "AXS"],
+            "description": "门窗状态、按键和震动检测",
+        },
+        "sensor": {"io": "V", "description": "电量监测"},
     },
     "SL_SC_BM": {
-        "binary_sensor": {"io": "M", "description": "吸顶背景音乐人感传感器"},
+        "binary_sensor": {"io": "M", "description": "CUBE动态感应器移动检测"},
+        "sensor": {"io": "V", "description": "电量监测"},
     },
     "SL_SC_GS": {
-        "binary_sensor": {"io": "G", "description": "震动传感器"},
+        "binary_sensor": {"io": ["P1", "AXS"], "description": "门窗磁感应和震动检测"},
+        "sensor": {"io": "V", "description": "电量监测"},
     },
     # ================= 温控设备 (Climate Devices) =================
     # 空调控制面板 - P1开关,P2模式,P3目标温度,P4风速,P6当前温度
@@ -2977,7 +2885,7 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     # 星玉情景面板 - P1~P6情景开关,P7开关控制器配置
     "SL_SW_NS6": {
         "switch": {
-            "io": ["P1", "P2", "P3", "P4", "P5", "P6"],
+            "io": ["P1", "P2", "P3", "P4", "P5", "P6", "P7"],
             "description": "情景开关面板",
         },
     },
@@ -2996,13 +2904,11 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
         "switch": {"io": "P1", "description": "虚拟开关控制"},
     },
     # ================= 灯光设备补充 =================
-    # 调光调色智控器0-10V
-    "SL_LI_WW_V2": {
-        "light": {"io": "_DIMMER", "description": "0-10V调光调色控制"},
-    },
+    # SL_LI_WW_V2: 版本标识符,通过fullCls="SL_LI_WW_V2"区分版本,使用基础设备类型处理
+    # "SL_LI_WW_V2": {"light": {"io": "_DIMMER", "description": "0-10V调光调色控制"}},  # 移除版本设备,使用基础设备类型处理
     # 星玉调光开关0-10V
     "SL_SW_WW": {
-        "light": {"io": "_DIMMER", "description": "星玉调光开关0-10V"},
+        "light": {"io": ["P1", "P2"], "description": "星玉调光开关亮度和色温控制"},
     },
     # 红外吸顶灯 - P1亮度,P2色温,P3夜灯亮度
     "SL_LI_IR": {
@@ -3021,10 +2927,11 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
         "binary_sensor": {"io": "P3", "description": "太阳能充电状态"},
     },
     # ================= 传感器设备补充 =================
-    # 甲醛传感器 - P1甲醛浓度,P2告警门限,P3警报音
+    # 甲醛传感器 - P1甲醛浓度检测和告警,P2告警门限,P3警报音控制
     "SL_SC_CH": {
         "binary_sensor": {"io": "P1", "description": "甲醛浓度告警"},
-        "sensor": {"io": "P1", "description": "甲醛浓度数值"},
+        "sensor": {"io": ["P1", "P2"], "description": "甲醛浓度数值和告警门限监测"},
+        "switch": {"io": "P3", "description": "甲醛报警音控制"},
     },
     # 语音小Q
     "SL_SC_CV": {
@@ -3034,14 +2941,14 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     "OD_MFRESH_M8088": {
         "switch": {"io": "O", "description": "空气净化器开关"},
         "sensor": {
-            "io": ["T", "H", "PM", "FL", "UV"],
+            "io": ["T", "H", "PM", "FL", "UV", "RM"],
             "description": "空气质量和滤芯寿命监测",
         },
     },
     # ================= 报警设备 =================
     # 智能报警器 - P1播放控制,P2音量控制
     "SL_ALM": {
-        "switch": {"io": "P1", "description": "报警器播放控制"},
+        "switch": {"io": ["P1", "P2"], "description": "报警器播放和音量控制"},
     },
     # 多功能报警器
     "LSSSMINIV1": {
@@ -3067,10 +2974,6 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
         },
         "sensor": {"io": "V", "description": "电量监测"},
     },
-    # 云防Keypad
-    "SL_DF_KP": {
-        "binary_sensor": {"io": "P1", "description": "数字键盘检测"},
-    },
     # ================= 窗帘设备补充 =================
     # 格致/塞纳三键窗帘 - P1开,P2停,P3关
     "SL_CN_FE": {
@@ -3081,19 +2984,42 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     "SL_P_IR": {
         "remote": {"io": "P1", "description": "红外控制功能"},
     },
-    # 红外模块V2 - P2配对按钮状态
-    "SL_P_IR_V2": {
-        "remote": {"io": "P1", "description": "红外控制功能"},
-        "binary_sensor": {"io": "P2", "description": "配对按钮检测"},
-    },
+    # SL_P_IR_V2: 版本标识符,通过fullCls="SL_P_IR_V2"区分版本,使用VERSIONED_DEVICE_TYPES处理
+    # "SL_P_IR_V2": {"remote": {"io": "P1"}, "binary_sensor": {"io": "P2"}},  # 移除版本设备,使用VERSIONED_DEVICE_TYPES处理
     # ================= 第三方485设备 =================
     # 485控制器 - 支持多种传感器和控制器
     "V_485_P": {
         "sensor": {
-            "io": ["P1", "T", "H", "PM", "CO2PPM", "TVOC"],
+            "io": [
+                "P1",
+                "T",
+                "H",
+                "PM",
+                "PMx",
+                "CO2PPM",
+                "TVOC",
+                "COPPM",
+                "CH20PPM",
+                "O2VOL",
+                "NH3PPM",
+                "H2SPPM",
+                "PHM",
+                "SMOKE",
+                "EP",
+                "EPF",
+                "EPFx",
+                "EF",
+                "EFx",
+                "EI",
+                "EIx",
+                "EV",
+                "EVx",
+                "EE",
+                "EEx",
+            ],
             "description": "485多功能传感器",
         },
-        "switch": {"io": ["L1", "L3"], "description": "485开关控制"},
+        "switch": {"io": ["Lx"], "description": "485开关控制"},
     },
     # DLT电量计量器 - EE用电量,EP功率
     "V_DLT645_P": {
@@ -3158,80 +3084,109 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     # 雷达传感器
     "SL_P_RM": {
         "binary_sensor": {"io": "P1", "description": "雷达人体检测"},
+        "sensor": {"io": "P2", "description": "雷达参数配置监测"},
     },
     # 云防系列传感器
     "SL_DF_GG": {
-        "binary_sensor": {
-            "io": ["A", "A2", "M", "TR", "SR", "eB1", "eB2", "eB3", "eB4"],
-            "description": "云防多功能检测",
-        },
+        "binary_sensor": {"io": ["A", "A2", "TR"], "description": "云防门窗检测和防拆"},
+        "sensor": {"io": ["T", "V"], "description": "云防环境温度和电量监测"},
     },
     # ================= 智能锁设备 (Lock Devices) =================
     "SL_LK_LS": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM"],
+            "description": "锁状态和报警检测",
+        },
         "sensor": {
             "io": ["BAT", "EVTOP", "HISLK"],
             "description": "电池电量、操作记录和历史开锁监测",
         },
     },
     "SL_LK_GTM": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM"],
+            "description": "锁状态和报警检测",
+        },
         "sensor": {
             "io": ["BAT", "EVTOP", "HISLK"],
             "description": "电池电量、操作记录和历史开锁监测",
         },
     },
     "SL_LK_AG": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM"],
+            "description": "锁状态和报警检测",
+        },
         "sensor": {
             "io": ["BAT", "EVTOP", "HISLK"],
             "description": "电池电量、操作记录和历史开锁监测",
         },
     },
     "SL_LK_SG": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM"],
+            "description": "锁状态和报警检测",
+        },
         "sensor": {
             "io": ["BAT", "EVTOP", "HISLK"],
             "description": "电池电量、操作记录和历史开锁监测",
         },
     },
     "SL_LK_YL": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM"],
+            "description": "锁状态和报警检测",
+        },
         "sensor": {
             "io": ["BAT", "EVTOP", "HISLK"],
             "description": "电池电量、操作记录和历史开锁监测",
         },
     },
     "SL_P_BDLK": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM"],
+            "description": "锁状态和报警检测",
+        },
         "sensor": {
             "io": ["BAT", "EVTOP", "HISLK"],
             "description": "电池电量、操作记录和历史开锁监测",
         },
     },
     "OD_JIUWANLI_LOCK1": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM"],
+            "description": "锁状态和报警检测",
+        },
         "sensor": {
             "io": ["BAT", "EVTOP", "HISLK"],
             "description": "电池电量、操作记录和历史开锁监测",
         },
     },
     "SL_LK_SWIFTE": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM"],
+            "description": "锁状态和报警检测",
+        },
         "sensor": {
             "io": ["BAT", "EVTOP", "HISLK"],
             "description": "电池电量、操作记录和历史开锁监测",
         },
     },
     "SL_LK_TY": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM", "EVTBEL"],
+            "description": "C100门锁状态、报警和门铃检测",
+        },
         "sensor": {
-            "io": ["BAT", "EVTOP", "HISLK"],
-            "description": "电池电量、操作记录和历史开锁监测",
+            "io": ["BAT", "HISLK"],
+            "description": "C100门锁电池电量和历史开锁监测",
         },
     },
     "SL_LK_DJ": {
-        "binary_sensor": {"io": ["EVTLO", "ALM"], "description": "锁状态和报警检测"},
+        "binary_sensor": {
+            "io": ["EVTLO", "ALM", "EVTBEL"],
+            "description": "锁状态、报警和门铃检测",
+        },
         "sensor": {
             "io": ["BAT", "EVTOP", "HISLK"],
             "description": "电池电量、操作记录和历史开锁监测",
@@ -3240,29 +3195,44 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     # ================= 温控设备 (Climate Devices) =================
     # 地暖温控器
     "SL_CP_DN": {
-        "climate": {"io": ["P1", "P3"], "description": "地暖温控"},
-        "binary_sensor": {"io": "P2", "description": "窗户开关检测"},
-        "sensor": {"io": "P5", "description": "附加温度传感器"},
+        "climate": {
+            "io": ["P1", "P2", "P3"],
+            "description": "地暖系统配置、继电器控制和目标温度设置",
+        },
+        "sensor": {"io": ["P4", "P5"], "description": "室内温度和底版温度监测"},
     },
     # 温控阀门
     "SL_CP_VL": {
-        "climate": {"io": ["P1", "P3"], "description": "阀门温控"},
-        "binary_sensor": {"io": "P5", "description": "窗户开关检测"},
-        "sensor": {"io": "P6", "description": "温度传感器"},
+        "climate": {"io": ["P1"], "description": "温控阀门开关和系统配置"},
+        "binary_sensor": {
+            "io": ["P2", "P3", "P5"],
+            "description": "双路阀门状态和告警检测",
+        },
+        "sensor": {"io": ["P4", "P6"], "description": "当前温度和电量监测"},
     },
     # 星玉面板
     "SL_FCU": {
-        "climate": {"io": ["P1"], "description": "风机盘管控制"},
+        "climate": {
+            "io": ["P1", "P6", "P7", "P8", "P9", "P10"],
+            "description": "风机盘管控制",
+        },
         "binary_sensor": {"io": ["P2", "P3"], "description": "阀门开关检测"},
+        "sensor": {"io": ["P4"], "description": "温度监测"},
     },
     # 新风系统
     "SL_TR_ACIPM": {
-        "climate": {"io": ["P1"], "description": "新风系统控制"},
-        "sensor": {"io": ["P4", "P5"], "description": "空气质量传感器"},
+        "climate": {
+            "io": ["P1", "P2", "P3"],
+            "description": "新风系统配置、风速控制和VOC阈值设置",
+        },
+        "sensor": {
+            "io": ["P4", "P5", "P6"],
+            "description": "VOC浓度、PM2.5浓度和温度传感器",
+        },
     },
     # 空调面板
     "V_AIR_P": {
-        "climate": {"io": ["O", "MODE"], "description": "空调控制"},
+        "climate": {"io": ["O", "MODE", "F", "tT"], "description": "空调控制"},
         "sensor": {"io": "T", "description": "温度传感器"},
     },
 }
@@ -3473,7 +3443,11 @@ ALL_EFFECT_LIST = list(ALL_EFFECT_MAP.keys())
 # 无位置窗帘配置映射 (用于将开/关/停动作映射到正确的IO口)
 NON_POSITIONAL_COVER_CONFIG = {
     "SL_SW_WIN": {"open": "OP", "close": "CL", "stop": "ST"},
-    "SL_P_V2": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_P_V2": {
+        "open": "P2",
+        "close": "P3",
+        "stop": "P4",
+    },  # 移除版本设备,通过VERSIONED_DEVICE_TYPES处理
     "SL_CN_IF": {"open": "P1", "close": "P2", "stop": "P3"},
     "SL_CN_FE": {"open": "P1", "close": "P2", "stop": "P3"},
     # 通用控制器

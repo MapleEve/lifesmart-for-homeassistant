@@ -24,7 +24,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.helpers import generate_unique_id
 from ..utils.factories import create_devices_by_category
-from ..utils.helpers import find_test_device, get_hub_id
+from ..utils.helpers import (
+    find_test_device,
+    get_hub_id,
+)
 
 
 # ==================== 测试数据 ====================
@@ -190,7 +193,7 @@ class TestBinarySensorSetup:
     async def test_setup_creates_expected_entities(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试设置过程创建了所有预期的实体。"""
         entity_registry = er.async_get(hass)
@@ -351,7 +354,7 @@ class TestDeviceClassification:
     async def test_device_class_and_initial_state(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
         device_me: str,
         sub_key: str,
         expected_class: BinarySensorDeviceClass | None,
@@ -396,7 +399,7 @@ class TestDeviceClassification:
     async def test_lock_entity_attributes(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试门锁实体的特殊属性。"""
         # 使用工厂函数获取测试设备
@@ -443,7 +446,7 @@ class TestDeviceClassification:
     async def test_water_sensor_attributes(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试水浸传感器的特殊属性。"""
         # 使用工厂函数获取测试设备
@@ -481,7 +484,7 @@ class TestStateParsingLogic:
     async def test_state_parsing(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
         device_me: str,
         sub_key: str,
         test_data: dict,
@@ -521,7 +524,7 @@ class TestStateParsingLogic:
     async def test_lock_state_parsing_complex(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试门锁复杂状态解析逻辑。"""
         # 使用工厂函数获取测试设备
@@ -581,7 +584,7 @@ class TestButtonEventHandling:
     async def test_button_event_detection(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
         freezer,
         event_val: int,
         expected_event_name: str,
@@ -622,7 +625,7 @@ class TestButtonEventHandling:
     async def test_button_auto_reset(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
         freezer,
     ):
         """测试按钮自动重置功能。"""
@@ -667,7 +670,7 @@ class TestUpdateHandling:
     async def test_real_time_update_handling(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试实时更新处理。"""
         mock_lifesmart_devices = create_devices_by_category(
@@ -701,7 +704,7 @@ class TestUpdateHandling:
     async def test_global_refresh_handling(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试全局刷新处理。"""
         mock_lifesmart_devices = create_devices_by_category(
@@ -730,7 +733,9 @@ class TestUpdateHandling:
         assert initial_state.state == STATE_ON, "初始状态应该是 ON"
 
         # 修改 hass.data 中的设备数据
-        devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
+        devices = hass.data[DOMAIN][setup_integration_binary_sensor_only.entry_id][
+            "devices"
+        ]
         test_door_devices = [d for d in devices if d.get("devtype") == "SL_SC_G"]
         assert len(test_door_devices) > 0, "hass.data中应该有门传感器设备"
         test_door_device = test_door_devices[0]
@@ -748,7 +753,7 @@ class TestUpdateHandling:
     async def test_update_error_handling(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
         caplog,
     ):
         """测试更新过程中的错误处理。"""
@@ -779,12 +784,12 @@ class TestUpdateHandling:
     async def test_global_refresh_missing_device(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
         caplog,
     ):
         """测试全局刷新时设备不存在的情况。"""
         # 清空设备列表模拟设备丢失
-        hass.data[DOMAIN][setup_integration.entry_id]["devices"] = []
+        hass.data[DOMAIN][setup_integration_binary_sensor_only.entry_id]["devices"] = []
 
         # 发送全局刷新信号
         async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
@@ -810,7 +815,7 @@ class TestSpecialDeviceTypes:
     async def test_guard_sensor_variations(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试不同类型的门窗感应器。"""
         mock_lifesmart_devices = create_devices_by_category(
@@ -824,7 +829,7 @@ class TestSpecialDeviceTypes:
     async def test_climate_device_binary_sensors(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试温控设备的二元传感器功能。"""
         # 测试温控器的阀门状态等
@@ -835,7 +840,7 @@ class TestSpecialDeviceTypes:
     async def test_unknown_device_handling(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试未知设备类型的处理。"""
         from custom_components.lifesmart.binary_sensor import LifeSmartBinarySensor
@@ -873,7 +878,7 @@ class TestEdgeCasesAndExceptions:
     async def test_entity_with_missing_data(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试数据缺失时的实体行为。"""
         mock_lifesmart_devices = create_devices_by_category(
@@ -899,7 +904,7 @@ class TestEdgeCasesAndExceptions:
     async def test_entity_device_info(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试实体的设备信息。"""
         mock_lifesmart_devices = create_devices_by_category(
@@ -929,7 +934,7 @@ class TestEdgeCasesAndExceptions:
     async def test_entity_unique_id_and_object_id(
         self,
         hass: HomeAssistant,
-        setup_integration: ConfigEntry,
+        setup_integration_binary_sensor_only: ConfigEntry,
     ):
         """测试实体的唯一ID和对象ID生成。"""
         mock_lifesmart_devices = create_devices_by_category(
