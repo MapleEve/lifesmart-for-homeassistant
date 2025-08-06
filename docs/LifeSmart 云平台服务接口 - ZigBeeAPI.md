@@ -5,15 +5,19 @@
 
 ## 目录
 
-- [1. 概述](#1-概述)
+-
+    1. 概述
+
     - [1.1 设备模型说明](#11-设备模型说明)
     - [1.2 ZigBee设备规格](#12-zigbee设备规格)
     - [1.3 ZigBee设备IO属性列表](#13-zigbee设备io属性列表)
-- [2. 接口(Interface)](#2-接口interface)
+-
+    2. 接口(Interface)
+
     - [2.1 控制ZigBee设备(ZigBeeCtl)](#21-控制zigbee设备zigbeectl)
-        - [2.1.1 请求定义](#211-请求定义)
-        - [2.1.2 范例](#212-范例)
-        - [2.1.3 动作(act)定义](#213-动作act定义)
+      - [2.1.1 请求定义](#211-请求定义)
+      - [2.1.2 范例](#212-范例)
+      - [2.1.3 动作(act)定义](#213-动作act定义)
     - [2.2 添加ZigBee设备(EpAdd)扩展说明](#22-添加zigbee设备epadd扩展说明)
         - [2.2.1 请求定义](#221-请求定义)
         - [2.2.2 扩展参数(optarg)说明](#222-扩展参数optarg说明)
@@ -35,9 +39,10 @@
         - [2.6.1 FUKI IO Smart DoorLock](#261-fuki-io-smart-doorlock)
     - [2.7 Zigbee设备特定常量定义](#27-zigbee设备特定常量定义)
         - [2.7.1 DoorLock](#271-doorlock)
-- [3. ZigBee设备列表](#3-zigbee设备列表)
+-
+    3. ZigBee设备列表
 
-## 1.概述
+# 1.概述
 
 该文档是LifeSmart云平台 ZigBee
 API服务接口的说明文档。它是做为LifeSmart云平台服务接口文档的扩充，有关基本概念，例如API调用的签名等我们已经在LifeSmart云平台服务接口文档作出说明，本文档将不再描述。因此需要先参考并结合《LifeSmart云平台服务接口》文档才能完整获悉。
@@ -142,17 +147,17 @@ ZigBee设备的设备属性(IO口)都已经映射到LifeSmart的设备模型，�
 | EE      | 甲醛浓度               | R   | `val`值表示甲醛浓度原始值，实际值等于原始值/1000（单位:ug/m3）                                                                                                                                                                                                         |
 | EE      | 电量Energy           | R   | 为累计用电量，值为浮点数，单位为度(kwh)。注意：其值类型为IEEE 754浮点数的32位整数布局。例如1024913643表示的是浮点值：0.03685085 具体请参考：《Lifesmart 智慧设备规格属性说明》- Io值浮点类型说明                                                                                                                       |
 | EE      | 功率Power            | R   | 为当前负载功率，值为浮点数，单位为w。注意：其值类型为IEEE 754浮点数的32位整数布局。例如1024913643表示的是浮点值：0.03685085 具体请参考：《LifeSmart 智慧设备规格属性说明》- Io值浮点类型说明                                                                                                                           |
-| EVTLO   | 开锁状态               | R   | `type%2==1`表示打开；`type%2==0`表示关闭；`val`值定义如下：`0xAABBCCCC`。AA表示 Operation Event Source，具体参见：2.7.1.1；BB表示 Operation Event Code，具体参见：2.7.1.2；CCCC表示用户编号；                                                                                             |
+| EVTLO   | 开锁状态               | R   | `type&1==1`表示打开；`type&1==0`表示关闭；`val`值定义如下：`0xAABBCCCC`。AA表示 Operation Event Source，具体参见：2.7.1.1；BB表示 Operation Event Code，具体参见：2.7.1.2；CCCC表示用户编号；                                                                                             |
 | G       | 门磁吸合感应             | R   | `val`值定义如下：`0`：门磁没有吸合，门处于打开；`1`：门磁吸合，门处于关闭                                                                                                                                                                                                      |
 | H       | 湿度 Humidity        | R   | `val`值表示原始湿度值，它是湿度值*10，也即实际湿度值=原始湿度值/10(%)                                                                                                                                                                                                      |
-| HISLK   | 最近一次开锁信息           | R   | `type%2==1`表示打开；`type%2==0`表示关闭；`val`值定义如下：`0xAABBCCCC`。AA表示 Operation Event Source，具体参见：2.7.1.1；BB表示 Operation Event Code，具体参见：2.7.1.2；CCCC表示用户编号；                                                                                             |
-| L       | 开关                 | RW  | 状态：`type%2==1`,表示打开(忽略`val`值);`type%2==0`,表示关闭(忽略`val`值)；控制：打开，则下发：`type=0x81,val=1`；关闭，则下发：`type=0x80,val=0`;                                                                                                                                  |
+| HISLK   | 最近一次开锁信息           | R   | `type&1==1`表示打开；`type&1==0`表示关闭；`val`值定义如下：`0xAABBCCCC`。AA表示 Operation Event Source，具体参见：2.7.1.1；BB表示 Operation Event Code，具体参见：2.7.1.2；CCCC表示用户编号；                                                                                             |
+| L       | 开关                 | RW  | 状态：`type&1==1`,表示打开(忽略`val`值);`type&1==0`,表示关闭(忽略`val`值)；控制：打开，则下发：`type=0x81,val=1`；关闭，则下发：`type=0x80,val=0`;                                                                                                                                  |
 | M       | 移动侦测 Motion Detect | R   | `val`值定义如下：`0`：没有检测到移动；非`0`:有检测到移动                                                                                                                                                                                                              |
-| O       | 插座开关               | RW  | 状态：`type%2==1`,表示打开(忽略`val`值);`type%2==0`,表示关闭(忽略`val`值)；控制：打开，则下发：`type=0x81,val=1`；关闭，则下发：`type=0x80,val=0`;                                                                                                                                  |
+| O       | 插座开关               | RW  | 状态：`type&1==1`,表示打开(忽略`val`值);`type&1==0`,表示关闭(忽略`val`值)；控制：打开，则下发：`type=0x81,val=1`；关闭，则下发：`type=0x80,val=0`;                                                                                                                                  |
 | PM      | PM2.5浓度            | R   | `val`值表示PM2.5值 (单位：ug/m³)                                                                                                                                                                                                                       |
 | PM(1)   | PM1浓度              | R   | `val`值表示PM1值 (单位：ug/m³)                                                                                                                                                                                                                         |
 | PM(10)  | PM10浓度             | R   | `val`值表示PM10值 (单位：ug/m³)                                                                                                                                                                                                                        |
-| RGB     | RGB三原色             | RW  | 状态：`type%2==1`表示打开;`type%2==0`表示关闭;`val`值为颜色值，大小4个字节，定义如下:`bit0~bit7:Blue` `bit8~bit15: Green` `bit16~bit23:Red` `bit24~bit31:0x00`；控制：开灯：`type=0x81;val=1`；关灯：`type=0x80;val=0`; 开灯并设置颜色或动态值：`type=0xff;val=颜色值`；关灯并设置颜色值:`type=0xfe;val=颜色值`； |
+| RGB     | RGB三原色             | RW  | 状态：`type&1==1`表示打开;`type&1==0`表示关闭;`val`值为颜色值，大小4个字节，定义如下:`bit0~bit7:Blue` `bit8~bit15: Green` `bit16~bit23:Red` `bit24~bit31:0x00`；控制：开灯：`type=0x81;val=1`；关灯：`type=0x80;val=0`; 开灯并设置颜色或动态值：`type=0xff;val=颜色值`；关灯并设置颜色值:`type=0xfe;val=颜色值`； |
 | T       | 温度 Temperature     | R   | `val`值表示原始温度值，它是温度值*10，也即实际温度值=原始温度值/10(单位：℃)                                                                                                                                                                                                   |
 | V       | 电压                 | R   | `val`值表示原始电压值，它是实际电压值*10，也即实际电压值=原始电压值/10(单位：V) `val`有效值为16位(2bytes)                                                                                                                                                                            |
 | WW      | 亮度色温               | RW  | 值越小则色温表现为暖光；值越大则色温表现为冷光；`val`有效值为16位，则设置的最大色温值为65535；设置色温，则下发：`type=0xcf,val=色温值`                                                                                                                                                               |
@@ -1265,7 +1270,6 @@ Request参数示例：
   "agt": "THE_AGT",
   "act": "Native",
   "actargs": "{\"cmd\": \"ctl\", \"proc\": \"get_network_version\"}"
-}
 }
 ```
 

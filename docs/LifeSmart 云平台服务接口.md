@@ -1,47 +1,6 @@
 # LifeSmart 云平台服务接口 (v1.38)
 
-## 版本历史
-
-| 版本   | 修订日期       | 修订人                 | 修订内容                                                                                                                      |
-|------|------------|---------------------|---------------------------------------------------------------------------------------------------------------------------|
-| 1.0  | 2015/10/20 | AlexCheng           | 初始版本                                                                                                                      |
-| 1.01 | 2015/10/28 | AlexCheng           | 修改返回信息。返回字段status修改为code，其值为错误代码。增加错误码列表                                                                                  |
-| 1.02 | 2015/11/4  | AlexCheng           | 修改签名串例子中的错误格式                                                                                                             |
-| 1.03 | 2015/11/9  | AlexCheng           | 1: 添加灯带/灯泡颜色控制<br/>2: 添加入墙开关控制<br/>3: 添加新增/删除智慧设备接口<br/>4: 添加注册用户接口                                                       |
-| 1.04 | 2015/11/19 | Lewis Li            | 1. 修改EpGetAll/EpSet/EpGet范例<br/>2. 添加EpAdd/EpRemove接口范例<br/>3. 细化注册用户接口<br/>4. 添加灯带动态设置                                   |
-| 1.05 | 2016/10/26 | Xiao Ye             | 1. 添加EpsSet，SceneGet，SceneSet接口                                                                                           |
-| 1.06 | 2016/11/3  | Xiao Ye             | 1. 添加UnregisterUser接口                                                                                                     |
-| 1.07 | 2017/1/10  | AlexCheng           | 1: 支持状态更新；2: 支持多终端访问                                                                                                      |
-| 1.08 | 2017/4/5   | AlexCheng           | 支持多区域访问                                                                                                                   |
-| 1.10 | 2017/10/09 | Jon Fan / Pretty Ju | 第二版整理                                                                                                                     |
-| 1.11 | 2018/04/20 | Jon Fan             | 添加WebSocket事件详细说明                                                                                                         |
-| 1.12 | 2018/09/20 | Jon Fan             | 添加EpAdd扩展参数说明/<br/>添加EpSet扩展参数说明<br/>修正文档描述不合理的部分                                                                         |
-| 1.13 | 2018/10/08 | Jon Fan             | 添加EpUpgradeAgt，EpRebootAgt，<br/>EpGetAgtLatestVersion文档说明；<br/>设备属性增加lHeart,lDbm说明；<br/>增加设备模型说明；<br/>EpSet增加修改Ep/IO名称的说明 |
-| 1.14 | 2018/11/25 | Jon Fan             | 增加EpSearchSmart, EpAddSmart接口                                                                                             |
-| 1.15 | 2018/12/05 | Jon Fan             | 增加EpCmd, EpGetAgtState接口说明，以及修改EpGetAll接口描述，增加agt_self以及智慧设备的描述                                                           |
-| 1.16 | 2018/12/12 | Jon Fan             | WebSocket增加AI事件通知描述                                                                                                       |
-| 1.17 | 2019/01/24 | Jon Fan             | 增加设备/AI的ext_loc属性说明                                                                                                       |
-| 1.18 | 2019/02/14 | Jon Fan             | 增加EpGetAttrs(获取设备扩展属性)接口                                                                                                  |
-| 1.19 | 2019/03/01 | Jon Fan             | 增加EpSet接口修改智慧中心名称说明<br/>增加EpTestRssi(测试射频设备信号强度)接口                                                                        |
-| 1.20 | 2019/06/03 | Jon Fan             | 增加EpGet/EpGetAll接口返回的设备IO属性里面v值的说明。增加授权返回的svrrgnid属性说明。<br/>增加EpBatchSet接口                                                |
-| 1.21 | 2019/10/18 | Jon Fan             | 增加EpSearchIDev,EpAddIDev接口说明                                                                                              |
-| 1.22 | 2019/12/30 | Jon Fan             | 增加EpMaintOtaFiles, EpMaintOtaTasks接口说明                                                                                    |
-| 1.23 | 2020/01/07 | Jon Fan             | 增加EpMaintAgtRM接口说明                                                                                                        |
-| 1.24 | 2020/03/11 | Jon Fan             | 增加EpSetVar接口说明<br/>EpUpgradeAgt接口增加HTTP升级方式说明                                                                             |
-| 1.25 | 2020/04/08 | Jon Fan             | 增加EpConfigAgt接口说明                                                                                                         |
-| 1.26 | 2020/04/21 | Jon Fan             | 设备模型增加fullCls描述                                                                                                           |
-| 1.27 | 2020/07/01 | Jon Fan             | EpConfigAgt接口增加timezone设置<br/>EpCmd接口增加云视户外摄像头声光警报设置                                                                      |
-| 1.28 | 2021/06/10 | Pretty Ju           | 更新附录1                                                                                                                     |
-| 1.29 | 2021/07/14 | Jon Fan             | "设备模型说明"增加新属性说明                                                                                                           |
-| 1.30 | 2022/02/08 | Jon Fan             | EpConfigAgt接口增加NIF配置                                                                                                      |
-| 1.31 | 2022/03/02 | Jon Fan             | EpConfigAgt接口文档重新整理并增加本地互联接口说明                                                                                            |
-| 1.32 | 2022/06/23 | Pretty Ju           | 去掉Headers["X-LS-SVRRGNID"]；更新附录1和附录2；细节描述优化                                                                               |
-| 1.33 | 2022/07/27 | Jon Fan             | EpConfigAgt接口增加resetRfModule配置                                                                                            |
-| 1.34 | 2022/08/02 | Pretty Ju           | 增加NatureCtl接口说明                                                                                                           |
-| 1.35 | 2022/10/22 | Jon Fan             | EpMaintOtaFiles、EpMaintOtaTasks接口增加扩展指令说明                                                                                 |
-| 1.36 | 2023/02/08 | Jon Fan             | WebSocket事件增加elog说明                                                                                                       |
-| 1.37 | 2023/06/26 | Jon Fan             | EpConfigAgt接口增加operExSv配置                                                                                                 |
-| 1.38 | 2023/08/22 | Jon Fan             | 增加EpMaintCartFiles接口说明                                                                                                    |
+本文档由 LifeSmart提供，@MapleEve 重构为 Markdown 格式
 
 ## 目录
 
@@ -131,14 +90,6 @@ api.eur.ilifesmart.com 服务地址，当前也可以仍旧使用 api.ilifesmart
 具体服务地址列表请参考附录2服务代号及地址对应表
 
 ## 3.3 授权过程
-
-输入上面URL后，出现如下界面：
-
-![](images/0c47416b0780a56de4f6db6e1bb4e90fd8fa5529f5b5bf0b400fa7843faebbca.jpg)
-
-输入用户名和密码，验证通过之后跳转到如下页面：
-
-![](images/77bed661b39f0d7b402d2fcf967efb4a031506391c4137a4c841d82ca1110941.jpg)
 
 点击授权之后页面跳转到URL提供的 auth_callback 的URL链接，URL中带有userid和usertoken等参数。智能应用端需要能读取到URL中的usertoken等内容，执行后续操作。
 
@@ -446,20 +397,32 @@ sign=MD5("method:TestMethod,param1:12345,param2:abcde,did:DID_XXXXXXXX ,time:144
 
 ```json
 {
-    "name": "Smart Switch",
-    "agt": "A3EAAABtAEwQXXXXXXXXXX",
-    "me": "2d11",
-    "devtype": "SL_SW_IF3",
-    "fullCls": "SL_SW_IF3_V2",
-    "stat": 1,
-    "data": {
-        "L1": {"type": 129, "val": 1,"name": "Living"},
-        "L2": {"type": 128, "val": 0,"name": "Study"},
-        "L3": {"type": 129, "val": 1,"name": "Kid"}
-    }, 
-    "ver": "0.1.6.49",
-    "lDbm": -42,
-    "lHeart": 1626229661
+  "name": "Smart Switch",
+  "agt": "A3EAAABtAEwQXXXXXXXXXX",
+  "me": "2d11",
+  "devtype": "SL_SW_IF3",
+  "fullCls": "SL_SW_IF3_V2",
+  "stat": 1,
+  "data": {
+    "L1": {
+      "type": 129,
+      "val": 1,
+      "name": "Living"
+    },
+    "L2": {
+      "type": 128,
+      "val": 0,
+      "name": "Study"
+    },
+    "L3": {
+      "type": 129,
+      "val": 1,
+      "name": "Kid"
+    }
+  },
+  "ver": "0.1.6.49",
+  "lDbm": -42,
+  "lHeart": 1626229661
 }
 ```
 
@@ -507,8 +470,6 @@ sign=MD5("method:TestMethod,param1:12345,param2:abcde,did:DID_XXXXXXXX ,time:144
 ### 4.5.1 EpAddAgt 增加智慧中心
 
 #### 4.5.1.1 JSON请求数据格式
-
-![](images/84079aa1aa20eedbba2162e7e343a535858bde13b0926bb8910af9dfb6a03c42.jpg)
 
 | 类型                  | 定义               | 必须 | 描述                              |
 |:--------------------|:-----------------|:---|:--------------------------------|
@@ -658,8 +619,6 @@ method:EpDeleteAgt, agt:A3EAAABdADQQxxxxxxxxxxx, time:1447641115,userid:1111111,
 ### 4.5.3 EpGetAllAgts 获取所有智慧中心
 
 #### 4.5.3.1 JSON请求数据格式
-
-![](images/fae5aa1b3ea02dca631c26172cf971df7b232a5926b71bdf460c55d4f6058284.jpg)
 
 | 类型                  | 定义               | 必须 | 描述                              |
 |:--------------------|:-----------------|:---|:--------------------------------|
@@ -1328,19 +1287,19 @@ sign为SIGN_XXXXXXXX，实际需要填写真实签名数据；
 
 ```json
 {
-    "id": 191,
-    "method": "EpsSet",
-    "system": {
-        "ver": "1.0",
-        "lang": "en",
-        "userid": "1111111",
-        "appkey": "APPKEY_xxxxxxxx",
-        "time": 1447640772,
-        "sign": "SIGN_xxxxxxxx"
-    },
-    "params": {
-        "args": "[{\"val\":65535,\"tag\":\"m\",\"agt\":\"_EAAABuADoYRzUyOTc2Mg\",\"me\":\"0011\",\"idx\":\"RGBW\",\"type\":255},{\"val\":0,\"tag\":\"m\",\"agt\":\"_EAAABuADoYRzUyOTc2Mg\",\"me\":\"0011\",\"idx\":\"DYN\",\"type\":128}]"
-    }
+  "id": 191,
+  "method": "EpsSet",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447640772,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "args": "[{\"val\":65535,\"tag\":\"m\",\"agt\":\"_EAAABuADoYRzUyOTc2Mg\",\"me\":\"0011\",\"idx\":\"RGBW\",\"type\":255},{\"val\":0,\"tag\":\"m\",\"agt\":\"_EAAABuADoYRzUyOTc2Mg\",\"me\":\"0011\",\"idx\":\"DYN\",\"type\":128}]"
+  }
 }
 ```
 
@@ -1399,19 +1358,19 @@ agt为AGT_XXXXXXXX, 实际需要填写真实数据；
 
 ```json
 {
-    "id": 974,
-    "method": "SceneGet",
-    "system": {
-        "ver": "1.0",
-        "lang": "en",
-        "userid": "1111111",
-        "appkey": "APPKEY_xxxxxxxx",
-        "time": 1447639497,
-        "sign": "SIGN_xxxxxxxx"
-    },
-    "params": {
-        "agt": "AGT_xxxxxxxx"
-    }
+  "id": 974,
+  "method": "SceneGet",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx"
+  }
 }
 ```
 
@@ -1435,7 +1394,7 @@ method:SceneGet, agt:AGT_xxxxxxxx, time:1447639497,userid:1111111, usertoken:UsE
       "cls": "scene"
     },
     {
-      "id": "bbbbbbb", 
+      "id": "bbbbbbb",
       "name": "testscenel",
       "desc": "testscene2",
       "cls": "scene"
@@ -1740,19 +1699,19 @@ agt为AGT_XXXXXXXX，实际需要填写真实数据；
 
 ```json
 {
-    "id": 974,
-    "method": "EpGetAgtLatestVersion",
-    "system": {
-        "ver": "1.0",
-        "lang": "en",
-        "userid": "1111111",
-        "appkey": "APPKEY_xxxxxxxx",
-        "time": 1447639497,
-        "sign": "SIGN_xxxxxxxx"
-    },
-    "params": {
-        "agt": "AGT_xxxxxxxx"
-    }
+  "id": 974,
+  "method": "EpGetAgtLatestVersion",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx"
+  }
 }
 ```
 
@@ -1876,8 +1835,6 @@ method:EpSearchSmart,agt:AGT_xxxxxxxx,mode:notexist, time:1447639497, userid:111
 - ttl 搜索过程的TTL条数，可用户诊断网络；
 - sn 被搜索到的智慧设备的MAC地址，并非所有的都会返回；
 
-![](images/46f07bdfd1fddaaabcbb2229a646c636de299e07fa17f0046fd3c9cdbdf6e1be.jpg)
-
 ### 4.5.16 EpAddSmart 把搜索到的附近智慧设备添加到智慧中心
 
 #### 4.5.16.1 JSON请求数据格式
@@ -1965,8 +1922,6 @@ me”属性值。若该设备已经存在与智慧中心下面，即已经被添
 ### 4.5.17 EpGetAgtState 获取智慧中心状态
 
 #### 4.5.17.1 JSON请求数据格式
-
-![](images/965a61c7dee720f70444d00081e83f0b15d069db26700209f4a0914f04d58e8a.jpg)
 
 | 类型                  | 定义                | 必须 | 描述                              |
 |:--------------------|:------------------|:---|:--------------------------------|
@@ -3202,21 +3157,21 @@ svrurl+PartialURL，例如：`https://api.ilifesmart.com/app/api.EpMaintCartFile
 
 ```json
 {
-    "id": 974,
-    "method": "EpMaintCartFiles",
-    "system": {
-        "ver": "1.0",
-        "lang": "en",
-        "userid": "1111111",
-        "appkey": "APPKEY_xxxxxxxx",
-        "time": 1447639497,
-        "sign": "SIGN_xxxxxxxx"
-    },
-    "params": {
-        "agt": "AGT_xxxxxxxx",
-        "act": "AddByUrl",
-        "actargs": "{\"uri\":\"`https://x.cololight.com/mweb/attach/upload/coloxxtemp/kt6_9AB807.rom`\"}"
-    }
+  "id": 974,
+  "method": "EpMaintCartFiles",
+  "system": {
+    "ver": "1.0",
+    "lang": "en",
+    "userid": "1111111",
+    "appkey": "APPKEY_xxxxxxxx",
+    "time": 1447639497,
+    "sign": "SIGN_xxxxxxxx"
+  },
+  "params": {
+    "agt": "AGT_xxxxxxxx",
+    "act": "AddByUrl",
+    "actargs": "{\"uri\":\"`https://x.cololight.com/mweb/attach/upload/coloxxtemp/kt6_9AB807.rom`\"}"
+  }
 }
 ```
 
@@ -3511,8 +3466,6 @@ NatureMinil、摄像头Cameral。假定Agtl的agt属性为"Agtl_agt";假定Natur
 
 #### 4.5.30.1 JSON请求数据格式
 
-![](images/46d69b4856f895b907df5d5f9648bcc667eab2ae737ed8c254ef9b78ae68e05d.jpg)
-
 | 类型                  | 定义               | 必须 | 描述                                   |
 |:--------------------|:-----------------|:---|:-------------------------------------|
 | Interface Name      | NatureCtl        |    | 设置Nature面板首页按键、快捷设备界面、更多按键页等配置。      |
@@ -3704,10 +3657,6 @@ OpenAPI接口分为两类，一类是查询设备类，一类是控制设备类�
 - 第一次认证成功后，Socket将保持连接，可以对该连接发送wbAuth和RmAuth接口请求。
 - wbAuth：WebSocket认证，一次认证一个用户，可以在一个连接多次认证，达到单连接多用户的效果，并且可以持续认证；
 - RmAuth：WebSocket认证移除，一次移除一个用户，用户数到零时，连接自动断开；
-
-# 7.1.流程
-
-![](images/ca87885ed49d63dc9030523f0b1f3476729b0eb86a54dcaf32b59b3191a21fcf.jpg)
 
 # 7.2.URI
 
@@ -4503,8 +4452,6 @@ elog字段定义:
 
 示例：userid = "7722454", agt="A3QAAABmAFAGRzczXXXXXX", idx = "s", devtype = "elog", ts = 1675662554000, elog = {cgy="
 sys", cls = "errlock", lv = 0, info = "0", obj="", lc = "A3QAAABmAFAGRzczXXXXXX/me/ep/2765"}
-
-![](images/701230270831984a630a86f657693efbb9fbd319920e3d59c960b16e033c33de.jpg)
 
 # 8.智能应用用户API
 
