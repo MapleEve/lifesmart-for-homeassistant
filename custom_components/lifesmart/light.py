@@ -333,7 +333,7 @@ class LifeSmartLight(LifeSmartBaseLight):
     @callback
     def _initialize_state(self) -> None:
         """初始化通用灯状态。"""
-        self._attr_is_on = safe_get(self._sub_data, "type", default=0) % 2 == 1
+        self._attr_is_on = safe_get(self._sub_data, "type", default=0) & 1 == 1
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
@@ -344,7 +344,7 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
     @callback
     def _initialize_state(self) -> None:
         """初始化亮度灯状态。"""
-        self._attr_is_on = safe_get(self._sub_data, "type", default=0) % 2 == 1
+        self._attr_is_on = safe_get(self._sub_data, "type", default=0) & 1 == 1
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         if (val := safe_get(self._sub_data, "val")) is not None:
@@ -420,7 +420,7 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
         p1_data = safe_get(data, "P1", default={})
         p2_data = safe_get(data, "P2", default={})
 
-        self._attr_is_on = safe_get(p1_data, "type", default=0) % 2 == 1
+        self._attr_is_on = safe_get(p1_data, "type", default=0) & 1 == 1
         self._attr_color_mode = ColorMode.COLOR_TEMP
         self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
@@ -533,7 +533,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
     def _initialize_state(self) -> None:
         """初始化SPOT RGB灯状态。"""
         sub_data = self._sub_data
-        self._attr_is_on = safe_get(sub_data, "type", default=0) % 2 == 1
+        self._attr_is_on = safe_get(sub_data, "type", default=0) & 1 == 1
         self._attr_color_mode = ColorMode.RGB
         self._attr_supported_color_modes = {ColorMode.RGB}
         self._attr_effect_list = DYN_EFFECT_LIST
@@ -648,7 +648,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
         p1_data = safe_get(data, "P1", default={})
         p2_data = safe_get(data, "P2", default={})
 
-        self._attr_is_on = safe_get(p1_data, "type", default=0) % 2 == 1
+        self._attr_is_on = safe_get(p1_data, "type", default=0) & 1 == 1
         if (val := safe_get(p1_data, "val")) is not None:
             self._attr_brightness = val
 
@@ -751,7 +751,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
     def _initialize_state(self) -> None:
         """初始化单IO RGBW灯状态。"""
         sub_data = self._sub_data
-        self._attr_is_on = safe_get(sub_data, "type", default=0) % 2 == 1
+        self._attr_is_on = safe_get(sub_data, "type", default=0) & 1 == 1
         self._attr_supported_color_modes = {ColorMode.RGBW}
         self._attr_color_mode = ColorMode.RGBW
         self._attr_effect_list = DYN_EFFECT_LIST
@@ -900,13 +900,13 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         color_data = safe_get(data, self._color_io, default={})
         dyn_data = safe_get(data, self._effect_io, default={})
 
-        self._attr_is_on = safe_get(color_data, "type", default=0) % 2 == 1
+        self._attr_is_on = safe_get(color_data, "type", default=0) & 1 == 1
         self._attr_brightness = 255 if self._attr_is_on else 0
         self._attr_supported_color_modes = {ColorMode.RGBW}
         self._attr_color_mode = ColorMode.RGBW
         self._attr_effect_list = DYN_EFFECT_LIST
 
-        if safe_get(dyn_data, "type", default=0) % 2 == 1:
+        if safe_get(dyn_data, "type", default=0) & 1 == 1:
             self._attr_effect = next(
                 (
                     k
@@ -1043,6 +1043,6 @@ class LifeSmartCoverLight(LifeSmartBaseLight):
     @callback
     def _initialize_state(self) -> None:
         """初始化车库门灯状态。"""
-        self._attr_is_on = safe_get(self._sub_data, "type", default=0) % 2 == 1
+        self._attr_is_on = safe_get(self._sub_data, "type", default=0) & 1 == 1
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}

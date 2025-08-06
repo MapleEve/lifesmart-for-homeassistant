@@ -42,6 +42,7 @@ from .const import (
     SMOKE_SENSOR_TYPES,
     RADAR_SENSOR_TYPES,
     DEFED_SENSOR_TYPES,
+    CUBE_BUTTON_TYPES,
     CLIMATE_TYPES,
 )
 from .entity import LifeSmartEntity
@@ -127,7 +128,7 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         self._attrs = self._get_attributes()
 
         # 最后，处理瞬时按钮的特殊重置逻辑
-        if self.devtype == "SL_SC_BB_V2" and is_currently_on:
+        if self.devtype in CUBE_BUTTON_TYPES and is_currently_on:
             # 更新事件相关的属性
             val = data.get("val", 0)
             event_map = {1: "single_click", 2: "double_click", 255: "long_press"}
@@ -223,14 +224,14 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         # 门窗感应器特殊处理
         if device_type in GUARD_SENSOR_TYPES:
             if device_type == "SL_SC_GS" and sub_key in {"P1", "P2"}:
-                return type_val % 2 == 1
+                return type_val & 1 == 1
             if device_type == "SL_SC_BG" and sub_key == "AXS":
                 return val != 0  # 非0表示检测到震动
             return val == 0 if sub_key == "G" else val != 0
 
         # 云防系列设备特殊处理
         if device_type in DEFED_SENSOR_TYPES:
-            return type_val % 2 == 1
+            return type_val & 1 == 1
 
         # 动态感应器
         if device_type in MOTION_SENSOR_TYPES:
@@ -252,7 +253,7 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
 
         # 通用控制器
         if device_type in GENERIC_CONTROLLER_TYPES:
-            return type_val % 2 == 1
+            return type_val & 1 == 1
 
         # 水浸传感器
         if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
@@ -273,8 +274,8 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         if device_type in CLIMATE_TYPES:
             if sub_key == "P5":  # 温控阀门告警 (val 是 bitmask)
                 return val > 0
-            # 其他所有温控器的附属开关/阀门都遵循 type%2==1 为开启的规则
-            return type_val % 2 == 1
+            # 其他所有温控器的附属开关/阀门都遵循 type&1==1 为开启的规则
+            return type_val & 1 == 1
 
         # 其他传感器默认处理
         return val != 0
@@ -306,8 +307,8 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
             return {"conductivity_level": val, "water_detected": val != 0}
 
-        # SL_SC_BB_V2 初始化事件属性
-        if device_type == "SL_SC_BB_V2":
+        # 按钮开关类型初始化事件属性
+        if device_type in CUBE_BUTTON_TYPES:
             return {"last_event": None, "last_event_time": None}
 
         # 为温控阀门的告警传感器添加详细属性

@@ -282,7 +282,7 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
 
         val = status_data.get("val", 0)
         self._attr_current_cover_position = val & 0x7F
-        is_moving = status_data.get("type", 0) % 2 == 1
+        is_moving = status_data.get("type", 0) & 1 == 1
         is_opening_direction = (val & 0x80) == 0
 
         self._attr_is_opening = is_moving and is_opening_direction
@@ -348,8 +348,8 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
         if not config or not data:
             return
 
-        is_opening = data.get(config["open"], {}).get("type", 0) % 2 == 1
-        is_closing = data.get(config["close"], {}).get("type", 0) % 2 == 1
+        is_opening = data.get(config["open"], {}).get("type", 0) & 1 == 1
+        is_closing = data.get(config["close"], {}).get("type", 0) & 1 == 1
 
         # 记录最后一次的移动方向
         if is_opening:
