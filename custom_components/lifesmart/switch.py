@@ -5,6 +5,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -24,7 +25,10 @@ from .const import (
     POWER_METER_PLUG_TYPES,
 )
 from .entity import LifeSmartEntity
-from .helpers import generate_unique_id, get_switch_subdevices
+from .helpers import (
+    generate_unique_id,
+    get_device_platform_mapping,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,9 +50,12 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用helpers中的统一逻辑获取所有有效的开关子设备
-        subdevice_keys = get_switch_subdevices(device)
-        for sub_key in subdevice_keys:
+        # 使用新的IO映射系统获取设备支持的平台
+        platform_mapping = get_device_platform_mapping(device)
+        switch_subdevices = platform_mapping.get(Platform.SWITCH, [])
+
+        # 为每个switch子设备创建实体
+        for sub_key in switch_subdevices:
             switches.append(
                 LifeSmartSwitch(
                     device, sub_key, hub.get_client(), config_entry.entry_id

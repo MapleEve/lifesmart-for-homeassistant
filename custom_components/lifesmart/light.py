@@ -33,6 +33,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -41,7 +42,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
-    CMD_TYPE_SET_RAW,
+    CMD_TYPE_SET_RAW_OFF,
+    CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_VAL,
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
@@ -62,7 +64,11 @@ from .const import (
     ALL_EFFECT_MAP,
 )
 from .entity import LifeSmartEntity
-from .helpers import generate_unique_id, get_light_subdevices, safe_get
+from .helpers import (
+    generate_unique_id,
+    get_device_platform_mapping,
+    safe_get,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,9 +114,12 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用helpers中的统一逻辑获取所有有效的灯光子设备
-        subdevice_keys = get_light_subdevices(device)
-        for sub_key in subdevice_keys:
+        # 使用新的IO映射系统获取设备支持的平台
+        platform_mapping = get_device_platform_mapping(device)
+        light_subdevices = platform_mapping.get(Platform.LIGHT, [])
+
+        # 为每个light子设备创建实体
+        for sub_key in light_subdevices:
             light_entity = _create_light_entity(
                 device, hub.get_client(), config_entry.entry_id, sub_key
             )
@@ -142,6 +151,13 @@ def _create_light_entity(device: dict, client, entry_id: str, sub_key: str):
     elif sub_key == "P1" and device_type in OUTDOOR_LIGHT_TYPES:
         return LifeSmartSingleIORGBWLight(device, client, entry_id, sub_key)
     elif sub_key == "P1" and device_type in BRIGHTNESS_LIGHT_TYPES:
+        return LifeSmartBrightnessLight(device, client, entry_id, sub_key)
+    # 处理带灯光功能的窗帘设备
+    elif device_type == "SL_CN_IF" and sub_key in {"P4", "P5", "P6"}:
+        # 流光窗帘开关的P4/P5/P6是RGBW颜色控制，支持动态模式
+        return LifeSmartSingleIORGBWLight(device, client, entry_id, sub_key)
+    elif device_type == "SL_SW_WIN" and sub_key in {"dark", "bright"}:
+        # 窗帘控制开关的dark/bright是亮度控制
         return LifeSmartBrightnessLight(device, client, entry_id, sub_key)
     else:
         # 默认创建普通灯光实体
@@ -576,7 +592,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
             if ATTR_EFFECT in kwargs:
                 effect_val = DYN_EFFECT_MAP.get(self._attr_effect)
                 if effect_val is not None:
-                    cmd_type, cmd_val = CMD_TYPE_SET_RAW, effect_val
+                    cmd_type, cmd_val = CMD_TYPE_SET_RAW_ON, effect_val
                 else:
                     # 效果不存在时，重置cmd_val为None以调用父类方法
                     cmd_val = None
@@ -591,7 +607,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
                 final_rgb = tuple(round(c * ratio) for c in rgb)
 
                 r, g, b = final_rgb
-                cmd_type, cmd_val = CMD_TYPE_SET_RAW, (r << 16) | (g << 8) | b
+                cmd_type, cmd_val = CMD_TYPE_SET_RAW_ON, (r << 16) | (g << 8) | b
 
             if cmd_val is not None:
                 await self._client.async_send_single_command(
@@ -614,16 +630,25 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light with robust optimistic update."""
+        """Turn off the light and preserve color settings."""
         original_is_on = self._attr_is_on
 
         self._attr_is_on = False
         self.async_write_ha_state()
 
         try:
-            await self._client.turn_off_light_switch_async(
-                self._sub_key, self.agt, self.me
-            )
+            # 使用当前RGB颜色值来关闭灯光，这样可以保留颜色设置
+            if self._attr_rgb_color:
+                r, g, b = self._attr_rgb_color
+                color_val = (r << 16) | (g << 8) | b
+                await self._client.async_send_single_command(
+                    self.agt, self.me, self._sub_key, CMD_TYPE_SET_RAW_OFF, color_val
+                )
+            else:
+                # 如果没有颜色值，使用标准关闭命令
+                await self._client.async_send_single_command(
+                    self.agt, self.me, self._sub_key, CMD_TYPE_OFF, 0
+                )
         except Exception as e:
             _LOGGER.error(
                 "Failed to turn off light %s. Reverting state. Error: %s",
@@ -697,12 +722,14 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
             if ATTR_RGBW_COLOR in kwargs:
                 r, g, b, w = self._attr_rgbw_color
                 color_val = (w << 24) | (r << 16) | (g << 8) | b
-                params.append({"idx": "P2", "type": CMD_TYPE_SET_RAW, "val": color_val})
+                params.append(
+                    {"idx": "P2", "type": CMD_TYPE_SET_RAW_ON, "val": color_val}
+                )
             if ATTR_EFFECT in kwargs:
                 params.append(
                     {
                         "idx": "P2",
-                        "type": CMD_TYPE_SET_RAW,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "val": ALL_EFFECT_MAP[self._attr_effect],
                     }
                 )
@@ -722,13 +749,14 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light with robust optimistic update."""
+        """关闭量子灯。量子灯只需要关闭P1（亮度控制），P2（颜色控制）不需要关闭命令。"""
         original_is_on = self._attr_is_on
 
         self._attr_is_on = False
         self.async_write_ha_state()
 
         try:
+            # 根据文档，量子灯只需要关闭P1，P2不需要关闭命令
             await self._client.turn_off_light_switch_async("P1", self.agt, self.me)
         except Exception as e:
             _LOGGER.error(
@@ -791,7 +819,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
 
             effect_val = DYN_EFFECT_MAP.get(self._attr_effect)
             if effect_val is not None:
-                cmd_type, cmd_val = CMD_TYPE_SET_RAW, effect_val
+                cmd_type, cmd_val = CMD_TYPE_SET_RAW_ON, effect_val
 
         # 其次处理颜色
         elif ATTR_RGBW_COLOR in kwargs:
@@ -804,7 +832,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
 
             r, g, b, w = self._attr_rgbw_color
             color_val = (w << 24) | (r << 16) | (g << 8) | b
-            cmd_type, cmd_val = CMD_TYPE_SET_RAW, color_val
+            cmd_type, cmd_val = CMD_TYPE_SET_RAW_ON, color_val
 
         # 如果只调节亮度，这通常意味着用户想要白光
         elif ATTR_BRIGHTNESS in kwargs:
@@ -820,7 +848,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
             self._attr_rgbw_color = (r, g, b, w)
 
             color_val = (w << 24) | (r << 16) | (g << 8) | b
-            cmd_type, cmd_val = CMD_TYPE_SET_RAW, color_val
+            cmd_type, cmd_val = CMD_TYPE_SET_RAW_ON, color_val
 
         self.async_write_ha_state()
 
@@ -845,7 +873,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """
         关闭单IO RGBW灯。
-        协议: type=0x80, val=0
+        协议: type=0xfe, val=当前颜色值 (保留颜色设置)
         """
         # 1. 保存原始状态
         original_is_on = self._attr_is_on
@@ -856,9 +884,18 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
 
         # 3. 发送命令并处理异常
         try:
-            await self._client.async_send_single_command(
-                self.agt, self.me, self._sub_key, CMD_TYPE_OFF, 0
-            )
+            # 使用当前的颜色值来关闭灯光，这样可以保留颜色设置
+            if self._attr_rgbw_color:
+                r, g, b, w = self._attr_rgbw_color
+                color_val = (w << 24) | (r << 16) | (g << 8) | b
+                await self._client.async_send_single_command(
+                    self.agt, self.me, self._sub_key, CMD_TYPE_SET_RAW_OFF, color_val
+                )
+            else:
+                # 如果没有颜色值，使用标准关闭命令
+                await self._client.async_send_single_command(
+                    self.agt, self.me, self._sub_key, CMD_TYPE_OFF, 0
+                )
         except Exception as e:
             _LOGGER.error(
                 "Failed to turn off light %s. Reverting state. Error: %s",
@@ -956,7 +993,7 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
                         {"idx": self._color_io, "type": CMD_TYPE_ON, "val": 1},
                         {
                             "idx": self._effect_io,
-                            "type": CMD_TYPE_SET_RAW,
+                            "type": CMD_TYPE_SET_RAW_ON,
                             "val": effect_val,
                         },
                     ]
@@ -974,7 +1011,11 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
                 color_val = (w << 24) | (r << 16) | (g << 8) | b
 
                 io_list = [
-                    {"idx": self._color_io, "type": CMD_TYPE_SET_RAW, "val": color_val},
+                    {
+                        "idx": self._color_io,
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "val": color_val,
+                    },
                     {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
                 ]
 
@@ -999,7 +1040,7 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """关闭双IO RGBW灯，同时关闭颜色和效果通道。"""
+        """关闭双IO RGBW灯，使用CMD_TYPE_SET_RAW_OFF保留颜色和效果设置。"""
         # 1. 保存原始状态
         original_is_on = self._attr_is_on
 
@@ -1009,10 +1050,36 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
 
         # 3. 发送命令并处理异常
         try:
-            io_list = [
-                {"idx": self._color_io, "type": CMD_TYPE_OFF, "val": 0},
-                {"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0},
-            ]
+            io_list = []
+
+            # 对颜色IO口使用CMD_TYPE_SET_RAW_OFF来保留颜色设置
+            if self._attr_rgbw_color:
+                r, g, b, w = self._attr_rgbw_color
+                color_val = (w << 24) | (r << 16) | (g << 8) | b
+                io_list.append(
+                    {
+                        "idx": self._color_io,
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "val": color_val,
+                    }
+                )
+            else:
+                io_list.append({"idx": self._color_io, "type": CMD_TYPE_OFF, "val": 0})
+
+            # 对效果IO口使用CMD_TYPE_SET_RAW_OFF来保留动态效果设置
+            if self._attr_effect and (
+                effect_val := DYN_EFFECT_MAP.get(self._attr_effect)
+            ):
+                io_list.append(
+                    {
+                        "idx": self._effect_io,
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "val": effect_val,
+                    }
+                )
+            else:
+                io_list.append({"idx": self._effect_io, "type": CMD_TYPE_OFF, "val": 0})
+
             await self._client.async_send_multi_command(self.agt, self.me, io_list)
         except Exception as e:
             _LOGGER.error(

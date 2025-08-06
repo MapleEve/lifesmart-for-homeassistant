@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
     PERCENTAGE,
+    Platform,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -40,7 +41,6 @@ from .const import (
     # --- 设备类型常量导入 ---
     BASIC_ENV_SENSOR_TYPES,
     AIR_QUALITY_SENSOR_TYPES,
-    EV_SENSOR_TYPES,
     GAS_SENSOR_TYPES,
     NOISE_SENSOR_TYPES,
     POWER_METER_PLUG_TYPES,
@@ -53,7 +53,12 @@ from .const import (
     CLIMATE_TYPES,
 )
 from .entity import LifeSmartEntity
-from .helpers import generate_unique_id, get_sensor_subdevices, safe_get
+from .helpers import (
+    generate_unique_id,
+    get_device_platform_mapping,
+    safe_get,
+    get_io_friendly_val,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,9 +80,12 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用helpers中的统一逻辑获取所有有效的传感器子设备
-        subdevice_keys = get_sensor_subdevices(device)
-        for sub_key in subdevice_keys:
+        # 使用新的IO映射系统获取设备支持的平台
+        platform_mapping = get_device_platform_mapping(device)
+        sensor_subdevices = platform_mapping.get(Platform.SENSOR, [])
+
+        # 为每个sensor子设备创建实体
+        for sub_key in sensor_subdevices:
             sub_device_data = safe_get(device, DEVICE_DATA_KEY, sub_key, default={})
             sensors.append(
                 LifeSmartSensor(
@@ -227,7 +235,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             if sub_key == "T":
                 return SensorDeviceClass.TEMPERATURE
             if sub_key == "H":
-                return SensorDeviceClass.HUMIDITY  
+                return SensorDeviceClass.HUMIDITY
             if sub_key == "V":
                 return SensorDeviceClass.VOLTAGE
             if sub_key == "Z":
@@ -345,6 +353,23 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
                 raw_value,
             )
             return None
+
+        # 首先尝试使用type字段进行IEEE754转换
+        if hasattr(self, "_sub_data") and "type" in self._sub_data:
+            io_type = self._sub_data.get("type")
+            if io_type is not None:
+                try:
+                    converted_val = get_io_friendly_val(io_type, int(numeric_raw_value))
+                    if converted_val is not None:
+                        return converted_val
+                except (ValueError, TypeError, OverflowError) as e:
+                    _LOGGER.debug(
+                        "IEEE754 conversion failed for %s (type=%s, val=%s): %s",
+                        self.unique_id,
+                        io_type,
+                        numeric_raw_value,
+                        e,
+                    )
 
         device_type = self._raw_device[DEVICE_TYPE_KEY]
 

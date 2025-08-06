@@ -22,6 +22,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature, PRECISION_TENTHS
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -47,7 +48,7 @@ from .const import (
 from .entity import LifeSmartEntity
 from .helpers import (
     generate_unique_id,
-    is_climate,
+    get_device_platform_mapping,
     safe_get,
     get_f_fan_mode,
     get_tf_fan_mode,
@@ -84,8 +85,9 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用helpers中的统一判断函数
-        if is_climate(device):
+        # 使用新的IO映射系统判断设备是否支持温控平台
+        platform_mapping = get_device_platform_mapping(device)
+        if Platform.CLIMATE in platform_mapping:
             climates.append(
                 LifeSmartClimate(
                     raw_device=device,
@@ -512,6 +514,10 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         self._attr_fan_mode = next(
             (k for k, v in LIFESMART_ACIPM_FAN_MAP.items() if v == fan_val), None
         )
+
+        # 处理P6当前温度 - 根据官方文档，P6是当前温度字段，使用v值
+        if (temp := safe_get(data, "P6", "v")) is not None:
+            self._attr_current_temperature = temp
 
     def _update_v_fresh_p(self, data: dict):
         """更新 V_FRESH_P 新风系统状态。"""

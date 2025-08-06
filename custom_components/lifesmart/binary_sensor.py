@@ -16,6 +16,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -46,7 +47,11 @@ from .const import (
     CLIMATE_TYPES,
 )
 from .entity import LifeSmartEntity
-from .helpers import generate_unique_id, get_binary_sensor_subdevices, safe_get
+from .helpers import (
+    generate_unique_id,
+    get_device_platform_mapping,
+    safe_get,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,9 +73,12 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用helpers中的统一逻辑获取所有有效的二元传感器子设备
-        subdevice_keys = get_binary_sensor_subdevices(device)
-        for sub_key in subdevice_keys:
+        # 使用新的IO映射系统获取设备支持的平台
+        platform_mapping = get_device_platform_mapping(device)
+        binary_sensor_subdevices = platform_mapping.get(Platform.BINARY_SENSOR, [])
+
+        # 为每个binary_sensor子设备创建实体
+        for sub_key in binary_sensor_subdevices:
             sub_device_data = safe_get(device, DEVICE_DATA_KEY, sub_key, default={})
             binary_sensors.append(
                 LifeSmartBinarySensor(

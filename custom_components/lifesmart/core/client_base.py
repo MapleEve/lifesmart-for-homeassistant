@@ -25,7 +25,7 @@ from ..const import (
     CMD_TYPE_SET_VAL,
     CMD_TYPE_SET_CONFIG,
     CMD_TYPE_SET_TEMP_DECIMAL,
-    CMD_TYPE_SET_RAW,
+    CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_TEMP_FCU,
     # --- 设备类型和映射 ---
     DOOYA_TYPES,
@@ -481,14 +481,14 @@ class LifeSmartClientBase(ABC):
             if mode_val is not None:
                 new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
                 return await self._async_send_single_command(
-                    agt, me, "P1", CMD_TYPE_SET_RAW, new_val
+                    agt, me, "P1", CMD_TYPE_SET_RAW_ON, new_val
                 )
 
         if device_type == "SL_CP_DN":
             is_auto = 1 if hvac_mode == HVACMode.AUTO else 0
             new_val = (current_val & ~(1 << 31)) | (is_auto << 31)
             return await self._async_send_single_command(
-                agt, me, "P1", CMD_TYPE_SET_RAW, new_val
+                agt, me, "P1", CMD_TYPE_SET_RAW_ON, new_val
             )
 
         if device_type == "SL_CP_VL":
@@ -496,7 +496,7 @@ class LifeSmartClientBase(ABC):
             mode_val = mode_map.get(hvac_mode, 0)
             new_val = (current_val & ~(0b11 << 1)) | (mode_val << 1)
             return await self._async_send_single_command(
-                agt, me, "P1", CMD_TYPE_SET_RAW, new_val
+                agt, me, "P1", CMD_TYPE_SET_RAW_ON, new_val
             )
 
         return 0
@@ -509,11 +509,11 @@ class LifeSmartClientBase(ABC):
         idx_map = {
             "V_AIR_P": ("tT", CMD_TYPE_SET_TEMP_DECIMAL),
             "SL_UACCB": ("P3", CMD_TYPE_SET_TEMP_DECIMAL),
-            "SL_CP_DN": ("P3", CMD_TYPE_SET_RAW),
-            "SL_CP_AIR": ("P4", CMD_TYPE_SET_RAW),
+            "SL_CP_DN": ("P3", CMD_TYPE_SET_RAW_ON),
+            "SL_CP_AIR": ("P4", CMD_TYPE_SET_RAW_ON),
             "SL_NATURE": ("P8", CMD_TYPE_SET_TEMP_DECIMAL),
             "SL_FCU": ("P8", CMD_TYPE_SET_TEMP_FCU),
-            "SL_CP_VL": ("P3", CMD_TYPE_SET_RAW),
+            "SL_CP_VL": ("P3", CMD_TYPE_SET_RAW_ON),
         }
         if device_type in idx_map:
             idx, cmd_type = idx_map[device_type]
@@ -534,7 +534,7 @@ class LifeSmartClientBase(ABC):
         elif device_type == "SL_TR_ACIPM":
             if (fan_val := LIFESMART_ACIPM_FAN_MAP.get(fan_mode)) is not None:
                 return await self._async_send_single_command(
-                    agt, me, "P2", CMD_TYPE_SET_RAW, fan_val
+                    agt, me, "P2", CMD_TYPE_SET_RAW_ON, fan_val
                 )
         elif device_type in {"SL_NATURE", "SL_FCU"}:
             if (fan_val := LIFESMART_TF_FAN_MAP.get(fan_mode)) is not None:
@@ -545,7 +545,7 @@ class LifeSmartClientBase(ABC):
             if (fan_val := LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)) is not None:
                 new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
                 return await self._async_send_single_command(
-                    agt, me, "P1", CMD_TYPE_SET_RAW, new_val
+                    agt, me, "P1", CMD_TYPE_SET_RAW_ON, new_val
                 )
 
         _LOGGER.warning("设备类型 %s 不支持风扇模式: %s", device_type, fan_mode)

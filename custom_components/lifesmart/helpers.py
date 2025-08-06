@@ -8,24 +8,212 @@ LifeSmart 集成的通用辅助函数模块。
 import re
 from typing import Any
 
+from homeassistant.components.climate import FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO
+from homeassistant.const import Platform
+
 from .const import (
-    ALL_BINARY_SENSOR_TYPES,
-    ALL_COVER_TYPES,
-    ALL_LIGHT_TYPES,
-    ALL_SENSOR_TYPES,
-    ALL_SWITCH_TYPES,
     CLIMATE_TYPES,
     DEVICE_DATA_KEY,
+    DEVICE_FULLCLS_KEY,
+    DEVICE_TYPE_KEY,
     GENERIC_CONTROLLER_TYPES,
-    GARAGE_DOOR_TYPES,
-    SUPPORTED_SWITCH_TYPES,
-    SMART_PLUG_TYPES,
-    POWER_METER_PLUG_TYPES,
+    VERSIONED_DEVICE_TYPES,
+    IO_TYPE_FLOAT_MASK,
+    IO_TYPE_FLOAT_VALUE,
+    IO_TYPE_PRECISION_MASK,
+    IO_TYPE_PRECISION_BASE,
+    IO_TYPE_PRECISION_BITS,
+    IO_TYPE_EXCEPTION,
+    # 新增：多平台设备支持映射
+    MULTI_PLATFORM_DEVICE_MAPPING,
+    STAR_SERIES_IO_MAPPING,
 )
 
 
 # ====================================================================
-# 通用辅助函数
+# 基于IO特征的平台检测函数
+# ====================================================================
+def get_device_platform_mapping(device: dict) -> dict[str, list[str]]:
+    """
+    根据设备的IO特征获取它支持的平台映射。
+
+    这个函数用于支持多平台设备，解决之前的设备重复定义问题。
+    单个物理设备可以使用不同IO口支持多个平台。
+
+    Args:
+        device: 设备字典，包含设备的基本信息和数据。
+
+    Returns:
+        返回平台名称到IO口列表的映射，例如:
+        {
+            "switch": ["L1"],
+            "light": ["dark", "bright"]
+        }
+    """
+    device_type = device.get("devtype")
+    device_data = safe_get(device, DEVICE_DATA_KEY, default={})
+    platforms = {}
+
+    # 先检查是否是多平台设备
+    if device_type in MULTI_PLATFORM_DEVICE_MAPPING:
+        mapping = MULTI_PLATFORM_DEVICE_MAPPING[device_type]
+
+        # 处理动态分类设备
+        if mapping.get("dynamic"):
+            return _handle_dynamic_device_platforms(device, mapping)
+
+        # 处理静态多平台设备
+        for platform, config in mapping.items():
+            if platform != "dynamic":
+                io_list = config.get("io", [])
+                if isinstance(io_list, str):
+                    io_list = [io_list]
+
+                # 检查IO口是否存在于设备数据中
+                valid_ios = [io for io in io_list if io in device_data]
+                if valid_ios:
+                    platforms[platform] = valid_ios
+
+        return platforms
+
+    # 处理单平台设备（传统逗辑）
+    return _get_single_platform_mapping(device)
+
+
+def _handle_dynamic_device_platforms(
+    device: dict, mapping: dict
+) -> dict[str, list[str]]:
+    """处理动态分类设备的平台映射。"""
+    device_type = device.get("devtype")
+    device_data = safe_get(device, DEVICE_DATA_KEY, default={})
+    platforms = {}
+
+    if device_type == "SL_NATURE":
+        # 超能面板动态分类逻辑
+        p5_val = safe_get(device_data, "P5", "val", default=0) & 0xFF
+
+        if p5_val == 1:  # 开关版
+            switch_config = mapping.get("switch_mode", {})
+            io_list = switch_config.get("io", [])
+            valid_ios = [io for io in io_list if io in device_data]
+            if valid_ios:
+                platforms["switch"] = valid_ios
+
+            # P4作为传感器
+            sensor_io_list = switch_config.get("sensor_io", [])
+            valid_sensor_ios = [io for io in sensor_io_list if io in device_data]
+            if valid_sensor_ios:
+                platforms["sensor"] = valid_sensor_ios
+
+        elif p5_val in [3, 6]:  # 温控版
+            climate_config = mapping.get("climate_mode", {})
+            io_list = climate_config.get("io", [])
+            valid_ios = [io for io in io_list if io in device_data]
+            if valid_ios:
+                platforms["climate"] = valid_ios
+
+            # P4作为传感器
+            sensor_io_list = climate_config.get("sensor_io", [])
+            valid_sensor_ios = [io for io in sensor_io_list if io in device_data]
+            if valid_sensor_ios:
+                platforms["sensor"] = valid_sensor_ios
+
+    elif device_type in ["SL_P", "SL_JEMA"]:
+        # 通用控制器动态分类逻辑
+        p1_val = safe_get(device_data, "P1", "val", default=0)
+        work_mode = (p1_val >> 24) & 0xE
+
+        if work_mode == 0:  # 自由模式 - 二元传感器
+            binary_sensor_config = mapping.get("binary_sensor_mode", {})
+            io_list = binary_sensor_config.get("io", [])
+            valid_ios = [io for io in io_list if io in device_data]
+            if valid_ios:
+                platforms["binary_sensor"] = valid_ios
+
+        elif work_mode in [2, 4]:  # 窗帘模式
+            cover_config = mapping.get("cover_mode", {})
+            io_list = cover_config.get("io", [])
+            valid_ios = [io for io in io_list if io in device_data]
+            if valid_ios:
+                platforms["cover"] = valid_ios
+
+        elif work_mode in [8, 10]:  # 开关模式
+            switch_config = mapping.get("switch_mode", {})
+            io_list = switch_config.get("io", [])
+            valid_ios = [io for io in io_list if io in device_data]
+            if valid_ios:
+                platforms["switch"] = valid_ios
+
+        # SL_JEMA额外支持P8/P9/P10独立开关
+        if device_type == "SL_JEMA" and "always_switch" in mapping:
+            always_switch_config = mapping["always_switch"]
+            io_list = always_switch_config.get("io", [])
+            valid_ios = [io for io in io_list if io in device_data]
+            if valid_ios:
+                if "switch" in platforms:
+                    platforms["switch"].extend(valid_ios)
+                else:
+                    platforms["switch"] = valid_ios
+
+    return platforms
+
+
+def _get_single_platform_mapping(device: dict) -> dict[str, list[str]]:
+    """获取单平台设备的IO映射（传统逗辑）。"""
+    device_type = device.get("devtype")
+    device_data = safe_get(device, DEVICE_DATA_KEY, default={})
+    platforms = {}
+
+    # 恒星/辰星/极星系列特殊处理
+    if device_type in STAR_SERIES_IO_MAPPING:
+        mapping = STAR_SERIES_IO_MAPPING[device_type]
+
+        # 开关IO口
+        switch_ios = [io for io in mapping["switch_io"] if io in device_data]
+        if switch_ios:
+            platforms["switch"] = switch_ios
+
+        # 电量IO口（作为传感器）
+        battery_io = mapping["battery_io"]
+        if battery_io in device_data:
+            platforms["sensor"] = [battery_io]
+
+    # 其他单平台设备的传统逗辑
+    # TODO: 在未来版本中，所有设备都应该添加到 MULTI_PLATFORM_DEVICE_MAPPING 中
+    # 目前保留的代码用于可能的向后兼容
+    # elif device_type in ALL_SWITCH_TYPES:
+    #     # 推断可能的开关IO口
+    #     common_switch_ios = ["O", "P1", "L1", "L2", "L3", "P2", "P3", "P4"]
+    #     valid_ios = [io for io in common_switch_ios if io in device_data]
+    #     if valid_ios:
+    #         platforms["switch"] = valid_ios
+    #
+    # elif device_type in ALL_LIGHT_TYPES:
+    #     # 推断可能的灯光IO口
+    #     common_light_ios = ["RGB", "RGBW", "P1", "P2", "DYN"]
+    #     valid_ios = [io for io in common_light_ios if io in device_data]
+    #     if valid_ios:
+    #         platforms["light"] = valid_ios
+
+    # 温控设备的传统逻辑
+    elif device_type in CLIMATE_TYPES:
+        # 推断可能的温控IO口
+        common_climate_ios = ["O", "MODE", "F", "tT", "T", "P1", "P2", "P3", "P4", "P8"]
+        valid_ios = [io for io in common_climate_ios if io in device_data]
+        if valid_ios:
+            platforms["climate"] = valid_ios
+
+    # 对于不在映射中的设备，尝试基于设备类型推断
+    else:
+        # 这里可以添加传统设备类型检查逻辑作为回退
+        # 但新架构鼓励将所有设备添加到MULTI_PLATFORM_DEVICE_MAPPING中
+        pass
+
+    return platforms
+
+
+# ====================================================================
+# 保留的兼容函数（基于新架构重写）
 # ====================================================================
 def safe_get(data: dict | list, *path, default: Any = None) -> Any:
     """
@@ -121,11 +309,7 @@ def is_binary_sensor(device: dict) -> bool:
     """
     判断一个设备是否应被创建为二元传感器实体。
 
-    此函数包含特殊业务逻辑：
-    - 对于通用控制器 (GENERIC_CONTROLLER_TYPES)，它们是多功能设备，需要通过检查
-      其 'P1' IO口的工作模式来区分具体功能。只有工作模式为 0 (自由模式) 时，
-      其P5/P6/P7等IO口才会作为二元传感器输入。
-    - 对于其他设备，直接检查其 devtype 是否在 ALL_BINARY_SENSOR_TYPES 集合中。
+    基于新的IO特征映射架构，检查设备的平台映射中是否包含binary_sensor平台。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -133,18 +317,8 @@ def is_binary_sensor(device: dict) -> bool:
     Returns:
         如果该设备应该被创建为二元传感器实体，则返回 True，否则返回 False。
     """
-    device_type = device.get("devtype")
-    if device_type not in ALL_BINARY_SENSOR_TYPES:
-        return False
-
-    # 通用控制器需要特殊判断其工作模式
-    if device_type in GENERIC_CONTROLLER_TYPES:
-        p1_val = safe_get(device, DEVICE_DATA_KEY, "P1", "val", default=0)
-        work_mode = (p1_val >> 24) & 0xE
-        # 0: 自由模式，此时P5/P6/P7为二元传感器输入
-        return work_mode == 0
-
-    return True
+    platforms = get_device_platform_mapping(device)
+    return Platform.BINARY_SENSOR in platforms
 
 
 def is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
@@ -166,6 +340,7 @@ def is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
         SMOKE_SENSOR_TYPES,
         RADAR_SENSOR_TYPES,
         DEFED_SENSOR_TYPES,
+        BUTTON_SWITCH_TYPES,
     )
 
     if device_type in CLIMATE_TYPES:
@@ -220,9 +395,12 @@ def is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     }:
         return True
 
-    # SL_SC_BB_V2 的 P1 是按钮事件触发器
-    if device_type == "SL_SC_BB_V2" and sub_key == "P1":
-        return True
+    # 按钮开关类型处理
+    if device_type in BUTTON_SWITCH_TYPES:
+        if device_type == "SL_SC_BB" and sub_key == "B":
+            return True  # SL_SC_BB 使用 B 作为按键状态
+        if device_type == "SL_SC_BB_V2" and sub_key == "P1":
+            return True  # SL_SC_BB_V2 使用 P1 作为按键状态
 
     return False
 
@@ -231,11 +409,7 @@ def get_binary_sensor_subdevices(device: dict) -> list[str]:
     """
     获取设备中所有有效的二元传感器子设备键。
 
-    此函数包含所有二元传感器设备的特殊处理逻辑：
-    - 对于通用控制器 (GENERIC_CONTROLLER_TYPES)，只有在工作模式为0（自由模式）时，
-      P5/P6/P7才是有效的二元传感器输入。
-    - 对于温控设备，某些IO口有特殊的二元传感器功能（如窗户开关检测）。
-    - 对于其他设备，使用通用的子设备判断逻辑。
+    基于新的IO特征映射架构，从平台映射中获取binary_sensor平台的IO口列表。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -248,19 +422,17 @@ def get_binary_sensor_subdevices(device: dict) -> list[str]:
 
     device_type = device.get("devtype")
     device_data = safe_get(device, DEVICE_DATA_KEY, default={})
+    platforms = get_device_platform_mapping(device)
+
+    # 从平台映射中获取binary_sensor的IO口
+    if "binary_sensor" in platforms:
+        return platforms["binary_sensor"]
+
+    # 回退到传统逻辑
     subdevices = []
-
-    # 对于通用控制器，helpers中的is_binary_sensor已经验证了工作模式，这里直接处理子设备
-    if device_type in GENERIC_CONTROLLER_TYPES:
-        for sub_key in ("P5", "P6", "P7"):
-            if sub_key in device_data:
-                subdevices.append(sub_key)
-    else:
-        # 其他设备使用子设备判断逻辑
-        for sub_key in device_data:
-            if is_binary_sensor_subdevice(device_type, sub_key):
-                subdevices.append(sub_key)
-
+    for sub_key in device_data:
+        if is_binary_sensor_subdevice(device_type, sub_key):
+            subdevices.append(sub_key)
     return subdevices
 
 
@@ -268,10 +440,7 @@ def is_climate(device: dict) -> bool:
     """
     判断一个设备是否应被创建为温控实体。
 
-    此函数包含特殊业务逻辑：
-    - 对于 'SL_NATURE' (超能面板)，它不仅仅是一个温控设备，也可能是开关面板。
-      必须通过检查其 'P5' IO口的值来区分。如果 P5 的低8位值为3，则为温控版。
-    - 对于其他设备，直接检查其 devtype 是否在 CLIMATE_TYPES 集合中。
+    基于新的IO特征映射架构，检查设备的平台映射中是否包含climate平台。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -279,28 +448,15 @@ def is_climate(device: dict) -> bool:
     Returns:
         如果该设备应该被创建为温控实体，则返回 True，否则返回 False。
     """
-    device_type = device.get("devtype")
-    if device_type not in CLIMATE_TYPES:
-        return False
-
-    # 超能面板需要特殊判断其工作模式
-    if device_type == "SL_NATURE":
-        # 温控版 SL_NATURE 必须存在 P5 且值为 3
-        # 使用位与操作 `& 0xFF` 确保只比较低8位，增加代码健壮性
-        p5_val = safe_get(device, DEVICE_DATA_KEY, "P5", "val", default=0) & 0xFF
-        return p5_val == 3  # 3 代表温控版
-
-    return True
+    platforms = get_device_platform_mapping(device)
+    return "climate" in platforms or device.get("devtype") in CLIMATE_TYPES
 
 
 def is_cover(device: dict) -> bool:
     """
     判断一个设备是否应被创建为覆盖物(窗帘)实体。
 
-    此函数包含特殊业务逻辑：
-    - 对于通用控制器 (GENERIC_CONTROLLER_TYPES)，它们是多功能设备，需要通过检查
-      其 'P1' IO口的工作模式来区分具体功能。只有工作模式为 2 或 4 时才是窗帘控制。
-    - 对于其他设备，直接检查其 devtype 是否在 ALL_COVER_TYPES 集合中。
+    基于新的IO特征映射架构，检查设备的平台映射中是否包含cover平台。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -308,18 +464,8 @@ def is_cover(device: dict) -> bool:
     Returns:
         如果该设备应该被创建为覆盖物实体，则返回 True，否则返回 False。
     """
-    device_type = device.get("devtype")
-    if device_type not in ALL_COVER_TYPES:
-        return False
-
-    # 通用控制器需要特殊判断其工作模式
-    if device_type in GENERIC_CONTROLLER_TYPES:
-        p1_val = safe_get(device, DEVICE_DATA_KEY, "P1", "val", default=0)
-        work_mode = (p1_val >> 24) & 0xE
-        # 2: 二线窗帘, 4: 三线窗帘
-        return work_mode in {2, 4}
-
-    return True
+    platforms = get_device_platform_mapping(device)
+    return Platform.COVER in platforms
 
 
 def is_cover_subdevice(device_type: str, sub_key: str) -> bool:
@@ -350,11 +496,7 @@ def get_cover_subdevices(device: dict) -> list[str]:
     """
     获取设备中所有有效的窗帘子设备键。
 
-    此函数包含所有窗帘设备的特殊处理逻辑：
-    - 对于通用控制器 (GENERIC_CONTROLLER_TYPES)，只有在工作模式为2或4时，
-      P2/P3才是有效的窗帘控制点。
-    - 对于非定位窗帘，只为其"开"操作的IO口创建一个实体，以避免重复。
-    - 对于其他设备，使用通用的子设备判断逻辑。
+    基于新的IO特征映射架构，从平台映射中获取cover平台的IO口列表。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -367,37 +509,40 @@ def get_cover_subdevices(device: dict) -> list[str]:
 
     device_type = device.get("devtype")
     device_data = safe_get(device, DEVICE_DATA_KEY, default={})
+    platforms = get_device_platform_mapping(device)
+
+    # 从平台映射中获取cover的IO口
+    if "cover" in platforms:
+        cover_ios = platforms["cover"]
+        # 对于非定位窗帘，只创建一个实体（避免重复）
+        from .const import NON_POSITIONAL_COVER_CONFIG, DOOYA_TYPES, GARAGE_DOOR_TYPES
+
+        # 定位窗帘直接返回所有IO口
+        if device_type in DOOYA_TYPES or device_type in GARAGE_DOOR_TYPES:
+            return cover_ios
+
+        # 非定位窗帘只返回第一个IO口（代表整个窗帘）
+        config_key = "SL_P" if device_type in GENERIC_CONTROLLER_TYPES else device_type
+        if config_key in NON_POSITIONAL_COVER_CONFIG:
+            # 返回所有可用IO口中的第一个
+            return cover_ios[:1] if cover_ios else []
+
+        return cover_ios
+
+    # 回退到传统逻辑
     subdevices = []
+    for sub_key in device_data:
+        if is_cover_subdevice(device_type, sub_key):
+            # 对于非定位窗帘，只为"开"操作的IO口创建实体
+            from .const import NON_POSITIONAL_COVER_CONFIG
 
-    # 对于通用控制器，helpers中的is_cover已经验证了工作模式，这里直接处理子设备
-    if device_type in GENERIC_CONTROLLER_TYPES:
-        for sub_key in ("P2", "P3"):
-            if sub_key in device_data:
-                # 对于非定位窗帘，只为"开"操作的IO口创建实体
-                from .const import NON_POSITIONAL_COVER_CONFIG
-
-                config = NON_POSITIONAL_COVER_CONFIG.get("SL_P", {})
+            if device_type in NON_POSITIONAL_COVER_CONFIG:
+                config = NON_POSITIONAL_COVER_CONFIG[device_type]
                 rep_key = config.get("open")
-                if rep_key and sub_key == rep_key:
+                if sub_key == rep_key:
                     subdevices.append(sub_key)
-                # 对于定位窗帘，都添加
-                elif not NON_POSITIONAL_COVER_CONFIG.get("SL_P"):
-                    subdevices.append(sub_key)
-    else:
-        # 其他设备使用子设备判断逻辑
-        for sub_key in device_data:
-            if is_cover_subdevice(device_type, sub_key):
-                # 对于非定位窗帘，只为"开"操作的IO口创建实体
-                from .const import NON_POSITIONAL_COVER_CONFIG
-
-                if device_type in NON_POSITIONAL_COVER_CONFIG:
-                    config = NON_POSITIONAL_COVER_CONFIG[device_type]
-                    rep_key = config.get("open")
-                    if sub_key == rep_key:
-                        subdevices.append(sub_key)
-                else:
-                    subdevices.append(sub_key)
-
+            else:
+                subdevices.append(sub_key)
     return subdevices
 
 
@@ -405,13 +550,16 @@ def is_light(device: dict) -> bool:
     """
     判断一个设备是否应被创建为灯光实体。
 
+    基于新的IO特征映射架构，检查设备的平台映射中是否包含light平台。
+
     Args:
         device: 设备字典，包含设备的基本信息和数据。
 
     Returns:
         如果该设备应该被创建为灯光实体，则返回 True，否则返回 False。
     """
-    return device.get("devtype") in ALL_LIGHT_TYPES
+    platforms = get_device_platform_mapping(device)
+    return Platform.LIGHT in platforms
 
 
 def is_light_subdevice(device_type: str, sub_key: str) -> bool:
@@ -439,11 +587,8 @@ def get_light_subdevices(device: dict) -> list[str]:
     """
     获取设备中所有有效的灯光子设备键。
 
-    此函数包含所有灯光设备的特殊处理逻辑：
-    - 对于 SPOT 类型设备，根据具体的 IO 口返回相应的子设备键。
-    - 对于车库门类型，只检查 P1 是否存在。
-    - 对于特殊的灯光类型（调光、量子灯、RGB等），不返回子设备键，因为它们会创建特殊的实体类。
-    - 对于其他设备，使用通用的子设备判断逻辑。
+    基于新的IO特征映射架构，从平台映射中获取light平台的IO口列表。
+    对于多平台设备（如SL_OL_W），只返回light平台相关的IO口。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -456,61 +601,41 @@ def get_light_subdevices(device: dict) -> list[str]:
 
     device_type = device.get("devtype")
     device_data = safe_get(device, DEVICE_DATA_KEY, default={})
+    platforms = get_device_platform_mapping(device)
+
+    # 从平台映射中获取light的IO口
+    if "light" in platforms:
+        light_ios = platforms["light"]
+
+        # 特殊处理不同的灯光类型
+        # 对于某些特殊设备，需要返回特殊标记而不是实际IO口
+        from .const import LIGHT_DIMMER_TYPES, QUANTUM_TYPES, RGBW_LIGHT_TYPES
+
+        if device_type in LIGHT_DIMMER_TYPES:
+            return ["_DIMMER"]  # 特殊标记
+        elif device_type in QUANTUM_TYPES:
+            return ["_QUANTUM"]  # 特殊标记
+        elif (
+            device_type in RGBW_LIGHT_TYPES
+            and "RGBW" in device_data
+            and "DYN" in device_data
+        ):
+            return ["_DUAL_RGBW"]  # 特殊标记
+
+        return light_ios
+
+    # 回退到传统逻辑
     subdevices = []
 
-    # 特殊处理：SPOT 类型设备
+    # SPOT 类型设备特殊处理
     if device_type in {"MSL_IRCTL", "OD_WE_IRCTL", "SL_SPOT"}:
         if device_type == "MSL_IRCTL" and "RGBW" in device_data:
-            subdevices.append("RGBW")  # 特殊标记，表示需要创建 SPOT RGBW 灯
+            subdevices.append("RGBW")
         elif device_type in {"OD_WE_IRCTL", "SL_SPOT"} and "RGB" in device_data:
-            subdevices.append("RGB")  # 特殊标记，表示需要创建 SPOT RGB 灯
+            subdevices.append("RGB")
         return subdevices
 
-    # 特殊处理：车库门类型，只检查 P1
-    if device_type in GARAGE_DOOR_TYPES:  # GARAGE_DOOR_TYPES
-        if "P1" in device_data:
-            subdevices.append("P1")
-        return subdevices
-
-    # 特殊处理：这些设备类型会创建特殊的灯光实体，不需要子设备遍历
-    from .const import (
-        LIGHT_DIMMER_TYPES,
-        QUANTUM_TYPES,
-        RGBW_LIGHT_TYPES,
-        RGB_LIGHT_TYPES,
-        OUTDOOR_LIGHT_TYPES,
-        BRIGHTNESS_LIGHT_TYPES,
-    )
-
-    if device_type in LIGHT_DIMMER_TYPES:
-        subdevices.append("_DIMMER")  # 特殊标记，表示需要创建调光灯
-        return subdevices
-
-    if device_type in QUANTUM_TYPES:
-        subdevices.append("_QUANTUM")  # 特殊标记，表示需要创建量子灯
-        return subdevices
-
-    if (
-        device_type in RGBW_LIGHT_TYPES
-        and "RGBW" in device_data
-        and "DYN" in device_data
-    ):
-        subdevices.append("_DUAL_RGBW")  # 特殊标记，表示需要创建双IO RGBW灯
-        return subdevices
-
-    if device_type in RGB_LIGHT_TYPES and "RGB" in device_data:
-        subdevices.append("RGB")  # 使用实际的子设备键
-        return subdevices
-
-    if device_type in OUTDOOR_LIGHT_TYPES and "P1" in device_data:
-        subdevices.append("P1")  # 使用实际的子设备键
-        return subdevices
-
-    if device_type in BRIGHTNESS_LIGHT_TYPES and "P1" in device_data:
-        subdevices.append("P1")  # 使用实际的子设备键，但会创建亮度灯
-        return subdevices
-
-    # 通用处理：其他灯光设备，遍历所有子设备
+    # 其他设备使用子设备判断逻辑
     for sub_key in device_data:
         if is_light_subdevice(device_type, sub_key):
             subdevices.append(sub_key)
@@ -522,11 +647,7 @@ def is_sensor(device: dict) -> bool:
     """
     判断一个设备是否应被创建为数值传感器实体。
 
-    此函数包含特殊业务逻辑：
-    - 对于 'SL_NATURE' (超能面板)，它不仅仅是一个开关设备，在温控模式下还会
-      产生温度传感器。必须通过检查其 'P5' IO口的值来区分。如果 P5 的低8位值为3，
-      则为温控版，会产生一个温度传感器实体。
-    - 对于其他设备，直接检查其 devtype 是否在 ALL_SENSOR_TYPES 集合中。
+    基于新的IO特征映射架构，检查设备的平台映射中是否包含sensor平台。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -534,13 +655,8 @@ def is_sensor(device: dict) -> bool:
     Returns:
         如果该设备应该被创建为数值传感器实体，则返回 True，否则返回 False。
     """
-    device_type = device.get("devtype")
-    # 温控版的超能面板会产生一个温度传感器
-    if device_type == "SL_NATURE":
-        p5_val = safe_get(device, DEVICE_DATA_KEY, "P5", "val", default=0) & 0xFF
-        return p5_val == 3  # 3 代表温控版
-
-    return device_type in ALL_SENSOR_TYPES
+    platforms = get_device_platform_mapping(device)
+    return Platform.SENSOR in platforms
 
 
 def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
@@ -556,19 +672,17 @@ def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     """
     from .const import (
         CLIMATE_TYPES,
-        EV_SENSOR_TYPES,
-        ENVIRONMENT_SENSOR_TYPES,
+        BASIC_ENV_SENSOR_TYPES,
+        AIR_QUALITY_SENSOR_TYPES,
         GAS_SENSOR_TYPES,
         NOISE_SENSOR_TYPES,
-        POWER_METER_PLUG_TYPES,
-        SMART_PLUG_TYPES,
+        METERING_OUTLET_TYPES,
         POWER_METER_TYPES,
         LOCK_TYPES,
         COVER_TYPES,
         DEFED_SENSOR_TYPES,
         SMOKE_SENSOR_TYPES,
         WATER_SENSOR_TYPES,
-        GARAGE_DOOR_TYPES,
     )
 
     if device_type in CLIMATE_TYPES:
@@ -581,23 +695,32 @@ def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
             return True  # 新风系统的PM2.5和CO2传感器
         return False
 
-    # 环境感应器（包括温度、湿度、光照、电压）
-    if device_type in EV_SENSOR_TYPES and sub_key in {
-        "T",  # 温度
-        "H",  # 湿度
-        "Z",  # 光照
-        "V",  # 电压
-        "P1",
-        "P2",
-        "P3",
-        "P4",
-        "P5",  # 各种传感器端口
-    }:
-        return True
-
-    # TVOC, CO2, CH2O 传感器
-    if device_type in ENVIRONMENT_SENSOR_TYPES and sub_key in {"P1", "P3", "P4"}:
-        return True
+    # 环境感应器（基础型：温度、湿度、光照、电压）
+    if device_type in BASIC_ENV_SENSOR_TYPES or device_type in AIR_QUALITY_SENSOR_TYPES:
+        # 基础环境传感器的IO口
+        if device_type in {"SL_SC_THL", "SL_SC_BE", "SL_SC_B1"} and sub_key in {
+            "T",
+            "H",
+            "Z",
+            "V",
+        }:
+            return True
+        # 空气质量传感器的IO口
+        if device_type in AIR_QUALITY_SENSOR_TYPES:
+            if device_type == "SL_SC_CQ" and sub_key in {
+                "P1",
+                "P2",
+                "P3",
+                "P4",
+                "P5",
+                "P6",
+            }:
+                return True  # 温度、湿度、CO2、TVOC、电量、USB供电
+            if device_type == "SL_SC_CA" and sub_key in {"P1", "P2", "P3", "P4", "P5"}:
+                return True  # 温度、湿度、CO2、电量、USB供电
+            if device_type == "SL_SC_CH" and sub_key in {"P1"}:
+                return True  # 甲醛浓度(P2/P3为配置口，不是传感器)
+        return False
 
     # 气体感应器
     if device_type in GAS_SENSOR_TYPES and sub_key in {"P1", "P2"}:
@@ -611,12 +734,8 @@ def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     if device_type in COVER_TYPES and sub_key == "P8":
         return True
 
-    # 智能插座（计量版）
-    if device_type in POWER_METER_PLUG_TYPES and sub_key in {"P2", "P3", "P4"}:
-        return True
-
-    # 智能插座 (非计量版，但也可能带计量功能)
-    if device_type in SMART_PLUG_TYPES and sub_key in {"EV", "EI", "EP", "EPA"}:
+    # 计量插座
+    if device_type in METERING_OUTLET_TYPES and sub_key in {"P2", "P3", "P4"}:
         return True
 
     # 噪音感应器
@@ -654,9 +773,8 @@ def get_sensor_subdevices(device: dict) -> list[str]:
     """
     获取设备中所有有效的传感器子设备键。
 
-    此函数包含所有传感器设备的特殊处理逻辑：
-    - 对于 'SL_NATURE' (超能面板)，只有在温控版（P5=3）时才创建P4温度传感器。
-    - 对于其他设备，使用通用的子设备判断逻辑。
+    基于新的IO特征映射架构，从平台映射中获取sensor平台的IO口列表。
+    对于多平台设备（如恒星系列），只返回sensor平台相关的IO口。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -669,6 +787,13 @@ def get_sensor_subdevices(device: dict) -> list[str]:
 
     device_type = device.get("devtype")
     device_data = safe_get(device, DEVICE_DATA_KEY, default={})
+    platforms = get_device_platform_mapping(device)
+
+    # 从平台映射中获取sensor的IO口
+    if "sensor" in platforms:
+        return platforms["sensor"]
+
+    # 回退到传统逻辑
     subdevices = []
 
     # 特殊处理：温控版的超能面板
@@ -690,10 +815,7 @@ def is_switch(device: dict) -> bool:
     """
     判断一个设备是否应被创建为开关实体。
 
-    此函数包含特殊业务逻辑：
-    - 对于通用控制器 (GENERIC_CONTROLLER_TYPES)，它们是多功能设备，需要通过检查
-      其 'P1' IO口的工作模式来区分具体功能。只有工作模式为 8 或 10 时才是开关。
-    - 对于其他设备，直接检查其 devtype 是否在 ALL_SWITCH_TYPES 集合中。
+    基于新的IO特征映射架构，检查设备的平台映射中是否包含switch平台。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -701,23 +823,15 @@ def is_switch(device: dict) -> bool:
     Returns:
         如果该设备应该被创建为开关实体，则返回 True，否则返回 False。
     """
-    device_type = device.get("devtype")
-    if device_type not in ALL_SWITCH_TYPES:
-        return False
-
-    # 通用控制器需要特殊判断其工作模式
-    if device_type in GENERIC_CONTROLLER_TYPES:
-        p1_val = safe_get(device, DEVICE_DATA_KEY, "P1", "val", default=0)
-        work_mode = (p1_val >> 24) & 0xE
-        # 8: 三路开关, 10: 三路开关(新)
-        return work_mode in {8, 10}
-
-    return True
+    platforms = get_device_platform_mapping(device)
+    return Platform.SWITCH in platforms
 
 
 def is_switch_subdevice(device_type: str, sub_key: str) -> bool:
     """
-    判断一个设备的子IO口是否为开关控制点。
+    基于IO口功能精确判断一个设备的子IO口是否为开关控制点。
+
+    根据const.py中每个设备类型的详细IO口注释进行逐一匹配。
 
     Args:
         device_type: 设备的类型代码。
@@ -728,24 +842,118 @@ def is_switch_subdevice(device_type: str, sub_key: str) -> bool:
     """
     sub_key_upper = sub_key.upper()
 
+    # ==================== 专门的开关控制器 ====================
+
+    # 开关智控器 - P2是开关控制口
+    if device_type == "SL_S":
+        return sub_key_upper == "P2"
+
+    # 九路开关控制器 - P1~P9都是开关控制口，支持点动模式
     if device_type == "SL_P_SW":
         return sub_key_upper in {f"P{i}" for i in range(1, 10)}
 
-    if device_type in GARAGE_DOOR_TYPES:
-        return False
-    if device_type == "SL_SC_BB_V2":
-        return False
-    if device_type in SUPPORTED_SWITCH_TYPES and sub_key_upper == "P4":
-        return False
+    # 星玉情景开关(六路) - P1~P6是情景开关控制
+    if device_type == "SL_SW_NS6":
+        return sub_key_upper in {f"P{i}" for i in range(1, 7)}
 
-    if device_type in SMART_PLUG_TYPES:
+    # ==================== 流光开关系列 ====================
+
+    # 流光开关/辰星开关 - L1/L2/L3是开关控制，dark/bright是指示灯控制(非开关)
+    if device_type in {"SL_SW_IF1", "SL_SW_FE1", "SL_SF_IF1", "SL_SW_RC1", "SL_SW_CP1"}:
+        return sub_key_upper == "L1"
+    if device_type in {"SL_SW_IF2", "SL_SW_FE2", "SL_SF_IF2", "SL_SW_RC2", "SL_SW_CP2"}:
+        return sub_key_upper in {"L1", "L2"}
+    if device_type in {"SL_SW_IF3", "SL_SF_IF3", "SL_SW_RC3", "SL_SW_CP3"}:
+        return sub_key_upper in {"L1", "L2", "L3"}
+
+    # 触摸开关/极星开关(零火版) - L1/L2/L3是开关控制
+    if device_type in {"SL_SW_RC", "SL_SF_RC"}:
+        return sub_key_upper in {"L1", "L2", "L3"}
+
+    # ==================== 星玉开关系列 ====================
+
+    # 星玉开关 - L1/L2/L3是开关控制，dark/bright是指示灯控制
+    if device_type == "SL_SW_NS1":
+        return sub_key_upper == "L1"
+    if device_type == "SL_SW_NS2":
+        return sub_key_upper in {"L1", "L2"}
+    if device_type == "SL_SW_NS3":
+        return sub_key_upper in {"L1", "L2", "L3"}
+
+    # ==================== 极星开关(120零火版) ====================
+
+    # 极星开关120零火版 - P1/P2/P3是开关控制
+    if device_type == "SL_SW_BS1":
+        return sub_key_upper == "P1"
+    if device_type == "SL_SW_BS2":
+        return sub_key_upper in {"P1", "P2"}
+    if device_type == "SL_SW_BS3":
+        return sub_key_upper in {"P1", "P2", "P3"}
+
+    # ==================== 恒星/辰星/极星系列(带电压监测) ====================
+
+    # 单键版本: P1是开关，P2是电量监测(非开关控制)
+    if device_type in {"SL_SW_ND1", "SL_MC_ND1"}:
+        return sub_key_upper == "P1"
+
+    # 双键版本: P1/P2是开关，P3是电量监测(非开关控制)
+    if device_type in {"SL_SW_ND2", "SL_MC_ND2"}:
+        return sub_key_upper in {"P1", "P2"}
+
+    # 三键版本: P1/P2/P3是开关，P4是电量监测(非开关控制)
+    if device_type in {"SL_SW_ND3", "SL_MC_ND3"}:
+        return sub_key_upper in {"P1", "P2", "P3"}
+
+    # ==================== 奇点开关模块 ====================
+
+    # 奇点开关模块 - P1/P2/P3是开关控制
+    if device_type == "SL_SW_MJ1":
+        return sub_key_upper == "P1"
+    if device_type == "SL_SW_MJ2":
+        return sub_key_upper in {"P1", "P2"}
+    if device_type == "SL_SW_MJ3":
+        return sub_key_upper in {"P1", "P2", "P3"}
+
+    # ==================== 超能面板 ====================
+
+    # 超能面板 - P1/P2/P3是开关控制(仅开关版P5=1时有效)
+    if device_type == "SL_NATURE":
+        return sub_key_upper in {"P1", "P2", "P3"}
+
+    # ==================== 插座系列 ====================
+
+    # 智能插座系列 - O口是开关控制
+    if device_type in {
+        "SL_OL",
+        "SL_OL_3C",
+        "SL_OL_DE",
+        "SL_OL_UK",
+        "SL_OL_UL",
+        "OD_WE_OT1",
+    }:
         return sub_key_upper == "O"
 
-    if device_type in POWER_METER_PLUG_TYPES:
+    # 入墙插座 - L1是开关控制，dark/bright是指示灯控制
+    if device_type == "SL_OL_W":
+        return sub_key_upper == "L1"
+
+    # 计量插座系列 - P1是开关控制，P4是功率门限控制(也算开关功能)
+    if device_type in {"SL_OE_DE", "SL_OE_3C", "SL_OE_W"}:
         return sub_key_upper in {"P1", "P4"}
 
-    if sub_key_upper in {"L1", "L2", "L3", "P1", "P2", "P3"}:
-        return True
+    # ==================== 特殊设备排除 ====================
+
+    # 车库门控制器 - P1是灯光控制(由light平台处理，不是开关)
+    if device_type in {"SL_ETDOOR"}:
+        return False
+
+    # 按钮开关 - 不是开关控制，是按键检测(由binary_sensor平台处理)
+    if device_type in {"SL_SC_BB", "SL_SC_BB_V2"}:
+        return False
+
+    # 虚拟开关 - 根据配置动态生成，暂时返回False
+    if device_type == "V_IND_S":
+        return False
 
     return False
 
@@ -754,11 +962,8 @@ def get_switch_subdevices(device: dict) -> list[str]:
     """
     获取设备中所有有效的开关子设备键。
 
-    此函数包含所有开关设备的特殊处理逻辑：
-    - 对于通用控制器 (GENERIC_CONTROLLER_TYPES)，只有在工作模式为8或10时，
-      P2/P3/P4才是有效的开关控制点。
-    - 对于超能面板 (SL_NATURE)，只有在开关版（P5=1）时才创建开关实体。
-    - 对于其他设备，使用通用的子设备判断逻辑。
+    基于新的IO特征映射架构，从平台映射中获取switch平台的IO口列表。
+    对于多平台设备（如SL_OL_W），只返回switch平台相关的IO口。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -771,11 +976,18 @@ def get_switch_subdevices(device: dict) -> list[str]:
 
     device_type = device.get("devtype")
     device_data = safe_get(device, DEVICE_DATA_KEY, default={})
+    platforms = get_device_platform_mapping(device)
+
+    # 从平台映射中获取switch的IO口
+    if "switch" in platforms:
+        return platforms["switch"]
+
+    # 回退到传统逻辑
     subdevices = []
 
     # 特殊处理：通用控制器
     if device_type in GENERIC_CONTROLLER_TYPES:
-        # 通用控制器的工作模式已经在is_switch中验证，这里直接返回子设备键
+        # 通用控制器的工作模式已经在is_switch中验证
         for sub_key in ("P2", "P3", "P4"):
             if safe_get(device_data, sub_key) is not None:
                 subdevices.append(sub_key)
@@ -793,3 +1005,168 @@ def get_switch_subdevices(device: dict) -> list[str]:
             subdevices.append(sub_key)
 
     return subdevices
+
+
+def get_device_effective_type(device: dict) -> str:
+    """
+    获取设备的有效类型，考虑fullCls版本信息。
+
+    Args:
+        device: 设备数据字典
+
+    Returns:
+        str: 有效的设备类型，如果需要版本区分则返回组合类型
+    """
+    devtype = device.get(DEVICE_TYPE_KEY)
+    fullcls = device.get(DEVICE_FULLCLS_KEY)
+
+    if not devtype:
+        return None
+
+    # 如果设备类型不需要版本区分，直接返回devtype
+    if devtype not in VERSIONED_DEVICE_TYPES:
+        return devtype
+
+    # 如果没有fullCls信息，返回基础devtype
+    if not fullcls:
+        return devtype
+
+    # 从fullCls中提取版本信息
+    version_info = VERSIONED_DEVICE_TYPES[devtype]
+
+    # 检查是否匹配任何已知版本（只匹配大写V版本，忽略OCR错误的小写）
+    for version_suffix, version_type in version_info.items():
+        if fullcls.upper().endswith(f"_{version_suffix}"):
+            return f"{devtype}_{version_suffix}"
+
+    # 如果没有匹配的版本，返回基础devtype
+    return devtype
+
+
+def is_versioned_device_type(device: dict, expected_version: str = None) -> bool:
+    """
+    检查设备是否为特定版本的设备类型。
+
+    Args:
+        device: 设备数据字典
+        expected_version: 期望的版本，如 'V2', 'V1' 等
+
+    Returns:
+        bool: 是否匹配期望版本
+    """
+    if not expected_version:
+        return False
+
+    effective_type = get_device_effective_type(device)
+    return effective_type and effective_type.endswith(f"_{expected_version}")
+
+
+# ====================================================================
+# IO接口和数据相关辅助函数
+# ====================================================================
+
+
+def is_ieee754_float_type(io_type: int) -> bool:
+    """判断IO类型是否为IEEE754浮点类型。
+
+    Args:
+        io_type: IO口的type值
+
+    Returns:
+        如果是浮点类型返回True，否则返回False
+
+    Reference:
+        只有满足条件 (io_type & 0x7e) == 0x2 的IO数据其值才是浮点类型数据
+    """
+    return (io_type & IO_TYPE_FLOAT_MASK) == IO_TYPE_FLOAT_VALUE
+
+
+def get_io_precision(io_type: int) -> int:
+    """获取IO类型的精度系数。
+
+    Args:
+        io_type: IO口的type值
+
+    Returns:
+        精度系数，用于将原始值转换为实际值
+
+    Reference:
+        基于官方文档附录3.5的精度计算公式
+    """
+    if (io_type & IO_TYPE_PRECISION_MASK) == IO_TYPE_PRECISION_BASE:
+        precision_bits = (io_type & IO_TYPE_PRECISION_BITS) // 2
+        return 10 ** (precision_bits + 1)
+    return 1
+
+
+def convert_ieee754_float(io_val: int) -> float:
+    """将32位整数转换为IEEE754浮点数。
+
+    Args:
+        io_val: 32位整数表示的IEEE754浮点数
+
+    Returns:
+        转换后的浮点数值
+
+    Reference:
+        官方文档附录3.4 IO值浮点类型说明
+        例如：1024913643表示的是浮点值：0.03685085
+    """
+    # IEEE754浮点数转换相关函数定义 - 参考官方文档附录3.4
+    # 这些函数用于处理LifeSmart设备中使用IEEE754格式存储的浮点数
+    import struct
+
+    return struct.unpack("!f", struct.pack("!i", io_val))[0]
+
+
+def get_io_friendly_val(io_type: int, io_val: int) -> float | None:
+    """获取IO口的友好值（实际值）。
+
+    Args:
+        io_type: IO口的type值
+        io_val: IO口的val值
+
+    Returns:
+        转换后的实际值，异常时返回None
+
+    Reference:
+        官方文档附录3.5 IO实际值转换及Type定义说明
+    """
+    # 参数类型检查，防止运行时错误
+    if not isinstance(io_type, int) or not isinstance(io_val, int):
+        return None
+
+    # 异常数据返回None
+    if io_type == IO_TYPE_EXCEPTION:
+        return None
+
+    # IEEE754浮点数类型
+    if is_ieee754_float_type(io_type):
+        return convert_ieee754_float(io_val)
+
+    # 普通数值类型，应用精度转换
+    precision = get_io_precision(io_type)
+    # 处理有符号16位数值
+    if io_val > 0x7FFF:
+        io_val = io_val - 0x10000
+    return io_val / precision
+
+
+def get_f_fan_mode(val: int) -> str:
+    """根据 F 口的 val 值获取风扇模式。"""
+    if val < 30:
+        return FAN_LOW
+    return FAN_MEDIUM if val < 65 else FAN_HIGH
+
+
+def get_tf_fan_mode(val: int) -> str | None:
+    """根据 tF 口的 val 值获取风扇模式。"""
+    if 30 >= val > 0:
+        return FAN_LOW
+    if val <= 65:
+        return FAN_MEDIUM
+    if val <= 100:
+        return FAN_HIGH
+    if val == 101:
+        return FAN_AUTO
+    return None  # 风扇停止时返回 None

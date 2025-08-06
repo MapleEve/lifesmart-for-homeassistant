@@ -22,6 +22,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -43,7 +44,11 @@ from .const import (
     NON_POSITIONAL_COVER_CONFIG,
 )
 from .entity import LifeSmartEntity
-from .helpers import generate_unique_id, get_cover_subdevices, safe_get
+from .helpers import (
+    generate_unique_id,
+    get_device_platform_mapping,
+    safe_get,
+)
 
 # 初始化模块级日志记录器
 _LOGGER = logging.getLogger(__name__)
@@ -72,9 +77,12 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用helpers中的统一逻辑获取所有有效的窗帘子设备
-        subdevice_keys = get_cover_subdevices(device)
-        for sub_key in subdevice_keys:
+        # 使用新的IO映射系统获取设备支持的平台
+        platform_mapping = get_device_platform_mapping(device)
+        cover_subdevices = platform_mapping.get(Platform.COVER, [])
+
+        # 为每个cover子设备创建实体
+        for sub_key in cover_subdevices:
             device_type = device.get(DEVICE_TYPE_KEY)
 
             # 根据设备是否支持位置，创建不同类型的实体
@@ -87,10 +95,8 @@ async def async_setup_entry(
                         sub_device_key=sub_key,
                     )
                 )
-            elif (
-                device_type in NON_POSITIONAL_COVER_CONFIG
-                or device_type in GENERIC_CONTROLLER_TYPES
-            ):
+            else:
+                # 默认创建非定位窗帘实体
                 covers.append(
                     LifeSmartNonPositionalCover(
                         raw_device=device,
