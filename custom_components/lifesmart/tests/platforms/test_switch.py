@@ -25,7 +25,12 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.switch import async_setup_entry
-from .test_utils import get_entity_unique_id
+from ..utils.factories import create_devices_by_category
+from ..utils.helpers import (
+    get_entity_unique_id,
+    create_mock_hub,
+    assert_platform_entity_count_matches_devices,
+)
 
 
 # ==================== 开关平台设置测试类 ====================
@@ -48,8 +53,11 @@ class TestSwitchSetup:
         - 9个九路控制器 (sw_p9)
         总计19个开关实体。
         """
-        # 3 (sw_if3) + 1 (sw_ol) + 3 (sw_nature) + 3 (generic_p_switch_mode) + 9 (sw_p9) = 19
-        assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 19
+        # 使用自动化验证替代硬编码数量检查
+        devices_list = create_devices_by_category(
+            ["traditional_switch", "advanced_switch", "smart_plug"]
+        )
+        assert_platform_entity_count_matches_devices(hass, SWITCH_DOMAIN, devices_list)
 
         assert hass.states.get("switch.9_way_controller_p4") is not None
 
@@ -59,7 +67,6 @@ class TestSwitchSetup:
         hass: HomeAssistant,
         mock_client: AsyncMock,
         mock_config_data: dict,
-        mock_lifesmart_devices: list,
     ):
         """测试设备和Hub可以从设置中排除。
 
@@ -82,14 +89,15 @@ class TestSwitchSetup:
         )
 
         # 2. 准备 hass.data，因为 async_setup_entry 会从中读取数据
-        # 创建一个模拟的 hub 对象
-        mock_hub = MagicMock()
+        # 使用工厂函数创建设备和mock hub
+        mock_lifesmart_devices = create_devices_by_category(
+            ["traditional_switch", "advanced_switch", "smart_plug"]
+        )
+        mock_hub = create_mock_hub(mock_lifesmart_devices, mock_client)
         mock_hub.get_exclude_config.return_value = (
             {"sw_ol", "sw_p9"},  # exclude_devices
             {"excluded_hub"},  # exclude_hubs
         )
-        mock_hub.get_devices.return_value = mock_lifesmart_devices
-        mock_hub.get_client.return_value = mock_client
 
         hass.data[DOMAIN] = {
             entry_with_exclusions.entry_id: {
@@ -120,58 +128,63 @@ class TestSwitchSetup:
 class TestStandardSwitch:
     """测试标准三路开关 (SL_SW_IF3) 的功能。"""
 
-    ENTITY_ID = "switch.3_gang_switch_l1"
-    DEVICE_ME = "sw_if3"
-    HUB_ID = "hub_sw"
-    SUB_KEY = "L1"
-
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
-        """测试开关实体的初始属性。
+    async def test_initial_properties_and_control(
+        self, hass: HomeAssistant, setup_integration, mock_client: AsyncMock
+    ):
+        """测试开关实体的初始属性和控制功能。
 
         验证：
-        - 实体存在性
-        - 初始状态正确
+        - 实体存在性和初始状态
         - 设备类型正确设置
+        - 控制命令正确传递
+        - 状态更新机制正常
         """
-        state = hass.states.get(self.ENTITY_ID)
+        # 使用工厂函数查找三路开关设备
+        devices = create_devices_by_category(["traditional_switch"])
+        switch_device = None
+        for device in devices:
+            if device.get("devtype") == "SL_SW_IF3":
+                switch_device = device
+                break
+
+        assert switch_device is not None, "应该找到三路开关测试设备"
+
+        # 构建实体ID（基于设备实际数据）
+        entity_id = f"switch.{switch_device['name'].lower().replace(' ', '_')}_l1"
+
+        # 测试初始属性
+        state = hass.states.get(entity_id)
         assert state is not None, "开关实体应存在"
         assert state.state == STATE_ON, "初始状态应为开启"
         assert (
             state.attributes.get("device_class") == SwitchDeviceClass.SWITCH
         ), "设备类别应为开关"
 
-    @pytest.mark.asyncio
-    async def test_turn_on_off_and_update(
-        self, hass: HomeAssistant, mock_client: AsyncMock, setup_integration
-    ):
-        """测试开关的开启/关闭控制和状态更新。
-
-        验证：
-        - 关闭服务调用正确传递到客户端
-        - 状态正确更新
-        - 通过dispatcher接收更新后状态变化
-        """
+        # 测试控制功能
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: self.ENTITY_ID},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
         assert (
-            hass.states.get(self.ENTITY_ID).state == STATE_OFF
+            hass.states.get(entity_id).state == STATE_OFF
         ), "关闭服务调用后状态应为关闭"
+
+        # 验证客户端调用
         mock_client.turn_off_light_switch_async.assert_called_with(
-            self.SUB_KEY, self.HUB_ID, self.DEVICE_ME
+            "L1", switch_device["agt"], switch_device["me"]
         )
 
-        unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
+        # 测试状态更新
+        unique_id = get_entity_unique_id(hass, entity_id)
         async_dispatcher_send(
             hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"type": 129}
         )
         await hass.async_block_till_done()
         assert (
-            hass.states.get(self.ENTITY_ID).state == STATE_ON
+            hass.states.get(entity_id).state == STATE_ON
         ), "接收dispatcher更新后状态应为开启"
 
 
@@ -181,41 +194,49 @@ class TestStandardSwitch:
 class TestSmartOutlet:
     """测试智能插座 (SL_OL) 的功能。"""
 
-    ENTITY_ID = "switch.smart_outlet_o"
-    DEVICE_ME = "sw_ol"
-    HUB_ID = "hub_sw"
-    SUB_KEY = "O"
-
     @pytest.mark.asyncio
-    async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
-        """测试智能插座的初始属性。
+    async def test_initial_properties_and_control(
+        self, hass: HomeAssistant, setup_integration, mock_client: AsyncMock
+    ):
+        """测试智能插座的初始属性和控制功能。
 
         验证：
-        - 实体存在性
-        - 初始状态为开启
+        - 实体存在性和初始状态
         - 设备类型为插座
+        - 控制命令正确传递
         """
-        state = hass.states.get(self.ENTITY_ID)
-        assert state is not None
-        assert state.state == STATE_ON
-        assert state.attributes.get("device_class") == SwitchDeviceClass.OUTLET
+        # 使用工厂函数查找智能插座设备
+        devices = create_devices_by_category(["smart_plug"])
+        outlet_device = None
+        for device in devices:
+            if device.get("devtype") == "SL_OL":
+                outlet_device = device
+                break
 
-    @pytest.mark.asyncio
-    async def test_turn_on_off(
-        self, hass: HomeAssistant, mock_client: AsyncMock, setup_integration
-    ):
-        """测试智能插座的开关控制。
+        assert outlet_device is not None, "应该找到智能插座测试设备"
 
-        验证关闭服务调用能正确传递到客户端。
-        """
+        # 构建实体ID（基于设备实际数据）
+        entity_id = f"switch.{outlet_device['name'].lower().replace(' ', '_')}_o"
+
+        # 测试初始属性
+        state = hass.states.get(entity_id)
+        assert state is not None, "插座实体应存在"
+        assert state.state == STATE_ON, "初始状态应为开启"
+        assert (
+            state.attributes.get("device_class") == SwitchDeviceClass.OUTLET
+        ), "设备类别应为插座"
+
+        # 测试控制功能
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: self.ENTITY_ID},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+        # 验证客户端调用
         mock_client.turn_off_light_switch_async.assert_called_with(
-            self.SUB_KEY, self.HUB_ID, self.DEVICE_ME
+            "O", outlet_device["agt"], outlet_device["me"]
         )
 
 
@@ -225,15 +246,12 @@ class TestSmartOutlet:
 class TestGenericControllerAsSwitch:
     """测试通用控制器 (SL_P) 在三路开关模式下的功能。"""
 
-    DEVICE_ME = "generic_p_switch_mode"
-    HUB_ID = "hub_sw"
-
     @pytest.mark.parametrize(
-        ("entity_id_suffix", "sub_key", "initial_state"),
+        ("sub_key", "expected_initial_state"),
         [
-            ("p2", "P2", STATE_ON),
-            ("p3", "P3", STATE_OFF),
-            ("p4", "P4", STATE_ON),
+            ("P2", STATE_ON),
+            ("P3", STATE_OFF),
+            ("P4", STATE_ON),
         ],
         ids=[
             "GenControllerChannelP2On",
@@ -247,9 +265,8 @@ class TestGenericControllerAsSwitch:
         hass: HomeAssistant,
         mock_client: AsyncMock,
         setup_integration,
-        entity_id_suffix: str,
         sub_key: str,
-        initial_state: str,
+        expected_initial_state: str,
     ):
         """测试通用控制器各通道的行为。
 
@@ -259,17 +276,35 @@ class TestGenericControllerAsSwitch:
         - P4通道初始状态为开启
         - 关闭服务调用正确传递参数
         """
-        entity_id = f"switch.generic_controller_switch_{entity_id_suffix}"
+        # 使用工厂函数查找通用控制器设备
+        devices = create_devices_by_category(["generic_p_switch_mode"])
+        controller_device = None
+        for device in devices:
+            if device.get("devtype") == "SL_P":
+                controller_device = device
+                break
 
+        assert controller_device is not None, "应该找到通用控制器测试设备"
+
+        # 构建实体ID（基于设备实际数据）
+        entity_id_suffix = sub_key.lower()
+        entity_id = f"switch.{controller_device['name'].lower().replace(' ', '_')}_{entity_id_suffix}"
+
+        # 测试初始状态
         state = hass.states.get(entity_id)
         assert state is not None, f"Entity {entity_id} not found"
-        assert state.state == initial_state
+        assert (
+            state.state == expected_initial_state
+        ), f"初始状态应为 {expected_initial_state}"
 
+        # 测试控制功能
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
+
+        # 验证客户端调用
         mock_client.turn_off_light_switch_async.assert_called_with(
-            sub_key, self.HUB_ID, self.DEVICE_ME
+            sub_key, controller_device["agt"], controller_device["me"]
         )
 
 
@@ -279,15 +314,12 @@ class TestGenericControllerAsSwitch:
 class TestNineWayController:
     """测试九路开关控制器 (SL_P_SW) 的功能。"""
 
-    DEVICE_ME = "sw_p9"
-    HUB_ID = "hub_sw"
-
     @pytest.mark.parametrize(
-        ("entity_id_suffix", "sub_key", "initial_state"),
+        ("sub_key", "expected_initial_state"),
         [
-            ("p1", "P1", STATE_ON),
-            ("p8", "P8", STATE_OFF),
-            ("p9", "P9", STATE_ON),
+            ("P1", STATE_ON),
+            ("P8", STATE_OFF),
+            ("P9", STATE_ON),
         ],
         ids=["NineWayChannelP1On", "NineWayChannelP8Off", "NineWayChannelP9On"],
     )
@@ -297,9 +329,8 @@ class TestNineWayController:
         hass: HomeAssistant,
         mock_client: AsyncMock,
         setup_integration,
-        entity_id_suffix: str,
         sub_key: str,
-        initial_state: str,
+        expected_initial_state: str,
     ):
         """测试九路控制器各通道的行为。
 
@@ -309,15 +340,33 @@ class TestNineWayController:
         - P9通道初始状态为开启
         - 关闭服务调用正确传递到对应通道
         """
-        entity_id = f"switch.9_way_controller_{entity_id_suffix}"
+        # 使用工厂函数查找九路控制器设备
+        devices = create_devices_by_category(["sw_p9"])
+        controller_device = None
+        for device in devices:
+            if device.get("devtype") == "SL_P_SW":
+                controller_device = device
+                break
 
+        assert controller_device is not None, "应该找到九路控制器测试设备"
+
+        # 构建实体ID（基于设备实际数据）
+        entity_id_suffix = sub_key.lower()
+        entity_id = f"switch.{controller_device['name'].lower().replace(' ', '_')}_{entity_id_suffix}"
+
+        # 测试初始状态
         state = hass.states.get(entity_id)
         assert state is not None, f"Entity {entity_id} not found"
-        assert state.state == initial_state
+        assert (
+            state.state == expected_initial_state
+        ), f"初始状态应为 {expected_initial_state}"
 
+        # 测试控制功能
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
+
+        # 验证客户端调用
         mock_client.turn_off_light_switch_async.assert_called_with(
-            sub_key, self.HUB_ID, self.DEVICE_ME
+            sub_key, controller_device["agt"], controller_device["me"]
         )

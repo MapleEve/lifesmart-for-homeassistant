@@ -19,6 +19,7 @@ from custom_components.lifesmart.const import (
     CONF_EXCLUDE_ITEMS,
     CONF_EXCLUDE_AGTS,
 )
+from .utils.helpers import create_mock_hub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ def mock_config_data_fixture():
     这个 Fixture 封装了一套标准的云端模式配置信息，用于在测试中创建
     `MockConfigEntry`。这确保了所有测试都使用一致的凭据，简化了测试的编写。
     """
-    from .test_utils import create_mock_config_data
+    from .utils.factories import create_mock_config_data
 
     return create_mock_config_data()
 
@@ -116,9 +117,87 @@ def mock_lifesmart_devices_fixture():
     - 用于测试平台级别的功能，例如，确保 `climate` 平台在初始化时不会错误地创建 `switch` 实体。
     - 用于测试设备排除逻辑。
     """
-    from .test_utils import create_mock_lifesmart_devices
+    from .utils.factories import create_mock_lifesmart_devices
 
     return create_mock_lifesmart_devices()
+
+
+@pytest.fixture
+def mock_light_devices_only():
+    """
+    创建仅包含灯光设备的模拟数据列表。
+    使用create_devices_by_category来测试分类功能。
+    """
+    from .utils.factories import create_devices_by_category
+
+    return create_devices_by_category(
+        [
+            "dimmer_light",
+            "brightness_light",
+            "rgb_light",
+            "rgbw_light",
+            "spot_light",
+            "quantum_light",
+            "outdoor_light",
+        ]
+    )
+
+
+@pytest.fixture
+def mock_sensor_devices_only():
+    """
+    创建仅包含传感器设备的模拟数据列表。
+    使用create_devices_by_category来测试传感器分类功能。
+    """
+    from .utils.factories import create_devices_by_category
+
+    return create_devices_by_category(
+        ["environment_sensor", "binary_sensor", "gas_sensor", "specialized_sensor"]
+    )
+
+
+@pytest.fixture
+def mock_climate_devices_only():
+    """
+    创建仅包含气候控制设备的模拟数据列表。
+    使用create_devices_by_category来优化气候平台测试的数据加载。
+    """
+    from .utils.factories import create_devices_by_category
+
+    return create_devices_by_category(["climate"])
+
+
+@pytest.fixture
+def mock_switch_devices_only():
+    """
+    创建仅包含开关设备的模拟数据列表。
+    使用create_devices_by_category来优化开关平台测试的数据加载。
+    """
+    from .utils.factories import create_devices_by_category
+
+    return create_devices_by_category(["traditional_switch", "advanced_switch"])
+
+
+@pytest.fixture
+def mock_cover_devices_only():
+    """
+    创建仅包含窗帘/遮盖设备的模拟数据列表。
+    使用create_devices_by_category来优化窗帘平台测试的数据加载。
+    """
+    from .utils.factories import create_devices_by_category
+
+    return create_devices_by_category(["cover"])
+
+
+@pytest.fixture
+def mock_plug_devices_only():
+    """
+    创建仅包含插座设备的模拟数据列表。
+    使用create_devices_by_category来优化插座相关测试的数据加载。
+    """
+    from .utils.factories import create_devices_by_category
+
+    return create_devices_by_category(["smart_plug", "power_meter_plug"])
 
 
 @pytest.fixture(autouse=True)
@@ -192,6 +271,32 @@ def mock_client(mock_client_class):
     所创建的那个模拟实例。
     """
     return mock_client_class.return_value
+
+
+@pytest.fixture
+def mock_failed_client():
+    """
+    提供模拟失败场景的OAPI客户端mock。
+
+    用于测试连接失败、认证失败等错误处理场景。
+    使用create_mock_failed_oapi_client工厂函数。
+    """
+    from .utils.factories import create_mock_failed_oapi_client
+
+    return create_mock_failed_oapi_client()
+
+
+@pytest.fixture
+def mock_client_with_devices(mock_lifesmart_devices):
+    """
+    提供带有预配置设备列表的OAPI客户端mock。
+
+    用于需要特定设备数据的测试场景。
+    使用create_mock_oapi_client_with_devices工厂函数。
+    """
+    from .utils.factories import create_mock_oapi_client_with_devices
+
+    return create_mock_oapi_client_with_devices(mock_lifesmart_devices)
 
 
 @pytest.fixture
@@ -339,10 +444,8 @@ async def setup_integration(
     """
     mock_config_entry.add_to_hass(hass)
 
-    # 配置 mock hub 实例
-    hub_instance = mock_hub_class.return_value
-    hub_instance.get_devices.return_value = mock_lifesmart_devices
-    hub_instance.get_client.return_value = mock_client
+    # 使用工厂函数创建mock hub实例并配置排除规则
+    hub_instance = create_mock_hub(mock_lifesmart_devices, mock_client)
     hub_instance.get_exclude_config.return_value = (
         {"excluded_device"},
         {"excluded_hub"},
@@ -350,7 +453,7 @@ async def setup_integration(
 
     with patch(
         "custom_components.lifesmart.LifeSmartHub",
-        new=mock_hub_class,
+        return_value=hub_instance,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -371,6 +474,214 @@ async def setup_integration(
     await hass.async_block_till_done()
 
     # 验证集成已成功卸载
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+# ============================================================================
+# === 平台专用优化设置 Fixtures ===
+#
+# 设计说明:
+# 这些 Fixtures 是对原有通用 `setup_integration` 的补充优化，专门用于
+# 平台级别的测试。通过只加载特定平台需要的设备类型，减少了测试的
+# 加载开销，提高了测试执行效率。
+#
+# 每个 fixture 使用 `create_devices_by_category` 函数来精确控制
+# 加载的设备类型，从而实现精细化的测试数据管理。
+# ============================================================================
+
+
+@pytest.fixture
+async def setup_integration_light_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_light_devices_only: list,
+):
+    """
+    专用的 setup fixture，仅加载灯光设备进行灯光平台测试。
+
+    这个优化版本只加载灯光相关设备，减少测试加载开销，
+    提高灯光平台测试的执行效率。
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # 使用工厂函数创建mock hub实例，只包含灯光设备
+    hub_instance = create_mock_hub(mock_light_devices_only, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
+    with patch(
+        "custom_components.lifesmart.LifeSmartHub",
+        return_value=hub_instance,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    mock_hub_class.assert_called_once()
+    hub_instance.async_setup.assert_called_once()
+
+    yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+@pytest.fixture
+async def setup_integration_climate_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_climate_devices_only: list,
+):
+    """
+    专用的 setup fixture，仅加载气候控制设备进行气候平台测试。
+
+    这个优化版本只加载气候控制相关设备，减少测试加载开销，
+    提高气候平台测试的执行效率。
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # 使用工厂函数创建mock hub实例，只包含气候设备
+    hub_instance = create_mock_hub(mock_climate_devices_only, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
+    with patch(
+        "custom_components.lifesmart.LifeSmartHub",
+        return_value=hub_instance,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    mock_hub_class.assert_called_once()
+    hub_instance.async_setup.assert_called_once()
+
+    yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+@pytest.fixture
+async def setup_integration_sensor_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_sensor_devices_only: list,
+):
+    """
+    专用的 setup fixture，仅加载传感器设备进行传感器平台测试。
+
+    这个优化版本只加载传感器相关设备，减少测试加载开销，
+    提高传感器平台测试的执行效率。
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # 使用工厂函数创建mock hub实例，只包含传感器设备
+    hub_instance = create_mock_hub(mock_sensor_devices_only, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
+    with patch(
+        "custom_components.lifesmart.LifeSmartHub",
+        return_value=hub_instance,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    mock_hub_class.assert_called_once()
+    hub_instance.async_setup.assert_called_once()
+
+    yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+@pytest.fixture
+async def setup_integration_switch_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_switch_devices_only: list,
+):
+    """
+    专用的 setup fixture，仅加载开关设备进行开关平台测试。
+
+    这个优化版本只加载开关相关设备，减少测试加载开销，
+    提高开关平台测试的执行效率。
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # 使用工厂函数创建mock hub实例，只包含开关设备
+    hub_instance = create_mock_hub(mock_switch_devices_only, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
+    with patch(
+        "custom_components.lifesmart.LifeSmartHub",
+        return_value=hub_instance,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    mock_hub_class.assert_called_once()
+    hub_instance.async_setup.assert_called_once()
+
+    yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+@pytest.fixture
+async def setup_integration_cover_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_cover_devices_only: list,
+):
+    """
+    专用的 setup fixture，仅加载窗帘设备进行窗帘平台测试。
+
+    这个优化版本只加载窗帘相关设备，减少测试加载开销，
+    提高窗帘平台测试的执行效率。
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # 使用工厂函数创建mock hub实例，只包含窗帘设备
+    hub_instance = create_mock_hub(mock_cover_devices_only, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
+    with patch(
+        "custom_components.lifesmart.LifeSmartHub",
+        return_value=hub_instance,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    mock_hub_class.assert_called_once()
+    hub_instance.async_setup.assert_called_once()
+
+    yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
@@ -400,7 +711,7 @@ def mock_device_climate_fancoil() -> dict:
       - `P4`: 目标温度 (target_temperature) 为 24.0。
       - `P5`: 当前温度 (current_temperature) 为 26.0。
     """
-    from .test_utils import create_mock_device_climate_fancoil
+    from .utils.factories import create_mock_device_climate_fancoil
 
     return create_mock_device_climate_fancoil()
 
@@ -512,7 +823,7 @@ def mock_device_spot_rgb_light() -> dict:
     - 初始状态: 开，颜色为 (255, 128, 64)。
       - `val` 为 `0xFF8040`。
     """
-    from .test_utils import create_mock_device_spot_rgb_light
+    from .utils.factories import create_mock_device_spot_rgb_light
 
     return create_mock_device_spot_rgb_light()
 
@@ -526,7 +837,7 @@ def mock_device_dual_io_rgbw_light() -> dict:
       - `RGBW` 口为开 (`type: 129`)，但值为 0。
       - `DYN` 口为关 (`type: 128`)。
     """
-    from .test_utils import create_mock_device_dual_io_rgbw_light
+    from .utils.factories import create_mock_device_dual_io_rgbw_light
 
     return create_mock_device_dual_io_rgbw_light()
 
@@ -540,7 +851,7 @@ def mock_device_single_io_rgbw_light() -> dict:
     - 初始状态: 开，颜色为 (1, 2, 3)，亮度为 100%。
       - `val` 为 `0x64010203` (亮度100, R=1, G=2, B=3)。
     """
-    from .test_utils import create_mock_device_single_io_rgb_light
+    from .utils.factories import create_mock_device_single_io_rgb_light
 
     return create_mock_device_single_io_rgb_light()
 
@@ -567,15 +878,13 @@ async def setup_integration_spot_rgb_only(
     mock_config_entry.add_to_hass(hass)
 
     # 配置 mock hub 实例
-    hub_instance = mock_hub_class.return_value
+    # 使用工厂函数创建mock hub实例
     devices = [mock_device_spot_rgb_light]
-    hub_instance.get_devices.return_value = devices
-    hub_instance.get_client.return_value = mock_client
-    hub_instance.get_exclude_config.return_value = (set(), set())
+    hub_instance = create_mock_hub(devices, mock_client)
 
     with patch(
         "custom_components.lifesmart.LifeSmartHub",
-        new=mock_hub_class,
+        return_value=hub_instance,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -599,16 +908,13 @@ async def setup_integration_dual_io_light_only(
     """
     mock_config_entry.add_to_hass(hass)
 
-    # 配置 mock hub 实例
-    hub_instance = mock_hub_class.return_value
+    # 使用工厂函数创建mock hub实例
     devices = [mock_device_dual_io_rgbw_light]
-    hub_instance.get_devices.return_value = devices
-    hub_instance.get_client.return_value = mock_client
-    hub_instance.get_exclude_config.return_value = (set(), set())
+    hub_instance = create_mock_hub(devices, mock_client)
 
     with patch(
         "custom_components.lifesmart.LifeSmartHub",
-        new=mock_hub_class,
+        return_value=hub_instance,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -632,16 +938,13 @@ async def setup_integration_single_io_rgbw_only(
     """
     mock_config_entry.add_to_hass(hass)
 
-    # 配置 mock hub 实例
-    hub_instance = mock_hub_class.return_value
+    # 使用工厂函数创建mock hub实例
     devices = [mock_device_single_io_rgbw_light]
-    hub_instance.get_devices.return_value = devices
-    hub_instance.get_client.return_value = mock_client
-    hub_instance.get_exclude_config.return_value = (set(), set())
+    hub_instance = create_mock_hub(devices, mock_client)
 
     with patch(
         "custom_components.lifesmart.LifeSmartHub",
-        new=mock_hub_class,
+        return_value=hub_instance,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

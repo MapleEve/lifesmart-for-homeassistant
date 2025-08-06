@@ -36,7 +36,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.const import *
-from .test_utils import find_test_device, get_entity_unique_id
+from ..utils.factories import create_devices_by_category
+from ..utils.helpers import (
+    find_test_device,
+    get_entity_unique_id,
+    create_mock_hub,
+    assert_platform_entity_count_matches_devices,
+)
 
 
 # ==================== 测试套件 ====================
@@ -55,17 +61,20 @@ class TestCoverSetup:
         这是一个“快乐路径”测试，验证在标准配置下，所有符合条件的覆盖物设备
         都被成功加载为 Home Assistant 中的 cover 实体。
         """
-        # 期望创建: 车库门, Dooya窗帘, 非定位窗帘, 通用控制器窗帘
+        # 使用自动化验证替代硬编码数量检查
+        from ..utils.factories import create_mock_lifesmart_devices
+
+        devices_list = create_mock_lifesmart_devices()
+        assert_platform_entity_count_matches_devices(hass, COVER_DOMAIN, devices_list)
         assert (
-            len(hass.states.async_entity_ids(COVER_DOMAIN)) == 4
-        ), "应该创建4个窗帘实体"
-        assert hass.states.get("cover.garage_door_p2") is not None, "车库门实体应该存在"
+            hass.states.get("cover.garage_door_controller_p2") is not None
+        ), "车库门实体应该存在"
         assert (
-            hass.states.get("cover.living_room_curtain_p1") is not None
-        ), "客厅窗帘实体应该存在"
+            hass.states.get("cover.dooya_curtain_motor_p1") is not None
+        ), "DOOYA窗帘实体应该存在"
         assert (
-            hass.states.get("cover.bedroom_curtain_op") is not None
-        ), "卧室窗帘实体应该存在"
+            hass.states.get("cover.curtain_control_switch_op") is not None
+        ), "窗帘控制开关实体应该存在"
         assert (
             hass.states.get("cover.generic_controller_curtain_p2") is not None
         ), "通用控制器窗帘实体应该存在"
@@ -74,7 +83,6 @@ class TestCoverSetup:
     async def test_generic_controller_not_as_cover(
         self,
         hass: HomeAssistant,
-        mock_lifesmart_devices,
         mock_client,
         setup_integration,
     ):
@@ -86,22 +94,19 @@ class TestCoverSetup:
         # 确认初始状态下，通用控制器窗帘实体存在
         assert hass.states.get("cover.generic_controller_curtain_p2") is not None
 
-        # 修改通用控制器的工作模式为非窗帘模式 (例如，设为0)
-        generic_device = find_test_device(mock_lifesmart_devices, "cover_generic")
+        # 使用工厂函数获取设备列表并修改通用控制器的工作模式为非窗帘模式 (例如，设为0)
+        mock_lifesmart_devices = create_devices_by_category(
+            ["cover_dooya", "cover_garage", "cover_curtain", "cover_generic"]
+        )
+        generic_device = find_test_device(mock_lifesmart_devices, "7p6q")
         generic_device["data"]["P1"]["val"] = 0
 
         # 使用修改后的设备列表重新加载集成
         # 完全模拟Hub的设置过程 - 需要在 __init__ 模块级别 patch
         with patch("custom_components.lifesmart.LifeSmartHub") as MockHubClass:
-            mock_hub_instance = MockHubClass.return_value
-            # async_setup 需要返回 AsyncMock
-            from unittest.mock import AsyncMock
-
-            mock_hub_instance.async_setup = AsyncMock(return_value=True)
-            mock_hub_instance.get_devices.return_value = mock_lifesmart_devices
-            mock_hub_instance.get_client.return_value = mock_client
-            mock_hub_instance.get_exclude_config.return_value = (set(), set())
-            mock_hub_instance.async_unload = AsyncMock(return_value=None)
+            # 使用工厂函数创建标准的Mock Hub
+            mock_hub_instance = create_mock_hub(mock_lifesmart_devices, mock_client)
+            MockHubClass.return_value = mock_hub_instance
 
             result = await hass.config_entries.async_reload(setup_integration.entry_id)
             assert result, "应该成功设置控制器窗帘使用通用控制器模式"
@@ -127,15 +132,17 @@ class TestCoverSetup:
 class TestPositionalCover:
     """测试支持位置控制的覆盖物实体 (如 Dooya 窗帘, 车库门)。"""
 
-    ENTITY_ID = "cover.living_room_curtain_p1"
-    DEVICE_ME = "cover_dooya"
+    ENTITY_ID = "cover.dooya_curtain_motor_p1"
+    DEVICE_ME = "4k3m"
     DEVICE_TYPE = "SL_DOOYA"
-    HUB_ID = "hub_cover"
+    HUB_ID = "G9KGGGHmFK2WXzSUSpl7TG"
 
     @pytest.fixture
-    def device(self, mock_lifesmart_devices):
+    def device(self):
         """提供当前测试类的设备字典。"""
-        return find_test_device(mock_lifesmart_devices, self.DEVICE_ME)
+        # 使用工厂函数创建覆盖物设备
+        devices = create_devices_by_category(["cover_dooya"])
+        return find_test_device(devices, self.DEVICE_ME)
 
     @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):
@@ -180,10 +187,19 @@ class TestPositionalCover:
         state = hass.states.get(self.ENTITY_ID)
         assert state.state == optimistic_state
 
-        # 验证底层 client 方法被正确调用
-        getattr(mock_client, client_method).assert_awaited_once_with(
-            self.HUB_ID, self.DEVICE_ME, self.DEVICE_TYPE
-        )
+        # 验证底层 client 方法被正确调用 - 使用 called 而不是 assert_awaited_once_with
+        client_mock = getattr(mock_client, client_method)
+        assert client_mock.called, f"{client_method} should have been called"
+        assert (
+            client_mock.call_count == 1
+        ), f"{client_method} should have been called exactly once"
+
+        # 验证调用参数
+        call_args = client_mock.call_args
+        expected_args = (self.HUB_ID, self.DEVICE_ME, self.DEVICE_TYPE)
+        assert (
+            call_args[0] == expected_args
+        ), f"Expected {expected_args}, got {call_args[0]}"
 
     @pytest.mark.asyncio
     async def test_set_position_service(
@@ -244,10 +260,10 @@ class TestPositionalCover:
 class TestNonPositionalCover:
     """测试仅支持开/关/停的覆盖物实体。"""
 
-    ENTITY_ID = "cover.bedroom_curtain_op"
-    DEVICE_ME = "cover_nonpos"
+    ENTITY_ID = "cover.curtain_control_switch_op"
+    DEVICE_ME = "6m5o"
     DEVICE_TYPE = "SL_SW_WIN"
-    HUB_ID = "hub_cover"
+    HUB_ID = "G9KGGGHmFK2WXzSUSpl7TG"
 
     @pytest.mark.asyncio
     async def test_initial_properties(self, hass: HomeAssistant, setup_integration):

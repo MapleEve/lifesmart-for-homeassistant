@@ -42,14 +42,15 @@ from custom_components.lifesmart.const import (
     DOMAIN,
 )
 from custom_components.lifesmart.exceptions import LifeSmartAuthError
+from ..utils.constants import DEFAULT_TEST_VALUES
 
 # ==================== 测试数据 ====================
 
 MOCK_CLOUD_CREDENTIALS = {
-    CONF_LIFESMART_APPKEY: "mock_appkey",
-    CONF_LIFESMART_APPTOKEN: "mock_apptoken",
-    CONF_LIFESMART_USERID: "mock_userid",
-    CONF_REGION: "cn2",
+    CONF_LIFESMART_APPKEY: DEFAULT_TEST_VALUES["appkey"],
+    CONF_LIFESMART_APPTOKEN: DEFAULT_TEST_VALUES["apptoken"],
+    CONF_LIFESMART_USERID: DEFAULT_TEST_VALUES["userid"],
+    CONF_REGION: DEFAULT_TEST_VALUES["region"],
 }
 
 MOCK_LOCAL_CREDENTIALS = {
@@ -60,15 +61,15 @@ MOCK_LOCAL_CREDENTIALS = {
 }
 
 MOCK_VALIDATION_SUCCESS = {
-    "title": "LifeSmart (mock_userid)",
+    "title": f"LifeSmart ({DEFAULT_TEST_VALUES['userid']})",
     "data": {
         **MOCK_CLOUD_CREDENTIALS,
-        CONF_LIFESMART_USERTOKEN: "mock_usertoken",
+        CONF_LIFESMART_USERTOKEN: DEFAULT_TEST_VALUES["usertoken"],
     },
 }
 
 MOCK_VALIDATION_WITH_NEW_TOKEN = {
-    "title": "LifeSmart (mock_userid)",
+    "title": f"LifeSmart ({DEFAULT_TEST_VALUES['userid']})",
     "data": {
         **MOCK_CLOUD_CREDENTIALS,
         CONF_LIFESMART_USERTOKEN: "newly_fetched_token",
@@ -204,13 +205,16 @@ class TestCloudFlow:
 
         # 提供 Token 并完成
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_LIFESMART_USERTOKEN: "mock_usertoken"}
+            result["flow_id"],
+            {CONF_LIFESMART_USERTOKEN: DEFAULT_TEST_VALUES["usertoken"]},
         )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY, "应该创建配置条目"
-        assert result["title"] == "LifeSmart (mock_userid)", "标题应该正确"
         assert (
-            result["data"][CONF_LIFESMART_USERTOKEN] == "mock_usertoken"
+            result["title"] == f"LifeSmart ({DEFAULT_TEST_VALUES['userid']})"
+        ), "标题应该正确"
+        assert (
+            result["data"][CONF_LIFESMART_USERTOKEN] == DEFAULT_TEST_VALUES["usertoken"]
         ), "Token 应该保存"
 
     @pytest.mark.asyncio
@@ -758,8 +762,10 @@ class TestEdgeCases:
                 await validate_input(hass, test_data)
 
     @pytest.mark.asyncio
-    async def test_validate_input_lifesmart_auth_error(self, hass: HomeAssistant):
-        """测试 validate_input 中 LifeSmartAuthError 异常处理。"""
+    async def test_validate_input_lifesmart_auth_error(
+        self, hass: HomeAssistant, mock_failed_client
+    ):
+        """测试 validate_input 中 LifeSmartAuthError 异常处理。使用失败客户端工厂函数。"""
         test_data = {
             CONF_LIFESMART_APPKEY: "test_key",
             CONF_LIFESMART_APPTOKEN: "test_token",
@@ -771,8 +777,8 @@ class TestEdgeCases:
         with patch(
             "custom_components.lifesmart.config_flow.LifeSmartOAPIClient"
         ) as mock_client_cls:
-            mock_client = AsyncMock()
-            mock_client_cls.return_value = mock_client
+            # 使用工厂函数创建的失败客户端
+            mock_client_cls.return_value = mock_failed_client
 
             # 模拟 LifeSmartAuthError 异常
             mock_client.async_get_all_devices.side_effect = LifeSmartAuthError(

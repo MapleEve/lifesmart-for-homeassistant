@@ -35,7 +35,11 @@ from custom_components.lifesmart.light import (
     DEFAULT_MIN_KELVIN,
     DEFAULT_MAX_KELVIN,
 )
-from .test_utils import get_entity_unique_id
+from ..utils.factories import create_devices_by_category
+from ..utils.helpers import (
+    get_entity_unique_id,
+    assert_platform_entity_count_matches_devices,
+)
 
 
 # --- 辅助函数测试 ---
@@ -65,31 +69,33 @@ class TestLightSetup:
         self, hass: HomeAssistant, setup_integration: ConfigEntry
     ) -> None:
         """测试从共享 fixtures 成功设置所有灯光实体类型。"""
-        # 根据 conftest.py 中定义的灯光设备，期望数量为 9
-        assert (
-            len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 9
-        ), "应该有9个灯光实体"  # 减少2个：SL_OL_W移到插座类型，LIGHT_BULB_TYPES已删除
+        # 使用自动化验证替代硬编码数量检查
+        devices_list = create_devices_by_category(
+            ["light_basic", "light_dimmer", "light_rgb", "light_rgbw"]
+        )
+        assert_platform_entity_count_matches_devices(hass, LIGHT_DOMAIN, devices_list)
 
-        # 验证所有预期的灯光实体都已创建
+        # 验证所有预期的灯光实体都已创建（基于真实的工厂数据）
         assert (
-            hass.states.get("light.brightness_light_p1") is not None
-        ), "亮度灯应该存在"
-        assert hass.states.get("light.dimmer_light") is not None, "调光器灯应该存在"
-        assert hass.states.get("light.quantum_light") is not None, "量子灯应该存在"
+            hass.states.get("light.white_light_bulb") is not None
+        ), "白光智能灯泡应该存在"
         assert (
-            hass.states.get("light.single_io_rgb_light_rgb") is not None
-        ), "单IO RGB灯应该存在"
+            hass.states.get("light.smart_bulb_cool_warm") is not None
+        ), "冷暖智能灯泡应该存在"
         assert (
-            hass.states.get("light.dual_io_rgbw_light") is not None
-        ), "双IO RGBW灯应该存在"
+            hass.states.get("light.dimmer_controller_0_10v") is not None
+        ), "调光控制器应该存在"
         assert (
-            hass.states.get("light.spot_rgb_light_rgb") is not None
-        ), "射灯RGB应该存在"
-        assert hass.states.get("light.spot_rgbw_light") is not None, "射灯RGBW应该存在"
-        assert hass.states.get("light.cover_light_p1") is not None, "窗帘灯应该存在"
-        # wall_outlet_light已移除，因为SL_OL_W现在归类为插座
-        # simple_bulb已移除，因为LIGHT_BULB_TYPES不存在
-        assert hass.states.get("light.outdoor_light_p1") is not None, "室外灯应该存在"
+            hass.states.get("light.rgb_light_strip_rgb") is not None
+        ), "RGB灯带应该存在"
+        assert hass.states.get("light.rgbw_light_strip") is not None, "RGBW灯带应该存在"
+        assert hass.states.get("light.rgbw_light_bulb") is not None, "RGBW灯泡应该存在"
+        assert (
+            hass.states.get("light.super_bowl_bluetooth") is not None
+        ), "超级碗蓝牙应该存在"
+        assert (
+            hass.states.get("light.super_bowl_coss_rgb") is not None
+        ), "超级碗CoSS应该存在"
 
         # 确认非灯光设备或子项没有被错误创建
         assert (
@@ -103,7 +109,7 @@ class TestLightSetup:
 class TestLifeSmartBrightnessLight:
     """测试亮度灯 (LifeSmartBrightnessLight)。"""
 
-    ENTITY_ID = "light.brightness_light_p1"
+    ENTITY_ID = "light.white_light_bulb_p1"
     DEVICE_ME = "light_bright"
     HUB_ID = "hub_light"
     SUB_KEY = "P1"
@@ -213,7 +219,7 @@ class TestLifeSmartBrightnessLight:
 class TestLifeSmartDimmerLight:
     """测试色温灯 (LifeSmartDimmerLight)。"""
 
-    ENTITY_ID = "light.dimmer_light"
+    ENTITY_ID = "light.wall_dimmer_light"
     DEVICE_ME = "light_dimmer"
     HUB_ID = "hub_light"
 
@@ -490,7 +496,7 @@ class TestLifeSmartQuantumLight:
 class TestLifeSmartSingleIORGBWLight:
     """测试单IO口RGBW灯 (LifeSmartSingleIORGBWLight)。"""
 
-    ENTITY_ID = "light.single_io_rgb_light_rgb"
+    ENTITY_ID = "light.single_io_rgb_single_test_rgb"
     DEVICE_ME = "light_singlergb"
     HUB_ID = "hub_light"
     SUB_KEY = "RGB"
@@ -623,7 +629,7 @@ class TestLifeSmartSingleIORGBWLight:
 class TestLifeSmartDualIORGBWLight:
     """测试双IO口RGBW灯 (LifeSmartDualIORGBWLight)。"""
 
-    ENTITY_ID = "light.dual_io_rgbw_light"
+    ENTITY_ID = "light.dual_io_rgbw_single_test"
     DEVICE_ME = "light_dualrgbw"
     HUB_ID = "hub_light"
     COLOR_IO = "RGBW"
@@ -774,7 +780,7 @@ class TestLifeSmartDualIORGBWLight:
 class TestLifeSmartSPOTRGBLight:
     """测试SPOT RGB灯 (LifeSmartSPOTRGBLight)。"""
 
-    ENTITY_ID = "light.spot_rgb_light_rgb"
+    ENTITY_ID = "light.spot_rgb_single_test_rgb"
     DEVICE_ME = "light_spotrgb"
     HUB_ID = "hub_light"
     SUB_KEY = "RGB"
@@ -1297,7 +1303,7 @@ class TestLightCoverageEnhancement:
         from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
         from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-        entity_id = "light.brightness_light_p1"
+        entity_id = "light.white_light_bulb_p1"
 
         # 清空设备列表模拟设备未找到
         entry_id = list(hass.data[DOMAIN].keys())[0]
@@ -1312,11 +1318,11 @@ class TestLightCoverageEnhancement:
         assert state is not None
 
     @pytest.mark.asyncio
-    async def test_brightness_light_turn_on_exception_rollback(
+    async def test_white_light_bulb_turn_on_exception_rollback(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试亮度灯在发送亮度命令失败时的状态回滚。"""
-        entity_id = "light.brightness_light_p1"
+        entity_id = "light.white_light_bulb_p1"
 
         # 模拟亮度命令失败
         mock_client.async_send_single_command.side_effect = Exception(
@@ -1339,11 +1345,11 @@ class TestLightCoverageEnhancement:
         assert final_state.attributes.get(ATTR_BRIGHTNESS) == initial_brightness
 
     @pytest.mark.asyncio
-    async def test_dimmer_light_turn_on_no_params_only(
+    async def test_wall_dimmer_light_turn_on_no_params_only(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试色温灯仅调用turn_on而无其他参数的情况。"""
-        entity_id = "light.dimmer_light"
+        entity_id = "light.wall_dimmer_light"
 
         # 清除之前的调用记录
         mock_client.reset_mock()
@@ -1363,11 +1369,11 @@ class TestLightCoverageEnhancement:
         )
 
     @pytest.mark.asyncio
-    async def test_dimmer_light_kelvin_boundary_calculations(
+    async def test_wall_dimmer_light_kelvin_boundary_calculations(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试色温灯边界色温值的计算。"""
-        entity_id = "light.dimmer_light"
+        entity_id = "light.wall_dimmer_light"
 
         # 测试最小色温
         await hass.services.async_call(
@@ -1437,11 +1443,11 @@ class TestLightCoverageEnhancement:
         )
 
     @pytest.mark.asyncio
-    async def test_spot_rgb_light_turn_on_no_color_no_effect(
+    async def test_spot_rgb_single_test_turn_on_no_color_no_effect(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试SPOT RGB灯在没有颜色和效果参数时的开灯行为。"""
-        entity_id = "light.spot_rgb_light_rgb"
+        entity_id = "light.spot_rgb_single_test_rgb"
 
         mock_client.reset_mock()
 
@@ -1459,11 +1465,11 @@ class TestLightCoverageEnhancement:
         )
 
     @pytest.mark.asyncio
-    async def test_spot_rgb_light_brightness_only(
+    async def test_spot_rgb_single_test_brightness_only(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试SPOT RGB灯仅设置亮度的情况。"""
-        entity_id = "light.spot_rgb_light_rgb"
+        entity_id = "light.spot_rgb_single_test_rgb"
 
         # 设置亮度但不设置颜色
         await hass.services.async_call(
@@ -1480,11 +1486,11 @@ class TestLightCoverageEnhancement:
         )
 
     @pytest.mark.asyncio
-    async def test_single_io_rgbw_light_effect_priority(
+    async def test_single_io_rgbw_single_test_effect_priority(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试单IO RGBW灯同时提供效果和颜色时效果的优先级。"""
-        entity_id = "light.single_io_rgb_light_rgb"
+        entity_id = "light.single_io_rgb_single_test_rgb"
 
         # 同时提供效果和颜色，效果应该优先
         await hass.services.async_call(
@@ -1509,11 +1515,11 @@ class TestLightCoverageEnhancement:
         assert state.attributes.get(ATTR_RGBW_COLOR) is None
 
     @pytest.mark.asyncio
-    async def test_dual_io_rgbw_light_turn_on_no_params(
+    async def test_dual_io_rgbw_single_test_turn_on_no_params(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试双IO RGBW灯仅开灯而无其他参数的情况。"""
-        entity_id = "light.dual_io_rgbw_light"
+        entity_id = "light.dual_io_rgbw_single_test"
 
         mock_client.reset_mock()
 
@@ -1532,11 +1538,11 @@ class TestLightCoverageEnhancement:
         )
 
     @pytest.mark.asyncio
-    async def test_dual_io_rgbw_light_brightness_calculation(
+    async def test_dual_io_rgbw_single_test_brightness_calculation(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试双IO RGBW灯亮度计算的边缘情况。"""
-        entity_id = "light.dual_io_rgbw_light"
+        entity_id = "light.dual_io_rgbw_single_test"
 
         # 测试亮度为0时的处理
         await hass.services.async_call(
@@ -1567,9 +1573,9 @@ class TestLightCoverageEnhancement:
         """测试_handle_update接收到空数据时的处理。"""
         from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
         from homeassistant.helpers.dispatcher import async_dispatcher_send
-        from .test_utils import get_entity_unique_id
+        from ..utils.helpers import get_entity_unique_id
 
-        entity_id = "light.brightness_light_p1"
+        entity_id = "light.white_light_bulb_p1"
         unique_id = get_entity_unique_id(hass, entity_id)
 
         initial_state = hass.states.get(entity_id)
@@ -1592,7 +1598,7 @@ class TestLightCoverageEnhancement:
         """测试_handle_update接收到非原始IO数据时的处理。"""
         from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
         from homeassistant.helpers.dispatcher import async_dispatcher_send
-        from .test_utils import get_entity_unique_id
+        from ..utils.helpers import get_entity_unique_id
 
         entity_id = "light.quantum_light"
         unique_id = get_entity_unique_id(hass, entity_id)
@@ -1659,7 +1665,7 @@ class TestLightProtocolAndColorEdgeCases:
         解析的。
         """
         # 定义测试中使用的常量
-        entity_id = "light.single_io_rgb_light_rgb"
+        entity_id = "light.single_io_rgb_single_test_rgb"
         hub_id = "hub_light"
         device_me = "light_singlergb"
         sub_key = "RGB"
@@ -1699,7 +1705,7 @@ class TestLightProtocolAndColorEdgeCases:
         )
 
     @pytest.mark.asyncio
-    async def test_spot_rgb_light_color_brightness_edge_cases(
+    async def test_spot_rgb_single_test_color_brightness_edge_cases(
         self,
         hass: HomeAssistant,
         mock_client: MagicMock,
@@ -1713,7 +1719,7 @@ class TestLightProtocolAndColorEdgeCases:
         的最终颜色值并发送给设备。
         """
         # 定义测试中使用的常量
-        entity_id = "light.spot_rgb_light_rgb"
+        entity_id = "light.spot_rgb_single_test_rgb"
         hub_id = "hub_light"
         device_me = "light_spotrgb"
         sub_key = "RGB"
@@ -1774,7 +1780,7 @@ class TestLightProtocolAndColorEdgeCases:
         这确保了设备不会处于一个未定义的状态。
         """
         # 定义测试中使用的常量
-        entity_id = "light.dual_io_rgbw_light"
+        entity_id = "light.dual_io_rgbw_single_test"
         hub_id = "hub_light"
         device_me = "light_dualrgbw"
         color_io = "RGBW"
@@ -1848,11 +1854,11 @@ class TestLightErrorHandlingAndEdgeCases:
     """测试灯光模块的错误处理和特殊边缘情况。"""
 
     @pytest.mark.asyncio
-    async def test_dimmer_light_kelvin_range_edge_case(
+    async def test_wall_dimmer_light_kelvin_range_edge_case(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试色温灯在极值色温下的处理。"""
-        entity_id = "light.dimmer_light"
+        entity_id = "light.wall_dimmer_light"
 
         # 测试超出范围的色温值（应被限制在范围内）
         await hass.services.async_call(
@@ -1871,7 +1877,9 @@ class TestLightErrorHandlingAndEdgeCases:
         assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) == DEFAULT_MAX_KELVIN
 
     @pytest.mark.asyncio
-    async def test_dimmer_light_division_by_zero_protection(self, hass: HomeAssistant):
+    async def test_wall_dimmer_light_division_by_zero_protection(
+        self, hass: HomeAssistant
+    ):
         """测试色温灯计算时的除零保护。"""
         from custom_components.lifesmart.light import LifeSmartDimmerLight
         from custom_components.lifesmart.const import DEVICE_DATA_KEY
@@ -1904,7 +1912,7 @@ class TestLightErrorHandlingAndEdgeCases:
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试单IO灯在亮度为0时的白光设置。"""
-        entity_id = "light.single_io_rgb_light_rgb"
+        entity_id = "light.single_io_rgb_single_test_rgb"
 
         # 设置亮度为0（应转换为白光W=0）
         await hass.services.async_call(
@@ -1926,9 +1934,9 @@ class TestLightErrorHandlingAndEdgeCases:
         """测试单IO灯状态更新时w_flag的计算。"""
         from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
         from homeassistant.helpers.dispatcher import async_dispatcher_send
-        from .test_utils import get_entity_unique_id
+        from ..utils.helpers import get_entity_unique_id
 
-        entity_id = "light.single_io_rgb_light_rgb"
+        entity_id = "light.single_io_rgb_single_test_rgb"
         unique_id = get_entity_unique_id(hass, entity_id)
 
         # 测试w_flag < 128的情况（静态颜色模式）
@@ -1952,7 +1960,7 @@ class TestLightErrorHandlingAndEdgeCases:
         """测试量子灯效果映射的边缘情况。"""
         from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
         from homeassistant.helpers.dispatcher import async_dispatcher_send
-        from .test_utils import get_entity_unique_id
+        from ..utils.helpers import get_entity_unique_id
 
         entity_id = "light.quantum_light"
         unique_id = get_entity_unique_id(hass, entity_id)
@@ -1972,11 +1980,11 @@ class TestLightErrorHandlingAndEdgeCases:
         assert state.attributes.get(ATTR_RGBW_COLOR) == (0x11, 0x22, 0x33, 0xFF)
 
     @pytest.mark.asyncio
-    async def test_dual_io_light_default_rgbw_fallback(
+    async def test_dual_io_rgbw_single_test_default_rgbw_fallback(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试双IO灯在RGBW为None时的默认值处理。"""
-        entity_id = "light.dual_io_rgbw_light"
+        entity_id = "light.dual_io_rgbw_single_test"
 
         # 先设置效果清除RGBW
         await hass.services.async_call(
@@ -2007,11 +2015,11 @@ class TestLightErrorHandlingAndEdgeCases:
         )
 
     @pytest.mark.asyncio
-    async def test_spot_rgb_light_rgb_color_none_fallback(
+    async def test_spot_rgb_single_test_rgb_color_none_fallback(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试SPOT RGB灯在RGB颜色为None时的默认值处理。"""
-        entity_id = "light.spot_rgb_light_rgb"
+        entity_id = "light.spot_rgb_single_test_rgb"
 
         # 先设置效果清除RGB
         await hass.services.async_call(
@@ -2088,7 +2096,7 @@ class TestLightErrorHandlingAndEdgeCases:
         self, hass: HomeAssistant, setup_integration
     ):
         """测试灯光实体的设备信息生成。"""
-        entity_id = "light.brightness_light_p1"
+        entity_id = "light.white_light_bulb_p1"
 
         # 获取实体的设备信息
         registry = hass.data["entity_registry"]
@@ -2132,11 +2140,11 @@ class TestLightErrorHandlingAndEdgeCases:
         assert light.hass is not None, "实体应该已关联到Home Assistant"
 
     @pytest.mark.asyncio
-    async def test_spot_rgb_light_effect_val_none_handling(
+    async def test_spot_rgb_single_test_effect_val_none_handling(
         self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
     ):
         """测试SPOT RGB灯在效果值为None时的处理。"""
-        entity_id = "light.spot_rgb_light_rgb"
+        entity_id = "light.spot_rgb_single_test_rgb"
 
         # 设置一个不存在的效果
         with patch.dict(

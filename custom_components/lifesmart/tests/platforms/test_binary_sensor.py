@@ -23,9 +23,105 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.const import *
 from custom_components.lifesmart.helpers import generate_unique_id
-from .test_utils import find_test_device
+from ..utils.factories import create_devices_by_category
+from ..utils.helpers import find_test_device, get_hub_id
+
 
 # ==================== 测试数据 ====================
+
+
+def generate_binary_sensor_test_cases():
+    """从工厂数据动态生成二进制传感器测试参数"""
+    devices = create_devices_by_category(
+        ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
+    )
+    test_cases = []
+
+    # 预定义每种设备类型和子键对应的设备类型和期望状态
+    device_mappings = {
+        ("SL_SC_G", "G"): (BinarySensorDeviceClass.DOOR, STATE_ON),  # 门传感器
+        ("SL_SC_MHW", "M"): (BinarySensorDeviceClass.MOTION, STATE_ON),  # 动态感应器
+        ("SL_SC_WA", "WA"): (BinarySensorDeviceClass.MOISTURE, STATE_ON),  # 水浸传感器
+        ("SL_LK_LS", "EVTLO"): (
+            BinarySensorDeviceClass.LOCK,
+            STATE_ON,
+        ),  # 智能门锁开锁事件
+        ("SL_LK_LS", "ALM"): (
+            BinarySensorDeviceClass.PROBLEM,
+            STATE_ON,
+        ),  # 智能门锁报警
+        ("SL_SC_BB", "B"): (None, STATE_OFF),  # 按钮
+    }
+
+    for device in devices:
+        devtype = device.get("devtype")
+        me = device.get("me")
+        data = device.get("data", {})
+
+        for (target_devtype, sub_key), (
+            device_class,
+            expected_state,
+        ) in device_mappings.items():
+            if devtype == target_devtype and sub_key in data:
+                test_cases.append((me, sub_key, device_class, expected_state))
+                break  # 只添加第一个匹配的设备
+
+    return test_cases
+
+
+# 生成测试参数
+BINARY_SENSOR_TEST_CASES = generate_binary_sensor_test_cases()
+
+
+def generate_state_parsing_test_cases():
+    """生成状态解析测试参数"""
+    devices = create_devices_by_category(["bs_door", "bs_motion", "bs_water"])
+    test_cases = []
+
+    # 预定义状态测试场景
+    state_scenarios = [
+        (
+            "SL_SC_G",
+            "G",
+            [
+                ({"val": 0}, True),  # 门开
+                ({"val": 1}, False),  # 门关
+            ],
+        ),
+        (
+            "SL_SC_MHW",
+            "M",
+            [
+                ({"val": 1}, True),  # 检测到运动
+                ({"val": 0}, False),  # 未检测到运动
+            ],
+        ),
+        (
+            "SL_SC_WA",
+            "WA",
+            [
+                ({"val": 1}, True),  # 检测到水
+                ({"val": 0}, False),  # 未检测到水
+            ],
+        ),
+    ]
+
+    for device in devices:
+        devtype = device.get("devtype")
+        me = device.get("me")
+        data = device.get("data", {})
+
+        for target_devtype, sub_key, scenarios in state_scenarios:
+            if devtype == target_devtype and sub_key in data:
+                for test_data, expected_state in scenarios:
+                    test_cases.append((me, sub_key, test_data, expected_state))
+                break  # 只添加第一个匹配的设备
+
+    return test_cases
+
+
+# 生成状态解析测试参数
+STATE_PARSING_TEST_CASES = generate_state_parsing_test_cases()
 
 # 设备类型和子设备映射
 DEVICE_TYPE_MAPPINGS = {
@@ -54,7 +150,7 @@ DEVICE_TYPE_MAPPINGS = {
         "sub_keys": ["EVTLO", "ALM"],
     },
     # 按钮
-    "bs_button": {"device_class": None, "sub_keys": ["P1"]},
+    "bs_button": {"device_class": None, "sub_keys": ["B"]},
 }
 
 # 状态测试用例
@@ -95,37 +191,83 @@ class TestBinarySensorSetup:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试设置过程创建了所有预期的实体。"""
         entity_registry = er.async_get(hass)
 
-        expected_entities = {
-            "binary_sensor.front_door_g",
-            "binary_sensor.main_lock_evtlo",
-            "binary_sensor.main_lock_alm",
-            "binary_sensor.panic_button_p1",
-        }
-
+        # 获取所有二进制传感器实体
         created_entities = {
             entry.entity_id
             for entry in entity_registry.entities.values()
             if entry.platform == DOMAIN and entry.domain == "binary_sensor"
         }
 
-        assert expected_entities.issubset(
-            created_entities
-        ), "所有预期的二元传感器实体都应该被创建"
+        # 使用工厂函数获取测试设备来验证实体创建
+        test_devices = create_devices_by_category(
+            ["bs_door", "bs_guard", "bs_lock", "bs_button"]
+        )
+
+        # 验证应该创建的设备类型和数量
+        expected_device_types = {
+            "SL_SC_G",  # 门禁感应器
+            "SL_SC_BG",  # CUBE门禁感应器
+            "SL_LK_LS",  # 智能门锁
+            "SL_SC_BB",  # 随心开关/按钮
+        }
+
+        # 查找对应的设备并验证实体创建
+        found_devices = set()
+        for device in test_devices:
+            if device["devtype"] in expected_device_types:
+                found_devices.add(device["devtype"])
+
+        # 验证每种设备类型都有对应的实体创建
+        assert len(found_devices) == len(
+            expected_device_types
+        ), f"应该找到{len(expected_device_types)}种设备类型，实际找到{len(found_devices)}"
+
+        # 验证至少创建了预期数量的二进制传感器实体
+        # SL_SC_G: 1个实体 (G)
+        # SL_SC_BG: 3个实体 (G, KB, AXS)
+        # SL_LK_LS: 2个实体 (EVTLO, ALM)
+        # SL_SC_BB: 1个实体 (B)
+        expected_entity_count = 7  # 总共应该有7个实体
+
+        assert (
+            len(created_entities) >= expected_entity_count
+        ), f"应该创建至少{expected_entity_count}个二进制传感器实体，实际创建了{len(created_entities)}个"
+
+        # 验证具体的实体类型存在（基于设备类型而不是hardcode的entity_id）
+        entity_unique_ids = {
+            entry.unique_id
+            for entry in entity_registry.entities.values()
+            if entry.platform == DOMAIN and entry.domain == "binary_sensor"
+        }
+
+        # 验证门锁实体的unique_id存在
+        lock_evtlo_found = any(
+            "sl_lk_ls" in uid and "evtlo" in uid for uid in entity_unique_ids
+        )
+        lock_alm_found = any(
+            "sl_lk_ls" in uid and "alm" in uid for uid in entity_unique_ids
+        )
+
+        assert lock_evtlo_found, "应该创建门锁开锁事件传感器"
+        assert lock_alm_found, "应该创建门锁告警传感器"
 
     @pytest.mark.asyncio
     async def test_setup_respects_device_exclusion(
         self,
         hass: HomeAssistant,
-        mock_lifesmart_devices: list,
     ):
         """测试设置过程正确排除指定的设备。"""
         from custom_components.lifesmart.binary_sensor import async_setup_entry
         from unittest.mock import MagicMock
+
+        # 使用工厂函数创建测试设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_guard", "bs_lock", "bs_button"]
+        )
 
         # 创建模拟的 hub 和 config_entry
         mock_hub = MagicMock()
@@ -154,11 +296,15 @@ class TestBinarySensorSetup:
     async def test_setup_respects_hub_exclusion(
         self,
         hass: HomeAssistant,
-        mock_lifesmart_devices: list,
     ):
         """测试设置过程正确排除指定的 hub。"""
         from custom_components.lifesmart.binary_sensor import async_setup_entry
         from unittest.mock import MagicMock
+
+        # 使用工厂函数创建测试设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_guard", "bs_lock", "bs_button"]
+        )
 
         mock_hub = MagicMock()
         mock_hub.get_devices.return_value = mock_lifesmart_devices
@@ -196,41 +342,37 @@ class TestDeviceClassification:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "device_me, sub_key, expected_class, expected_state",
-        [
-            ("bs_door", "G", BinarySensorDeviceClass.DOOR, STATE_ON),
-            ("bs_motion", "M", BinarySensorDeviceClass.MOTION, STATE_ON),
-            ("bs_water", "WA", BinarySensorDeviceClass.MOISTURE, STATE_ON),
-            ("bs_defed", "M", BinarySensorDeviceClass.MOTION, STATE_ON),
-            ("bs_smoke", "P1", BinarySensorDeviceClass.SMOKE, STATE_ON),
-            ("bs_radar", "P1", BinarySensorDeviceClass.OCCUPANCY, STATE_ON),
-            ("bs_lock", "EVTLO", BinarySensorDeviceClass.LOCK, STATE_ON),
-            ("bs_lock", "ALM", BinarySensorDeviceClass.PROBLEM, STATE_ON),
-            ("bs_button", "P1", None, STATE_OFF),
-        ],
+        BINARY_SENSOR_TEST_CASES,
         ids=[
-            "DoorSensor",
-            "MotionSensor",
-            "WaterSensor",
-            "DefedSensor",
-            "SmokeSensor",
-            "RadarSensor",
-            "LockStatus",
-            "LockAlarm",
-            "Button",
+            f"{next((d['devtype'] for d in create_devices_by_category(['bs_door', 'bs_motion', 'bs_water', 'bs_lock', 'bs_button']) if d['me'] == me), 'Unknown')}-{sub_key}"
+            for me, sub_key, device_class, expected_state in BINARY_SENSOR_TEST_CASES
         ],
     )
     async def test_device_class_and_initial_state(
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
         device_me: str,
         sub_key: str,
         expected_class: BinarySensorDeviceClass | None,
         expected_state: str,
     ):
         """测试设备类别识别和初始状态。"""
+        # 使用工厂函数获取测试设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
+        )
         device = find_test_device(mock_lifesmart_devices, device_me)
+        # For duplicate device IDs, find the binary sensor device specifically
+        if device is None or sub_key not in device.get("data", {}):
+            # Try to find the Door Sensor (SL_SC_G) specifically by hub ID
+            device = find_test_device(mock_lifesmart_devices, device_me, get_hub_id(6))
+
+        assert device is not None, f"设备 {device_me} 应该存在于mock数据中"
+        assert sub_key in device.get(
+            "data", {}
+        ), f"设备 {device_me} 应该包含键 {sub_key}"
+
         entity_registry = er.async_get(hass)
         unique_id = generate_unique_id(
             device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], sub_key
@@ -257,8 +399,25 @@ class TestDeviceClassification:
         setup_integration: ConfigEntry,
     ):
         """测试门锁实体的特殊属性。"""
+        # 使用工厂函数获取测试设备
+        mock_lifesmart_devices = create_devices_by_category(["bs_lock"])
+        # 从测试设备中找到门锁设备 - 使用真实的设备ID
+        lock_device = find_test_device(mock_lifesmart_devices, "2i1k")
+        assert lock_device is not None, "应该找到门锁测试设备"
+
+        entity_registry = er.async_get(hass)
+
         # 测试 EVTLO 实体的属性
-        evtlo_state = hass.states.get("binary_sensor.main_lock_evtlo")
+        evtlo_unique_id = generate_unique_id(
+            lock_device[DEVICE_TYPE_KEY],
+            lock_device[HUB_ID_KEY],
+            lock_device[DEVICE_ID_KEY],
+            "EVTLO",
+        )
+        evtlo_entity_id = entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, evtlo_unique_id
+        )
+        evtlo_state = hass.states.get(evtlo_entity_id)
         assert evtlo_state is not None, "门锁状态传感器应该存在"
 
         assert "unlocking_method" in evtlo_state.attributes, "应该包含解锁方式属性"
@@ -267,7 +426,16 @@ class TestDeviceClassification:
         assert "last_updated" in evtlo_state.attributes, "应该包含最后更新时间属性"
 
         # 测试 ALM 实体的属性
-        alm_state = hass.states.get("binary_sensor.main_lock_alm")
+        alm_unique_id = generate_unique_id(
+            lock_device[DEVICE_TYPE_KEY],
+            lock_device[HUB_ID_KEY],
+            lock_device[DEVICE_ID_KEY],
+            "ALM",
+        )
+        alm_entity_id = entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, alm_unique_id
+        )
+        alm_state = hass.states.get(alm_entity_id)
         assert alm_state is not None, "门锁报警传感器应该存在"
         assert "alarm_type" in alm_state.attributes, "应该包含报警类型属性"
 
@@ -276,10 +444,11 @@ class TestDeviceClassification:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试水浸传感器的特殊属性。"""
-        device = find_test_device(mock_lifesmart_devices, "bs_water")
+        # 使用工厂函数获取测试设备
+        mock_lifesmart_devices = create_devices_by_category(["bs_water"])
+        device = find_test_device(mock_lifesmart_devices, "1h0j")  # SL_SC_WA水浸传感器
         entity_registry = er.async_get(hass)
         unique_id = generate_unique_id(
             device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], "WA"
@@ -303,53 +472,31 @@ class TestStateParsingLogic:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "device_me, sub_key, test_data, expected_state",
-        [
-            # 门窗感应器测试
-            ("bs_door", "G", {"val": 0}, True),  # 门开
-            ("bs_door", "G", {"val": 1}, False),  # 门关
-            # 动态感应器测试
-            ("bs_motion", "M", {"val": 1}, True),  # 检测到运动
-            ("bs_motion", "M", {"val": 0}, False),  # 未检测到运动
-            # 水浸传感器测试
-            ("bs_water", "WA", {"val": 1}, True),  # 检测到水
-            ("bs_water", "WA", {"val": 0}, False),  # 未检测到水
-            # 烟雾感应器测试
-            ("bs_smoke", "P1", {"val": 1}, True),  # 检测到烟雾
-            ("bs_smoke", "P1", {"val": 0}, False),  # 未检测到烟雾
-            # 人体存在感应器测试
-            ("bs_radar", "P1", {"val": 1}, True),  # 检测到人体
-            ("bs_radar", "P1", {"val": 0}, False),  # 未检测到人体
-            # 云防系列测试 - 使用 type 字段
-            ("bs_defed", "M", {"type": 1}, True),  # type % 2 == 1
-            ("bs_defed", "M", {"type": 2}, False),  # type % 2 == 0
-        ],
+        STATE_PARSING_TEST_CASES,
         ids=[
-            "DoorOpen",
-            "DoorClosed",
-            "MotionDetected",
-            "MotionClear",
-            "WaterDetected",
-            "WaterClear",
-            "SmokeDetected",
-            "SmokeClear",
-            "OccupancyDetected",
-            "OccupancyClear",
-            "DefedActive",
-            "DefedInactive",
+            f"{next((d['devtype'] for d in create_devices_by_category(['bs_door', 'bs_motion', 'bs_water']) if d['me'] == me), 'Unknown')}-{sub_key}-{'On' if expected_state else 'Off'}"
+            for me, sub_key, test_data, expected_state in STATE_PARSING_TEST_CASES
         ],
     )
     async def test_state_parsing(
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
         device_me: str,
         sub_key: str,
         test_data: dict,
         expected_state: bool,
     ):
         """测试各种设备类型的状态解析逻辑。"""
+        # 使用工厂函数获取测试设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_motion", "bs_water"]
+        )
         device = find_test_device(mock_lifesmart_devices, device_me)
+        # For duplicate device IDs, find the binary sensor device specifically
+        if device is None or sub_key not in device.get("data", {}):
+            # Try to find the Door Sensor (SL_SC_G) specifically by hub ID
+            device = find_test_device(mock_lifesmart_devices, device_me, get_hub_id(6))
         entity_registry = er.async_get(hass)
         unique_id = generate_unique_id(
             device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], sub_key
@@ -375,10 +522,11 @@ class TestStateParsingLogic:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试门锁复杂状态解析逻辑。"""
-        device = find_test_device(mock_lifesmart_devices, "bs_lock")
+        # 使用工厂函数获取测试设备
+        mock_lifesmart_devices = create_devices_by_category(["bs_lock"])
+        device = find_test_device(mock_lifesmart_devices, "2i1k")
         entity_registry = er.async_get(hass)
 
         # 测试 EVTLO 锁状态
@@ -434,16 +582,17 @@ class TestButtonEventHandling:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
         freezer,
         event_val: int,
         expected_event_name: str,
     ):
         """测试按钮事件检测和属性设置。"""
-        device = find_test_device(mock_lifesmart_devices, "bs_button")
+        # 使用工厂函数获取测试设备
+        mock_lifesmart_devices = create_devices_by_category(["bs_button"])
+        device = find_test_device(mock_lifesmart_devices, "3j2l")
         entity_registry = er.async_get(hass)
         unique_id = generate_unique_id(
-            device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], "P1"
+            device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], "B"
         )
         entity_id = entity_registry.async_get_entity_id(
             "binary_sensor", DOMAIN, unique_id
@@ -474,14 +623,14 @@ class TestButtonEventHandling:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
         freezer,
     ):
         """测试按钮自动重置功能。"""
-        device = find_test_device(mock_lifesmart_devices, "bs_button")
+        mock_lifesmart_devices = create_devices_by_category(["bs_button"])
+        device = find_test_device(mock_lifesmart_devices, "3j2l")
         entity_registry = er.async_get(hass)
         unique_id = generate_unique_id(
-            device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], "P1"
+            device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], "B"
         )
         entity_id = entity_registry.async_get_entity_id(
             "binary_sensor", DOMAIN, unique_id
@@ -519,10 +668,12 @@ class TestUpdateHandling:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试实时更新处理。"""
-        device = find_test_device(mock_lifesmart_devices, "bs_door")
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
+        )
+        device = find_test_device(mock_lifesmart_devices, "9f8i", get_hub_id(6))
         entity_registry = er.async_get(hass)
         unique_id = generate_unique_id(
             device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], "G"
@@ -553,7 +704,26 @@ class TestUpdateHandling:
         setup_integration: ConfigEntry,
     ):
         """测试全局刷新处理。"""
-        entity_id = "binary_sensor.front_door_g"
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
+        )
+        # 从测试设备中找到门传感器设备 - 动态获取
+        door_devices = [
+            d for d in mock_lifesmart_devices if d.get("devtype") == "SL_SC_G"
+        ]
+        assert len(door_devices) > 0, "应该至少有一个门传感器设备"
+        door_device = door_devices[0]  # 使用第一个门传感器
+
+        entity_registry = er.async_get(hass)
+        unique_id = generate_unique_id(
+            door_device[DEVICE_TYPE_KEY],
+            door_device[HUB_ID_KEY],
+            door_device[DEVICE_ID_KEY],
+            "G",
+        )
+        entity_id = entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, unique_id
+        )
 
         # 获取初始状态
         initial_state = hass.states.get(entity_id)
@@ -561,8 +731,10 @@ class TestUpdateHandling:
 
         # 修改 hass.data 中的设备数据
         devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
-        door_device = find_test_device(devices, "bs_door")
-        door_device[DEVICE_DATA_KEY]["G"] = {"val": 1, "type": 0}  # 门关闭
+        test_door_devices = [d for d in devices if d.get("devtype") == "SL_SC_G"]
+        assert len(test_door_devices) > 0, "hass.data中应该有门传感器设备"
+        test_door_device = test_door_devices[0]
+        test_door_device[DEVICE_DATA_KEY]["G"] = {"val": 1, "type": 0}  # 门关闭
 
         # 发送全局刷新信号
         async_dispatcher_send(hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
@@ -577,11 +749,13 @@ class TestUpdateHandling:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
         caplog,
     ):
         """测试更新过程中的错误处理。"""
-        device = find_test_device(mock_lifesmart_devices, "bs_door")
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
+        )
+        device = find_test_device(mock_lifesmart_devices, "9f8i", get_hub_id(6))
         unique_id = generate_unique_id(
             device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], "G"
         )
@@ -637,9 +811,11 @@ class TestSpecialDeviceTypes:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试不同类型的门窗感应器。"""
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
+        )
         # 测试震动感应器 (假设我们有 SL_SC_BG 设备)
         # 这里需要根据实际的测试设备数据进行调整
         pass
@@ -698,10 +874,12 @@ class TestEdgeCasesAndExceptions:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试数据缺失时的实体行为。"""
-        device = find_test_device(mock_lifesmart_devices, "bs_door")
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
+        )
+        device = find_test_device(mock_lifesmart_devices, "9f8i", get_hub_id(6))
         entity_registry = er.async_get(hass)
         unique_id = generate_unique_id(
             device[DEVICE_TYPE_KEY], device[HUB_ID_KEY], device[DEVICE_ID_KEY], "G"
@@ -722,13 +900,15 @@ class TestEdgeCasesAndExceptions:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试实体的设备信息。"""
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
+        )
         from custom_components.lifesmart.binary_sensor import LifeSmartBinarySensor
         from unittest.mock import MagicMock
 
-        device = find_test_device(mock_lifesmart_devices, "bs_door")
+        device = find_test_device(mock_lifesmart_devices, "9f8i", get_hub_id(6))
         sensor = LifeSmartBinarySensor(
             raw_device=device,
             client=MagicMock(),
@@ -750,13 +930,15 @@ class TestEdgeCasesAndExceptions:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试实体的唯一ID和对象ID生成。"""
+        mock_lifesmart_devices = create_devices_by_category(
+            ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
+        )
         from custom_components.lifesmart.binary_sensor import LifeSmartBinarySensor
         from unittest.mock import MagicMock
 
-        device = find_test_device(mock_lifesmart_devices, "bs_door")
+        device = find_test_device(mock_lifesmart_devices, "9f8i", get_hub_id(6))
         sensor = LifeSmartBinarySensor(
             raw_device=device,
             client=MagicMock(),

@@ -44,7 +44,7 @@ from custom_components.lifesmart.const import (
 )
 from custom_components.lifesmart.exceptions import LifeSmartAPIError, LifeSmartAuthError
 from custom_components.lifesmart.hub import LifeSmartHub
-from .test_utils import create_mock_oapi_client
+from ..utils.factories import create_mock_oapi_client
 
 
 @pytest.fixture

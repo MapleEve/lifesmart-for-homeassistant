@@ -34,7 +34,7 @@ from custom_components.lifesmart.const import (
     CMD_TYPE_SET_VAL,
     CMD_TYPE_SET_CONFIG,
     CMD_TYPE_SET_TEMP_DECIMAL,
-    CMD_TYPE_SET_RAW,
+    CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_TEMP_FCU,
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
@@ -838,7 +838,7 @@ class TestClimateControlHelpers:
         "device_type, temperature, expected_conversion",
         [
             ("V_AIR_P", 25.5, ("tT", CMD_TYPE_SET_TEMP_DECIMAL, 255)),
-            ("SL_CP_DN", 18.0, ("P3", CMD_TYPE_SET_RAW, 180)),
+            ("SL_CP_DN", 18.0, ("P3", CMD_TYPE_SET_RAW_ON, 180)),
             ("SL_FCU", 22.0, ("P8", CMD_TYPE_SET_TEMP_FCU, 220)),
             ("UNSUPPORTED", 20.0, None),
         ],
@@ -863,7 +863,7 @@ class TestClimateControlHelpers:
         "device_type, fan_mode, current_val, expected_conversion",
         [
             ("V_AIR_P", FAN_LOW, 0, ("F", CMD_TYPE_SET_CONFIG, 15)),
-            ("SL_TR_ACIPM", FAN_MEDIUM, 0, ("P2", CMD_TYPE_SET_RAW, 2)),
+            ("SL_TR_ACIPM", FAN_MEDIUM, 0, ("P2", CMD_TYPE_SET_RAW_ON, 2)),
             ("SL_NATURE", FAN_HIGH, 0, ("P9", CMD_TYPE_SET_CONFIG, 75)),
             ("SL_FCU", FAN_AUTO, 0, ("P9", CMD_TYPE_SET_CONFIG, 101)),
             ("UNSUPPORTED", FAN_LOW, 0, None),

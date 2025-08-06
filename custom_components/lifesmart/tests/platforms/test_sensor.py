@@ -37,7 +37,11 @@ from custom_components.lifesmart.const import *
 from custom_components.lifesmart.helpers import (
     generate_unique_id,
 )
-from .test_utils import find_test_device
+from ..utils.factories import create_devices_by_category
+from ..utils.helpers import (
+    find_test_device,
+    assert_platform_entity_count_matches_devices,
+)
 
 
 class TestSensorSetup:
@@ -48,9 +52,26 @@ class TestSensorSetup:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试传感器设置是否创建了正确的实体。"""
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            [
+                "sensor_env",
+                "sensor_quality",
+                "sensor_power",
+                "sensor_battery",
+                "sensor_lock",
+            ]
+        )
+
+        # 使用自动化验证替代硬编码数量检查
+        from homeassistant.const import DOMAIN as SENSOR_DOMAIN
+
+        assert_platform_entity_count_matches_devices(
+            hass, SENSOR_DOMAIN, mock_lifesmart_devices
+        )
+
         entity_registry = er.async_get(hass)
 
         expected_entities = {
@@ -61,7 +82,7 @@ class TestSensorSetup:
             "sensor.study_co2_p3",
             "sensor.washing_machine_plug_p2",
             "sensor.washing_machine_plug_p3",
-            "sensor.main_door_lock_bat",
+            "sensor.main_lock_bat",  # 修正实体ID以匹配工厂数据
             "sensor.nature_panel_thermo_p4",
             "sensor.boundary_test_sensor_t",
             "sensor.boundary_test_sensor_h",
@@ -83,9 +104,12 @@ class TestSensorSetup:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试设置是否正确排除了配置中指定的设备。"""
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_excluded"]
+        )
         entity_registry = er.async_get(hass)
 
         excluded_device_on_hub = find_test_device(
@@ -112,7 +136,7 @@ class TestSensorEntity:
         "device_me, sub_key, expected_name_suffix, expected_class, expected_unit, expected_state_class, expected_value",
         [
             (
-                "sensor_env",
+                "7d6f",
                 "T",
                 "T",
                 SensorDeviceClass.TEMPERATURE,
@@ -121,7 +145,7 @@ class TestSensorEntity:
                 25.5,
             ),
             (
-                "sensor_env",
+                "7d6f",
                 "H",
                 "H",
                 SensorDeviceClass.HUMIDITY,
@@ -130,7 +154,7 @@ class TestSensorEntity:
                 60.1,
             ),
             (
-                "sensor_env",
+                "7d6f",
                 "Z",
                 "Z",
                 SensorDeviceClass.ILLUMINANCE,
@@ -139,7 +163,7 @@ class TestSensorEntity:
                 1000,
             ),
             (
-                "sensor_env",
+                "7d6f",
                 "V",
                 "V",
                 SensorDeviceClass.VOLTAGE,
@@ -148,7 +172,7 @@ class TestSensorEntity:
                 95,
             ),
             (
-                "sensor_lock_battery",
+                "2i1k",
                 "BAT",
                 "BAT",
                 SensorDeviceClass.BATTERY,
@@ -157,7 +181,7 @@ class TestSensorEntity:
                 88,
             ),
             (
-                "sensor_power_plug",
+                "4c7d",
                 "P2",
                 "P2",
                 SensorDeviceClass.ENERGY,
@@ -166,7 +190,7 @@ class TestSensorEntity:
                 1.5,
             ),
             (
-                "sensor_power_plug",
+                "4c7d",
                 "P3",
                 "P3",
                 SensorDeviceClass.POWER,
@@ -200,7 +224,6 @@ class TestSensorEntity:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
         device_me,
         sub_key,
         expected_name_suffix,
@@ -210,6 +233,16 @@ class TestSensorEntity:
         expected_value,
     ):
         """测试传感器实体的属性和初始状态是否正确。"""
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            [
+                "sensor_env",
+                "sensor_quality",
+                "sensor_power",
+                "sensor_battery",
+                "sensor_lock",
+            ]
+        )
         raw_device = find_test_device(mock_lifesmart_devices, device_me)
         entity_id = (
             f"sensor.{raw_device['name'].lower().replace(' ', '_')}_{sub_key.lower()}"
@@ -288,17 +321,17 @@ class TestSensorEntity:
     @pytest.mark.parametrize(
         "entity_id, unique_id_suffix, initial_value, update_payload, expected_value",
         [
-            ("sensor.living_room_env_t", "sensor_env_T", 25.5, {"val": 288}, 28.8),
+            ("sensor.living_room_env_t", "7d6f_T", 25.5, {"val": 288}, 28.8),
             (
                 "sensor.washing_machine_plug_p3",
-                "sensor_power_plug_P3",
+                "4c7d_P3",
                 1200,
                 {"v": 1500.5},
                 1500.5,
             ),
             (
-                "sensor.main_door_lock_bat",
-                "sensor_lock_battery_BAT",
+                "sensor.main_lock_bat",
+                "2i1k_BAT",
                 88,
                 {"val": 50},
                 50,
@@ -311,7 +344,6 @@ class TestSensorEntity:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
         entity_id,
         unique_id_suffix,
         initial_value,
@@ -325,6 +357,10 @@ class TestSensorEntity:
         ), f"实体 {entity_id} 初始值应为 {initial_value}"
 
         device_me, sub_key = unique_id_suffix.rsplit("_", 1)
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
         raw_device = find_test_device(mock_lifesmart_devices, device_me)
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
@@ -351,13 +387,16 @@ class TestComplexSensorScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """验证对模糊'val'键的智能处理。"""
         entity_id = "sensor.living_room_env_t"
         device_me = "sensor_env"
         sub_key = "T"
 
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
         # 获取dispatcher所需的unique_id
         raw_device = find_test_device(mock_lifesmart_devices, device_me)
         unique_id = generate_unique_id(
@@ -676,13 +715,16 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试传感器更新过程中的错误处理。"""
         entity_id = "sensor.living_room_env_t"
 
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
         # 获取设备信息用于构建unique_id
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1204,12 +1246,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试不同格式的状态更新消息。"""
         entity_id = "sensor.living_room_env_t"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1267,12 +1312,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试从msg格式更新传感器状态 (行 359-363)"""
         entity_id = "sensor.living_room_env_t"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1299,12 +1347,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试直接子键数据更新传感器状态 (行 384-385)"""
         entity_id = "sensor.living_room_env_h"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1331,12 +1382,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试没有数据时的更新处理 (行 401)"""
         entity_id = "sensor.living_room_env_t"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1365,12 +1419,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试无效值的处理 (行 455)"""
         entity_id = "sensor.living_room_env_t"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1395,12 +1452,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试None值的处理 (行 480-481)"""
         entity_id = "sensor.living_room_env_h"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1425,11 +1485,14 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试全局刷新时设备未找到的情况 (行 496->503, 507-515)"""
         entity_id = "sensor.living_room_env_t"
 
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
         # 获取初始状态
         initial_state = hass.states.get(entity_id)
         assert initial_state.state != STATE_UNAVAILABLE, "初始状态应该可用"
@@ -1461,11 +1524,14 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试全局刷新时子键未找到的情况 (行 524-525)"""
         entity_id = "sensor.living_room_env_t"
 
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
         # 模拟设备存在但子键不存在
         original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
         modified_devices = []
@@ -1796,12 +1862,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试从msg格式更新传感器状态 (行 359-363)"""
         entity_id = "sensor.living_room_env_t"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1828,12 +1897,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试直接子键数据更新传感器状态 (行 384-385)"""
         entity_id = "sensor.living_room_env_h"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1860,12 +1932,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试没有数据时的更新处理 (行 401)"""
         entity_id = "sensor.living_room_env_t"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1894,12 +1969,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试无效值的处理 (行 455)"""
         entity_id = "sensor.living_room_env_t"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1924,12 +2002,15 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试None值的处理 (行 480-481)"""
         entity_id = "sensor.living_room_env_h"
 
-        raw_device = find_test_device(mock_lifesmart_devices, "sensor_env")
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
+        raw_device = find_test_device(mock_lifesmart_devices, "7d6f")
         unique_id = generate_unique_id(
             raw_device[DEVICE_TYPE_KEY],
             raw_device[HUB_ID_KEY],
@@ -1954,11 +2035,14 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试全局刷新时设备未找到的情况 (行 496->503, 507-515)"""
         entity_id = "sensor.living_room_env_t"
 
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
         # 获取初始状态
         initial_state = hass.states.get(entity_id)
         assert initial_state.state != STATE_UNAVAILABLE
@@ -1990,11 +2074,14 @@ class TestSensorAdvancedScenarios:
         self,
         hass: HomeAssistant,
         setup_integration: ConfigEntry,
-        mock_lifesmart_devices: list,
     ):
         """测试全局刷新时子键未找到的情况 (行 524-525)"""
         entity_id = "sensor.living_room_env_t"
 
+        # 使用工厂函数创建传感器设备
+        mock_lifesmart_devices = create_devices_by_category(
+            ["sensor_env", "sensor_quality", "sensor_power", "sensor_battery"]
+        )
         # 模拟设备存在但子键不存在
         original_devices = hass.data[DOMAIN][setup_integration.entry_id]["devices"]
         modified_devices = []
