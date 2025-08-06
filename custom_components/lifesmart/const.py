@@ -2784,7 +2784,7 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     "SL_SC_CQ": {
         "sensor": {
             "io": ["P1", "P2", "P3", "P4", "P5", "P6"],
-            "description": "CO2传感器多项监测",
+            "description": "CO2+TVOC环境传感器完整监测",
         },
     },
     # 燃气传感器 - P1燃气浓度检测和告警,P2告警门限设置,P3警报音控制
