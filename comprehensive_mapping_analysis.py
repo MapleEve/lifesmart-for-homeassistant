@@ -64,9 +64,11 @@ def get_all_devices_from_const() -> Set[str]:
         except KeyError:
             print(f"警告: 未找到设备集合 {set_name}")
 
-    # 排除带_V数字的版本设备
+    # 排除带_V数字的版本设备，但保留SL_P_V2（它是真实设备名称，不是版本标识符）
     filtered_devices = {
-        device for device in all_devices if not re.search(r"_V\d+$", device)
+        device
+        for device in all_devices
+        if not re.search(r"_V\d+$", device) or device == "SL_P_V2"
     }
 
     print(f"🔍 const.py设备总数（含版本）: {len(all_devices)}")
@@ -130,9 +132,11 @@ def extract_appendix_device_names() -> Set[str]:
                     # 普通设备名
                     appendix_devices.add(device_col)
 
-    # 过滤掉带_V数字的版本设备，与const.py的处理保持一致
+    # 过滤掉带_V数字的版本设备，但保留SL_P_V2，与const.py的处理保持一致
     filtered_devices = {
-        device for device in appendix_devices if not re.search(r"_V\d+$", device)
+        device
+        for device in appendix_devices
+        if not re.search(r"_V\d+$", device) or device == "SL_P_V2"
     }
 
     print(f"🔍 附录3.1设备总数（含版本）: {len(appendix_devices)}")
@@ -347,25 +351,56 @@ def extract_current_mappings() -> Dict[str, Dict]:
     current_mappings = {}
 
     for device, mapping in MULTI_PLATFORM_DEVICE_MAPPING.items():
-        # 排除带_V数字的设备(fullCls版本标识符)
-        if re.search(r"_V\d+$", device):
+        # 排除带_V数字的设备(fullCls版本标识符)，但保留SL_P_V2（它是真实设备名称）
+        if re.search(r"_V\d+$", device) and device != "SL_P_V2":
             continue
 
         current_mappings[device] = {}
 
-        for platform, platform_info in mapping.items():
-            if platform == "dynamic":
-                continue
+        # 检查是否为动态设备
+        if isinstance(mapping, dict) and mapping.get("dynamic"):
+            # 处理动态设备的各种模式
+            for key, value in mapping.items():
+                if key == "dynamic":
+                    continue
 
-            io_list = platform_info.get("io", [])
-            if isinstance(io_list, str):
-                io_list = [io_list]
-            elif isinstance(io_list, list):
-                pass
-            else:
-                continue
+                # 处理不同模式的IO口
+                if isinstance(value, dict) and "io" in value:
+                    io_list = value["io"]
+                    if isinstance(io_list, str):
+                        io_list = [io_list]
+                    elif isinstance(io_list, list):
+                        pass
+                    else:
+                        continue
 
-            current_mappings[device][platform] = io_list
+                    # 为动态设备的每个模式创建条目
+                    mode_platform = key.replace("_mode", "").replace("always_", "")
+                    if mode_platform not in current_mappings[device]:
+                        current_mappings[device][mode_platform] = []
+                    current_mappings[device][mode_platform].extend(io_list)
+        else:
+            # 处理普通设备映射
+            for platform, platform_info in mapping.items():
+                if platform == "dynamic":
+                    continue
+
+                if isinstance(platform_info, dict):
+                    io_list = platform_info.get("io", [])
+                elif isinstance(platform_info, bool):
+                    # 跳过布尔值(如"dynamic": True)
+                    continue
+                else:
+                    continue
+
+                if isinstance(io_list, str):
+                    io_list = [io_list]
+                elif isinstance(io_list, list):
+                    pass
+                else:
+                    continue
+
+                current_mappings[device][platform] = io_list
 
     return current_mappings
 
