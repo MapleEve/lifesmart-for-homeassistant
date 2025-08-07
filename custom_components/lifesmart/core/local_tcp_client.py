@@ -10,8 +10,8 @@ import logging
 from typing import Callable, Any
 
 from .client_base import LifeSmartClientBase
-from .helpers import safe_get, normalize_device_names
 from .protocol import LifeSmartPacketFactory, LifeSmartProtocol
+from .utils import safe_get, normalize_device_names
 
 _LOGGER = logging.getLogger(__name__)
 

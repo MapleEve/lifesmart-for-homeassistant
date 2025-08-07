@@ -37,6 +37,8 @@ from .core.const import (
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
+)
+from .core.device import (
     LIFESMART_HVAC_MODE_MAP,
     LIFESMART_CP_AIR_HVAC_MODE_MAP,
     LIFESMART_CP_AIR_FAN_MAP,
@@ -48,6 +50,8 @@ from .core.const import (
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
+)
+from .core.utils import (
     get_device_platform_mapping,
     safe_get,
     get_f_fan_mode,

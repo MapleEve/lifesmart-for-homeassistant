@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from homeassistant.components.climate import HVACMode, FAN_LOW, FAN_MEDIUM, FAN_HIGH
 
-from custom_components.lifesmart.const import (
+from custom_components.lifesmart.core.const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
     CMD_TYPE_PRESS,
@@ -33,12 +33,12 @@ from custom_components.lifesmart.const import (
     GARAGE_DOOR_TYPES,
     NON_POSITIONAL_COVER_CONFIG,
 )
+from custom_components.lifesmart.core.helpers import normalize_device_names
 from custom_components.lifesmart.core.local_tcp_client import LifeSmartLocalTCPClient
 from custom_components.lifesmart.core.protocol import (
     LifeSmartProtocol,
     LifeSmartPacketFactory,
 )
-from custom_components.lifesmart.helpers import normalize_device_names
 
 
 # ==================== 测试数据和Fixtures ====================

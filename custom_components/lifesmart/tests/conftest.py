@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.lifesmart.const import (
+from custom_components.lifesmart.core.const import (
     DOMAIN,
     CONF_EXCLUDE_ITEMS,
     CONF_EXCLUDE_AGTS,
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # 设置兼容性支持
-from custom_components.lifesmart.compatibility import setup_logging
+from custom_components.lifesmart.core.compatibility import setup_logging
 
 setup_logging()
 
@@ -197,7 +197,7 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 
 
 @pytest.fixture
-def mock_client_class(mock_lifesmart_devices):
+def mock_client_class(mock_sensor_devices_only):
     """
     一个高级 fixture，它 patch LifeSmartOAPIClient 类并返回这个类的 Mock。
 
@@ -212,7 +212,7 @@ def mock_client_class(mock_lifesmart_devices):
     ) as mock_class:
         # 配置默认的实例行为
         instance = mock_class.return_value
-        instance.async_get_all_devices.return_value = mock_lifesmart_devices
+        instance.async_get_all_devices.return_value = mock_sensor_devices_only
         instance.login_async.return_value = {
             "usertoken": "mock_new_usertoken",
             "userid": "mock_userid",
@@ -272,7 +272,7 @@ def mock_failed_client():
 
 
 @pytest.fixture
-def mock_client_with_devices(mock_lifesmart_devices):
+def mock_client_with_devices(mock_sensor_devices_only):
     """
     提供带有预配置设备列表的OAPI客户端mock。
 
@@ -281,7 +281,7 @@ def mock_client_with_devices(mock_lifesmart_devices):
     """
     from .utils.factories import create_mock_oapi_client_with_devices
 
-    return create_mock_oapi_client_with_devices(mock_lifesmart_devices)
+    return create_mock_oapi_client_with_devices(mock_sensor_devices_only)
 
 
 @pytest.fixture
@@ -313,7 +313,7 @@ def mock_hub_class():
     （设置、卸载、重载）被正确调用。
     """
     with patch(
-        "custom_components.lifesmart.hub.LifeSmartHub", autospec=True
+        "custom_components.lifesmart.core.hub.LifeSmartHub", autospec=True
     ) as mock_class:
         # 获取实例的 mock，以便我们可以配置和断言它的方法
         instance = mock_class.return_value
@@ -366,7 +366,7 @@ def auto_prevent_thread_creation(request):
             ),
             patch(
                 # 防止创建真实的WebSocket状态管理器（异步任务残留的根源）
-                "custom_components.lifesmart.hub.LifeSmartStateManager",
+                "custom_components.lifesmart.core.hub.LifeSmartStateManager",
                 return_value=MagicMock(),
             ),
         ):
@@ -389,19 +389,19 @@ def mock_hub_for_testing():
     """
     with (
         patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.async_setup",
             return_value=True,
         ) as mock_hub_setup,
         patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.get_devices",
             return_value=[],
         ) as mock_get_devices,
         patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.get_client",
             return_value=MagicMock(),
         ) as mock_get_client,
         patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_unload",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.async_unload",
             return_value=True,
         ) as mock_hub_unload,
     ):

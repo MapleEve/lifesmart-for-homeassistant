@@ -27,9 +27,9 @@ from .const import (
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_TEMP_FCU,
-    # --- 设备类型和映射 ---
-    DOOYA_TYPES,
-    GARAGE_DOOR_TYPES,
+)
+# 从device模块导入设备映射和配置
+from .device import (
     NON_POSITIONAL_COVER_CONFIG,
     REVERSE_F_HVAC_MODE_MAP,
     LIFESMART_F_FAN_MAP,
@@ -39,9 +39,35 @@ from .const import (
     REVERSE_LIFESMART_HVAC_MODE_MAP,
     REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
 )
-from .helpers import safe_get
+from .utils import safe_get
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_device_type(device_type: str, target_type: str) -> bool:
+    """检查设备是否为特定类型。
+
+    Args:
+        device_type: 要检查的设备类型
+        target_type: 目标设备类型（如'SL_DOOYA'）
+
+    Returns:
+        如果设备类型匹配则返回True
+    """
+    return device_type == target_type
+
+
+def _is_dooya_device(device_type: str) -> bool:
+    """检查设备是否为DOOYA类型窗帘。"""
+    return device_type == "SL_DOOYA"
+
+
+def _is_garage_door_device(device_type: str) -> bool:
+    """检查设备是否为车库门类型。"""
+    # 根据DEVICE_MAPPING检查车库门设备类型
+    # 如果有其他车库门类型，可以在这里添加
+    garage_door_types = {"SL_GARAGE"}  # 示例，需要根据实际mapping调整
+    return device_type in garage_door_types
 
 
 class LifeSmartClientBase(ABC):
@@ -366,11 +392,11 @@ class LifeSmartClientBase(ABC):
 
     async def open_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """开启窗帘或车库门。"""
-        if device_type in GARAGE_DOOR_TYPES:
+        if _is_garage_door_device(device_type):
             return await self._async_send_single_command(
                 agt, me, "P3", CMD_TYPE_SET_VAL, 100
             )
-        if device_type in DOOYA_TYPES:
+        if _is_dooya_device(device_type):
             return await self._async_send_single_command(
                 agt, me, "P2", CMD_TYPE_SET_VAL, 100
             )
@@ -387,11 +413,11 @@ class LifeSmartClientBase(ABC):
 
     async def close_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """关闭窗帘或车库门。"""
-        if device_type in GARAGE_DOOR_TYPES:
+        if _is_garage_door_device(device_type):
             return await self._async_send_single_command(
                 agt, me, "P3", CMD_TYPE_SET_VAL, 0
             )
-        if device_type in DOOYA_TYPES:
+        if _is_dooya_device(device_type):
             return await self._async_send_single_command(
                 agt, me, "P2", CMD_TYPE_SET_VAL, 0
             )
@@ -408,11 +434,11 @@ class LifeSmartClientBase(ABC):
 
     async def stop_cover_async(self, agt: str, me: str, device_type: str) -> int:
         """停止窗帘或车库门。"""
-        if device_type in GARAGE_DOOR_TYPES:
+        if _is_garage_door_device(device_type):
             return await self._async_send_single_command(
                 agt, me, "P3", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
             )
-        if device_type in DOOYA_TYPES:
+        if _is_dooya_device(device_type):
             return await self._async_send_single_command(
                 agt, me, "P2", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
             )
@@ -431,11 +457,11 @@ class LifeSmartClientBase(ABC):
         self, agt: str, me: str, position: int, device_type: str
     ) -> int:
         """设置窗帘或车库门到指定位置。"""
-        if device_type in GARAGE_DOOR_TYPES:
+        if _is_garage_door_device(device_type):
             return await self._async_send_single_command(
                 agt, me, "P3", CMD_TYPE_SET_VAL, position
             )
-        if device_type in DOOYA_TYPES:
+        if _is_dooya_device(device_type):
             return await self._async_send_single_command(
                 agt, me, "P2", CMD_TYPE_SET_VAL, position
             )

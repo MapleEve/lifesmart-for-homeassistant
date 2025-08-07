@@ -9,7 +9,7 @@ from unittest.mock import patch, MagicMock, Mock
 
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from custom_components.lifesmart.compatibility import (
+from custom_components.lifesmart.core.compatibility import (
     get_ws_timeout,
     get_climate_entity_features,
     get_scheduled_timer_handles,
@@ -410,7 +410,7 @@ class TestCompatibilityEdgeCases:
 
     def test_setup_logging_function(self):
         """测试设置日志功能"""
-        from custom_components.lifesmart.compatibility import setup_logging
+        from custom_components.lifesmart.core.compatibility import setup_logging
 
         # 这个函数应该能够正常调用而不出错
         try:
@@ -506,7 +506,10 @@ class TestCompatibilityEdgeCases:
 
     def test_setup_logging_coverage(self):
         """测试setup_logging函数的覆盖率"""
-        from custom_components.lifesmart.compatibility import setup_logging, _LOGGER
+        from custom_components.lifesmart.core.compatibility import (
+            setup_logging,
+            _LOGGER,
+        )
 
         with patch.object(_LOGGER, "info") as mock_info:
             setup_logging()
@@ -1013,7 +1016,10 @@ class TestCompatibilityDeepCoverage:
 
     def test_setup_logging_logger_info_call(self):
         """测试setup_logging函数的日志调用"""
-        from custom_components.lifesmart.compatibility import setup_logging, _LOGGER
+        from custom_components.lifesmart.core.compatibility import (
+            setup_logging,
+            _LOGGER,
+        )
 
         with patch.object(_LOGGER, "info") as mock_info:
             setup_logging()
@@ -1023,7 +1029,7 @@ class TestCompatibilityDeepCoverage:
 
     def test_compatibility_module_logger_configuration(self):
         """测试兼容性模块的日志配置"""
-        from custom_components.lifesmart.compatibility import _LOGGER
+        from custom_components.lifesmart.core.compatibility import _LOGGER
 
         # 验证logger配置正确
         assert _LOGGER.name == "custom_components.lifesmart.compatibility"

@@ -7,7 +7,7 @@ LifeSmart 设备配置模块。
 主要导出内容:
 - DEVICE_MAPPING: 完整的设备映射配置
 - 所有 _*_io() 函数: IO端口配置生成器
-- 所有 _*_device() 函数: 设备配置生成器 
+- 所有 _*_device() 函数: 设备配置生成器
 - 所有映射常量: 温控器映射、动态效果映射等
 """
 
@@ -15,7 +15,6 @@ LifeSmart 设备配置模块。
 from .mapping import (
     # 主要设备映射
     DEVICE_MAPPING,
-    
     # 温控器映射常量
     LIFESMART_F_HVAC_MODE_MAP,
     REVERSE_F_HVAC_MODE_MAP,
@@ -31,33 +30,27 @@ from .mapping import (
     REVERSE_LIFESMART_TF_FAN_MODE_MAP,
     LIFESMART_F_FAN_MAP,
     REVERSE_LIFESMART_F_FAN_MODE_MAP,
-    
     # 其他映射常量
-    UNLOCK_METHOD,
     DYNAMIC_CLASSIFICATION_DEVICES,
     VERSIONED_DEVICE_TYPES,
     THIRD_PARTY_DEVICES,
-    
     # 动态效果映射
     DYN_EFFECT_MAP,
     QUANTUM_EFFECT_MAP,
     DYN_EFFECT_LIST,
     ALL_EFFECT_MAP,
     ALL_EFFECT_LIST,
-    
     # 窗帘配置映射
     NON_POSITIONAL_COVER_CONFIG,
-    LIFESMART_REGION_OPTIONS,
 )
 
 # 导出所有内容供其他模块使用
 __all__ = [
     # 主要设备映射
     "DEVICE_MAPPING",
-    
     # 温控器映射
     "LIFESMART_F_HVAC_MODE_MAP",
-    "REVERSE_F_HVAC_MODE_MAP", 
+    "REVERSE_F_HVAC_MODE_MAP",
     "LIFESMART_HVAC_MODE_MAP",
     "REVERSE_LIFESMART_HVAC_MODE_MAP",
     "LIFESMART_CP_AIR_HVAC_MODE_MAP",
@@ -70,21 +63,16 @@ __all__ = [
     "REVERSE_LIFESMART_TF_FAN_MODE_MAP",
     "LIFESMART_F_FAN_MAP",
     "REVERSE_LIFESMART_F_FAN_MODE_MAP",
-    
     # 其他映射
-    "UNLOCK_METHOD",
     "DYNAMIC_CLASSIFICATION_DEVICES",
-    "VERSIONED_DEVICE_TYPES", 
+    "VERSIONED_DEVICE_TYPES",
     "THIRD_PARTY_DEVICES",
-    
     # 动态效果映射
     "DYN_EFFECT_MAP",
-    "QUANTUM_EFFECT_MAP", 
+    "QUANTUM_EFFECT_MAP",
     "DYN_EFFECT_LIST",
     "ALL_EFFECT_MAP",
     "ALL_EFFECT_LIST",
-    
     # 配置映射
     "NON_POSITIONAL_COVER_CONFIG",
-    "LIFESMART_REGION_OPTIONS",
 ]

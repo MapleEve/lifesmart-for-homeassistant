@@ -32,41 +32,42 @@ _LOGGER = logging.getLogger(__name__)
 # 实体ID生成和管理 (Entity ID Generation and Management)
 # ====================================================================
 def generate_unique_id(
-    hub_id: str,
-    device_id: str,
+    devtype: str,
+    agt: str,
+    me: str,
     sub_key: str = None,
-    platform: Platform = None,
 ) -> str:
     """
     为 LifeSmart 设备生成唯一ID。
 
-    此函数为每个平台的每个设备子部件生成一个唯一标识符，用于在Home Assistant中标识实体。
+    此函数为每个设备子部件生成一个唯一标识符，用于在Home Assistant中标识实体。
     确保即使设备重命名，实体仍能保持其历史状态和配置。
 
     Args:
-        hub_id: 智慧中心的ID (来自设备的'agt'字段)
-        device_id: 设备的唯一ID (来自设备的'me'字段)
+        devtype: 设备类型，如'SL_SW_IF1'
+        agt: 智慧中心的ID (来自设备的'agt'字段)
+        me: 设备的唯一ID (来自设备的'me'字段)
         sub_key: 子设备键，如'L1', 'P2'等 (可选)
-        platform: Home Assistant平台类型 (可选，用于多平台设备)
 
     Returns:
-        格式化的唯一ID字符串
+        格式化的唯一ID字符串，格式为小写并去除特殊字符
 
     Examples:
-        generate_unique_id("hub1", "dev1") -> "lifesmart_hub1_dev1"
-        generate_unique_id("hub1", "dev1", "L1") -> "lifesmart_hub1_dev1_L1"
-        generate_unique_id("hub1", "dev1", "L1", Platform.SWITCH) -> "lifesmart_hub1_dev1_L1_switch"
+        generate_unique_id("SL_SW_IF1", "agt123", "dev456", "L1") -> "sl_sw_if1_agt123_dev456_l1"
+        generate_unique_id("SL_P_IR", "agt123", "dev789") -> "sl_p_ir_agt123_dev789"
     """
-    # 基础ID由hub和device组成
-    unique_id = f"lifesmart_{hub_id}_{device_id}"
+    import re
 
-    # 添加子键（如果存在）
+    # 组合所有部分
+    parts = [devtype, agt, me]
     if sub_key:
-        unique_id = f"{unique_id}_{sub_key}"
+        parts.append(sub_key)
 
-    # 为多平台设备添加平台标识
-    if platform and isinstance(platform, Platform):
-        unique_id = f"{unique_id}_{platform.value}"
+    # 连接并处理
+    combined = "_".join(str(part) for part in parts)
+
+    # 转换为小写并移除特殊字符（保留字母、数字和下划线）
+    unique_id = re.sub(r"\W", "", combined.lower().replace("-", "").replace("/", ""))
 
     return unique_id
 

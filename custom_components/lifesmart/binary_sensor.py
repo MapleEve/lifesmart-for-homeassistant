@@ -34,12 +34,12 @@ from .core.const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     UNLOCK_METHOD,
-    # --- 单个设备类型判断用 ---
-    BUTTON_SWITCH_TYPES,
 )
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
+)
+from .core.utils import (
     get_device_platform_mapping,
     safe_get,
 )
@@ -126,8 +126,8 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         # 然后，更新所有属性。_get_attributes 可能会用到 self._attr_is_on 的最新值
         self._attrs = self._get_attributes()
 
-        # 最后，处理瞬时按钮的特殊重置逻辑
-        if self.devtype in BUTTON_SWITCH_TYPES and is_currently_on:
+        # 最后，处理瞬时按钮的特殊重置逻辑 - 使用映射驱动判断
+        if self._is_momentary_button_device() and is_currently_on:
             # 更新事件相关的属性
             val = data.get("val", 0)
             event_map = {1: "single_click", 2: "double_click", 255: "long_press"}
@@ -236,6 +236,23 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             return None
 
         return None
+
+    @callback
+    def _is_momentary_button_device(self) -> bool:
+        """从DEVICE_MAPPING判断是否为瞬时按钮设备。"""
+        # 检查设备是否为按钮类型的二进制传感器（如遥控器按键、开关按键等）
+        device_type = self.devtype
+        sub_key = self._sub_key
+
+        # 云防遥控器的按键 (SL_DF_BB)
+        if device_type == "SL_DF_BB" and sub_key.startswith("eB"):
+            return True
+
+        # 门禁感应器的按键部分 (SL_SC_BG)
+        if device_type == "SL_SC_BG" and sub_key == "B":
+            return True
+
+        return False
 
     @callback
     def _parse_state(self) -> bool:
@@ -385,8 +402,8 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         if device_type == "SL_SC_WA" and sub_key == "WA":
             return {"conductivity_level": val, "water_detected": val != 0}
 
-        # 按钮开关类型初始化事件属性
-        if device_type in BUTTON_SWITCH_TYPES:
+        # 按钮开关类型初始化事件属性 - 使用映射驱动判断
+        if self._is_momentary_button_device():
             return {"last_event": None, "last_event_time": None}
 
         # 为温控阀门的告警传感器添加详细属性

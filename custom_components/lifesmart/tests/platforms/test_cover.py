@@ -35,7 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from custom_components.lifesmart.const import *
+from custom_components.lifesmart.core.const import *
 from ..utils.factories import create_devices_by_category
 from ..utils.helpers import (
     find_test_device,

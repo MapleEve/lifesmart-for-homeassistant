@@ -13,11 +13,13 @@ from unittest.mock import AsyncMock, MagicMock
 from homeassistant import config_entries
 from homeassistant.const import CONF_REGION, CONF_TYPE
 
-from custom_components.lifesmart.const import (
+from custom_components.lifesmart.core.const import (
     CONF_LIFESMART_APPKEY,
     CONF_LIFESMART_APPTOKEN,
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERTOKEN,
+)
+from custom_components.lifesmart.core.device import (
     DYN_EFFECT_MAP,
 )
 from .constants import (
@@ -1945,3 +1947,29 @@ def create_mock_config_data_with_validation():
     config_data = create_mock_config_data()
     validate_config_data_completeness(config_data)
     return config_data
+
+
+def create_mock_device(
+    device_type: str, data: dict, name: str = None, hub_id: str = None
+) -> dict:
+    """
+    创建通用的模拟设备对象，用于测试。
+
+    Args:
+        device_type: 设备类型（如'SL_SW_RC3'）
+        data: 设备数据字典（IO端口数据）
+        name: 设备名称（可选）
+        hub_id: Hub ID（可选，默认使用test hub）
+
+    Returns:
+        dict: 完整的设备对象
+    """
+    return {
+        "agt": hub_id or get_hub_id(1),
+        "me": f"test_{device_type.lower()}",
+        "devtype": device_type,
+        "name": name or f"Test {device_type}",
+        "data": data,
+        "stat": 1,
+        "ver": "0.0.0.7",
+    }

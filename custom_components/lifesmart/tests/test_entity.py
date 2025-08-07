@@ -11,15 +11,15 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from custom_components.lifesmart.entity import LifeSmartEntity
 from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 
-from custom_components.lifesmart.const import (
+from custom_components.lifesmart.core.const import (
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
     HUB_ID_KEY,
 )
-from custom_components.lifesmart.entity import LifeSmartEntity
 
 
 class TestLifeSmartEntity:

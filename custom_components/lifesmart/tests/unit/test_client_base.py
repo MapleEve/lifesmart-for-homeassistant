@@ -120,7 +120,7 @@ class TestClientBasePublicInterfaces:
     @pytest.mark.asyncio
     async def test_async_send_single_command_interface(self, mock_client):
         """测试发送单个命令的公共接口。"""
-        from custom_components.lifesmart.const import CMD_TYPE_ON
+        from custom_components.lifesmart.core.const import CMD_TYPE_ON
 
         mock_client._send_single_command.return_value = 0
 
@@ -151,7 +151,7 @@ class TestLightSwitchControl:
     @pytest.mark.asyncio
     async def test_turn_on_light_switch_async(self, mock_client):
         """测试开启灯光或开关。"""
-        from custom_components.lifesmart.const import CMD_TYPE_ON
+        from custom_components.lifesmart.core.const import CMD_TYPE_ON
 
         result = await mock_client.turn_on_light_switch_async("P1", "agt1", "switch1")
 
@@ -163,7 +163,7 @@ class TestLightSwitchControl:
     @pytest.mark.asyncio
     async def test_turn_off_light_switch_async(self, mock_client):
         """测试关闭灯光或开关。"""
-        from custom_components.lifesmart.const import CMD_TYPE_OFF
+        from custom_components.lifesmart.core.const import CMD_TYPE_OFF
 
         result = await mock_client.turn_off_light_switch_async("P2", "agt1", "switch1")
 
@@ -175,7 +175,7 @@ class TestLightSwitchControl:
     @pytest.mark.asyncio
     async def test_press_switch_async_basic_duration(self, mock_client):
         """测试点动操作的基本持续时间。"""
-        from custom_components.lifesmart.const import CMD_TYPE_PRESS
+        from custom_components.lifesmart.core.const import CMD_TYPE_PRESS
 
         result = await mock_client.press_switch_async("P3", "agt1", "switch1", 500)
 
@@ -188,7 +188,7 @@ class TestLightSwitchControl:
     @pytest.mark.asyncio
     async def test_press_switch_async_minimum_duration(self, mock_client):
         """测试点动操作的最小持续时间处理。"""
-        from custom_components.lifesmart.const import CMD_TYPE_PRESS
+        from custom_components.lifesmart.core.const import CMD_TYPE_PRESS
 
         result = await mock_client.press_switch_async("P1", "agt1", "switch1", 10)
 
@@ -205,7 +205,7 @@ class TestCoverControl:
     @pytest.mark.asyncio
     async def test_open_cover_garage_door(self, mock_client):
         """测试开启车库门类型的窗帘。"""
-        from custom_components.lifesmart.const import (
+        from custom_components.lifesmart.core.const import (
             GARAGE_DOOR_TYPES,
             CMD_TYPE_SET_VAL,
         )
@@ -222,7 +222,7 @@ class TestCoverControl:
     @pytest.mark.asyncio
     async def test_open_cover_dooya_type(self, mock_client):
         """测试开启杜亚类型的窗帘。"""
-        from custom_components.lifesmart.const import DOOYA_TYPES, CMD_TYPE_SET_VAL
+        from custom_components.lifesmart.core.const import DOOYA_TYPES, CMD_TYPE_SET_VAL
 
         dooya_type = list(DOOYA_TYPES)[0]
 
@@ -236,7 +236,7 @@ class TestCoverControl:
     @pytest.mark.asyncio
     async def test_open_cover_non_positional_type(self, mock_client):
         """测试开启非位置控制类型的窗帘。"""
-        from custom_components.lifesmart.const import (
+        from custom_components.lifesmart.core.const import (
             NON_POSITIONAL_COVER_CONFIG,
             CMD_TYPE_ON,
         )
@@ -265,7 +265,7 @@ class TestCoverControl:
     @pytest.mark.asyncio
     async def test_set_cover_position_garage_door(self, mock_client):
         """测试设置车库门类型窗帘的位置。"""
-        from custom_components.lifesmart.const import (
+        from custom_components.lifesmart.core.const import (
             GARAGE_DOOR_TYPES,
             CMD_TYPE_SET_VAL,
         )
@@ -289,7 +289,7 @@ class TestClimateControl:
     async def test_set_climate_hvac_mode_off(self, mock_client):
         """测试设置HVAC模式为关闭。"""
         from homeassistant.components.climate import HVACMode
-        from custom_components.lifesmart.const import CMD_TYPE_OFF
+        from custom_components.lifesmart.core.const import CMD_TYPE_OFF
 
         result = await mock_client.async_set_climate_hvac_mode(
             "agt1", "climate1", "SL_NATURE", HVACMode.OFF
@@ -303,7 +303,7 @@ class TestClimateControl:
     @pytest.mark.asyncio
     async def test_set_climate_temperature_v_air_p(self, mock_client):
         """测试设置V_AIR_P设备的温度。"""
-        from custom_components.lifesmart.const import CMD_TYPE_SET_TEMP_DECIMAL
+        from custom_components.lifesmart.core.const import CMD_TYPE_SET_TEMP_DECIMAL
 
         result = await mock_client.async_set_climate_temperature(
             "agt1", "climate1", "V_AIR_P", 25.5
@@ -345,7 +345,7 @@ class TestEdgeCasesAndErrorHandling:
 
     def test_safe_get_function_import(self):
         """测试safe_get函数的导入和使用。"""
-        from custom_components.lifesmart.helpers import safe_get
+        from custom_components.lifesmart.core.helpers import safe_get
 
         test_dict = {"level1": {"level2": {"value": "test"}}}
         result = safe_get(test_dict, "level1", "level2", "value")
@@ -357,7 +357,7 @@ class TestEdgeCasesAndErrorHandling:
     @pytest.mark.asyncio
     async def test_climate_fan_mode_none_values(self, mock_client):
         """测试风扇模式映射返回None值的情况。"""
-        from custom_components.lifesmart.const import LIFESMART_F_FAN_MAP
+        from custom_components.lifesmart.core.const import LIFESMART_F_FAN_MAP
 
         with patch.dict(LIFESMART_F_FAN_MAP, {}, clear=True):
             with patch(
@@ -378,7 +378,7 @@ class TestDeviceControlWithFactoryDevices:
     @pytest.mark.asyncio
     async def test_switch_control_with_factory_switch(self, mock_client):
         """使用工厂函数创建的开关设备测试控制。"""
-        from custom_components.lifesmart.const import CMD_TYPE_ON
+        from custom_components.lifesmart.core.const import CMD_TYPE_ON
 
         # 获取工厂函数创建的开关设备
         switch_devices = create_devices_by_category(["smart_plug"])

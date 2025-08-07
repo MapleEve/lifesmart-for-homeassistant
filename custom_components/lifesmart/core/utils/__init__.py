@@ -7,6 +7,7 @@ LifeSmart 工具函数模块。
 主要组件:
 - conversion.py: 数据转换工具
 - platform_detection.py: 平台检测工具
+- device_query.py: 设备查询工具（替代预定义设备类型集合）
 """
 
 # 数据转换工具

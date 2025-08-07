@@ -19,7 +19,7 @@
 from unittest.mock import AsyncMock, patch
 
 # 兼容性模块导入 - 获取兼容的气候实体功能常量
-from custom_components.lifesmart.compatibility import get_climate_entity_features
+from custom_components.lifesmart.core.compatibility import get_climate_entity_features
 
 CLIMATE_FEATURES = get_climate_entity_features()
 
@@ -41,7 +41,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.lifesmart.const import *
+from custom_components.lifesmart.core.const import *
 from ..utils.helpers import (
     find_test_device,
     create_mock_hub,
@@ -916,7 +916,7 @@ class TestClimateEntityErrorHandling:
         )
         entity_id = f"climate.{device['name']}"
 
-        from custom_components.lifesmart.helpers import generate_unique_id
+        from custom_components.lifesmart.core.helpers import generate_unique_id
 
         unique_id = generate_unique_id(
             device["devtype"], device["agt"], device["me"], None

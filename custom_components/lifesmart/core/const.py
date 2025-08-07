@@ -135,17 +135,12 @@ ATTR_AZ = "az"  # 区域属性（用于部分第三方设备）
 REGION_MAPPING = {
     "AUTO": "AUTO",
     "cn0": "cn0",
-    "cn1": "cn1", 
+    "cn1": "cn1",
     "cn2": "cn2",
     "us": "us",
     "eur": "eur",
     "jp": "jp",
     "apz": "apz",
-}
-
-AUTH_METHOD_MAPPING = {
-    "账号密码": "account_password",
-    "授权码": "auth_code",
 }
 
 # 默认配置值
@@ -174,6 +169,43 @@ SUPPORTED_PLATFORMS = {
     Platform.COVER,
     Platform.LIGHT,
     Platform.CLIMATE,
-    Platform.BUTTON,
-    Platform.FAN,
+    # Platform.BUTTON,
+    # Platform.FAN,
+    # Platform.LOCK,
+    # Platform.EVENT,
+    # Platform.CAMERA,
+    Platform.REMOTE,
+    # Platform.NUMBER,
+    # Platform.AIR_QUALITY
+    # Platform.SIREN
+    # Platform.SCENE
+    # Platform.VALVE
 }
+
+# ================= 其他配置映射 =================
+# 门锁解锁方式映射
+UNLOCK_METHOD = {
+    0: "None",
+    1: "Password",
+    2: "Fingerprint",
+    3: "NFC",
+    4: "Keys",
+    5: "Remote",
+    6: "12V Signal",
+    7: "App",
+    8: "Bluetooth",
+    9: "Manual",
+    15: "Error",
+}
+
+# 服务器区域选项 (用于配置流程)
+LIFESMART_REGION_OPTIONS = [
+    "cn0",
+    "cn1",
+    "cn2",
+    "us",
+    "eur",
+    "jp",
+    "apz",
+    "AUTO",
+]

@@ -13,27 +13,67 @@
 
 import pytest
 
-from custom_components.lifesmart.helpers import (
+from custom_components.lifesmart.core.helpers import (
     generate_unique_id,
+)
+from custom_components.lifesmart.core.utils import (
     get_switch_subdevices,
     get_binary_sensor_subdevices,
     get_cover_subdevices,
     get_sensor_subdevices,
     get_light_subdevices,
     is_binary_sensor,
-    is_binary_sensor_subdevice,
     is_climate,
     is_cover,
-    is_cover_subdevice,
     is_light,
-    is_light_subdevice,
     is_sensor,
-    is_sensor_subdevice,
     is_switch,
-    is_switch_subdevice,
     normalize_device_names,
     safe_get,
 )
+
+
+# 基于现有函数实现缺失的子设备检查函数
+def is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为二进制传感器子设备"""
+    from ..utils.factories import create_mock_device
+
+    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
+    return sub_key in get_binary_sensor_subdevices(mock_device)
+
+
+def is_cover_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为窗帘子设备"""
+    from ..utils.factories import create_mock_device
+
+    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
+    return sub_key in get_cover_subdevices(mock_device)
+
+
+def is_light_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为灯光子设备"""
+    from ..utils.factories import create_mock_device
+
+    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
+    return sub_key in get_light_subdevices(mock_device)
+
+
+def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为传感器子设备"""
+    from ..utils.factories import create_mock_device
+
+    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
+    return sub_key in get_sensor_subdevices(mock_device)
+
+
+def is_switch_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为开关子设备"""
+    from ..utils.factories import create_mock_device
+
+    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
+    return sub_key in get_switch_subdevices(mock_device)
+
+
 from ..utils.factories import (
     create_devices_by_category,
 )
@@ -675,7 +715,7 @@ class TestSubdeviceLogicParametrized:
     )
     def test_switch_subdevice_logic(self, device_type, sub_key, expected):
         """测试开关子设备判断逻辑。"""
-        from custom_components.lifesmart.helpers import is_switch_subdevice
+        from custom_components.lifesmart.core.helpers import is_switch_subdevice
 
         result = is_switch_subdevice(device_type, sub_key)
         assert (
@@ -1878,7 +1918,7 @@ class TestDeviceTypeDetectionEdgeCases:
 
     def test_device_data_key_access_patterns(self):
         """测试设备数据键访问模式。"""
-        from custom_components.lifesmart.const import DEVICE_DATA_KEY
+        from custom_components.lifesmart.core.const import DEVICE_DATA_KEY
 
         # 测试有DEVICE_DATA_KEY的设备
         device_with_data = {
@@ -2262,7 +2302,7 @@ class TestDeviceTypeClassificationComprehensive:
         - 复合设备（如计量插座、智能锁）的多重分类
         - 特殊设备（如超能面板、通用控制器）的条件分类
         """
-        from custom_components.lifesmart.helpers import (
+        from custom_components.lifesmart.core.helpers import (
             is_switch,
             is_light,
             is_cover,

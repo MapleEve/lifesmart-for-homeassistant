@@ -35,8 +35,8 @@ from .core.const import (
 )
 from .core.diagnostics import get_error_advice
 from .core.exceptions import LifeSmartAuthError
-from .core.helpers import safe_get
 from .core.openapi_client import LifeSmartOAPIClient
+from .core.utils import safe_get
 
 _LOGGER = logging.getLogger(__name__)
 

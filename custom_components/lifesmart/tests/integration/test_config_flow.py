@@ -28,7 +28,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.lifesmart.const import (
+from custom_components.lifesmart.core.const import (
     CONF_AI_INCLUDE_AGTS,
     CONF_AI_INCLUDE_ITEMS,
     CONF_EXCLUDE_AGTS,
@@ -41,7 +41,7 @@ from custom_components.lifesmart.const import (
     CONF_LIFESMART_USERTOKEN,
     DOMAIN,
 )
-from custom_components.lifesmart.exceptions import LifeSmartAuthError
+from custom_components.lifesmart.core.exceptions import LifeSmartAuthError
 from ..utils.constants import DEFAULT_TEST_VALUES
 
 # ==================== 测试数据 ====================

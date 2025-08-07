@@ -27,7 +27,7 @@ from homeassistant.components.climate import (
     FAN_AUTO,
 )
 
-from custom_components.lifesmart.const import (
+from custom_components.lifesmart.core.const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
     CMD_TYPE_PRESS,
@@ -39,8 +39,11 @@ from custom_components.lifesmart.const import (
     DOOYA_TYPES,
     GARAGE_DOOR_TYPES,
 )
+from custom_components.lifesmart.core.exceptions import (
+    LifeSmartAPIError,
+    LifeSmartAuthError,
+)
 from custom_components.lifesmart.core.openapi_client import LifeSmartOAPIClient
-from custom_components.lifesmart.exceptions import LifeSmartAPIError, LifeSmartAuthError
 
 
 # ==================== 测试数据和Fixtures ====================

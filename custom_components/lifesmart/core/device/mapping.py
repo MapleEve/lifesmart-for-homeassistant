@@ -11,7 +11,6 @@ LifeSmart 设备配置映射和helper函数。
 """
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.climate.const import (
     HVACMode,
     FAN_AUTO,
@@ -22,6 +21,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfEnergy, UnitOfPower
 
+# 从compatibility模块导入兼容性函数
+from ..compatibility import get_button_device_class
 # 从const.py导入需要的常量
 from ..const import (
     CMD_TYPE_ON,
@@ -1269,22 +1270,6 @@ LIFESMART_F_FAN_MAP = {
 }
 REVERSE_LIFESMART_F_FAN_MODE_MAP = {v: k for k, v in LIFESMART_F_FAN_MAP.items()}
 
-
-# 门锁解锁方式映射
-UNLOCK_METHOD = {
-    0: "None",
-    1: "Password",
-    2: "Fingerprint",
-    3: "NFC",
-    4: "Keys",
-    5: "Remote",
-    6: "12V Signal",
-    7: "App",
-    8: "Bluetooth",
-    9: "Manual",
-    15: "Error",
-}
-
 # --- 动态分类设备列表 (Dynamic Classification Devices) ---
 # 这些设备的平台归属由 helpers.py 中的逻辑决定
 DYNAMIC_CLASSIFICATION_DEVICES = {
@@ -1471,8 +1456,6 @@ ALL_EFFECT_MAP = {**DYN_EFFECT_MAP, **QUANTUM_EFFECT_MAP}
 ALL_EFFECT_LIST = list(ALL_EFFECT_MAP.keys())
 
 
-# ================= 其他配置映射 =================
-
 # 无位置窗帘配置映射 (用于将开/关/停动作映射到正确的IO口)
 NON_POSITIONAL_COVER_CONFIG = {
     "SL_SW_WIN": {"open": "OP", "close": "CL", "stop": "ST"},
@@ -1487,18 +1470,6 @@ NON_POSITIONAL_COVER_CONFIG = {
     "SL_P": {"open": "P2", "close": "P3", "stop": "P4"},
     "SL_JEMA": {"open": "P2", "close": "P3", "stop": "P4"},
 }
-
-# 服务器区域选项 (用于配置流程)
-LIFESMART_REGION_OPTIONS = [
-    "cn0",
-    "cn1",
-    "cn2",
-    "us",
-    "eur",
-    "jp",
-    "apz",
-    "AUTO",
-]
 
 
 # ================= 平台聚合已废弃 (Platform Aggregation Deprecated) =================
@@ -1732,7 +1703,7 @@ DEVICE_MAPPING = {
                 "data_type": "button_state",
                 "conversion": "val_direct",
                 "detailed_description": "`val` 的值定义如下：- 0：未按下按键 - 1：按下按键",
-                "device_class": ButtonDeviceClass.IDENTIFY,
+                "device_class": get_button_device_class(),
             },
         },
         "sensor": {
@@ -1757,7 +1728,7 @@ DEVICE_MAPPING = {
                 "data_type": "button_events",
                 "conversion": "val_direct",
                 "detailed_description": "`type` 的值定义如下: `type&1==1`，表示有按键事件产生；`type&1==0`,表示按键事件消失；`val` 值指明按键事件类型，只有在 `type&1==1` 才有效，`val` 的值定义如下：1：单击事件 2：双击事件 255：长按事件",
-                "device_class": ButtonDeviceClass.IDENTIFY,
+                "device_class": get_button_device_class(),
             },
         },
         "sensor": {

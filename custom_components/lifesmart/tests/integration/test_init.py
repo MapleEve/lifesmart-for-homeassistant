@@ -33,10 +33,13 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.lifesmart.const import (
+from custom_components.lifesmart.core.const import (
     DOMAIN,
 )
-from custom_components.lifesmart.exceptions import LifeSmartAPIError, LifeSmartAuthError
+from custom_components.lifesmart.core.exceptions import (
+    LifeSmartAPIError,
+    LifeSmartAuthError,
+)
 from ..utils.factories import (
     create_devices_by_category,
     create_mock_failed_oapi_client,

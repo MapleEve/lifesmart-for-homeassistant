@@ -15,15 +15,15 @@ from aiohttp.client_exceptions import ClientError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from custom_components.lifesmart.const import (
+from .client_base import LifeSmartClientBase
+from .const import (
     # --- 设备类型和映射 ---
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     SUBDEVICE_INDEX_KEY,
 )
-from custom_components.lifesmart.core.client_base import LifeSmartClientBase
-from custom_components.lifesmart.diagnostics import get_error_advice
-from custom_components.lifesmart.exceptions import LifeSmartAPIError, LifeSmartAuthError
+from .diagnostics import get_error_advice
+from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 
 _LOGGER = logging.getLogger(__name__)
 

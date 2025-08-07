@@ -29,7 +29,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from custom_components.lifesmart.const import *
+from custom_components.lifesmart.core.const import *
 from custom_components.lifesmart.light import (
     _parse_color_value,
     DEFAULT_MIN_KELVIN,
@@ -1324,7 +1324,7 @@ class TestLightCoverageEnhancement:
     ):
         """测试_create_light_entity函数处理不支持的子设备键时返回默认实体。"""
         from custom_components.lifesmart.light import _create_light_entity
-        from custom_components.lifesmart.const import DEVICE_TYPE_KEY
+        from custom_components.lifesmart.core.const import DEVICE_TYPE_KEY
 
         # 创建一个测试设备，其sub_key不匹配任何特殊条件
         device = {
@@ -1345,7 +1345,7 @@ class TestLightCoverageEnhancement:
     async def test_base_light_init_without_sub_key(self, hass: HomeAssistant):
         """测试LifeSmartBaseLight在没有sub_key时的初始化。"""
         from custom_components.lifesmart.light import LifeSmartBaseLight
-        from custom_components.lifesmart.const import DEVICE_DATA_KEY
+        from custom_components.lifesmart.core.const import DEVICE_DATA_KEY
 
         # 创建测试设备数据
         raw_device = {
@@ -1373,7 +1373,10 @@ class TestLightCoverageEnhancement:
     async def test_base_light_sub_name_processing(self, hass: HomeAssistant):
         """测试LifeSmartBaseLight子设备名称处理逻辑。"""
         from custom_components.lifesmart.light import LifeSmartBaseLight
-        from custom_components.lifesmart.const import DEVICE_DATA_KEY, DEVICE_NAME_KEY
+        from custom_components.lifesmart.core.const import (
+            DEVICE_DATA_KEY,
+            DEVICE_NAME_KEY,
+        )
 
         # 测试子设备名称与sub_key相同的情况
         raw_device = {
@@ -1397,7 +1400,9 @@ class TestLightCoverageEnhancement:
         self, hass: HomeAssistant, setup_integration
     ):
         """测试_handle_global_refresh当设备未找到时的处理。"""
-        from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
+        from custom_components.lifesmart.core.const import (
+            LIFESMART_SIGNAL_UPDATE_ENTITY,
+        )
         from homeassistant.helpers.dispatcher import async_dispatcher_send
 
         entity_id = "light.white_light_bulb_p1"
@@ -1668,7 +1673,9 @@ class TestLightCoverageEnhancement:
         self, hass: HomeAssistant, setup_integration
     ):
         """测试_handle_update接收到空数据时的处理。"""
-        from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
+        from custom_components.lifesmart.core.const import (
+            LIFESMART_SIGNAL_UPDATE_ENTITY,
+        )
         from homeassistant.helpers.dispatcher import async_dispatcher_send
         from ..utils.helpers import get_entity_unique_id
 
@@ -1693,7 +1700,9 @@ class TestLightCoverageEnhancement:
         self, hass: HomeAssistant, setup_integration
     ):
         """测试_handle_update接收到非原始IO数据时的处理。"""
-        from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
+        from custom_components.lifesmart.core.const import (
+            LIFESMART_SIGNAL_UPDATE_ENTITY,
+        )
         from homeassistant.helpers.dispatcher import async_dispatcher_send
         from ..utils.helpers import get_entity_unique_id
 
@@ -1979,7 +1988,7 @@ class TestLightErrorHandlingAndEdgeCases:
     ):
         """测试色温灯计算时的除零保护。"""
         from custom_components.lifesmart.light import LifeSmartDimmerLight
-        from custom_components.lifesmart.const import DEVICE_DATA_KEY
+        from custom_components.lifesmart.core.const import DEVICE_DATA_KEY
 
         # 创建一个色温范围为0的测试场景
         raw_device = {
@@ -2029,7 +2038,9 @@ class TestLightErrorHandlingAndEdgeCases:
         self, hass: HomeAssistant, setup_integration
     ):
         """测试单IO灯状态更新时w_flag的计算。"""
-        from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
+        from custom_components.lifesmart.core.const import (
+            LIFESMART_SIGNAL_UPDATE_ENTITY,
+        )
         from homeassistant.helpers.dispatcher import async_dispatcher_send
         from ..utils.helpers import get_entity_unique_id
 
@@ -2055,7 +2066,9 @@ class TestLightErrorHandlingAndEdgeCases:
         self, hass: HomeAssistant, setup_integration
     ):
         """测试量子灯效果映射的边缘情况。"""
-        from custom_components.lifesmart.const import LIFESMART_SIGNAL_UPDATE_ENTITY
+        from custom_components.lifesmart.core.const import (
+            LIFESMART_SIGNAL_UPDATE_ENTITY,
+        )
         from homeassistant.helpers.dispatcher import async_dispatcher_send
         from ..utils.helpers import get_entity_unique_id
 
@@ -2151,7 +2164,7 @@ class TestLightErrorHandlingAndEdgeCases:
     ):
         """测试_create_light_entity函数处理多种特殊设备类型。"""
         from custom_components.lifesmart.light import _create_light_entity
-        from custom_components.lifesmart.const import DEVICE_TYPE_KEY
+        from custom_components.lifesmart.core.const import DEVICE_TYPE_KEY
 
         mock_client = MagicMock()
 
@@ -2214,7 +2227,7 @@ class TestLightErrorHandlingAndEdgeCases:
     ):
         """测试灯光实体添加到HA时的调度器注册。"""
         from custom_components.lifesmart.light import LifeSmartLight
-        from custom_components.lifesmart.const import DEVICE_DATA_KEY
+        from custom_components.lifesmart.core.const import DEVICE_DATA_KEY
 
         # 创建测试灯光实体
         raw_device = {
@@ -2265,7 +2278,7 @@ class TestLightErrorHandlingAndEdgeCases:
     ):
         """测试灯光在亮度为None时的处理。"""
         from custom_components.lifesmart.light import LifeSmartDimmerLight
-        from custom_components.lifesmart.const import DEVICE_DATA_KEY
+        from custom_components.lifesmart.core.const import DEVICE_DATA_KEY
 
         # 创建亮度为None的测试数据
         raw_device = {
@@ -2291,7 +2304,7 @@ class TestLightErrorHandlingAndEdgeCases:
     ):
         """测试色温灯在色温值为None时的处理。"""
         from custom_components.lifesmart.light import LifeSmartDimmerLight
-        from custom_components.lifesmart.const import DEVICE_DATA_KEY
+        from custom_components.lifesmart.core.const import DEVICE_DATA_KEY
 
         # 创建色温为None的测试数据
         raw_device = {

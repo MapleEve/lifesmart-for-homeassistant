@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
-from custom_components.lifesmart.const import DEVICE_ID_KEY
+from custom_components.lifesmart.core.const import DEVICE_ID_KEY
 from .constants import (
     TEST_HUB_IDS,
     SPECIALIZED_TEST_DEVICE_IDS,
@@ -431,8 +431,8 @@ def _calculate_expected_entity_count_for_platform(
     """
     # 导入必要的常量和函数
     from homeassistant.const import Platform
-    from custom_components.lifesmart.const import CLIMATE_TYPES
-    from custom_components.lifesmart.helpers import get_device_platform_mapping
+    from custom_components.lifesmart.core.const import CLIMATE_TYPES
+    from custom_components.lifesmart.core.helpers import get_device_platform_mapping
 
     expected_count = 0
 
@@ -606,7 +606,7 @@ def get_platform_device_types_for_testing(platform_domain):
         list: 该平台支持的设备类型列表
     """
     from homeassistant.const import Platform
-    from custom_components.lifesmart.const import (
+    from custom_components.lifesmart.core.const import (
         CLIMATE_TYPES,
         MULTI_PLATFORM_DEVICE_MAPPING,
         STAR_SERIES_IO_MAPPING,

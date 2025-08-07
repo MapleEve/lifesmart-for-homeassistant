@@ -15,8 +15,8 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from custom_components.lifesmart.compatibility import create_service_call
-from custom_components.lifesmart.const import (
+from custom_components.lifesmart.core.compatibility import create_service_call
+from custom_components.lifesmart.core.const import (
     DEVICE_ID_KEY,
     DOMAIN,
     HUB_ID_KEY,

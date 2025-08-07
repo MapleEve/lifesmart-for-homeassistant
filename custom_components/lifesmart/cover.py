@@ -35,17 +35,18 @@ from .core.const import (
     DEVICE_TYPE_KEY,
     DEVICE_VERSION_KEY,
     DOMAIN,
-    DOOYA_TYPES,
-    GARAGE_DOOR_TYPES,
-    GENERIC_CONTROLLER_TYPES,
     HUB_ID_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
+)
+from .core.device import (
     NON_POSITIONAL_COVER_CONFIG,
 )
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
+)
+from .core.utils import (
     get_device_platform_mapping,
     safe_get,
 )

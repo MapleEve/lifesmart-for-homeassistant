@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.lifesmart.const import *
+from custom_components.lifesmart.core.const import *
 from custom_components.lifesmart.switch import async_setup_entry
 from ..utils.constants import (
     FRIENDLY_DEVICE_NAMES,

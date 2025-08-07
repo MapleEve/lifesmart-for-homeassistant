@@ -9,19 +9,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    LIGHT_LUX,
-    PERCENTAGE,
-    Platform,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfPower,
-    UnitOfTemperature,
-    UnitOfSoundPressure,
-    UnitOfElectricCurrent,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -38,30 +25,21 @@ from .core.const import (
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
-    # --- 设备类型常量导入 ---
-    BASIC_ENV_SENSOR_TYPES,
-    AIR_QUALITY_SENSOR_TYPES,
-    GAS_SENSOR_TYPES,
-    NOISE_SENSOR_TYPES,
-    POWER_METER_PLUG_TYPES,
-    SMART_PLUG_TYPES,
-    POWER_METER_TYPES,
-    DEFED_SENSOR_TYPES,
-    SMOKE_SENSOR_TYPES,
-    WATER_SENSOR_TYPES,
-    SUPPORTED_SWITCH_TYPES,
-    CLIMATE_TYPES,
-    # 增强版映射结构
-    MULTI_PLATFORM_DEVICE_MAPPING,
+)
+from .core.device import (
+    # 设备映射结构
+    DEVICE_MAPPING,
 )
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
-    get_device_platform_mapping,
+)
+from .core.utils import (
     safe_get,
-    get_io_friendly_val,
     expand_wildcard_ios,
     get_enhanced_io_value,
+    apply_enhanced_conversion,
+    get_sensor_subdevices,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
     """
-    从增强版MULTI_PLATFORM_DEVICE_MAPPING中获取IO口的配置信息。
+    从DEVICE_MAPPING中获取IO口的配置信息。
 
     Args:
         device: 设备字典
@@ -79,10 +57,10 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
         IO口的配置信息字典，如果不存在则返回None
     """
     device_type = device.get(DEVICE_TYPE_KEY)
-    if not device_type or device_type not in MULTI_PLATFORM_DEVICE_MAPPING:
+    if not device_type or device_type not in DEVICE_MAPPING:
         return None
 
-    mapping = MULTI_PLATFORM_DEVICE_MAPPING[device_type]
+    mapping = DEVICE_MAPPING[device_type]
 
     # 处理版本化设备
     if mapping.get("versioned"):
@@ -125,9 +103,8 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用新的IO映射系统获取设备支持的平台
-        platform_mapping = get_device_platform_mapping(device)
-        sensor_subdevices = platform_mapping.get(Platform.SENSOR, [])
+        # 使用工具函数获取设备的sensor子设备列表
+        sensor_subdevices = get_sensor_subdevices(device)
 
         # 展开通配符模式的IO口并为每个sensor子设备创建实体
         device_data = device.get(DEVICE_DATA_KEY, {})
@@ -213,206 +190,39 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
     @callback
     def _determine_device_class(self) -> SensorDeviceClass | None:
-        """Automatically determine device class based on sub-device."""
-        # 首先尝试从增强版映射中获取设备类别
+        """Determine device class using mapping-based approach only."""
+        # 完全依赖映射获取设备类别
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         if io_config and "device_class" in io_config:
             return io_config["device_class"]
-
-        # 如果增强版映射中没有找到，回退到原有逻辑
-        device_type = self._raw_device[DEVICE_TYPE_KEY]
-        sub_key = self._sub_key
-
-        # 气体传感器优先判断
-        if device_type in GAS_SENSOR_TYPES and sub_key in {"P1", "P2"}:
-            return SensorDeviceClass.GAS
-
-        # 温控设备特殊处理
-        if device_type in CLIMATE_TYPES:
-            if sub_key == "P5":
-                return (
-                    SensorDeviceClass.TEMPERATURE
-                    if device_type in ("SL_CP_DN", "SL_NATURE")
-                    else SensorDeviceClass.PM25
-                )
-            if sub_key == "P6":
-                return SensorDeviceClass.BATTERY
-            if sub_key == "P4":
-                return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
-            # 继续到通用子设备键判断，不返回None
-
-        # 根据子设备键判断
-        if sub_key == "BAT":
-            return SensorDeviceClass.BATTERY
-        if sub_key == "T":
-            return SensorDeviceClass.TEMPERATURE
-        if sub_key == "H":
-            return SensorDeviceClass.HUMIDITY
-        if sub_key == "Z":
-            return SensorDeviceClass.ILLUMINANCE
-        if sub_key == "V":
-            return SensorDeviceClass.VOLTAGE
-
-        # 空气质量传感器的设备
-        if device_type in AIR_QUALITY_SENSOR_TYPES:
-            if device_type == "SL_SC_CQ":
-                if sub_key == "P4":
-                    return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
-                if sub_key == "P3":
-                    return SensorDeviceClass.CO2
-            if device_type == "SL_SC_CA":
-                if sub_key == "P3":
-                    return SensorDeviceClass.CO2
-            if device_type == "SL_SC_CH":
-                return SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS  # 甲醛也属于VOC
-
-        # 计量插座特殊处理
-        if device_type in POWER_METER_PLUG_TYPES:
-            if sub_key == "P2":
-                return SensorDeviceClass.ENERGY
-            if sub_key == "P3":
-                return SensorDeviceClass.POWER
-
-        # 智能插座的电压、电流、功率等传感器
-        if device_type in SMART_PLUG_TYPES:
-            if sub_key == "EV":
-                return SensorDeviceClass.VOLTAGE
-            if sub_key == "EI":
-                return SensorDeviceClass.CURRENT
-            if sub_key == "EP":
-                return SensorDeviceClass.POWER
-            if sub_key == "EPA":
-                return SensorDeviceClass.ENERGY
-
-        # 噪音感应器
-        if device_type in NOISE_SENSOR_TYPES and sub_key == "P1":
-            return SensorDeviceClass.SOUND_PRESSURE  # 噪音等级
-
-        # 电量计量器
-        if device_type in POWER_METER_TYPES:
-            if sub_key in {"EPA", "EP"}:
-                return SensorDeviceClass.POWER
-            if sub_key == "EE":
-                return SensorDeviceClass.ENERGY
-
-        # 云防系列的温度传感器
-        if device_type in DEFED_SENSOR_TYPES and sub_key == "T":
-            return SensorDeviceClass.TEMPERATURE
-
-        # 烟雾传感器的电量
-        if device_type in SMOKE_SENSOR_TYPES and sub_key == "P2":
-            return SensorDeviceClass.BATTERY
-
-        # 基础环境感应器 (SL_SC_THL等)
-        if device_type in BASIC_ENV_SENSOR_TYPES:
-            if sub_key == "T":
-                return SensorDeviceClass.TEMPERATURE
-            if sub_key == "H":
-                return SensorDeviceClass.HUMIDITY
-            if sub_key == "V":
-                return SensorDeviceClass.VOLTAGE
-            if sub_key == "Z":
-                return SensorDeviceClass.ILLUMINANCE
-
-        # 空气质量传感器 (温湿度数据用于环境补偿)
-        if device_type in AIR_QUALITY_SENSOR_TYPES and device_type != "SL_SC_CH":
-            if sub_key == "P1":
-                return SensorDeviceClass.TEMPERATURE
-            if sub_key == "P2":
-                return SensorDeviceClass.HUMIDITY
-
-        # 插座开关等电量传感器
-        if (device_type in SUPPORTED_SWITCH_TYPES and sub_key == "P4") or (
-            device_type == "SL_SC_BB_V2" and sub_key == "P2"
-        ):
-            return SensorDeviceClass.BATTERY
 
         return None
 
     @callback
     def _determine_unit(self) -> str | None:
-        """Map sub-device to unit."""
-        # 首先尝试从增强版映射中获取单位
+        """Determine unit using mapping-based approach only."""
+        # 完全依赖映射获取单位
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
-        if io_config and "unit" in io_config:
-            return io_config["unit"]
-
-        # 如果增强版映射中没有找到，回退到基于设备类别的通用映射
-        device_type = self._raw_device[DEVICE_TYPE_KEY]
-        sub_key = self._sub_key
-
-        if self.device_class == SensorDeviceClass.BATTERY:
-            return PERCENTAGE
-        if self.device_class == SensorDeviceClass.TEMPERATURE:
-            return UnitOfTemperature.CELSIUS
-        if self.device_class == SensorDeviceClass.HUMIDITY:
-            return PERCENTAGE
-        if self.device_class == SensorDeviceClass.ILLUMINANCE:
-            return LIGHT_LUX
-        if self.device_class == SensorDeviceClass.VOLTAGE:
-            return UnitOfElectricPotential.VOLT
-        if self.device_class == SensorDeviceClass.CURRENT:
-            return UnitOfElectricCurrent.AMPERE
-        if self.device_class == SensorDeviceClass.POWER:
-            return UnitOfPower.WATT
-        if self.device_class == SensorDeviceClass.ENERGY:
-            return UnitOfEnergy.KILO_WATT_HOUR
-        if self.device_class == SensorDeviceClass.PM25:
-            return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-        if self.device_class == SensorDeviceClass.CO2:
-            return CONCENTRATION_PARTS_PER_MILLION
-        if self.device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
-            return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-        if self.device_class == SensorDeviceClass.SOUND_PRESSURE:
-            return UnitOfSoundPressure.DECIBEL
-
-        # 燃气浓度单位
-        if device_type in GAS_SENSOR_TYPES and sub_key == "P1":
-            return CONCENTRATION_PARTS_PER_MILLION  # 一般为甲烷等气体
+        if io_config and "unit_of_measurement" in io_config:
+            return io_config["unit_of_measurement"]
 
         return None
 
     @callback
     def _determine_state_class(self) -> SensorStateClass | None:
-        """Determine state class for long-term statistics."""
-        # 首先尝试从增强版映射中获取状态类别
+        """从DEVICE_MAPPING获取状态类别。"""
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
-        if io_config and "state_class" in io_config:
-            return io_config["state_class"]
-
-        # 如果增强版映射中没有找到，回退到基于设备类别的通用映射
-        # 为传感器设置状态类别，以支持历史图表
-        if self.device_class in {
-            SensorDeviceClass.TEMPERATURE,
-            SensorDeviceClass.HUMIDITY,
-            SensorDeviceClass.ILLUMINANCE,
-            SensorDeviceClass.POWER,
-            SensorDeviceClass.CO2,
-            SensorDeviceClass.PM25,
-            SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            SensorDeviceClass.SOUND_PRESSURE,
-            SensorDeviceClass.BATTERY,
-            SensorDeviceClass.VOLTAGE,
-        }:
-            return SensorStateClass.MEASUREMENT
-        if self.device_class == SensorDeviceClass.ENERGY:
-            return SensorStateClass.TOTAL_INCREASING
-        return None
+        return io_config.get("state_class") if io_config else None
 
     @callback
     def _extract_initial_value(self) -> float | int | None:
-        """Extract initial value from device data."""
-        # 首先尝试使用增强版映射的转换逻辑
+        """使用DEVICE_MAPPING提取初始值。"""
+        # 完全依赖映射的转换逻辑，工具函数内部已处理v/val优先级
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         if io_config:
-            enhanced_value = get_enhanced_io_value(
-                self._raw_device, self._sub_key, io_config
-            )
-            if enhanced_value is not None:
-                return enhanced_value
+            return get_enhanced_io_value(self._raw_device, self._sub_key, io_config)
 
-        # 如果增强版映射没有找到或转换失败，回退到原有逻辑
-        # 优先使用友好值
+        # 如果映射中没有转换配置，尝试直接使用v字段
         value = self._sub_data.get("v")
         if value is not None:
             try:
@@ -423,22 +233,23 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
                     self.unique_id,
                     value,
                 )
-                return None
 
-        # 使用原始值并进行必要的转换
+        # 最后尝试val字段
         raw_value = self._sub_data.get("val")
         if raw_value is not None:
-            return self._convert_raw_value(raw_value)
+            try:
+                return float(raw_value)
+            except (ValueError, TypeError):
+                return None
 
         return None
 
     @callback
     def _convert_raw_value(self, raw_value: Any) -> float | int | None:
-        """Convert raw value to actual value based on device type."""
+        """Convert raw value using mapping-based conversion only."""
         if raw_value is None:
             return None
 
-        numeric_raw_value: float | int
         try:
             numeric_raw_value = float(raw_value)
         except (ValueError, TypeError):
@@ -449,80 +260,23 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             )
             return None
 
-        # 首先尝试使用type字段进行IEEE754转换
-        if hasattr(self, "_sub_data") and "type" in self._sub_data:
-            io_type = self._sub_data.get("type")
-            if io_type is not None:
-                try:
-                    converted_val = get_io_friendly_val(io_type, int(numeric_raw_value))
-                    if converted_val is not None:
-                        return converted_val
-                except (ValueError, TypeError, OverflowError) as e:
-                    _LOGGER.debug(
-                        "IEEE754 conversion failed for %s (type=%s, val=%s): %s",
-                        self.unique_id,
-                        io_type,
-                        numeric_raw_value,
-                        e,
-                    )
+        # 完全依赖映射的转换逻辑，工具函数内部已处理IEEE754转换
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if io_config:
+            enhanced_value = get_enhanced_io_value(
+                self._raw_device, self._sub_key, io_config
+            )
+            if enhanced_value is not None:
+                return enhanced_value
 
-        device_type = self._raw_device[DEVICE_TYPE_KEY]
-
-        # 仅当设备类别是温度或湿度时，才应用此启发式规则
-        if self.device_class in {
-            SensorDeviceClass.TEMPERATURE,
-            SensorDeviceClass.HUMIDITY,
-        }:
-            # 假设原始值（如 260）通常会大于一个阈值（如100），
-            # 而最终值（如 26）则小于它。这是一个处理API不一致性的策略。
-            # 这样可以避免将已经是最终值的 26 错误地处理成 2.6。
-            if numeric_raw_value > 100:
-                return numeric_raw_value / 10.0
-            else:
-                return numeric_raw_value
-
-        # CO2传感器的特殊转换逻辑
-        if self.device_class == SensorDeviceClass.CO2:
-            # 只对明显过小的值进行转换，合理范围的值保持不变
-            if numeric_raw_value < 10:
-                return numeric_raw_value * 100
-            elif 10 <= numeric_raw_value < 100:
-                return numeric_raw_value * 10
-            else:
-                # 大于等于100的值认为已经是正确的ppm值，不转换
-                return numeric_raw_value
-
-        # 对于其他类型的传感器，保持原有逻辑
-        if device_type in CLIMATE_TYPES:
-            if (
-                device_type in ("SL_CP_DN", "SL_NATURE")
-                and self._sub_key in ("P5", "P4")
-            ) or (device_type == "SL_TR_ACIPM" and self._sub_key == "P4"):
-                return numeric_raw_value / 10.0
-            return numeric_raw_value
-
-        # 电量百分比值直接使用
-        if self._sub_key in {"BAT", "V", "P4", "P5"}:
-            return numeric_raw_value
-
-        # 其他值直接返回
+        # 如果映射中没有转换配置，直接返回原始值
         return numeric_raw_value
 
     @callback
     def _get_extra_attributes(self) -> dict[str, Any] | None:
-        """Get extra state attributes."""
-        device_type = self._raw_device[DEVICE_TYPE_KEY]
-
-        # CO2传感器的空气质量等级
-        if device_type == "SL_SC_CA" and self._sub_key == "P3":
-            val = self._sub_data.get("val", 0)
-            return {"air_quality": val}
-
-        # 水浸传感器的导电率等级
-        if device_type in WATER_SENSOR_TYPES and self._sub_key == "WA":
-            val = self._sub_data.get("val", 0)
-            return {"conductivity_level": val}
-
+        """从DEVICE_MAPPING获取额外状态属性。"""
+        # TODO: 将这些特殊属性配置移到DEVICE_MAPPING中
+        # 当前暂时保留硬编码，但应该在映射中定义extra_attributes字段
         return None
 
     @property
@@ -581,33 +335,28 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
                     "possible upstream issue."
                 )
                 return
-            # 统一处理数据来源
-            sub_data = {}
-            if "msg" in new_data:
-                sub_data = new_data.get("msg", {}).get(self._sub_key, {})
+            # 统一处理数据来源，提取IO数据
+            io_data = {}
+            if "msg" in new_data and isinstance(new_data["msg"], dict):
+                io_data = new_data["msg"].get(self._sub_key, {})
             elif self._sub_key in new_data:
-                sub_data = new_data.get(self._sub_key, {})
+                io_data = new_data[self._sub_key]
             else:
-                # 兼容直接推送子键值对的格式，例如 {'v': 26.0} 或 {'val': 260}
-                sub_data = new_data
+                # 直接推送子键值对格式
+                io_data = new_data
 
-            if not sub_data:
+            if not io_data:
                 return
 
-            new_value = None
-            # 优先使用 'v' (最终值), 否则使用 'val' (原始值)
-            if "v" in new_data:
-                try:
-                    new_value = float(new_data["v"])
-                except (ValueError, TypeError):
-                    _LOGGER.warning(
-                        "Invalid non-numeric 'v' value received for %s: %s",
-                        self.unique_id,
-                        new_data["v"],
-                    )
-                    return
-            elif "val" in sub_data:
-                new_value = self._convert_raw_value(sub_data["val"])
+            # 使用工具函数进行映射驱动的数值转换（内含v/val优先级处理）
+            io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+            if io_config:
+                conversion_type = io_config.get("conversion", "raw_value")
+                new_value = apply_enhanced_conversion(
+                    conversion_type, io_data, io_config
+                )
+            else:
+                new_value = None
 
             if new_value is None:
                 # 如果收到无效数据仅打印日志（已在convert中完成）

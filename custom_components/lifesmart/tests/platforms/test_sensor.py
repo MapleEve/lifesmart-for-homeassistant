@@ -33,8 +33,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from custom_components.lifesmart.const import *
-from custom_components.lifesmart.helpers import (
+from custom_components.lifesmart.core.const import *
+from custom_components.lifesmart.core.helpers import (
     generate_unique_id,
 )
 from ..utils.constants import (
