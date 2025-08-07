@@ -20,7 +20,6 @@ from .const import (
     DEVICE_TYPE_KEY,
     DEVICE_DATA_KEY,
 )
-# 从utils模块导入转换后的函数
 from .utils import (
     get_device_platform_mapping,
 )

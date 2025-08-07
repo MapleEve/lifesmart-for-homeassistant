@@ -28,7 +28,6 @@ from .const import (
     CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_TEMP_FCU,
 )
-# 从device模块导入设备映射和配置
 from .device import (
     NON_POSITIONAL_COVER_CONFIG,
     REVERSE_F_HVAC_MODE_MAP,

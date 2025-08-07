@@ -21,9 +21,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfEnergy, UnitOfPower
 
-# 从compatibility模块导入兼容性函数
 from ..compatibility import get_button_device_class
-# 从const.py导入需要的常量
 from ..const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
