@@ -8,12 +8,12 @@
 
 import re
 import sys
-from typing import Dict, Set, List
+from typing import Dict, Set, List, Any
 
 # Add the custom component to path for importing const.py
-sys.path.append("custom_components/lifesmart")
+sys.path.append("../custom_components/lifesmart")
 from const import (
-    MULTI_PLATFORM_DEVICE_MAPPING,
+    DEVICE_MAPPING,
     VERSIONED_DEVICE_TYPES,
     DYNAMIC_CLASSIFICATION_DEVICES,
 )
@@ -22,77 +22,1044 @@ from const import (
 LSCAM_PREFIX = "LSCAM:"
 VERSION_PATTERN = r"_V\d+$"
 
+# ================== 官方文档顺序定义 ==================
+
+# 定义官方文档中的设备章节顺序 (按照文档 2.1-2.14 的章节编号)
+OFFICIAL_DEVICE_ORDER = {
+    # 2.1 插座系列 (优先级: 100-199)
+    "SL_OL": 100,
+    "SL_OL_3C": 101,
+    "SL_OL_DE": 102,
+    "SL_OL_UK": 103,
+    "SL_OL_UL": 104,
+    "OD_WE_OT1": 105,
+    "SL_OE_3C": 110,
+    "SL_OE_DE": 111,
+    "SL_OE_W": 112,
+    "SL_OE_DC": 113,
+    # 2.2 开关系列 (优先级: 200-499)
+    "SL_SW_IF3": 200,
+    "SL_SF_IF3": 201,
+    "SL_SW_CP3": 202,
+    "SL_SW_RC3": 203,
+    "SL_SW_IF2": 204,
+    "SL_SF_IF2": 205,
+    "SL_SW_CP2": 206,
+    "SL_SW_FE2": 207,
+    "SL_SW_RC2": 208,
+    "SL_SW_IF1": 209,
+    "SL_SF_IF1": 210,
+    "SL_SW_CP1": 211,
+    "SL_SW_FE1": 212,
+    "SL_SW_RC1": 213,
+    "SL_SW_ND1": 220,
+    "SL_MC_ND1": 221,
+    "SL_SW_ND2": 222,
+    "SL_MC_ND2": 223,
+    "SL_SW_ND3": 224,
+    "SL_MC_ND3": 225,
+    "SL_S": 230,
+    "SL_SPWM": 231,
+    "SL_P_SW": 232,
+    "SL_SC_BB": 240,
+    "SL_SW_DM1": 250,
+    "SL_SW_MJ1": 260,
+    "SL_SW_MJ2": 261,
+    "SL_SW_MJ3": 262,
+    "SL_SC_BB2": 270,
+    "SL_SW_WW": 280,
+    "SL_SW_BS1": 281,
+    "SL_SW_BS2": 282,
+    "SL_SW_BS3": 283,
+    "SL_SW_NS1": 284,
+    "SL_SW_NS2": 285,
+    "SL_SW_NS3": 286,
+    "SL_SW_NS6": 287,
+    # 2.3 窗帘控制 (优先级: 500-599)
+    "SL_SW_WIN": 500,
+    "SL_CN_IF": 501,
+    "SL_CN_FE": 502,
+    "SL_DOOYA": 503,
+    "SL_P_V2": 504,
+    # 2.4 灯光系列 (优先级: 600-699)
+    "SL_LI_RGBW": 600,
+    "SL_CT_RGBW": 601,
+    "SL_SC_RGB": 602,
+    "SL_LI_WW": 603,
+    "SL_LI_GD1": 604,
+    "SL_LI_UG1": 605,
+    "SL_SPOT": 606,
+    "MSL_IRCTL": 607,
+    "OD_WE_IRCTL": 608,
+    "SL_LI_IR": 609,
+    "SL_P_IR": 610,
+    "OD_WE_QUAN": 611,
+    # 2.5 第三方设备 (优先级: 700-799)
+    "V_DLT645_P": 700,
+    "V_485_P": 701,
+    "V_DUNJIA_P": 702,
+    "V_HG_L": 703,
+    "V_HG_XX": 704,
+    "V_IND_S": 705,
+    "V_SZJSXR_P": 706,
+    "V_T8600_P": 707,
+    # 2.6 传感器系列 (优先级: 800-999)
+    "SL_SC_THL": 800,
+    "SL_SC_BE": 801,
+    "SL_SC_CQ": 802,
+    "SL_SC_CA": 803,
+    "SL_SC_CH": 804,
+    "SL_SC_CP": 805,
+    "SL_SC_CN": 806,
+    "SL_SC_WA": 807,
+    "SL_SC_G": 808,
+    "SL_SC_BG": 809,
+    "SL_SC_MHW": 810,
+    "SL_SC_CM": 811,
+    "SL_SC_BM": 812,
+    "SL_SC_GS": 813,
+    "SL_SC_CV": 814,
+    "SL_P_A": 815,
+    "SL_P_RM": 816,
+    "SL_DF_GG": 817,
+    "SL_DF_MM": 818,
+    "SL_DF_SR": 819,
+    "SL_DF_BB": 820,
+    "SL_DF_KP": 821,
+    "ELIQ_EM": 822,
+    "SL_BP_MZ": 823,
+    # 2.7 空气净化器 (优先级: 1000-1099)
+    "OD_MFRESH_M8088": 1000,
+    # 2.8 智能门锁 (优先级: 1100-1199)
+    "SL_LK_LS": 1100,
+    "SL_LK_GTM": 1101,
+    "SL_LK_AG": 1102,
+    "SL_LK_SG": 1103,
+    "SL_LK_YL": 1104,
+    "SL_LK_SWIFTE": 1105,
+    "SL_LK_TY": 1106,
+    "SL_LK_DJ": 1107,
+    "OD_JIUWANLI_LOCK1": 1108,
+    "SL_P_BDLK": 1109,
+    # 2.9 温控设备 (优先级: 1200-1299)
+    "V_AIR_P": 1200,
+    "SL_TR_ACIPM": 1201,
+    "SL_CP_DN": 1202,
+    "SL_CP_AIR": 1203,
+    "SL_CP_VL": 1204,
+    "SL_DN": 1205,
+    "SL_FCU": 1206,
+    "SL_UACCB": 1207,
+    "V_FRESH_P": 1208,
+    # 2.10 报警器 (优先级: 1300-1399)
+    "SL_ALM": 1300,
+    "LSSSMINIV1": 1301,
+    # 2.11 其他设备 (优先级: 1400-1499)
+    "SL_ETDOOR": 1400,
+    # 2.12 通用控制器 (优先级: 1500-1599)
+    "SL_P": 1500,
+    "SL_JEMA": 1501,
+    # 2.13 摄像头 (优先级: 1600-1699)
+    "cam": 1600,
+    "LSCAM": 1601,
+    # 2.14 超能面板 (优先级: 1700-1799)
+    "SL_NATURE": 1700,
+}
+
+
+def sort_devices_by_official_order(devices: List[str]) -> List[str]:
+    """根据官方文档章节顺序排序设备列表"""
+
+    def get_device_priority(device: str) -> int:
+        # 处理版本设备（如SL_SW_DM1_V1 -> SL_SW_DM1）
+        base_device = re.sub(VERSION_PATTERN, "", device)
+        # 处理摄像头前缀设备（如LSCAM:xxx -> LSCAM）
+        if device.startswith(LSCAM_PREFIX):
+            base_device = "LSCAM"
+
+        return OFFICIAL_DEVICE_ORDER.get(base_device, 9999)
+
+    # 按照官方文档顺序排序
+    return sorted(devices, key=lambda d: (get_device_priority(d), d))
+
+
+def infer_sensor_attributes(
+    io_name: str, description: str, doc_rw: str, doc_details: str
+) -> Dict[str, Any]:
+    """根据官方文档信息推断传感器属性，使用HA_STANDARD_MAPPINGS标准"""
+    attrs = {
+        "rw": doc_rw,
+        "description": description,
+        "data_type": "raw_value",
+        "conversion": "raw_value",
+        "commands": {},
+    }
+
+    # 规范化描述和详情文本
+    desc_lower = description.lower()
+    details_lower = doc_details.lower() if doc_details else ""
+    combined_text = f"{desc_lower} {details_lower}"
+
+    # 使用HA_STANDARD_MAPPINGS进行智能匹配
+    best_match = None
+    best_score = 0
+
+    for func_type, standards in HA_STANDARD_MAPPINGS.items():
+        if standards["platform"] != "sensor":
+            continue
+
+        # 计算关键词匹配分数
+        keywords = standards.get("keywords", [])
+        matches = sum(1 for keyword in keywords if keyword.lower() in combined_text)
+
+        if matches > best_score:
+            best_score = matches
+            best_match = (func_type, standards)
+
+    # 应用最佳匹配的标准
+    if best_match:
+        func_type, standards = best_match
+
+        # 设置device_class
+        if "device_class" in standards:
+            attrs["device_class"] = standards["device_class"]
+
+        # 设置单位
+        units = standards.get("units", [])
+        if units:
+            attrs["unit_of_measurement"] = units[0]
+
+        # 设置state_class（sensor平台默认为MEASUREMENT）
+        if func_type in ["energy", "energy_total"]:
+            attrs["state_class"] = "SensorStateClass.TOTAL_INCREASING"
+        else:
+            attrs["state_class"] = "SensorStateClass.MEASUREMENT"
+
+        # 根据转换提示设置转换方式
+        conversion_hints = standards.get("conversion_hints", [])
+        for hint in conversion_hints:
+            if hint.lower() in details_lower:
+                if "ieee754" in hint.lower():
+                    attrs.update(
+                        {
+                            "conversion": "ieee754_converter",
+                            "data_type": f"{func_type}_ieee754",
+                        }
+                    )
+                elif "/10" in hint or "值*10" in hint:
+                    attrs.update(
+                        {
+                            "conversion": f"{func_type}_converter",
+                            "data_type": f"{func_type}_raw",
+                        }
+                    )
+                elif "v字段" in hint:
+                    attrs.update(
+                        {"conversion": "v_field", "data_type": f"{func_type}_friendly"}
+                    )
+                break
+
+        # 特殊范围设置
+        if func_type == "battery":
+            attrs["range"] = [0, 100]
+
+    # 如果没有匹配到sensor类型，可能是其他平台类型
+    if not best_match:
+        # 检查是否为binary_sensor类型
+        for func_type, standards in HA_STANDARD_MAPPINGS.items():
+            if standards["platform"] != "binary_sensor":
+                continue
+
+            keywords = standards.get("keywords", [])
+            if any(keyword.lower() in combined_text for keyword in keywords):
+                attrs.update(
+                    {
+                        "platform": "binary_sensor",
+                        "device_class": standards["device_class"],
+                        "data_type": "binary_state",
+                    }
+                )
+                break
+    return attrs
+
+
+def infer_binary_sensor_attributes(
+    io_name: str, description: str, doc_rw: str, doc_details: str
+) -> Dict[str, Any]:
+    """推断二进制传感器属性"""
+    attrs = {
+        "rw": doc_rw,
+        "description": description,
+        "data_type": "binary_state",
+        "conversion": "binary_converter",
+        "commands": {},
+    }
+
+    desc_lower = description.lower()
+    details_lower = doc_details.lower() if doc_details else ""
+    combined_text = f"{desc_lower} {details_lower}"
+
+    # 推断 BinarySensorDeviceClass
+    if any(
+        keyword in combined_text
+        for keyword in ["门", "door", "开关状态", "open", "close"]
+    ):
+        attrs["device_class"] = "BinarySensorDeviceClass.DOOR"
+
+    elif any(keyword in combined_text for keyword in ["窗", "window"]):
+        attrs["device_class"] = "BinarySensorDeviceClass.WINDOW"
+
+    elif any(
+        keyword in combined_text for keyword in ["移动", "motion", "人体", "检测"]
+    ):
+        attrs["device_class"] = "BinarySensorDeviceClass.MOTION"
+
+    elif any(keyword in combined_text for keyword in ["烟雾", "smoke", "烟感"]):
+        attrs["device_class"] = "BinarySensorDeviceClass.SMOKE"
+
+    elif any(keyword in combined_text for keyword in ["燃气", "gas", "气体"]):
+        attrs["device_class"] = "BinarySensorDeviceClass.GAS"
+
+    elif any(keyword in combined_text for keyword in ["告警", "alarm", "报警", "警报"]):
+        attrs["device_class"] = "BinarySensorDeviceClass.SAFETY"
+
+    elif any(keyword in combined_text for keyword in ["低电", "电量", "battery"]):
+        attrs["device_class"] = "BinarySensorDeviceClass.BATTERY"
+
+    elif any(keyword in combined_text for keyword in ["连接", "connectivity", "网络"]):
+        attrs["device_class"] = "BinarySensorDeviceClass.CONNECTIVITY"
+
+    elif any(keyword in combined_text for keyword in ["防拆", "tamper", "撬开"]):
+        attrs["device_class"] = "BinarySensorDeviceClass.TAMPER"
+
+    elif any(keyword in combined_text for keyword in ["问题", "problem", "故障"]):
+        attrs["device_class"] = "BinarySensorDeviceClass.PROBLEM"
+
+    else:
+        # 默认为通用类型
+        attrs["device_class"] = "BinarySensorDeviceClass.GENERIC"
+
+    return attrs
+
+
+# ================ 设备属性分析类 ================
+
+
+class DeviceAttributeAnalyzer:
+    """设备属性分析器"""
+
+    def __init__(self):
+        self.official_data = {}
+        self.device_mapping = DEVICE_MAPPING
+        self.official_device_names = set()  # 官方设备名称集合
+
+    def load_official_data(self):
+        """加载官方文档数据"""
+        self.official_data = extract_device_ios_from_docs()
+        self.official_device_names = extract_official_device_names()
+
+    def validate_device_names(self) -> Dict[str, Any]:
+        """验证设备名称字段"""
+        if not self.official_device_names:
+            self.official_device_names = extract_official_device_names()
+
+        validation_results = {
+            "total_devices": len(self.device_mapping),
+            "devices_with_name": 0,
+            "devices_without_name": 0,
+            "devices_with_invalid_name": 0,
+            "missing_name_devices": [],
+            "invalid_name_devices": [],
+            "valid_name_devices": [],
+        }
+
+        print(f"📊 开始验证 {len(self.device_mapping)} 个设备的name字段...")
+        print(f"📊 官方设备名称集合大小: {len(self.official_device_names)} 个")
+
+        for device_id, device_config in self.device_mapping.items():
+            device_name = device_config.get("name", "")
+
+            if not device_name:
+                # 设备缺失name字段
+                validation_results["devices_without_name"] += 1
+                validation_results["missing_name_devices"].append(
+                    {
+                        "device_id": device_id,
+                        "issue": "缺失name字段",
+                        "suggestion": "需要添加中文名称",
+                    }
+                )
+            else:
+                validation_results["devices_with_name"] += 1
+
+                # 检查name是否在官方名称集合中
+                if device_name in self.official_device_names:
+                    validation_results["valid_name_devices"].append(
+                        {"device_id": device_id, "name": device_name, "status": "valid"}
+                    )
+                else:
+                    validation_results["devices_with_invalid_name"] += 1
+                    validation_results["invalid_name_devices"].append(
+                        {
+                            "device_id": device_id,
+                            "name": device_name,
+                            "issue": "name不在官方设备名称集合中",
+                            "suggestion": f"检查是否应为官方名称集合中的某个名称",
+                        }
+                    )
+
+        return validation_results
+
+    def generate_name_validation_report(
+        self, validation_results: Dict[str, Any]
+    ) -> str:
+        """生成设备名称验证报告"""
+        total = validation_results["total_devices"]
+        with_name = validation_results["devices_with_name"]
+        without_name = validation_results["devices_without_name"]
+        invalid_name = validation_results["devices_with_invalid_name"]
+        valid_name = len(validation_results["valid_name_devices"])
+
+        report = [
+            "# LifeSmart 设备名称验证报告",
+            "",
+            "## 摘要",
+            f"- 分析设备总数: {total}",
+            f"- 有name字段设备: {with_name} ({with_name/total*100:.1f}%)",
+            f"- 无name字段设备: {without_name} ({without_name/total*100:.1f}%)",
+            f"- name字段有效设备: {valid_name} ({valid_name/total*100:.1f}%)",
+            f"- name字段无效设备: {invalid_name} ({invalid_name/total*100:.1f}%)",
+            "",
+            "## 问题详情",
+            "",
+        ]
+
+        # 缺失name字段的设备
+        if validation_results["missing_name_devices"]:
+            report.extend(
+                [
+                    f"### ❌ 缺失name字段设备 ({len(validation_results['missing_name_devices'])}个)",
+                    "",
+                ]
+            )
+
+            for item in validation_results["missing_name_devices"]:
+                report.append(f"- **{item['device_id']}**: {item['issue']}")
+            report.append("")
+
+        # name字段无效的设备
+        if validation_results["invalid_name_devices"]:
+            report.extend(
+                [
+                    f"### ⚠️ name字段无效设备 ({len(validation_results['invalid_name_devices'])}个)",
+                    "",
+                ]
+            )
+
+            for item in validation_results["invalid_name_devices"]:
+                report.append(
+                    f"- **{item['device_id']}** (name: \"{item['name']}\"): {item['issue']}"
+                )
+            report.append("")
+
+        # 有效设备汇总
+        if validation_results["valid_name_devices"]:
+            report.extend(
+                [
+                    f"### ✅ name字段有效设备 ({len(validation_results['valid_name_devices'])}个)",
+                    "",
+                ]
+            )
+
+            # 只显示前20个，避免报告过长
+            sample_valid = validation_results["valid_name_devices"][:20]
+            for item in sample_valid:
+                report.append(f"- **{item['device_id']}**: {item['name']}")
+
+            if len(validation_results["valid_name_devices"]) > 20:
+                remaining = len(validation_results["valid_name_devices"]) - 20
+                report.append(f"- ... 还有 {remaining} 个有效设备")
+            report.append("")
+
+        return "\n".join(report)
+
+    def analyze_missing_attributes(self) -> Dict[str, Any]:
+        """分析缺失的设备属性"""
+        if not self.official_data:
+            self.load_official_data()
+
+        missing_configs = {}
+        suggestions = []
+
+        print(f"📊 开始分析 {len(self.device_mapping)} 个设备的属性缺失情况...")
+
+        for device_name, device_config in self.device_mapping.items():
+            # 获取该设备的官方文档信息
+            official_device_ios = self.official_data.get(device_name, [])
+
+            current_mapping = device_config
+
+            # 检查每个平台的IO配置
+            device_suggestions = {"device": device_name, "platforms": {}}
+
+            has_missing = False
+
+            for platform in [
+                "sensor",
+                "binary_sensor",
+                "switch",
+                "light",
+                "climate",
+                "lock",
+                "cover",
+            ]:
+                if platform not in current_mapping:
+                    continue
+
+                platform_config = current_mapping[platform]
+                platform_suggestions = {}
+
+                # 检查平台配置中是否有io字段
+                if "io" not in platform_config:
+                    continue
+
+                io_list = platform_config["io"]
+
+                # 检查每个IO的配置
+                for io_name in io_list:
+                    # 查找该IO在platform_config中的配置
+                    io_config = platform_config.get(io_name, {})
+
+                    # 查找官方文档中对应的IO信息
+                    doc_io_info = None
+                    for io_detail in official_device_ios:
+                        if io_detail.get("io") == io_name:
+                            doc_io_info = io_detail
+                            break
+
+                    # 如果找不到官方文档信息，使用基础信息
+                    if not doc_io_info:
+                        doc_description = io_name
+                        doc_rw = "R"  # 默认只读
+                        doc_details = ""
+                    else:
+                        doc_description = doc_io_info.get("name", io_name)
+                        doc_rw = doc_io_info.get("rw", "R")
+                        doc_details = doc_io_info.get("description", "")
+
+                    # 检查缺失的属性
+                    missing_attrs = []
+                    suggestions_for_io = {}
+
+                    # 基础属性检查
+                    if "rw" not in io_config:
+                        missing_attrs.append("rw")
+                        suggestions_for_io["rw"] = f'"{doc_rw}"'
+
+                    if "description" not in io_config:
+                        missing_attrs.append("description")
+                        suggestions_for_io["description"] = f'"{doc_description}"'
+
+                    # 根据平台类型检查特定属性
+                    if platform == "sensor":
+                        attrs = infer_sensor_attributes(
+                            io_name, doc_description, doc_rw, doc_details
+                        )
+
+                        for attr_name, attr_value in attrs.items():
+                            if attr_name not in io_config:
+                                missing_attrs.append(attr_name)
+                                if isinstance(
+                                    attr_value, str
+                                ) and not attr_value.startswith('"'):
+                                    suggestions_for_io[attr_name] = attr_value
+                                else:
+                                    suggestions_for_io[attr_name] = (
+                                        f'"{attr_value}"'
+                                        if isinstance(attr_value, str)
+                                        else attr_value
+                                    )
+
+                    elif platform == "binary_sensor":
+                        attrs = infer_binary_sensor_attributes(
+                            io_name, doc_description, doc_rw, doc_details
+                        )
+
+                        for attr_name, attr_value in attrs.items():
+                            if attr_name not in io_config:
+                                missing_attrs.append(attr_name)
+                                if isinstance(
+                                    attr_value, str
+                                ) and not attr_value.startswith('"'):
+                                    suggestions_for_io[attr_name] = attr_value
+                                else:
+                                    suggestions_for_io[attr_name] = (
+                                        f'"{attr_value}"'
+                                        if isinstance(attr_value, str)
+                                        else attr_value
+                                    )
+
+                    # 如果有缺失属性，添加到建议中
+                    if missing_attrs:
+                        has_missing = True
+                        platform_suggestions[io_name] = {
+                            "missing_attributes": missing_attrs,
+                            "suggestions": suggestions_for_io,
+                            "doc_info": {
+                                "description": doc_description,
+                                "rw": doc_rw,
+                                "details": doc_details,
+                            },
+                        }
+
+                if platform_suggestions:
+                    device_suggestions["platforms"][platform] = platform_suggestions
+
+            if has_missing:
+                suggestions.append(device_suggestions)
+
+        return {
+            "missing_devices": suggestions,
+            "total_devices": len(self.device_mapping),
+            "devices_with_missing": len(suggestions),
+        }
+
+    def generate_attribute_report(self, analysis_results: Dict[str, Any]) -> str:
+        """生成设备属性缺失报告"""
+        missing_devices = analysis_results["missing_devices"]
+        total_devices = analysis_results["total_devices"]
+        devices_with_missing = analysis_results["devices_with_missing"]
+
+        report = [
+            "# LifeSmart 设备属性缺失分析报告",
+            "",
+            "## 摘要",
+            f"- 分析设备总数: {total_devices}",
+            f"- 发现属性缺失设备: {devices_with_missing}",
+            "",
+            "## 主要缺失属性类型",
+            "- device_class: 设备分类",
+            "- state_class: 状态分类 ",
+            "- unit_of_measurement: 测量单位",
+            "- rw: 读写权限",
+            "- range: 取值范围",
+            "- conversion: 数据转换方式",
+            "",
+            "---",
+            "",
+        ]
+
+        for device_suggestion in missing_devices:
+            device_name = device_suggestion["device"]
+            report.append(f"## 🔸 **{device_name}**")
+            report.append("")
+
+            for platform, platform_data in device_suggestion["platforms"].items():
+                report.append(f"### {platform.upper()}")
+                report.append("")
+
+                for io_name, io_data in platform_data.items():
+                    missing_attrs = io_data["missing_attributes"]
+                    suggestions_dict = io_data["suggestions"]
+                    doc_info = io_data["doc_info"]
+
+                    report.append(f"#### IO口: `{io_name}`")
+                    report.append(f"- **官方描述**: {doc_info['description']}")
+                    report.append(f"- **读写权限**: {doc_info['rw']}")
+                    report.append(f"- **缺失属性**: {', '.join(missing_attrs)}")
+                    report.append("")
+                    report.append("**建议添加的配置**:")
+                    report.append("```python")
+
+                    for attr_name, attr_value in suggestions_dict.items():
+                        report.append(f'"{attr_name}": {attr_value},')
+
+                    report.append("```")
+                    report.append("")
+
+            report.append("")
+
+        return "\n".join(report)
+
+    def generate_patches_json(self, analysis_results: Dict[str, Any]) -> Dict[str, Any]:
+        """生成JSON格式的补丁建议"""
+        missing_devices = analysis_results["missing_devices"]
+        patches = {}
+
+        for device_suggestion in missing_devices:
+            device_name = device_suggestion["device"]
+            patches[device_name] = {}
+
+            for platform, platform_data in device_suggestion["platforms"].items():
+                patches[device_name][platform] = {}
+
+                for io_name, io_data in platform_data.items():
+                    patches[device_name][platform][io_name] = io_data["suggestions"]
+
+        return patches
+
+
 # Home Assistant标准常量映射（用于映射质量验证）
+# 使用HA官方device_class常量 - 涵盖所有16个支持的平台
 HA_STANDARD_MAPPINGS = {
+    # =============== SENSOR 平台标准 ===============
     # 温度相关
     "temperature": {
-        "device_class": "temperature",
-        "units": ["°C", "℃"],
+        "device_class": "SensorDeviceClass.TEMPERATURE",
+        "units": ["UnitOfTemperature.CELSIUS"],
         "keywords": ["温度", "temp", "temperature", "℃", "度"],
         "conversion_hints": ["v字段", "/10", "ieee754", "温度值*10"],
+        "platform": "sensor",
     },
     # 湿度相关
     "humidity": {
-        "device_class": "humidity",
-        "units": ["%"],
+        "device_class": "SensorDeviceClass.HUMIDITY",
+        "units": ["PERCENTAGE"],
         "keywords": ["湿度", "humidity", "RH", "%"],
         "conversion_hints": ["百分比", "相对湿度"],
+        "platform": "sensor",
     },
     # 电量/电池相关
     "battery": {
-        "device_class": "battery",
-        "units": ["%"],
+        "device_class": "SensorDeviceClass.BATTERY",
+        "units": ["PERCENTAGE"],
         "keywords": ["电量", "电池", "battery", "power", "剩余", "%"],
         "conversion_hints": ["百分比", "电压换算"],
+        "platform": "sensor",
     },
     # 功率相关
     "power": {
-        "device_class": "power",
-        "units": ["W", "w"],
+        "device_class": "SensorDeviceClass.POWER",
+        "units": ["UnitOfPower.WATT"],
         "keywords": ["功率", "power", "watt", "w"],
         "conversion_hints": ["浮点数", "ieee754"],
+        "platform": "sensor",
     },
     # 能源/用电量相关
     "energy": {
-        "device_class": "energy",
-        "units": ["kWh", "Wh"],
+        "device_class": "SensorDeviceClass.ENERGY",
+        "units": ["UnitOfEnergy.KILO_WATT_HOUR"],
         "keywords": ["用电量", "电量", "energy", "kwh", "累计"],
         "conversion_hints": ["ieee754", "浮点数", "累计"],
+        "platform": "sensor",
     },
     # 电压相关
     "voltage": {
-        "device_class": "voltage",
-        "units": ["V"],
+        "device_class": "SensorDeviceClass.VOLTAGE",
+        "units": ["UnitOfElectricPotential.VOLT"],
         "keywords": ["电压", "voltage", "v"],
         "conversion_hints": ["原始电压值"],
+        "platform": "sensor",
     },
     # 亮度/照度相关
     "illuminance": {
-        "device_class": "illuminance",
-        "units": ["lx", "lux"],
+        "device_class": "SensorDeviceClass.ILLUMINANCE",
+        "units": ["UnitOfIlluminance.LUX"],
         "keywords": ["亮度", "照度", "光照", "light", "lux", "illuminance"],
         "conversion_hints": ["环境光照"],
+        "platform": "sensor",
     },
-    # 开关/二进制传感器
+    # 噪音相关
+    "sound_pressure": {
+        "device_class": "SensorDeviceClass.SOUND_PRESSURE",
+        "units": ["UnitOfSoundPressure.DECIBEL"],
+        "keywords": ["噪音", "noise", "分贝", "db"],
+        "conversion_hints": ["声压级"],
+        "platform": "sensor",
+    },
+    # CO2相关
+    "co2": {
+        "device_class": "SensorDeviceClass.CO2",
+        "units": ["CONCENTRATION_PARTS_PER_MILLION"],
+        "keywords": ["co2", "二氧化碳", "ppm"],
+        "conversion_hints": ["浓度"],
+        "platform": "sensor",
+    },
+    # TVOC/甲醛相关
+    "volatile_organic_compounds": {
+        "device_class": "SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS",
+        "units": ["CONCENTRATION_MICROGRAMS_PER_CUBIC_METER"],
+        "keywords": ["甲醛", "tvoc", "formaldehyde", "ug/m"],
+        "conversion_hints": ["浓度"],
+        "platform": "sensor",
+    },
+    # 燃气相关
+    "gas": {
+        "device_class": "SensorDeviceClass.GAS",
+        "units": [],
+        "keywords": ["燃气", "gas", "浓度"],
+        "conversion_hints": ["气体浓度"],
+        "platform": "sensor",
+    },
+    # =============== SWITCH 平台标准 ===============
     "switch": {
         "device_class": None,  # switch平台不使用device_class
         "units": [],
         "keywords": ["开关", "switch", "控制", "on", "off", "type&1"],
         "conversion_hints": ["type&1==1", "type&1==0", "忽略val值"],
+        "platform": "switch",
     },
+    # =============== BINARY_SENSOR 平台标准 ===============
     # 二进制传感器 - 运动检测
     "motion": {
-        "device_class": "motion",
+        "device_class": "BinarySensorDeviceClass.MOTION",
         "units": [],
         "keywords": ["动态", "移动", "人体", "motion", "pir", "感应"],
         "conversion_hints": [],
+        "platform": "binary_sensor",
     },
     # 二进制传感器 - 门窗状态
     "door": {
-        "device_class": "door",
+        "device_class": "BinarySensorDeviceClass.DOOR",
         "units": [],
-        "keywords": ["门", "窗", "door", "window", "门窗"],
+        "keywords": ["门", "门窗", "door"],
         "conversion_hints": [],
+        "platform": "binary_sensor",
+    },
+    # 二进制传感器 - 窗户状态
+    "window": {
+        "device_class": "BinarySensorDeviceClass.WINDOW",
+        "units": [],
+        "keywords": ["窗", "窗户", "window"],
+        "conversion_hints": [],
+        "platform": "binary_sensor",
+    },
+    # 二进制传感器 - 烟雾检测
+    "smoke": {
+        "device_class": "BinarySensorDeviceClass.SMOKE",
+        "units": [],
+        "keywords": ["烟雾", "smoke", "烟感"],
+        "conversion_hints": [],
+        "platform": "binary_sensor",
+    },
+    # 二进制传感器 - 燃气检测
+    "gas_binary": {
+        "device_class": "BinarySensorDeviceClass.GAS",
+        "units": [],
+        "keywords": ["燃气", "gas", "气体"],
+        "conversion_hints": [],
+        "platform": "binary_sensor",
+    },
+    # 二进制传感器 - 安全状态
+    "safety": {
+        "device_class": "BinarySensorDeviceClass.SAFETY",
+        "units": [],
+        "keywords": ["告警", "alarm", "报警", "警报"],
+        "conversion_hints": [],
+        "platform": "binary_sensor",
+    },
+    # 二进制传感器 - 电池状态
+    "battery_binary": {
+        "device_class": "BinarySensorDeviceClass.BATTERY",
+        "units": [],
+        "keywords": ["低电", "电量", "battery"],
+        "conversion_hints": [],
+        "platform": "binary_sensor",
+    },
+    # 二进制传感器 - 连接状态
+    "connectivity": {
+        "device_class": "BinarySensorDeviceClass.CONNECTIVITY",
+        "units": [],
+        "keywords": ["连接", "connectivity", "网络"],
+        "conversion_hints": [],
+        "platform": "binary_sensor",
+    },
+    # 二进制传感器 - 防拆状态
+    "tamper": {
+        "device_class": "BinarySensorDeviceClass.TAMPER",
+        "units": [],
+        "keywords": ["防拆", "tamper", "撬开"],
+        "conversion_hints": [],
+        "platform": "binary_sensor",
+    },
+    # 二进制传感器 - 问题状态
+    "problem": {
+        "device_class": "BinarySensorDeviceClass.PROBLEM",
+        "units": [],
+        "keywords": ["问题", "problem", "故障"],
+        "conversion_hints": [],
+        "platform": "binary_sensor",
+    },
+    # =============== COVER 平台标准 ===============
+    "cover_curtain": {
+        "device_class": "CoverDeviceClass.CURTAIN",
+        "units": [],
+        "keywords": ["窗帘", "curtain", "遮光", "打开", "关闭", "位置"],
+        "conversion_hints": ["位置百分比", "0-100", "停止命令"],
+        "platform": "cover",
+    },
+    "cover_blind": {
+        "device_class": "CoverDeviceClass.BLIND",
+        "units": [],
+        "keywords": ["百叶窗", "blind", "遮阳", "角度"],
+        "conversion_hints": ["角度控制", "倾斜角度"],
+        "platform": "cover",
+    },
+    "cover_shutter": {
+        "device_class": "CoverDeviceClass.SHUTTER",
+        "units": [],
+        "keywords": ["卷帘", "shutter", "遮光"],
+        "conversion_hints": ["位置控制"],
+        "platform": "cover",
+    },
+    "cover_garage": {
+        "device_class": "CoverDeviceClass.GARAGE",
+        "units": [],
+        "keywords": ["车库门", "garage", "门"],
+        "conversion_hints": ["开关控制"],
+        "platform": "cover",
+    },
+    # =============== LIGHT 平台标准 ===============
+    "light_brightness": {
+        "device_class": None,  # light平台不使用device_class
+        "units": [],
+        "keywords": ["亮度", "brightness", "调光", "dimmer"],
+        "conversion_hints": ["0-255", "百分比转换"],
+        "platform": "light",
+    },
+    "light_color_temp": {
+        "device_class": None,
+        "units": ["mired"],
+        "keywords": ["色温", "color_temp", "暖光", "冷光", "开尔文", "k"],
+        "conversion_hints": ["mired转换", "2700K-6500K"],
+        "platform": "light",
+    },
+    "light_rgb": {
+        "device_class": None,
+        "units": [],
+        "keywords": ["rgb", "颜色", "color", "彩色"],
+        "conversion_hints": ["RGB值", "0-255每通道"],
+        "platform": "light",
+    },
+    "light_rgbw": {
+        "device_class": None,
+        "units": [],
+        "keywords": ["rgbw", "彩色", "白光", "color", "white"],
+        "conversion_hints": ["RGBW值", "包含白光通道"],
+        "platform": "light",
+    },
+    "light_effect": {
+        "device_class": None,
+        "units": [],
+        "keywords": ["效果", "effect", "动态", "场景"],
+        "conversion_hints": ["效果列表", "场景模式"],
+        "platform": "light",
+    },
+    # =============== CLIMATE 平台标准 ===============
+    "climate_temperature": {
+        "device_class": None,  # climate平台不使用device_class
+        "units": ["UnitOfTemperature.CELSIUS"],
+        "keywords": ["温度", "temperature", "温控", "thermostat"],
+        "conversion_hints": ["当前温度", "目标温度"],
+        "platform": "climate",
+    },
+    "climate_humidity": {
+        "device_class": None,
+        "units": ["PERCENTAGE"],
+        "keywords": ["湿度", "humidity", "相对湿度"],
+        "conversion_hints": ["当前湿度", "目标湿度"],
+        "platform": "climate",
+    },
+    "climate_fan_mode": {
+        "device_class": None,
+        "units": [],
+        "keywords": ["风速", "fan", "档位", "自动", "高", "中", "低"],
+        "conversion_hints": ["风速档位", "自动模式"],
+        "platform": "climate",
+    },
+    "climate_hvac_mode": {
+        "device_class": None,
+        "units": [],
+        "keywords": ["模式", "制热", "制冷", "auto", "heat", "cool", "off"],
+        "conversion_hints": ["工作模式", "制热制冷"],
+        "platform": "climate",
+    },
+    # =============== LOCK 平台标准 ===============
+    "lock_state": {
+        "device_class": None,  # lock平台不使用device_class
+        "units": [],
+        "keywords": ["锁", "lock", "unlock", "开锁", "锁定", "门锁"],
+        "conversion_hints": ["锁定状态", "开锁命令"],
+        "platform": "lock",
+    },
+    "lock_battery": {
+        "device_class": "SensorDeviceClass.BATTERY",
+        "units": ["PERCENTAGE"],
+        "keywords": ["门锁电量", "锁电量", "battery"],
+        "conversion_hints": ["电量百分比"],
+        "platform": "lock",
+    },
+    # =============== BUTTON 平台标准 ===============
+    "button_press": {
+        "device_class": "ButtonDeviceClass.RESTART",
+        "units": [],
+        "keywords": ["按钮", "button", "press", "触发", "执行"],
+        "conversion_hints": ["按压触发", "一次性动作"],
+        "platform": "button",
+    },
+    # =============== FAN 平台标准 ===============
+    "fan_speed": {
+        "device_class": None,  # fan平台不使用device_class
+        "units": [],
+        "keywords": ["风扇", "fan", "转速", "档位", "speed"],
+        "conversion_hints": ["转速控制", "档位设置"],
+        "platform": "fan",
+    },
+    # =============== EVENT 平台标准 ===============
+    "event_trigger": {
+        "device_class": None,  # event平台不使用device_class
+        "units": [],
+        "keywords": ["事件", "event", "trigger", "触发"],
+        "conversion_hints": ["事件触发", "状态变化"],
+        "platform": "event",
+    },
+    # =============== NUMBER 平台标准 ===============
+    "number_value": {
+        "device_class": None,  # number平台不使用device_class
+        "units": [],
+        "keywords": ["数值", "number", "value", "设置", "参数"],
+        "conversion_hints": ["数值输入", "范围设置"],
+        "platform": "number",
+    },
+    # =============== SIREN 平台标准 ===============
+    "siren_alarm": {
+        "device_class": None,  # siren平台不使用device_class
+        "units": [],
+        "keywords": ["警报", "siren", "alarm", "蜂鸣", "报警"],
+        "conversion_hints": ["警报控制", "音量设置"],
+        "platform": "siren",
+    },
+    # =============== VALVE 平台标准 ===============
+    "valve_water": {
+        "device_class": "ValveDeviceClass.WATER",
+        "units": [],
+        "keywords": ["阀门", "valve", "水阀", "开关"],
+        "conversion_hints": ["阀门开关", "位置控制"],
+        "platform": "valve",
+    },
+    # =============== AIR_QUALITY 平台标准 ===============
+    "air_quality_index": {
+        "device_class": "SensorDeviceClass.AQI",
+        "units": [],
+        "keywords": ["空气质量", "air_quality", "aqi", "pm2.5", "pm10"],
+        "conversion_hints": ["空气质量指数"],
+        "platform": "air_quality",
+    },
+    # =============== REMOTE 平台标准 ===============
+    "remote_control": {
+        "device_class": None,  # remote平台不使用device_class
+        "units": [],
+        "keywords": ["遥控", "remote", "红外", "ir", "控制"],
+        "conversion_hints": ["红外发送", "遥控命令"],
+        "platform": "remote",
+    },
+    # =============== CAMERA 平台标准 ===============
+    "camera_stream": {
+        "device_class": None,  # camera平台不使用device_class
+        "units": [],
+        "keywords": ["摄像头", "camera", "视频", "stream", "监控"],
+        "conversion_hints": ["视频流", "图像捕获"],
+        "platform": "camera",
     },
 }
 
@@ -194,7 +1161,10 @@ class ReportGenerator:
             self.report_lines.extend(
                 [
                     f"📋 只在映射中存在的设备 ({len(mapping_only)}个):",
-                    *[f"• {device}" for device in sorted(mapping_only)],
+                    *[
+                        f"• {device}"
+                        for device in sort_devices_by_official_order(mapping_only)
+                    ],
                     "",
                 ]
             )
@@ -205,7 +1175,10 @@ class ReportGenerator:
             self.report_lines.extend(
                 [
                     f"📋 只在官方文档中存在的设备 ({len(official_only)}个):",
-                    *[f"• {device}" for device in sorted(official_only)],
+                    *[
+                        f"• {device}"
+                        for device in sort_devices_by_official_order(official_only)
+                    ],
                     "",
                 ]
             )
@@ -216,7 +1189,10 @@ class ReportGenerator:
             self.report_lines.extend(
                 [
                     f"🔇 已忽略设备 ({len(ignored)}个):",
-                    *[f"• {device}" for device in sorted(ignored)],
+                    *[
+                        f"• {device}"
+                        for device in sort_devices_by_official_order(ignored)
+                    ],
                     "",
                 ]
             )
@@ -252,7 +1228,9 @@ class ReportGenerator:
             ]
         )
 
-        for device, error_info in sorted(mapping_errors.items()):
+        sorted_devices = sort_devices_by_official_order(mapping_errors.keys())
+        for device in sorted_devices:
+            error_info = mapping_errors[device]
             self._add_single_device_error_info(device, error_info)
 
     def _add_single_device_error_info(self, device: str, error_info: Dict):
@@ -459,7 +1437,9 @@ class ReportGenerator:
             ]
         )
 
-        for device, missing_info in sorted(missing_mappings.items()):
+        sorted_devices = sort_devices_by_official_order(missing_mappings.keys())
+        for device in sorted_devices:
+            missing_info = missing_mappings[device]
             doc_ios = sorted(missing_info.get("doc_ios", []))
             self.report_lines.extend(
                 [
@@ -482,7 +1462,9 @@ class ReportGenerator:
             ]
         )
 
-        for device, correct_info in sorted(correct_mappings.items()):
+        sorted_devices = sort_devices_by_official_order(correct_mappings.keys())
+        for device in sorted_devices:
+            correct_info = correct_mappings[device]
             match_score = correct_info.get("match_score", 1.0)
             platforms = list(correct_info.get("platforms", {}).keys())
             self.report_lines.extend(
@@ -560,8 +1542,10 @@ class MappingAnalyzer:
         mapped_devices_no_version = set()
 
         for device in mapped_devices:
-            # 特殊处理：SL_P_V2是真实设备名称，不是版本标识
-            if device == "SL_P_V2":
+            # 特殊处理：这些看似版本设备但实际是真实设备名称
+            special_real_devices = {"SL_P_V2", "SL_SC_BB_V2"}
+
+            if device in special_real_devices:
                 mapped_devices_no_version.add(device)
             # 排除版本标识符（如SL_MC_ND1_V2），但不排除VERSIONED_DEVICE_TYPES中的基础设备
             elif re.search(VERSION_PATTERN, device):
@@ -682,6 +1666,19 @@ class IOQualityProcessor:
 
     def process_all_devices(self, doc_device_ios: Dict, current_mappings: Dict) -> Dict:
         """处理所有设备的质量分析"""
+        print(f"📊 开始分析 {len(doc_device_ios)} 个文档中的设备...")
+
+        # 过滤出真正有IO口定义的设备
+        devices_with_io = {k: v for k, v in doc_device_ios.items() if v}
+        devices_without_io = {k: v for k, v in doc_device_ios.items() if not v}
+
+        print(f"✅ 有IO口定义的设备: {len(devices_with_io)} 个")
+        print(f"❌ 无IO口定义的设备: {len(devices_without_io)} 个 (将被跳过)")
+        if devices_without_io:
+            print(
+                f"   跳过的设备: {list(devices_without_io.keys())[:10]}{'...' if len(devices_without_io) > 10 else ''}"
+            )
+
         doc_with_correct_mapping = 0
         doc_with_incorrect_mapping = 0
         doc_missing_mapping = 0
@@ -689,9 +1686,7 @@ class IOQualityProcessor:
         correct_mappings = {}
         missing_mappings = {}
 
-        for device, ios in doc_device_ios.items():
-            if not ios:  # 跳过没有IO口定义的设备
-                continue
+        for device, ios in devices_with_io.items():  # 只分析有IO口定义的设备
 
             # 获取文档中定义的IO口
             doc_ios = {io["io"] for io in ios}
@@ -774,9 +1769,66 @@ class IOQualityProcessor:
             )
 
     def _extract_mapped_ios(self, device_mapping: Dict) -> Set[str]:
-        """从设备映射中提取IO口列表"""
+        """从设备映射中提取IO口列表，支持VERSIONED_DEVICE_TYPES和DYNAMIC_CLASSIFICATION_DEVICES特殊结构"""
         mapped_ios = set()
 
+        # 1. 处理动态分类设备 (DYNAMIC_CLASSIFICATION_DEVICES)
+        if device_mapping.get("dynamic", False):
+            # 动态设备的各种模式都会用到不同的IO口
+            for key, value in device_mapping.items():
+                if key in ["dynamic", "description"]:
+                    continue
+
+                if isinstance(value, dict):
+                    # 提取io字段
+                    if "io" in value:
+                        io_list = value["io"]
+                        if isinstance(io_list, str):
+                            mapped_ios.add(io_list)
+                        elif isinstance(io_list, list):
+                            mapped_ios.update(io_list)
+
+                    # 提取sensor_io, binary_sensor等字段
+                    if "sensor_io" in value:
+                        sensor_io = value["sensor_io"]
+                        if isinstance(sensor_io, list):
+                            mapped_ios.update(sensor_io)
+
+                    # 提取各平台的IO口定义
+                    for platform in [
+                        "climate",
+                        "switch",
+                        "sensor",
+                        "binary_sensor",
+                        "light",
+                        "cover",
+                    ]:
+                        if platform in value:
+                            platform_config = value[platform]
+                            if isinstance(platform_config, dict):
+                                # 从平台配置中提取IO口名称
+                                mapped_ios.update(platform_config.keys())
+
+            return mapped_ios
+
+        # 2. 处理版本设备 (VERSIONED_DEVICE_TYPES)
+        if device_mapping.get("versioned", False):
+            # 版本设备的每个版本都有不同的IO口定义
+            for key, value in device_mapping.items():
+                if key == "versioned":
+                    continue
+
+                if isinstance(value, dict):
+                    # 递归处理每个版本的配置
+                    for platform, platform_config in value.items():
+                        if isinstance(platform_config, dict):
+                            mapped_ios.update(platform_config.keys())
+                        elif isinstance(platform_config, list):
+                            mapped_ios.update(platform_config)
+
+            return mapped_ios
+
+        # 3. 处理标准设备结构
         # 处理新的详细结构
         if "platforms" in device_mapping:
             for platform, platform_ios in device_mapping["platforms"].items():
@@ -785,10 +1837,18 @@ class IOQualityProcessor:
                 elif isinstance(platform_ios, str):
                     mapped_ios.add(platform_ios)
         else:
-            # 向后兼容旧结构
+            # 向后兼容旧结构 - 直接从平台配置中提取IO口
             for platform, platform_ios in device_mapping.items():
-                if platform not in ["versioned", "dynamic", "detailed_platforms"]:
-                    if isinstance(platform_ios, list):
+                if platform not in [
+                    "versioned",
+                    "dynamic",
+                    "detailed_platforms",
+                    "name",
+                ]:
+                    if isinstance(platform_ios, dict):
+                        # 提取IO口名称作为键
+                        mapped_ios.update(platform_ios.keys())
+                    elif isinstance(platform_ios, list):
                         mapped_ios.update(platform_ios)
                     elif isinstance(platform_ios, str):
                         mapped_ios.add(platform_ios)
@@ -806,6 +1866,8 @@ class IOQualityProcessor:
         match_score: float,
         ios_details: List,
         device_mapping: Dict,
+        rw_errors: List,
+        attribute_errors: List,
     ) -> Dict:
         """构建错误结果"""
         # 收集详细的映射信息和质量分析
@@ -825,6 +1887,8 @@ class IOQualityProcessor:
             "current_mapping": device_mapping.get("platforms", {}),
             "detailed_mapping": detailed_mapping_info,
             "quality_analysis": quality_analysis,
+            "rw_errors": rw_errors,
+            "attribute_errors": attribute_errors,
         }
 
         return {"has_errors": True, "error_info": error_info}
@@ -894,10 +1958,249 @@ class IOQualityProcessor:
 
         return quality_analysis
 
+    def _check_rw_permissions(
+        self, device: str, ios_details: List, device_mapping: Dict
+    ) -> List:
+        """检查RW权限是否匹配"""
+        rw_errors = []
+
+        # 创建官方文档IO口的RW权限映射
+        doc_rw_mapping = {}
+        for io_detail in ios_details:
+            io_port = io_detail.get("io", "")
+            rw_permission = io_detail.get("rw", "")
+            if io_port and rw_permission:
+                doc_rw_mapping[io_port] = rw_permission
+
+        # 检查映射中的RW权限
+        if "detailed_platforms" in device_mapping:
+            for platform, platform_details in device_mapping[
+                "detailed_platforms"
+            ].items():
+                if (
+                    isinstance(platform_details, dict)
+                    and "detailed_ios" in platform_details
+                ):
+                    for io_port, io_config in platform_details["detailed_ios"].items():
+                        mapped_rw = io_config.get("rw", "")
+                        doc_rw = doc_rw_mapping.get(io_port, "")
+
+                        if doc_rw and mapped_rw:
+                            if not self._compare_rw_permissions(doc_rw, mapped_rw):
+                                rw_errors.append(
+                                    f"{io_port}: 文档权限({doc_rw}) vs 映射权限({mapped_rw})"
+                                )
+                        elif doc_rw and not mapped_rw:
+                            rw_errors.append(
+                                f"{io_port}: 文档定义权限({doc_rw})但映射未定义"
+                            )
+
+        return rw_errors
+
+    def _compare_rw_permissions(self, doc_rw: str, mapped_rw: str) -> bool:
+        """比较RW权限是否匹配"""
+
+        # 标准化权限表示
+        def normalize_rw(rw: str) -> str:
+            rw = rw.upper().strip()
+            if rw in ["RW", "R/W", "READ_WRITE"]:
+                return "RW"
+            elif rw in ["R", "READ"]:
+                return "R"
+            elif rw in ["W", "WRITE"]:
+                return "W"
+            return rw
+
+        return normalize_rw(doc_rw) == normalize_rw(mapped_rw)
+
+    def _check_device_attributes(
+        self, device: str, ios_details: List, device_mapping: Dict
+    ) -> List:
+        """检查设备属性是否匹配官方文档"""
+        attribute_errors = []
+
+        # 检查映射中的设备属性是否符合官方文档描述
+        if "detailed_platforms" in device_mapping:
+            for platform, platform_details in device_mapping[
+                "detailed_platforms"
+            ].items():
+                if (
+                    isinstance(platform_details, dict)
+                    and "detailed_ios" in platform_details
+                ):
+                    for io_port, io_config in platform_details["detailed_ios"].items():
+                        # 查找对应的文档IO口信息
+                        doc_io_info = None
+                        for io_detail in ios_details:
+                            if io_detail.get("io", "") == io_port:
+                                doc_io_info = io_detail
+                                break
+
+                        if doc_io_info:
+                            # 检查device_class是否合适
+                            mapped_device_class = io_config.get("device_class", "")
+                            doc_desc = doc_io_info.get("description", "").lower()
+                            doc_name = doc_io_info.get("name", "").lower()
+
+                            # 基于文档描述推断期望的device_class
+                            expected_classes = []
+                            if any(
+                                keyword in doc_desc or keyword in doc_name
+                                for keyword in ["温度", "temp", "℃"]
+                            ):
+                                expected_classes.append("temperature")
+                            elif any(
+                                keyword in doc_desc or keyword in doc_name
+                                for keyword in ["湿度", "humidity", "%"]
+                            ):
+                                expected_classes.append("humidity")
+                            elif any(
+                                keyword in doc_desc or keyword in doc_name
+                                for keyword in ["电量", "battery", "剩余"]
+                            ):
+                                expected_classes.append("battery")
+                            elif any(
+                                keyword in doc_desc or keyword in doc_name
+                                for keyword in ["功率", "power", "w"]
+                            ):
+                                expected_classes.append("power")
+                            elif any(
+                                keyword in doc_desc or keyword in doc_name
+                                for keyword in ["用电量", "energy", "kwh"]
+                            ):
+                                expected_classes.append("energy")
+                            elif any(
+                                keyword in doc_desc or keyword in doc_name
+                                for keyword in ["电压", "voltage"]
+                            ):
+                                expected_classes.append("voltage")
+                            elif any(
+                                keyword in doc_desc or keyword in doc_name
+                                for keyword in ["照度", "亮度", "lux"]
+                            ):
+                                expected_classes.append("illuminance")
+
+                            # 检查是否匹配
+                            if (
+                                expected_classes
+                                and mapped_device_class not in expected_classes
+                            ):
+                                if not mapped_device_class:
+                                    attribute_errors.append(
+                                        f"{io_port}: 缺失device_class，建议使用: {expected_classes[0]}"
+                                    )
+                                else:
+                                    attribute_errors.append(
+                                        f"{io_port}: device_class({mapped_device_class}) 可能不匹配文档描述，建议: {expected_classes[0]}"
+                                    )
+
+                            # 检查state_class
+                            mapped_state_class = io_config.get("state_class", "")
+                            if any(
+                                keyword in doc_desc
+                                for keyword in ["累计", "总计", "total"]
+                            ):
+                                if mapped_state_class not in [
+                                    "total",
+                                    "total_increasing",
+                                ]:
+                                    attribute_errors.append(
+                                        f"{io_port}: state_class应为total_increasing (累计数据)"
+                                    )
+                            elif any(
+                                keyword in doc_desc
+                                for keyword in ["当前", "实时", "瞬时"]
+                            ):
+                                if mapped_state_class != "measurement":
+                                    attribute_errors.append(
+                                        f"{io_port}: state_class应为measurement (测量数据)"
+                                    )
+
+        return attribute_errors
+
+
+def extract_official_device_names() -> Set[str]:
+    """从附录3.1智慧设备规格名称表格中提取设备的中文名称集合"""
+    docs_file = "../docs/LifeSmart 智慧设备规格属性说明.md"
+
+    try:
+        with open(docs_file, "r", encoding="utf-8") as f:
+            content = f.read()
+    except FileNotFoundError:
+        print(f"❌ 文档文件未找到: {docs_file}")
+        return set()
+
+    device_names = set()
+    lines = content.split("\n")
+    in_device_names_table = False
+
+    for line_num, line in enumerate(lines, 1):
+        line = line.strip()
+
+        # 找到设备规格名称表格开始
+        if "### 3.1 智慧设备规格名称" in line:
+            in_device_names_table = True
+            continue
+
+        # 找到下一个章节，结束解析
+        if line.startswith("### 3.2") and in_device_names_table:
+            break
+
+        # 解析设备名称表格行
+        if in_device_names_table and line.startswith("|") and "----" not in line:
+            columns = [col.strip() for col in line.split("|")[1:-1]]  # 去掉首尾空列
+
+            if len(columns) >= 2:
+                device_type_col = columns[0].strip()
+                device_name_col = columns[1].strip()
+
+                # 跳过表格标题和分类行
+                if (
+                    device_type_col == "Devtype/c1s"
+                    or device_name_col == "Name"
+                    or device_type_col.startswith("**")
+                    or device_name_col.startswith("**")
+                    or not device_name_col
+                ):
+                    continue
+
+                # 提取有效的中文设备名称
+                if device_name_col and len(device_name_col) > 1:
+                    # 处理复杂名称，如 "SL_LI_WW_V1:智能灯泡(冷暖白) SL_LI_WW_V2:调光调色智控器(O-10V)"
+                    if ":" in device_name_col:
+                        # 分割多个名称定义
+                        parts = device_name_col.split()
+                        for part in parts:
+                            if ":" in part:
+                                name_part = part.split(":", 1)[1]
+                                # 移除括号内容
+                                if "(" in name_part:
+                                    name_part = name_part.split("(")[0]
+                                if name_part and len(name_part) > 1:
+                                    device_names.add(name_part)
+                    else:
+                        # 移除括号内容
+                        clean_name = device_name_col
+                        if "(" in clean_name:
+                            clean_name = clean_name.split("(")[0].strip()
+                        if "/" in clean_name:
+                            # 处理如 "恒星/辰星开关伴侣一键" 这样的名称
+                            device_names.add(clean_name)
+                        else:
+                            device_names.add(clean_name)
+
+    print(f"🔍 从附录3.1提取到设备名称: {len(device_names)} 个")
+    if device_names:
+        # 显示前10个名称作为验证
+        sample_names = list(sorted(device_names))[:10]
+        print(f"🔍 示例设备名称: {sample_names}")
+
+    return device_names
+
 
 def extract_appendix_device_names() -> Set[str]:
     """从附录3.1智慧设备规格名称表格中提取设备名称"""
-    docs_file = "docs/LifeSmart 智慧设备规格属性说明.md"
+    docs_file = "../docs/LifeSmart 智慧设备规格属性说明.md"
 
     try:
         with open(docs_file, "r", encoding="utf-8") as f:
@@ -1005,11 +2308,12 @@ def extract_appendix_device_names() -> Set[str]:
     # 合并所有设备
     all_devices = appendix_devices | third_party_devices
 
-    # 过滤掉带_V数字的版本设备，但保留SL_P_V2，与const.py的处理保持一致
+    # 过滤掉带_V数字的版本设备，但保留真实设备名称
+    special_real_devices = {"SL_P_V2", "SL_SC_BB_V2"}
     filtered_devices = {
         device
         for device in all_devices
-        if not re.search(r"_V\d+$", device) or device == "SL_P_V2"
+        if not re.search(r"_V\d+$", device) or device in special_real_devices
     }
 
     print(f"🔍 附录3.1设备总数（含版本）: {len(appendix_devices)}")
@@ -1134,8 +2438,32 @@ def validate_io_quality_comprehensive(
     validation_result["matched_function_type"] = function_type
 
     if not function_type:
-        validation_result["issues"].append(f"IO口 {doc_io} 无法识别功能类型")
+        validation_result["issues"].append(
+            f"IO口 {doc_io} 无法识别功能类型 - 不在HA_STANDARD_MAPPINGS中"
+        )
         validation_result["overall_quality"] = "poor"
+
+        # 🔥 关键修复：即使不在标准映射中，也要继续验证现有映射的问题
+        if mapped_class:
+            validation_result["issues"].append(
+                f"IO口 {doc_io} 使用了未知的device_class: {mapped_class}"
+            )
+        if mapped_unit:
+            validation_result["issues"].append(
+                f"IO口 {doc_io} 使用了未验证的unit_of_measurement: {mapped_unit}"
+            )
+        if mapped_conversion:
+            validation_result["issues"].append(
+                f"IO口 {doc_io} 使用了未验证的conversion方式: {mapped_conversion}"
+            )
+
+        # 标记为非标准但继续处理
+        validation_result["ha_standard_compliance"]["device_class"] = "non_standard"
+        validation_result["ha_standard_compliance"][
+            "unit_of_measurement"
+        ] = "non_standard"
+        validation_result["ha_standard_compliance"]["conversion"] = "non_standard"
+
         return validation_result
 
     standards = HA_STANDARD_MAPPINGS[function_type]
@@ -1311,7 +2639,7 @@ def calculate_mapping_match_score(doc_ios: Set[str], mapped_ios: Set[str]) -> Di
 
 def extract_device_ios_from_docs() -> Dict[str, List[Dict]]:
     """从官方文档中提取设备IO口定义（权威数据源）"""
-    docs_file = "docs/LifeSmart 智慧设备规格属性说明.md"
+    docs_file = "../docs/LifeSmart 智慧设备规格属性说明.md"
 
     # 特殊设备类型映射：文档通用类型 -> 实际设备列表
     special_device_mapping = {
@@ -1385,8 +2713,14 @@ def extract_device_ios_from_docs() -> Dict[str, List[Dict]]:
                         )
 
                         # 正确的过滤逻辑 - 排除表格标题和格式标记
+                        # 特殊设备列表：这些看似版本设备但实际是真实设备名称
+                        special_real_devices = {"SL_P_V2", "SL_SC_BB_V2"}
+
                         if (
-                            not re.search(r"_V\d+$", device_name)  # 排除版本标识符
+                            (
+                                not re.search(r"_V\d+$", device_name)
+                                or device_name in special_real_devices
+                            )  # 排除版本标识符，但保留特殊真实设备
                             and len(device_name) > 1  # 排除单字符
                             and device_name
                             not in [
@@ -1558,20 +2892,18 @@ def extract_device_ios_from_docs() -> Dict[str, List[Dict]]:
         print()
 
     print(f"前30行调试信息:")
-    for debug_line in debug_lines[:30]:
+    for debug_line in debug_lines:
         print(debug_line)
-    if len(debug_lines) > 30:
-        print(f"... 还有 {len(debug_lines) - 30} 行调试信息")
 
     return device_ios
 
 
 def extract_current_mappings() -> Dict[str, Dict]:
-    """从const.py中提取当前的MULTI_PLATFORM_DEVICE_MAPPING（支持增强结构）"""
+    """从const.py中提取当前的DEVICE_MAPPING（支持增强结构）"""
 
     current_mappings = {}
 
-    for device, device_config in MULTI_PLATFORM_DEVICE_MAPPING.items():
+    for device, device_config in DEVICE_MAPPING.items():
         # 处理版本设备的特殊逻辑
         if device in VERSIONED_DEVICE_TYPES:
             # 对于版本设备，我们需要验证每个版本的映射
@@ -1735,6 +3067,14 @@ def extract_detailed_platform_data(config: Dict) -> Dict[str, Dict]:
                         "EE",
                         "EP",
                         "EQ",
+                        "bright",
+                        "dark",
+                        "bright1",
+                        "bright2",
+                        "bright3",
+                        "dark1",
+                        "dark2",
+                        "dark3",
                     ]:
 
                         if isinstance(io_config, dict):
@@ -1827,6 +3167,14 @@ def extract_platform_data(config: Dict) -> Dict[str, List]:
                         "EE",
                         "EP",
                         "EQ",
+                        "bright",
+                        "dark",
+                        "bright1",
+                        "bright2",
+                        "bright3",
+                        "dark1",
+                        "dark2",
+                        "dark3",
                     ]:
                         io_list.append(io_key)
                     elif isinstance(io_config, dict) and "description" in io_config:
@@ -1935,22 +3283,12 @@ def analyze_comprehensive_mapping() -> Dict:
             # 设备既在文档中也在映射中，检查映射正确性
             mapped_ios = set()
 
-            # 处理新的detailed structure
+            # 使用新的IO提取方法处理所有设备类型
             device_mapping = current_mappings[device]
-            if "platforms" in device_mapping:
-                for platform, platform_ios in device_mapping["platforms"].items():
-                    if isinstance(platform_ios, list):
-                        mapped_ios.update(platform_ios)
-                    elif isinstance(platform_ios, str):
-                        mapped_ios.add(platform_ios)
-            else:
-                # 向后兼容旧结构
-                for platform, platform_ios in device_mapping.items():
-                    if platform not in ["versioned", "dynamic", "detailed_platforms"]:
-                        if isinstance(platform_ios, list):
-                            mapped_ios.update(platform_ios)
-                        elif isinstance(platform_ios, str):
-                            mapped_ios.add(platform_ios)
+
+            # 实例化分析器来使用提取方法
+            analyzer = DeviceAttributeAnalyzer()
+            mapped_ios = analyzer._extract_mapped_ios(device_mapping)
 
             # 使用新的通配符匹配逻辑
             match_result = calculate_mapping_match_score(doc_ios, mapped_ios)
@@ -2062,7 +3400,9 @@ def generate_comprehensive_report(analysis_results: Dict) -> str:
                 f"🚨 映射独有设备 ({len(analysis_results['mapping_missing_from_official'])}个):"
             )
             report.append("   (这些设备在映射中存在但官方文档中找不到)")
-            for device in sorted(analysis_results["mapping_missing_from_official"]):
+            for device in sort_devices_by_official_order(
+                analysis_results["mapping_missing_from_official"]
+            ):
                 report.append(f"     • {device}")
             report.append("")
 
@@ -2072,7 +3412,9 @@ def generate_comprehensive_report(analysis_results: Dict) -> str:
                 f"⚠️ 官方独有设备 ({len(analysis_results['official_missing_from_mapping'])}个):"
             )
             report.append("   (这些设备在官方文档中存在但映射中缺失)")
-            for device in sorted(analysis_results["official_missing_from_mapping"]):
+            for device in sort_devices_by_official_order(
+                analysis_results["official_missing_from_mapping"]
+            ):
                 report.append(f"     • {device}")
             report.append("")
 
@@ -2082,7 +3424,9 @@ def generate_comprehensive_report(analysis_results: Dict) -> str:
                 f"🔇 已忽略设备 ({len(analysis_results['ignored_devices'])}个):"
             )
             report.append("   (这些设备被标记为忽略，不参与对比)")
-            for device in sorted(analysis_results["ignored_devices"]):
+            for device in sort_devices_by_official_order(
+                analysis_results["ignored_devices"]
+            ):
                 report.append(f"     • {device}")
             report.append("")
     else:
@@ -2233,16 +3577,321 @@ def generate_comprehensive_report(analysis_results: Dict) -> str:
 
 
 if __name__ == "__main__":
+    print("🔍 开始生成两份LifeSmart设备分析报告...")
+
     # 使用新的模块化分析器
     analyzer = MappingAnalyzer()
     results = analyzer.analyze()
 
-    # 生成报告
-    report = analyzer.generate_report(results)
-    print("\n" + report)
+    # 获取数据源
+    doc_devices = set(results.get("doc_devices", []))
+    current_devices = set(DEVICE_MAPPING.keys())
+    doc_device_ios = extract_device_ios_from_docs()
 
-    # 保存报告
-    with open("comprehensive_mapping_analysis.txt", "w", encoding="utf-8") as f:
-        f.write(report)
+    print("📊 生成报告1: 设备覆盖对比分析...")
 
-    print("\n📄 详细报告已保存到: comprehensive_mapping_analysis.txt")
+    # 报告1：设备覆盖对比分析 + 设备name字段验证
+    coverage_report = []
+    coverage_report.append("=" * 80)
+    coverage_report.append("📊 LifeSmart 设备覆盖对比分析报告")
+    coverage_report.append("=" * 80)
+    coverage_report.append("")
+
+    # 数据摘要
+    total_doc = results.get("total_official_devices", 0)
+    total_mapped = results.get("total_mapped_no_version", 0)
+    common_devices = len(doc_devices & current_devices)
+    missing_devices = len(results.get("official_missing_from_mapping", []))
+    extra_devices = len(results.get("mapping_missing_from_official", []))
+
+    coverage_rate = (common_devices / total_doc * 100) if total_doc > 0 else 0
+
+    coverage_report.append("📈 **数据摘要**")
+    coverage_report.append("-" * 40)
+    coverage_report.append(f"• 官方文档设备总数: {total_doc} 个")
+    coverage_report.append(f"• 当前映射设备总数: {total_mapped} 个")
+    coverage_report.append("")
+
+    coverage_report.append("📊 **覆盖率分析**")
+    coverage_report.append("-" * 40)
+    coverage_report.append(f"• 映射覆盖率: {coverage_rate:.1f}%")
+    coverage_report.append(f"• 已覆盖设备: {common_devices} 个")
+    coverage_report.append(f"• 缺失设备: {missing_devices} 个")
+    coverage_report.append(f"• 多余设备: {extra_devices} 个")
+    coverage_report.append("")
+
+    # 新增：设备name字段验证
+    coverage_report.append("📋 **设备name字段验证**")
+    coverage_report.append("-" * 40)
+
+    # 执行name验证
+    attribute_analyzer = DeviceAttributeAnalyzer()
+    name_validation_results = attribute_analyzer.validate_device_names()
+
+    total_devices = name_validation_results["total_devices"]
+    with_name = name_validation_results["devices_with_name"]
+    without_name = name_validation_results["devices_without_name"]
+    invalid_name = name_validation_results["devices_with_invalid_name"]
+    valid_name = len(name_validation_results["valid_name_devices"])
+
+    coverage_report.append(f"• 分析设备总数: {total_devices} 个")
+    coverage_report.append(
+        f"• 有name字段: {with_name} ({with_name/total_devices*100:.1f}%)"
+    )
+    coverage_report.append(
+        f"• 缺失name字段: {without_name} ({without_name/total_devices*100:.1f}%)"
+    )
+    coverage_report.append(
+        f"• name字段有效: {valid_name} ({valid_name/total_devices*100:.1f}%)"
+    )
+    coverage_report.append(
+        f"• name字段无效: {invalid_name} ({invalid_name/total_devices*100:.1f}%)"
+    )
+    coverage_report.append("")
+
+    # name字段问题详情
+    if name_validation_results["missing_name_devices"]:
+        coverage_report.append(
+            f"⚠️ **缺失name字段设备** ({len(name_validation_results['missing_name_devices'])}个):"
+        )
+        for item in name_validation_results["missing_name_devices"][
+            :10
+        ]:  # 只显示前10个
+            coverage_report.append(f"   • {item['device_id']}")
+        if len(name_validation_results["missing_name_devices"]) > 10:
+            remaining = len(name_validation_results["missing_name_devices"]) - 10
+            coverage_report.append(f"   • ... 还有 {remaining} 个设备缺失name字段")
+        coverage_report.append("")
+
+    if name_validation_results["invalid_name_devices"]:
+        coverage_report.append(
+            f"❌ **name字段无效设备** ({len(name_validation_results['invalid_name_devices'])}个):"
+        )
+        for item in name_validation_results["invalid_name_devices"][:5]:  # 只显示前5个
+            coverage_report.append(
+                f"   • {item['device_id']} (name: \"{item['name']}\")"
+            )
+        if len(name_validation_results["invalid_name_devices"]) > 5:
+            remaining = len(name_validation_results["invalid_name_devices"]) - 5
+            coverage_report.append(f"   • ... 还有 {remaining} 个设备name字段无效")
+        coverage_report.append("")
+
+    # 设备分类对比
+    coverage_report.append("🔍 **设备分类对比**")
+    coverage_report.append("-" * 40)
+
+    # 缺失设备
+    missing_list = results.get("official_missing_from_mapping", [])
+    if missing_list:
+        coverage_report.append(f"📋 **缺失设备列表** ({len(missing_list)}个):")
+        for device in sort_devices_by_official_order(missing_list):
+            coverage_report.append(f"   ❌ {device}")
+        coverage_report.append("")
+
+    # 多余设备
+    extra_list = results.get("mapping_missing_from_official", [])
+    if extra_list:
+        coverage_report.append(f"🔧 **多余设备列表** ({len(extra_list)}个):")
+        for device in sort_devices_by_official_order(extra_list):
+            coverage_report.append(f"   ➕ {device}")
+        coverage_report.append("")
+
+    # 共同设备
+    common_list = list(doc_devices & current_devices)
+    if common_list:
+        coverage_report.append(f"✅ **共同设备列表** ({len(common_list)}个):")
+        for device in sort_devices_by_official_order(common_list):
+            coverage_report.append(f"   ✓ {device}")
+        coverage_report.append("")
+
+    coverage_report.append("=" * 80)
+    coverage_report.append("📋 设备覆盖对比分析报告生成完成")
+    coverage_report.append("=" * 80)
+
+    # 保存报告1
+    with open("../device_coverage_analysis.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(coverage_report))
+    print("✅ 设备覆盖对比分析报告（含name验证）已保存到: device_coverage_analysis.txt")
+
+    print("🔍 生成报告2: IO口详细对比分析...")
+
+    # 报告2：IO口详细对比分析
+    io_report = []
+    io_report.append("=" * 80)
+    io_report.append("🔍 LifeSmart 设备IO口详细对比分析报告")
+    io_report.append("=" * 80)
+    io_report.append("")
+
+    # 只分析有IO定义且有映射的设备
+    common_devices_with_io = set(doc_device_ios.keys()) & current_devices
+
+    io_report.append("📊 **IO口对比分析摘要**")
+    io_report.append("-" * 40)
+    io_report.append(f"• 可对比设备总数: {len(common_devices_with_io)} 个")
+
+    # 分析结果统计
+    perfect_match = []
+    partial_match = []
+    mismatch = []
+
+    for device in sort_devices_by_official_order(common_devices_with_io):
+        if device not in doc_device_ios or not doc_device_ios[device]:
+            continue
+
+        doc_ios_set = set(io_def["io"] for io_def in doc_device_ios[device])
+
+        # 从当前映射中提取IO口
+        mapped_ios_set = set()
+        device_config = DEVICE_MAPPING.get(device, {})
+
+        for platform, platform_config in device_config.items():
+            if platform in ["dynamic", "versioned"]:
+                continue
+            if isinstance(platform_config, dict):
+                for io_name in platform_config.keys():
+                    if io_name not in [
+                        "dynamic",
+                        "switch_mode",
+                        "climate_mode",
+                        "condition",
+                    ]:
+                        mapped_ios_set.add(io_name)
+
+        # 计算匹配情况
+        matched_ios = doc_ios_set & mapped_ios_set
+        total_ios = len(doc_ios_set | mapped_ios_set)
+        match_score = len(matched_ios) / total_ios if total_ios > 0 else 0
+
+        device_info = {
+            "device": device,
+            "doc_ios": sorted(doc_ios_set),
+            "mapped_ios": sorted(mapped_ios_set),
+            "match_score": match_score,
+            "missing_ios": sorted(doc_ios_set - mapped_ios_set),
+            "extra_ios": sorted(mapped_ios_set - doc_ios_set),
+        }
+
+        if match_score == 1.0:
+            perfect_match.append(device_info)
+        elif match_score >= 0.5:
+            partial_match.append(device_info)
+        else:
+            mismatch.append(device_info)
+
+    io_report.append(f"• 完美匹配设备: {len(perfect_match)} 个")
+    io_report.append(f"• 部分匹配设备: {len(partial_match)} 个")
+    io_report.append(f"• 不匹配设备: {len(mismatch)} 个")
+    io_report.append("")
+
+    # 完美匹配详情
+    if perfect_match:
+        io_report.append("✅ **完美匹配设备详情**")
+        io_report.append("-" * 50)
+        for device_info in perfect_match:
+            io_report.append(f"🔸 **{device_info['device']}**")
+            io_report.append(f"   IO口: {', '.join(device_info['doc_ios'])}")
+            io_report.append(f"   匹配度: {device_info['match_score']:.1%}")
+            io_report.append("")
+
+    # 部分匹配详情
+    if partial_match:
+        io_report.append("⚠️ **部分匹配设备详情**")
+        io_report.append("-" * 50)
+        for device_info in partial_match:
+            io_report.append(f"🔸 **{device_info['device']}**")
+            io_report.append(f"   官方IO口: {', '.join(device_info['doc_ios'])}")
+            io_report.append(f"   映射IO口: {', '.join(device_info['mapped_ios'])}")
+            io_report.append(f"   匹配度: {device_info['match_score']:.1%}")
+            if device_info["missing_ios"]:
+                io_report.append(
+                    f"   ❌ 缺失IO口: {', '.join(device_info['missing_ios'])}"
+                )
+            if device_info["extra_ios"]:
+                io_report.append(
+                    f"   ➕ 多余IO口: {', '.join(device_info['extra_ios'])}"
+                )
+            io_report.append("")
+
+    # 不匹配详情
+    if mismatch:
+        io_report.append("❌ **不匹配设备详情**")
+        io_report.append("-" * 50)
+        for device_info in mismatch:
+            io_report.append(f"🔸 **{device_info['device']}**")
+            io_report.append(f"   官方IO口: {', '.join(device_info['doc_ios'])}")
+            io_report.append(f"   映射IO口: {', '.join(device_info['mapped_ios'])}")
+            io_report.append(f"   匹配度: {device_info['match_score']:.1%}")
+            if device_info["missing_ios"]:
+                io_report.append(
+                    f"   ❌ 缺失IO口: {', '.join(device_info['missing_ios'])}"
+                )
+            if device_info["extra_ios"]:
+                io_report.append(
+                    f"   ➕ 多余IO口: {', '.join(device_info['extra_ios'])}"
+                )
+            io_report.append("")
+
+    # 统计摘要
+    missing_count = sum(len(info["missing_ios"]) for info in partial_match + mismatch)
+    extra_count = sum(len(info["extra_ios"]) for info in partial_match + mismatch)
+
+    io_report.append("📈 **IO口统计摘要**")
+    io_report.append("-" * 50)
+    io_report.append(
+        f"• 需要补充IO口的设备: {len([d for d in partial_match + mismatch if d['missing_ios']])} 个"
+    )
+    io_report.append(
+        f"• 有多余IO口的设备: {len([d for d in partial_match + mismatch if d['extra_ios']])} 个"
+    )
+    io_report.append(f"• 总计缺失IO口数: {missing_count} 个")
+    io_report.append(f"• 总计多余IO口数: {extra_count} 个")
+    io_report.append("")
+
+    io_report.append("=" * 80)
+    io_report.append("🔍 IO口详细对比分析报告生成完成")
+    io_report.append("=" * 80)
+
+    # 保存报告2
+    with open("../io_mapping_detailed_analysis.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(io_report))
+    print("✅ IO口详细对比分析报告已保存到: io_mapping_detailed_analysis.txt")
+
+    print("📋 生成报告3: 设备属性缺失分析...")
+
+    # 报告3：设备属性缺失分析 - 基于const.py中的详细设备定义
+    attribute_analyzer = DeviceAttributeAnalyzer()
+    attribute_results = attribute_analyzer.analyze_missing_attributes()
+
+    # 始终生成第三份报告，无论是否有缺失
+    attribute_report = attribute_analyzer.generate_attribute_report(attribute_results)
+
+    with open("../device_attributes_missing_analysis.md", "w", encoding="utf-8") as f:
+        f.write(attribute_report)
+    print("✅ 设备属性缺失分析报告已保存到: device_attributes_missing_analysis.md")
+
+    # 生成JSON格式补丁建议
+    patches_json = attribute_analyzer.generate_patches_json(attribute_results)
+
+    with open("../device_attributes_patches.json", "w", encoding="utf-8") as f:
+        import json
+
+        f.write(json.dumps(patches_json, indent=2, ensure_ascii=False))
+    print("✅ 设备属性补丁建议已保存到: device_attributes_patches.json")
+
+    if attribute_results["devices_with_missing"] > 0:
+        print(
+            "📊 发现 {} 个设备存在属性缺失".format(
+                attribute_results["devices_with_missing"]
+            )
+        )
+    else:
+        print("📊 所有设备属性配置完整，无缺失")
+
+    print("✅ 三份报告生成完成!")
+
+    # 删除我创建的临时脚本文件
+    import os
+
+    if os.path.exists("dual_report_generator.py"):
+        os.remove("dual_report_generator.py")
+        print("🗑️ 已清理临时脚本文件")

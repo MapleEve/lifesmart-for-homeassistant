@@ -5,6 +5,7 @@ LifeSmart 集成的通用辅助函数模块。
 这包括实体ID生成、设备类型检查、数据安全获取和名称规范化等。
 """
 
+import logging
 import re
 from typing import Any
 
@@ -24,9 +25,9 @@ from .const import (
     IO_TYPE_EXCEPTION,
     # 新架构：多平台设备支持映射
     MULTI_PLATFORM_DEVICE_MAPPING,
-    # 设备类型常量
-    GENERIC_CONTROLLER_TYPES,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # ====================================================================
@@ -74,9 +75,6 @@ def get_device_platform_mapping(device: dict) -> dict[str, list[str]]:
                     platforms[platform] = valid_ios
 
         return platforms
-
-    # 处理单平台设备（传统逗辑）
-    return _get_single_platform_mapping(device)
 
 
 def _handle_dynamic_device_platforms(
@@ -334,7 +332,6 @@ def is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
     Returns:
         如果该IO口是此类型设备的二元传感器控制点，则返回 True。
     """
-    from .const import MULTI_PLATFORM_DEVICE_MAPPING
 
     # 检查设备是否在映射表中
     if device_type not in MULTI_PLATFORM_DEVICE_MAPPING:
@@ -1067,9 +1064,7 @@ def apply_enhanced_conversion(
 
     else:
         # 未知转换类型，记录警告并返回原始值
-        import logging
 
-        _LOGGER = logging.getLogger(__name__)
         _LOGGER.warning("Unknown conversion type: %s", conversion_type)
         return val
 
@@ -1142,11 +1137,6 @@ def get_enhanced_platform_mapping(device: dict) -> dict[str, list[str]]:
             ):
                 # 增强结构：提取IO口键名
                 ios = list(platform_config.keys())
-            else:
-                # 旧的简化结构：使用 io 字段
-                ios = platform_config.get("io", [])
-                if isinstance(ios, str):
-                    ios = [ios]
         else:
             ios = []
 
@@ -1159,5 +1149,5 @@ def get_enhanced_platform_mapping(device: dict) -> dict[str, list[str]]:
 def _handle_dynamic_device_mapping(device: dict, mapping: dict) -> dict[str, list[str]]:
     """处理动态设备的映射逻辑（保持原有逻辑）"""
     # 保持原有的动态设备处理逻辑不变
-    # 这里应该包含原来的动态设备处理代码
+    # TODO 这里应该包含动态设备处理代码
     return {}

@@ -73,6 +73,7 @@ Thumbs.db
 # But keep important testing scripts
 !/.testing/test_ci_locally.sh
 !/.testing/version_mapping.sh
+!/.testing/device_mapping_analysis.py
 
 # Auto-generated .gitignore files
 **/.gitignore
