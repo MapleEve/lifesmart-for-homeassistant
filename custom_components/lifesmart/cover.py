@@ -28,7 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
+from .core.const import (
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
@@ -43,8 +43,8 @@ from .const import (
     MANUFACTURER,
     NON_POSITIONAL_COVER_CONFIG,
 )
-from .entity import LifeSmartEntity
-from .helpers import (
+from .core.entity import LifeSmartEntity
+from .core.helpers import (
     generate_unique_id,
     get_device_platform_mapping,
     safe_get,

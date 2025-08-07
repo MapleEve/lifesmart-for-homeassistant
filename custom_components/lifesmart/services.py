@@ -11,8 +11,8 @@ import logging
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 
-from .const import DEVICE_ID_KEY, HUB_ID_KEY, SUBDEVICE_INDEX_KEY, DOMAIN
 from .core.client_base import LifeSmartClientBase
+from .core.const import DEVICE_ID_KEY, HUB_ID_KEY, SUBDEVICE_INDEX_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -11,8 +11,8 @@ from typing import Any
 from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 from homeassistant.helpers.entity import Entity
 
+from .client_base import LifeSmartClientBase
 from .const import DEVICE_ID_KEY, DEVICE_NAME_KEY, DEVICE_TYPE_KEY, HUB_ID_KEY
-from .core.client_base import LifeSmartClientBase
 
 _LOGGER = logging.getLogger(__name__)
 

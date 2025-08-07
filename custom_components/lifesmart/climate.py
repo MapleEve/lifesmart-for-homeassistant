@@ -28,8 +28,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .compatibility import get_climate_entity_features
-from .const import (
+from .core.compatibility import get_climate_entity_features
+from .core.const import (
     DOMAIN,
     MANUFACTURER,
     HUB_ID_KEY,
@@ -45,8 +45,8 @@ from .const import (
     LIFESMART_TF_FAN_MAP,
     REVERSE_LIFESMART_CP_AIR_FAN_MAP,
 )
-from .entity import LifeSmartEntity
-from .helpers import (
+from .core.entity import LifeSmartEntity
+from .core.helpers import (
     generate_unique_id,
     get_device_platform_mapping,
     safe_get,

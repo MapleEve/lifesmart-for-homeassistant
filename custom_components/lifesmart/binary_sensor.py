@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-from .const import (
+from .core.const import (
     # --- 核心常量导入 ---
     DOMAIN,
     MANUFACTURER,
@@ -37,8 +37,8 @@ from .const import (
     # --- 单个设备类型判断用 ---
     BUTTON_SWITCH_TYPES,
 )
-from .entity import LifeSmartEntity
-from .helpers import (
+from .core.entity import LifeSmartEntity
+from .core.helpers import (
     generate_unique_id,
     get_device_platform_mapping,
     safe_get,

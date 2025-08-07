@@ -701,6 +701,140 @@ class DeviceAttributeAnalyzer:
 
         return patches
 
+    def _extract_mapped_ios(self, device_mapping: Dict) -> Set[str]:
+        """从设备映射中提取IO口列表，支持VERSIONED_DEVICE_TYPES和DYNAMIC_CLASSIFICATION_DEVICES特殊结构"""
+        mapped_ios = set()
+
+        # 1. 处理动态分类设备 (DYNAMIC_CLASSIFICATION_DEVICES)
+        if device_mapping.get("dynamic", False):
+            # 动态设备的各种模式都会用到不同的IO口
+            for key, value in device_mapping.items():
+                if key in ["dynamic", "description", "name"]:
+                    continue
+
+                if isinstance(value, dict):
+                    # 提取io字段 - 直接的IO口列表
+                    if "io" in value:
+                        io_list = value["io"]
+                        if isinstance(io_list, str):
+                            mapped_ios.add(io_list)
+                        elif isinstance(io_list, list):
+                            mapped_ios.update(io_list)
+
+                    # 提取sensor_io等字段 - 传感器IO口列表
+                    if "sensor_io" in value:
+                        sensor_io = value["sensor_io"]
+                        if isinstance(sensor_io, list):
+                            mapped_ios.update(sensor_io)
+
+                    # 提取各平台的详细IO口定义 (如SL_NATURE的climate模式)
+                    for platform in [
+                        "climate",
+                        "switch",
+                        "sensor",
+                        "binary_sensor",
+                        "light",
+                        "cover",
+                    ]:
+                        if platform in value:
+                            platform_config = value[platform]
+                            if isinstance(platform_config, dict):
+                                # 从平台详细配置中提取IO口名称 (如P1, P4, P5等)
+                                for potential_io, io_config in platform_config.items():
+                                    # 检查是否是真实IO口格式 - 只提取符合IO口命名规范的键
+                                    if self._is_valid_io_name(potential_io):
+                                        mapped_ios.add(potential_io)
+
+            return mapped_ios
+
+        # 2. 处理版本设备 (VERSIONED_DEVICE_TYPES)
+        if device_mapping.get("versioned", False):
+            # 版本设备的每个版本都有不同的IO口定义
+            for key, value in device_mapping.items():
+                if key == "versioned":
+                    continue
+
+                if isinstance(value, dict):
+                    # 递归处理每个版本的配置
+                    for platform, platform_config in value.items():
+                        if isinstance(platform_config, dict):
+                            # 只提取符合IO口命名规范的键
+                            for potential_io in platform_config.keys():
+                                if self._is_valid_io_name(potential_io):
+                                    mapped_ios.add(potential_io)
+                        elif isinstance(platform_config, list):
+                            # 如果是列表，检查每个元素是否是有效IO口
+                            for potential_io in platform_config:
+                                if self._is_valid_io_name(potential_io):
+                                    mapped_ios.add(potential_io)
+
+            return mapped_ios
+
+        # 3. 处理标准设备结构
+        # 处理新的详细结构
+        if "platforms" in device_mapping:
+            for platform, platform_ios in device_mapping["platforms"].items():
+                if isinstance(platform_ios, list):
+                    # 过滤有效的IO口名称
+                    for potential_io in platform_ios:
+                        if self._is_valid_io_name(potential_io):
+                            mapped_ios.add(potential_io)
+                elif isinstance(platform_ios, str):
+                    if self._is_valid_io_name(platform_ios):
+                        mapped_ios.add(platform_ios)
+        else:
+            # 向后兼容旧结构 - 直接从平台配置中提取IO口
+            for platform, platform_ios in device_mapping.items():
+                if platform not in [
+                    "versioned",
+                    "dynamic",
+                    "detailed_platforms",
+                    "name",
+                ]:
+                    if isinstance(platform_ios, dict):
+                        # 提取IO口名称作为键 - 只提取有效的IO口名称
+                        for potential_io in platform_ios.keys():
+                            if self._is_valid_io_name(potential_io):
+                                mapped_ios.add(potential_io)
+                    elif isinstance(platform_ios, list):
+                        # 过滤有效的IO口名称
+                        for potential_io in platform_ios:
+                            if self._is_valid_io_name(potential_io):
+                                mapped_ios.add(potential_io)
+                    elif isinstance(platform_ios, str):
+                        if self._is_valid_io_name(platform_ios):
+                            mapped_ios.add(platform_ios)
+
+        return mapped_ios
+
+    def _is_valid_io_name(self, name: str) -> bool:
+        """检查是否是有效的IO口名称格式"""
+        if not name or not isinstance(name, str):
+            return False
+        
+        # P系列IO口 (P1, P2, ..., P10)
+        if re.match(r"^P\d+$", name):
+            return True
+        
+        # 其他标准IO口名称
+        standard_io_names = {
+            "L1", "L2", "L3",           # 开关系列
+            "A", "A2", "T", "V", "TR",  # 传感器系列 
+            "M", "SR", "KP", "EPA",     # 控制系列
+            "EE", "EP", "EQ",           # 扩展系列
+            "bright", "dark",           # 指示灯系列
+            "bright1", "bright2", "bright3",
+            "dark1", "dark2", "dark3",
+            "eB1", "eB2", "eB3", "eB4", # 扩展按键系列
+            "O", "B",                   # 基础开关
+            # 添加其他特殊IO口名称
+            "CL", "OP", "ST",           # 窗帘控制
+            "RGBW", "RGB", "DYN",       # 灯光控制
+            "H", "Z", "WA", "G", "AXS", # 传感器特殊口
+        }
+        
+        return name in standard_io_names
+
 
 # Home Assistant标准常量映射（用于映射质量验证）
 # 使用HA官方device_class常量 - 涵盖所有16个支持的平台
@@ -1884,38 +2018,8 @@ class IOQualityProcessor:
                             if isinstance(platform_config, dict):
                                 # 从平台详细配置中提取IO口名称 (如P1, P4, P5等)
                                 for potential_io, io_config in platform_config.items():
-                                    # 检查是否是真实IO口格式
-                                    if re.match(
-                                        r"^P\d+$", potential_io
-                                    ) or potential_io in [
-                                        "L1",
-                                        "L2",
-                                        "L3",
-                                        "A",
-                                        "A2",
-                                        "T",
-                                        "V",
-                                        "TR",
-                                        "M",
-                                        "SR",
-                                        "KP",
-                                        "EPA",
-                                        "EE",
-                                        "EP",
-                                        "EQ",
-                                        "bright",
-                                        "dark",
-                                        "bright1",
-                                        "bright2",
-                                        "bright3",
-                                        "dark1",
-                                        "dark2",
-                                        "dark3",
-                                        "eB1",
-                                        "eB2",
-                                        "eB3",
-                                        "eB4",
-                                    ]:
+                                    # 检查是否是真实IO口格式 - 只提取符合IO口命名规范的键
+                                    if self._is_valid_io_name(potential_io):
                                         mapped_ios.add(potential_io)
 
             return mapped_ios
@@ -1931,9 +2035,15 @@ class IOQualityProcessor:
                     # 递归处理每个版本的配置
                     for platform, platform_config in value.items():
                         if isinstance(platform_config, dict):
-                            mapped_ios.update(platform_config.keys())
+                            # 只提取符合IO口命名规范的键
+                            for potential_io in platform_config.keys():
+                                if self._is_valid_io_name(potential_io):
+                                    mapped_ios.add(potential_io)
                         elif isinstance(platform_config, list):
-                            mapped_ios.update(platform_config)
+                            # 如果是列表，检查每个元素是否是有效IO口
+                            for potential_io in platform_config:
+                                if self._is_valid_io_name(potential_io):
+                                    mapped_ios.add(potential_io)
 
             return mapped_ios
 
@@ -1942,9 +2052,13 @@ class IOQualityProcessor:
         if "platforms" in device_mapping:
             for platform, platform_ios in device_mapping["platforms"].items():
                 if isinstance(platform_ios, list):
-                    mapped_ios.update(platform_ios)
+                    # 过滤有效的IO口名称
+                    for potential_io in platform_ios:
+                        if self._is_valid_io_name(potential_io):
+                            mapped_ios.add(potential_io)
                 elif isinstance(platform_ios, str):
-                    mapped_ios.add(platform_ios)
+                    if self._is_valid_io_name(platform_ios):
+                        mapped_ios.add(platform_ios)
         else:
             # 向后兼容旧结构 - 直接从平台配置中提取IO口
             for platform, platform_ios in device_mapping.items():
@@ -1955,14 +2069,44 @@ class IOQualityProcessor:
                     "name",
                 ]:
                     if isinstance(platform_ios, dict):
-                        # 提取IO口名称作为键
-                        mapped_ios.update(platform_ios.keys())
+                        # 提取IO口名称作为键 - 只提取有效的IO口名称
+                        for potential_io in platform_ios.keys():
+                            if self._is_valid_io_name(potential_io):
+                                mapped_ios.add(potential_io)
                     elif isinstance(platform_ios, list):
-                        mapped_ios.update(platform_ios)
+                        # 过滤有效的IO口名称
+                        for potential_io in platform_ios:
+                            if self._is_valid_io_name(potential_io):
+                                mapped_ios.add(potential_io)
                     elif isinstance(platform_ios, str):
-                        mapped_ios.add(platform_ios)
+                        if self._is_valid_io_name(platform_ios):
+                            mapped_ios.add(platform_ios)
 
         return mapped_ios
+
+    def _is_valid_io_name(self, name: str) -> bool:
+        """检查是否是有效的IO口名称格式"""
+        if not name or not isinstance(name, str):
+            return False
+        
+        # P系列IO口 (P1, P2, ..., P10)
+        if re.match(r"^P\d+$", name):
+            return True
+        
+        # 其他标准IO口名称
+        standard_io_names = {
+            "L1", "L2", "L3",           # 开关系列
+            "A", "A2", "T", "V", "TR",  # 传感器系列 
+            "M", "SR", "KP", "EPA",     # 控制系列
+            "EE", "EP", "EQ",           # 扩展系列
+            "bright", "dark",           # 指示灯系列
+            "bright1", "bright2", "bright3",
+            "dark1", "dark2", "dark3",
+            "eB1", "eB2", "eB3", "eB4", # 扩展按键系列
+            "O", "B",                   # 基础开关
+        }
+        
+        return name in standard_io_names
 
     def _build_error_result(
         self,
@@ -3849,22 +3993,12 @@ if __name__ == "__main__":
 
         doc_ios_set = set(io_def["io"] for io_def in doc_device_ios[device])
 
-        # 从当前映射中提取IO口
-        mapped_ios_set = set()
+        # 从当前映射中提取IO口 - 使用修复后的方法
         device_config = DEVICE_MAPPING.get(device, {})
-
-        for platform, platform_config in device_config.items():
-            if platform in ["dynamic", "versioned"]:
-                continue
-            if isinstance(platform_config, dict):
-                for io_name in platform_config.keys():
-                    if io_name not in [
-                        "dynamic",
-                        "switch_mode",
-                        "climate_mode",
-                        "condition",
-                    ]:
-                        mapped_ios_set.add(io_name)
+        
+        # 使用DeviceAttributeAnalyzer来提取IO口（支持DYNAMIC和VERSIONED设备）
+        analyzer = DeviceAttributeAnalyzer()
+        mapped_ios_set = analyzer._extract_mapped_ios(device_config)
 
         # 计算匹配情况
         matched_ios = doc_ios_set & mapped_ios_set

@@ -39,7 +39,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
+from .core.const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
     CMD_TYPE_SET_RAW_OFF,
@@ -63,8 +63,8 @@ from .const import (
     ALL_EFFECT_LIST,
     ALL_EFFECT_MAP,
 )
-from .entity import LifeSmartEntity
-from .helpers import (
+from .core.entity import LifeSmartEntity
+from .core.helpers import (
     generate_unique_id,
     get_device_platform_mapping,
     safe_get,

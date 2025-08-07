@@ -17,7 +17,7 @@ from typing import Any
 
 from homeassistant.components.climate import HVACMode
 
-from ..const import (
+from .const import (
     # --- 命令类型常量 ---
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -39,7 +39,7 @@ from ..const import (
     REVERSE_LIFESMART_HVAC_MODE_MAP,
     REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
 )
-from ..helpers import safe_get
+from .helpers import safe_get
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -35,6 +35,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
+from .client_base import LifeSmartClientBase
 # aiohttp 版本兼容性处理
 from .compatibility import get_ws_timeout
 from .const import (
@@ -56,11 +57,10 @@ from .const import (
     MANUFACTURER,
     SUBDEVICE_INDEX_KEY,
 )
-from .core.client_base import LifeSmartClientBase
-from .core.local_tcp_client import LifeSmartLocalTCPClient
-from .core.openapi_client import LifeSmartOAPIClient
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 from .helpers import generate_unique_id
+from .local_tcp_client import LifeSmartLocalTCPClient
+from .openapi_client import LifeSmartOAPIClient
 
 _LOGGER = logging.getLogger(__name__)
 

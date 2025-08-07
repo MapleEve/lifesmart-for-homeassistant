@@ -27,7 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
+from .core.const import (
     # 核心常量
     DOMAIN,
     MANUFACTURER,
@@ -54,8 +54,8 @@ from .const import (
     # 增强版映射结构
     MULTI_PLATFORM_DEVICE_MAPPING,
 )
-from .entity import LifeSmartEntity
-from .helpers import (
+from .core.entity import LifeSmartEntity
+from .core.helpers import (
     generate_unique_id,
     get_device_platform_mapping,
     safe_get,
@@ -86,7 +86,7 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
 
     # 处理版本化设备
     if mapping.get("versioned"):
-        from .helpers import get_device_version
+        from .core.helpers import get_device_version
 
         device_version = get_device_version(device)
         if device_version and device_version in mapping:

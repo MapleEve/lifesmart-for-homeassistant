@@ -184,3 +184,69 @@ def create_service_call(
 def setup_logging():
     """设置兼容性日志"""
     _LOGGER.info("LifeSmart兼容性模块已加载")
+
+
+def get_button_device_class():
+    """
+    获取兼容的按钮设备类
+    
+    在不同HA版本中，ButtonDeviceClass的IDENTIFY属性支持情况不同：
+    - HA 2024.8+: 支持 ButtonDeviceClass.IDENTIFY ('identify')
+    - HA 2023.6.0: ButtonDeviceClass存在但没有IDENTIFY属性
+    """
+    try:
+        from homeassistant.components.button import ButtonDeviceClass
+        
+        # 检查是否支持 IDENTIFY 类型
+        if hasattr(ButtonDeviceClass, 'IDENTIFY'):
+            return ButtonDeviceClass.IDENTIFY
+        else:
+            # 早期版本没有 IDENTIFY 类型
+            _LOGGER.debug("当前HA版本不支持ButtonDeviceClass.IDENTIFY，使用None")
+            return None
+    except ImportError:
+        # 如果ButtonDeviceClass不存在，返回None
+        _LOGGER.debug("ButtonDeviceClass不可用，使用None")
+        return None
+
+
+def get_platform_constants():
+    """
+    获取兼容的平台常量
+    
+    某些平台类型在不同HA版本中支持情况不同：
+    - HA 2025.8.0+: EVENT, VALVE, AIR_QUALITY 全部支持
+    - HA 2023.6.0: 只支持 AIR_QUALITY，不支持 EVENT, VALVE
+    """
+    try:
+        from homeassistant.const import Platform
+        
+        # 检查各个平台是否存在，不存在就用字符串
+        platforms = {}
+        
+        # EVENT 平台 - 新版本支持
+        if hasattr(Platform, 'EVENT'):
+            platforms['EVENT'] = Platform.EVENT
+        else:
+            platforms['EVENT'] = 'event'  # 回退到字符串
+        
+        # VALVE 平台 - 新版本支持
+        if hasattr(Platform, 'VALVE'):
+            platforms['VALVE'] = Platform.VALVE  
+        else:
+            platforms['VALVE'] = 'valve'  # 回退到字符串
+            
+        # AIR_QUALITY 平台 - 大多数版本都支持
+        if hasattr(Platform, 'AIR_QUALITY'):
+            platforms['AIR_QUALITY'] = Platform.AIR_QUALITY
+        else:
+            platforms['AIR_QUALITY'] = 'air_quality'  # 回退到字符串
+        
+        return platforms
+    except ImportError:
+        # 如果Platform不存在，使用字符串
+        return {
+            'EVENT': 'event',
+            'VALVE': 'valve',
+            'AIR_QUALITY': 'air_quality'
+        }

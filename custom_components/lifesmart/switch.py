@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
+from .core.const import (
     DOMAIN,
     MANUFACTURER,
     HUB_ID_KEY,
@@ -22,8 +22,8 @@ from .const import (
     SUBDEVICE_INDEX_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
 )
-from .entity import LifeSmartEntity
-from .helpers import (
+from .core.entity import LifeSmartEntity
+from .core.helpers import (
     generate_unique_id,
     get_device_platform_mapping,
 )
