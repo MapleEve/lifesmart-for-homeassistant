@@ -21,8 +21,6 @@ from .const import (
     DEVICE_VERSION_KEY,
     SUBDEVICE_INDEX_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
-    SMART_PLUG_TYPES,
-    POWER_METER_PLUG_TYPES,
 )
 from .entity import LifeSmartEntity
 from .helpers import (
@@ -110,7 +108,11 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
     @callback
     def _determine_device_class(self) -> SwitchDeviceClass:
         """Determine device class for better UI representation."""
-        if self.devtype in (SMART_PLUG_TYPES | POWER_METER_PLUG_TYPES):
+        # Use device type patterns to determine UI class instead of legacy type sets
+        if any(
+            pattern in self.devtype.upper()
+            for pattern in ["OL", "OE", "PLUG", "OUTLET"]
+        ):
             return SwitchDeviceClass.OUTLET
         return SwitchDeviceClass.SWITCH
 

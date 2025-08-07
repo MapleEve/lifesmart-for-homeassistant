@@ -51,6 +51,8 @@ from .const import (
     WATER_SENSOR_TYPES,
     SUPPORTED_SWITCH_TYPES,
     CLIMATE_TYPES,
+    # 增强版映射结构
+    MULTI_PLATFORM_DEVICE_MAPPING,
 )
 from .entity import LifeSmartEntity
 from .helpers import (
@@ -58,9 +60,52 @@ from .helpers import (
     get_device_platform_mapping,
     safe_get,
     get_io_friendly_val,
+    expand_wildcard_ios,
+    get_enhanced_io_value,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
+    """
+    从增强版MULTI_PLATFORM_DEVICE_MAPPING中获取IO口的配置信息。
+
+    Args:
+        device: 设备字典
+        sub_key: IO口键名
+
+    Returns:
+        IO口的配置信息字典，如果不存在则返回None
+    """
+    device_type = device.get(DEVICE_TYPE_KEY)
+    if not device_type or device_type not in MULTI_PLATFORM_DEVICE_MAPPING:
+        return None
+
+    mapping = MULTI_PLATFORM_DEVICE_MAPPING[device_type]
+
+    # 处理版本化设备
+    if mapping.get("versioned"):
+        from .helpers import get_device_version
+
+        device_version = get_device_version(device)
+        if device_version and device_version in mapping:
+            mapping = mapping[device_version]
+        else:
+            return None
+
+    # 在sensor平台中查找IO配置
+    sensor_config = mapping.get("sensor")
+    if not sensor_config:
+        return None
+
+    # 检查是否为增强结构
+    if isinstance(sensor_config, dict) and sub_key in sensor_config:
+        io_config = sensor_config[sub_key]
+        if isinstance(io_config, dict) and "description" in io_config:
+            return io_config
+
+    return None
 
 
 async def async_setup_entry(
@@ -84,18 +129,40 @@ async def async_setup_entry(
         platform_mapping = get_device_platform_mapping(device)
         sensor_subdevices = platform_mapping.get(Platform.SENSOR, [])
 
-        # 为每个sensor子设备创建实体
+        # 展开通配符模式的IO口并为每个sensor子设备创建实体
+        device_data = device.get(DEVICE_DATA_KEY, {})
+
         for sub_key in sensor_subdevices:
-            sub_device_data = safe_get(device, DEVICE_DATA_KEY, sub_key, default={})
-            sensors.append(
-                LifeSmartSensor(
-                    raw_device=device,
-                    client=hub.get_client(),
-                    entry_id=config_entry.entry_id,
-                    sub_device_key=sub_key,
-                    sub_device_data=sub_device_data,
+            # 检查是否为通配符模式
+            if "*" in sub_key or "x" in sub_key:
+                # 展开通配符，获取实际的IO口列表
+                expanded_ios = expand_wildcard_ios(sub_key, device_data)
+                for expanded_io in expanded_ios:
+                    sub_device_data = safe_get(
+                        device, DEVICE_DATA_KEY, expanded_io, default={}
+                    )
+                    if sub_device_data:  # 只有当存在实际数据时才创建实体
+                        sensors.append(
+                            LifeSmartSensor(
+                                raw_device=device,
+                                client=hub.get_client(),
+                                entry_id=config_entry.entry_id,
+                                sub_device_key=expanded_io,
+                                sub_device_data=sub_device_data,
+                            )
+                        )
+            else:
+                # 非通配符模式，正常处理
+                sub_device_data = safe_get(device, DEVICE_DATA_KEY, sub_key, default={})
+                sensors.append(
+                    LifeSmartSensor(
+                        raw_device=device,
+                        client=hub.get_client(),
+                        entry_id=config_entry.entry_id,
+                        sub_device_key=sub_key,
+                        sub_device_data=sub_device_data,
+                    )
                 )
-            )
 
     async_add_entities(sensors)
 
@@ -147,6 +214,12 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
     @callback
     def _determine_device_class(self) -> SensorDeviceClass | None:
         """Automatically determine device class based on sub-device."""
+        # 首先尝试从增强版映射中获取设备类别
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if io_config and "device_class" in io_config:
+            return io_config["device_class"]
+
+        # 如果增强版映射中没有找到，回退到原有逻辑
         device_type = self._raw_device[DEVICE_TYPE_KEY]
         sub_key = self._sub_key
 
@@ -259,6 +332,12 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
     @callback
     def _determine_unit(self) -> str | None:
         """Map sub-device to unit."""
+        # 首先尝试从增强版映射中获取单位
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if io_config and "unit" in io_config:
+            return io_config["unit"]
+
+        # 如果增强版映射中没有找到，回退到基于设备类别的通用映射
         device_type = self._raw_device[DEVICE_TYPE_KEY]
         sub_key = self._sub_key
 
@@ -296,6 +375,12 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
     @callback
     def _determine_state_class(self) -> SensorStateClass | None:
         """Determine state class for long-term statistics."""
+        # 首先尝试从增强版映射中获取状态类别
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if io_config and "state_class" in io_config:
+            return io_config["state_class"]
+
+        # 如果增强版映射中没有找到，回退到基于设备类别的通用映射
         # 为传感器设置状态类别，以支持历史图表
         if self.device_class in {
             SensorDeviceClass.TEMPERATURE,
@@ -317,6 +402,16 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
     @callback
     def _extract_initial_value(self) -> float | int | None:
         """Extract initial value from device data."""
+        # 首先尝试使用增强版映射的转换逻辑
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if io_config:
+            enhanced_value = get_enhanced_io_value(
+                self._raw_device, self._sub_key, io_config
+            )
+            if enhanced_value is not None:
+                return enhanced_value
+
+        # 如果增强版映射没有找到或转换失败，回退到原有逻辑
         # 优先使用友好值
         value = self._sub_data.get("v")
         if value is not None:

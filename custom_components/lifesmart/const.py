@@ -13,7 +13,18 @@ from homeassistant.components.climate.const import (
     FAN_LOW,
     FAN_MEDIUM,
 )
-from homeassistant.const import Platform
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import (
+    Platform,
+    PERCENTAGE,
+    LIGHT_LUX,
+    UnitOfTemperature,
+    UnitOfElectricPotential,
+    UnitOfPower,
+    UnitOfEnergy,
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+)
 
 # ================= 重要技术说明 (Critical Technical Documentation) =================
 
@@ -462,6 +473,15 @@ VERSIONED_DEVICE_TYPES = {
         # IO口: P1(开关+亮度 RW) P2(指示灯亮度 RW)
         "V2": "triac_dimmer",
     },
+    # 白光调光灯版本区分 - 基于相同的IO口功能
+    "SL_LI_WW": {
+        # SL_LI_WW_V1智能灯泡(冷暖白) - 同SL_LI_WW规范
+        # IO口: P1(亮度控制 RW) P2(色温控制 RW)
+        "V1": "dimmable_light_v1",
+        # SL_LI_WW_V2调光调色智控器(0-10V) - 同SL_LI_WW规范
+        # IO口: P1(亮度控制 RW) P2(色温控制 RW)
+        "V2": "dimmable_light_v2",
+    },
     # 按钮开关版本区分 - 基于不同的按键检测能力
     "SL_SC_BB": {
         # SL_SC_BB_V1基础随心按键 - 简单按键检测
@@ -737,7 +757,8 @@ SUPPORTED_SWITCH_TYPES = {
     # P9(tF目标风速 RW)
     #   数据类型：整数风速级别
     #   属性值描述：val值表示风速，定义如下:
-    #               0:Stop停止, 0<val<30:Low低档, 30<=val<65:Medium中档, 65<=val<100:High高档, 101:Auto自动
+    #               0:Stop停止, 0<val<30:Low低档, 30<=val<65:Medium中档,
+    #               65<=val<100:High高档, 101:Auto自动
     #               注意:P6 CFG配置不同，支持的tF也会不同
     #   下发命令：type保持原样或type=0xCE, val值如下:
     #            0:Stop停止, 15:Low低档, 45:Medium中档, 75:High高档, 101:Auto自动
@@ -745,7 +766,8 @@ SUPPORTED_SWITCH_TYPES = {
     # P10(F当前风速 R)
     #   数据类型：整数风速级别
     #   属性值描述：val值表示风速，定义同tF相同
-    #               0:stop停止, 0<val<30:Low低档, 30<=val<65:Medium中档, 65<=val<100:High高档, 101:Auto自动
+    #               0:stop停止, 0<val<30:Low低档, 30<=val<65:Medium中档,
+    #               65<=val<100:High高档, 101:Auto自动
     #
     # 动态分类: P5&0xFF==1→switch平台, P5&0xFF==3/6→climate+sensor平台
     "SL_NATURE",
@@ -1962,16 +1984,14 @@ CLIMATE_TYPES = {
     #   开关控制：type&1==1表示打开; type&1==0表示关闭
     #   配置参数：val为配置参数,包含工作模式设置和儿童锁设置
     #   下发命令：开启type=0x81,val=配置值; 关闭type=0x80,val=配置值
+    #        最低位代表系统的开机状态 0:OFF 1:O val 的 bit 2~1 值为0表示⼿动模式；
+    #        值为1表示节能模式； 值为2表示⾃动模式； bit 0 值为0表示关闭⼉童锁；
+    #        值为1表示开启⼉童锁；
     #
-    # P2(阀门状态1 R) - 第一路阀门状态
-    #   数据类型：整数状态值
-    #   功能说明：阀门1状态(盘管的冷阀或盘管的冷热阀)
-    #   状态指示：显示阀门的开启程度或工作状态
-    #
-    # P3(阀门状态2 R) - 第二路阀门状态
-    #   数据类型：整数状态值
-    #   功能说明：阀门2状态(盘管的热阀或地暖阀)
-    #   双阀控制：支持冷热水分离控制或地暖独立控制
+    # P3(目标温度 RW) - 需要达到的温度
+    #   数据类型：整数温度值
+    #   属性值描述：v值表示实际温度值 val值表示原始温度值，它是温度值*10,单位:℃
+    #   温度检测：用于温控阀门的反馈控制
     #
     # P4(当前温度 R) - 室内当前温度
     #   数据类型：整数温度值
@@ -1981,13 +2001,12 @@ CLIMATE_TYPES = {
     # P5(告警 R) - 系统告警信息
     #   数据类型：整数告警位掩码
     #   告警类型：val告警信息位字段定义
-    #     bit0:高温保护告警, bit1:低温保护告警, bit4:低电量告警等
+    #     bit0:⾼温保护 bit1:低温保护 bit2:int_sensor bit3:ext_sensor bit4:低电量 bit5:设备掉线
     #   告警处理：根据不同位的状态判断具体告警类型
     #
     # P6(电量 R) - 电池电量状态
     #   数据类型：整数电压值
     #   属性值描述：val为原始电压值,v为电量百分比[0,100]
-    #   电池类型：通常为AA或锂电池,支持长期工作
     "SL_CP_VL",
     # 新风系统 SL_TR_ACIPM
     # IO口详细说明：
@@ -2414,13 +2433,14 @@ UNLOCK_METHOD = {
 #
 # 🔄 **新的设备平台映射架构**：
 # - 使用 helpers.py 中的 get_device_platform_mapping() 函数获取设备支持的平台
-# - 基于 MULTI_PLATFORM_DEVICE_MAPPING 和 STAR_SERIES_IO_MAPPING 精确映射
+# - 基于 MULTI_PLATFORM_DEVICE_MAPPING精确映射
 # - 支持单设备多平台，避免了设备重复定义问题
 # - 动态分类设备（如SL_NATURE、SL_P）根据IO状态自动判断平台归属
 #
 # 📋 **迁移指南**：
 # - 旧代码: `if device_type in ALL_SWITCH_TYPES`
-# - 新代码: `platforms = get_device_platform_mapping(device); if Platform.SWITCH in platforms`
+# - 新代码: `platforms = get_device_platform_mapping(device);`
+#           `if Platform.SWITCH in platforms`
 #
 # 🔍 **技术优势**：
 # - ✅ 消除设备重复定义
@@ -2448,6 +2468,7 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
             "condition": "P5&0xFF in [3,6]",
             "io": ["P1", "P6", "P7", "P8", "P9", "P10"],
             "sensor_io": ["P4", "P5"],
+            "binary_sensor_io": ["P2", "P3"],  # 超能面板和星玉面板的阀门开关检测
         },
     },
     # 通用控制器 - 动态分类：二元传感器/窗帘/开关
@@ -2488,24 +2509,90 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     },
     # ================= 开关设备 (Switch Devices) =================
     # 单一开关功能或主要开关功能的设备
-    # 基础插座开关
+    # ================= 基础插座系列 (Basic Outlet Series) =================
     "SL_OL": {
-        "switch": {"io": "O", "description": "插座开关控制"},
-    },
-    "OD_WE_OT1": {
-        "switch": {"io": "P1", "description": "海外版智能插座"},
-    },
-    "SL_OL_UK": {
-        "switch": {"io": "O", "description": "英式插座开关"},
+        "switch": {
+            "O": {
+                "description": "插座开关控制",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+        },
     },
     "SL_OL_3C": {
-        "switch": {"io": "O", "description": "3C版插座开关"},
+        "switch": {
+            "O": {
+                "description": "3C版插座开关控制",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+        },
+    },
+    "SL_OL_UK": {
+        "switch": {
+            "O": {
+                "description": "英标插座开关控制",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+        },
     },
     "SL_OL_UL": {
-        "switch": {"io": "O", "description": "UL版插座开关"},
+        "switch": {
+            "O": {
+                "description": "美标插座开关控制",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+        },
     },
     "SL_OL_DE": {
-        "switch": {"io": "O", "description": "德式插座开关"},
+        "switch": {
+            "O": {
+                "description": "德标插座开关控制",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+        },
+    },
+    "OD_WE_OT1": {
+        "switch": {
+            "P1": {
+                "description": "Wi-Fi插座开关控制",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+        },
     },
     # 开关控制器系列
     "SL_S": {
@@ -2546,28 +2633,6 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     },
     # ================= 开关+传感器设备 (Switch + Sensor Devices) =================
     # 同时具有开关和传感器功能的设备
-    # 计量插座系列 - 开关 + 电量传感器
-    "SL_OE_3C": {
-        "switch": {"io": ["P1", "P4"], "description": "插座开关控制和功率门限控制"},
-        "sensor": {
-            "io": ["P2", "P3", "P4"],
-            "description": "用电量、功率、功率门限监测",
-        },
-    },
-    "SL_OE_DE": {
-        "switch": {"io": ["P1", "P4"], "description": "插座开关控制和功率门限控制"},
-        "sensor": {
-            "io": ["P2", "P3", "P4"],
-            "description": "用电量、功率、功率门限监测",
-        },
-    },
-    "SL_OE_W": {
-        "switch": {"io": ["P1", "P4"], "description": "插座开关控制和功率门限控制"},
-        "sensor": {
-            "io": ["P2", "P3", "P4"],
-            "description": "用电量、功率、功率门限监测",
-        },
-    },
     # 恒星/辰星/极星系列 - 开关 + 电量传感器
     "SL_SW_ND1": {
         "switch": {"io": ["P1"], "description": "单键开关控制"},
@@ -2596,7 +2661,7 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     # 星玉情景面板 - 多开关
     "SL_SW_NS6": {
         "switch": {
-            "io": ["P1", "P2", "P3", "P4", "P5", "P6", "P7"],
+            "io": ["P1", "P2", "P3", "P4", "P5", "P6"],
             "description": "情景开关面板",
         },
     },
@@ -2729,9 +2794,6 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     "SL_SPWM": {
         "light": {"io": "P1", "description": "白光亮度控制"},
     },
-    "SL_LI_WW": {
-        "light": {"io": "_DIMMER", "description": "白光调光控制"},
-    },
     "SL_SW_WW": {
         "light": {"io": ["P1", "P2"], "description": "星玉调光开关亮度和色温控制"},
     },
@@ -2790,32 +2852,497 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
         "cover": {"io": ["P1", "P2", "P3"], "description": "三键窗帘控制"},
     },
     # ================= 传感器设备 (Sensor Devices) =================
-    # 纯传感器设备或传感器为主要功能的设备
-    # 环境传感器
+    # ================= 基础环境传感器 (Basic Environmental Sensors) =================
+    # 增强版映射结构 - 包含完整IO口信息
     "SL_SC_THL": {
-        "sensor": {"io": ["T", "H", "Z", "V"], "description": "温湿度光照电量传感器"},
+        "sensor": {
+            "T": {
+                "description": "当前环境温度",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",  # 只读
+                "data_type": "temperature_10x",  # val值是温度值*10
+                "conversion": "val_divide_10",  # 转换类型
+                "precision": 1,  # 小数位数
+            },
+            "H": {
+                "description": "当前环境湿度",
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "humidity_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "Z": {
+                "description": "当前环境光照",
+                "device_class": SensorDeviceClass.ILLUMINANCE,
+                "unit": LIGHT_LUX,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "raw_lux",
+                "conversion": "v_or_val",  # 优先使用v，不存在则使用val
+            },
+            "V": {
+                "description": "电池电量",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "voltage_to_percentage",
+                "conversion": "voltage_to_battery",
+                "range": [0, 100],
+            },
+        },
     },
     "SL_SC_BE": {
-        "sensor": {"io": ["T", "H", "Z", "V"], "description": "环境传感器+电量"},
+        "sensor": {
+            "T": {
+                "description": "当前环境温度",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "temperature_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "H": {
+                "description": "当前环境湿度",
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "humidity_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "Z": {
+                "description": "当前环境光照",
+                "device_class": SensorDeviceClass.ILLUMINANCE,
+                "unit": LIGHT_LUX,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "raw_lux",
+                "conversion": "v_or_val",
+            },
+            "V": {
+                "description": "电池电量",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "voltage_to_percentage",
+                "conversion": "voltage_to_battery",
+                "range": [0, 100],
+            },
+        },
     },
-    # 空气质量传感器
+    "SL_SC_B1": {
+        "sensor": {
+            "T": {
+                "description": "当前环境温度",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "temperature_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "H": {
+                "description": "当前环境湿度",
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "humidity_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "Z": {
+                "description": "当前环境光照",
+                "device_class": SensorDeviceClass.ILLUMINANCE,
+                "unit": LIGHT_LUX,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "raw_lux",
+                "conversion": "v_or_val",
+            },
+            "V": {
+                "description": "电池电量",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "voltage_to_percentage",
+                "conversion": "voltage_to_battery",
+                "range": [0, 100],
+            },
+        },
+    },
+    # ================= 空气质量传感器 (Air Quality Sensors) =================
     "SL_SC_CA": {
         "sensor": {
-            "io": ["P1", "P2", "P3", "P4", "P5"],
-            "description": "CO2传感器完整监测",
+            "P1": {
+                "description": "当前环境温度",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "temperature_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "P2": {
+                "description": "当前环境湿度",
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "humidity_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "P3": {
+                "description": "CO2浓度",
+                "device_class": SensorDeviceClass.CO2,
+                "unit": CONCENTRATION_PARTS_PER_MILLION,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "co2_ppm",
+                "conversion": "v_or_val",
+                "thresholds": {
+                    "excellent": {"max": 500, "label": "优"},
+                    "good": {"max": 700, "label": "良"},
+                    "moderate": {"max": 1000, "label": "中"},
+                    "poor": {"min": 1000, "label": "差"},
+                },
+            },
+            "P4": {
+                "description": "电池电量",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "voltage_to_percentage",
+                "conversion": "voltage_to_battery",
+                "range": [0, 100],
+            },
+            "P5": {
+                "description": "USB供电状态",
+                "device_class": SensorDeviceClass.VOLTAGE,
+                "unit": UnitOfElectricPotential.VOLT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "usb_power_voltage",
+                "conversion": "raw_value",
+                "threshold": 430,  # >430表示USB供电工作
+            },
         },
     },
     "SL_SC_CQ": {
         "sensor": {
-            "io": ["P1", "P2", "P3", "P4", "P5", "P6"],
-            "description": "CO2+TVOC环境传感器完整监测",
+            "P1": {
+                "description": "当前环境温度",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "temperature_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "P2": {
+                "description": "当前环境湿度",
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "humidity_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "P3": {
+                "description": "CO2浓度",
+                "device_class": SensorDeviceClass.CO2,
+                "unit": CONCENTRATION_PARTS_PER_MILLION,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "co2_ppm",
+                "conversion": "v_or_val",
+                "thresholds": {
+                    "excellent": {"max": 500, "label": "优"},
+                    "good": {"max": 700, "label": "良"},
+                    "moderate": {"max": 1000, "label": "中"},
+                    "poor": {"min": 1000, "label": "差"},
+                },
+            },
+            "P4": {
+                "description": "TVOC浓度",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "tvoc_1000x",  # val值是实际值*1000
+                "conversion": "val_divide_1000",
+                "precision": 3,
+                "thresholds": {
+                    "excellent": {"max": 0.34, "label": "优"},
+                    "good": {"max": 0.68, "label": "良"},
+                    "moderate": {"max": 1.02, "label": "中"},
+                    "poor": {"min": 1.02, "label": "差"},
+                },
+            },
+            "P5": {
+                "description": "电池电量",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "voltage_to_percentage",
+                "conversion": "voltage_to_battery",
+                "range": [0, 100],
+            },
+            "P6": {
+                "description": "USB供电状态",
+                "device_class": SensorDeviceClass.VOLTAGE,
+                "unit": UnitOfElectricPotential.VOLT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "usb_power_voltage",
+                "conversion": "raw_value",
+                "threshold": 430,  # >430表示USB供电工作
+            },
         },
     },
-    # 甲醛传感器 - 传感器 + 二元传感器 + 开关
     "SL_SC_CH": {
-        "binary_sensor": {"io": "P1", "description": "甲醛浓度告警"},
-        "sensor": {"io": ["P1", "P2"], "description": "甲醛浓度数值和告警门限监测"},
-        "switch": {"io": "P3", "description": "甲醛报警音控制"},
+        "sensor": {
+            "P1": {
+                "description": "甲醛浓度",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "formaldehyde_1000x",  # val值是实际值*1000
+                "conversion": "val_divide_1000",
+                "precision": 3,
+                "safe_range": [0, 86],  # 安全区间 0-86 ug/m³
+                "alarm_thresholds": {
+                    "no_alarm": 5000,
+                    "medium_sensitivity": 100,
+                    "high_sensitivity": 80,
+                },
+            },
+        },
+        "binary_sensor": {
+            "P1": {
+                "description": "甲醛浓度告警状态",
+                "rw": "R",
+                "data_type": "formaldehyde_alarm",
+                "conversion": "type_bit_0",  # type&1==1表示超过告警门限
+            },
+        },
+        "switch": {
+            "P2": {
+                "description": "甲醛告警门限设置",
+                "rw": "RW",
+                "data_type": "threshold_setting",
+                "conversion": "raw_value",
+                "commands": {
+                    "set_threshold": {"type": 0x8D, "val": "threshold_value"},
+                },
+                "presets": {
+                    "no_alarm": 5000,
+                    "medium": 100,
+                    "high": 80,
+                },
+            },
+            "P3": {
+                "description": "警报音控制",
+                "rw": "RW",
+                "data_type": "alarm_sound",
+                "conversion": "type_bit_0",  # type&1==1表示报警音正在响
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+        },
+    },
+    # ================= 计量插座系列 (Power Meter Outlets) =================
+    "SL_OE_3C": {
+        "switch": {
+            "P1": {
+                "description": "插座开关控制",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+            "P4": {
+                "description": "功率门限控制",
+                "rw": "RW",
+                "data_type": "power_threshold",
+                "commands": {
+                    "enable": {"type": 0x81, "val": 1},
+                    "disable": {"type": 0x80, "val": 0},
+                    "enable_with_threshold": {"type": 207, "val": "threshold_watts"},
+                    "disable_with_threshold": {"type": 206, "val": "threshold_watts"},
+                },
+                "range": [0, 3000],  # 0-3000W
+                "unit": UnitOfPower.WATT,
+            },
+        },
+        "sensor": {
+            "P2": {
+                "description": "累计用电量",
+                "device_class": SensorDeviceClass.ENERGY,
+                "unit": UnitOfEnergy.KILO_WATT_HOUR,
+                "state_class": SensorStateClass.TOTAL_INCREASING,
+                "rw": "R",
+                "data_type": "ieee754_float",
+                "conversion": "ieee754_float",
+                "precision": 5,
+            },
+            "P3": {
+                "description": "当前功率",
+                "device_class": SensorDeviceClass.POWER,
+                "unit": UnitOfPower.WATT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "ieee754_float",
+                "conversion": "ieee754_float",
+                "precision": 2,
+            },
+            "P4": {
+                "description": "功率门限值",
+                "device_class": SensorDeviceClass.POWER,
+                "unit": UnitOfPower.WATT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "integer",
+                "conversion": "raw_value",
+            },
+        },
+    },
+    "SL_OE_DE": {
+        "switch": {
+            "P1": {
+                "description": "插座开关控制",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+            "P4": {
+                "description": "功率门限控制",
+                "rw": "RW",
+                "data_type": "power_threshold",
+                "commands": {
+                    "enable": {"type": 0x81, "val": 1},
+                    "disable": {"type": 0x80, "val": 0},
+                    "enable_with_threshold": {"type": 207, "val": "threshold_watts"},
+                    "disable_with_threshold": {"type": 206, "val": "threshold_watts"},
+                },
+                "range": [0, 3000],
+                "unit": UnitOfPower.WATT,
+            },
+        },
+        "sensor": {
+            "P2": {
+                "description": "累计用电量",
+                "device_class": SensorDeviceClass.ENERGY,
+                "unit": UnitOfEnergy.KILO_WATT_HOUR,
+                "state_class": SensorStateClass.TOTAL_INCREASING,
+                "rw": "R",
+                "data_type": "ieee754_float",
+                "conversion": "ieee754_float",
+                "precision": 5,
+            },
+            "P3": {
+                "description": "当前功率",
+                "device_class": SensorDeviceClass.POWER,
+                "unit": UnitOfPower.WATT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "ieee754_float",
+                "conversion": "ieee754_float",
+                "precision": 2,
+            },
+            "P4": {
+                "description": "功率门限值",
+                "device_class": SensorDeviceClass.POWER,
+                "unit": UnitOfPower.WATT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "integer",
+                "conversion": "raw_value",
+            },
+        },
+    },
+    "SL_OE_W": {
+        "switch": {
+            "P1": {
+                "description": "插座开关控制",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+            "P4": {
+                "description": "功率门限控制",
+                "rw": "RW",
+                "data_type": "power_threshold",
+                "commands": {
+                    "enable": {"type": 0x81, "val": 1},
+                    "disable": {"type": 0x80, "val": 0},
+                    "enable_with_threshold": {"type": 207, "val": "threshold_watts"},
+                    "disable_with_threshold": {"type": 206, "val": "threshold_watts"},
+                },
+                "range": [0, 3000],
+                "unit": UnitOfPower.WATT,
+            },
+        },
+        "sensor": {
+            "P2": {
+                "description": "累计用电量",
+                "device_class": SensorDeviceClass.ENERGY,
+                "unit": UnitOfEnergy.KILO_WATT_HOUR,
+                "state_class": SensorStateClass.TOTAL_INCREASING,
+                "rw": "R",
+                "data_type": "ieee754_float",
+                "conversion": "ieee754_float",
+                "precision": 5,
+            },
+            "P3": {
+                "description": "当前功率",
+                "device_class": SensorDeviceClass.POWER,
+                "unit": UnitOfPower.WATT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "ieee754_float",
+                "conversion": "ieee754_float",
+                "precision": 2,
+            },
+            "P4": {
+                "description": "功率门限值",
+                "device_class": SensorDeviceClass.POWER,
+                "unit": UnitOfPower.WATT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "integer",
+                "conversion": "raw_value",
+            },
+        },
     },
     # 第三方传感器和计量器
     "ELIQ_EM": {
@@ -2842,20 +3369,15 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
                 "PHM",
                 "SMOKE",
                 "EP",
-                "EPF",
-                "EPFx",
-                "EF",
-                "EFx",
-                "EI",
-                "EIx",
-                "EV",
-                "EVx",
-                "EE",
-                "EEx",
+                "EPF*",  # 支持EPF和EPFx格式
+                "EF*",  # 支持EF和EFx格式
+                "EI*",  # 支持EI和EIx格式
+                "EV*",  # 支持EV和EVx格式
+                "EE*",  # 支持EE和EEx格式
             ],
             "description": "485多功能传感器",
         },
-        "switch": {"io": ["Lx"], "description": "485开关控制"},
+        "switch": {"io": ["L*"], "description": "485开关控制，支持Lx格式"},
     },
     "V_HG_XX": {
         "sensor": {"io": "P1", "description": "极速虚拟设备"},
@@ -3063,16 +3585,6 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
             "description": "C100门锁电池电量和历史开锁监测",
         },
     },
-    "SL_LK_DJ": {
-        "binary_sensor": {
-            "io": ["EVTLO", "ALM", "EVTBEL"],
-            "description": "锁状态、报警和门铃检测",
-        },
-        "sensor": {
-            "io": ["BAT", "EVTOP", "HISLK"],
-            "description": "电池电量、操作记录和历史开锁监测",
-        },
-    },
     # ================= 温控设备 (Climate Devices) =================
     # 纯温控设备或温控为主要功能的设备
     # 空调控制面板
@@ -3084,13 +3596,89 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
         "climate": {"io": ["O", "MODE", "F", "tT"], "description": "空调控制"},
         "sensor": {"io": "T", "description": "温度传感器"},
     },
-    # 地暖温控器
+    # ================= 温控设备 (Climate Devices) =================
     "SL_CP_DN": {
         "climate": {
-            "io": ["P1", "P2", "P3"],
-            "description": "地暖系统配置、继电器控制和目标温度设置",
+            "P1": {
+                "description": "地暖系统配置",
+                "rw": "RW",
+                "data_type": "complex_config",
+                "control_type": "system_config",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                    "set_config": {"type": "current", "val": "config_value"},
+                },
+                "config_bits": {
+                    "system_state": {"bit": 0, "description": "系统开关状态"},
+                    "mode": {"bits": [31], "description": "模式: 0手动/1自动"},
+                    "temp_limit": {"bits": [24, 19], "description": "限温值=val+40"},
+                    "control_mode": {"bits": [18, 17], "description": "控温模式"},
+                    "time_mode": {"bits": [16, 15], "description": "时段模式"},
+                    "external_sensor_diff": {
+                        "bits": [14, 11],
+                        "description": "外置探头差=(val-10)/2",
+                    },
+                    "internal_sensor_diff": {
+                        "bits": [10, 8],
+                        "description": "内置探头差=(val-10)/2",
+                    },
+                    "temp_correction": {
+                        "bits": [7, 3],
+                        "description": "温度修正=val/2+5",
+                    },
+                    "power_restore": {"bit": 1, "description": "停电后来电状态"},
+                    "backlight": {"bit": 0, "description": "背光设置"},
+                },
+            },
+            "P3": {
+                "description": "目标温度设置",
+                "rw": "RW",
+                "data_type": "temperature_10x",
+                "conversion": "val_divide_10",
+                "control_type": "target_temperature",
+                "commands": {
+                    "set_temperature": {"type": "current", "val": "temperature*10"},
+                },
+                "precision": 1,
+                "range": [5, 35],  # 5°C - 35°C
+                "unit": UnitOfTemperature.CELSIUS,
+            },
         },
-        "sensor": {"io": ["P4", "P5"], "description": "室内温度和底版温度监测"},
+        "switch": {
+            "P2": {
+                "description": "继电器开关控制",
+                "rw": "RW",
+                "data_type": "relay_switch",
+                "conversion": "type_bit_0",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1},
+                    "off": {"type": 0x80, "val": 0},
+                },
+            },
+        },
+        "sensor": {
+            "P4": {
+                "description": "室内温度",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "temperature_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+            "P5": {
+                "description": "底版温度",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "rw": "R",
+                "data_type": "temperature_10x",
+                "conversion": "val_divide_10",
+                "precision": 1,
+            },
+        },
     },
     "SL_DN": {
         "climate": {"io": ["P1", "P2", "P8"], "description": "地暖温控系统"},
@@ -3101,14 +3689,11 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     "SL_CP_AIR": {
         "climate": {"io": ["P1", "P2", "P4"], "description": "风机盘管控制"},
         "sensor": {"io": "P5", "description": "室内温度监测"},
-        "binary_sensor": {"io": "P3", "description": "风速状态"},
+        "binary_sensor": {"io": "P2", "description": "阀门状态检测"},
     },
     "SL_CP_VL": {
-        "climate": {"io": ["P1"], "description": "温控阀门开关和系统配置"},
-        "binary_sensor": {
-            "io": ["P2", "P3", "P5"],
-            "description": "双路阀门状态和告警检测",
-        },
+        "climate": {"io": ["P1", "P3"], "description": "温控阀门开关和目标温度设置"},
+        "binary_sensor": {"io": "P5", "description": "告警状态检测"},
         "sensor": {"io": ["P4", "P6"], "description": "当前温度和电量监测"},
     },
     "SL_FCU": {
@@ -3174,6 +3759,132 @@ MULTI_PLATFORM_DEVICE_MAPPING = {
     # 通过控制器接入的第三方设备
     "SL_DF_KP": {
         "binary_sensor": {"io": "P1", "description": "云防Keypad按键检测"},
+    },
+    # ================= 版本设备 (Versioned Devices) =================
+    # 这些设备在VERSIONED_DEVICE_TYPES中定义，需要独立的IO口映射
+    "SL_SW_DM1": {
+        "versioned": True,
+        "V1": {  # 动态调光开关版本 - 具有传感器和智能控制功能
+            "light": {"io": ["P1", "P2"], "description": "调光开关亮度和指示灯控制"},
+            "binary_sensor": {"io": "P3", "description": "移动检测"},
+            "sensor": {
+                "io": ["P4", "P5", "P6"],
+                "description": "环境光照、调光设置和动态设置监测",
+            },
+        },
+        "V2": {  # 星玉调光开关(可控硅)版本 - 基础调光功能
+            "light": {"io": ["P1", "P2"], "description": "调光开关亮度和指示灯控制"},
+            # V2版本不包含传感器功能
+        },
+    },
+    "SL_SC_BB": {
+        "versioned": True,
+        "V1": {  # 基础随心按键版本 - 简单按键检测
+            "binary_sensor": {
+                "B": {
+                    "description": "按键状态检测",
+                    "rw": "R",
+                    "data_type": "simple_button",
+                    "conversion": "binary_state",
+                    "states": {
+                        0: "未按下",
+                        1: "按下",
+                    },
+                },
+            },
+            "sensor": {
+                "V": {
+                    "description": "电池电量",
+                    "device_class": SensorDeviceClass.BATTERY,
+                    "unit": PERCENTAGE,
+                    "state_class": SensorStateClass.MEASUREMENT,
+                    "rw": "R",
+                    "data_type": "voltage_to_percentage",
+                    "conversion": "voltage_to_battery",
+                    "range": [0, 100],
+                    "voltage_range": [2000, 4200],  # 2V-4.2V
+                },
+            },
+        },
+        "V2": {  # 高级随心按键版本 - 支持复杂手势识别
+            "binary_sensor": {
+                "P1": {
+                    "description": "按键事件检测",
+                    "rw": "R",
+                    "data_type": "advanced_button_event",
+                    "conversion": "raw_value",
+                    "events": {
+                        1: "单击事件",
+                        2: "双击事件",
+                        255: "长按事件",
+                        0: "无事件",
+                    },
+                    "attributes": {
+                        "event_type": "get_button_event_type",
+                        "last_event": "get_last_event_time",
+                    },
+                },
+            },
+            "sensor": {
+                "P2": {
+                    "description": "电池电量",
+                    "device_class": SensorDeviceClass.BATTERY,
+                    "unit": PERCENTAGE,
+                    "state_class": SensorStateClass.MEASUREMENT,
+                    "rw": "R",
+                    "data_type": "voltage_to_percentage",
+                    "conversion": "voltage_to_battery",
+                    "range": [0, 100],
+                    "voltage_range": [2000, 4200],
+                },
+            },
+        },
+    },
+    "SL_LK_DJ": {
+        "versioned": True,
+        "V1": {  # 智能门锁C210版本
+            "binary_sensor": {
+                "io": ["EVTLO", "ALM"],
+                "description": "锁状态和报警检测",
+            },
+            "sensor": {
+                "io": ["BAT", "EVTOP", "HISLK"],
+                "description": "电池电量、操作记录和历史开锁监测",
+            },
+        },
+        "V2": {  # 智能门锁C200版本 - 包含门铃功能
+            "binary_sensor": {
+                "io": ["EVTLO", "ALM", "EVTBEL"],
+                "description": "锁状态、报警和门铃检测",
+            },
+            "sensor": {
+                "io": ["BAT", "EVTOP", "HISLK"],
+                "description": "电池电量、操作记录和历史开锁监测",
+            },
+        },
+    },
+    "SL_LI_WW": {
+        "versioned": True,
+        "V1": {  # 智能灯泡(冷暖白)版本
+            "light": {"io": ["P1", "P2"], "description": "亮度和色温控制"},
+        },
+        "V2": {  # 调光调色智控器(0-10V)版本
+            "light": {"io": ["P1", "P2"], "description": "亮度和色温控制"},
+        },
+    },
+    # ================= 窗帘设备 (Cover Devices) =================
+    # 缺失映射的窗帘控制设备
+    "SL_SW_WIN": {
+        "cover": {"io": ["OP", "CL", "ST"], "description": "窗帘开关停控制"},
+        "light": {"io": ["dark", "bright"], "description": "指示灯亮度控制"},
+    },
+    "SL_CN_IF": {
+        "cover": {"io": ["P1", "P2", "P3"], "description": "流光窗帘开关停控制"},
+        "light": {"io": ["P4", "P5", "P6"], "description": "指示灯颜色控制"},
+    },
+    "SL_ETDOOR": {
+        "cover": {"io": ["P2", "P3"], "description": "车库门状态和控制"},
+        "light": {"io": "P1", "description": "车库门灯光控制"},
     },
 }
 

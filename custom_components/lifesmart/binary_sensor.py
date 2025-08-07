@@ -34,17 +34,8 @@ from .const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     UNLOCK_METHOD,
-    # --- 设备类型常量导入 ---
-    GENERIC_CONTROLLER_TYPES,
-    GUARD_SENSOR_TYPES,
-    MOTION_SENSOR_TYPES,
-    LOCK_TYPES,
-    WATER_SENSOR_TYPES,
-    SMOKE_SENSOR_TYPES,
-    RADAR_SENSOR_TYPES,
-    DEFED_SENSOR_TYPES,
+    # --- 单个设备类型判断用 ---
     BUTTON_SWITCH_TYPES,
-    CLIMATE_TYPES,
 )
 from .entity import LifeSmartEntity
 from .helpers import (
@@ -158,7 +149,21 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         device_type = self.devtype
         sub_key = self._sub_key
 
-        if device_type in CLIMATE_TYPES:
+        # 温控设备的二元传感器
+        if device_type in {
+            "V_AIR_P",
+            "SL_CP_DN",
+            "SL_CP_AIR",
+            "SL_CP_VL",
+            "SL_TR_ACIPM",
+            "V_FRESH_P",
+            "SL_NATURE",
+            "SL_DN",
+            "SL_FCU",
+            "SL_UACCB",
+            "V_SZJSXR_P",
+            "V_T8600_P",
+        }:
             if sub_key == "P2":  # 地暖继电器, 风机盘管阀门
                 return (
                     BinarySensorDeviceClass.POWER
@@ -173,7 +178,7 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             return None
 
         # 门窗感应器
-        if device_type in GUARD_SENSOR_TYPES:
+        if device_type in {"SL_SC_G", "SL_SC_BG", "SL_SC_GS"}:
             if sub_key in {"G", "P1"}:
                 return BinarySensorDeviceClass.DOOR
             if sub_key in {"AXS", "P2"}:
@@ -182,34 +187,45 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
                 return None  # 通用二元传感器
 
         # 动态感应器
-        if device_type in MOTION_SENSOR_TYPES:
+        if device_type in {"SL_SC_MHW", "SL_SC_BM", "SL_SC_CM", "SL_BP_MZ"}:
             return BinarySensorDeviceClass.MOTION
 
         # 门锁
-        if device_type in LOCK_TYPES:
+        if device_type in {
+            "SL_LK_LS",
+            "SL_LK_GTM",
+            "SL_LK_AG",
+            "SL_LK_SG",
+            "SL_LK_YL",
+            "SL_P_BDLK",
+            "OD_JIUWANLI_LOCK1",
+            "SL_LK_SWIFTE",
+            "SL_LK_TY",
+            "SL_LK_DJ",
+        }:
             if sub_key == "EVTLO":
                 return BinarySensorDeviceClass.LOCK
             if sub_key == "ALM":
                 return BinarySensorDeviceClass.PROBLEM
 
         # 通用控制器
-        if device_type in GENERIC_CONTROLLER_TYPES:
+        if device_type in {"SL_P", "SL_JEMA"}:
             return BinarySensorDeviceClass.OPENING
 
         # 水浸传感器
-        if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
+        if device_type == "SL_SC_WA" and sub_key == "WA":
             return BinarySensorDeviceClass.MOISTURE
 
         # 烟雾感应器
-        if device_type in SMOKE_SENSOR_TYPES and sub_key == "P1":
+        if device_type == "SL_P_A" and sub_key == "P1":
             return BinarySensorDeviceClass.SMOKE
 
         # 人体存在感应器
-        if device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
+        if device_type == "SL_P_RM" and sub_key == "P1":
             return BinarySensorDeviceClass.OCCUPANCY
 
         # 云防系列设备类别
-        if device_type in DEFED_SENSOR_TYPES:
+        if device_type in {"SL_DF_GG", "SL_DF_MM", "SL_DF_SR", "SL_DF_BB", "SL_DF_KP"}:
             if device_type == "SL_DF_GG":
                 return BinarySensorDeviceClass.DOOR
             if device_type == "SL_DF_MM":
@@ -230,7 +246,7 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         type_val = self._sub_data.get("type", 0)
 
         # 门窗感应器特殊处理
-        if device_type in GUARD_SENSOR_TYPES:
+        if device_type in {"SL_SC_G", "SL_SC_BG", "SL_SC_GS"}:
             if device_type == "SL_SC_GS" and sub_key in {"P1", "P2"}:
                 return type_val & 1 == 1
             if device_type == "SL_SC_BG" and sub_key == "AXS":
@@ -238,15 +254,26 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             return val == 0 if sub_key == "G" else val != 0
 
         # 云防系列设备特殊处理
-        if device_type in DEFED_SENSOR_TYPES:
+        if device_type in {"SL_DF_GG", "SL_DF_MM", "SL_DF_SR", "SL_DF_BB", "SL_DF_KP"}:
             return type_val & 1 == 1
 
         # 动态感应器
-        if device_type in MOTION_SENSOR_TYPES:
+        if device_type in {"SL_SC_MHW", "SL_SC_BM", "SL_SC_CM", "SL_BP_MZ"}:
             return val != 0
 
         # 门锁事件
-        if device_type in LOCK_TYPES:
+        if device_type in {
+            "SL_LK_LS",
+            "SL_LK_GTM",
+            "SL_LK_AG",
+            "SL_LK_SG",
+            "SL_LK_YL",
+            "SL_P_BDLK",
+            "OD_JIUWANLI_LOCK1",
+            "SL_LK_SWIFTE",
+            "SL_LK_TY",
+            "SL_LK_DJ",
+        }:
             if sub_key == "EVTLO":
                 unlock_type = self._sub_data.get("type", 0)
                 unlock_user = val & 0xFFF
@@ -260,26 +287,39 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
                 return val > 0
 
         # 通用控制器
-        if device_type in GENERIC_CONTROLLER_TYPES:
+        if device_type in {"SL_P", "SL_JEMA"}:
             return type_val & 1 == 1
 
         # 水浸传感器
-        if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
+        if device_type == "SL_SC_WA" and sub_key == "WA":
             return val != 0  # 非0表示检测到水
 
         # 烟雾感应器
-        if device_type in SMOKE_SENSOR_TYPES and sub_key == "P1":
+        if device_type == "SL_P_A" and sub_key == "P1":
             return val != 0  # 非0表示检测到烟雾
 
         # 人体存在感应器
-        if device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
+        if device_type == "SL_P_RM" and sub_key == "P1":
             return val != 0  # 非0表示检测到人体存在
 
         # 云防门窗感应器
         if device_type == "SL_DF_GG" and sub_key == "A":
             return val == 0  # 云防门窗：0=开，1=关
 
-        if device_type in CLIMATE_TYPES:
+        if device_type in {
+            "V_AIR_P",
+            "SL_CP_DN",
+            "SL_CP_AIR",
+            "SL_CP_VL",
+            "SL_TR_ACIPM",
+            "V_FRESH_P",
+            "SL_NATURE",
+            "SL_DN",
+            "SL_FCU",
+            "SL_UACCB",
+            "V_SZJSXR_P",
+            "V_T8600_P",
+        }:
             if sub_key == "P5":  # 温控阀门告警 (val 是 bitmask)
                 return val > 0
             # 其他所有温控器的附属开关/阀门都遵循 type&1==1 为开启的规则
@@ -296,7 +336,22 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         val = self._sub_data.get("val", 0)
 
         # 门锁事件的特殊属性
-        if device_type in LOCK_TYPES and sub_key == "EVTLO":
+        if (
+            device_type
+            in {
+                "SL_LK_LS",
+                "SL_LK_GTM",
+                "SL_LK_AG",
+                "SL_LK_SG",
+                "SL_LK_YL",
+                "SL_P_BDLK",
+                "OD_JIUWANLI_LOCK1",
+                "SL_LK_SWIFTE",
+                "SL_LK_TY",
+                "SL_LK_DJ",
+            }
+            and sub_key == "EVTLO"
+        ):
             return {
                 "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
                 "unlocking_user": val & 0xFFF,
@@ -308,11 +363,26 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             }
 
         # 门锁报警的属性
-        if device_type in LOCK_TYPES and sub_key == "ALM":
+        if (
+            device_type
+            in {
+                "SL_LK_LS",
+                "SL_LK_GTM",
+                "SL_LK_AG",
+                "SL_LK_SG",
+                "SL_LK_YL",
+                "SL_P_BDLK",
+                "OD_JIUWANLI_LOCK1",
+                "SL_LK_SWIFTE",
+                "SL_LK_TY",
+                "SL_LK_DJ",
+            }
+            and sub_key == "ALM"
+        ):
             return {"alarm_type": val}
 
         # 水浸传感器的属性
-        if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
+        if device_type == "SL_SC_WA" and sub_key == "WA":
             return {"conductivity_level": val, "water_detected": val != 0}
 
         # 按钮开关类型初始化事件属性
