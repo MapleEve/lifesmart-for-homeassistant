@@ -11,6 +11,7 @@ LifeSmart 设备配置映射和helper函数。
 """
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.climate.const import (
     HVACMode,
     FAN_AUTO,
@@ -21,7 +22,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfEnergy, UnitOfPower
 
-from ..compatibility import get_button_device_class
+# 从const.py导入需要的常量
 from ..const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -1701,7 +1702,7 @@ DEVICE_MAPPING = {
                 "data_type": "button_state",
                 "conversion": "val_direct",
                 "detailed_description": "`val` 的值定义如下：- 0：未按下按键 - 1：按下按键",
-                "device_class": get_button_device_class(),
+                "device_class": ButtonDeviceClass.IDENTIFY,
             },
         },
         "sensor": {
@@ -1726,7 +1727,7 @@ DEVICE_MAPPING = {
                 "data_type": "button_events",
                 "conversion": "val_direct",
                 "detailed_description": "`type` 的值定义如下: `type&1==1`，表示有按键事件产生；`type&1==0`,表示按键事件消失；`val` 值指明按键事件类型，只有在 `type&1==1` 才有效，`val` 的值定义如下：1：单击事件 2：双击事件 255：长按事件",
-                "device_class": get_button_device_class(),
+                "device_class": ButtonDeviceClass.IDENTIFY,
             },
         },
         "sensor": {
