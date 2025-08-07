@@ -24,7 +24,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    Platform,
     PERCENTAGE,
     UnitOfTemperature,
     UnitOfEnergy,
@@ -664,7 +663,7 @@ DEVICE_MAPPING = {
         },
     },
     "SL_SW_RC2": {
-        "name": "随心开关二位",
+        "name": "流光开关二键",
         "switch": {
             "L1": {
                 "description": "第一路开关控制口",
@@ -690,48 +689,86 @@ DEVICE_MAPPING = {
             },
         },
         "light": {
-            "dark": {
-                "description": "关状态时指示灯亮度",
+            "dark1": {
+                "description": "第一路关状态时指示灯亮度",
                 "rw": "RW",
-                "data_type": "indicator_light",
+                "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
                 "commands": {
                     "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
                     "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
-                    "set_brightness_on": {
+                    "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置亮度值，val=亮度值",
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
-                    "set_brightness_off": {
+                    "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置亮度值，val=亮度值",
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
-            "bright": {
-                "description": "开状态时指示灯亮度",
+            "dark2": {
+                "description": "第二路关状态时指示灯亮度",
                 "rw": "RW",
-                "data_type": "indicator_light",
+                "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
                 "commands": {
                     "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
                     "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
-                    "set_brightness_on": {
+                    "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置亮度值，val=亮度值",
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
-                    "set_brightness_off": {
+                    "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置亮度值，val=亮度值",
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright1": {
+                "description": "第一路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright2": {
+                "description": "第二路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
         },
     },
     "SL_SW_RC3": {
-        "name": "随心开关三位",
+        "name": "流光开关三键",
         "switch": {
             "L1": {
                 "description": "第一路开关控制口",
@@ -768,41 +805,1280 @@ DEVICE_MAPPING = {
             },
         },
         "light": {
-            "dark": {
-                "description": "关状态时指示灯亮度",
+            "dark1": {
+                "description": "第一路关状态时指示灯亮度",
                 "rw": "RW",
-                "data_type": "indicator_light",
+                "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
                 "commands": {
                     "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
                     "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
-                    "set_brightness_on": {
+                    "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置亮度值，val=亮度值",
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
-                    "set_brightness_off": {
+                    "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置亮度值，val=亮度值",
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark2": {
+                "description": "第二路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark3": {
+                "description": "第三路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright1": {
+                "description": "第一路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright2": {
+                "description": "第二路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright3": {
+                "description": "第三路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.1 传统开关系列补充 (Traditional Switch Series Supplement)
+    "SL_SW_IF3": {
+        "name": "流光开关三键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L2": {
+                "description": "第二路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L3": {
+                "description": "第三路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark1": {
+                "description": "第一路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark2": {
+                "description": "第二路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark3": {
+                "description": "第三路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright1": {
+                "description": "第一路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright2": {
+                "description": "第二路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright3": {
+                "description": "第三路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SF_IF3": {
+        "name": "单火流光开关三键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L2": {
+                "description": "第二路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L3": {
+                "description": "第三路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark1": {
+                "description": "第一路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark2": {
+                "description": "第二路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark3": {
+                "description": "第三路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright1": {
+                "description": "第一路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright2": {
+                "description": "第二路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright3": {
+                "description": "第三路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_CP3": {
+        "name": "橙朴开关三键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L2": {
+                "description": "第二路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L3": {
+                "description": "第三路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark1": {
+                "description": "第一路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark2": {
+                "description": "第二路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark3": {
+                "description": "第三路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright1": {
+                "description": "第一路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright2": {
+                "description": "第二路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright3": {
+                "description": "第三路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_IF2": {
+        "name": "零火流光开关二键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L2": {
+                "description": "第二路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark1": {
+                "description": "第一路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark2": {
+                "description": "第二路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright1": {
+                "description": "第一路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright2": {
+                "description": "第二路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SF_IF2": {
+        "name": "单火流光开关二键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L2": {
+                "description": "第二路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark1": {
+                "description": "第一路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark2": {
+                "description": "第二路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright1": {
+                "description": "第一路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright2": {
+                "description": "第二路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_CP2": {
+        "name": "橙朴开关二键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L2": {
+                "description": "第二路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark1": {
+                "description": "第一路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark2": {
+                "description": "第二路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright1": {
+                "description": "第一路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright2": {
+                "description": "第二路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_FE2": {
+        "name": "塞纳开关二键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "L2": {
+                "description": "第二路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark1": {
+                "description": "第一路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "dark2": {
+                "description": "第二路关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright1": {
+                "description": "第一路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright2": {
+                "description": "第二路开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_IF1": {
+        "name": "零火流光开关单键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark": {
+                "description": "关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright": {
                 "description": "开状态时指示灯亮度",
                 "rw": "RW",
-                "data_type": "indicator_light",
+                "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SF_IF1": {
+        "name": "单火流光开关单键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark": {
+                "description": "关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
                 "commands": {
                     "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
                     "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
-                    "set_brightness_on": {
+                    "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置亮度值，val=亮度值",
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
-                    "set_brightness_off": {
+                    "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置亮度值，val=亮度值",
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright": {
+                "description": "开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_CP1": {
+        "name": "橙朴开关单键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark": {
+                "description": "关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright": {
+                "description": "开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_FE1": {
+        "name": "塞纳开关单键",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark": {
+                "description": "关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright": {
+                "description": "开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_OL_W": {
+        "name": "智慧插座开关版",
+        "switch": {
+            "L1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "light": {
+            "dark": {
+                "description": "关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+            "bright": {
+                "description": "开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -810,6 +2086,7 @@ DEVICE_MAPPING = {
     },
     # 2.2.2 恒星/辰星/极星开关系列 (Star Series Switch)
     "SL_SW_ND1": {
+        "name": "恒星开关一键",
         "switch": {
             "P1": {
                 "description": "开关",
@@ -837,6 +2114,7 @@ DEVICE_MAPPING = {
         },
     },
     "SL_SW_ND2": {
+        "name": "恒星开关二键",
         "switch": {
             "P1": {
                 "description": "开关",
@@ -875,6 +2153,7 @@ DEVICE_MAPPING = {
         },
     },
     "SL_SW_ND3": {
+        "name": "恒星开关三键",
         "switch": {
             "P1": {
                 "description": "开关",
@@ -923,8 +2202,126 @@ DEVICE_MAPPING = {
             },
         },
     },
+    "SL_MC_ND1": {
+        "name": "恒星/辰星开关伴侣一键",
+        "switch": {
+            "P1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "sensor": {
+            "P2": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery_level",
+                "conversion": "voltage_to_percentage",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    "SL_MC_ND2": {
+        "name": "恒星/辰星开关伴侣二键",
+        "switch": {
+            "P1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "P2": {
+                "description": "第二路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "sensor": {
+            "P3": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery_level",
+                "conversion": "voltage_to_percentage",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    "SL_MC_ND3": {
+        "name": "恒星/辰星开关伴侣三键",
+        "switch": {
+            "P1": {
+                "description": "第一路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "P2": {
+                "description": "第二路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+            "P3": {
+                "description": "第三路开关控制口",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "sensor": {
+            "P4": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery_level",
+                "conversion": "voltage_to_percentage",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
     # 2.2.3 开关控制器系列 (Switch Controller Series)
     "SL_S": {
+        "name": "单路开关控制器",
         "switch": {
             "P2": {
                 "description": "开关",
@@ -940,6 +2337,7 @@ DEVICE_MAPPING = {
         },
     },
     "SL_SPWM": {
+        "name": "PWM调光开关控制器",
         "switch": {
             "P1": {
                 "description": "开关",
@@ -963,6 +2361,7 @@ DEVICE_MAPPING = {
         },
     },
     "SL_P_SW": {
+        "name": "九路开关控制器",
         "switch": {
             "P1": {
                 "description": "开关",
@@ -1067,6 +2466,7 @@ DEVICE_MAPPING = {
     },
     # 2.2.4 随心开关 (CUBE Clicker)
     "SL_SC_BB": {
+        "name": "随心开关",
         "button": {
             "B": {
                 "description": "按键状态",
@@ -1090,8 +2490,34 @@ DEVICE_MAPPING = {
             },
         },
     },
+    "SL_SC_BB_V2": {
+        "name": "随心按键",
+        "button": {
+            "P1": {
+                "description": "按键状态",
+                "rw": "R",
+                "data_type": "button_events",
+                "conversion": "val_direct",
+                "detailed_description": "`type` 的值定义如下: `type&1==1`，表示有按键事件产生；`type&1==0`,表示按键事件消失；`val` 值指明按键事件类型，只有在 `type&1==1` 才有效，`val` 的值定义如下：1：单击事件 2：双击事件 255：长按事件",
+                "device_class": ButtonDeviceClass.IDENTIFY,
+            },
+        },
+        "sensor": {
+            "P2": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery_level",
+                "conversion": "voltage_to_percentage",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0，100]，它是根据 `val` 电压值换算的。",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
     # 2.2.5 奇点开关模块系列 (Singularity Switch Module Series)
     "SL_SW_MJ1": {
+        "name": "奇点开关模块一键",
         "switch": {
             "P1": {
                 "description": "开关",
@@ -1107,6 +2533,7 @@ DEVICE_MAPPING = {
         },
     },
     "SL_SW_MJ2": {
+        "name": "奇点开关模块二键",
         "switch": {
             "P1": {
                 "description": "开关",
@@ -1133,6 +2560,7 @@ DEVICE_MAPPING = {
         },
     },
     "SL_SW_MJ3": {
+        "name": "奇点开关模块三键",
         "switch": {
             "P1": {
                 "description": "开关",
@@ -1165,6 +2593,740 @@ DEVICE_MAPPING = {
                 "commands": {
                     "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
                     "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+    },
+    # ================= 2.3 窗帘控制系列 (Curtain Controller) =================
+    # 2.3.1 窗帘控制开关
+    "SL_SW_WIN": {
+        "name": "窗帘控制开关",
+        "cover": {
+            "OP": {
+                "description": "打开窗帘",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示打开窗帘",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行打开窗帘"},
+                },
+            },
+            "ST": {
+                "description": "停止 (stop)",
+                "rw": "RW", 
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示停止当前动作",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行停止窗帘"},
+                },
+            },
+            "CL": {
+                "description": "关闭窗帘 (close)",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0", 
+                "detailed_description": "`type&1==1`表示关闭窗帘",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行关闭窗帘"},
+                },
+            },
+        },
+        "light": {
+            "dark": {
+                "description": "关闭状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "brightness_light",
+                "conversion": "val_direct",
+                "range": "0~1023",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val`表示指示灯亮度值，取值范围：0~1023",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_brightness_on": {"type": CMD_TYPE_SET_RAW_ON, "description": "开灯并设置亮度值，val=亮度值"},
+                    "set_brightness_off": {"type": CMD_TYPE_SET_RAW_OFF, "description": "关灯并设置亮度值，val=亮度值"},
+                },
+            },
+            "bright": {
+                "description": "开启状态时指示灯亮度",
+                "rw": "RW", 
+                "data_type": "brightness_light",
+                "conversion": "val_direct",
+                "range": "0~1023",
+                "detailed_description": "`val`表示指示灯亮度值，取值范围：0~1023",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_brightness_on": {"type": CMD_TYPE_SET_RAW_ON, "description": "开灯并设置亮度值，val=亮度值"},
+                    "set_brightness_off": {"type": CMD_TYPE_SET_RAW_OFF, "description": "关灯并设置亮度值，val=亮度值"},
+                },
+            },
+        },
+    },
+    "SL_CN_IF": {
+        "name": "流光窗帘控制器",
+        "cover": {
+            "P1": {
+                "description": "打开窗帘",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示打开窗帘",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行打开窗帘"},
+                },
+            },
+            "P2": {
+                "description": "停止 (stop)",
+                "rw": "RW",
+                "data_type": "binary_switch", 
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示停止当前动作",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行停止窗帘"},
+                },
+            },
+            "P3": {
+                "description": "关闭窗帘 (close)",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示关闭窗帘",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行关闭窗帘"},
+                },
+            },
+        },
+        "light": {
+            "P4": {
+                "description": "打开面板指示灯的颜色值",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct", 
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val`表示指示灯亮度值，定义如下：（当`White>0`时，表示动态模式）具体动态值请参考：附录3.1动态颜色(`DYN`)定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {"type": CMD_TYPE_SET_RAW_ON, "description": "开灯并设置颜色或动态值，val=颜色或动态值"},
+                    "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF, "description": "关灯并设置颜色值或动态值，val=颜色或动态值"},
+                },
+            },
+            "P5": {
+                "description": "停止(stop)时指示灯的颜色值",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭;`val`表示指示灯亮度值，定义如下：`bit0~bit7`:Blue, `bit8~bit15`:Green, `bit16~bit23`:Red, `bit24~bit31`:White, （当`White>0`时，表示动态模式）具体动态值请参考：附录3.1动态颜色(`DYN`)定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {"type": CMD_TYPE_SET_RAW_ON, "description": "开灯并设置颜色或动态值，val=颜色或动态值"},
+                    "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF, "description": "关灯并设置颜色值或动态值，val=颜色或动态值"},
+                },
+            },
+            "P6": {
+                "description": "关闭面板指示灯的颜色值",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val`表示指示灯亮度值，定义如下：`bit24~bit31`:White, （当`White>0`时，表示动态模式）具体动态值请参考：附录3.1动态颜色(`DYN`)定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {"type": CMD_TYPE_SET_RAW_ON, "description": "开灯并设置颜色或动态值，val=颜色或动态值"},
+                    "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF, "description": "关灯并设置颜色值或动态值，val=颜色或动态值"},
+                },
+            },
+        },
+    },
+    "SL_CN_FE": {
+        "name": "塞纳三键窗帘",
+        "cover": {
+            "P1": {
+                "description": "打开窗帘",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示打开窗帘",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行打开窗帘"},
+                },
+            },
+            "P2": {
+                "description": "停止 (stop)",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0", 
+                "detailed_description": "`type&1==1`表示停止当前动作",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行停止窗帘"},
+                },
+            },
+            "P3": {
+                "description": "关闭窗帘",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示关闭窗帘",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行关闭窗帘"},
+                },
+            },
+        },
+    },
+    # 2.3.2 DOOYA窗帘电机
+    "SL_DOOYA": {
+        "name": "DOOYA窗帘电机",
+        "cover": {
+            "P1": {
+                "description": "窗帘状态",
+                "rw": "R",
+                "data_type": "position_status",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1`表示控制正在运行；`type&1==0`表示没有运行；当正在运行的时候即(`type&1==1`):,`val%0x80==0x80`表示正在开，否则表示正在关；`val%0x7F`的值表示窗帘打开的百分比([0,100]);若`val%0x7F`大于100则表示获取不到位置信息，只有执行全开或全关之后才能重新获取位置信息。",
+            },
+            "P2": {
+                "description": "窗帘控制",
+                "rw": "W",
+                "data_type": "position_control",
+                "conversion": "val_direct",
+                "commands": {
+                    "open": {"type": 0xCF, "val": 100, "description": "完全打开"},
+                    "close": {"type": 0xCF, "val": 0, "description": "完全关闭"},
+                    "stop": {"type": 0xCE, "val": 0x80, "description": "停止窗帘"},
+                    "set_position": {"type": 0xCF, "description": "开到百分比，val=percent，percent取值:[0,100]"},
+                },
+            },
+        },
+    },
+    # 2.3.3 智界窗帘电机智控器
+    "SL_P_V2": {
+        "name": "智界窗帘电机智控器",
+        "cover": {
+            "P2": {
+                "description": "打开窗帘 (open)",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示打开窗帘",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行打开窗帘"},
+                },
+            },
+            "P3": {
+                "description": "关闭窗帘 (close)",
+                "rw": "RW", 
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示关闭窗帘",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行关闭窗帘"},
+                },
+            },
+            "P4": {
+                "description": "停止 (stop)",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示停止当前动作",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "执行停止窗帘"},
+                },
+            },
+        },
+        "sensor": {
+            "P8": {
+                "description": "电压(V)",
+                "rw": "R",
+                "data_type": "voltage",
+                "conversion": "friendly_val",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0，100]，它是根据val电压值换算的。",
+                "device_class": SensorDeviceClass.VOLTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    # ================= 2.4 灯光系列 (Light Series) =================
+    # 2.4.1 灯光系列 (RGBW/RGB Light Series)
+    "SL_CT_RGBW": {
+        "name": "RGBW灯带",
+        "light": {
+            "RGBW": {
+                "description": "RGBW颜色值",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "range": "0x00000000-0xFFFFFFFF",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:White，例如：红色：0x00FF0000, 白色：0xFF000000",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色值，val=颜色值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值，val=颜色值",
+                    },
+                },
+            },
+            "DYN": {
+                "description": "动态颜色值",
+                "rw": "RW",
+                "data_type": "dynamic_effect",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1`表示打开动态；`type&1==0`表示关闭动态；`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义",
+                "commands": {
+                    "enable": {"type": CMD_TYPE_ON, "val": 1, "description": "使能"},
+                    "disable": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_effect_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "使能并设置动态值，val=动态值",
+                    },
+                    "set_effect_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关闭并设置动态值，val=动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_LI_RGBW": {
+        "name": "RGBW灯泡",
+        "light": {
+            "RGBW": {
+                "description": "RGBW颜色值",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "range": "0x00000000-0xFFFFFFFF",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:White，例如：红色：0x00FF0000, 白色：0xFF000000",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色值，val=颜色值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值，val=颜色值",
+                    },
+                },
+            },
+            "DYN": {
+                "description": "动态颜色值",
+                "rw": "RW",
+                "data_type": "dynamic_effect",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1`表示打开动态；`type&1==0`表示关闭动态；`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义",
+                "commands": {
+                    "enable": {"type": CMD_TYPE_ON, "val": 1, "description": "使能"},
+                    "disable": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_effect_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "使能并设置动态值，val=动态值",
+                    },
+                    "set_effect_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关闭并设置动态值，val=动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_RGB": {
+        "name": "RGB灯带无白光",
+        "light": {
+            "RGB": {
+                "description": "RGB颜色值",
+                "rw": "RW",
+                "data_type": "rgb_light",
+                "conversion": "val_direct",
+                "range": "0x00000000-0xFFFFFFFF",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:White, （当White>=128时，表示动态模式）具体动态值请参考：附录3.2动态颜色（DYN）定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    # 2.4.2 量子灯 (Quantum Light)
+    "OD_WE_QUAN": {
+        "name": "量子灯",
+        "light": {
+            "P1": {
+                "description": "亮度控制",
+                "rw": "RW",
+                "data_type": "brightness_light",
+                "conversion": "val_direct",
+                "range": "0-100",
+                "detailed_description": "`type&1==1`表示打开(忽略`val` 值)；`type&1==0`表示关闭(忽略`val` 值)；`val`指示灯光的亮度值范围[0,100]，100亮度最大",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯(打开)"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯(关闭)"},
+                    "set_brightness": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置亮度，val=亮度值[0，100]",
+                    },
+                },
+            },
+            "P2": {
+                "description": "颜色控制",
+                "rw": "RW",
+                "data_type": "quantum_light",
+                "conversion": "val_direct",
+                "range": "0x00000000-0xFFFFFFFF",
+                "detailed_description": "`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:White, （当White>0时，表示动态模式）具体动态值请参考：附录3.2动态颜色(DYN)定义, 附录3.3量子灯特殊(DYN)定义",
+                "commands": {
+                    "set_color": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "设置颜色或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    # 2.4.3 调光调色控制器/白光智能灯泡 (Smart Bulb)
+    "SL_LI_WW": {
+        "name": "调光调色控制器",
+        "light": {
+            "P1": {
+                "description": "亮度控制",
+                "rw": "RW",
+                "data_type": "brightness_light",
+                "conversion": "val_direct",
+                "range": "0-255",
+                "detailed_description": "`type&1==1`,表示打开(忽略`val` 值);`type&1==0`,表示关闭(忽略`val` 值)；val指示灯光的亮度值范围[0，255]，255亮度最大",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_brightness": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置亮度，val=亮度值[0，255]",
+                    },
+                },
+            },
+            "P2": {
+                "description": "色温控制",
+                "rw": "RW",
+                "data_type": "color_temperature",
+                "conversion": "val_direct",
+                "range": "0-255",
+                "detailed_description": "`val` 值为色温值，取值范围[0，255]，0表示暖光，255表示冷光",
+                "commands": {
+                    "set_color_temp": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置色温，val=色温值[0，255]",
+                    },
+                },
+            },
+        },
+    },
+    # 2.4.4 门廊壁灯 (Porch Wall Lamp)
+    "SL_LI_GD1": {
+        "name": "门廊壁灯",
+        "light": {
+            "P1": {
+                "description": "开关",
+                "rw": "RW",
+                "data_type": "brightness_light",
+                "conversion": "val_direct",
+                "range": "0-255",
+                "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0，255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_brightness_on": {
+                        "type": 207,
+                        "description": "打开并且设置亮度，val=亮度值[0,255]",
+                    },
+                    "set_brightness_off": {
+                        "type": 206,
+                        "description": "关闭并设置亮度，val=亮度值[0,255]",
+                    },
+                },
+            },
+        },
+        "binary_sensor": {
+            "P2": {
+                "description": "移动检测",
+                "rw": "R",
+                "data_type": "motion",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下: 0：没有检测到移动, 1:有检测到移动",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        },
+        "sensor": {
+            "P3": {
+                "description": "环境光照",
+                "rw": "R",
+                "data_type": "illuminance",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值表示原始光照值(单位：lux)",
+                "device_class": SensorDeviceClass.ILLUMINANCE,
+                "unit_of_measurement": "lux",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    # 2.4.5 花园地灯 (Garden Landscape Light)
+    "SL_LI_UG1": {
+        "name": "花园地灯",
+        "light": {
+            "P1": {
+                "description": "开关/颜色设置",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "range": "0x00000000-0xFFFFFFFF",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White/DYN。例如：红色：`0x00FF0000`, 白色：`0xFF000000`。`bit24~bit31`即可以设置白光又可以设置动态。当其值在[0~100]表示设置的是白光，0表示不显示白光，100表示白光最亮；当其值大于等于128表示设置为动态模式，具体动态值请参考：附录3.2 动态颜色(DYN)定义",
+                "commands": {
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+        "sensor": {
+            "P2": {
+                "description": "环境光照",
+                "rw": "R",
+                "data_type": "illuminance",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值表示光照值(单位: lux)",
+                "device_class": SensorDeviceClass.ILLUMINANCE,
+                "unit_of_measurement": "lux",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P3": {
+                "description": "充电指示",
+                "rw": "R",
+                "data_type": "charging_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：没有充电, 1：正在充电，`val`表示原始电压值",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": "V",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P4": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery_level",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值,`v` 值将表示当前剩余电量百分比，值范围[0，100]，它是根据val电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    # 2.5 超级碗 (SPOT Series)
+    "MSL_IRCTL": {
+        "name": "超级碗RGB灯",
+        "light": {
+            "RGBW": {
+                "description": "RGB颜色值",
+                "rw": "RW",
+                "data_type": "rgbw_light",
+                "conversion": "val_direct",
+                "range": "0x00000000-0xFFFFFFFF",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:white，例如：红色：0x00FF0000, 白色：0xFF000000",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色值，val=颜色值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值，val=颜色值",
+                    },
+                },
+            },
+            "DYN": {
+                "description": "动态颜色值",
+                "rw": "RW",
+                "data_type": "dynamic_effect",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1`表示打开动态；`type&1==0`表示关闭动态；`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义",
+                "commands": {
+                    "enable": {"type": CMD_TYPE_ON, "val": 1, "description": "使能"},
+                    "disable": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_effect_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "使能并设置动态值，val=动态值",
+                    },
+                    "set_effect_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关闭并设置动态值，val=动态值",
+                    },
+                },
+            },
+        },
+    },
+    "OD_WE_IRCTL": {
+        "name": "超级碗RGB灯(OD)",
+        "light": {
+            "RGB": {
+                "description": "RGB颜色值",
+                "rw": "RW",
+                "data_type": "rgb_light",
+                "conversion": "val_direct",
+                "range": "0x00000000-0xFFFFFFFF",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:white，例如：红色：0x00FF0000, 白色：0x00FFFFFF, （当White>0时，表示动态模式）具体动态值请参考：附录3.2动态颜色(DYN)定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SPOT": {
+        "name": "超级碗RGB灯",
+        "light": {
+            "RGB": {
+                "description": "RGB颜色值",
+                "rw": "RW",
+                "data_type": "rgb_light",
+                "conversion": "val_direct",
+                "range": "0x00000000-0xFFFFFFFF",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:white, （当White>0时，表示动态模式）具体动态值请参考：附录3.2动态颜色(DYN)定义",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_color_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    },
+                    "set_color_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_LI_IR": {
+        "name": "红外吸顶灯",
+        "light": {
+            "P1": {
+                "description": "亮度控制",
+                "rw": "RW",
+                "data_type": "brightness_light",
+                "conversion": "val_direct",
+                "range": "0-255",
+                "detailed_description": "`type&1==1`，表示打开(忽略`val` 值)；`type&1==0`，表示关闭(忽略`val` 值)；`val` 值为亮度值，值范围[0，255]，255亮度最大",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_brightness": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置亮度，val=亮度值[0，255]",
+                    },
+                },
+            },
+            "P2": {
+                "description": "色温控制",
+                "rw": "RW",
+                "data_type": "color_temperature",
+                "conversion": "val_direct",
+                "range": "0-255",
+                "detailed_description": "`val` 值为色温值，取值范围[0，255]，0表示暖光，255表示冷光",
+                "commands": {
+                    "set_color_temp": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置色温，val=色温值[0,255]",
+                    },
+                },
+            },
+            "P3": {
+                "description": "夜灯亮度控制",
+                "rw": "RW",
+                "data_type": "nightlight_brightness",
+                "conversion": "val_direct",
+                "range": "0,63,127,195,255",
+                "detailed_description": "`val` 值为夜灯亮度，共有5档，亮度从低到高分别如下：0、63、127、195、255。0表示夜灯处于关闭状态，255表示夜灯处于最亮状态。注意：若亮度值为其它值则根据如下规则判断亮度档位：0：关闭档，>=196：最亮档，>=128并且<=195：次亮档，>=64并且<=127：第三亮档，>0并且<=63：第四亮档",
+                "commands": {
+                    "set_brightness": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置亮度，val=亮度值[0、63、127、195、255]",
+                    },
+                },
+            },
+        },
+    },
+    "SL_P_IR": {
+        "name": "红外模块",
+        "light": {
+            "P1": {
+                "description": "亮度控制",
+                "rw": "RW",
+                "data_type": "brightness_light",
+                "conversion": "val_direct",
+                "range": "0-255",
+                "detailed_description": "`type&1==1`，表示打开(忽略`val` 值)；`type&1==0`，表示关闭(忽略`val` 值)；`val` 值为亮度值，值范围[0，255]，255亮度最大",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_brightness": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置亮度，val=亮度值[0，255]",
+                    },
+                },
+            },
+            "P2": {
+                "description": "色温控制",
+                "rw": "RW",
+                "data_type": "color_temperature",
+                "conversion": "val_direct",
+                "range": "0-255",
+                "detailed_description": "`val` 值为色温值，取值范围[0，255]，0表示暖光，255表示冷光",
+                "commands": {
+                    "set_color_temp": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置色温，val=色温值[0,255]",
+                    },
+                },
+            },
+            "P3": {
+                "description": "夜灯亮度控制",
+                "rw": "RW",
+                "data_type": "nightlight_brightness",
+                "conversion": "val_direct",
+                "range": "0,63,127,195,255",
+                "detailed_description": "`val` 值为夜灯亮度，共有5档，亮度从低到高分别如下：0、63、127、195、255。0表示夜灯处于关闭状态，255表示夜灯处于最亮状态。注意：若亮度值为其它值则根据如下规则判断亮度档位：0：关闭档，>=196：最亮档，>=128并且<=195：次亮档，>=64并且<=127：第三亮档，>0并且<=63：第四亮档",
+                "commands": {
+                    "set_brightness": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置亮度，val=亮度值[0、63、127、195、255]",
+                    },
                 },
             },
         },
@@ -1288,6 +3450,908 @@ DEVICE_MAPPING = {
                     "conversion": "val_direct",
                     "detailed_description": "阀门2状态（盘管的热阀或者地暖阀)",
                     "device_class": BinarySensorDeviceClass.OPENING,
+                },
+            },
+        },
+    },
+    
+    # ================= 2.6 感应器系列 (Sensor Series) =================
+    # 2.6.1 门禁感应器（Guard Sensor)
+    "SL_SC_G": {
+        "name": "门禁感应器",
+        "binary_sensor": {
+            "G": {
+                "description": "当前状态",
+                "rw": "R", 
+                "data_type": "door_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：打开，1：关闭",
+                "device_class": BinarySensorDeviceClass.DOOR,
+            },
+        },
+        "sensor": {
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    "SL_SC_BG": {
+        "name": "门禁感应器（带按键震动）",
+        "binary_sensor": {
+            "G": {
+                "description": "当前状态",
+                "rw": "R",
+                "data_type": "door_status", 
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：打开，1：关闭",
+                "device_class": BinarySensorDeviceClass.DOOR,
+            },
+            "B": {
+                "description": "按键状态",
+                "rw": "R",
+                "data_type": "button_status",
+                "conversion": "val_direct", 
+                "detailed_description": "`val` 值定义如下：0：未按下按键，1：按下按键",
+                "device_class": BinarySensorDeviceClass.MOVING,
+            },
+            "AXS": {
+                "description": "震动状态",
+                "rw": "R",
+                "data_type": "vibration_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：无震动，非0：震动",
+                "device_class": BinarySensorDeviceClass.VIBRATION,
+            },
+        },
+        "sensor": {
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    "SL_SC_GS": {
+        "name": "门禁感应器（增强版）",
+        "binary_sensor": {
+            "P1": {
+                "description": "门禁状态",
+                "rw": "R",
+                "data_type": "door_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示处于打开状态(忽略`val` 值)；`type&1==0`表示处于吸合状态(忽略`val` 值)",
+                "device_class": BinarySensorDeviceClass.DOOR,
+            },
+            "AXS": {
+                "description": "震动状态",
+                "rw": "R",
+                "data_type": "vibration_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示处于震动状态；`type&1==0`表示无震动状态；`val` 值表示震动强度",
+                "device_class": BinarySensorDeviceClass.VIBRATION,
+            },
+        },
+        "sensor": {
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.2 动态感应器（Motion Sensor)
+    "SL_SC_MHW": {
+        "name": "动态感应器",
+        "binary_sensor": {
+            "M": {
+                "description": "移动检测",
+                "rw": "R",
+                "data_type": "motion_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：没有检测到移动，1：有检测到移动",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        },
+        "sensor": {
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val`表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    "SL_SC_BM": {
+        "name": "动态感应器",
+        "binary_sensor": {
+            "M": {
+                "description": "移动检测",
+                "rw": "R",
+                "data_type": "motion_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：没有检测到移动，1：有检测到移动",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        },
+        "sensor": {
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val`表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    "SL_SC_CM": {
+        "name": "动态感应器（带USB供电）",
+        "binary_sensor": {
+            "P1": {
+                "description": "移动检测",
+                "rw": "R",
+                "data_type": "motion_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：没有检测到移动，1：有检测到移动",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        },
+        "sensor": {
+            "P3": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val`表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P4": {
+                "description": "USB供电电压",
+                "rw": "R",
+                "data_type": "voltage",
+                "conversion": "val_direct",
+                "detailed_description": "`val`表示原始电压值，若`val` 值大于430则表明电已经充满。若设备连接USB，供电在工作，则应该忽略`P3`电量属性",
+                "device_class": SensorDeviceClass.VOLTAGE,
+                "unit_of_measurement": "V",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    "SL_BP_MZ": {
+        "name": "动态感应器PRO",
+        "binary_sensor": {
+            "P1": {
+                "description": "移动检测",
+                "rw": "R",
+                "data_type": "motion_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：没有检测到移动，1：有检测到移动",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        },
+        "sensor": {
+            "P2": {
+                "description": "当前环境光照",
+                "rw": "R",
+                "data_type": "illuminance",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始光照值，`v` 值表示实际值(单位：lux)",
+                "device_class": SensorDeviceClass.ILLUMINANCE,
+                "unit_of_measurement": "lx",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P3": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val`表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.3 环境感应器（Env Sensor)
+    "SL_SC_THL": {
+        "name": "环境感应器（温湿度光照）",
+        "sensor": {
+            "T": {
+                "description": "当前环境温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "val_div_10",
+                "detailed_description": "`val` 值表示原始温度值，它是温度值*10值(单位：℃)",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "H": {
+                "description": "当前环境湿度",
+                "rw": "R",
+                "data_type": "humidity",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "Z": {
+                "description": "当前环境光照",
+                "rw": "R",
+                "data_type": "illuminance",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始光照值，`v` 值表示实际值(单位：lux)",
+                "device_class": SensorDeviceClass.ILLUMINANCE,
+                "unit_of_measurement": "lx",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    "SL_SC_BE": {
+        "name": "环境感应器（温湿度光照）",
+        "sensor": {
+            "T": {
+                "description": "当前环境温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "val_div_10",
+                "detailed_description": "`val` 值表示原始温度值，它是温度值*10值(单位：℃)",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "H": {
+                "description": "当前环境湿度",
+                "rw": "R",
+                "data_type": "humidity",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "Z": {
+                "description": "当前环境光照",
+                "rw": "R",
+                "data_type": "illuminance",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始光照值，`v` 值表示实际值(单位：lux)",
+                "device_class": SensorDeviceClass.ILLUMINANCE,
+                "unit_of_measurement": "lx",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+        },
+    },
+    
+    # 2.6.4 水浸传感器（Water Flooding Sensor)
+    "SL_SC_WA": {
+        "name": "水浸传感器",
+        "sensor": {
+            "WA": {
+                "description": "导电率",
+                "rw": "R",
+                "data_type": "conductivity",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：未检测到水；值越大表示水越多，导电率越高",
+                "device_class": SensorDeviceClass.MOISTURE,
+                "unit_of_measurement": "µS/cm",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.5 气体感应器(甲醛)(CH2O Sensor)
+    "SL_SC_CH": {
+        "name": "甲醛感应器",
+        "sensor": {
+            "P1": {
+                "description": "甲醛浓度",
+                "rw": "R",
+                "data_type": "formaldehyde",
+                "conversion": "v_field",
+                "detailed_description": "`type&1==1`表示甲醛浓度值超过告警门限；`val` 值表示甲醛浓度原始值，实际值等于原始值/1000（单位：ug/m³）；`v` 值表示实际值；甲醛浓度安全区间为：[0,0.086]mg/m³ 也即：[0,86]ug/m³",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "unit_of_measurement": "µg/m³",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+        "switch": {
+            "P2": {
+                "description": "甲醛浓度告警门限",
+                "rw": "RW",
+                "data_type": "threshold_setting",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值越大则灵敏度越低，门限越高（单位：ug/m³）：不告警：`val=5000`；中灵敏：`val=100`；高灵敏：`val=80`",
+                "commands": {
+                    "set_sensitivity": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置报警器灵敏度",
+                    },
+                },
+            },
+            "P3": {
+                "description": "警报音",
+                "rw": "RW",
+                "data_type": "alarm_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`指示报警音正在响，反之则没有报警音",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "手工触发报警音"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "手动消除报警音"},
+                },
+            },
+        },
+    },
+    
+    # 2.6.6 气体感应器(燃气）(Gas Sensor)
+    "SL_SC_CP": {
+        "name": "燃气感应器",
+        "sensor": {
+            "P1": {
+                "description": "燃气浓度",
+                "rw": "R",
+                "data_type": "gas_concentration",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1`表示燃气浓度值超过告警门限，有告警；`val`为当前燃气浓度值",
+                "device_class": SensorDeviceClass.GAS,
+                "unit_of_measurement": "ppm",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+        "switch": {
+            "P2": {
+                "description": "燃气浓度告警门限",
+                "rw": "RW",
+                "data_type": "threshold_setting",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值越大则灵敏度越低，门限越高：低灵敏度：`val=150`；中灵敏度：`val=120`；高灵敏度：`val=90`",
+                "commands": {
+                    "set_sensitivity": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置报警器灵敏度",
+                    },
+                },
+            },
+            "P3": {
+                "description": "警报音",
+                "rw": "RW",
+                "data_type": "alarm_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`指示报警音正在响，反之则没有报警音",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "手工触发报警音"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "手动消除报警音"},
+                },
+            },
+        },
+    },
+    
+    # 2.6.7 环境感应器 (TVOC+CO2) (TVOC+CO2 Sensor)
+    "SL_SC_CQ": {
+        "name": "TVOC+CO2环境感应器",
+        "sensor": {
+            "P1": {
+                "description": "当前环境温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始温度值，它是温度值*10，`v` 值表示实际值(单位：℃)",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P2": {
+                "description": "当前环境湿度",
+                "rw": "R",
+                "data_type": "humidity",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P3": {
+                "description": "当前CO2浓度值",
+                "rw": "R",
+                "data_type": "co2_concentration",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示co2浓度值，`v` 值表示实际值(单位：ppm)，参考：`val`<=500：优，`val`<=700：良，`val`<=1000：中，`val`>1000：差",
+                "device_class": SensorDeviceClass.CO2,
+                "unit_of_measurement": "ppm",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P4": {
+                "description": "当前TVOC浓度值",
+                "rw": "R",
+                "data_type": "tvoc_concentration",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示tvoc原始浓度值，它是TVOC浓度值*1000，实际浓度值=原始浓度值/1000，`v` 值表示实际值(单位：mg/m3)，参考：`val`<0.34：优，`val`<0.68：良，`val`<=1.02：中，`val`>1.02：差",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "unit_of_measurement": "mg/m³",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P5": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P6": {
+                "description": "USB供电电压",
+                "rw": "R",
+                "data_type": "voltage",
+                "conversion": "val_direct",
+                "detailed_description": "`val`表示原始电压值，若`val` 值大于430则表明电已经充满。若设备连接USB，供电在工作，则应该忽略`P5`电量属性",
+                "device_class": SensorDeviceClass.VOLTAGE,
+                "unit_of_measurement": "V",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.8 ELIQ电量计量器(ELIQ)
+    "ELIQ_EM": {
+        "name": "ELIQ电量计量器",
+        "sensor": {
+            "EPA": {
+                "description": "平均功率",
+                "rw": "R",
+                "data_type": "power",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值表示平均功率",
+                "device_class": SensorDeviceClass.POWER,
+                "unit_of_measurement": UnitOfPower.WATT,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.9 烟雾感应器(Smoke Sensor)
+    "SL_P_A": {
+        "name": "烟雾感应器",
+        "binary_sensor": {
+            "P1": {
+                "description": "当前是否有烟雾告警",
+                "rw": "R",
+                "data_type": "smoke_alarm",
+                "conversion": "val_direct",
+                "detailed_description": "`val`等于0表示没有烟雾告警，等于1表示有烟雾告警",
+                "device_class": BinarySensorDeviceClass.SMOKE,
+            },
+        },
+        "sensor": {
+            "P2": {
+                "description": "电压",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "如果使用9V的电池，则实际电压值=(`val`/100)*3，注意：其值可能会超过9V，例如9.58V；如果外接12V供电，则该值无效。`v` 值将表示当前剩余电量百分比，值范围[0,100]",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.10 环境感应器(CO2）(CO2 Sensor)
+    "SL_SC_CA": {
+        "name": "CO2环境感应器",
+        "sensor": {
+            "P1": {
+                "description": "当前环境温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始温度值，它是温度值*10，`v` 值表示实际值(单位：℃)",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P2": {
+                "description": "当前环境湿度",
+                "rw": "R",
+                "data_type": "humidity",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P3": {
+                "description": "当前CO2浓度值",
+                "rw": "R",
+                "data_type": "co2_concentration",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示co2浓度值，`v` 值表示实际值(单位：ppm)，参考：`val`<=500：优，`val`<=700：良，`val`<=1000：中，`val`>1000：差",
+                "device_class": SensorDeviceClass.CO2,
+                "unit_of_measurement": "ppm",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P4": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P5": {
+                "description": "USB供电电压",
+                "rw": "R",
+                "data_type": "voltage",
+                "conversion": "val_direct",
+                "detailed_description": "`val`表示原始电压值，若`val` 值大于430则表明供电在工作，否则表明未供电工作",
+                "device_class": SensorDeviceClass.VOLTAGE,
+                "unit_of_measurement": "V",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.11 人体存在感应器（Radar Motion Sensor)
+    "SL_P_RM": {
+        "name": "雷达人体存在感应器",
+        "binary_sensor": {
+            "P1": {
+                "description": "移动检测(Motion)",
+                "rw": "R",
+                "data_type": "motion_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0：没有检测到移动，非0：有检测到移动",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        },
+        "switch": {
+            "P2": {
+                "description": "移动检测参数设置",
+                "rw": "RW",
+                "data_type": "radar_config",
+                "conversion": "val_direct",
+                "detailed_description": "包含动态锁定时间与灵敏度设置。其中：`bit0-bit7`：动态锁定时间，取值范围为：1-255，具体锁定时间为：配置值*4，单位为秒，例如`bit0-bit7`配置值为16，则表示动态锁定时间为64秒。`bit8-bit25`：灵敏度，灵敏度默认值为4，范围1-255，值越小则越灵敏",
+                "commands": {
+                    "set_config": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置感应器动态锁定时间与灵敏度",
+                    },
+                },
+            },
+        },
+    },
+    
+    # 2.6.12 云防门窗感应器（DEFED Window/Door)
+    "SL_DF_GG": {
+        "name": "云防门窗感应器",
+        "binary_sensor": {
+            "A": {
+                "description": "当前状态",
+                "rw": "R",
+                "data_type": "door_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示处于打开状态(忽略`val` 值)；`type&1==0`表示处于吸合状态(忽略`val` 值)",
+                "device_class": BinarySensorDeviceClass.DOOR,
+            },
+            "A2": {
+                "description": "外部感应器状态",
+                "rw": "R",
+                "data_type": "door_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示处于打开状态(忽略`val` 值)；`type&1==0`表示处于吸合状态(忽略`val` 值)；需要接外部感应器，如果没有接则type值为1",
+                "device_class": BinarySensorDeviceClass.DOOR,
+            },
+            "TR": {
+                "description": "防拆状态",
+                "rw": "R",
+                "data_type": "tamper_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`则表示触发防拆警报；`type&1==0`则表示状态正常",
+                "device_class": BinarySensorDeviceClass.TAMPER,
+            },
+        },
+        "sensor": {
+            "T": {
+                "description": "温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始温度值，它是实际温度值*10，`v` 值表示实际值(单位：℃)",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.13 云防动态感应器（DEFED Motion)
+    "SL_DF_MM": {
+        "name": "云防动态感应器",
+        "binary_sensor": {
+            "M": {
+                "description": "当前状态",
+                "rw": "R",
+                "data_type": "motion_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示侦测到人体移动(忽略`val` 值)；`type&1==0`表示没有侦测到人体移动(忽略`val` 值)",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+            "TR": {
+                "description": "防拆状态",
+                "rw": "R",
+                "data_type": "tamper_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`则表示触发防拆警报；`type&1==0`则表示状态正常",
+                "device_class": BinarySensorDeviceClass.TAMPER,
+            },
+        },
+        "sensor": {
+            "T": {
+                "description": "温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始温度值，它是实际温度值*10，`v` 值表示实际值(单位：℃)",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.14 云防室内警铃(DEFED Indoor Siren)
+    "SL_DF_SR": {
+        "name": "云防室内警铃",
+        "binary_sensor": {
+            "SR": {
+                "description": "当前状态",
+                "rw": "R",
+                "data_type": "siren_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示警铃播放(忽略`val` 值)；`type&1==0`表示正常(忽略`val` 值)",
+                "device_class": BinarySensorDeviceClass.SOUND,
+            },
+            "TR": {
+                "description": "防拆状态",
+                "rw": "R",
+                "data_type": "tamper_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`则表示触发防拆警报；`type&1==0`则表示状态正常",
+                "device_class": BinarySensorDeviceClass.TAMPER,
+            },
+        },
+        "sensor": {
+            "T": {
+                "description": "温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始温度值，它是实际温度值*10，`v` 值表示实际值(单位：℃)",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据val电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+        "switch": {
+            "P1": {
+                "description": "报警设置",
+                "rw": "RW",
+                "data_type": "alarm_config",
+                "conversion": "val_direct",
+                "detailed_description": "`val`为32bit值，描述如下(16进制)：`0xAABBCCDD`：`AABB`表示警报持续时长，单位为0.1秒；`CC`是声音强度(136-255)，255最强，136最弱；`DD`表示音频序号：0：无，1：信息，2：告警",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "播放"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "停止"},
+                    "set_config_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "设置值并播放",
+                    },
+                    "set_config_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "设置值并停止",
+                    },
+                },
+            },
+        },
+    },
+    
+    # 2.6.15 云防遥控器（DEFED Key Fob)
+    "SL_DF_BB": {
+        "name": "云防遥控器",
+        "binary_sensor": {
+            "eB1": {
+                "description": "按键1状态(为布防图标)",
+                "rw": "R",
+                "data_type": "button_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示按键处于按下状态(忽略`val` 值)；`type&1==0`表示按键处于松开状态(忽略`val` 值)",
+                "device_class": BinarySensorDeviceClass.MOVING,
+            },
+            "eB2": {
+                "description": "按键2状态(为撤防图标)",
+                "rw": "R",
+                "data_type": "button_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示按键处于按下状态(忽略`val` 值)；`type&1==0`表示按键处于松开状态(忽略`val` 值)",
+                "device_class": BinarySensorDeviceClass.MOVING,
+            },
+            "eB3": {
+                "description": "按键3状态(为警告图标)",
+                "rw": "R",
+                "data_type": "button_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示按键处于按下状态(忽略`val` 值)；`type&1==0`表示按键处于松开状态(忽略`val` 值)",
+                "device_class": BinarySensorDeviceClass.MOVING,
+            },
+            "eB4": {
+                "description": "按键4状态(为在家图标)",
+                "rw": "R",
+                "data_type": "button_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示按键处于按下状态(忽略`val` 值)；`type&1==0`表示按键处于松开状态(忽略`val` 值)",
+                "device_class": BinarySensorDeviceClass.MOVING,
+            },
+        },
+        "sensor": {
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    
+    # 2.6.16 噪音感应器（Noise Sensor)
+    "SL_SC_CN": {
+        "name": "噪音感应器",
+        "sensor": {
+            "P1": {
+                "description": "噪音值",
+                "rw": "R",
+                "data_type": "noise_level",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1`表示噪音值大于告警门限；`type&1==0`表示噪音值没有超过告警门限；`val`表示当前噪音值，单位为分贝",
+                "device_class": SensorDeviceClass.SOUND_PRESSURE,
+                "unit_of_measurement": "dB",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P4": {
+                "description": "噪音校正值",
+                "rw": "RW",
+                "data_type": "noise_calibration",
+                "conversion": "val_direct",
+                "detailed_description": "取值范围为[-128~127]，如果噪音采样有误差，可以配置噪音校正值校正",
+                "device_class": SensorDeviceClass.SOUND_PRESSURE,
+                "unit_of_measurement": "dB",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+        "switch": {
+            "P2": {
+                "description": "告警门限设置",
+                "rw": "RW",
+                "data_type": "threshold_config",
+                "conversion": "val_direct",
+                "detailed_description": "`val`为32bit值(十六进制)：`0xAABBCCDD`：`DD`表示告警门限值，数值单位为分贝，取值范围[0,255]；`CC`表示采样值1，取值范围[0,255]；`BB`表示采样值2，取值范围[0,255]；`CCBB`共同作用形成越限率",
+                "commands": {
+                    "set_threshold": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "修改门限值",
+                    },
+                },
+            },
+            "P3": {
+                "description": "报警设置",
+                "rw": "RW",
+                "data_type": "alarm_config",
+                "conversion": "val_direct",
+                "detailed_description": "`type&1==1`表示处于报警状态；`type&1==0`表示处于正常状态；`val`为32bit值，描述如下(16进制)：`0xAABBCCDD`：`AABB`表示警报持续时长，单位为0.1秒，等于65535则表示一直持续；`CC`是声音强度，0表示没有声音，其它值表示有声音；`DD`表示音频模式：0：无声音，1：指示音，2：告警音，0x7F：测试音，0x80-0xFF：自定义模式",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "播放"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "停止"},
+                    "set_config_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "设置值并播放",
+                    },
+                    "set_config_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "设置值并停止",
+                    },
                 },
             },
         },

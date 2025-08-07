@@ -6,12 +6,15 @@
 - 保持完整功能
 """
 
+# Add the custom component to path for importing const.py
+import os
 import re
 import sys
 from typing import Dict, Set, List, Any
 
-# Add the custom component to path for importing const.py
-sys.path.append("../custom_components/lifesmart")
+sys.path.insert(
+    0, os.path.join(os.path.dirname(__file__), "../custom_components/lifesmart")
+)
 from const import (
     DEVICE_MAPPING,
     VERSIONED_DEVICE_TYPES,
@@ -913,37 +916,110 @@ HA_STANDARD_MAPPINGS = {
     "light_brightness": {
         "device_class": None,  # light平台不使用device_class
         "units": [],
-        "keywords": ["亮度", "brightness", "调光", "dimmer"],
-        "conversion_hints": ["0-255", "百分比转换"],
+        "keywords": ["亮度", "brightness", "调光", "dimmer", "白光调光"],
+        "conversion_hints": ["0-255", "百分比转换", "亮度值"],
         "platform": "light",
+        "color_mode": "ColorMode.BRIGHTNESS",
+        "supported_features": ["LightEntityFeature.EFFECT"],
     },
     "light_color_temp": {
         "device_class": None,
         "units": ["mired"],
-        "keywords": ["色温", "color_temp", "暖光", "冷光", "开尔文", "k"],
-        "conversion_hints": ["mired转换", "2700K-6500K"],
+        "keywords": [
+            "色温",
+            "color_temp",
+            "暖光",
+            "冷光",
+            "开尔文",
+            "k",
+            "调色",
+            "色温调节",
+        ],
+        "conversion_hints": ["mired转换", "2700K-6500K", "色温范围"],
         "platform": "light",
+        "color_mode": "ColorMode.COLOR_TEMP",
+        "supported_features": ["LightEntityFeature.EFFECT"],
+        "color_temp_range": [153, 370],  # 2700K-6500K in mired
     },
     "light_rgb": {
         "device_class": None,
         "units": [],
-        "keywords": ["rgb", "颜色", "color", "彩色"],
-        "conversion_hints": ["RGB值", "0-255每通道"],
+        "keywords": ["rgb", "颜色", "color", "彩色", "三色", "红绿蓝"],
+        "conversion_hints": ["RGB值", "0-255每通道", "颜色编码"],
         "platform": "light",
+        "color_mode": "ColorMode.RGB",
+        "supported_features": ["LightEntityFeature.EFFECT"],
     },
     "light_rgbw": {
         "device_class": None,
         "units": [],
-        "keywords": ["rgbw", "彩色", "白光", "color", "white"],
-        "conversion_hints": ["RGBW值", "包含白光通道"],
+        "keywords": ["rgbw", "彩色", "白光", "color", "white", "四色", "红绿蓝白"],
+        "conversion_hints": ["RGBW值", "包含白光通道", "四通道颜色"],
         "platform": "light",
+        "color_mode": "ColorMode.RGBW",
+        "supported_features": ["LightEntityFeature.EFFECT"],
+    },
+    "light_rgbww": {
+        "device_class": None,
+        "units": [],
+        "keywords": [
+            "rgbww",
+            "彩色",
+            "暖白",
+            "冷白",
+            "color",
+            "warm_white",
+            "cool_white",
+            "五色",
+        ],
+        "conversion_hints": ["RGBWW值", "包含暖冷白光通道", "五通道颜色"],
+        "platform": "light",
+        "color_mode": "ColorMode.RGBWW",
+        "supported_features": ["LightEntityFeature.EFFECT"],
+    },
+    "light_white": {
+        "device_class": None,
+        "units": [],
+        "keywords": ["白光", "white", "单色", "调光", "白光亮度"],
+        "conversion_hints": ["白光亮度", "0-255", "单通道白光"],
+        "platform": "light",
+        "color_mode": "ColorMode.WHITE",
+        "supported_features": ["LightEntityFeature.EFFECT"],
+    },
+    "light_onoff": {
+        "device_class": None,
+        "units": [],
+        "keywords": ["开关", "on_off", "开关灯", "简单", "基础开关"],
+        "conversion_hints": ["开关控制", "无调光", "简单开关"],
+        "platform": "light",
+        "color_mode": "ColorMode.ONOFF",
+        "supported_features": [],
     },
     "light_effect": {
         "device_class": None,
         "units": [],
-        "keywords": ["效果", "effect", "动态", "场景"],
-        "conversion_hints": ["效果列表", "场景模式"],
+        "keywords": ["效果", "effect", "动态", "场景", "灯光效果", "动态效果"],
+        "conversion_hints": ["效果列表", "场景模式", "效果编号"],
         "platform": "light",
+        "supported_features": ["LightEntityFeature.EFFECT"],
+    },
+    "light_hs": {
+        "device_class": None,
+        "units": [],
+        "keywords": ["hs", "色相", "饱和度", "hue", "saturation", "色调"],
+        "conversion_hints": ["色相饱和度", "HSV颜色空间", "0-360度色相"],
+        "platform": "light",
+        "color_mode": "ColorMode.HS",
+        "supported_features": ["LightEntityFeature.EFFECT"],
+    },
+    "light_xy": {
+        "device_class": None,
+        "units": [],
+        "keywords": ["xy", "色度坐标", "cie", "色彩空间"],
+        "conversion_hints": ["CIE xy色度坐标", "色彩空间转换"],
+        "platform": "light",
+        "color_mode": "ColorMode.XY",
+        "supported_features": ["LightEntityFeature.EFFECT"],
     },
     # =============== CLIMATE 平台标准 ===============
     "climate_temperature": {
@@ -1776,11 +1852,11 @@ class IOQualityProcessor:
         if device_mapping.get("dynamic", False):
             # 动态设备的各种模式都会用到不同的IO口
             for key, value in device_mapping.items():
-                if key in ["dynamic", "description"]:
+                if key in ["dynamic", "description", "name"]:
                     continue
 
                 if isinstance(value, dict):
-                    # 提取io字段
+                    # 提取io字段 - 直接的IO口列表
                     if "io" in value:
                         io_list = value["io"]
                         if isinstance(io_list, str):
@@ -1788,13 +1864,13 @@ class IOQualityProcessor:
                         elif isinstance(io_list, list):
                             mapped_ios.update(io_list)
 
-                    # 提取sensor_io, binary_sensor等字段
+                    # 提取sensor_io等字段 - 传感器IO口列表
                     if "sensor_io" in value:
                         sensor_io = value["sensor_io"]
                         if isinstance(sensor_io, list):
                             mapped_ios.update(sensor_io)
 
-                    # 提取各平台的IO口定义
+                    # 提取各平台的详细IO口定义 (如SL_NATURE的climate模式)
                     for platform in [
                         "climate",
                         "switch",
@@ -1806,8 +1882,41 @@ class IOQualityProcessor:
                         if platform in value:
                             platform_config = value[platform]
                             if isinstance(platform_config, dict):
-                                # 从平台配置中提取IO口名称
-                                mapped_ios.update(platform_config.keys())
+                                # 从平台详细配置中提取IO口名称 (如P1, P4, P5等)
+                                for potential_io, io_config in platform_config.items():
+                                    # 检查是否是真实IO口格式
+                                    if re.match(
+                                        r"^P\d+$", potential_io
+                                    ) or potential_io in [
+                                        "L1",
+                                        "L2",
+                                        "L3",
+                                        "A",
+                                        "A2",
+                                        "T",
+                                        "V",
+                                        "TR",
+                                        "M",
+                                        "SR",
+                                        "KP",
+                                        "EPA",
+                                        "EE",
+                                        "EP",
+                                        "EQ",
+                                        "bright",
+                                        "dark",
+                                        "bright1",
+                                        "bright2",
+                                        "bright3",
+                                        "dark1",
+                                        "dark2",
+                                        "dark3",
+                                        "eB1",
+                                        "eB2",
+                                        "eB3",
+                                        "eB4",
+                                    ]:
+                                        mapped_ios.add(potential_io)
 
             return mapped_ios
 
