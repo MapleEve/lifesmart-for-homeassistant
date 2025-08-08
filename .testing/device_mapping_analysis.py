@@ -15,7 +15,7 @@ from typing import Dict, Set, List, Any
 sys.path.insert(
     0, os.path.join(os.path.dirname(__file__), "../custom_components/lifesmart")
 )
-from const import (
+from core.device.mapping import (
     DEVICE_MAPPING,
     VERSIONED_DEVICE_TYPES,
     DYNAMIC_CLASSIFICATION_DEVICES,
@@ -811,28 +811,56 @@ class DeviceAttributeAnalyzer:
         """检查是否是有效的IO口名称格式"""
         if not name or not isinstance(name, str):
             return False
-        
+
         # P系列IO口 (P1, P2, ..., P10)
         if re.match(r"^P\d+$", name):
             return True
-        
+
         # 其他标准IO口名称
         standard_io_names = {
-            "L1", "L2", "L3",           # 开关系列
-            "A", "A2", "T", "V", "TR",  # 传感器系列 
-            "M", "SR", "KP", "EPA",     # 控制系列
-            "EE", "EP", "EQ",           # 扩展系列
-            "bright", "dark",           # 指示灯系列
-            "bright1", "bright2", "bright3",
-            "dark1", "dark2", "dark3",
-            "eB1", "eB2", "eB3", "eB4", # 扩展按键系列
-            "O", "B",                   # 基础开关
+            "L1",
+            "L2",
+            "L3",  # 开关系列
+            "A",
+            "A2",
+            "T",
+            "V",
+            "TR",  # 传感器系列
+            "M",
+            "SR",
+            "KP",
+            "EPA",  # 控制系列
+            "EE",
+            "EP",
+            "EQ",  # 扩展系列
+            "bright",
+            "dark",  # 指示灯系列
+            "bright1",
+            "bright2",
+            "bright3",
+            "dark1",
+            "dark2",
+            "dark3",
+            "eB1",
+            "eB2",
+            "eB3",
+            "eB4",  # 扩展按键系列
+            "O",
+            "B",  # 基础开关
             # 添加其他特殊IO口名称
-            "CL", "OP", "ST",           # 窗帘控制
-            "RGBW", "RGB", "DYN",       # 灯光控制
-            "H", "Z", "WA", "G", "AXS", # 传感器特殊口
+            "CL",
+            "OP",
+            "ST",  # 窗帘控制
+            "RGBW",
+            "RGB",
+            "DYN",  # 灯光控制
+            "H",
+            "Z",
+            "WA",
+            "G",
+            "AXS",  # 传感器特殊口
         }
-        
+
         return name in standard_io_names
 
 
@@ -2088,24 +2116,44 @@ class IOQualityProcessor:
         """检查是否是有效的IO口名称格式"""
         if not name or not isinstance(name, str):
             return False
-        
+
         # P系列IO口 (P1, P2, ..., P10)
         if re.match(r"^P\d+$", name):
             return True
-        
+
         # 其他标准IO口名称
         standard_io_names = {
-            "L1", "L2", "L3",           # 开关系列
-            "A", "A2", "T", "V", "TR",  # 传感器系列 
-            "M", "SR", "KP", "EPA",     # 控制系列
-            "EE", "EP", "EQ",           # 扩展系列
-            "bright", "dark",           # 指示灯系列
-            "bright1", "bright2", "bright3",
-            "dark1", "dark2", "dark3",
-            "eB1", "eB2", "eB3", "eB4", # 扩展按键系列
-            "O", "B",                   # 基础开关
+            "L1",
+            "L2",
+            "L3",  # 开关系列
+            "A",
+            "A2",
+            "T",
+            "V",
+            "TR",  # 传感器系列
+            "M",
+            "SR",
+            "KP",
+            "EPA",  # 控制系列
+            "EE",
+            "EP",
+            "EQ",  # 扩展系列
+            "bright",
+            "dark",  # 指示灯系列
+            "bright1",
+            "bright2",
+            "bright3",
+            "dark1",
+            "dark2",
+            "dark3",
+            "eB1",
+            "eB2",
+            "eB3",
+            "eB4",  # 扩展按键系列
+            "O",
+            "B",  # 基础开关
         }
-        
+
         return name in standard_io_names
 
     def _build_error_result(
@@ -2374,7 +2422,11 @@ class IOQualityProcessor:
 
 def extract_official_device_names() -> Set[str]:
     """从附录3.1智慧设备规格名称表格中提取设备的中文名称集合"""
-    docs_file = "../docs/LifeSmart 智慧设备规格属性说明.md"
+    docs_file = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "docs",
+        "LifeSmart 智慧设备规格属性说明.md",
+    )
 
     try:
         with open(docs_file, "r", encoding="utf-8") as f:
@@ -2453,7 +2505,11 @@ def extract_official_device_names() -> Set[str]:
 
 def extract_appendix_device_names() -> Set[str]:
     """从附录3.1智慧设备规格名称表格中提取设备名称"""
-    docs_file = "../docs/LifeSmart 智慧设备规格属性说明.md"
+    docs_file = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "docs",
+        "LifeSmart 智慧设备规格属性说明.md",
+    )
 
     try:
         with open(docs_file, "r", encoding="utf-8") as f:
@@ -2892,7 +2948,11 @@ def calculate_mapping_match_score(doc_ios: Set[str], mapped_ios: Set[str]) -> Di
 
 def extract_device_ios_from_docs() -> Dict[str, List[Dict]]:
     """从官方文档中提取设备IO口定义（权威数据源）"""
-    docs_file = "../docs/LifeSmart 智慧设备规格属性说明.md"
+    docs_file = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "docs",
+        "LifeSmart 智慧设备规格属性说明.md",
+    )
 
     # 特殊设备类型映射：文档通用类型 -> 实际设备列表
     special_device_mapping = {
@@ -3003,7 +3063,7 @@ def extract_device_ios_from_docs() -> Dict[str, List[Dict]]:
                             and "type" not in device_name.lower()
                             and (
                                 device_name.startswith(
-                                    ("SL_", "V_", "ELIQ_", "OD_", "LSCAM:")
+                                    ("SL_", "V_", "ELIQ_", "OD_", "MSL_", "LSCAM:")
                                 )
                                 or device_name == "cam"
                             )  # 允许的设备名格式
@@ -3957,12 +4017,89 @@ if __name__ == "__main__":
             coverage_report.append(f"   ✓ {device}")
         coverage_report.append("")
 
+    # 添加设备顺序检查部分
+    coverage_report.append("=" * 80)
+    coverage_report.append("📋 DEVICE_MAPPING设备定义顺序检查")
+    coverage_report.append("=" * 80)
+    coverage_report.append("")
+
+    # 获取DEVICE_MAPPING中设备的实际顺序
+    actual_order = list(DEVICE_MAPPING.keys())
+
+    # 获取官方文档推荐顺序（只包含已在mapping中的设备）
+    recommended_order = []
+    for section_devices in doc_device_ios.values():
+        if isinstance(section_devices, dict):
+            # 处理字典结构的设备组
+            for device_type in section_devices.keys():
+                if device_type in DEVICE_MAPPING:
+                    recommended_order.append(device_type)
+        elif isinstance(section_devices, list):
+            # 处理列表结构的设备组
+            for device_data in section_devices:
+                if isinstance(device_data, dict) and "device" in device_data:
+                    device_type = device_data["device"]
+                    if device_type in DEVICE_MAPPING:
+                        recommended_order.append(device_type)
+
+    # 检查顺序差异
+    out_of_order_devices = []
+
+    # 找出不按官方顺序排列的设备
+    actual_index_map = {device: i for i, device in enumerate(actual_order)}
+
+    for i in range(len(recommended_order) - 1):
+        current_device = recommended_order[i]
+        next_device = recommended_order[i + 1]
+
+        if current_device in actual_index_map and next_device in actual_index_map:
+            actual_current = actual_index_map[current_device]
+            actual_next = actual_index_map[next_device]
+
+            if actual_current > actual_next:
+                out_of_order_devices.append((current_device, next_device))
+
+    coverage_report.append("📊 **顺序检查摘要**")
+    coverage_report.append("-" * 40)
+    coverage_report.append(f"• DEVICE_MAPPING中设备总数: {len(actual_order)}")
+    coverage_report.append(f"• 官方文档中的设备总数: {len(recommended_order)}")
+    coverage_report.append(f"• 顺序问题设备对数: {len(out_of_order_devices)}")
+    coverage_report.append("")
+
+    if out_of_order_devices:
+        coverage_report.append("⚠️ **发现顺序问题的设备对**:")
+        coverage_report.append("")
+        for current, next_device in out_of_order_devices:
+            current_pos = actual_index_map[current] + 1
+            next_pos = actual_index_map[next_device] + 1
+            coverage_report.append(
+                f"   • {current} (位置{current_pos}) 应该在 {next_device} (位置{next_pos}) 之前"
+            )
+        coverage_report.append("")
+    else:
+        coverage_report.append("✅ **DEVICE_MAPPING设备顺序完全符合官方文档**")
+        coverage_report.append("")
+
+    # 显示只在mapping中但不在官方文档的设备
+    mapping_only_devices = set(actual_order) - set(recommended_order)
+    if mapping_only_devices:
+        coverage_report.append(
+            "🔧 **仅存在于DEVICE_MAPPING中的设备** (未在官方文档中找到):"
+        )
+        for device in sorted(mapping_only_devices):
+            pos = actual_index_map[device] + 1
+            coverage_report.append(f"   • {device} (位置{pos})")
+        coverage_report.append("")
+
     coverage_report.append("=" * 80)
     coverage_report.append("📋 设备覆盖对比分析报告生成完成")
     coverage_report.append("=" * 80)
 
     # 保存报告1
-    with open("../device_coverage_analysis.txt", "w", encoding="utf-8") as f:
+    report1_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "device_coverage_analysis.txt"
+    )
+    with open(report1_path, "w", encoding="utf-8") as f:
         f.write("\n".join(coverage_report))
     print("✅ 设备覆盖对比分析报告（含name验证）已保存到: device_coverage_analysis.txt")
 
@@ -3995,7 +4132,7 @@ if __name__ == "__main__":
 
         # 从当前映射中提取IO口 - 使用修复后的方法
         device_config = DEVICE_MAPPING.get(device, {})
-        
+
         # 使用DeviceAttributeAnalyzer来提取IO口（支持DYNAMIC和VERSIONED设备）
         analyzer = DeviceAttributeAnalyzer()
         mapped_ios_set = analyzer._extract_mapped_ios(device_config)
@@ -4095,7 +4232,10 @@ if __name__ == "__main__":
     io_report.append("=" * 80)
 
     # 保存报告2
-    with open("../io_mapping_detailed_analysis.txt", "w", encoding="utf-8") as f:
+    report2_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "io_mapping_detailed_analysis.txt"
+    )
+    with open(report2_path, "w", encoding="utf-8") as f:
         f.write("\n".join(io_report))
     print("✅ IO口详细对比分析报告已保存到: io_mapping_detailed_analysis.txt")
 
@@ -4108,18 +4248,25 @@ if __name__ == "__main__":
     # 始终生成第三份报告，无论是否有缺失
     attribute_report = attribute_analyzer.generate_attribute_report(attribute_results)
 
-    with open("../device_attributes_missing_analysis.md", "w", encoding="utf-8") as f:
+    output_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "device_attributes_missing_analysis.md",
+    )
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(attribute_report)
-    print("✅ 设备属性缺失分析报告已保存到: device_attributes_missing_analysis.md")
+    print(f"✅ 设备属性缺失分析报告已保存到: {output_path}")
 
     # 生成JSON格式补丁建议
     patches_json = attribute_analyzer.generate_patches_json(attribute_results)
 
-    with open("../device_attributes_patches.json", "w", encoding="utf-8") as f:
+    patches_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "device_attributes_patches.json"
+    )
+    with open(patches_path, "w", encoding="utf-8") as f:
         import json
 
         f.write(json.dumps(patches_json, indent=2, ensure_ascii=False))
-    print("✅ 设备属性补丁建议已保存到: device_attributes_patches.json")
+    print(f"✅ 设备属性补丁建议已保存到: {patches_path}")
 
     if attribute_results["devices_with_missing"] > 0:
         print(
