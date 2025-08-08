@@ -288,9 +288,15 @@ class LifeSmartHub:
         Args:
             auth_response: OAPI 认证响应数据
         """
-        # 设置定时刷新任务
+        # 设置定时刷新任务 - 在云模式下使用更频繁的轮询作为websocket的备用方案
+        refresh_interval_minutes = 10
+        if self.client and hasattr(self.client, "get_wss_url"):
+            # 云模式：使用更短的轮询间隔作为websocket故障的备用方案
+            refresh_interval_minutes = 2  # 每2分钟轮询一次
+            _LOGGER.info("云模式：启用每%d分钟的轮询作为WebSocket备用方案", refresh_interval_minutes)
+        
         self._refresh_task_unsub = async_track_time_interval(
-            self.hass, self._async_periodic_refresh, timedelta(minutes=10)
+            self.hass, self._async_periodic_refresh, timedelta(minutes=refresh_interval_minutes)
         )
 
         # OAPI 模式下设置 WebSocket 状态管理器
@@ -494,7 +500,7 @@ class LifeSmartStateManager:
         ws_url: str,
         refresh_callback: callable,
         retry_interval: int = 10,
-        max_retries: int = 60,
+        max_retries: int = -1,  # Unlimited retries for better resilience
     ) -> None:
         """初始化 WebSocket 状态管理器。
 
@@ -505,7 +511,7 @@ class LifeSmartStateManager:
             ws_url: WebSocket 连接地址
             refresh_callback: 全量刷新回调函数
             retry_interval: 初始重试间隔（秒）
-            max_retries: 最大重试次数
+            max_retries: 最大重试次数，-1表示无限重试
         """
         self.hass = hass
         self.config_entry = config_entry
@@ -548,7 +554,7 @@ class LifeSmartStateManager:
 
     async def _connection_handler(self):
         """主连接处理循环。"""
-        while not self._should_stop and self._retry_count <= self.max_retries:
+        while not self._should_stop and (self.max_retries == -1 or self._retry_count <= self.max_retries):
             try:
                 async with self._connection_lock:
                     _LOGGER.info("正在尝试建立 WebSocket 连接...")
@@ -559,16 +565,23 @@ class LifeSmartStateManager:
                     await self._message_consumer()
 
             except PermissionError as e:
-                _LOGGER.critical("WebSocket 认证失败，不可恢复的错误: %s", e)
-                break
+                _LOGGER.error("WebSocket 认证失败，将尝试刷新token后重试: %s", e)
+                # 尝试刷新token
+                try:
+                    await self.client.async_refresh_token()
+                    _LOGGER.info("Token刷新成功，将重试连接")
+                    # 重置重试计数，给刷新后的token一个机会
+                    self._retry_count = max(0, self._retry_count - 5)
+                except Exception as token_error:
+                    _LOGGER.error("Token刷新也失败: %s", token_error)
+                await self._schedule_retry()
 
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                _LOGGER.warning(
-                    "WebSocket 网络错误，将进行重试 (%d/%d): %s",
-                    self._retry_count + 1,
-                    self.max_retries,
-                    e,
-                )
+                retry_msg = f"WebSocket 网络错误，将进行重试"
+                if self.max_retries != -1:
+                    retry_msg += f" ({self._retry_count + 1}/{self.max_retries})"
+                retry_msg += f": {e}"
+                _LOGGER.warning(retry_msg)
                 await self._schedule_retry()
 
             except Exception as e:
@@ -681,16 +694,19 @@ class LifeSmartStateManager:
             self._last_disconnect_time = datetime.now()
 
         self._retry_count += 1
-        if self._retry_count > self.max_retries:
+        if self.max_retries != -1 and self._retry_count > self.max_retries:
             _LOGGER.error("已达到最大重试次数 (%s)，将停止尝试连接。", self.max_retries)
             return
 
-        delay = min(self.retry_interval * (2 ** (self._retry_count - 1)), 300)
-        _LOGGER.info(
-            "WebSocket 连接断开，将在 %.1f 秒后进行第 %d 次重试。",
-            delay,
-            self._retry_count,
-        )
+        # 实现指数退避，但有最大限制，以避免等待时间过长
+        delay = min(self.retry_interval * (2 ** min(self._retry_count - 1, 8)), 300)
+        
+        retry_msg = f"WebSocket 连接断开，将在 {delay:.1f} 秒后进行第 {self._retry_count} 次重试"
+        if self.max_retries != -1:
+            retry_msg += f"/{self.max_retries}"
+        retry_msg += "。"
+        _LOGGER.info(retry_msg)
+        
         await asyncio.sleep(delay)
 
     async def _token_refresh_handler(self):
