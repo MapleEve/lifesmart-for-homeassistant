@@ -1499,6 +1499,150 @@ NON_POSITIONAL_COVER_CONFIG = {
 # - ✅ IO口级别的精确控制
 # - ✅ 更好的可维护性和扩展性
 
+# ================= 智能门锁辅助函数 (Smart Lock Helper Functions) =================
+
+
+def _smart_lock_common_sensors():
+    """生成智能门锁共同的传感器配置（BAT, ALM, EVTLO, HISLK）"""
+    return {
+        "BAT": {
+            "description": "电量",
+            "rw": "R",
+            "data_type": "battery",
+            "conversion": "val_direct",
+            "detailed_description": "`Val`表示电量值",
+            "device_class": SensorDeviceClass.BATTERY,
+            "unit_of_measurement": PERCENTAGE,
+            "state_class": SensorStateClass.MEASUREMENT,
+        },
+        "ALM": {
+            "description": "告警信息",
+            "rw": "R",
+            "data_type": "alarm_status",
+            "conversion": "val_direct",
+            "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+        },
+        "EVTLO": {
+            "description": "实时开锁",
+            "rw": "R",
+            "data_type": "lock_event",
+            "conversion": "val_direct",
+            "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+        },
+        "HISLK": {
+            "description": "最近一次开锁信息",
+            "rw": "R",
+            "data_type": "recent_unlock",
+            "conversion": "val_direct",
+            "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+        },
+    }
+
+
+def _smart_lock_basic_config(name):
+    """生成基础智能门锁设备配置（标准门锁 + EVTOP）"""
+    return {
+        "name": name,
+        "sensor": {
+            **_smart_lock_common_sensors(),
+            "EVTOP": {
+                "description": "操作记录",
+                "rw": "R",
+                "data_type": "operation_record",
+                "conversion": "val_direct",
+                "detailed_description": "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or `type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) `val`的通用的编码次序是：[1Byte的记录 类型][2Byte的用户id][1Byte的用户 flag] 用户标志flag：`bit01=11`表示管理 员，01表示普通用户，00表示已经删除了",
+            },
+        },
+    }
+
+
+def _smart_lock_c_series_config(name):
+    """生成C100/C200门锁设备配置（标准门锁 + EVTBEL）"""
+    return {
+        "name": name,
+        "sensor": {
+            **_smart_lock_common_sensors(),
+            "EVTBEL": {
+                "description": "门铃消息",
+                "rw": "R",
+                "data_type": "doorbell_message",
+                "conversion": "val_direct",
+                "detailed_description": "门铃消息状态，与EVTLO共享，`type&1=1`表示有门铃消息",
+            },
+        },
+    }
+
+
+def _air_controller_climate_config():
+    """生成智控器空调面板完整配置（用于V_AIR_P、V_SZJSXR_P、V_T8600_P等参考设备）"""
+    return {
+        "climate": {
+            "O": {
+                "description": "开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`,`val` 值忽略表示打开；`type&1==0`,`val` 值忽略表示关闭；",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开空调"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭空调"},
+                },
+            },
+            "MODE": {
+                "description": "模式",
+                "rw": "RW",
+                "data_type": "hvac_mode",
+                "conversion": "val_direct",
+                "detailed_description": "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; 3:Cool 制冷; 4:Heat 制热; 5:Dry除湿",
+                "commands": {
+                    "set_mode": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置模式，val=模式值",
+                    },
+                },
+            },
+            "F": {
+                "description": "风速",
+                "rw": "RW",
+                "data_type": "fan_speed",
+                "conversion": "val_direct",
+                "detailed_description": "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; `val>=65`:高档",
+                "commands": {
+                    "set_fan_speed": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
+                    },
+                },
+            },
+            "tT": {
+                "description": "目标温度",
+                "rw": "RW",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "commands": {
+                    "set_temperature": {
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                        "description": "设置目标温度，val=目标温度值*10",
+                    },
+                },
+            },
+            "T": {
+                "description": "当前温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`type==0x08`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    }
+
+
 # ================= 设备IO特征映射 (Device IO Feature Mapping) =================
 # 基于设备实际IO口功能的平台支持映射，解决多平台设备问题
 # 每个设备只在一个主要集合中定义，但可支持多个平台
@@ -1754,6 +1898,116 @@ DEVICE_MAPPING = {
     "SL_SW_MJ1": _singularity_switch_device("奇点开关模块一键", ["P1"]),
     "SL_SW_MJ2": _singularity_switch_device("奇点开关模块二键", ["P1", "P2"]),
     "SL_SW_MJ3": _singularity_switch_device("奇点开关模块三键", ["P1", "P2", "P3"]),
+    # 2.2.8 星玉开关系列 (Nature Switch Series)
+    "SL_SW_NS1": _multi_key_switch_with_lights(
+        "星玉开关一键",
+        {"L1": _SWITCH_DESC_1},
+        {"dark": _LIGHT_DARK_SINGLE, "bright": _LIGHT_BRIGHT_SINGLE},
+    ),
+    "SL_SW_NS2": _multi_key_switch_with_lights(
+        "星玉开关二键",
+        {"L1": _SWITCH_DESC_1, "L2": _SWITCH_DESC_2},
+        {
+            "dark1": _LIGHT_DARK_1,
+            "dark2": _LIGHT_DARK_2,
+            "bright1": _LIGHT_BRIGHT_1,
+            "bright2": _LIGHT_BRIGHT_2,
+        },
+    ),
+    "SL_SW_NS3": _multi_key_switch_with_lights(
+        "星玉开关三键",
+        {"L1": _SWITCH_DESC_1, "L2": _SWITCH_DESC_2, "L3": _SWITCH_DESC_3},
+        {
+            "dark1": _LIGHT_DARK_1,
+            "dark2": _LIGHT_DARK_2,
+            "dark3": _LIGHT_DARK_3,
+            "bright1": _LIGHT_BRIGHT_1,
+            "bright2": _LIGHT_BRIGHT_2,
+            "bright3": _LIGHT_BRIGHT_3,
+        },
+    ),
+    # 2.2.11 极星开关(120零火版) (BS Series)
+    "SL_SW_BS1": {
+        "name": "极星开关(120零火版)一键",
+        "switch": _binary_switch_io("P1", "第一路开关控制口"),
+    },
+    "SL_SW_BS2": {
+        "name": "极星开关(120零火版)二键",
+        "switch": {
+            **_binary_switch_io("P1", "第一路开关控制口"),
+            **_binary_switch_io("P2", "第二路开关控制口"),
+        },
+    },
+    "SL_SW_BS3": {
+        "name": "极星开关(120零火版)三键",
+        "switch": {
+            **_binary_switch_io("P1", "第一路开关控制口"),
+            **_binary_switch_io("P2", "第二路开关控制口"),
+            **_binary_switch_io("P3", "第三路开关控制口"),
+        },
+    },
+    # 2.2.12 星玉调光开关（可控硅）Dimming Light Switch
+    "SL_SW_WW": {
+        "name": "星玉调光开关",
+        "light": {
+            "P1": {
+                "description": "亮度控制",
+                "rw": "RW",
+                "data_type": "brightness",
+                "conversion": "val_to_brightness",
+                "detailed_description": "`type&1==1`表示打开(忽略`val` 值);`type&1==0`表示关闭(忽略`val` 值);val指示灯光的亮度值范围[0，255]，255亮度最大。",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_brightness": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置亮度，val=亮度值[0,255]",
+                    },
+                },
+            },
+            "P2": {
+                "description": "色温控制",
+                "rw": "RW",
+                "data_type": "color_temp",
+                "conversion": "val_to_color_temp",
+                "detailed_description": "`val` 值为色温值，取值范围[0，255]，0表示暖光，255表示冷光",
+                "commands": {
+                    "set_color_temp": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置色温，val=色温值[0,255]",
+                    },
+                },
+            },
+        },
+        # 注意：SL_SW_DM1_V2也在星玉调光开关范畴内，通过fullCls区分版本
+    },
+    # 2.2.14 星玉情景面板（Nature Switch Scene Panel)
+    "SL_SW_NS6": {
+        "name": "星玉情景面板",
+        "switch": {
+            **_binary_switch_io("P1", "情景开关1"),
+            **_binary_switch_io("P2", "情景开关2"),
+            **_binary_switch_io("P3", "情景开关3"),
+            **_binary_switch_io("P4", "情景开关4"),
+            **_binary_switch_io("P5", "情景开关5"),
+            **_binary_switch_io("P6", "情景开关6"),
+        },
+        "sensor": {
+            "P7": {
+                "description": "开关控制器配置",
+                "rw": "RW",
+                "data_type": "scene_config",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值为面板上六个按键的功能配置参数。`bit0-bit3`:设置P1;`bit4-bit7`:设置P2;`bit8-bit11`：设置P3;`bit12-bit15`: 设置P4;`bit16-bit19`:设置P5;`bit20-bit23`：设置P6;如上划分每4个bit分别代表对应面板上的按钮设置，我们按照每4个bit的值来看功能的定义设置，以P1的设置为例：值为0时：表示自复位开关，默认5s自动关;值为1、2、3时：分别对应面板物理设备上的继电器L1，那么该P1的开关操作就是操作的继电器L1的开关；值为4~14时：表示自复位开关自定义延迟关的时间，若x表示满足当前区间的值，那么延迟关时间的计算公式为：(5+(X-3)*15) 单位为秒S。值为15时：表示通用开关，不会自动关。当P1~P6设置为绑定继电器时，当前为普通开关控制器。",
+                "commands": {
+                    "config": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "下发配置，val=bit0~bit23按对应Px配置值后合并的一个数值",
+                    },
+                },
+            },
+        },
+    },
     # ================= 2.3 窗帘控制系列 (Curtain Controller) =================
     # 2.3.1 窗帘控制开关
     "SL_SW_WIN": {
@@ -1832,119 +2086,6 @@ DEVICE_MAPPING = {
     "SL_SPOT": _rgb_device("超级碗RGB灯"),
     "SL_LI_IR": _brightness_color_temp_device("红外吸顶灯", night_port="P3"),
     "SL_P_IR": _brightness_color_temp_device("红外模块", night_port="P3"),
-    # ================= 超能面板设备 (NATURE Series Devices) =================
-    # 基于官方文档2.14 超能面板系列（NATURE Series)
-    # 注意：这是动态分类设备，根据P5值决定是开关版还是温控版
-    "SL_NATURE": {
-        "dynamic": True,
-        "switch_mode": {
-            "condition": "P5&0xFF==1",
-            "io": ["P1", "P2", "P3"],
-            "sensor_io": ["P4", "P5"],
-        },
-        "climate_mode": {
-            "condition": "P5&0xFF in [3,6]",
-            "climate": {
-                "P1": {
-                    "description": "开关",
-                    "rw": "RW",
-                    "data_type": "binary_switch",
-                    "conversion": "type_bit_0",
-                    "detailed_description": "type&1==1,表示打开(忽略`val` 值)；type&1==0,表示关闭(忽略`val` 值)；",
-                    "commands": {
-                        "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
-                        "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
-                    },
-                },
-                "P4": {
-                    "description": "T当前温度",
-                    "rw": "R",
-                    "data_type": "temperature",
-                    "conversion": "v_field",
-                    "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
-                    "device_class": SensorDeviceClass.TEMPERATURE,
-                    "unit_of_measurement": UnitOfTemperature.CELSIUS,
-                    "state_class": SensorStateClass.MEASUREMENT,
-                },
-                "P5": {
-                    "description": "设备种类",
-                    "rw": "R",
-                    "data_type": "device_type",
-                    "conversion": "val_direct",
-                    "detailed_description": "val&0xFF指示设备种类。1：开关面板 2：POE面板 3：温控面板 6：温控面板 注意：值必须是3或者6才是温控面板，否则是其它类型的设备。",
-                },
-                "P6": {
-                    "description": "CFG配置",
-                    "rw": "RW",
-                    "data_type": "config_bitmask",
-                    "conversion": "val_direct",
-                    "detailed_description": "(val>>6)&0x7 指示设备类型 0：新风模式 1：风机盘管（单阀）模式 2：水地暖模式 3：风机盘管+水地暖模式 4: 风机盘管（双阀）模式 5：水地暖+新风模式",
-                    "commands": {
-                        "set_config": {
-                            "type": CMD_TYPE_SET_RAW_ON,
-                            "description": "设置配置，需要保留其它位",
-                        },
-                    },
-                },
-                "P7": {
-                    "description": "MODE模式",
-                    "rw": "RW",
-                    "data_type": "hvac_mode",
-                    "conversion": "val_direct",
-                    "detailed_description": "3：Cool制冷 4：Heat 制热 7：DN地暖 8：DN_Heat 地暖+空调 注意：P6 CFG配置不同，支持的MODE也会不同",
-                    "commands": _single_command_set_mode(),
-                },
-                "P8": {
-                    "description": "tT目标温度",
-                    "rw": "RW",
-                    "data_type": "temperature",
-                    "conversion": "v_field",
-                    "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
-                    "device_class": SensorDeviceClass.TEMPERATURE,
-                    "unit_of_measurement": UnitOfTemperature.CELSIUS,
-                    "commands": {
-                        "set_temperature": {
-                            "type": CMD_TYPE_SET_TEMP_DECIMAL,
-                            "description": "设置目标温度，val=温度*10",
-                        },
-                    },
-                },
-                "P9": {
-                    "description": "tF目标风速",
-                    "rw": "RW",
-                    "data_type": "fan_speed",
-                    "conversion": "val_direct",
-                    "detailed_description": "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动 注意：P6 CFG配置不同，支持的tF也会不同",
-                    "commands": _single_command_set_fan_speed(),
-                },
-                "P10": {
-                    "description": "F当前风速",
-                    "rw": "R",
-                    "data_type": "fan_speed",
-                    "conversion": "val_direct",
-                    "detailed_description": "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动",
-                },
-            },
-            "binary_sensor": {
-                "P2": {
-                    "description": "阀门状态",
-                    "rw": "R",
-                    "data_type": "valve_status",
-                    "conversion": "val_direct",
-                    "detailed_description": "阀门1状态(盘管的冷阀或者盘管的冷热阀)",
-                    "device_class": BinarySensorDeviceClass.OPENING,
-                },
-                "P3": {
-                    "description": "阀门状态",
-                    "rw": "R",
-                    "data_type": "valve_status",
-                    "conversion": "val_direct",
-                    "detailed_description": "阀门2状态（盘管的热阀或者地暖阀)",
-                    "device_class": BinarySensorDeviceClass.OPENING,
-                },
-            },
-        },
-    },
     # ================= 2.6 感应器系列 (Sensor Series) =================
     # 2.6.1 门禁感应器（Guard Sensor)
     "SL_SC_G": _basic_door_sensor_device("门禁感应器", "G", "V"),
@@ -2318,6 +2459,1596 @@ DEVICE_MAPPING = {
                 "conversion": "val_direct",
                 "detailed_description": "`type&1==1`表示处于报警状态；`type&1==0`表示处于正常状态；`val`为32bit值，描述如下(16进制)：`0xAABBCCDD`：`AABB`表示警报持续时长，单位为0.1秒，等于65535则表示一直持续；`CC`是声音强度，0表示没有声音，其它值表示有声音；`DD`表示音频模式：0：无声音，1：指示音，2：告警音，0x7F：测试音，0x80-0xFF：自定义模式",
                 "commands": _siren_control_commands(),
+            },
+        },
+    },
+    # ================= 2.7 空气净化器 (Air Purifier) =================
+    "OD_MFRESH_M8088": {
+        "name": "空气净化器",
+        "switch": {
+            "O": {
+                "description": "开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit0",
+                "detailed_description": "`type&1==1`表示打开,`val` 值忽略；`type&1==0`表示关闭；",
+                "commands": _switch_binary_on_off(),
+            },
+            "RM": {
+                "description": "运行模式",
+                "rw": "RW",
+                "data_type": "run_mode",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值定义如下：0:auto 1~3:风量1~3 4：风量最大 5:睡眠模式",
+                "commands": {
+                    "set_mode": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置运行模式",
+                    },
+                },
+            },
+        },
+        "sensor": {
+            "T": {
+                "description": "温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "friendly_value",
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示原始温度值，它是温度值*10，`v` 值表示实际值(单位：℃)",
+            },
+            "H": {
+                "description": "湿度",
+                "rw": "R",
+                "data_type": "humidity",
+                "conversion": "friendly_value",
+                "unit_of_measurement": PERCENTAGE,
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
+            },
+            "PM": {
+                "description": "PM2.5",
+                "rw": "R",
+                "data_type": "pm25",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "µg/m³",
+                "device_class": SensorDeviceClass.PM25,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示PM2.5值，`v` 值表示实际值(单位：ug/m³)",
+            },
+            "FL": {
+                "description": "滤芯寿命",
+                "rw": "R",
+                "data_type": "filter_life",
+                "conversion": "val_direct",
+                "unit_of_measurement": "h",
+                "detailed_description": "`val` 值表示滤芯寿命，范围：0~4800(单位：h)",
+            },
+            "UV": {
+                "description": "紫外线指数",
+                "rw": "R",
+                "data_type": "uv_index",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值表示紫外线指数",
+            },
+        },
+    },
+    # ================= 2.8 智能门锁 (Smart Door Lock) =================
+    # 2.8.1 智能门锁系列 (Smart Door Lock Series)
+    "SL_LK_LS": _smart_lock_basic_config("思锁智能门锁"),
+    "SL_LK_GTM": _smart_lock_basic_config("盖特曼智能门锁"),
+    "SL_LK_AG": _smart_lock_basic_config("Aqara智能门锁"),
+    "SL_LK_SG": _smart_lock_basic_config("思哥智能门锁"),
+    "SL_LK_YL": _smart_lock_basic_config("Yale智能门锁"),
+    # 2.8.2 C100/C200门锁系列 (C100/C200 Door Lock Series)
+    "SL_LK_TY": _smart_lock_c_series_config("C200门锁"),
+    "SL_LK_DJ": _smart_lock_c_series_config("C100门锁"),
+    # ================= 2.9 温控器 (Climate Controller) =================
+    # 2.9.1 智控器空调面板 (Central AIR Board)
+    "V_AIR_P": {
+        "name": "智控器空调面板",
+        **_air_controller_climate_config(),
+    },
+    # 2.9.2 新风系统 (Fresh Air System)
+    "SL_TR_ACIPM": {
+        "name": "新风系统",
+        "climate": {
+            "P1": {
+                "description": "系统配置",
+                "rw": "RW",
+                "data_type": "hvac_mode",
+                "conversion": "val_direct",
+                "detailed_description": "1:自动; 2:手动; 3:定时",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_mode": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置模式，val=模式值",
+                    },
+                },
+            },
+            "P2": {
+                "description": "风速",
+                "rw": "RW",
+                "data_type": "fan_speed",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值定义如下: 0:关闭; 1:1档; 2:2档; 3:3档 注意：只有在模式处于手动模式下该参数设置才有效",
+                "commands": _single_command_set_fan_speed(),
+            },
+            "P3": {
+                "description": "设置VOC",
+                "rw": "RW",
+                "data_type": "voc_concentration",
+                "conversion": "val_div_10",
+                "detailed_description": "`val`值减小10倍为真实值，`v`值表示实际值(单位：ppm)",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "unit_of_measurement": "ppm",
+                "commands": {
+                    "set_voc": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置VOC值，需要将真实值扩大10倍",
+                    },
+                },
+            },
+        },
+        "sensor": {
+            "P4": {
+                "description": "VOC",
+                "rw": "R",
+                "data_type": "voc_concentration",
+                "conversion": "val_div_10",
+                "detailed_description": "`val`值表示原始VOC值，且`val`值减小10倍为真实值，`v`值表示实际值(单位：ppm)",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "unit_of_measurement": "ppm",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "P5": {
+                "description": "PM2.5",
+                "rw": "R",
+                "data_type": "pm25",
+                "conversion": "v_field",
+                "detailed_description": "`val`值表示原始PM2.5值，`v`为实际值(单位：μg/m³)",
+                "device_class": SensorDeviceClass.PM25,
+                "unit_of_measurement": "μg/m³",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            **_temperature_sensor_io(
+                "P6",
+                "当前温度",
+                conversion="val_div_10",
+                detail_desc="`val`值除以10为真实温度值，`v`值表示实际值(单位：℃)",
+            ),
+        },
+    },
+    # 2.9.3 地暖温控器 (Thermostat)
+    "SL_CP_DN": {
+        "name": "地暖温控器",
+        "climate": {
+            "P1": {
+                "description": "系统配置",
+                "rw": "RW",
+                "data_type": "hvac_mode",
+                "conversion": "val_direct",
+                "detailed_description": "该IO的type和val字段说明，详见文档表2-17-1",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_config": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置配置，需要保留其他位",
+                    },
+                },
+            },
+            "P3": {
+                "description": "目标温度",
+                "rw": "RW",
+                "data_type": "temperature",
+                "conversion": "val_div_10",
+                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10倍，`v`值表示实际值",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "commands": {
+                    "set_temperature": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置目标温度",
+                    },
+                },
+            },
+        },
+        "binary_sensor": {
+            "P2": {
+                "description": "继电器开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                "device_class": BinarySensorDeviceClass.OPENING,
+            },
+        },
+        "sensor": {
+            **_temperature_sensor_io(
+                "P4",
+                "室内温度",
+                conversion="val_div_10",
+                detail_desc="`val`值表示原始温度值，真实温度值为原始值除以10倍，精度为0.1，`v`值表示实际值",
+            ),
+            **_temperature_sensor_io(
+                "P5",
+                "底版温度",
+                conversion="val_div_10",
+                detail_desc="`val`值表示原始温度值，真实温度值为原始值除以10，精度为0.1，`v`值表示实际值",
+            ),
+        },
+    },
+    # 2.9.4 风机盘管 (Fan Coil Unit)
+    "SL_CP_AIR": {
+        "name": "风机盘管",
+        "climate": {
+            "P1": {
+                "description": "系统配置",
+                "rw": "RW",
+                "data_type": "hvac_mode",
+                "conversion": "val_direct",
+                "detailed_description": "该IO的type和val字段说明，详见文档表2-18-1",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_config": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置配置，需要保留其他位",
+                    },
+                },
+            },
+            "P4": {
+                "description": "目标温度",
+                "rw": "RW",
+                "data_type": "temperature",
+                "conversion": "val_div_10",
+                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10倍，精度为0.5，`v`值表示实际值",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "commands": {
+                    "set_temperature": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置目标温度",
+                    },
+                },
+            },
+        },
+        "binary_sensor": {
+            "P2": {
+                "description": "阀门状态",
+                "rw": "R",
+                "data_type": "valve_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type`值定义如下: 0x80:阀门关; 0x81:阀门开",
+                "device_class": BinarySensorDeviceClass.OPENING,
+            },
+        },
+        "sensor": {
+            "P3": {
+                "description": "风速状态",
+                "rw": "R",
+                "data_type": "fan_speed",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值定义如下: 0:自动; 1:低速; 2:中速; 3:高速",
+            },
+            **_temperature_sensor_io(
+                "P5",
+                "室内温度",
+                conversion="val_div_10",
+                detail_desc="`val`值表示原始温度值，真实温度值为原始值除以10，精度为0.1，`v`值表示实际值",
+            ),
+        },
+    },
+    # 2.9.5 空调控制面板 (AIR Board)
+    "SL_UACCB": {
+        "name": "空调控制面板",
+        "climate": {
+            "P1": {
+                "description": "开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`,`val`值忽略表示打开；`type&1==0`，`val`值忽略表示关闭",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开空调"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭空调"},
+                },
+            },
+            "P2": {
+                "description": "模式",
+                "rw": "RW",
+                "data_type": "hvac_mode",
+                "conversion": "val_direct",
+                "detailed_description": "`type==0xCE`，`val`值表示模式，定义如下：1:Auto自动；2:Fan吹风；3:Cool制冷；4:Heat制热；5:Dry除湿",
+                "commands": _single_command_set_mode(),
+            },
+            "P3": {
+                "description": "目标温度",
+                "rw": "RW",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`type==0x88`,`v`值表示实际温度值，`val`值表示原始温度值，它是温度值*10",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "commands": {
+                    "set_temperature": {
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                        "description": "设置目标温度，val=目标温度值*10",
+                    },
+                },
+            },
+            "P4": {
+                "description": "风速",
+                "rw": "RW",
+                "data_type": "fan_speed",
+                "conversion": "val_direct",
+                "detailed_description": "`val<30`:低档；`val<65`:中档；`val>=65`:高档",
+                "commands": {
+                    "set_fan_speed": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置风速，低档val=15；中档val=45；高档val=75",
+                    },
+                },
+            },
+        },
+        "sensor": {
+            **_temperature_sensor_io(
+                "P6",
+                "当前温度",
+                conversion="v_field",
+                detail_desc="`type==0x08`,`v`值表示实际温度值，`val`值表示原始温度值，它是温度值*10",
+            ),
+        },
+    },
+    # 2.9.6 温控阀门 (Thermostat Valve)
+    "SL_CP_VL": {
+        "name": "温控阀门",
+        "climate": {
+            "P1": {
+                "description": "开关及系统配置",
+                "rw": "RW",
+                "data_type": "hvac_mode",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`,`val`值忽略表示打开；该IO的type和val字段说明，详见文档表2-19-1",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    "set_config": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置配置，需要保留其他位",
+                    },
+                },
+            },
+            "P3": {
+                "description": "目标温度",
+                "rw": "RW",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`v`值表示实际温度值，`val`值表示原始温度值，它是温度值*10",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "commands": {
+                    "set_temperature": {
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                        "description": "设置目标温度，val=目标温度值*10",
+                    },
+                },
+            },
+        },
+        "sensor": {
+            **_temperature_sensor_io(
+                "P4",
+                "当前温度",
+                conversion="v_field",
+                detail_desc="`v`值表示实际温度值，`val`值表示原始温度值，它是温度值*10",
+            ),
+            "P5": {
+                "description": "告警",
+                "rw": "R",
+                "data_type": "alarm_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val`表示告警信息，可参考：bit0:高温保护；bit1:低温保护；bit2:int_sensor；bit3:ext_sensor；bit4:低电量；bit5:设备掉线",
+            },
+            **_battery_sensor_io(
+                "P6",
+                conversion="v_field",
+            ),
+        },
+    },
+    # 2.9.8 星玉地暖 (Smart Controller)
+    "SL_DN": {
+        "name": "星玉地暖",
+        "climate": {
+            "P1": {
+                "description": "开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`，`val`值忽略表示打开；`type&1==0`，`val`值忽略表示关闭",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开地暖"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭地暖"},
+                },
+            },
+            "P2": {
+                "description": "模式",
+                "rw": "RW",
+                "data_type": "config_bitmask",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值定义如下：温度限制0-5位：17+val(17~80)；回差6-9位：使用温度(v+1)*0.5作为回差参数；控温模式10-11位：0/1:in；2:out；3:all",
+                "commands": _single_command_set_config("设置模式配置"),
+            },
+            "P8": {
+                "description": "目标温度",
+                "rw": "RW",
+                "data_type": "temperature",
+                "conversion": "val_div_10",
+                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10倍，精度为0.5，`v`值表示实际值",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "commands": {
+                    "set_temperature": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置目标温度",
+                    },
+                },
+            },
+        },
+        "binary_sensor": {
+            "P3": {
+                "description": "阀门状态",
+                "rw": "R",
+                "data_type": "valve_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "type值定义如下：0x80:阀门关；0x81:阀门开；`val`值类型为浮点数值，表示的是电量统计",
+                "device_class": BinarySensorDeviceClass.OPENING,
+            },
+        },
+        "sensor": {
+            **_temperature_sensor_io(
+                "P4",
+                "室内温度",
+                conversion="val_div_10",
+                detail_desc="`val`值表示原始温度值，真实温度值为原始值除以10倍，精度为0.1，`v`值表示实际值",
+            ),
+            **_temperature_sensor_io(
+                "P9",
+                "底版温度",
+                conversion="val_div_10",
+                detail_desc="`val`值表示原始温度值，真实温度值为原始值除以10，精度为0.1，`v`值表示实际值",
+            ),
+        },
+    },
+    # ================= 2.10 通用控制器系列 (General Controller Series) =================
+    # 2.10.1 通用控制器 (General Controller)
+    "SL_P": {
+        "name": "通用控制器",
+        "dynamic": True,
+        "control_modes": {
+            "free_mode": {
+                "condition": "(P1>>24)&0xe == 0",
+                "binary_sensor": {
+                    "P5": {
+                        "description": "Status1状态输入",
+                        "rw": "R",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
+                        "device_class": BinarySensorDeviceClass.MOVING,
+                    },
+                    "P6": {
+                        "description": "Status2状态输入",
+                        "rw": "R",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
+                        "device_class": BinarySensorDeviceClass.MOVING,
+                    },
+                    "P7": {
+                        "description": "Status3状态输入",
+                        "rw": "R",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
+                        "device_class": BinarySensorDeviceClass.MOVING,
+                    },
+                },
+            },
+            "cover_mode": {
+                "condition": "(P1>>24)&0xe in [2,4,6]",
+                "cover": {
+                    "P2": {
+                        "description": "打开窗帘",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开窗帘",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开窗帘",
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "关闭窗帘",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示关闭窗帘",
+                        "commands": {
+                            "close": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "关闭窗帘",
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "停止窗帘",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示停止窗帘",
+                        "commands": {
+                            "stop": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "停止窗帘",
+                            },
+                        },
+                    },
+                },
+            },
+            "switch_mode": {
+                "condition": "(P1>>24)&0xe in [8,10]",
+                "switch": {
+                    "P2": {
+                        "description": "Ctrl1第一路开关",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开",
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                                "description": "关闭",
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "Ctrl2第二路开关",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开",
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                                "description": "关闭",
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "Ctrl3第三路开关",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开",
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                                "description": "关闭",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "sensor": {
+            "P1": {
+                "description": "控制参数",
+                "rw": "RW",
+                "data_type": "control_config",
+                "conversion": "val_direct",
+                "detailed_description": "32位控制参数：31bit软件配置标志，24-27bit工作模式，16-18bit延时使能，0-15bit延时秒数",
+                "commands": {
+                    "set_config": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置控制参数，需要保留未修改的bit位",
+                    },
+                },
+            },
+        },
+    },
+    # 2.10.2 通用控制器HA (HA Interface Adapter)
+    "SL_JEMA": {
+        "name": "通用控制器HA",
+        "dynamic": True,
+        "control_modes": {
+            "free_mode": {
+                "condition": "(P1>>24)&0xe == 0",
+                "binary_sensor": {
+                    "P5": {
+                        "description": "Status1状态输入",
+                        "rw": "R",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
+                        "device_class": BinarySensorDeviceClass.MOVING,
+                    },
+                    "P6": {
+                        "description": "Status2状态输入",
+                        "rw": "R",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
+                        "device_class": BinarySensorDeviceClass.MOVING,
+                    },
+                    "P7": {
+                        "description": "Status3状态输入",
+                        "rw": "R",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
+                        "device_class": BinarySensorDeviceClass.MOVING,
+                    },
+                },
+            },
+            "cover_mode": {
+                "condition": "(P1>>24)&0xe in [2,4,6]",
+                "cover": {
+                    "P2": {
+                        "description": "Ctrl1打开窗帘",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                        "commands": {
+                            "open": {"type": 0x81, "val": 1, "description": "打开窗帘"},
+                        },
+                    },
+                    "P3": {
+                        "description": "Ctrl2关闭窗帘",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                        "commands": {
+                            "close": {
+                                "type": 0x81,
+                                "val": 1,
+                                "description": "关闭窗帘",
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "Ctrl3停止窗帘",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                        "commands": {
+                            "stop": {"type": 0x81, "val": 1, "description": "停止窗帘"},
+                        },
+                    },
+                },
+            },
+            "switch_mode": {
+                "condition": "(P1>>24)&0xe in [8,10]",
+                "switch": {
+                    "P2": {
+                        "description": "Ctrl1第一路开关",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                        "commands": {
+                            "on": {"type": 0x81, "val": 1, "description": "打开"},
+                            "off": {"type": 0x80, "val": 0, "description": "关闭"},
+                        },
+                    },
+                    "P3": {
+                        "description": "Ctrl2第二路开关",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                        "commands": {
+                            "on": {"type": 0x81, "val": 1, "description": "打开"},
+                            "off": {"type": 0x80, "val": 0, "description": "关闭"},
+                        },
+                    },
+                    "P4": {
+                        "description": "Ctrl3第三路开关",
+                        "rw": "RW",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                        "commands": {
+                            "on": {"type": 0x81, "val": 1, "description": "打开"},
+                            "off": {"type": 0x80, "val": 0, "description": "关闭"},
+                        },
+                    },
+                },
+            },
+        },
+        "switch": {
+            "P8": {
+                "description": "HA1独立开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1, "description": "打开"},
+                    "off": {"type": 0x80, "val": 0, "description": "关闭"},
+                },
+            },
+            "P9": {
+                "description": "HA2独立开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1, "description": "打开"},
+                    "off": {"type": 0x80, "val": 0, "description": "关闭"},
+                },
+            },
+            "P10": {
+                "description": "HA3独立开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
+                "commands": {
+                    "on": {"type": 0x81, "val": 1, "description": "打开"},
+                    "off": {"type": 0x80, "val": 0, "description": "关闭"},
+                },
+            },
+        },
+        "sensor": {
+            "P1": {
+                "description": "控制参数",
+                "rw": "RW",
+                "data_type": "control_config",
+                "conversion": "val_direct",
+                "detailed_description": "32位控制参数：31bit恒为1(软件可配置)，24-27bit工作模式，16-18bit延时使能，0-15bit延时秒数",
+                "commands": {
+                    "set_config": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置控制参数，需要保留未修改的bit位",
+                    },
+                },
+            },
+        },
+    },
+    # ================= 第三方设备 (Third-party Devices) =================
+    "V_DLT645_P": {
+        "name": "DLT电量计量器",
+        "sensor": {
+            "EE": {
+                "description": "用电量",
+                "rw": "R",
+                "data_type": "energy_consumption",
+                "conversion": "ieee754_or_friendly",
+                "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+                "device_class": SensorDeviceClass.ENERGY,
+                "state_class": SensorStateClass.TOTAL_INCREASING,
+                "detailed_description": "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为度(kwh)。注意：`v` 值可以直接使用，若不存在`v` 值，则需要手动转换。其值类型为IEEE 754浮点数的32位整数布局。",
+            },
+            "EP": {
+                "description": "功率",
+                "rw": "R",
+                "data_type": "power",
+                "conversion": "ieee754_or_friendly",
+                "unit_of_measurement": UnitOfPower.WATT,
+                "device_class": SensorDeviceClass.POWER,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "为当前负载功率，`v` 值为浮点数，单位为w。注意：`v` 值可以直接使用，若不存在`v` 值，则需要手动转换。其值类型为IEEE 754浮点数的32位整数布局。",
+            },
+        },
+    },
+    "V_DUNJIA_P": {
+        "name": "X100人脸识别可视门锁",
+        "sensor": {**_smart_lock_common_sensors()},
+    },
+    "V_HG_L": {
+        "name": "极速开关组",
+        "switch": {
+            **_binary_switch_io("L1", "第一路开关控制口"),
+            **_binary_switch_io("L2", "第二路开关控制口"),
+            **_binary_switch_io("L3", "第三路开关控制口"),
+        },
+    },
+    "V_HG_XX": {
+        "name": "极速虚拟设备",
+        "switch": _binary_switch_io("P1", "虚拟开关"),
+    },
+    # V_SZJSXR_P (该规格属性参考 V_AIR_P) - 新风控制器(深圳建设新风)
+    "V_SZJSXR_P": {
+        "name": "新风控制器(深圳建设新风)",
+        # 参考V_AIR_P的IO口定义，使用相同的配置结构
+        **_air_controller_climate_config(),
+    },
+    # V_T8600_P (该规格属性参考 V_AIR_P) - YORK温控器
+    "V_T8600_P": {
+        "name": "YORK温控器T8600",
+        # 参考V_AIR_P的IO口定义，使用相同的配置结构
+        **_air_controller_climate_config(),
+    },
+    "V_FRESH_P": {
+        "name": "艾弗纳KV11新风控制器",
+        "switch": {
+            **_binary_switch_io("O", "开关"),
+            "MODE": {
+                "description": "工作模式",
+                "rw": "RW",
+                "data_type": "mode_config",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值为模式位掩码，0-1位和2-3位分别控制不同功能",
+                "commands": {
+                    "set_mode": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "description": "设置工作模式",
+                    },
+                },
+            },
+        },
+        "sensor": {
+            "F1": {
+                "description": "送风风速",
+                "rw": "R",
+                "data_type": "fan_speed",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值表示风速，0:停止, val<30:低档, val<65:中档, val>=65:高档",
+            },
+            "F2": {
+                "description": "排风风速",
+                "rw": "R",
+                "data_type": "fan_speed",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值表示风速，0:停止, val<30:低档, val<65:中档, val>=65:高档",
+            },
+            **_temperature_sensor_io(
+                "T",
+                "环境温度",
+                detail_desc="`val` 值除以10为真实温度值，`v` 值表示实际值(单位：℃)",
+            ),
+        },
+    },
+    "V_IND_S": {
+        "name": "工业传感器",
+        "sensor": {
+            "P1": {
+                "description": "传感器数值",
+                "rw": "R",
+                "data_type": "generic_value",
+                "conversion": "ieee754_or_friendly",
+                "detailed_description": "为当前接入设备的值，`val` 值为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为具体接入设备当前的单位",
+            },
+        },
+    },
+    "V_485_P": {
+        "name": "485控制器",
+        "wildcard_support": True,
+        "switch": {
+            "O": {
+                "description": "开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "type&1=1，`val` 值忽略表示打开；type&1=0，`val` 值忽略表示关闭；",
+                "commands": _switch_binary_on_off(),
+            },
+            "L*": {
+                "description": "多路开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "type&1=1,`val` 值忽略表示打开；type&1=0，`val` 值忽略表示关闭；(Lx，x为1时，即L1表示第一位开关的IO控制口，多位开关时x可取值为3，L3则表示第三位开关的IO控制口）",
+                "commands": _switch_binary_on_off(),
+            },
+        },
+        "sensor": {
+            "P1": {
+                "description": "当前接入设备的值",
+                "rw": "R",
+                "data_type": "generic_value",
+                "conversion": "ieee754_or_friendly",
+                "detailed_description": "为当前接入设备的值，`val` 值为为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为具体接入设备当前的单位。如：接入设备为压力传感器，那么val为当前接入设备的压力值，单位以接入设备的单位设定为准。",
+            },
+            # 电力监测相关 - 支持通配符
+            "EE": {
+                "description": "用电量",
+                "rw": "R",
+                "data_type": "energy_consumption",
+                "conversion": "ieee754_or_friendly",
+                "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+                "device_class": SensorDeviceClass.ENERGY,
+                "state_class": SensorStateClass.TOTAL_INCREASING,
+                "detailed_description": "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为度(kwh)。",
+            },
+            "EE*": {
+                "description": "多路用电量",
+                "rw": "R",
+                "data_type": "energy_consumption",
+                "conversion": "ieee754_or_friendly",
+                "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
+                "device_class": SensorDeviceClass.ENERGY,
+                "state_class": SensorStateClass.TOTAL_INCREASING,
+                "detailed_description": "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为度(kwh)。(EEx，x取值为数字)",
+            },
+            "EP": {
+                "description": "功率",
+                "rw": "R",
+                "data_type": "power",
+                "conversion": "ieee754_or_friendly",
+                "unit_of_measurement": UnitOfPower.WATT,
+                "device_class": SensorDeviceClass.POWER,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "为当前负载功率，`v` 值为浮点数，单位为w。",
+            },
+            "EPF": {
+                "description": "功率因数",
+                "rw": "R",
+                "data_type": "power_factor",
+                "conversion": "friendly_value",
+                "device_class": SensorDeviceClass.POWER_FACTOR,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "功率因数，单位无。",
+            },
+            "EPF*": {
+                "description": "多路功率因数",
+                "rw": "R",
+                "data_type": "power_factor",
+                "conversion": "friendly_value",
+                "device_class": SensorDeviceClass.POWER_FACTOR,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "功率因数，单位无。(EPFx，x取值为数字)",
+            },
+            "EF": {
+                "description": "交流电频率",
+                "rw": "R",
+                "data_type": "frequency",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "Hz",
+                "device_class": SensorDeviceClass.FREQUENCY,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "交流电频率，单位为HZ。",
+            },
+            "EF*": {
+                "description": "多路交流电频率",
+                "rw": "R",
+                "data_type": "frequency",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "Hz",
+                "device_class": SensorDeviceClass.FREQUENCY,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "交流电频率，单位为HZ。(EFx，x取值为数字)",
+            },
+            "EI": {
+                "description": "电流",
+                "rw": "R",
+                "data_type": "current",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "A",
+                "device_class": SensorDeviceClass.CURRENT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "电流，单位为A。",
+            },
+            "EI*": {
+                "description": "多路电流",
+                "rw": "R",
+                "data_type": "current",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "A",
+                "device_class": SensorDeviceClass.CURRENT,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "电流，单位为A。(EIx，x取值为数字)",
+            },
+            "EV": {
+                "description": "电压",
+                "rw": "R",
+                "data_type": "voltage",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "V",
+                "device_class": SensorDeviceClass.VOLTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "电压，单位为V。",
+            },
+            "EV*": {
+                "description": "多路电压",
+                "rw": "R",
+                "data_type": "voltage",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "V",
+                "device_class": SensorDeviceClass.VOLTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "电压，单位为V。(EVx，x取值为数字)",
+            },
+            # 环境监测相关
+            "T": {
+                "description": "温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "friendly_value",
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示原始温度值，`v` 值为实际值(单位：℃)。",
+            },
+            "H": {
+                "description": "湿度",
+                "rw": "R",
+                "data_type": "humidity",
+                "conversion": "friendly_value",
+                "unit_of_measurement": PERCENTAGE,
+                "device_class": SensorDeviceClass.HUMIDITY,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示原始湿度值，`v` 值为实际值(单位：%)。",
+            },
+            "PM": {
+                "description": "PM2.5",
+                "rw": "R",
+                "data_type": "pm25",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "µg/m³",
+                "device_class": SensorDeviceClass.PM25,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示PM2.5值，`v` 值为实际值(单位：ug/m³)。",
+            },
+            "PMx": {
+                "description": "PM10",
+                "rw": "R",
+                "data_type": "pm10",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "µg/m³",
+                "device_class": SensorDeviceClass.PM10,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示PM10值，`v` 值为实际值(单位：ug/m³)。",
+            },
+            # 气体监测相关
+            "COPPM": {
+                "description": "一氧化碳",
+                "rw": "R",
+                "data_type": "co_concentration",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "ppm",
+                "device_class": SensorDeviceClass.CO,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示co浓度值，`v` 值为实际值(单位：ppm)。",
+            },
+            "CO2PPM": {
+                "description": "二氧化碳",
+                "rw": "R",
+                "data_type": "co2_concentration",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "ppm",
+                "device_class": SensorDeviceClass.CO2,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示co2浓度值，`v` 值为实际值(单位：ppm)。",
+            },
+            "CH20PPM": {
+                "description": "甲醛",
+                "rw": "R",
+                "data_type": "formaldehyde_concentration",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "ppm",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示甲醛原始浓度值，`v` 值为实际值(单位：ppm)。",
+            },
+            "O2VOL": {
+                "description": "氧气",
+                "rw": "R",
+                "data_type": "oxygen_concentration",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "vol%",
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示氧气原始浓度值，`v` 值为实际值(单位：vol%)。",
+            },
+            "NH3PPM": {
+                "description": "氨气",
+                "rw": "R",
+                "data_type": "ammonia_concentration",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "ppm",
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示氨气原始浓度值，`v` 值为实际值(单位：ppm)。",
+            },
+            "H2SPPM": {
+                "description": "硫化氢",
+                "rw": "R",
+                "data_type": "h2s_concentration",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "ppm",
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示硫化氢原始浓度值，`v` 值为实际值(单位：ppm)。",
+            },
+            "TVOC": {
+                "description": "TVOC",
+                "rw": "R",
+                "data_type": "tvoc_concentration",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "mg/m³",
+                "device_class": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示TVOC原始浓度值，`v` 值为实际值(单位：mg/m³)。",
+            },
+            "PHM": {
+                "description": "噪音",
+                "rw": "R",
+                "data_type": "noise_level",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "dB",
+                "device_class": SensorDeviceClass.SOUND_PRESSURE,
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示噪音原始值，`v` 值为实际值(单位：dB)。",
+            },
+            "SMOKE": {
+                "description": "烟雾",
+                "rw": "R",
+                "data_type": "smoke_concentration",
+                "conversion": "friendly_value",
+                "unit_of_measurement": "ppm",
+                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`val` 值表示烟雾原始浓度值，`v` 值为实际值(单位：ppm)。",
+            },
+        },
+    },
+    "LSSSMINIV1": {
+        "name": "红外夜灯",
+        "light": {
+            "P1": {
+                "description": "夜灯控制",
+                "rw": "RW",
+                "data_type": "infrared_light",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示开启红外夜灯；`type&1==0`表示关闭红外夜灯",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开启夜灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭夜灯"},
+                },
+            },
+        },
+        "binary_sensor": {
+            "P2": {
+                "description": "人体感应",
+                "rw": "R",
+                "data_type": "motion_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值定义如下：0：没有检测到移动，1：有检测到移动",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        },
+        "sensor": {
+            **_illuminance_sensor_io("P3", "环境光照"),
+            **_battery_sensor_io("P4"),
+        },
+    },
+    "SL_DF_KP": {
+        "name": "云防键盘",
+        "binary_sensor": {
+            "KY": {
+                "description": "按键状态",
+                "rw": "R",
+                "data_type": "keypad_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值表示按键编号，0表示无按键按下，其他值表示对应按键编号",
+                "device_class": BinarySensorDeviceClass.MOVING,
+            },
+            "TR": {
+                "description": "防拆状态",
+                "rw": "R",
+                "data_type": "tamper_status",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`则表示触发防拆警报；`type&1==0`则表示状态正常",
+                "device_class": BinarySensorDeviceClass.TAMPER,
+            },
+        },
+        "sensor": {
+            "T": {
+                "description": "温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`val`值表示原始温度值，它是实际温度值*10，`v`值表示实际值(单位：℃)",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+            "V": {
+                "description": "电量",
+                "rw": "R",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val`值表示原始电压值，`v`值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    # ================= 2.11 摄像头系列 (Camera Series) =================
+    # 2.11.1 监控摄像头系列 (Surveillance Camera Series)
+    "LSCAM": {
+        "name": "监控摄像头",
+        "camera": {
+            "VIDEO": {
+                "description": "视频流",
+                "rw": "R",
+                "data_type": "video_stream",
+                "conversion": "stream_url",
+                "detailed_description": "实时视频流地址",
+            },
+            "PTZ": {
+                "description": "云台控制",
+                "rw": "RW",
+                "data_type": "ptz_control",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值控制云台方向：1：上；2：下；3：左；4：右；5：停止",
+                "commands": {
+                    "move_up": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "val": 1,
+                        "description": "向上",
+                    },
+                    "move_down": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "val": 2,
+                        "description": "向下",
+                    },
+                    "move_left": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "val": 3,
+                        "description": "向左",
+                    },
+                    "move_right": {
+                        "type": CMD_TYPE_SET_VAL,
+                        "val": 4,
+                        "description": "向右",
+                    },
+                    "stop": {"type": CMD_TYPE_SET_VAL, "val": 5, "description": "停止"},
+                },
+            },
+        },
+        "binary_sensor": {
+            "MOTION": {
+                "description": "动态检测",
+                "rw": "R",
+                "data_type": "motion_detection",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值定义如下：0：没有检测到移动，1：有检测到移动",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+            "SOUND": {
+                "description": "声音检测",
+                "rw": "R",
+                "data_type": "sound_detection",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值定义如下：0：没有检测到声音，1：有检测到声音",
+                "device_class": BinarySensorDeviceClass.SOUND,
+            },
+        },
+        "switch": {
+            "RECORD": {
+                "description": "录像控制",
+                "rw": "RW",
+                "data_type": "recording_control",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示开始录像；`type&1==0`表示停止录像",
+                "commands": {
+                    "start": {"type": CMD_TYPE_ON, "val": 1, "description": "开始录像"},
+                    "stop": {"type": CMD_TYPE_OFF, "val": 0, "description": "停止录像"},
+                },
+            },
+            "NIGHT_VISION": {
+                "description": "夜视模式",
+                "rw": "RW",
+                "data_type": "night_vision_control",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示开启夜视模式；`type&1==0`表示关闭夜视模式",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开启夜视"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭夜视"},
+                },
+            },
+        },
+        "sensor": {
+            "SIGNAL": {
+                "description": "信号强度",
+                "rw": "R",
+                "data_type": "signal_strength",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值表示WiFi信号强度，范围：-100至0 dBm",
+                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
+                "unit_of_measurement": "dBm",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    # 2.11.2 门铃摄像头 (Doorbell Camera)
+    "LSCAM_DOORBELL": {
+        "name": "门铃摄像头",
+        "camera": {
+            "VIDEO": {
+                "description": "视频流",
+                "rw": "R",
+                "data_type": "video_stream",
+                "conversion": "stream_url",
+                "detailed_description": "实时视频流地址",
+            },
+        },
+        "binary_sensor": {
+            "DOORBELL": {
+                "description": "门铃按键",
+                "rw": "R",
+                "data_type": "doorbell_button",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示门铃被按下；`type&1==0`表示门铃释放",
+                "device_class": BinarySensorDeviceClass.MOVING,
+            },
+            "MOTION": {
+                "description": "动态检测",
+                "rw": "R",
+                "data_type": "motion_detection",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值定义如下：0：没有检测到移动，1：有检测到移动",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        },
+        "switch": {
+            "CHIME": {
+                "description": "响铃控制",
+                "rw": "RW",
+                "data_type": "chime_control",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示开启响铃；`type&1==0`表示关闭响铃",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开启响铃"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭响铃"},
+                },
+            },
+        },
+        "sensor": {
+            **_battery_sensor_io("BATTERY"),
+            "SIGNAL": {
+                "description": "信号强度",
+                "rw": "R",
+                "data_type": "signal_strength",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值表示WiFi信号强度，范围：-100至0 dBm",
+                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
+                "unit_of_measurement": "dBm",
+                "state_class": SensorStateClass.MEASUREMENT,
+            },
+        },
+    },
+    # ================= 超能面板设备 (NATURE Series Devices) =================
+    # 基于官方文档2.14 超能面板系列（NATURE Series)
+    # 注意：这是动态分类设备，根据P5值决定是开关版还是温控版
+    "SL_NATURE": {
+        "dynamic": True,
+        "switch_mode": {
+            "condition": "P5&0xFF==1",
+            "io": ["P1", "P2", "P3"],
+            "sensor_io": ["P4", "P5"],
+        },
+        "climate_mode": {
+            "condition": "P5&0xFF in [3,6]",
+            "climate": {
+                "P1": {
+                    "description": "开关",
+                    "rw": "RW",
+                    "data_type": "binary_switch",
+                    "conversion": "type_bit_0",
+                    "detailed_description": "type&1==1,表示打开(忽略`val` 值)；type&1==0,表示关闭(忽略`val` 值)；",
+                    "commands": {
+                        "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                        "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
+                    },
+                },
+                "P4": {
+                    "description": "T当前温度",
+                    "rw": "R",
+                    "data_type": "temperature",
+                    "conversion": "v_field",
+                    "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
+                    "device_class": SensorDeviceClass.TEMPERATURE,
+                    "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    "state_class": SensorStateClass.MEASUREMENT,
+                },
+                "P5": {
+                    "description": "设备种类",
+                    "rw": "R",
+                    "data_type": "device_type",
+                    "conversion": "val_direct",
+                    "detailed_description": "val&0xFF指示设备种类。1：开关面板 2：POE面板 3：温控面板 6：温控面板 注意：值必须是3或者6才是温控面板，否则是其它类型的设备。",
+                },
+                "P6": {
+                    "description": "CFG配置",
+                    "rw": "RW",
+                    "data_type": "config_bitmask",
+                    "conversion": "val_direct",
+                    "detailed_description": "(val>>6)&0x7 指示设备类型 0：新风模式 1：风机盘管（单阀）模式 2：水地暖模式 3：风机盘管+水地暖模式 4: 风机盘管（双阀）模式 5：水地暖+新风模式",
+                    "commands": {
+                        "set_config": {
+                            "type": CMD_TYPE_SET_RAW_ON,
+                            "description": "设置配置，需要保留其它位",
+                        },
+                    },
+                },
+                "P7": {
+                    "description": "MODE模式",
+                    "rw": "RW",
+                    "data_type": "hvac_mode",
+                    "conversion": "val_direct",
+                    "detailed_description": "3：Cool制冷 4：Heat 制热 7：DN地暖 8：DN_Heat 地暖+空调 注意：P6 CFG配置不同，支持的MODE也会不同",
+                    "commands": _single_command_set_mode(),
+                },
+                "P8": {
+                    "description": "tT目标温度",
+                    "rw": "RW",
+                    "data_type": "temperature",
+                    "conversion": "v_field",
+                    "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
+                    "device_class": SensorDeviceClass.TEMPERATURE,
+                    "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                    "commands": {
+                        "set_temperature": {
+                            "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            "description": "设置目标温度，val=温度*10",
+                        },
+                    },
+                },
+                "P9": {
+                    "description": "tF目标风速",
+                    "rw": "RW",
+                    "data_type": "fan_speed",
+                    "conversion": "val_direct",
+                    "detailed_description": "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动 注意：P6 CFG配置不同，支持的tF也会不同",
+                    "commands": _single_command_set_fan_speed(),
+                },
+                "P10": {
+                    "description": "F当前风速",
+                    "rw": "R",
+                    "data_type": "fan_speed",
+                    "conversion": "val_direct",
+                    "detailed_description": "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动",
+                },
+            },
+            "binary_sensor": {
+                "P2": {
+                    "description": "阀门状态",
+                    "rw": "R",
+                    "data_type": "valve_status",
+                    "conversion": "val_direct",
+                    "detailed_description": "阀门1状态(盘管的冷阀或者盘管的冷热阀)",
+                    "device_class": BinarySensorDeviceClass.OPENING,
+                },
+                "P3": {
+                    "description": "阀门状态",
+                    "rw": "R",
+                    "data_type": "valve_status",
+                    "conversion": "val_direct",
+                    "detailed_description": "阀门2状态（盘管的热阀或者地暖阀)",
+                    "device_class": BinarySensorDeviceClass.OPENING,
+                },
+            },
+        },
+    },
+    # ================= 2.14 智能面板系列 (Smart Panel Series) =================
+    # 2.14.4 星玉温控面板 (Nature Thermostat)
+    "SL_FCU": {
+        "name": "星玉温控面板",
+        "climate": {
+            "P1": {
+                "description": "开关",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "val_direct",
+                "detailed_description": "开关状态：0关 1开",
+                "commands": _switch_binary_on_off(),
+            },
+            "P6": {
+                "description": "CFG配置",
+                "rw": "RW",
+                "data_type": "config_bitmask",
+                "conversion": "val_direct",
+                "detailed_description": "配置功能：bit0：热回水开关，bit1：地暖开关，bit2：制热开关，bit3：制冷开关，bit4：通风开关，bit5：除湿开关，bit6：加湿开关，bit7：应急通风开关，bit8：应急加热开关，bit9：应急制冷开关",
+            },
+            "P7": {
+                "description": "MODE模式",
+                "rw": "RW",
+                "data_type": "hvac_mode",
+                "conversion": "val_direct",
+                "detailed_description": "运行模式：1制热、2制冷、3通风、4除湿、5加湿、6应急通风、7应急加热、8应急制冷、16自动",
+                "commands": _single_command_set_mode(),
+            },
+            "P8": {
+                "description": "tT目标温度",
+                "rw": "RW",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+                "commands": {
+                    "set_temperature": {
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                        "description": "设置目标温度，val=温度*10",
+                    },
+                },
+            },
+            "P9": {
+                "description": "tF目标风速",
+                "rw": "RW",
+                "data_type": "fan_speed",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动 注意：P6 CFG配置不同，支持的tF也会不同",
+                "commands": _single_command_set_fan_speed(),
+            },
+        },
+        "sensor": {
+            "P4": {
+                "description": "T当前温度",
+                "rw": "R",
+                "data_type": "temperature",
+                "conversion": "v_field",
+                "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "unit_of_measurement": UnitOfTemperature.CELSIUS,
+            },
+            "P10": {
+                "description": "F当前风速",
+                "rw": "R",
+                "data_type": "fan_speed",
+                "conversion": "val_direct",
+                "detailed_description": "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动",
+            },
+        },
+        "binary_sensor": {
+            "P2": {
+                "description": "阀门状态",
+                "rw": "R",
+                "data_type": "valve_status",
+                "conversion": "val_direct",
+                "detailed_description": "阀门1状态(盘管的冷阀或者盘管的冷热阀)",
+                "device_class": BinarySensorDeviceClass.OPENING,
+            },
+            "P3": {
+                "description": "阀门状态",
+                "rw": "R",
+                "data_type": "valve_status",
+                "conversion": "val_direct",
+                "detailed_description": "阀门2状态（盘管的热阀或者地暖阀)",
+                "device_class": BinarySensorDeviceClass.OPENING,
             },
         },
     },
