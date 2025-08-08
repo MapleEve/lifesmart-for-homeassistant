@@ -1727,6 +1727,106 @@ DEVICE_MAPPING = {
         )
     },
     # 2.2.1 传统开关系列补充 (Traditional Switch Series Supplement)
+    "SL_SF_RC": {
+        "name": "单火触摸开关",
+        "switch": {
+            **_binary_switch_io("L1", "第一路开关控制口"),
+            **_binary_switch_io("L2", "第二路开关控制口"),
+            **_binary_switch_io("L3", "第三路开关控制口"),
+        },
+        "light": {
+            "dark": {
+                "description": "关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "indicator_light",
+                "conversion": "val_direct",
+                "range": "0-1023",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_brightness_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置亮度值",
+                    },
+                    "set_brightness_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置亮度值",
+                    },
+                },
+            },
+            "bright": {
+                "description": "开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "indicator_light",
+                "conversion": "val_direct",
+                "range": "0-1023",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_brightness_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置亮度值",
+                    },
+                    "set_brightness_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置亮度值",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_RC": {
+        "name": "触摸开关/极星开关(零火版)",
+        "switch": {
+            **_binary_switch_io("L1", "第一路开关控制口"),
+            **_binary_switch_io("L2", "第二路开关控制口"),
+            **_binary_switch_io("L3", "第三路开关控制口"),
+        },
+        "light": {
+            "dark": {
+                "description": "关状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "indicator_light",
+                "conversion": "val_direct",
+                "range": "0-1023",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_brightness_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置亮度值",
+                    },
+                    "set_brightness_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置亮度值",
+                    },
+                },
+            },
+            "bright": {
+                "description": "开状态时指示灯亮度",
+                "rw": "RW",
+                "data_type": "indicator_light",
+                "conversion": "val_direct",
+                "range": "0-1023",
+                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开灯"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关灯"},
+                    "set_brightness_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "开灯并设置亮度值",
+                    },
+                    "set_brightness_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "关灯并设置亮度值",
+                    },
+                },
+            },
+        },
+    },
     "SL_SW_IF3": _multi_key_switch_with_lights(
         "流光开关三键",
         {"L1": _SWITCH_DESC_1, "L2": _SWITCH_DESC_2, "L3": _SWITCH_DESC_3},
@@ -1869,6 +1969,178 @@ DEVICE_MAPPING = {
             },
         },
     },
+    #### 2.2.5 动态调光开关(Dimmer Motion Controller) - 版本设备
+    "SL_SW_DM1": {
+        "versioned": True,
+        "version_modes": {
+            "V1": {
+                "name": "动态调光开关",
+                "light": {
+                    "P1": {
+                        "description": "开关",
+                        "rw": "RW",
+                        "data_type": "brightness_light",
+                        "conversion": "val_direct",
+                        "range": "0-255",
+                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开",
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                                "description": "关闭",
+                            },
+                            "set_brightness_on": {
+                                "type": 0xCF,
+                                "description": "打开并且设置亮度，val=亮度值[0,255]",
+                            },
+                            "set_brightness_off": {
+                                "type": 0xCE,
+                                "description": "关闭并设置亮度，val=亮度值[0,255]",
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "指示灯",
+                        "rw": "RW",
+                        "data_type": "indicator_light",
+                        "conversion": "val_direct",
+                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，它有灯光处于打开状态下的指示灯亮度和灯光处于关闭状态下的指示灯亮度。`bit8-bit15`：用于指示灯光处于打开状态下的指示灯亮度 `bit0-bit7`：用于指示灯光处于关闭状态下的指示灯亮度 每8个bit可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮。",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开",
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                                "description": "关闭",
+                            },
+                            "set_brightness": {
+                                "type": 223,
+                                "description": "设置亮度，val=亮度值[0,65535]",
+                            },
+                        },
+                    },
+                },
+                "binary_sensor": {
+                    "P3": {
+                        "description": "移动检测",
+                        "rw": "R",
+                        "data_type": "motion_status",
+                        "conversion": "val_direct",
+                        "detailed_description": "`val` 值定义如下：0：没有检测到移动 1：有检测到移动",
+                        "device_class": BinarySensorDeviceClass.MOTION,
+                    },
+                },
+                "sensor": {
+                    "P4": {
+                        "description": "环境光照",
+                        "rw": "R",
+                        "data_type": "illuminance",
+                        "conversion": "val_direct",
+                        "detailed_description": "`val` 值表示原始光照值(单位：lux)",
+                        "device_class": SensorDeviceClass.ILLUMINANCE,
+                        "unit_of_measurement": "lx",
+                        "state_class": SensorStateClass.MEASUREMENT,
+                    },
+                    "P5": {
+                        "description": "调光设置",
+                        "rw": "RW",
+                        "data_type": "dimming_config",
+                        "conversion": "val_direct",
+                        "detailed_description": "当前调光设置值",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "description": "设置调光参数配置",
+                            },
+                        },
+                    },
+                    "P6": {
+                        "description": "动态设置",
+                        "rw": "RW",
+                        "data_type": "dynamic_config",
+                        "conversion": "val_direct",
+                        "detailed_description": "当前动态设置值",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "description": "设置动态参数配置",
+                            },
+                        },
+                    },
+                },
+            },
+            "V2": {
+                "name": "星玉调光开关(可控硅)",
+                "light": {
+                    "P1": {
+                        "description": "开关",
+                        "rw": "RW",
+                        "data_type": "brightness_light",
+                        "conversion": "val_direct",
+                        "range": "0-255",
+                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开",
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                                "description": "关闭",
+                            },
+                            "set_brightness_on": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "description": "打开并且设置亮度，val=亮度值[0,255]",
+                            },
+                            "set_brightness_off": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "description": "关闭并设置亮度，val=亮度值[0,255]",
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "指示灯亮度",
+                        "rw": "RW",
+                        "data_type": "indicator_light",
+                        "conversion": "val_direct",
+                        "range": "0-255",
+                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开",
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                                "description": "关闭",
+                            },
+                            "set_brightness": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "description": "设置亮度，val=亮度值[0,255]",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.6 奇点开关模块系列 (Singularity Switch Module Series)
+    "SL_SW_MJ1": _singularity_switch_device("奇点开关模块一键", ["P1"]),
+    "SL_SW_MJ2": _singularity_switch_device("奇点开关模块二键", ["P1", "P2"]),
+    "SL_SW_MJ3": _singularity_switch_device("奇点开关模块三键", ["P1", "P2", "P3"]),
+    # 2.2.7 随心按键 (CUBE Clicker2)
     "SL_SC_BB_V2": {
         "name": "随心按键",
         "button": {
@@ -1894,10 +2166,6 @@ DEVICE_MAPPING = {
             },
         },
     },
-    # 2.2.5 奇点开关模块系列 (Singularity Switch Module Series)
-    "SL_SW_MJ1": _singularity_switch_device("奇点开关模块一键", ["P1"]),
-    "SL_SW_MJ2": _singularity_switch_device("奇点开关模块二键", ["P1", "P2"]),
-    "SL_SW_MJ3": _singularity_switch_device("奇点开关模块三键", ["P1", "P2", "P3"]),
     # 2.2.8 星玉开关系列 (Nature Switch Series)
     "SL_SW_NS1": _multi_key_switch_with_lights(
         "星玉开关一键",
@@ -2074,8 +2342,98 @@ DEVICE_MAPPING = {
     "SL_SC_RGB": _rgb_device("RGB灯带无白光"),
     # 2.4.2 量子灯 (Quantum Light)
     "OD_WE_QUAN": _quantum_light_device("量子灯"),
-    # 2.4.3 调光调色控制器/白光智能灯泡 (Smart Bulb)
-    "SL_LI_WW": _brightness_color_temp_device("调光调色控制器"),
+    # 2.4.3 调光调色控制器/白光智能灯泡 (Smart Bulb) - 版本设备
+    "SL_LI_WW": {
+        "versioned": True,
+        "version_modes": {
+            "V1": {
+                "name": "智能灯泡(冷暖白)",
+                "light": {
+                    "P1": {
+                        "description": "亮度控制",
+                        "rw": "RW",
+                        "data_type": "brightness_light",
+                        "conversion": "val_direct",
+                        "range": "0-255",
+                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开",
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                                "description": "关闭",
+                            },
+                            "set_brightness": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "description": "设置亮度，val=亮度值[0-255]",
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "色温控制",
+                        "rw": "RW",
+                        "data_type": "color_temperature",
+                        "conversion": "val_direct",
+                        "range": "0-255",
+                        "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
+                        "commands": {
+                            "set_color_temp": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "description": "设置色温，val=色温值[0-255]",
+                            },
+                        },
+                    },
+                },
+            },
+            "V2": {
+                "name": "调光调色智控器(0-10V)",
+                "light": {
+                    "P1": {
+                        "description": "亮度控制",
+                        "rw": "RW",
+                        "data_type": "brightness_light",
+                        "conversion": "val_direct",
+                        "range": "0-255",
+                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                                "description": "打开",
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                                "description": "关闭",
+                            },
+                            "set_brightness": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "description": "设置亮度，val=亮度值[0-255]",
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "色温控制",
+                        "rw": "RW",
+                        "data_type": "color_temperature",
+                        "conversion": "val_direct",
+                        "range": "0-255",
+                        "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
+                        "commands": {
+                            "set_color_temp": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "description": "设置色温，val=色温值[0-255]",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
     # 2.4.4 门廊壁灯 (Porch Wall Lamp)
     "SL_LI_GD1": _motion_light_device("门廊壁灯", "P1", "P2", "P3"),
     # 2.4.5 花园地灯 (Garden Landscape Light)
@@ -2086,6 +2444,10 @@ DEVICE_MAPPING = {
     "SL_SPOT": _rgb_device("超级碗RGB灯"),
     "SL_LI_IR": _brightness_color_temp_device("红外吸顶灯", night_port="P3"),
     "SL_P_IR": _brightness_color_temp_device("红外模块", night_port="P3"),
+    "SL_SC_CV": {
+        "name": "语音小Q",
+        "switch": _binary_switch_io("P1"),
+    },
     # ================= 2.6 感应器系列 (Sensor Series) =================
     # 2.6.1 门禁感应器（Guard Sensor)
     "SL_SC_G": _basic_door_sensor_device("门禁感应器", "G", "V"),
@@ -2413,7 +2775,7 @@ DEVICE_MAPPING = {
             },
         },
     },
-    # 2.6.16 噪音感应器（Noise Sensor)
+    # 2.6.17 噪音感应器（Noise Sensor)
     "SL_SC_CN": {
         "name": "噪音感应器",
         "sensor": {
@@ -2543,6 +2905,9 @@ DEVICE_MAPPING = {
     "SL_LK_AG": _smart_lock_basic_config("Aqara智能门锁"),
     "SL_LK_SG": _smart_lock_basic_config("思哥智能门锁"),
     "SL_LK_YL": _smart_lock_basic_config("Yale智能门锁"),
+    "SL_LK_SWIFTE": _smart_lock_basic_config("SWIFTE智能门锁"),
+    "OD_JIUWANLI_LOCK1": _smart_lock_basic_config("久万里智能门锁"),
+    "SL_P_BDLK": _smart_lock_basic_config("百度智能门锁"),
     # 2.8.2 C100/C200门锁系列 (C100/C200 Door Lock Series)
     "SL_LK_TY": _smart_lock_c_series_config("C200门锁"),
     "SL_LK_DJ": _smart_lock_c_series_config("C100门锁"),
@@ -3697,157 +4062,150 @@ DEVICE_MAPPING = {
         },
     },
     # ================= 2.11 摄像头系列 (Camera Series) =================
-    # 2.11.1 监控摄像头系列 (Surveillance Camera Series)
-    "LSCAM": {
-        "name": "监控摄像头",
-        "camera": {
-            "VIDEO": {
-                "description": "视频流",
-                "rw": "R",
-                "data_type": "video_stream",
-                "conversion": "stream_url",
-                "detailed_description": "实时视频流地址",
+    # 基于官方文档2.13摄像头系列规格
+    # 基础设备类型: cam，通过dev_rt属性区分具体型号
+    "cam": {
+        "camera": True,
+        "name": "摄像头",
+        "dev_rt_variants": {
+            "LSCAM:LSCAMV1": {
+                "name": "FRAME摄像头",
+                "supported_ios": ["M", "V", "CFST"],
             },
-            "PTZ": {
-                "description": "云台控制",
-                "rw": "RW",
-                "data_type": "ptz_control",
-                "conversion": "val_direct",
-                "detailed_description": "`val`值控制云台方向：1：上；2：下；3：左；4：右；5：停止",
-                "commands": {
-                    "move_up": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 1,
-                        "description": "向上",
-                    },
-                    "move_down": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 2,
-                        "description": "向下",
-                    },
-                    "move_left": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 3,
-                        "description": "向左",
-                    },
-                    "move_right": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 4,
-                        "description": "向右",
-                    },
-                    "stop": {"type": CMD_TYPE_SET_VAL, "val": 5, "description": "停止"},
+            "LSCAM:LSICAMEZ1": {"name": "户外摄像头", "supported_ios": ["M"]},
+            "LSCAM:LSICAMEZ2": {"name": "户外摄像头", "supported_ios": ["M"]},
+            "LSCAM:LSLKCAMV1": {"name": "视频门锁摄像头", "supported_ios": ["M"]},
+            "LSCAM:LSICAMGOS1": {
+                "name": "高清摄像头",
+                "supported_ios": ["M"],
+                "model_key_support": {
+                    "0xd2": "高清摄像头",
+                    "0xda": "云视户外摄像头",
+                    "0xdb": "云瞳室内摄像头",
+                    "0xdc": "云瞳室外摄像头",
                 },
             },
         },
         "binary_sensor": {
-            "MOTION": {
-                "description": "动态检测",
+            "M": {
+                "description": "移动检测",
                 "rw": "R",
                 "data_type": "motion_detection",
                 "conversion": "val_direct",
                 "detailed_description": "`val`值定义如下：0：没有检测到移动，1：有检测到移动",
                 "device_class": BinarySensorDeviceClass.MOTION,
             },
-            "SOUND": {
-                "description": "声音检测",
-                "rw": "R",
-                "data_type": "sound_detection",
-                "conversion": "val_direct",
-                "detailed_description": "`val`值定义如下：0：没有检测到声音，1：有检测到声音",
-                "device_class": BinarySensorDeviceClass.SOUND,
-            },
-        },
-        "switch": {
-            "RECORD": {
-                "description": "录像控制",
-                "rw": "RW",
-                "data_type": "recording_control",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示开始录像；`type&1==0`表示停止录像",
-                "commands": {
-                    "start": {"type": CMD_TYPE_ON, "val": 1, "description": "开始录像"},
-                    "stop": {"type": CMD_TYPE_OFF, "val": 0, "description": "停止录像"},
-                },
-            },
-            "NIGHT_VISION": {
-                "description": "夜视模式",
-                "rw": "RW",
-                "data_type": "night_vision_control",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示开启夜视模式；`type&1==0`表示关闭夜视模式",
-                "commands": {
-                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开启夜视"},
-                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭夜视"},
-                },
-            },
         },
         "sensor": {
-            "SIGNAL": {
-                "description": "信号强度",
+            "V": {
+                "description": "电压",
                 "rw": "R",
-                "data_type": "signal_strength",
-                "conversion": "val_direct",
-                "detailed_description": "`val`值表示WiFi信号强度，范围：-100至0 dBm",
-                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
-                "unit_of_measurement": "dBm",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "detailed_description": "`val`表示原始电压值，`v`值将表示当前剩余电量百分比，值范围[0,100]，它是根据val电压值换算的。注意：当前只有FRAME设备有该属性",
+                "device_class": SensorDeviceClass.BATTERY,
+                "unit_of_measurement": PERCENTAGE,
                 "state_class": SensorStateClass.MEASUREMENT,
+                "availability_condition": "dev_rt == 'LSCAM:LSCAMV1'",
+            },
+            "CFST": {
+                "description": "摄像头状态",
+                "rw": "R",
+                "data_type": "camera_status",
+                "conversion": "val_direct",
+                "detailed_description": "`val`值定义如下（按位表示值）：第0位：表示是否有外接电源，1表示有外接电源，0表示没有；第1位：是否为旋转云台，1表示摄像头在旋转云台上，0表示没有；第2位：表示是否正在旋转，1表示正在旋转。注意：当前只有FRAME设备有该属性",
+                "availability_condition": "dev_rt == 'LSCAM:LSCAMV1'",
             },
         },
     },
-    # 2.11.2 门铃摄像头 (Doorbell Camera)
-    "LSCAM_DOORBELL": {
-        "name": "门铃摄像头",
-        "camera": {
-            "VIDEO": {
-                "description": "视频流",
-                "rw": "R",
-                "data_type": "video_stream",
-                "conversion": "stream_url",
-                "detailed_description": "实时视频流地址",
-            },
-        },
-        "binary_sensor": {
-            "DOORBELL": {
-                "description": "门铃按键",
-                "rw": "R",
-                "data_type": "doorbell_button",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示门铃被按下；`type&1==0`表示门铃释放",
-                "device_class": BinarySensorDeviceClass.MOVING,
-            },
-            "MOTION": {
-                "description": "动态检测",
-                "rw": "R",
-                "data_type": "motion_detection",
-                "conversion": "val_direct",
-                "detailed_description": "`val`值定义如下：0：没有检测到移动，1：有检测到移动",
-                "device_class": BinarySensorDeviceClass.MOTION,
-            },
-        },
-        "switch": {
-            "CHIME": {
-                "description": "响铃控制",
+    # ================= 2.12 车库门控制 (Garage Door Control) =================
+    "SL_ETDOOR": {
+        "name": "车库门控制器",
+        "light": {
+            "P1": {
+                "description": "灯光控制",
                 "rw": "RW",
-                "data_type": "chime_control",
+                "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示开启响铃；`type&1==0`表示关闭响铃",
+                "detailed_description": "`type&1==1`表示打开(忽略`val`值)；`type&1==0`表示关闭(忽略`val`值)",
                 "commands": {
-                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "开启响铃"},
-                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭响铃"},
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
                 },
             },
         },
-        "sensor": {
-            **_battery_sensor_io("BATTERY"),
-            "SIGNAL": {
-                "description": "信号强度",
+        "cover": {
+            "P2": {
+                "description": "车库门状态",
                 "rw": "R",
-                "data_type": "signal_strength",
+                "data_type": "garage_door_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val`值表示WiFi信号强度，范围：-100至0 dBm",
-                "device_class": SensorDeviceClass.SIGNAL_STRENGTH,
-                "unit_of_measurement": "dBm",
-                "state_class": SensorStateClass.MEASUREMENT,
+                "detailed_description": "`type&1==1`表示控制正在运行；`type&1==0`表示没有运行；当正在运行的时候即(`type&1==1`):`val&0x80==0x80`表示正在开，否则表示正在关；`val&0x7F`的值表示车库门打开的百分比",
+            },
+            "P3": {
+                "description": "车库门控制",
+                "rw": "W",
+                "data_type": "garage_door_control",
+                "conversion": "val_direct",
+                "detailed_description": "百分比取值范围：[0,100]",
+                "commands": {
+                    "open": {"type": 0xCF, "val": 100, "description": "完全打开"},
+                    "close": {"type": 0xCF, "val": 0, "description": "完全关闭"},
+                    "stop": {
+                        "type": 0xCE,
+                        "val": 0x80,
+                        "description": "停止车库门开合",
+                    },
+                    "set_position": {
+                        "type": 0xCF,
+                        "description": "开到百分比，val=percent，percent取值:[0,100]",
+                    },
+                },
+            },
+        },
+    },
+    # ================= 2.13 智能报警器(CoSS版) (Smart Alarm CoSS) =================
+    # 基于官方文档2.12 智能报警器（CoSS版）规格
+    "SL_ALM": {
+        "name": "智能报警器(CoSS版)",
+        "switch": {
+            "P1": {
+                "description": "播放控制",
+                "rw": "RW",
+                "data_type": "alarm_playback",
+                "conversion": "type_bit_0",
+                "detailed_description": "type&1==1,表示正在播放(忽略`val` 值)；type&1==0,表示没有播放(忽略`val` 值)；val为32bit值，描述如下(16进制)：0xAABBCCDD AABB表示时间或者循环次数(最高位1表示次数，否则为时间，时间单位为秒)；CC是音量(只有16级，使用高4位，若CC值等于0将采用P2 IO定义的音量值，否则将使用CC值做为音量值)；DD表示音频序号；",
+                "commands": {
+                    "on": {"type": CMD_TYPE_ON, "val": 1, "description": "播放"},
+                    "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "停止"},
+                    "set_config_on": {
+                        "type": CMD_TYPE_SET_RAW_ON,
+                        "description": "设置值并播放，val=需要设置的值",
+                    },
+                    "set_config_off": {
+                        "type": CMD_TYPE_SET_RAW_OFF,
+                        "description": "设置值并停止，val=需要设置的值",
+                    },
+                },
+            },
+            "P2": {
+                "description": "音量控制",
+                "rw": "RW",
+                "data_type": "volume_control",
+                "conversion": "type_bit_0",
+                "detailed_description": "type&1==1表示处于正常模式；type&1==0表示处于静音模式；`val` 值表示音量值，只有16级，使用高4位。即有效位为：0x000000F0",
+                "commands": {
+                    "unmute": {
+                        "type": CMD_TYPE_ON,
+                        "val": 1,
+                        "description": "取消静音",
+                    },
+                    "mute": {"type": CMD_TYPE_OFF, "val": 0, "description": "设置静音"},
+                    "set_volume": {
+                        "type": CMD_TYPE_SET_CONFIG,
+                        "description": "设置音量，val=音量值",
+                    },
+                },
             },
         },
     },

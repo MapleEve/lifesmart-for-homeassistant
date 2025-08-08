@@ -749,21 +749,23 @@ class DeviceAttributeAnalyzer:
 
         # 2. 处理版本设备 (VERSIONED_DEVICE_TYPES)
         if device_mapping.get("versioned", False):
-            # 版本设备的每个版本都有不同的IO口定义
-            for key, value in device_mapping.items():
-                if key == "versioned":
-                    continue
+            # 版本设备使用 version_modes 结构
+            version_modes = device_mapping.get("version_modes", {})
 
-                if isinstance(value, dict):
-                    # 递归处理每个版本的配置
-                    for platform, platform_config in value.items():
+            for version_name, version_config in version_modes.items():
+                if isinstance(version_config, dict):
+                    # 每个版本包含平台配置 (如 "light", "sensor", "binary_sensor")
+                    for platform_name, platform_config in version_config.items():
+                        if platform_name == "name":  # 跳过 name 字段
+                            continue
+
                         if isinstance(platform_config, dict):
-                            # 只提取符合IO口命名规范的键
-                            for potential_io in platform_config.keys():
+                            # 平台配置包含IO口定义
+                            for potential_io, io_config in platform_config.items():
                                 if self._is_valid_io_name(potential_io):
                                     mapped_ios.add(potential_io)
                         elif isinstance(platform_config, list):
-                            # 如果是列表，检查每个元素是否是有效IO口
+                            # 如果是列表格式的IO口
                             for potential_io in platform_config:
                                 if self._is_valid_io_name(potential_io):
                                     mapped_ios.add(potential_io)
@@ -816,6 +818,19 @@ class DeviceAttributeAnalyzer:
         if re.match(r"^P\d+$", name):
             return True
 
+        # 通配符IO口 (V_485_P等设备支持)
+        wildcard_patterns = {
+            "L*",  # 多路开关
+            "EE*",  # 多路用电量
+            "EPF*",  # 多路功率因数
+            "EF*",  # 多路交流电频率
+            "EI*",  # 多路电流
+            "EV*",  # 多路电压
+        }
+
+        if name in wildcard_patterns:
+            return True
+
         # 其他标准IO口名称
         standard_io_names = {
             "L1",
@@ -832,6 +847,10 @@ class DeviceAttributeAnalyzer:
             "EPA",  # 控制系列
             "EE",
             "EP",
+            "EPF",  # 功率因数
+            "EI",  # 电流
+            "EV",  # 电压
+            "EF",  # 频率
             "EQ",  # 扩展系列
             "bright",
             "dark",  # 指示灯系列
@@ -859,6 +878,19 @@ class DeviceAttributeAnalyzer:
             "WA",
             "G",
             "AXS",  # 传感器特殊口
+            # V_485_P 等设备的特殊IO口
+            "P1",  # 当前接入设备的值
+            "COPPM",  # 一氧化碳
+            "CO2PPM",  # 二氧化碳
+            "CH20PPM",  # 甲醛
+            "O2VOL",  # 氧气
+            "NH3PPM",  # 氨气
+            "H2SPPM",  # 硫化氢
+            "TVOC",  # TVOC
+            "PHM",  # 噪音
+            "SMOKE",  # 烟雾
+            "PM",  # PM2.5
+            "PMx",  # PM10
         }
 
         return name in standard_io_names
@@ -2054,21 +2086,23 @@ class IOQualityProcessor:
 
         # 2. 处理版本设备 (VERSIONED_DEVICE_TYPES)
         if device_mapping.get("versioned", False):
-            # 版本设备的每个版本都有不同的IO口定义
-            for key, value in device_mapping.items():
-                if key == "versioned":
-                    continue
+            # 版本设备使用 version_modes 结构
+            version_modes = device_mapping.get("version_modes", {})
 
-                if isinstance(value, dict):
-                    # 递归处理每个版本的配置
-                    for platform, platform_config in value.items():
+            for version_name, version_config in version_modes.items():
+                if isinstance(version_config, dict):
+                    # 每个版本包含平台配置 (如 "light", "sensor", "binary_sensor")
+                    for platform_name, platform_config in version_config.items():
+                        if platform_name == "name":  # 跳过 name 字段
+                            continue
+
                         if isinstance(platform_config, dict):
-                            # 只提取符合IO口命名规范的键
-                            for potential_io in platform_config.keys():
+                            # 平台配置包含IO口定义
+                            for potential_io, io_config in platform_config.items():
                                 if self._is_valid_io_name(potential_io):
                                     mapped_ios.add(potential_io)
                         elif isinstance(platform_config, list):
-                            # 如果是列表，检查每个元素是否是有效IO口
+                            # 如果是列表格式的IO口
                             for potential_io in platform_config:
                                 if self._is_valid_io_name(potential_io):
                                     mapped_ios.add(potential_io)
@@ -2643,7 +2677,7 @@ def match_wildcard_io(mapping_io: str, doc_io: str) -> bool:
     匹配通配符IO口格式
 
     Args:
-        mapping_io: 映射中的IO口，如 'EF*', 'L*'
+        mapping_io: 映射中的IO口，如 'EF*', 'L*', 'EF', 'L1'
         doc_io: 文档中的IO口，如 'EF/EFx(x取值为数字)', 'Lx(x取值为数字)'
 
     Returns:
@@ -2653,7 +2687,7 @@ def match_wildcard_io(mapping_io: str, doc_io: str) -> bool:
     if mapping_io == doc_io:
         return True
 
-    # 处理通配符匹配
+    # 处理映射中的通配符匹配（映射通配符 -> 文档具体/通配符）
     if mapping_io.endswith("*"):
         base_pattern = mapping_io[:-1]  # 移除*
 
@@ -2665,27 +2699,54 @@ def match_wildcard_io(mapping_io: str, doc_io: str) -> bool:
         if re.match(rf"^{re.escape(base_pattern)}x.*取值为数字", doc_io):
             return True
 
-        # 匹配简单前缀
-        if doc_io.startswith(base_pattern):
+        # 匹配 EE* -> EE 的情况（基础IO口）
+        if doc_io == base_pattern:
             return True
 
-    # 反向匹配：文档通配符 -> 映射具体
-    # 如文档中的 'EF/EFx(x取值为数字)' 匹配映射中的 'EF1', 'EF2' 等
-    if "(x取值为数字)" in doc_io or "x(x取值为数字)" in doc_io:
-        # 提取基础模式
-        base_match = re.match(r"^([A-Z]+)/?([A-Z]*)", doc_io)
-        if base_match:
-            base1 = base_match.group(1)  # EF
-            base2 = base_match.group(2) or base1  # EFx的EF部分
-
-            # 检查映射IO是否匹配任何基础模式
-            if (
-                mapping_io.startswith(base1)
-                or mapping_io.startswith(base2)
-                or mapping_io == base1
-                or mapping_io == base2
-            ):
+        # 匹配简单前缀（如 L* 匹配 L1, L2 等）
+        if doc_io.startswith(base_pattern) and len(doc_io) > len(base_pattern):
+            # 确保后面是数字或符合IO口格式
+            suffix = doc_io[len(base_pattern) :]
+            if suffix.isdigit() or re.match(r"^\d+$", suffix):
                 return True
+
+    # 反向匹配：文档通配符 -> 映射具体或通配符
+    # 如文档中的 'EF/EFx(x取值为数字)' 匹配映射中的 'EF*', 'EF', 'EF1', 'EF2' 等
+    if "(x取值为数字)" in doc_io:
+        # 处理 EF/EFx(x取值为数字) 格式
+        if "/" in doc_io and "x" in doc_io:
+            base_match = re.match(r"^([A-Z]+)/([A-Z]+)x", doc_io)
+            if base_match:
+                base1 = base_match.group(1)  # EF
+                base2 = base_match.group(2)  # EF (from EFx)
+
+                # 检查映射IO是否匹配
+                if mapping_io == f"{base1}*" or mapping_io == f"{base2}*":  # EF* 匹配
+                    return True
+                if mapping_io == base1 or mapping_io == base2:  # EF 匹配
+                    return True
+                # 检查是否为具体的编号IO口（如EF1, EF2等）
+                if mapping_io.startswith(base1) and mapping_io != base1:
+                    suffix = mapping_io[len(base1) :]
+                    if suffix.isdigit():
+                        return True
+
+        # 处理 Lx(x取值为数字) 格式
+        else:
+            base_match = re.match(r"^([A-Z]+)x", doc_io)
+            if base_match:
+                base = base_match.group(1)  # L
+
+                # 检查映射IO是否匹配
+                if mapping_io == f"{base}*":  # L* 匹配
+                    return True
+                if mapping_io == base:  # L 匹配
+                    return True
+                # 检查是否为具体的编号IO口（如L1, L2等）
+                if mapping_io.startswith(base) and mapping_io != base:
+                    suffix = mapping_io[len(base) :]
+                    if suffix.isdigit():
+                        return True
 
     return False
 
@@ -4097,7 +4158,7 @@ if __name__ == "__main__":
 
     # 保存报告1
     report1_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "device_coverage_analysis.txt"
+        os.path.dirname(__file__), "device_coverage_analysis.txt"
     )
     with open(report1_path, "w", encoding="utf-8") as f:
         f.write("\n".join(coverage_report))
@@ -4233,7 +4294,7 @@ if __name__ == "__main__":
 
     # 保存报告2
     report2_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "io_mapping_detailed_analysis.txt"
+        os.path.dirname(__file__), "io_mapping_detailed_analysis.txt"
     )
     with open(report2_path, "w", encoding="utf-8") as f:
         f.write("\n".join(io_report))
@@ -4249,7 +4310,7 @@ if __name__ == "__main__":
     attribute_report = attribute_analyzer.generate_attribute_report(attribute_results)
 
     output_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
+        os.path.dirname(__file__),
         "device_attributes_missing_analysis.md",
     )
     with open(output_path, "w", encoding="utf-8") as f:
@@ -4260,7 +4321,7 @@ if __name__ == "__main__":
     patches_json = attribute_analyzer.generate_patches_json(attribute_results)
 
     patches_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)), "device_attributes_patches.json"
+        os.path.dirname(__file__), "device_attributes_patches.json"
     )
     with open(patches_path, "w", encoding="utf-8") as f:
         import json

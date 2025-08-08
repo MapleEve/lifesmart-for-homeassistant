@@ -4,6 +4,8 @@ LifeSmart 平台检测工具模块。
 此模块从helpers.py迁移而来，专门负责设备平台检测和映射功能。
 按照HA规范，将工具函数从业务逻辑中分离出来。
 
+现在使用新的mapping引擎，消除了硬编码的业务逻辑。
+
 主要功能:
 - 设备平台检测和映射
 - 动态分类设备处理
@@ -13,8 +15,7 @@ LifeSmart 平台检测工具模块。
 
 from typing import Any
 
-from ..const import DEVICE_DATA_KEY
-from ..device import DEVICE_MAPPING, DYNAMIC_CLASSIFICATION_DEVICES
+from ..device.mapping_engine import mapping_engine
 
 
 def safe_get(data: dict | list, *path, default: Any = None) -> Any:
@@ -57,7 +58,7 @@ def get_device_platform_mapping(device: dict) -> dict[str, list[str]]:
     """
     根据设备的IO特征获取它支持的平台映射。
 
-    这个函数用于支持多平台设备，解决之前的设备重复定义问题。
+    这个函数现在使用新的mapping引擎，支持动态分类设备和复杂业务逻辑。
     单个物理设备可以使用不同IO口支持多个平台。
 
     Args:
@@ -66,114 +67,12 @@ def get_device_platform_mapping(device: dict) -> dict[str, list[str]]:
     Returns:
         返回平台名称到IO口列表的映射，例如:
         {
-            "switch": ["L1"],
-            "light": ["dark", "bright"]
+            "switch": ["P1"],
+            "sensor": ["P2"]
         }
     """
-    device_type = device.get("devtype")
-    device_data = safe_get(device, DEVICE_DATA_KEY, default={})
-    platforms = {}
-
-    # 检查是否是动态分类设备
-    if device_type in DYNAMIC_CLASSIFICATION_DEVICES:
-        return _handle_dynamic_device_platforms(device)
-
-    # 检查设备映射中是否有平台配置
-    if device_type in DEVICE_MAPPING:
-        mapping = DEVICE_MAPPING[device_type]
-
-        # 遍历所有可能的平台
-        for platform in [
-            "switch",
-            "light",
-            "sensor",
-            "binary_sensor",
-            "cover",
-            "climate",
-            "button",
-            "lock",
-            "fan",
-        ]:
-            if platform in mapping:
-                platform_config = mapping[platform]
-                if isinstance(platform_config, dict):
-                    # 提取IO口列表
-                    io_list = list(platform_config.keys())
-                    # 检查IO口是否存在于设备数据中
-                    valid_ios = [io for io in io_list if io in device_data]
-                    if valid_ios:
-                        platforms[platform] = valid_ios
-
-    return platforms
-
-
-def _handle_dynamic_device_platforms(device: dict) -> dict[str, list[str]]:
-    """处理动态分类设备的平台映射。"""
-    device_type = device.get("devtype")
-    device_data = safe_get(device, DEVICE_DATA_KEY, default={})
-    platforms = {}
-
-    if device_type == "SL_NATURE":
-        # 超能面板动态分类逻辑
-        p5_val = safe_get(device_data, "P5", "val", default=0) & 0xFF
-
-        if p5_val == 1:  # 开关版
-            # P1, P2, P3作为开关
-            switch_ios = ["P1", "P2", "P3"]
-            valid_switch_ios = [io for io in switch_ios if io in device_data]
-            if valid_switch_ios:
-                platforms["switch"] = valid_switch_ios
-
-            # P4, P5作为传感器
-            sensor_ios = ["P4", "P5"]
-            valid_sensor_ios = [io for io in sensor_ios if io in device_data]
-            if valid_sensor_ios:
-                platforms["sensor"] = valid_sensor_ios
-
-        elif p5_val in [3, 6]:  # 温控版
-            # 温控设备
-            climate_ios = ["P1", "P4", "P5", "P6", "P7", "P8", "P9", "P10"]
-            valid_climate_ios = [io for io in climate_ios if io in device_data]
-            if valid_climate_ios:
-                platforms["climate"] = valid_climate_ios
-
-            # P2, P3作为二进制传感器(阀门状态)
-            binary_sensor_ios = ["P2", "P3"]
-            valid_binary_sensor_ios = [
-                io for io in binary_sensor_ios if io in device_data
-            ]
-            if valid_binary_sensor_ios:
-                platforms["binary_sensor"] = valid_binary_sensor_ios
-
-    elif device_type in ["SL_P", "SL_JEMA"]:
-        # 通用控制器动态分类逻辑
-        p1_val = safe_get(device_data, "P1", "val", default=0)
-        work_mode = (p1_val >> 24) & 0xE
-
-        if work_mode == 0:  # 自由模式 - 二元传感器
-            binary_sensor_ios = ["P1", "P2", "P3", "P4", "P5", "P6", "P7"]
-            valid_ios = [io for io in binary_sensor_ios if io in device_data]
-            if valid_ios:
-                platforms["binary_sensor"] = valid_ios
-
-        elif work_mode in [2, 4]:  # 窗帘模式
-            cover_ios = ["P2", "P3", "P4"]  # 开/关/停
-            valid_ios = [io for io in cover_ios if io in device_data]
-            if valid_ios:
-                platforms["cover"] = valid_ios
-
-        # SL_JEMA额外的独立开关
-        if device_type == "SL_JEMA":
-            independent_switch_ios = ["P8", "P9", "P10"]
-            valid_switch_ios = [
-                io for io in independent_switch_ios if io in device_data
-            ]
-            if valid_switch_ios:
-                if "switch" not in platforms:
-                    platforms["switch"] = []
-                platforms["switch"].extend(valid_switch_ios)
-
-    return platforms
+    # 使用新的mapping引擎解析设备映射
+    return mapping_engine.resolve_device_mapping(device)
 
 
 def is_binary_sensor(device: dict) -> bool:
@@ -312,7 +211,7 @@ def is_momentary_button_device(device_type: str, sub_key: str) -> bool:
     判断是否为瞬时按钮设备。
 
     从binary_sensor.py的_is_momentary_button_device方法迁移而来，
-    使用映射驱动判断设备是否为瞬时按钮类型。
+    现在使用mapping驱动判断设备是否为瞬时按钮类型。
 
     Args:
         device_type: 设备类型
@@ -321,15 +220,17 @@ def is_momentary_button_device(device_type: str, sub_key: str) -> bool:
     Returns:
         是否为瞬时按钮设备
     """
-    # 云防遥控器的按键 (SL_DF_BB)
-    if device_type == "SL_DF_BB" and sub_key.startswith("eB"):
-        return True
+    # 使用mapping引擎获取设备配置
+    from ..device.mapping import DEVICE_MAPPING
 
-    # 门禁感应器的按键部分 (SL_SC_BG)
-    if device_type == "SL_SC_BG" and sub_key == "B":
-        return True
+    device_config = DEVICE_MAPPING.get(device_type, {})
 
-    return False
+    # 检查binary_sensor平台的IO配置
+    binary_sensor_config = device_config.get("binary_sensor", {})
+    io_config = binary_sensor_config.get(sub_key, {})
+
+    # 根据IO配置判断是否为瞬时按钮
+    return io_config.get("momentary", False)
 
 
 def get_binary_sensor_io_config(device: dict, sub_key: str) -> dict:
@@ -345,7 +246,7 @@ def get_binary_sensor_io_config(device: dict, sub_key: str) -> dict:
     Returns:
         IO口的配置字典，包含device_class等信息
     """
-    from ..device import DEVICE_MAPPING
+    from ..device.mapping import DEVICE_MAPPING
 
     device_type = get_device_effective_type(device)
     device_config = DEVICE_MAPPING.get(device_type, {})

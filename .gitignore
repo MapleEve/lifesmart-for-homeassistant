@@ -68,12 +68,17 @@ Thumbs.db
 
 # Testing artifacts (allow core scripts, exclude generated files)
 *logs*.txt
-/.testing/**
+/.testing/*
 
-# But keep important testing scripts
+# But keep important testing scripts and directories
 !/.testing/test_ci_locally.sh
 !/.testing/version_mapping.sh
-!/.testing/device_mapping_analysis.py
+!/.testing/mapping_report.py
+!/.testing/mapping_tool/
+/.testing/mapping_tool/*
+!/.testing/mapping_tool/*.py
+!/.testing/mapping_tool/README.md
+!/.testing/mapping_tool/QUICK_START.md
 
 # Auto-generated .gitignore files
 **/.gitignore
