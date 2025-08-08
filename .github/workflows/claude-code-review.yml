@@ -1,5 +1,8 @@
 name: Claude Code Review
 
+env:
+  ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+
 on:
   pull_request:
     types: [opened, synchronize]
