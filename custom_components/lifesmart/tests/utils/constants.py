@@ -8,6 +8,41 @@
 4. 友好设备名称映射
 """
 
+from homeassistant.const import CONF_REGION
+
+from custom_components.lifesmart.core.const import (
+    CONF_LIFESMART_APPKEY,
+    CONF_LIFESMART_APPTOKEN,
+    CONF_LIFESMART_USERID,
+)
+
+# ============================================================================
+# === 基础测试值 (moved up to avoid circular import) ===
+# ============================================================================
+
+# 默认测试值
+DEFAULT_TEST_VALUES = {
+    "appkey": "mock_appkey",
+    "apptoken": "mock_apptoken",
+    "userid": "mock_userid",
+    "usertoken": "mock_usertoken",
+    "region": "cn2",
+    "wss_url": "wss://test.com/ws",
+    "wss_auth": '{"auth": "test"}',
+}
+
+# ============================================================================
+# === 测试配置常量 ===
+# ============================================================================
+
+# 模拟云端配置凭证
+MOCK_CLOUD_CREDENTIALS = {
+    CONF_LIFESMART_APPKEY: DEFAULT_TEST_VALUES["appkey"],
+    CONF_LIFESMART_APPTOKEN: DEFAULT_TEST_VALUES["apptoken"],
+    CONF_LIFESMART_USERID: DEFAULT_TEST_VALUES["userid"],
+    CONF_REGION: DEFAULT_TEST_VALUES["region"],
+}
+
 # ============================================================================
 # === 测试Hub ID常量 ===
 # ============================================================================
@@ -119,17 +154,6 @@ STANDARD_CONFIG_FIELDS = [
     "CONF_LIFESMART_USERTOKEN",
     "CONF_REGION",
 ]
-
-# 默认测试值
-DEFAULT_TEST_VALUES = {
-    "appkey": "mock_appkey",
-    "apptoken": "mock_apptoken",
-    "userid": "mock_userid",
-    "usertoken": "mock_usertoken",
-    "region": "cn2",
-    "wss_url": "wss://test.com/ws",
-    "wss_auth": '{"auth": "test"}',
-}
 
 # 测试用的错误消息常量
 TEST_ERROR_MESSAGES = {

@@ -29,6 +29,10 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACMode,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_HIGH,
 )
 from homeassistant.components.climate.const import (
     # ATTR_* 常量位于 homeassistant.components.climate.const 中

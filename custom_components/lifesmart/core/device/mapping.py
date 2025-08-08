@@ -22,6 +22,14 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfEnergy, UnitOfPower
 
+# 处理ButtonDeviceClass.IDENTIFY的兼容性
+try:
+    # 在HA 2024.2.0+版本中，ButtonDeviceClass.IDENTIFY存在
+    _BUTTON_IDENTIFY = ButtonDeviceClass.IDENTIFY
+except AttributeError:
+    # 在HA 2023.6.0版本中，ButtonDeviceClass.IDENTIFY不存在，使用None
+    _BUTTON_IDENTIFY = None
+
 # 从const.py导入需要的常量
 from ..const import (
     CMD_TYPE_ON,
@@ -32,7 +40,6 @@ from ..const import (
     CMD_TYPE_SET_RAW_OFF,
     CMD_TYPE_SET_TEMP_DECIMAL,
 )
-
 
 # ================= 设备映射重构辅助函数 (Device Mapping Helper Functions) =================
 

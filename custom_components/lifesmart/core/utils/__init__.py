@@ -24,6 +24,8 @@ from .conversion import (
     convert_temperature_decimal,
     convert_percentage_value,
     convert_fan_speed_to_mode,
+    convert_binary_sensor_state,
+    get_binary_sensor_attributes,
 )
 
 # 平台检测工具
@@ -43,6 +45,8 @@ from .platform_detection import (
     get_switch_subdevices,
     expand_wildcard_ios,
     get_device_effective_type,
+    get_binary_sensor_io_config,
+    is_momentary_button_device,
     safe_get,
 )
 
@@ -63,6 +67,8 @@ __all__ = [
     "get_switch_subdevices",
     "expand_wildcard_ios",
     "get_device_effective_type",
+    "get_binary_sensor_io_config",
+    "is_momentary_button_device",
     "safe_get",
     # 数据转换工具
     "is_ieee754_float_type",
@@ -77,4 +83,6 @@ __all__ = [
     "convert_temperature_decimal",
     "convert_percentage_value",
     "convert_fan_speed_to_mode",
+    "convert_binary_sensor_state",
+    "get_binary_sensor_attributes",
 ]

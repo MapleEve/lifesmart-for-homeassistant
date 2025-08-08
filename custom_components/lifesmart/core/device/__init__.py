@@ -42,6 +42,7 @@ from .mapping import (
     ALL_EFFECT_LIST,
     # 窗帘配置映射
     NON_POSITIONAL_COVER_CONFIG,
+    DOOYA_TYPES,
 )
 
 # 导出所有内容供其他模块使用

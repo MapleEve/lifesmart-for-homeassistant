@@ -14,7 +14,6 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from custom_components.lifesmart.hub import LifeSmartHub
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH
 from homeassistant.const import (
     CONF_HOST,
@@ -47,6 +46,7 @@ from custom_components.lifesmart.core.exceptions import (
     LifeSmartAPIError,
     LifeSmartAuthError,
 )
+from custom_components.lifesmart.core.hub import LifeSmartHub
 from ..utils.factories import create_mock_oapi_client
 
 

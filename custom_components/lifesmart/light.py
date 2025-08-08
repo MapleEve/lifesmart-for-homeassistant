@@ -33,7 +33,6 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -60,13 +59,14 @@ from .core.device import (
     DYN_EFFECT_LIST,
     ALL_EFFECT_LIST,
     ALL_EFFECT_MAP,
+    DEVICE_MAPPING,
 )
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
 )
 from .core.utils import (
-    get_device_platform_mapping,
+    get_light_subdevices,
     safe_get,
 )
 
@@ -97,6 +97,47 @@ def _parse_color_value(value: int, has_white: bool) -> tuple:
     return (red, green, blue)
 
 
+def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
+    """
+    从DEVICE_MAPPING中获取light IO口的配置信息。
+
+    Args:
+        device: 设备字典
+        sub_key: IO口键名
+
+    Returns:
+        IO口的配置信息字典，如果不存在则返回None
+    """
+    device_type = device.get(DEVICE_TYPE_KEY)
+    if not device_type or device_type not in DEVICE_MAPPING:
+        return None
+
+    mapping = DEVICE_MAPPING[device_type]
+
+    # 处理版本化设备
+    if mapping.get("versioned"):
+        from .core.helpers import get_device_version
+
+        device_version = get_device_version(device)
+        if device_version and device_version in mapping:
+            mapping = mapping[device_version]
+        else:
+            return None
+
+    # 在light平台中查找IO配置
+    light_config = mapping.get("light")
+    if not light_config:
+        return None
+
+    # 检查是否为增强结构
+    if isinstance(light_config, dict) and sub_key in light_config:
+        io_config = light_config[sub_key]
+        if isinstance(io_config, dict) and "description" in io_config:
+            return io_config
+
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -114,14 +155,19 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用新的IO映射系统获取设备支持的平台
-        platform_mapping = get_device_platform_mapping(device)
-        light_subdevices = platform_mapping.get(Platform.LIGHT, [])
+        # 使用工具函数获取设备的light子设备列表
+        light_subdevices = get_light_subdevices(device)
 
         # 为每个light子设备创建实体
         for sub_key in light_subdevices:
-            light_entity = _create_light_entity(
-                device, hub.get_client(), config_entry.entry_id, sub_key
+            # 使用工具函数获取IO配置
+            io_config = _get_enhanced_io_config(device, sub_key)
+            if not io_config:
+                continue
+
+            # 根据IO配置创建相应的灯光实体
+            light_entity = _create_light_entity_from_mapping(
+                device, hub.get_client(), config_entry.entry_id, sub_key, io_config
             )
             if light_entity:
                 lights.append(light_entity)
@@ -129,38 +175,30 @@ async def async_setup_entry(
     async_add_entities(lights)
 
 
-def _create_light_entity(device: dict, client, entry_id: str, sub_key: str):
-    """根据子设备键创建相应的灯光实体。"""
-    device_type = device.get(DEVICE_TYPE_KEY)
+def _create_light_entity_from_mapping(
+    device: dict, client, entry_id: str, sub_key: str, io_config: dict
+):
+    """根据DEVICE_MAPPING配置创建相应的灯光实体。"""
+    entity_type = io_config.get("entity_type", "basic")
 
-    # 处理特殊标记，创建对应的灯光实体类
-    if sub_key == "_DIMMER":
+    # 根据实体类型创建相应的灯光实体类
+    if entity_type == "dimmer":
         return LifeSmartDimmerLight(device, client, entry_id)
-    elif sub_key == "_QUANTUM":
+    elif entity_type == "quantum":
         return LifeSmartQuantumLight(device, client, entry_id)
-    elif sub_key == "_DUAL_RGBW":
+    elif entity_type == "dual_rgbw":
         return LifeSmartDualIORGBWLight(device, client, entry_id, "RGBW", "DYN")
-    elif sub_key == "RGBW" and device_type == "MSL_IRCTL":
+    elif entity_type == "spot_rgbw":
         return LifeSmartSPOTRGBWLight(device, client, entry_id)
-    elif sub_key == "RGB" and device_type in {"OD_WE_IRCTL", "SL_SPOT"}:
+    elif entity_type == "spot_rgb":
         return LifeSmartSPOTRGBLight(device, client, entry_id)
-    elif sub_key == "RGB" and device_type in RGB_LIGHT_TYPES:
+    elif entity_type == "single_io_rgbw":
         return LifeSmartSingleIORGBWLight(device, client, entry_id, sub_key)
-    elif sub_key == "P1" and device_type in GARAGE_DOOR_TYPES:
+    elif entity_type == "cover_light":
         return LifeSmartCoverLight(device, client, entry_id, sub_key)
-    elif sub_key == "P1" and device_type in OUTDOOR_LIGHT_TYPES:
-        return LifeSmartSingleIORGBWLight(device, client, entry_id, sub_key)
-    elif sub_key == "P1" and device_type in BRIGHTNESS_LIGHT_TYPES:
+    elif entity_type == "brightness":
         return LifeSmartBrightnessLight(device, client, entry_id, sub_key)
-    # 处理带灯光功能的窗帘设备
-    elif device_type == "SL_CN_IF" and sub_key in {"P4", "P5", "P6"}:
-        # 流光窗帘开关的P4/P5/P6是RGBW颜色控制，支持动态模式
-        return LifeSmartSingleIORGBWLight(device, client, entry_id, sub_key)
-    elif device_type == "SL_SW_WIN" and sub_key in {"dark", "bright"}:
-        # 窗帘控制开关的dark/bright是亮度控制
-        return LifeSmartBrightnessLight(device, client, entry_id, sub_key)
-    else:
-        # 默认创建普通灯光实体
+    else:  # entity_type == "basic"
         return LifeSmartLight(device, client, entry_id, sub_key)
 
 

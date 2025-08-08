@@ -339,3 +339,194 @@ def convert_fan_speed_to_mode(speed_val: int) -> str:
         return FAN_AUTO
     else:
         return FAN_AUTO  # 默认自动模式
+
+
+def get_binary_sensor_attributes(
+    device_type: str, sub_key: str, sub_data: dict, is_on: bool
+) -> dict:
+    """
+    获取binary_sensor的设备属性。
+
+    从binary_sensor.py的_get_attributes方法迁移而来，
+    集中处理各种设备的属性生成逻辑。
+
+    Args:
+        device_type: 设备类型
+        sub_key: 子设备键名
+        sub_data: 子设备数据
+        is_on: 当前状态
+
+    Returns:
+        属性字典
+    """
+    from ..const import UNLOCK_METHOD
+    import datetime
+
+    val = sub_data.get("val", 0)
+
+    # 门锁事件的特殊属性
+    if (
+        device_type
+        in {
+            "SL_LK_LS",
+            "SL_LK_GTM",
+            "SL_LK_AG",
+            "SL_LK_SG",
+            "SL_LK_YL",
+            "SL_P_BDLK",
+            "OD_JIUWANLI_LOCK1",
+            "SL_LK_SWIFTE",
+            "SL_LK_TY",
+            "SL_LK_DJ",
+        }
+        and sub_key == "EVTLO"
+    ):
+        return {
+            "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
+            "unlocking_user": val & 0xFFF,
+            "device_type": device_type,
+            "unlocking_success": is_on,
+            "last_updated": datetime.datetime.fromtimestamp(
+                sub_data.get("valts", 0) / 1000
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+        }
+
+    # 门锁报警的属性
+    if (
+        device_type
+        in {
+            "SL_LK_LS",
+            "SL_LK_GTM",
+            "SL_LK_AG",
+            "SL_LK_SG",
+            "SL_LK_YL",
+            "SL_P_BDLK",
+            "OD_JIUWANLI_LOCK1",
+            "SL_LK_SWIFTE",
+            "SL_LK_TY",
+            "SL_LK_DJ",
+        }
+        and sub_key == "ALM"
+    ):
+        return {"alarm_type": val}
+
+    # 水浸传感器的属性
+    if device_type == "SL_SC_WA" and sub_key == "WA":
+        return {"conductivity_level": val, "water_detected": val != 0}
+
+    # 温控阀门的告警传感器添加详细属性
+    if device_type == "SL_CP_VL" and sub_key == "P5":
+        return {
+            "high_temp_protection": bool(val & 0b1),
+            "low_temp_protection": bool(val & 0b10),
+            "internal_sensor_fault": bool(val & 0b100),
+            "external_sensor_fault": bool(val & 0b1000),
+            "low_battery": bool(val & 0b10000),
+            "device_offline": bool(val & 0b100000),
+        }
+
+    # 默认返回原始数据
+    return dict(sub_data)
+
+
+def convert_binary_sensor_state(device_type: str, sub_key: str, sub_data: dict) -> bool:
+    """
+    转换binary_sensor的状态。
+
+    从binary_sensor.py的_parse_state方法迁移而来，
+    集中处理各种设备的状态解析逻辑。
+
+    Args:
+        device_type: 设备类型
+        sub_key: 子设备键名
+        sub_data: 子设备数据
+
+    Returns:
+        布尔状态值
+    """
+    val = sub_data.get("val", 0)
+    type_val = sub_data.get("type", 0)
+
+    # 门窗感应器特殊处理
+    if device_type in {"SL_SC_G", "SL_SC_BG", "SL_SC_GS"}:
+        if device_type == "SL_SC_GS" and sub_key in {"P1", "P2"}:
+            return type_val & 1 == 1
+        if device_type == "SL_SC_BG" and sub_key == "AXS":
+            return val != 0  # 非0表示检测到震动
+        return val == 0 if sub_key == "G" else val != 0
+
+    # 云防系列设备特殊处理
+    if device_type in {"SL_DF_GG", "SL_DF_MM", "SL_DF_SR", "SL_DF_BB", "SL_DF_KP"}:
+        return type_val & 1 == 1
+
+    # 动态感应器
+    if device_type in {"SL_SC_MHW", "SL_SC_BM", "SL_SC_CM", "SL_BP_MZ"}:
+        return val != 0
+
+    # 门锁事件
+    if device_type in {
+        "SL_LK_LS",
+        "SL_LK_GTM",
+        "SL_LK_AG",
+        "SL_LK_SG",
+        "SL_LK_YL",
+        "SL_P_BDLK",
+        "OD_JIUWANLI_LOCK1",
+        "SL_LK_SWIFTE",
+        "SL_LK_TY",
+        "SL_LK_DJ",
+    }:
+        if sub_key == "EVTLO":
+            unlock_type = sub_data.get("type", 0)
+            unlock_user = val & 0xFFF
+            return (
+                val != 0
+                and unlock_type & 0x01 == 1
+                and unlock_user != 0
+                and val >> 12 != 15
+            )
+        if sub_key == "ALM":
+            return val > 0
+
+    # 通用控制器
+    if device_type in {"SL_P", "SL_JEMA"}:
+        return type_val & 1 == 1
+
+    # 水浸传感器
+    if device_type == "SL_SC_WA" and sub_key == "WA":
+        return val != 0  # 非0表示检测到水
+
+    # 烟雾感应器
+    if device_type == "SL_P_A" and sub_key == "P1":
+        return val != 0  # 非0表示检测到烟雾
+
+    # 人体存在感应器
+    if device_type == "SL_P_RM" and sub_key == "P1":
+        return val != 0  # 非0表示检测到人体存在
+
+    # 云防门窗感应器
+    if device_type == "SL_DF_GG" and sub_key == "A":
+        return val == 0  # 云防门窗：0=开，1=关
+
+    # 温控设备
+    if device_type in {
+        "V_AIR_P",
+        "SL_CP_DN",
+        "SL_CP_AIR",
+        "SL_CP_VL",
+        "SL_TR_ACIPM",
+        "V_FRESH_P",
+        "SL_NATURE",
+        "SL_DN",
+        "SL_FCU",
+        "SL_UACCB",
+        "V_SZJSXR_P",
+        "V_T8600_P",
+    }:
+        if sub_key == "P5":  # 温控阀门告警 (val 是 bitmask)
+            return val > 0
+        # 其他所有温控器的附属开关/阀门都遵循 type&1==1 为开启的规则
+        return type_val & 1 == 1
+
+    # 其他传感器默认处理
+    return val != 0

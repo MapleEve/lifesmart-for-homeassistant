@@ -25,6 +25,8 @@ from .core.const import (
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
+)
+from .core.utils import (
     get_device_platform_mapping,
 )
 
@@ -107,13 +109,19 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
 
     @callback
     def _determine_device_class(self) -> SwitchDeviceClass:
-        """Determine device class for better UI representation."""
-        # Use device type patterns to determine UI class instead of legacy type sets
-        if any(
-            pattern in self.devtype.upper()
-            for pattern in ["OL", "OE", "PLUG", "OUTLET"]
-        ):
-            return SwitchDeviceClass.OUTLET
+        """从DEVICE_MAPPING获取设备类别。"""
+        from .core.device import DEVICE_MAPPING
+
+        device_config = DEVICE_MAPPING.get(self.devtype, {})
+        switch_config = device_config.get("switch", {})
+        io_config = switch_config.get(self._sub_key, {})
+
+        # 从配置中获取设备类别
+        device_class = io_config.get("device_class")
+        if device_class:
+            return device_class
+
+        # 默认为开关
         return SwitchDeviceClass.SWITCH
 
     @callback

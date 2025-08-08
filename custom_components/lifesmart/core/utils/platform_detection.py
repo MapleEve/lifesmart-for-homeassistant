@@ -305,3 +305,51 @@ def get_device_effective_type(device: dict) -> str:
             return f"{device_type}_V2"
 
     return device_type
+
+
+def is_momentary_button_device(device_type: str, sub_key: str) -> bool:
+    """
+    判断是否为瞬时按钮设备。
+
+    从binary_sensor.py的_is_momentary_button_device方法迁移而来，
+    使用映射驱动判断设备是否为瞬时按钮类型。
+
+    Args:
+        device_type: 设备类型
+        sub_key: 子设备键名
+
+    Returns:
+        是否为瞬时按钮设备
+    """
+    # 云防遥控器的按键 (SL_DF_BB)
+    if device_type == "SL_DF_BB" and sub_key.startswith("eB"):
+        return True
+
+    # 门禁感应器的按键部分 (SL_SC_BG)
+    if device_type == "SL_SC_BG" and sub_key == "B":
+        return True
+
+    return False
+
+
+def get_binary_sensor_io_config(device: dict, sub_key: str) -> dict:
+    """
+    获取binary_sensor IO口的配置信息。
+
+    从DEVICE_MAPPING中提取指定IO口的binary_sensor配置。
+
+    Args:
+        device: 设备字典
+        sub_key: IO口键名
+
+    Returns:
+        IO口的配置字典，包含device_class等信息
+    """
+    from ..device import DEVICE_MAPPING
+
+    device_type = get_device_effective_type(device)
+    device_config = DEVICE_MAPPING.get(device_type, {})
+
+    # 获取binary_sensor平台的IO配置
+    binary_sensor_config = device_config.get("binary_sensor", {})
+    return binary_sensor_config.get(sub_key, {})

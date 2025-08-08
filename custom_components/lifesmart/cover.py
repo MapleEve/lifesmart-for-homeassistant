@@ -22,7 +22,6 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -40,19 +39,60 @@ from .core.const import (
     MANUFACTURER,
 )
 from .core.device import (
-    NON_POSITIONAL_COVER_CONFIG,
+    DEVICE_MAPPING,
 )
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
 )
 from .core.utils import (
-    get_device_platform_mapping,
+    get_cover_subdevices,
     safe_get,
 )
 
 # 初始化模块级日志记录器
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
+    """
+    从DEVICE_MAPPING中获取cover IO口的配置信息。
+
+    Args:
+        device: 设备字典
+        sub_key: IO口键名
+
+    Returns:
+        IO口的配置信息字典，如果不存在则返回None
+    """
+    device_type = device.get(DEVICE_TYPE_KEY)
+    if not device_type or device_type not in DEVICE_MAPPING:
+        return None
+
+    mapping = DEVICE_MAPPING[device_type]
+
+    # 处理版本化设备
+    if mapping.get("versioned"):
+        from .core.helpers import get_device_version
+
+        device_version = get_device_version(device)
+        if device_version and device_version in mapping:
+            mapping = mapping[device_version]
+        else:
+            return None
+
+    # 在cover平台中查找IO配置
+    cover_config = mapping.get("cover")
+    if not cover_config:
+        return None
+
+    # 检查是否为增强结构
+    if isinstance(cover_config, dict) and sub_key in cover_config:
+        io_config = cover_config[sub_key]
+        if isinstance(io_config, dict) and "description" in io_config:
+            return io_config
+
+    return None
 
 
 async def async_setup_entry(
@@ -78,16 +118,21 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用新的IO映射系统获取设备支持的平台
-        platform_mapping = get_device_platform_mapping(device)
-        cover_subdevices = platform_mapping.get(Platform.COVER, [])
+        # 使用工具函数获取设备的cover子设备列表
+        cover_subdevices = get_cover_subdevices(device)
 
         # 为每个cover子设备创建实体
         for sub_key in cover_subdevices:
-            device_type = device.get(DEVICE_TYPE_KEY)
+            # 使用工具函数获取IO配置
+            io_config = _get_enhanced_io_config(device, sub_key)
+            if not io_config:
+                continue
 
-            # 根据设备是否支持位置，创建不同类型的实体
-            if device_type in GARAGE_DOOR_TYPES or device_type in DOOYA_TYPES:
+            # 通过数据类型判断是否为位置控制设备
+            data_type = io_config.get("data_type", "")
+            is_positional = data_type in ["position_status", "position_control"]
+
+            if is_positional:
                 covers.append(
                     LifeSmartPositionalCover(
                         raw_device=device,
@@ -265,11 +310,20 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
             | CoverEntityFeature.STOP
             | CoverEntityFeature.SET_POSITION
         )
-        self._attr_device_class = (
-            CoverDeviceClass.GARAGE
-            if self.devtype in GARAGE_DOOR_TYPES
-            else CoverDeviceClass.CURTAIN
-        )
+        self._attr_device_class = self._determine_device_class()
+
+    @callback
+    def _determine_device_class(self) -> CoverDeviceClass:
+        """从DEVICE_MAPPING获取设备类别。"""
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if io_config:
+            # 检查是否为车库门类型
+            description = io_config.get("description", "").lower()
+            if "garage" in description or "车库" in description:
+                return CoverDeviceClass.GARAGE
+
+        # 默认为窗帘
+        return CoverDeviceClass.CURTAIN
 
     @callback
     def _initialize_state(self) -> None:
@@ -345,18 +399,24 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
         窗帘是否正在移动。
         """
         self._attr_current_cover_position = None
-        config_key = (
-            "SL_P" if self.devtype in GENERIC_CONTROLLER_TYPES else self.devtype
-        )
-        config = NON_POSITIONAL_COVER_CONFIG.get(config_key, {})
+
+        # 使用映射驱动方式获取cover配置
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if not io_config:
+            # 如果没有找到增强配置，直接返回，不使用旧的配置系统
+            return
         data = safe_get(self._raw_device, DEVICE_DATA_KEY, default={})
 
-        # 如果没有配置或数据，则不更新
-        if not config or not data:
+        # 如果没有数据，则不更新
+        if not data:
             return
 
-        is_opening = data.get(config["open"], {}).get("type", 0) & 1 == 1
-        is_closing = data.get(config["close"], {}).get("type", 0) & 1 == 1
+        # 从IO配置中获取开关控制点的映射
+        open_io = io_config.get("open_io", "P2")  # 默认开启IO口
+        close_io = io_config.get("close_io", "P3")  # 默认关闭IO口
+
+        is_opening = data.get(open_io, {}).get("type", 0) & 1 == 1
+        is_closing = data.get(close_io, {}).get("type", 0) & 1 == 1
 
         # 记录最后一次的移动方向
         if is_opening:

@@ -36,8 +36,6 @@ from custom_components.lifesmart.core.const import (
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_TEMP_FCU,
-    DOOYA_TYPES,
-    GARAGE_DOOR_TYPES,
 )
 from custom_components.lifesmart.core.exceptions import (
     LifeSmartAPIError,
