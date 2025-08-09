@@ -15,11 +15,19 @@ from typing import Dict, Set, List, Any
 sys.path.insert(
     0, os.path.join(os.path.dirname(__file__), "../custom_components/lifesmart")
 )
-from core.device.mapping import (
-    DEVICE_MAPPING,
-    VERSIONED_DEVICE_TYPES,
-    DYNAMIC_CLASSIFICATION_DEVICES,
-)
+# 直接从原始数据读取，确保数据准确性
+from core.devices.raw_data import DEVICE_SPECS_DATA
+
+# 导入动态分类设备列表
+DYNAMIC_CLASSIFICATION_DEVICES = [
+    "SL_NATURE",  # 根据P5值决定是开关版还是温控版
+    "SL_P",  # 根据P1工作模式决定功能
+    "SL_JEMA",  # 同SL_P，但额外支持P8/P9/P10独立开关
+]
+VERSIONED_DEVICE_TYPES = []
+
+# 使用原始数据作为设备映射
+DEVICE_MAPPING = DEVICE_SPECS_DATA
 
 # 常量定义
 LSCAM_PREFIX = "LSCAM:"
@@ -1845,11 +1853,25 @@ class MappingAnalyzer:
         self, official_devices: Set[str], mapped_devices_no_version: Set[str]
     ) -> Set[str]:
         """处理cam设备与LSCAM设备的特殊关联"""
-        has_lscam_devices = any(
-            device.startswith(LSCAM_PREFIX) for device in official_devices
-        )
-        if has_lscam_devices and "cam" in mapped_devices_no_version:
+        # 查找所有LSCAM:xxx设备
+        lscam_devices = {
+            device for device in official_devices if device.startswith(LSCAM_PREFIX)
+        }
+
+        if lscam_devices and "cam" in mapped_devices_no_version:
+            # 如果映射中有cam设备，且官方文档中有LSCAM:xxx设备
+            # 则将LSCAM:xxx设备从官方设备集合中移除，因为它们都映射到cam
+            print(
+                f"📋 检测到摄像头设备映射: {len(lscam_devices)} 个LSCAM设备映射到 'cam'"
+            )
+            print(f"   LSCAM设备: {sorted(lscam_devices)}")
+
+            # 从官方设备中移除LSCAM设备，因为它们通过cam统一处理
+            official_devices = official_devices - lscam_devices
+
+            # 如果cam不在官方设备中，添加它
             official_devices.add("cam")
+
         return official_devices
 
     def _analyze_device_differences(self, device_sets: Dict) -> Dict:
@@ -2039,14 +2061,37 @@ class IOQualityProcessor:
             )
 
     def _extract_mapped_ios(self, device_mapping: Dict) -> Set[str]:
-        """从设备映射中提取IO口列表，支持VERSIONED_DEVICE_TYPES和DYNAMIC_CLASSIFICATION_DEVICES特殊结构"""
+        """从设备映射中提取IO口列表，支持新的原始数据结构"""
         mapped_ios = set()
 
-        # 1. 处理动态分类设备 (DYNAMIC_CLASSIFICATION_DEVICES)
+        # 处理新的数据结构：优先检查 platforms 字典
+        if "platforms" in device_mapping:
+            platforms = device_mapping["platforms"]
+            if isinstance(platforms, dict):
+                # 优先使用 combined 键（包含所有IO口）
+                if "combined" in platforms:
+                    io_list = platforms["combined"]
+                    if isinstance(io_list, list):
+                        mapped_ios.update(io_list)
+                        return mapped_ios  # 如果有combined，直接返回
+
+                # 如果没有combined，从所有平台收集IO口
+                for platform, io_list in platforms.items():
+                    if isinstance(io_list, list):
+                        mapped_ios.update(io_list)
+
+        # 处理旧的结构作为备选
         if device_mapping.get("dynamic", False):
             # 动态设备的各种模式都会用到不同的IO口
             for key, value in device_mapping.items():
-                if key in ["dynamic", "description", "name"]:
+                if key in [
+                    "dynamic",
+                    "description",
+                    "name",
+                    "platforms",
+                    "detailed_platforms",
+                    "versioned",
+                ]:
                     continue
 
                 if isinstance(value, dict):
@@ -2057,92 +2102,27 @@ class IOQualityProcessor:
                             mapped_ios.add(io_list)
                         elif isinstance(io_list, list):
                             mapped_ios.update(io_list)
+                    # 递归处理嵌套的平台配置
+                    else:
+                        nested_ios = self._extract_mapped_ios(value)
+                        mapped_ios.update(nested_ios)
 
-                    # 提取sensor_io等字段 - 传感器IO口列表
-                    if "sensor_io" in value:
-                        sensor_io = value["sensor_io"]
-                        if isinstance(sensor_io, list):
-                            mapped_ios.update(sensor_io)
-
-                    # 提取各平台的详细IO口定义 (如SL_NATURE的climate模式)
-                    for platform in [
-                        "climate",
-                        "switch",
-                        "sensor",
-                        "binary_sensor",
-                        "light",
-                        "cover",
-                    ]:
-                        if platform in value:
-                            platform_config = value[platform]
-                            if isinstance(platform_config, dict):
-                                # 从平台详细配置中提取IO口名称 (如P1, P4, P5等)
-                                for potential_io, io_config in platform_config.items():
-                                    # 检查是否是真实IO口格式 - 只提取符合IO口命名规范的键
-                                    if self._is_valid_io_name(potential_io):
-                                        mapped_ios.add(potential_io)
-
-            return mapped_ios
-
-        # 2. 处理版本设备 (VERSIONED_DEVICE_TYPES)
-        if device_mapping.get("versioned", False):
-            # 版本设备使用 version_modes 结构
-            version_modes = device_mapping.get("version_modes", {})
-
-            for version_name, version_config in version_modes.items():
-                if isinstance(version_config, dict):
-                    # 每个版本包含平台配置 (如 "light", "sensor", "binary_sensor")
-                    for platform_name, platform_config in version_config.items():
-                        if platform_name == "name":  # 跳过 name 字段
-                            continue
-
-                        if isinstance(platform_config, dict):
-                            # 平台配置包含IO口定义
-                            for potential_io, io_config in platform_config.items():
-                                if self._is_valid_io_name(potential_io):
-                                    mapped_ios.add(potential_io)
-                        elif isinstance(platform_config, list):
-                            # 如果是列表格式的IO口
-                            for potential_io in platform_config:
-                                if self._is_valid_io_name(potential_io):
-                                    mapped_ios.add(potential_io)
-
-            return mapped_ios
-
-        # 3. 处理标准设备结构
-        # 处理新的详细结构
-        if "platforms" in device_mapping:
-            for platform, platform_ios in device_mapping["platforms"].items():
-                if isinstance(platform_ios, list):
-                    # 过滤有效的IO口名称
-                    for potential_io in platform_ios:
-                        if self._is_valid_io_name(potential_io):
-                            mapped_ios.add(potential_io)
-                elif isinstance(platform_ios, str):
-                    if self._is_valid_io_name(platform_ios):
-                        mapped_ios.add(platform_ios)
-        else:
-            # 向后兼容旧结构 - 直接从平台配置中提取IO口
-            for platform, platform_ios in device_mapping.items():
-                if platform not in [
-                    "versioned",
-                    "dynamic",
-                    "detailed_platforms",
-                    "name",
-                ]:
-                    if isinstance(platform_ios, dict):
-                        # 提取IO口名称作为键 - 只提取有效的IO口名称
-                        for potential_io in platform_ios.keys():
-                            if self._is_valid_io_name(potential_io):
-                                mapped_ios.add(potential_io)
-                    elif isinstance(platform_ios, list):
-                        # 过滤有效的IO口名称
-                        for potential_io in platform_ios:
-                            if self._is_valid_io_name(potential_io):
-                                mapped_ios.add(potential_io)
-                    elif isinstance(platform_ios, str):
-                        if self._is_valid_io_name(platform_ios):
-                            mapped_ios.add(platform_ios)
+        # 处理常规平台结构
+        for platform in [
+            "climate",
+            "switch",
+            "sensor",
+            "binary_sensor",
+            "cover",
+            "light",
+            "button",
+        ]:
+            if platform in device_mapping and isinstance(
+                device_mapping[platform], dict
+            ):
+                platform_data = device_mapping[platform]
+                # 直接添加字典的键作为IO口
+                mapped_ios.update(platform_data.keys())
 
         return mapped_ios
 
@@ -2254,13 +2234,30 @@ class IOQualityProcessor:
 
         if "detailed_platforms" in device_mapping:
             for platform, details in device_mapping["detailed_platforms"].items():
-                if details.get("detailed", False) and "detailed_ios" in details:
-                    detailed_mapping_info[platform] = details["detailed_ios"]
-                else:
+                # 处理新的数据结构：details可能是列表或字典
+                if isinstance(details, list):
+                    # 新结构：details是IO口列表
                     detailed_mapping_info[platform] = {
-                        "ios": details.get("ios", []),
-                        "description": details.get("description", ""),
-                        "detailed": details.get("detailed", False),
+                        "ios": details,
+                        "description": "",
+                        "detailed": False,
+                    }
+                elif isinstance(details, dict):
+                    # 旧结构：details是字典
+                    if details.get("detailed", False) and "detailed_ios" in details:
+                        detailed_mapping_info[platform] = details["detailed_ios"]
+                    else:
+                        detailed_mapping_info[platform] = {
+                            "ios": details.get("ios", []),
+                            "description": details.get("description", ""),
+                            "detailed": details.get("detailed", False),
+                        }
+                else:
+                    # 其他情况，提供默认值
+                    detailed_mapping_info[platform] = {
+                        "ios": [],
+                        "description": "",
+                        "detailed": False,
                     }
 
         return detailed_mapping_info
@@ -3272,51 +3269,13 @@ def extract_device_ios_from_docs() -> Dict[str, List[Dict]]:
     return device_ios
 
 
-def extract_current_mappings() -> Dict[str, Dict]:
-    """从const.py中提取当前的DEVICE_MAPPING（支持增强结构）"""
-
+def extract_current_mappings_from_raw_data() -> Dict[str, Dict]:
+    """从原始数据中提取当前的设备映射（直接处理DEVICE_SPECS_DATA结构）"""
     current_mappings = {}
 
     for device, device_config in DEVICE_MAPPING.items():
-        # 处理版本设备的特殊逻辑
-        if device in VERSIONED_DEVICE_TYPES:
-            # 对于版本设备，我们需要验证每个版本的映射
-            current_mappings[device] = {
-                "platforms": {},
-                "detailed_platforms": {},
-                "versioned": True,
-                "dynamic": False,
-                "versions": {},
-            }
-
-            if isinstance(device_config, dict) and device_config.get("versioned"):
-                for version_key, version_config in device_config.items():
-                    if version_key != "versioned" and isinstance(version_config, dict):
-                        # 提取每个版本的平台数据
-                        version_platforms = extract_platform_data(version_config)
-                        version_detailed = extract_detailed_platform_data(
-                            version_config
-                        )
-
-                        current_mappings[device]["versions"][version_key] = {
-                            "platforms": version_platforms,
-                            "detailed_platforms": version_detailed,
-                        }
-
-                        # 同时添加到总的平台映射中（用于整体对比）
-                        for platform, ios in version_platforms.items():
-                            platform_key = f"{version_key}_{platform}"
-                            current_mappings[device]["platforms"][platform_key] = ios
-
-                        for platform, details in version_detailed.items():
-                            platform_key = f"{version_key}_{platform}"
-                            current_mappings[device]["detailed_platforms"][
-                                platform_key
-                            ] = details
-            continue
-
-        # 排除其他带_V数字的设备(fullCls版本标识符)，但保留SL_P_V2（它是真实设备名称）
-        if re.search(r"_V\d+$", device) and device != "SL_P_V2":
+        # 排除带_V数字的设备(版本标识符)，但保留SL_P_V2/SL_SC_BB_V2（真实设备名称）
+        if re.search(r"_V\d+$", device) and device not in {"SL_P_V2", "SL_SC_BB_V2"}:
             continue
 
         current_mappings[device] = {
@@ -3326,72 +3285,85 @@ def extract_current_mappings() -> Dict[str, Dict]:
             "dynamic": device in DYNAMIC_CLASSIFICATION_DEVICES,
         }
 
-        # 检查是否为版本化设备
-        if isinstance(device_config, dict) and device_config.get("versioned"):
-            current_mappings[device]["versioned"] = True
-            # 处理每个版本
-            for key, version_config in device_config.items():
-                if key != "versioned" and isinstance(version_config, dict):
-                    # 提取简化的平台数据
-                    version_platforms = extract_platform_data(version_config)
-                    for platform, ios in version_platforms.items():
-                        platform_key = f"{key}_{platform}"
-                        current_mappings[device]["platforms"][platform_key] = ios
+        if not isinstance(device_config, dict):
+            continue
 
-                    # 提取详细的平台数据
-                    version_detailed = extract_detailed_platform_data(version_config)
-                    for platform, details in version_detailed.items():
-                        platform_key = f"{key}_{platform}"
-                        current_mappings[device]["detailed_platforms"][
-                            platform_key
-                        ] = details
+        # 调试打印 - 临时移除
+        # if device in ["SL_P", "SL_JEMA"]:
+        #     print(f"[DEBUG] Processing device {device}")
+        #     print(f"[DEBUG] Device config keys: {list(device_config.keys())}")
+        #     print(f"[DEBUG] Dynamic flag: {device_config.get('dynamic', False)}")
 
-        # 检查是否为动态分类设备
-        elif isinstance(device_config, dict) and device_config.get("dynamic"):
+        # 处理动态设备
+        if device_config.get("dynamic", False):
             current_mappings[device]["dynamic"] = True
-            # 处理动态设备的各种模式
-            for key, value in device_config.items():
-                if key in ["dynamic", "description"]:
-                    continue
+            # 对于动态设备，提取所有可能的平台和IO口
+            platforms = extract_raw_platforms_from_dynamic_device(device_config)
+            # if device in ["SL_P", "SL_JEMA"]:
+            #     print(f"[DEBUG] Extracted platforms for {device}: {platforms}")
+            current_mappings[device]["platforms"] = platforms
+            current_mappings[device]["detailed_platforms"] = platforms
+            continue
 
-                if isinstance(value, dict):
-                    # 动态设备的模式配置
-                    if "io" in value:
-                        io_list = value["io"]
-                        if isinstance(io_list, str):
-                            io_list = [io_list]
-                        elif not isinstance(io_list, list):
-                            continue
+        # 处理常规设备 - 直接从平台结构中提取
+        for platform_name, platform_data in device_config.items():
+            if platform_name in ["name", "dynamic", "description"]:
+                continue
 
-                        # 为动态设备的每个模式创建条目
-                        mode_platform = key.replace("_mode", "").replace("always_", "")
-                        current_mappings[device]["platforms"][mode_platform] = io_list
-                        current_mappings[device]["detailed_platforms"][
-                            mode_platform
-                        ] = {
-                            "ios": io_list,
-                            "description": value.get("condition", ""),
-                            "detailed": False,
-                        }
-                    else:
-                        # 可能是平台映射
-                        platform_data = extract_platform_data({key: value})
-                        current_mappings[device]["platforms"].update(platform_data)
-
-                        detailed_data = extract_detailed_platform_data({key: value})
-                        current_mappings[device]["detailed_platforms"].update(
-                            detailed_data
-                        )
-
-        # 处理普通设备映射
-        elif isinstance(device_config, dict):
-            platform_data = extract_platform_data(device_config)
-            current_mappings[device]["platforms"] = platform_data
-
-            detailed_data = extract_detailed_platform_data(device_config)
-            current_mappings[device]["detailed_platforms"] = detailed_data
+            if isinstance(platform_data, dict):
+                io_list = list(platform_data.keys())
+                if io_list:
+                    current_mappings[device]["platforms"][platform_name] = io_list
+                    current_mappings[device]["detailed_platforms"][
+                        platform_name
+                    ] = io_list
 
     return current_mappings
+
+
+def extract_raw_platforms_from_dynamic_device(device_config: Dict) -> Dict[str, List]:
+    """从动态设备配置中提取所有可能的平台和IO口"""
+    platforms = {}
+    all_ios = set()  # 收集所有的IO口
+
+    # 处理控制模式（如SL_P的不同工作模式）
+    if "control_modes" in device_config:
+        for mode_name, mode_config in device_config["control_modes"].items():
+            if isinstance(mode_config, dict):
+                for platform_name, platform_data in mode_config.items():
+                    if platform_name in ["condition", "description"]:
+                        continue
+                    if isinstance(platform_data, dict):
+                        io_list = list(platform_data.keys())
+                        if io_list:
+                            # 将所有的IO口添加到总集合中
+                            all_ios.update(io_list)
+                            # 也为特定模式+平台创建条目（用于详细分析）
+                            if mode_name != "default":
+                                key = f"{mode_name}_{platform_name}"
+                                platforms[key] = io_list
+
+    # 处理直接的平台配置
+    for platform_name, platform_data in device_config.items():
+        if platform_name in ["name", "dynamic", "description", "control_modes"]:
+            continue
+        if isinstance(platform_data, dict):
+            io_list = list(platform_data.keys())
+            if io_list:
+                all_ios.update(io_list)
+                platforms[platform_name] = io_list
+
+    # 为动态设备创建一个合并的条目，包含所有IO口
+    if all_ios:
+        # 将所有的IO口放在一个统一的平台下，以便与官方文档进行对比
+        platforms["combined"] = sorted(list(all_ios))
+
+    return platforms
+
+
+def extract_current_mappings() -> Dict[str, Dict]:
+    """从原始数据中提取当前的设备映射（直接处理DEVICE_SPECS_DATA结构）"""
+    return extract_current_mappings_from_raw_data()
 
 
 def extract_detailed_platform_data(config: Dict) -> Dict[str, Dict]:

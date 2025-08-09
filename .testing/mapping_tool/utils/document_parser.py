@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Any, Optional
 
-from optimized_core_utils import (
+from .core_utils import (
     IOPort,
     OptimizedRegexPatterns,
     DocumentCleaner,

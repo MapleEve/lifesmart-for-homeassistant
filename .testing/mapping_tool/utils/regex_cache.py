@@ -42,8 +42,20 @@ class RegexCache:
 
     @classmethod
     def is_version_device(cls, device_name: str) -> bool:
-        """检查是否为版本设备"""
-        return cls.VERSION_PATTERN.search(device_name) is not None
+        """
+        检查是否为版本设备
+
+        修复：SL_SC_BB_V2, SL_P_V2 等不是版本设备，而是独立设备
+        真正的版本设备应该在配置中有 version_modes 或 versioned 字段
+        """
+        # 已知的真实版本设备列表（基于配置中的 version_modes 或 versioned 字段）
+        known_versioned_devices = {
+            "SL_SW_DM1",  # 动态调光开关，有 version_modes 配置
+            "SL_LI_WW",  # 调光调色控制器，有 version_modes 配置
+        }
+
+        # 只有在已知版本设备列表中的才被认为是版本设备
+        return device_name in known_versioned_devices
 
     @classmethod
     def remove_version_suffix(cls, device_name: str) -> str:
