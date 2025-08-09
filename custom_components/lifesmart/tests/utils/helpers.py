@@ -27,24 +27,114 @@ from .constants import (
 # ============================================================================
 
 
-def get_entity_unique_id(hass: HomeAssistant, entity_id: str) -> str:
+def get_expected_entity_id_from_device(platform_domain: str, device: dict, sub_key: str = None) -> str:
     """
-    通过 entity_id 获取实体的 unique_id。
+    根据设备数据生成期望的 entity_id。
+    
+    这个函数模拟 LifeSmartBaseLight 中的 object_id 生成逻辑。
+    
+    Args:
+        platform_domain: 平台域名，如 'light'
+        device: 设备数据字典
+        sub_key: 子设备键名（可选）
+        
+    Returns:
+        期望的 entity_id
+    """
+    base_name = device.get("name", "Unknown Device")
+    
+    if sub_key:
+        # 有子设备的情况，模拟 LifeSmartBaseLight 的逻辑
+        sub_key_slug = sub_key.lower()
+        object_id = f"{base_name.lower().replace(' ', '_')}_{sub_key_slug}"
+    else:
+        # 没有子设备的情况
+        object_id = base_name.lower().replace(" ", "_")
+    
+    return f"{platform_domain}.{object_id}"
+
+
+def get_entity_unique_id(
+    platform_or_hass, device_me_or_entity_id=None, hub_id=None
+) -> str:
+    """
+    多功能实体 ID 处理函数。
+
+    支持两种调用模式：
+    1. get_entity_unique_id(hass, entity_id) - 通过 entity_id 获取实体的 unique_id
+    2. get_entity_unique_id(platform, device_me, hub_id) - 生成 entity_id
 
     Args:
-        hass: Home Assistant 实例。
-        entity_id: 实体的 ID。
+        platform_or_hass: Platform string 或 Home Assistant 实例
+        device_me_or_entity_id: device ME 或 entity_id
+        hub_id: hub ID (仅在生成模式下使用)
 
     Returns:
-        实体的 unique_id。
+        unique_id 或生成的 entity_id
 
     Raises:
-        AssertionError: 如果实体在注册表中未找到。
+        AssertionError: 如果实体在注册表中未找到（获取模式下）。
     """
-    entity_registry = async_get_entity_registry(hass)
-    entry = entity_registry.async_get(entity_id)
-    assert entry is not None, f"实体 {entity_id} 未在注册表中找到"
-    return entry.unique_id
+    # 判断调用模式
+    if hub_id is None and hasattr(platform_or_hass, "states"):
+        # 模式1: 获取 unique_id
+        hass = platform_or_hass
+        entity_id = device_me_or_entity_id
+        entity_registry = async_get_entity_registry(hass)
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None, f"实体 {entity_id} 未在注册表中找到"
+        return entry.unique_id
+    else:
+        # 模式2: 生成 entity_id
+        # 这个模式已过时，应使用实际的设备数据来生成正确的 entity_id
+        # 为了向后兼容，保持现有实现但标记为不建议使用
+        platform = platform_or_hass
+        device_me = device_me_or_entity_id
+        # 生成简单的 entity_id 格式: platform.device_name
+        # 使用设备 me 作为名称基础，清理特殊字符
+        import re
+
+        clean_name = re.sub(r"[^a-zA-Z0-9_]", "_", str(device_me)).lower()
+        return f"{platform}.{clean_name}"
+    """
+    多功能实体 ID 处理函数。
+
+    支持两种调用模式：
+    1. get_entity_unique_id(hass, entity_id) - 通过 entity_id 获取实体的 unique_id
+    2. get_entity_unique_id(platform, device_me, hub_id) - 生成 entity_id
+
+    Args:
+        platform_or_hass: Platform string 或 Home Assistant 实例
+        device_me_or_entity_id: device ME 或 entity_id
+        hub_id: hub ID (仅在生成模式下使用)
+
+    Returns:
+        unique_id 或生成的 entity_id
+
+    Raises:
+        AssertionError: 如果实体在注册表中未找到（获取模式下）。
+    """
+    # 判断调用模式
+    if hub_id is None and hasattr(platform_or_hass, "states"):
+        # 模式1: 获取 unique_id
+        hass = platform_or_hass
+        entity_id = device_me_or_entity_id
+        entity_registry = async_get_entity_registry(hass)
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None, f"实体 {entity_id} 未在注册表中找到"
+        return entry.unique_id
+    else:
+        # 模式2: 生成 entity_id
+        # 这个模式已过时，应使用实际的设备数据来生成正确的 entity_id
+        # 为了向后兼容，保持现有实现但标记为不建议使用
+        platform = platform_or_hass
+        device_me = device_me_or_entity_id
+        # 生成简单的 entity_id 格式: platform.device_name
+        # 使用设备 me 作为名称基础，清理特殊字符
+        import re
+
+        clean_name = re.sub(r"[^a-zA-Z0-9_]", "_", str(device_me)).lower()
+        return f"{platform}.{clean_name}"
 
 
 def find_test_device(devices: list, me: str, agt: str = None):
@@ -431,8 +521,7 @@ def _calculate_expected_entity_count_for_platform(
     """
     # 导入必要的常量和函数
     from homeassistant.const import Platform
-    from custom_components.lifesmart.core.const import CLIMATE_TYPES
-    from custom_components.lifesmart.core.helpers import get_device_platform_mapping
+    from custom_components.lifesmart.core.platform import get_device_platform_mapping
 
     expected_count = 0
 
@@ -481,8 +570,8 @@ def _calculate_expected_entity_count_for_platform(
                 else:
                     expected_count += count * multiplier
         except Exception:
-            # 如果新系统出现问题，使用旧逻辑作为回退
-            if platform_domain == "climate" and device_type in CLIMATE_TYPES:
+            # 如果新系统出现问题，基本的设备类型检查作为回退
+            if platform_domain == "climate" and ("NATURE" in device_type or "AIR_P" in device_type):
                 expected_count += count * multiplier
 
     return expected_count
@@ -606,43 +695,45 @@ def get_platform_device_types_for_testing(platform_domain):
         list: 该平台支持的设备类型列表
     """
     from homeassistant.const import Platform
-    from custom_components.lifesmart.core.const import (
-        CLIMATE_TYPES,
-        MULTI_PLATFORM_DEVICE_MAPPING,
-        STAR_SERIES_IO_MAPPING,
-    )
+    from custom_components.lifesmart.core.config.mapping import DEVICE_MAPPING
+    from custom_components.lifesmart.core.platform import get_device_platform_mapping
 
     # 基于新架构的设备类型收集
     device_types = set()
 
-    # 从多平台映射中收集
-    platform_map = {
-        "light": Platform.LIGHT,
-        "switch": Platform.SWITCH,
-        "sensor": Platform.SENSOR,
-        "binary_sensor": Platform.BINARY_SENSOR,
-        "climate": Platform.CLIMATE,
-        "cover": Platform.COVER,
-    }
-
-    target_platform = platform_map.get(platform_domain)
-    if not target_platform:
-        return []
-
-    # 从MULTI_PLATFORM_DEVICE_MAPPING收集设备类型
-    for device_type, mapping in MULTI_PLATFORM_DEVICE_MAPPING.items():
-        if target_platform.value in mapping:
-            device_types.add(device_type)
-
-    # 从STAR_SERIES_IO_MAPPING收集设备类型（主要是switch和sensor）
-    if platform_domain in ["switch", "sensor"]:
-        device_types.update(STAR_SERIES_IO_MAPPING.keys())
-
-    # 温控设备
-    if platform_domain == "climate":
-        device_types.update(CLIMATE_TYPES)
-
-    # TODO: 完整实现需要扫描所有设备类型常量，这里提供基本实现
-    # 在未来版本中，所有设备都应添加到MULTI_PLATFORM_DEVICE_MAPPING中
+    # 遍历所有设备类型，检查它们是否支持目标平台
+    for device_type in DEVICE_MAPPING.keys():
+        # 创建模拟设备用于平台检测
+        mock_device = {
+            "devtype": device_type,
+            "data": _get_mock_device_data(device_type),
+        }
+        
+        try:
+            platforms = get_device_platform_mapping(mock_device)
+            platform_map = {
+                "light": Platform.LIGHT,
+                "switch": Platform.SWITCH,
+                "sensor": Platform.SENSOR,
+                "binary_sensor": Platform.BINARY_SENSOR,
+                "climate": Platform.CLIMATE,
+                "cover": Platform.COVER,
+            }
+            
+            target_platform = platform_map.get(platform_domain)
+            if target_platform and target_platform in platforms:
+                device_types.add(device_type)
+        except Exception:
+            # 如果新系统出现问题，使用基本的类型检查
+            if platform_domain == "light" and "LI_" in device_type:
+                device_types.add(device_type)
+            elif platform_domain == "switch" and ("SW_" in device_type or "OL_" in device_type):
+                device_types.add(device_type)
+            elif platform_domain == "sensor" and "SC_" in device_type:
+                device_types.add(device_type)
+            elif platform_domain == "climate" and ("NATURE" in device_type or "AIR_P" in device_type):
+                device_types.add(device_type)
+            elif platform_domain == "cover" and ("DOOYA" in device_type or "ETDOOR" in device_type):
+                device_types.add(device_type)
 
     return sorted(list(device_types))
