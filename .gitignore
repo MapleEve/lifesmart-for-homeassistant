@@ -76,10 +76,10 @@ Thumbs.db
 !/.testing/version_mapping.sh
 !/.testing/mapping_report.py
 !/.testing/mapping_tool/
-/.testing/mapping_tool/*
-!/.testing/mapping_tool/*.py
-!/.testing/mapping_tool/README.md
-!/.testing/mapping_tool/QUICK_START.md
+!/.testing/mapping_tool/**
+# Exclude mapping tool reports
+/.testing/mapping_tool/*.json
+/.testing/mapping_tool/*SUMMARY*.md
 
 # Auto-generated .gitignore files
 **/.gitignore
