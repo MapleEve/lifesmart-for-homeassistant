@@ -27,6 +27,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .core.config.mapping import (
+    DEVICE_MAPPING,
+)
 from .core.const import (
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
@@ -38,14 +41,12 @@ from .core.const import (
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
 )
-from .core.devices import (
-    DEVICE_MAPPING,
-)
+from .core.data.processors.io_processors import process_io_value
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
 )
-from .core.utils import (
+from .core.platform.platform_detection import (
     get_cover_subdevices,
     safe_get,
 )
@@ -328,12 +329,7 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
     @callback
     def _initialize_state(self) -> None:
         """
-        从设备数据中解析并更新实体的状态。
-
-        此方法解析包含位置和移动方向的 'val' 值。
-        - val 的低7位 (val & 0x7F) 代表当前位置 (0-100)。
-        - val 的最高位 (val & 0x80) 代表移动方向 (0=开, 1=关)。
-        - 'type' 值的奇偶性代表是否正在移动。
+        使用新的业务逻辑处理器解析设备状态。
         """
         status_data = safe_get(
             self._raw_device, DEVICE_DATA_KEY, self._sub_key, default={}
@@ -341,13 +337,45 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
         if not status_data:
             return  # 如果没有状态数据，则不进行更新
 
-        val = status_data.get("val", 0)
-        self._attr_current_cover_position = val & 0x7F
-        is_moving = status_data.get("type", 0) & 1 == 1
-        is_opening_direction = (val & 0x80) == 0
+        # 使用映射驱动的业务逻辑处理器
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if not io_config:
+            return
 
-        self._attr_is_opening = is_moving and is_opening_direction
-        self._attr_is_closing = is_moving and not is_opening_direction
+        # 处理器类型直接来自conversion字段
+        conversion = io_config.get("conversion")
+        if conversion == "cover_position":
+            # 构建处理器配置
+            processor_config = {"processor_type": "cover_position"}
+            processed_value = process_io_value(processor_config, status_data)
+
+            if processed_value and isinstance(processed_value, dict):
+                self._attr_current_cover_position = processed_value.get("position")
+                self._attr_is_opening = processed_value.get("is_opening", False)
+                self._attr_is_closing = processed_value.get("is_closing", False)
+            return
+
+        # 对于其他情况，使用单独的处理器
+        # 获取位置值
+        processed_value = process_io_value(io_config, status_data)
+        if processed_value is not None:
+            self._attr_current_cover_position = (
+                int(processed_value)
+                if isinstance(processed_value, (int, float))
+                else None
+            )
+
+        # 使用type字段判断移动状态（通过业务逻辑处理器处理）
+        is_moving_config = {"processor_type": "type_bit_0_switch"}
+        is_moving = process_io_value(is_moving_config, status_data)
+
+        # 使用val字段判断移动方向（通过业务逻辑处理器处理）
+        direction_config = {"processor_type": "cover_direction"}
+        is_opening_direction = process_io_value(direction_config, status_data)
+
+        self._attr_is_opening = bool(is_moving and is_opening_direction)
+        self._attr_is_closing = bool(is_moving and not is_opening_direction)
+
         self._attr_is_closed = (
             self.current_cover_position is not None and self.current_cover_position <= 0
         )
@@ -393,10 +421,7 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
     @callback
     def _initialize_state(self) -> None:
         """
-        从设备数据中解析并更新实体的状态。
-
-        此方法通过检查开（OP）、关（CL）IO口的 'type' 值的奇偶性来判断
-        窗帘是否正在移动。
+        使用新的业务逻辑处理器解析设备状态。
         """
         self._attr_current_cover_position = None
 
@@ -415,8 +440,21 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
         open_io = io_config.get("open_io", "P2")  # 默认开启IO口
         close_io = io_config.get("close_io", "P3")  # 默认关闭IO口
 
-        is_opening = data.get(open_io, {}).get("type", 0) & 1 == 1
-        is_closing = data.get(close_io, {}).get("type", 0) & 1 == 1
+        # 使用业务逻辑处理器处理开启状态
+        open_data = data.get(open_io, {})
+        if open_data:
+            open_config = {"processor_type": "type_bit_0_switch"}
+            is_opening = process_io_value(open_config, open_data)
+        else:
+            is_opening = False
+
+        # 使用业务逻辑处理器处理关闭状态
+        close_data = data.get(close_io, {})
+        if close_data:
+            close_config = {"processor_type": "type_bit_0_switch"}
+            is_closing = process_io_value(close_config, close_data)
+        else:
+            is_closing = False
 
         # 记录最后一次的移动方向
         if is_opening:
@@ -424,8 +462,8 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
         elif is_closing:
             self._last_known_is_opening = False
 
-        self._attr_is_opening = is_opening
-        self._attr_is_closing = is_closing
+        self._attr_is_opening = bool(is_opening)
+        self._attr_is_closing = bool(is_closing)
 
         # 判断是否关闭
         if not is_opening and not is_closing:

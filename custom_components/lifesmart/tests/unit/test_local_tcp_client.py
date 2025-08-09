@@ -30,7 +30,7 @@ from custom_components.lifesmart.core.const import (
     CMD_TYPE_SET_TEMP_FCU,
     CMD_TYPE_SET_RAW_ON,
 )
-from custom_components.lifesmart.core.devices import (
+from custom_components.lifesmart.core.device import (
     NON_POSITIONAL_COVER_CONFIG,
 )
 from custom_components.lifesmart.core.helpers import normalize_device_names

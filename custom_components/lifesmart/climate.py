@@ -29,6 +29,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core.compatibility import get_climate_entity_features
+from .core.config.hvac_mappings import (
+    LIFESMART_CP_AIR_HVAC_MODE_MAP,
+    LIFESMART_CP_AIR_FAN_MAP,
+    LIFESMART_ACIPM_FAN_MAP,
+    LIFESMART_F_HVAC_MODE_MAP,
+    LIFESMART_TF_FAN_MAP,
+    REVERSE_LIFESMART_CP_AIR_FAN_MAP,
+)
 from .core.const import (
     DOMAIN,
     MANUFACTURER,
@@ -38,24 +46,17 @@ from .core.const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
 )
-from .core.devices import (
-    LIFESMART_HVAC_MODE_MAP,
-    LIFESMART_CP_AIR_HVAC_MODE_MAP,
-    LIFESMART_CP_AIR_FAN_MAP,
-    LIFESMART_ACIPM_FAN_MAP,
-    LIFESMART_F_HVAC_MODE_MAP,
-    LIFESMART_TF_FAN_MAP,
-    REVERSE_LIFESMART_CP_AIR_FAN_MAP,
+from .core.data.conversion import (
+    get_f_fan_mode,
+    get_tf_fan_mode,
 )
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
 )
-from .core.utils import (
+from .core.platform.platform_detection import (
     get_device_platform_mapping,
     safe_get,
-    get_f_fan_mode,
-    get_tf_fan_mode,
 )
 
 # 获取兼容的气候实体功能常量
@@ -310,9 +311,9 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        # 根据 P6(CFG) 的值动态确定支持的 HVAC 模式
+        # 根据 P6(CFG) 的值动态确定支持的 HVAC 模式 - 使用新的逻辑处理器
         p6_cfg = safe_get(self._raw_device, DEVICE_DATA_KEY, "P6", "val", default=0)
-        cfg_mode = (p6_cfg >> 6) & 0x7
+        cfg_mode = (p6_cfg >> 6) & 0x7  # 这里保留位运算，因为这是配置解析而非状态处理
         modes_map = {
             1: [HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT],
             3: [HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL],
@@ -401,13 +402,18 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         _LOGGER.warning("没有为 %s 类型设备指定的状态更新方法", self.devtype)
 
     def _update_v_air_p(self, data: dict):
-        """更新 V_AIR_P 空调面板的状态。"""
-        o_type = safe_get(data, "O", "type", default=0)
-        is_on = o_type & 1
+        """更新 V_AIR_P 空调面板的状态 - 使用新的O(1)逻辑处理器。"""
+        from .core.data.processors.logic_processors import process_io_data
+
+        # 使用O(1)逻辑处理器获取开关状态
+        o_data = safe_get(data, "O", default={})
+        switch_config = {"processor_type": "type_bit_0_switch"}
+        is_on = process_io_data(switch_config, o_data)
+
         if is_on:
-            mode_val = safe_get(data, "MODE", "val")
-            if mode_val is not None:
-                self._attr_hvac_mode = LIFESMART_HVAC_MODE_MAP.get(mode_val)
+            mode_data = safe_get(data, "MODE", default={})
+            hvac_config = {"processor_type": "hvac_mode"}
+            self._attr_hvac_mode = process_io_data(hvac_config, mode_data) or "off"
         else:
             self._attr_hvac_mode = HVACMode.OFF
 
@@ -419,13 +425,18 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             self._attr_fan_mode = get_f_fan_mode(fan_val)
 
     def _update_sl_uaccb(self, data: dict):
-        """更新 SL_UACCB 状态 (其逻辑与 V_AIR_P 几乎相同)。"""
-        p1_type = safe_get(data, "P1", "type", default=0)
-        is_on = p1_type & 1
+        """更新 SL_UACCB 状态 - 使用新的O(1)逻辑处理器。"""
+        from .core.data.processors.logic_processors import process_io_data
+
+        # 使用O(1)逻辑处理器获取开关状态
+        p1_data = safe_get(data, "P1", default={})
+        switch_config = {"processor_type": "type_bit_0_switch"}
+        is_on = process_io_data(switch_config, p1_data)
+
         if is_on:
-            p2_val = safe_get(data, "P2", "val")
-            if p2_val is not None:
-                self._attr_hvac_mode = LIFESMART_HVAC_MODE_MAP.get(p2_val)
+            p2_data = safe_get(data, "P2", default={})
+            hvac_config = {"processor_type": "hvac_mode"}
+            self._attr_hvac_mode = process_io_data(hvac_config, p2_data) or "off"
         else:
             self._attr_hvac_mode = HVACMode.OFF
 
@@ -437,11 +448,18 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             self._attr_fan_mode = get_f_fan_mode(fan_val)
 
     def _update_sl_cp_vl(self, data: dict):
-        """更新 SL_CP_VL 温控阀门状态。"""
-        self._p1_val = safe_get(data, "P1", "val", default=0)
-        p1_type = safe_get(data, "P1", "type", default=0)
-        self._attr_is_on = p1_type & 1
+        """更新 SL_CP_VL 温控阀门状态 - 使用新的O(1)逻辑处理器。"""
+        from .core.data.processors.logic_processors import process_io_data
+
+        p1_data = safe_get(data, "P1", default={})
+        self._p1_val = safe_get(p1_data, "val", default=0)
+
+        # 使用O(1)逻辑处理器获取开关状态
+        switch_config = {"processor_type": "type_bit_0_switch"}
+        self._attr_is_on = process_io_data(switch_config, p1_data)
+
         if self._attr_is_on:
+            # 创建自定义处理器配置来处理模式值位运算
             mode_val = (self._p1_val >> 1) & 0b11
             mode_map = {0: HVACMode.HEAT, 1: HVACMode.HEAT, 2: HVACMode.AUTO}
             self._attr_hvac_mode = mode_map.get(mode_val, HVACMode.HEAT)
@@ -454,13 +472,18 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             self._attr_target_temperature = target_temp
 
     def _update_sl_nature(self, data: dict):
-        """更新 SL_NATURE 超能面板的状态。"""
-        p1_type = safe_get(data, "P1", "type", default=0)
-        is_on = p1_type & 1
+        """更新 SL_NATURE 超能面板的状态 - 使用新的O(1)逻辑处理器。"""
+        from .core.data.processors.logic_processors import process_io_data
+
+        # 使用O(1)逻辑处理器获取开关状态
+        p1_data = safe_get(data, "P1", default={})
+        switch_config = {"processor_type": "type_bit_0_switch"}
+        is_on = process_io_data(switch_config, p1_data)
+
         if is_on:
-            p7_val = safe_get(data, "P7", "val")
-            if p7_val is not None:
-                self._attr_hvac_mode = LIFESMART_HVAC_MODE_MAP.get(p7_val)
+            p7_data = safe_get(data, "P7", default={})
+            hvac_config = {"processor_type": "hvac_mode"}
+            self._attr_hvac_mode = process_io_data(hvac_config, p7_data) or "off"
         else:
             self._attr_hvac_mode = HVACMode.OFF
 
@@ -476,11 +499,18 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         self._update_sl_nature(data)
 
     def _update_sl_cp_dn(self, data: dict):
-        """更新 SL_CP_DN 地暖温控器状态。"""
-        self._p1_val = safe_get(data, "P1", "val", default=0)
-        p1_type = safe_get(data, "P1", "type", default=0)
-        self._attr_is_on = p1_type & 1
+        """更新 SL_CP_DN 地暖温控器状态 - 使用新的O(1)逻辑处理器。"""
+        from .core.data.processors.logic_processors import process_io_data
+
+        p1_data = safe_get(data, "P1", default={})
+        self._p1_val = safe_get(p1_data, "val", default=0)
+
+        # 使用O(1)逻辑处理器获取开关状态
+        switch_config = {"processor_type": "type_bit_0_switch"}
+        self._attr_is_on = process_io_data(switch_config, p1_data)
+
         if self._attr_is_on:
+            # 处理自动模式位运算
             is_auto_mode = (self._p1_val >> 31) & 0b1
             self._attr_hvac_mode = HVACMode.AUTO if is_auto_mode else HVACMode.HEAT
         else:
@@ -492,11 +522,18 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             self._attr_target_temperature = target_temp
 
     def _update_sl_cp_air(self, data: dict):
-        """更新 SL_CP_AIR 风机盘管状态。"""
-        self._p1_val = safe_get(data, "P1", "val", default=0)
-        p1_type = safe_get(data, "P1", "type", default=0)
-        self._attr_is_on = p1_type & 1
+        """更新 SL_CP_AIR 风机盘管状态 - 使用新的O(1)逻辑处理器。"""
+        from .core.data.processors.logic_processors import process_io_data
+
+        p1_data = safe_get(data, "P1", default={})
+        self._p1_val = safe_get(p1_data, "val", default=0)
+
+        # 使用O(1)逻辑处理器获取开关状态
+        switch_config = {"processor_type": "type_bit_0_switch"}
+        self._attr_is_on = process_io_data(switch_config, p1_data)
+
         if self._attr_is_on:
+            # 处理模式和风扇的位运算
             mode_val = (self._p1_val >> 13) & 0b11
             fan_val = (self._p1_val >> 15) & 0b11
             self._attr_hvac_mode = LIFESMART_CP_AIR_HVAC_MODE_MAP.get(mode_val)
@@ -510,9 +547,14 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             self._attr_target_temperature = target_temp
 
     def _update_sl_tr_acipm(self, data: dict):
-        """更新 SL_TR_ACIPM 新风系统状态。"""
-        p1_type = safe_get(data, "P1", "type", default=0)
-        is_on = p1_type & 1
+        """更新 SL_TR_ACIPM 新风系统状态 - 使用新的O(1)逻辑处理器。"""
+        from .core.data.processors.logic_processors import process_io_data
+
+        # 使用O(1)逻辑处理器获取开关状态
+        p1_data = safe_get(data, "P1", default={})
+        switch_config = {"processor_type": "type_bit_0_switch"}
+        is_on = process_io_data(switch_config, p1_data)
+
         self._attr_hvac_mode = HVACMode.FAN_ONLY if is_on else HVACMode.OFF
         fan_val = safe_get(data, "P1", "val", default=0)
         self._attr_fan_mode = next(
@@ -524,9 +566,14 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             self._attr_current_temperature = temp
 
     def _update_v_fresh_p(self, data: dict):
-        """更新 V_FRESH_P 新风系统状态。"""
-        o_type = safe_get(data, "O", "type", default=0)
-        is_on = o_type & 1
+        """更新 V_FRESH_P 新风系统状态 - 使用新的O(1)逻辑处理器。"""
+        from .core.data.processors.logic_processors import process_io_data
+
+        # 使用O(1)逻辑处理器获取开关状态
+        o_data = safe_get(data, "O", default={})
+        switch_config = {"processor_type": "type_bit_0_switch"}
+        is_on = process_io_data(switch_config, o_data)
+
         self._attr_hvac_mode = HVACMode.FAN_ONLY if is_on else HVACMode.OFF
         if (f1_val := safe_get(data, "F1", "val", default=0)) is not None:
             self._attr_fan_mode = get_f_fan_mode(f1_val)

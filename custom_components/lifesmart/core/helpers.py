@@ -20,9 +20,7 @@ from .const import (
     DEVICE_TYPE_KEY,
     DEVICE_DATA_KEY,
 )
-from .utils import (
-    get_device_platform_mapping,
-)
+from .platform import get_device_platform_mapping
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +50,9 @@ def generate_unique_id(
         格式化的唯一ID字符串，格式为小写并去除特殊字符
 
     Examples:
-        generate_unique_id("SL_SW_IF1", "agt123", "dev456", "L1") -> "sl_sw_if1_agt123_dev456_l1"
+        generate_unique_id("SL_SW_IF1", "agt123", "dev456", "L1") -> (
+            "sl_sw_if1_agt123_dev456_l1"
+        )
         generate_unique_id("SL_P_IR", "agt123", "dev789") -> "sl_p_ir_agt123_dev789"
     """
     import re

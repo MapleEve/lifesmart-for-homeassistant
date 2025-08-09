@@ -1,4 +1,4 @@
-"""LifeSmart 本地 Web API 客户端
+"""LifeSmart 本地 Web API 客户端，由 @MapleEve 初始创建和维护
 
 此模块提供了一个 LifeSmartLocalWebClient 类，用于封装与 LifeSmart 本地 Web API 的所有交互。
 它负责构建请求、处理签名、发送命令，并为上层平台（如 switch, light）

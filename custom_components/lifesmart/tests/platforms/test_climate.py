@@ -50,7 +50,6 @@ from ..utils.helpers import (
     find_test_device,
     create_mock_hub,
     assert_platform_entity_count_matches_devices,
-    count_devices_by_type,
     verify_platform_entity_count,
     get_platform_device_types_for_testing,
     find_device_by_friendly_name,
@@ -204,8 +203,7 @@ class TestClimateSetup:
         devices_list = create_devices_by_category(climate_device_types)
 
         # 验证设备计数和平台实体数量一致性
-        expected_count = count_devices_by_type(devices_list, climate_device_types)
-        verify_platform_entity_count(hass, CLIMATE_DOMAIN, expected_count)
+        verify_platform_entity_count(hass, CLIMATE_DOMAIN, devices_list)
         assert_platform_entity_count_matches_devices(hass, CLIMATE_DOMAIN, devices_list)
         # 使用FRIENDLY_DEVICE_NAMES常量获取气候设备名称
         climate_friendly_names = [

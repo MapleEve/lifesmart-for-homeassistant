@@ -15,20 +15,20 @@ from aiohttp.client_exceptions import ClientError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .client_base import LifeSmartClientBase
-from .const import (
+from ..client_base import LifeSmartClientBase
+from ..const import (
     # --- 设备类型和映射 ---
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     SUBDEVICE_INDEX_KEY,
 )
-from .diagnostics import get_error_advice
-from .exceptions import LifeSmartAPIError, LifeSmartAuthError
+from ..diagnostics import get_error_advice
+from ..exceptions import LifeSmartAPIError, LifeSmartAuthError
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class LifeSmartOAPIClient(LifeSmartClientBase):
+class LifeSmartOpenAPIClient(LifeSmartClientBase):
     """一个用于高效、健壮地管理 LifeSmart API 调用的类。
 
     此类封装了所有与 LifeSmart API 的通信细节，包括认证、签名生成、

@@ -39,9 +39,7 @@ from ..utils.helpers import (
     get_entity_unique_id,
     create_mock_hub,
     assert_platform_entity_count_matches_devices,
-    count_devices_by_type,
     verify_platform_entity_count,
-    get_platform_device_types_for_testing,
     find_device_by_friendly_name,
     validate_device_data,
 )
@@ -95,9 +93,7 @@ class TestSwitchSetup:
                 assert device is not None, f"{friendly_name}设备应该存在"
 
         # 验证平台实体数量
-        switch_device_types = get_platform_device_types_for_testing("switch")
-        expected_count = count_devices_by_type(devices_list, switch_device_types)
-        verify_platform_entity_count(hass, SWITCH_DOMAIN, expected_count)
+        verify_platform_entity_count(hass, SWITCH_DOMAIN, devices_list)
         assert_platform_entity_count_matches_devices(hass, SWITCH_DOMAIN, devices_list)
 
         assert hass.states.get("switch.9_way_controller_p4") is not None

@@ -38,6 +38,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .core.config.effect_mappings import (
+    DYN_EFFECT_MAP,
+    DYN_EFFECT_LIST,
+    ALL_EFFECT_LIST,
+    ALL_EFFECT_MAP,
+)
+from .core.config.mapping import DEVICE_MAPPING
 from .core.const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -54,18 +61,11 @@ from .core.const import (
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
 )
-from .core.devices import (
-    DYN_EFFECT_MAP,
-    DYN_EFFECT_LIST,
-    ALL_EFFECT_LIST,
-    ALL_EFFECT_MAP,
-    DEVICE_MAPPING,
-)
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
 )
-from .core.utils import (
+from .core.platform.platform_detection import (
     get_light_subdevices,
     safe_get,
 )
@@ -77,24 +77,30 @@ DEFAULT_MIN_KELVIN = 2700
 DEFAULT_MAX_KELVIN = 6500
 
 
+from .core.data.processors.io_processors import process_io_value
+
+
 def _parse_color_value(value: int, has_white: bool) -> tuple:
     """
-    将一个32位整数颜色值解析为RGB或RGBW元组。
-
-    颜色格式假定为：
-    - bits 0-7:   Blue
-    - bits 8-15:  Green
-    - bits 16-23: Red
-    - bits 24-31: White (如果 has_white 为 True) 或 亮度/效果标志
+    使用RGBW处理器解析32位整数颜色值为RGB或RGBW元组。
     """
-    blue = value & 0xFF
-    green = (value >> 8) & 0xFF
-    red = (value >> 16) & 0xFF
+    # 使用RGBW处理器
+    processor_config = {"processor_type": "rgbw_color"}
+    raw_data = {"val": value, "type": 0}
 
-    if has_white:
-        white = (value >> 24) & 0xFF
-        return (red, green, blue, white)
-    return (red, green, blue)
+    color_data = process_io_value(processor_config, raw_data)
+    if color_data and isinstance(color_data, dict):
+        red = color_data.get("red", 0)
+        green = color_data.get("green", 0)
+        blue = color_data.get("blue", 0)
+
+        if has_white:
+            white = color_data.get("white", 0)
+            return (red, green, blue, white)
+        return (red, green, blue)
+
+    # 降级处理
+    return (0, 0, 0, 0) if has_white else (0, 0, 0)
 
 
 def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
@@ -386,8 +392,12 @@ class LifeSmartLight(LifeSmartBaseLight):
 
     @callback
     def _initialize_state(self) -> None:
-        """初始化通用灯状态。"""
-        self._attr_is_on = safe_get(self._sub_data, "type", default=0) & 1 == 1
+        """初始化通用灯状态 - 使用新的逻辑处理器系统。"""
+
+        light_state = process_light_state(
+            self.devtype, self._sub_key or "main", self._sub_data
+        )
+        self._attr_is_on = light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
@@ -397,11 +407,20 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
 
     @callback
     def _initialize_state(self) -> None:
-        """初始化亮度灯状态。"""
-        self._attr_is_on = safe_get(self._sub_data, "type", default=0) & 1 == 1
+        """初始化亮度灯状态 - 使用新的逻辑处理器系统。"""
+
+        light_state = process_light_state(
+            self.devtype, self._sub_key or "main", self._sub_data
+        )
+        self._attr_is_on = light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        if (val := safe_get(self._sub_data, "val")) is not None:
+
+        # 设置亮度
+        brightness = light_state.get("brightness")
+        if brightness is not None:
+            self._attr_brightness = brightness
+        elif (val := safe_get(self._sub_data, "val")) is not None:
             self._attr_brightness = val
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -469,12 +488,15 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
 
     @callback
     def _initialize_state(self) -> None:
-        """初始化色温灯状态。"""
+        """初始化色温灯状态 - 使用新的逻辑处理器系统。"""
+
         data = self._sub_data
         p1_data = safe_get(data, "P1", default={})
         p2_data = safe_get(data, "P2", default={})
 
-        self._attr_is_on = safe_get(p1_data, "type", default=0) & 1 == 1
+        # 使用新的逻辑处理器获取开关状态
+        p1_light_state = process_light_state(self.devtype, "P1", p1_data)
+        self._attr_is_on = p1_light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.COLOR_TEMP
         self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
@@ -585,19 +607,33 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
 
     @callback
     def _initialize_state(self) -> None:
-        """初始化SPOT RGB灯状态。"""
+        """初始化SPOT RGB灯状态 - 使用新的逻辑处理器系统。"""
+
         sub_data = self._sub_data
-        self._attr_is_on = safe_get(sub_data, "type", default=0) & 1 == 1
+        light_state = process_light_state(
+            self.devtype, self._sub_key or "RGB", sub_data
+        )
+
+        self._attr_is_on = light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.RGB
         self._attr_supported_color_modes = {ColorMode.RGB}
         self._attr_effect_list = DYN_EFFECT_LIST
         self._attr_brightness = 255 if self._attr_is_on else 0
 
         if (val := safe_get(sub_data, "val")) is not None:
-            if (val >> 24) & 0xFF > 0:
-                self._attr_effect = next(
-                    (k for k, v in DYN_EFFECT_MAP.items() if v == val), None
-                )
+            # 使用RGBW处理器判断动态模式
+            processor_config = {"processor_type": "rgbw_color"}
+            raw_data = {"val": val, "type": 0}
+            color_data = process_io_value(processor_config, raw_data)
+
+            if color_data and isinstance(color_data, dict):
+                is_dynamic = color_data.get("is_dynamic", False)
+                if is_dynamic:
+                    self._attr_effect = next(
+                        (k for k, v in DYN_EFFECT_MAP.items() if v == val), None
+                    )
+                else:
+                    self._attr_effect = None
             else:
                 self._attr_effect = None
             self._attr_rgb_color = _parse_color_value(val, has_white=False)
@@ -706,13 +742,21 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
 
     @callback
     def _initialize_state(self) -> None:
-        """初始化量子灯状态。"""
+        """初始化量子灯状态 - 使用新的逻辑处理器系统。"""
+
         data = self._sub_data
         p1_data = safe_get(data, "P1", default={})
         p2_data = safe_get(data, "P2", default={})
 
-        self._attr_is_on = safe_get(p1_data, "type", default=0) & 1 == 1
-        if (val := safe_get(p1_data, "val")) is not None:
+        # 使用新的逻辑处理器获取P1开关状态
+        p1_light_state = process_light_state(self.devtype, "P1", p1_data)
+        self._attr_is_on = p1_light_state.get("is_on", False)
+
+        # 处理亮度
+        brightness = p1_light_state.get("brightness")
+        if brightness is not None:
+            self._attr_brightness = brightness
+        elif (val := safe_get(p1_data, "val")) is not None:
             self._attr_brightness = val
 
         self._attr_color_mode = ColorMode.RGBW
@@ -720,11 +764,19 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
         self._attr_effect_list = ALL_EFFECT_LIST
 
         if (color_val := safe_get(p2_data, "val")) is not None:
-            white_byte = (color_val >> 24) & 0xFF
-            if white_byte > 0:
-                self._attr_effect = next(
-                    (k for k, v in ALL_EFFECT_MAP.items() if v == color_val), None
-                )
+            # 使用RGBW处理器判断动态模式
+            processor_config = {"processor_type": "rgbw_color"}
+            raw_data = {"val": color_val, "type": 0}
+            color_data = process_io_value(processor_config, raw_data)
+
+            if color_data and isinstance(color_data, dict):
+                white_byte = color_data.get("white", 0)
+                if white_byte > 0:
+                    self._attr_effect = next(
+                        (k for k, v in ALL_EFFECT_MAP.items() if v == color_val), None
+                    )
+                else:
+                    self._attr_effect = None
             else:
                 self._attr_effect = None
             self._attr_rgbw_color = _parse_color_value(color_val, has_white=True)
@@ -815,9 +867,12 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
 
     @callback
     def _initialize_state(self) -> None:
-        """初始化单IO RGBW灯状态。"""
+        """初始化单IO RGBW灯状态 - 使用新的逻辑处理器系统。"""
+
         sub_data = self._sub_data
-        self._attr_is_on = safe_get(sub_data, "type", default=0) & 1 == 1
+        light_state = process_light_state(self.devtype, self._sub_key, sub_data)
+
+        self._attr_is_on = light_state.get("is_on", False)
         self._attr_supported_color_modes = {ColorMode.RGBW}
         self._attr_color_mode = ColorMode.RGBW
         self._attr_effect_list = DYN_EFFECT_LIST
@@ -970,24 +1025,30 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
 
     @callback
     def _initialize_state(self) -> None:
-        """初始化双IO RGBW灯状态。"""
+        """初始化双IO RGBW灯状态 - 使用新的逻辑处理器系统。"""
+        from .core.data.processors.logic_processors import process_io_data
+
         data = self._sub_data
         color_data = safe_get(data, self._color_io, default={})
         dyn_data = safe_get(data, self._effect_io, default={})
 
-        self._attr_is_on = safe_get(color_data, "type", default=0) & 1 == 1
+        # 使用新的逻辑处理器获取颜色IO开关状态
+        color_light_state = process_light_state(
+            self.devtype, self._color_io, color_data
+        )
+        self._attr_is_on = color_light_state.get("is_on", False)
         self._attr_brightness = 255 if self._attr_is_on else 0
         self._attr_supported_color_modes = {ColorMode.RGBW}
         self._attr_color_mode = ColorMode.RGBW
         self._attr_effect_list = DYN_EFFECT_LIST
 
-        if safe_get(dyn_data, "type", default=0) & 1 == 1:
+        # 检查动态效果 - 使用新的逻辑处理器
+        switch_config = {"processor_type": "type_bit_0_switch"}
+        dyn_is_on = process_io_data(switch_config, dyn_data)
+        if dyn_is_on:
+            dyn_val = safe_get(dyn_data, "val")
             self._attr_effect = next(
-                (
-                    k
-                    for k, v in DYN_EFFECT_MAP.items()
-                    if v == safe_get(dyn_data, "val")
-                ),
+                (k for k, v in DYN_EFFECT_MAP.items() if v == dyn_val),
                 None,
             )
         else:
@@ -1147,7 +1208,9 @@ class LifeSmartCoverLight(LifeSmartBaseLight):
 
     @callback
     def _initialize_state(self) -> None:
-        """初始化车库门灯状态。"""
-        self._attr_is_on = safe_get(self._sub_data, "type", default=0) & 1 == 1
+        """初始化车库门灯状态 - 使用新的逻辑处理器系统。"""
+
+        light_state = process_light_state(self.devtype, self._sub_key, self._sub_data)
+        self._attr_is_on = light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}

@@ -17,6 +17,17 @@ from typing import Any
 
 from homeassistant.components.climate import HVACMode
 
+from .config.cover_mappings import NON_POSITIONAL_COVER_CONFIG
+from .config.device_specs import _RAW_DEVICE_DATA
+from .config.hvac_mappings import (
+    REVERSE_F_HVAC_MODE_MAP,
+    LIFESMART_F_FAN_MAP,
+    LIFESMART_TF_FAN_MAP,
+    LIFESMART_ACIPM_FAN_MAP,
+    LIFESMART_CP_AIR_FAN_MAP,
+    REVERSE_LIFESMART_HVAC_MODE_MAP,
+    REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
+)
 from .const import (
     # --- 命令类型常量 ---
     CMD_TYPE_ON,
@@ -28,19 +39,92 @@ from .const import (
     CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_TEMP_FCU,
 )
-from .devices import (
-    NON_POSITIONAL_COVER_CONFIG,
-    REVERSE_F_HVAC_MODE_MAP,
-    LIFESMART_F_FAN_MAP,
-    LIFESMART_TF_FAN_MAP,
-    LIFESMART_ACIPM_FAN_MAP,
-    LIFESMART_CP_AIR_FAN_MAP,
-    REVERSE_LIFESMART_HVAC_MODE_MAP,
-    REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
-)
-from .utils import safe_get
+from .platform.platform_detection import safe_get
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_device_climate_config(device_type: str, action: str) -> dict | None:
+    """从映射中获取设备的climate配置。"""
+    device_config = _RAW_DEVICE_DATA.get(device_type, {})
+    climate_config = device_config.get("climate", {})
+    if not climate_config:
+        return None
+
+    # 查找相关的IO口配置
+    for io_port, io_config in climate_config.items():
+        if action in io_config.get("climate_actions", []):
+            return {"io_port": io_port, "config": io_config}
+    return None
+
+
+def _get_device_hvac_config(device_type: str) -> dict | None:
+    """获取设备的HVAC模式配置。"""
+    # 基于设备类型的硬编码映射 - 待从raw_data获取
+    hvac_configs = {
+        "V_AIR_P": {"mode_io": "MODE", "mode_map": REVERSE_F_HVAC_MODE_MAP},
+        "SL_NATURE": {"mode_io": "P7", "mode_map": REVERSE_LIFESMART_HVAC_MODE_MAP},
+        "SL_FCU": {"mode_io": "P7", "mode_map": REVERSE_LIFESMART_HVAC_MODE_MAP},
+        "SL_UACCB": {"mode_io": "P2", "mode_map": REVERSE_LIFESMART_HVAC_MODE_MAP},
+        "SL_CP_AIR": {
+            "mode_io": "P1",
+            "mode_map": REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
+            "use_raw": True,
+        },
+        "SL_CP_DN": {"mode_io": "P1", "use_raw": True, "auto_bit": 31},
+        "SL_CP_VL": {
+            "mode_io": "P1",
+            "use_raw": True,
+            "mode_map": {HVACMode.HEAT: 0, HVACMode.AUTO: 2},
+        },
+    }
+    return hvac_configs.get(device_type)
+
+
+def _get_device_temp_config(device_type: str) -> dict | None:
+    """获取设备的温度设置配置。"""
+    temp_configs = {
+        "V_AIR_P": {"temp_io": "tT", "cmd_type": CMD_TYPE_SET_TEMP_DECIMAL},
+        "SL_UACCB": {"temp_io": "P3", "cmd_type": CMD_TYPE_SET_TEMP_DECIMAL},
+        "SL_CP_DN": {"temp_io": "P3", "cmd_type": CMD_TYPE_SET_RAW_ON},
+        "SL_CP_AIR": {"temp_io": "P4", "cmd_type": CMD_TYPE_SET_RAW_ON},
+        "SL_NATURE": {"temp_io": "P8", "cmd_type": CMD_TYPE_SET_TEMP_DECIMAL},
+        "SL_FCU": {"temp_io": "P8", "cmd_type": CMD_TYPE_SET_TEMP_FCU},
+        "SL_CP_VL": {"temp_io": "P3", "cmd_type": CMD_TYPE_SET_RAW_ON},
+    }
+    return temp_configs.get(device_type)
+
+
+def _get_device_fan_config(device_type: str) -> dict | None:
+    """获取设备的风扇配置。"""
+    fan_configs = {
+        "V_AIR_P": {
+            "fan_io": "F",
+            "fan_map": LIFESMART_F_FAN_MAP,
+            "cmd_type": CMD_TYPE_SET_CONFIG,
+        },
+        "SL_TR_ACIPM": {
+            "fan_io": "P2",
+            "fan_map": LIFESMART_ACIPM_FAN_MAP,
+            "cmd_type": CMD_TYPE_SET_RAW_ON,
+        },
+        "SL_NATURE": {
+            "fan_io": "P9",
+            "fan_map": LIFESMART_TF_FAN_MAP,
+            "cmd_type": CMD_TYPE_SET_CONFIG,
+        },
+        "SL_FCU": {
+            "fan_io": "P9",
+            "fan_map": LIFESMART_TF_FAN_MAP,
+            "cmd_type": CMD_TYPE_SET_CONFIG,
+        },
+        "SL_CP_AIR": {
+            "fan_io": "P1",
+            "fan_map": LIFESMART_CP_AIR_FAN_MAP,
+            "use_raw": True,
+        },
+    }
+    return fan_configs.get(device_type)
 
 
 def _is_device_type(device_type: str, target_type: str) -> bool:
@@ -483,95 +567,91 @@ class LifeSmartClientBase(ABC):
 
         await self._async_send_single_command(agt, me, "P1", CMD_TYPE_ON, 1)
 
-        mode_val = None
-        idx = None
+        # 使用配置化方法替代硬编码
+        hvac_config = _get_device_hvac_config(device_type)
+        if not hvac_config:
+            _LOGGER.warning("设备类型 %s 不支持HVAC模式设置", device_type)
+            return -1
 
-        if device_type == "V_AIR_P":
-            mode_val = REVERSE_F_HVAC_MODE_MAP.get(hvac_mode)
-            idx = "MODE"
-        elif device_type in {"SL_NATURE", "SL_FCU"}:
-            mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
-            idx = "P7"
-        elif device_type == "SL_UACCB":
-            mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
-            idx = "P2"
+        mode_io = hvac_config["mode_io"]
 
-        if mode_val is not None and idx is not None:
-            return await self._async_send_single_command(
-                agt, me, idx, CMD_TYPE_SET_CONFIG, mode_val
-            )
-
-        if device_type == "SL_CP_AIR":
-            mode_val = REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP.get(hvac_mode)
-            if mode_val is not None:
-                new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
-                return await self._async_send_single_command(
-                    agt, me, "P1", CMD_TYPE_SET_RAW_ON, new_val
-                )
-
+        # SL_CP_DN特殊处理 - 只有AUTO位
         if device_type == "SL_CP_DN":
             is_auto = 1 if hvac_mode == HVACMode.AUTO else 0
-            new_val = (current_val & ~(1 << 31)) | (is_auto << 31)
+            auto_bit = hvac_config["auto_bit"]
+            new_val = (current_val & ~(1 << auto_bit)) | (is_auto << auto_bit)
             return await self._async_send_single_command(
-                agt, me, "P1", CMD_TYPE_SET_RAW_ON, new_val
+                agt, me, mode_io, CMD_TYPE_SET_RAW_ON, new_val
             )
 
-        if device_type == "SL_CP_VL":
-            mode_map = {HVACMode.HEAT: 0, HVACMode.AUTO: 2}
-            mode_val = mode_map.get(hvac_mode, 0)
-            new_val = (current_val & ~(0b11 << 1)) | (mode_val << 1)
-            return await self._async_send_single_command(
-                agt, me, "P1", CMD_TYPE_SET_RAW_ON, new_val
-            )
+        # 获取模式映射
+        mode_map = hvac_config.get("mode_map", {})
+        mode_val = mode_map.get(hvac_mode)
+        if mode_val is None:
+            _LOGGER.warning("设备类型 %s 不支持HVAC模式: %s", device_type, hvac_mode)
+            return -1
 
-        return 0
+        # 根据配置选择命令类型
+        if hvac_config.get("use_raw"):
+            if device_type == "SL_CP_AIR":
+                new_val = (current_val & ~(0b11 << 13)) | (mode_val << 13)
+            elif device_type == "SL_CP_VL":
+                new_val = (current_val & ~(0b11 << 1)) | (mode_val << 1)
+            else:
+                new_val = mode_val
+            return await self._async_send_single_command(
+                agt, me, mode_io, CMD_TYPE_SET_RAW_ON, new_val
+            )
+        else:
+            return await self._async_send_single_command(
+                agt, me, mode_io, CMD_TYPE_SET_CONFIG, mode_val
+            )
 
     async def async_set_climate_temperature(
         self, agt: str, me: str, device_type: str, temp: float
     ) -> int:
         """设置温控设备的目标温度。"""
         temp_val = int(temp * 10)
-        idx_map = {
-            "V_AIR_P": ("tT", CMD_TYPE_SET_TEMP_DECIMAL),
-            "SL_UACCB": ("P3", CMD_TYPE_SET_TEMP_DECIMAL),
-            "SL_CP_DN": ("P3", CMD_TYPE_SET_RAW_ON),
-            "SL_CP_AIR": ("P4", CMD_TYPE_SET_RAW_ON),
-            "SL_NATURE": ("P8", CMD_TYPE_SET_TEMP_DECIMAL),
-            "SL_FCU": ("P8", CMD_TYPE_SET_TEMP_FCU),
-            "SL_CP_VL": ("P3", CMD_TYPE_SET_RAW_ON),
-        }
-        if device_type in idx_map:
-            idx, cmd_type = idx_map[device_type]
-            return await self._async_send_single_command(
-                agt, me, idx, cmd_type, temp_val
-            )
-        return -1
+
+        # 使用配置化方法替代硬编码
+        temp_config = _get_device_temp_config(device_type)
+        if not temp_config:
+            _LOGGER.warning("设备类型 %s 不支持温度设置", device_type)
+            return -1
+
+        temp_io = temp_config["temp_io"]
+        cmd_type = temp_config["cmd_type"]
+
+        return await self._async_send_single_command(
+            agt, me, temp_io, cmd_type, temp_val
+        )
 
     async def async_set_climate_fan_mode(
         self, agt: str, me: str, device_type: str, fan_mode: str, current_val: int = 0
     ) -> int:
         """设置温控设备的风扇模式。"""
-        if device_type == "V_AIR_P":
-            if (fan_val := LIFESMART_F_FAN_MAP.get(fan_mode)) is not None:
-                return await self._async_send_single_command(
-                    agt, me, "F", CMD_TYPE_SET_CONFIG, fan_val
-                )
-        elif device_type == "SL_TR_ACIPM":
-            if (fan_val := LIFESMART_ACIPM_FAN_MAP.get(fan_mode)) is not None:
-                return await self._async_send_single_command(
-                    agt, me, "P2", CMD_TYPE_SET_RAW_ON, fan_val
-                )
-        elif device_type in {"SL_NATURE", "SL_FCU"}:
-            if (fan_val := LIFESMART_TF_FAN_MAP.get(fan_mode)) is not None:
-                return await self._async_send_single_command(
-                    agt, me, "P9", CMD_TYPE_SET_CONFIG, fan_val
-                )
-        elif device_type == "SL_CP_AIR":
-            if (fan_val := LIFESMART_CP_AIR_FAN_MAP.get(fan_mode)) is not None:
-                new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
-                return await self._async_send_single_command(
-                    agt, me, "P1", CMD_TYPE_SET_RAW_ON, new_val
-                )
+        # 使用配置化方法替代硬编码
+        fan_config = _get_device_fan_config(device_type)
+        if not fan_config:
+            _LOGGER.warning("设备类型 %s 不支持风扇模式设置", device_type)
+            return -1
 
-        _LOGGER.warning("设备类型 %s 不支持风扇模式: %s", device_type, fan_mode)
-        return -1
+        fan_map = fan_config["fan_map"]
+        fan_val = fan_map.get(fan_mode)
+        if fan_val is None:
+            _LOGGER.warning("设备类型 %s 不支持风扇模式: %s", device_type, fan_mode)
+            return -1
+
+        fan_io = fan_config["fan_io"]
+
+        # SL_CP_AIR特殊处理 - 需要位操作
+        if fan_config.get("use_raw") and device_type == "SL_CP_AIR":
+            new_val = (current_val & ~(0b11 << 15)) | (fan_val << 15)
+            return await self._async_send_single_command(
+                agt, me, fan_io, CMD_TYPE_SET_RAW_ON, new_val
+            )
+        else:
+            cmd_type = fan_config["cmd_type"]
+            return await self._async_send_single_command(
+                agt, me, fan_io, cmd_type, fan_val
+            )

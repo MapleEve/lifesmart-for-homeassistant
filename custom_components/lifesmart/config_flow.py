@@ -18,7 +18,8 @@ from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import SelectSelectorMode
 
-import custom_components.lifesmart.core.local_tcp_client
+import custom_components.lifesmart.core.client.local_tcp_client
+from .core.client.openapi_client import LifeSmartOpenAPIClient
 from .core.const import (
     CONF_AI_INCLUDE_AGTS,
     CONF_AI_INCLUDE_ITEMS,
@@ -35,8 +36,7 @@ from .core.const import (
 )
 from .core.diagnostics import get_error_advice
 from .core.exceptions import LifeSmartAuthError
-from .core.openapi_client import LifeSmartOAPIClient
-from .core.utils import safe_get
+from .core.platform.platform_detection import safe_get
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
     # 注意：这个函数现在只在成功时返回值，失败时直接抛出异常
     # 错误处理逻辑移至调用方 (各个 step 中)
     try:
-        client = LifeSmartOAPIClient(
+        client = LifeSmartOpenAPIClient(
             hass,
             data.get(CONF_REGION),
             data.get(CONF_LIFESMART_APPKEY),
@@ -100,7 +100,7 @@ async def validate_local_input(
 ) -> dict[str, Any]:
     """Validate the user input for local connection."""
     try:
-        dev = custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient(
+        dev = custom_components.lifesmart.core.local_tcp_client.LifeSmartTCPClient(
             data[CONF_HOST],
             data[CONF_PORT],
             data[CONF_USERNAME],
@@ -613,7 +613,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         try:
             # 获取云端客户端实例
             config_data = self._config_entry_ref.data
-            client = LifeSmartOAPIClient(
+            client = LifeSmartOpenAPIClient(
                 self.hass,
                 config_data.get(CONF_REGION),
                 config_data.get(CONF_LIFESMART_APPKEY),
@@ -668,7 +668,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
 
         try:
             config_data = self._config_entry_ref.data
-            client = LifeSmartOAPIClient(
+            client = LifeSmartOpenAPIClient(
                 self.hass,
                 config_data.get(CONF_REGION),
                 config_data.get(CONF_LIFESMART_APPKEY),
@@ -727,7 +727,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
 
         try:
             config_data = self._config_entry_ref.data
-            client = LifeSmartOAPIClient(
+            client = LifeSmartOpenAPIClient(
                 self.hass,
                 config_data.get(CONF_REGION),
                 config_data.get(CONF_LIFESMART_APPKEY),

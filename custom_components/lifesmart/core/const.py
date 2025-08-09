@@ -48,7 +48,7 @@ from homeassistant.const import (
 4. 【多平台设备支持】
    单个物理设备可支持多个Home Assistant平台：
    - 如SL_OL_W: 同时支持switch(开关功能)和light(指示灯)
-   - 平台映射通过device/mapping.py的DEVICE_MAPPING定义
+   - 平台映射通过device/raw_data.py和mapping_engine.py定义
    - 动态平台检测通过utils/platform_detection.py实现
 """
 
@@ -161,7 +161,7 @@ HTTP_TIMEOUT = 30  # HTTP请求超时时间(秒)
 HTTP_MAX_RETRIES = 3  # HTTP请求最大重试次数
 
 # ================= Home Assistant 平台支持 (HA Platform Support) =================
-# Home Assistant 支持的平台列表
+# Home Assistant 支持的平台列表 (扩充版)
 SUPPORTED_PLATFORMS = {
     Platform.SWITCH,
     Platform.BINARY_SENSOR,
@@ -169,20 +169,79 @@ SUPPORTED_PLATFORMS = {
     Platform.COVER,
     Platform.LIGHT,
     Platform.CLIMATE,
-    # Platform.BUTTON,
-    # Platform.FAN,
-    # Platform.LOCK,
-    # Platform.EVENT,
-    # Platform.CAMERA,
+    Platform.BUTTON,  # 新增: 按钮平台
+    Platform.FAN,  # 新增: 风扇平台
+    Platform.LOCK,  # 新增: 门锁平台
+    Platform.EVENT,  # 新增: 事件平台
+    Platform.CAMERA,  # 新增: 摄像头平台
     Platform.REMOTE,
-    # Platform.NUMBER,
-    # Platform.AIR_QUALITY
-    # Platform.SIREN
-    # Platform.SCENE
-    # Platform.VALVE
+    Platform.NUMBER,  # 新增: 数值平台
+    Platform.AIR_QUALITY,  # 新增: 空气质量平台
+    Platform.SIREN,  # 新增: 警报平台
+    Platform.SCENE,  # 新增: 场景平台
+    Platform.VALVE,  # 新增: 阀门平台
 }
 
-# ================= 其他配置映射 =================
+# ================= 新增平台相关常量 (New Platform Constants) =================
+
+# 按钮平台相关
+BUTTON_PRESS_TIME = 0.1  # 按钮按下持续时间(秒)
+BUTTON_DEBOUNCE_TIME = 0.5  # 按钮去抖时间(秒)
+
+# 风扇平台相关
+FAN_SPEED_LEVELS = [1, 2, 3, 4, 5]  # 支持的风扇速度级别
+FAN_PRESET_MODES = ["auto", "sleep", "natural"]  # 预设模式
+
+# 门锁平台相关
+LOCK_TIMEOUT = 30  # 门锁操作超时时间(秒)
+LOCK_STATE_LOCKED = 1
+LOCK_STATE_UNLOCKED = 0
+
+# 事件平台相关
+EVENT_TYPES = {
+    "button_press": "按钮按下",
+    "motion_detected": "检测到移动",
+    "door_opened": "门已打开",
+    "door_closed": "门已关闭",
+    "alarm_triggered": "警报触发",
+}
+
+# 摄像头平台相关
+CAMERA_STREAM_TIMEOUT = 10  # 视频流超时时间(秒)
+CAMERA_SNAPSHOT_TIMEOUT = 5  # 快照超时时间(秒)
+
+# 数值平台相关
+NUMBER_MIN_VALUE = 0
+NUMBER_MAX_VALUE = 100
+NUMBER_STEP = 1
+
+# 空气质量平台相关
+AIR_QUALITY_EXCELLENT = 0  # 优
+AIR_QUALITY_GOOD = 1  # 良
+AIR_QUALITY_FAIR = 2  # 中等
+AIR_QUALITY_POOR = 3  # 差
+AIR_QUALITY_VERY_POOR = 4  # 很差
+
+# 警报平台相关
+SIREN_DURATION = 30  # 警报持续时间(秒)
+SIREN_VOLUME_LEVELS = [1, 2, 3, 4, 5]  # 音量级别
+
+# 场景平台相关
+SCENE_ACTIVATION_TIME = 2  # 场景激活时间(秒)
+
+# 阀门平台相关
+VALVE_OPERATION_TIME = 10  # 阀门操作时间(秒)
+VALVE_STATE_OPEN = 1
+VALVE_STATE_CLOSED = 0
+
+# ================= 注意：设备类型映射已迁移 =================
+#
+# 设备类型到平台的映射已迁移到配置层，遵循"所有的东西以doc为准，不要信const"原则：
+# - 静态映射: core/config/device_specs.py (基于官方文档)
+# - 动态检测: core/platform/platform_detection.py (运行时检测)
+# - 映射转换: core/config/mapping_engine.py (自动生成HA格式)
+#
+# 不再在const.py中硬编码设备类型集合，所有设备类型信息应从官方文档获取。
 # 门锁解锁方式映射
 UNLOCK_METHOD = {
     0: "None",

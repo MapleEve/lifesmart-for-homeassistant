@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.core.const import *
-from custom_components.lifesmart.core.devices import DYN_EFFECT_MAP
+from custom_components.lifesmart.core.config.effect_mappings import DYN_EFFECT_MAP
 from custom_components.lifesmart.light import (
     _parse_color_value,
     DEFAULT_MIN_KELVIN,
@@ -44,7 +44,6 @@ from ..utils.factories import create_devices_by_category
 from ..utils.helpers import (
     get_entity_unique_id,
     assert_platform_entity_count_matches_devices,
-    count_devices_by_type,
     verify_platform_entity_count,
     get_platform_device_types_for_testing,
     find_device_by_friendly_name,
@@ -86,10 +85,7 @@ class TestLightSetup:
         mock_lifesmart_devices = create_devices_by_category(light_device_types)
 
         # 验证设备计数和平台实体数量
-        expected_count = count_devices_by_type(
-            mock_lifesmart_devices, light_device_types
-        )
-        verify_platform_entity_count(hass, LIGHT_DOMAIN, expected_count)
+        verify_platform_entity_count(hass, LIGHT_DOMAIN, mock_lifesmart_devices)
         assert_platform_entity_count_matches_devices(
             hass, LIGHT_DOMAIN, mock_lifesmart_devices
         )
@@ -220,26 +216,34 @@ class TestLifeSmartBrightnessLight:
 
     @pytest.mark.asyncio
     async def test_attribute_services(
-        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration, device
     ):
+        # 使用动态生成的entity_id和设备参数
+        entity_id = get_entity_unique_id("light", device["me"], device.get("agt", ""))
+        hub_id = device.get("agt", TEST_HUB_IDS[0])
+        device_me = device["me"]
+
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: self.ENTITY_ID, ATTR_BRIGHTNESS: 150},
+            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 150},
             blocking=True,
         )
-        state = hass.states.get(self.ENTITY_ID)
+        state = hass.states.get(entity_id)
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_BRIGHTNESS) == 150
         mock_client.async_send_single_command.assert_called_with(
-            self.HUB_ID, self.DEVICE_ME, self.SUB_KEY, 0xCF, 150
+            hub_id, device_me, self.SUB_KEY, 0xCF, 150
         )
 
     @pytest.mark.asyncio
     async def test_state_update(
-        self, hass: HomeAssistant, setup_integration_light_only
+        self, hass: HomeAssistant, setup_integration_light_only, device
     ):
-        unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
+        # 使用动态生成的entity_id
+        entity_id = get_entity_unique_id("light", device["me"], device.get("agt", ""))
+        unique_id = get_entity_unique_id(hass, entity_id)
+
         # 场景 1: 灯关闭
         async_dispatcher_send(
             hass,
@@ -247,7 +251,7 @@ class TestLifeSmartBrightnessLight:
             {"type": 128, "val": 50},
         )
         await hass.async_block_till_done()
-        assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
+        assert hass.states.get(entity_id).state == STATE_OFF
         # 场景 2: 灯开启
         async_dispatcher_send(
             hass,
@@ -255,17 +259,20 @@ class TestLifeSmartBrightnessLight:
             {"type": 129, "val": 75},
         )
         await hass.async_block_till_done()
-        state = hass.states.get(self.ENTITY_ID)
+        state = hass.states.get(entity_id)
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_BRIGHTNESS) == 75
 
     @pytest.mark.asyncio
     async def test_api_failure_reverts_state(
-        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration
+        self, hass: HomeAssistant, mock_client: MagicMock, setup_integration, device
     ):
         """测试API调用失败时，亮度灯状态会回滚。"""
+        # 使用动态生成的entity_id
+        entity_id = get_entity_unique_id("light", device["me"], device.get("agt", ""))
+
         # 初始状态: on, brightness 100
-        initial_state = hass.states.get(self.ENTITY_ID)
+        initial_state = hass.states.get(entity_id)
         assert initial_state.state == STATE_ON
         assert initial_state.attributes.get(ATTR_BRIGHTNESS) == 100
 
@@ -276,12 +283,12 @@ class TestLifeSmartBrightnessLight:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: self.ENTITY_ID},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
         # 验证状态已回滚到初始状态
-        final_state = hass.states.get(self.ENTITY_ID)
+        final_state = hass.states.get(entity_id)
         assert final_state.state == STATE_ON
         assert final_state.attributes.get(ATTR_BRIGHTNESS) == 100
 

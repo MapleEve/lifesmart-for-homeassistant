@@ -51,9 +51,7 @@ from ..utils.factories import (
 from ..utils.helpers import (
     find_test_device,
     assert_platform_entity_count_matches_devices,
-    count_devices_by_type,
     verify_platform_entity_count,
-    get_platform_device_types_for_testing,
     filter_devices_by_hub,
     group_devices_by_hub,
     get_all_hub_ids,
@@ -107,11 +105,8 @@ class TestSensorSetup:
         # 验证平台实体数量
         from homeassistant.const import DOMAIN as SENSOR_DOMAIN
 
-        sensor_device_types = get_platform_device_types_for_testing("sensor")
-        expected_count = count_devices_by_type(
-            mock_lifesmart_devices, sensor_device_types
-        )
-        verify_platform_entity_count(hass, SENSOR_DOMAIN, expected_count)
+        # 验证平台实体数量和设备数量一致性
+        verify_platform_entity_count(hass, SENSOR_DOMAIN, mock_lifesmart_devices)
         assert_platform_entity_count_matches_devices(
             hass, SENSOR_DOMAIN, mock_lifesmart_devices
         )

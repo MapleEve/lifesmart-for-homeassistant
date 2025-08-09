@@ -534,16 +534,14 @@ class BatchAnalysisEngine:
         results = []
 
         for device_name, device_mapping in devices_data.items():
-            if device_name not in doc_ios_map:
-                continue
+            # 获取文档数据，如果没有则使用空列表（允许纯AI分析）
+            doc_ios = doc_ios_map.get(device_name, [])
 
             # 选择合适的分析策略
             strategy = self.factory.get_strategy(device_mapping)
 
             # 执行分析
-            result = strategy.analyze_device(
-                device_name, device_mapping, doc_ios_map[device_name]
-            )
+            result = strategy.analyze_device(device_name, device_mapping, doc_ios)
 
             results.append(result)
 
@@ -573,8 +571,8 @@ class EnhancedAnalysisEngine:
         enhanced_strategy = EnhancedDeviceAnalysisStrategy(self.supported_platforms)
 
         for device_name, device_mapping in devices_data.items():
-            if device_name not in doc_ios_map:
-                continue
+            # 获取文档数据，如果没有则使用空列表（允许纯AI分析）
+            doc_ios = doc_ios_map.get(device_name, [])
 
             # 选择基础策略执行分析
             strategy_type = "standard"  # 默认策略
@@ -585,7 +583,7 @@ class EnhancedAnalysisEngine:
 
             base_strategy = self.strategies[strategy_type]
             base_result = base_strategy.analyze_device(
-                device_name, device_mapping, doc_ios_map[device_name]
+                device_name, device_mapping, doc_ios
             )
 
             # 获取raw data
@@ -599,7 +597,7 @@ class EnhancedAnalysisEngine:
                     enhanced_strategy.analyze_device_with_platform_validation(
                         device_name,
                         device_mapping,
-                        doc_ios_map[device_name],
+                        doc_ios,
                         raw_device_data,
                     )
                 )
@@ -623,6 +621,25 @@ class EnhancedAnalysisEngine:
             results.append(enhanced_result)
 
         return results
+
+    def _convert_to_enhanced_result(
+        self, base_result: AnalysisResult
+    ) -> EnhancedAnalysisResult:
+        """将基础结果转换为增强结果"""
+        return EnhancedAnalysisResult(
+            device_name=base_result.device_name,
+            doc_ios=base_result.doc_ios,
+            mapped_ios=base_result.mapped_ios,
+            matched_pairs=base_result.matched_pairs,
+            unmatched_doc=base_result.unmatched_doc,
+            unmatched_mapping=base_result.unmatched_mapping,
+            match_score=base_result.match_score,
+            analysis_type=base_result.analysis_type,
+            platform_allocation_issues=[],
+            io_capabilities={},
+            platform_allocation_score=1.0,
+            allocation_recommendations=[],
+        )
 
     def generate_enhanced_report(
         self, results: List[EnhancedAnalysisResult]

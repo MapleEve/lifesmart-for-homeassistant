@@ -14,6 +14,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .core.config.mapping import (
+    # 设备映射结构
+    DEVICE_MAPPING,
+)
 from .core.const import (
     # 核心常量
     DOMAIN,
@@ -26,19 +30,14 @@ from .core.const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
 )
-from .core.devices import (
-    # 设备映射结构
-    DEVICE_MAPPING,
-)
+from .core.data.processors import process_io_data
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
 )
-from .core.utils import (
+from .core.platform.platform_detection import (
     safe_get,
     expand_wildcard_ios,
-    get_enhanced_io_value,
-    apply_enhanced_conversion,
     get_sensor_subdevices,
 )
 
@@ -220,7 +219,10 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         # 完全依赖映射的转换逻辑，工具函数内部已处理v/val优先级
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         if io_config:
-            return get_enhanced_io_value(self._raw_device, self._sub_key, io_config)
+            device_type = self._raw_device.get(DEVICE_TYPE_KEY, "UNKNOWN")
+            return process_io_data(
+                device_type, self._sub_key, io_config, self._sub_data
+            )
 
         # 如果映射中没有转换配置，尝试直接使用v字段
         value = self._sub_data.get("v")
@@ -263,8 +265,9 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         # 完全依赖映射的转换逻辑，工具函数内部已处理IEEE754转换
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         if io_config:
-            enhanced_value = get_enhanced_io_value(
-                self._raw_device, self._sub_key, io_config
+            device_type = self._raw_device.get(DEVICE_TYPE_KEY, "UNKNOWN")
+            enhanced_value = process_io_data(
+                device_type, self._sub_key, io_config, self._sub_data
             )
             if enhanced_value is not None:
                 return enhanced_value
@@ -348,12 +351,12 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             if not io_data:
                 return
 
-            # 使用工具函数进行映射驱动的数值转换（内含v/val优先级处理）
+            # 使用新的业务逻辑处理器进行映射驱动的数值转换
             io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
             if io_config:
-                conversion_type = io_config.get("conversion", "raw_value")
-                new_value = apply_enhanced_conversion(
-                    conversion_type, io_data, io_config
+                device_type = self._raw_device.get(DEVICE_TYPE_KEY, "UNKNOWN")
+                new_value = process_io_data(
+                    device_type, self._sub_key, io_config, io_data
                 )
             else:
                 new_value = None

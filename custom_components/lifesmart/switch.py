@@ -26,7 +26,7 @@ from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
 )
-from .core.utils import (
+from .core.platform.platform_detection import (
     get_device_platform_mapping,
 )
 
@@ -110,7 +110,7 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
     @callback
     def _determine_device_class(self) -> SwitchDeviceClass:
         """从DEVICE_MAPPING获取设备类别。"""
-        from .core.devices import DEVICE_MAPPING
+        from .core.config.mapping import DEVICE_MAPPING
 
         device_config = DEVICE_MAPPING.get(self.devtype, {})
         switch_config = device_config.get("switch", {})
@@ -126,8 +126,24 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
 
     @callback
     def _parse_state(self, data: dict) -> bool:
-        """Parse the on/off state from devices data."""
-        return data.get("type", 0) & 0x01 == 1
+        """Parse the on/off state using new logic processor system."""
+        from .core.data.processors.logic_processors import process_io_data
+        from .core.config.mapping import DEVICE_MAPPING
+
+        # Get IO configuration from DEVICE_MAPPING
+        device_config = DEVICE_MAPPING.get(self.devtype, {})
+        switch_config = device_config.get("switch", {})
+        io_config = switch_config.get(self._sub_key, {})
+
+        if not io_config:
+            # If no mapping exists, use type_bit_0_switch processor
+            switch_processor_config = {"processor_type": "type_bit_0_switch"}
+            return process_io_data(switch_processor_config, data)
+
+        # Use new logic processor system with configured processor
+        processor_type = io_config.get("processor_type", "type_bit_0_switch")
+        processor_config = {"processor_type": processor_type}
+        return process_io_data(processor_config, data)
 
     @property
     def device_info(self) -> DeviceInfo:

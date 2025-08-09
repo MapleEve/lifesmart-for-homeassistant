@@ -1,21 +1,23 @@
 """
 LifeSmart 平台检测工具模块。
 
-此模块从helpers.py迁移而来，专门负责设备平台检测和映射功能。
+此模块专门负责设备平台检测和映射功能。
 按照HA规范，将工具函数从业务逻辑中分离出来。
 
 现在使用新的mapping引擎，消除了硬编码的业务逻辑。
+由 @MapleEve 初始创建和维护
 
 主要功能:
 - 设备平台检测和映射
 - 动态分类设备处理
 - 多平台设备支持
 - 子设备检测和过滤
+- Bitmask多设备生成支持
 """
 
 from typing import Any
 
-from ..devices.mapping_engine import mapping_engine
+from ..config.mapping_engine import mapping_engine
 
 
 def safe_get(data: dict | list, *path, default: Any = None) -> Any:
@@ -112,9 +114,21 @@ def is_switch(device: dict) -> bool:
 
 
 def get_binary_sensor_subdevices(device: dict) -> list[str]:
-    """获取设备的binary_sensor子设备列表。"""
+    """
+    获取设备的binary_sensor子设备列表。
+
+    增强版本：支持bitmask多设备生成。
+    """
+    # 获取基础平台映射
     platforms = get_device_platform_mapping(device)
-    return platforms.get("binary_sensor", [])
+    basic_subdevices = platforms.get("binary_sensor", [])
+
+    # 获取bitmask扩展的子设备
+    expanded_mapping = expand_bitmask_subdevices(device, "binary_sensor")
+    expanded_subdevices = expanded_mapping.get("binary_sensor", [])
+
+    # 合并并去重既有基础子设备（优先使用扩展版本）
+    return expanded_subdevices if expanded_subdevices else basic_subdevices
 
 
 def get_climate_subdevices(device: dict) -> list[str]:
@@ -145,6 +159,66 @@ def get_switch_subdevices(device: dict) -> list[str]:
     """获取设备的switch子设备列表。"""
     platforms = get_device_platform_mapping(device)
     return platforms.get("switch", [])
+
+
+def get_camera_subdevices(device: dict) -> list[str]:
+    """获取设备的camera子设备列表。"""
+    platforms = get_device_platform_mapping(device)
+    return platforms.get("camera", [])
+
+
+def get_air_quality_subdevices(device: dict) -> list[str]:
+    """获取设备的air_quality子设备列表。"""
+    platforms = get_device_platform_mapping(device)
+    return platforms.get("air_quality", [])
+
+
+def get_siren_subdevices(device: dict) -> list[str]:
+    """获取设备的siren子设备列表。"""
+    platforms = get_device_platform_mapping(device)
+    return platforms.get("siren", [])
+
+
+def get_scene_subdevices(device: dict) -> list[str]:
+    """获取设备的scene子设备列表。"""
+    platforms = get_device_platform_mapping(device)
+    return platforms.get("scene", [])
+
+
+def get_valve_subdevices(device: dict) -> list[str]:
+    """获取设备的valve子设备列表。"""
+    platforms = get_device_platform_mapping(device)
+    return platforms.get("valve", [])
+
+
+def is_camera(device: dict) -> bool:
+    """检查设备是否支持camera平台。"""
+    platforms = get_device_platform_mapping(device)
+    return "camera" in platforms
+
+
+def is_air_quality(device: dict) -> bool:
+    """检查设备是否支持air_quality平台。"""
+    platforms = get_device_platform_mapping(device)
+    return "air_quality" in platforms
+
+
+def is_siren(device: dict) -> bool:
+    """检查设备是否支持siren平台。"""
+    platforms = get_device_platform_mapping(device)
+    return "siren" in platforms
+
+
+def is_scene(device: dict) -> bool:
+    """检查设备是否支持scene平台。"""
+    platforms = get_device_platform_mapping(device)
+    return "scene" in platforms
+
+
+def is_valve(device: dict) -> bool:
+    """检查设备是否支持valve平台。"""
+    platforms = get_device_platform_mapping(device)
+    return "valve" in platforms
 
 
 def expand_wildcard_ios(io_pattern: str, device_data: dict) -> list[str]:
@@ -221,9 +295,9 @@ def is_momentary_button_device(device_type: str, sub_key: str) -> bool:
         是否为瞬时按钮设备
     """
     # 使用mapping引擎获取设备配置
-    from ..devices.mapping import DEVICE_MAPPING
-
-    device_config = DEVICE_MAPPING.get(device_type, {})
+    device_config = mapping_engine.resolve_device_mapping_from_data(
+        {"devtype": device_type, "data": {}}
+    )
 
     # 检查binary_sensor平台的IO配置
     binary_sensor_config = device_config.get("binary_sensor", {})
@@ -237,20 +311,135 @@ def get_binary_sensor_io_config(device: dict, sub_key: str) -> dict:
     """
     获取binary_sensor IO口的配置信息。
 
+    增强版本：支持bitmask虚拟子设备配置获取。
+
     从DEVICE_MAPPING中提取指定IO口的binary_sensor配置。
 
     Args:
         device: 设备字典
-        sub_key: IO口键名
+        sub_key: IO口键名，可能是虚拟子设备键
 
     Returns:
         IO口的配置字典，包含device_class等信息
     """
-    from ..devices.mapping import DEVICE_MAPPING
+    # 检查是否为bitmask虚拟子设备
+    if is_bitmask_virtual_subdevice(sub_key):
+        return get_bitmask_virtual_subdevice_config(device, sub_key)
 
+    # 原始逻辑：从映射引擎获取配置
     device_type = get_device_effective_type(device)
-    device_config = DEVICE_MAPPING.get(device_type, {})
+    device_config = mapping_engine.resolve_device_mapping_from_data(
+        {"devtype": device_type, "data": device.get("data", {})}
+    )
 
     # 获取binary_sensor平台的IO配置
     binary_sensor_config = device_config.get("binary_sensor", {})
     return binary_sensor_config.get(sub_key, {})
+
+
+def expand_bitmask_subdevices(
+    device: dict, platform: str = "binary_sensor"
+) -> dict[str, list[str]]:
+    """
+    扩展ALM类型的IO口为多个虚拟子设备。
+
+    使用新的ALM数据处理器架构，基于配置驱动的原则。
+    例如：ALM字段生成ALM_bit0, ALM_bit1, ALM_bit2等子设备。
+
+    Args:
+        device: 设备字典，包含设备信息和数据
+        platform: 目标平台名称
+
+    Returns:
+        扩展后的平台映射，格式: {"平台名": ["io1", "虚拟io1", "虚拟io2", ...]}
+    """
+    from ..data.processors.data_processors import is_alm_io_port, get_alm_subdevices
+    from ..config.device_specs import DEVICE_SPECS_DATA
+
+    device_type = get_device_effective_type(device)
+    device_data = device.get("data", {})
+
+    # 获取设备规格数据
+    device_specs = DEVICE_SPECS_DATA.get(device_type, {})
+    platform_config = device_specs.get(platform, {})
+
+    if not platform_config:
+        return {}
+
+    expanded_mapping = {platform: []}
+
+    # 检查每个IO口是否为ALM类型
+    for io_port, io_config in platform_config.items():
+        if not isinstance(io_config, dict):
+            continue
+
+        # 检查是否存在实际数据
+        if io_port not in device_data:
+            continue
+
+        # 添加原始IO口
+        expanded_mapping[platform].append(io_port)
+
+        # 检查是否为ALM IO口
+        if is_alm_io_port(io_port):
+            # 获取ALM虚拟子设备
+            virtual_subdevices = get_alm_subdevices()
+
+            # 添加虚拟子设备到映射中
+            for virtual_key in virtual_subdevices.keys():
+                expanded_mapping[platform].append(virtual_key)
+
+    return expanded_mapping
+
+
+def get_bitmask_virtual_subdevice_config(device: dict, virtual_key: str) -> dict:
+    """
+    获取ALM虚拟子设备的配置。
+
+    使用新的ALM数据处理器架构，基于配置驱动的原则。
+
+    Args:
+        device: 设备字典
+        virtual_key: 虚拟子设备键，如"ALM_bit0"
+
+    Returns:
+        虚拟子设备的配置字典
+    """
+    from ..data.processors.data_processors import is_alm_io_port, get_alm_subdevices
+
+    # 解析虚拟键格式: {IO口}_bit{位号}
+    if "_bit" not in virtual_key:
+        return {}
+
+    source_io_port = virtual_key.split("_bit")[0]
+
+    # 检查是否为ALM IO口
+    if not is_alm_io_port(source_io_port):
+        return {}
+
+    # 获取ALM虚拟子设备配置
+    virtual_subdevices = get_alm_subdevices()
+
+    return virtual_subdevices.get(virtual_key, {})
+
+    if processor:
+        bit_definitions = processor.parse_bit_definitions(detailed_description)
+        virtual_subdevices = processor.generate_virtual_subdevices(
+            source_io_port, bit_definitions
+        )
+        return virtual_subdevices.get(virtual_key, {})
+
+    return {}
+
+
+def is_bitmask_virtual_subdevice(sub_key: str) -> bool:
+    """
+    判断是否为bitmask虚拟子设备。
+
+    Args:
+        sub_key: 子设备键名
+
+    Returns:
+        是否为虚拟子设备
+    """
+    return "_bit" in sub_key and sub_key.split("_bit")[-1].isdigit()

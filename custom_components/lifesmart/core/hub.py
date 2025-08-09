@@ -35,6 +35,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
+from .client import LifeSmartTCPClient, LifeSmartOpenAPIClient
 from .client_base import LifeSmartClientBase
 # aiohttp 版本兼容性处理
 from .compatibility import get_ws_timeout
@@ -59,8 +60,6 @@ from .const import (
 )
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 from .helpers import generate_unique_id
-from .local_tcp_client import LifeSmartLocalTCPClient
-from .openapi_client import LifeSmartOAPIClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,7 +159,7 @@ class LifeSmartHub:
             ConfigEntryNotReady: 网络错误
         """
         try:
-            self.client = LifeSmartOAPIClient(
+            self.client = LifeSmartOpenAPIClient(
                 self.hass,
                 config_data.get(CONF_REGION),
                 config_data.get(CONF_LIFESMART_APPKEY),
@@ -226,7 +225,7 @@ class LifeSmartHub:
             ConfigEntryNotReady: 连接失败
         """
         try:
-            self.client = LifeSmartLocalTCPClient(
+            self.client = LifeSmartTCPClient(
                 self.config_entry.data[CONF_HOST],
                 self.config_entry.data[CONF_PORT],
                 self.config_entry.data[CONF_USERNAME],
@@ -490,7 +489,7 @@ class LifeSmartStateManager:
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        client: LifeSmartOAPIClient,
+        client: LifeSmartOpenAPIClient,
         ws_url: str,
         refresh_callback: callable,
         retry_interval: int = 10,

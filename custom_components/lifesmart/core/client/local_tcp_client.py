@@ -1,4 +1,4 @@
-"""LifeSmart 本地 TCP 客户端实现。
+"""LifeSmart 本地 TCP 客户端实现。由 @MapleEve 初始创建和维护
 
 此模块包含 LifeSmartLocalTCPClient 类，负责通过 TCP Socket 与 LifeSmart 中枢
 进行通信。它使用 protocol.py 中的工具来构建和解析数据包，并实现了与云端客户端
@@ -9,14 +9,15 @@ import asyncio
 import logging
 from typing import Callable, Any
 
-from .client_base import LifeSmartClientBase
 from .protocol import LifeSmartPacketFactory, LifeSmartProtocol
-from .utils import safe_get, normalize_device_names
+from ..client_base import LifeSmartClientBase
+from ..data.conversion import normalize_device_names
+from ..platform.platform_detection import safe_get
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class LifeSmartLocalTCPClient(LifeSmartClientBase):
+class LifeSmartTCPClient(LifeSmartClientBase):
     """LifeSmart 本地客户端，负责与中枢进行 TCP 通信。"""
 
     IDLE_TIMEOUT = 65.0

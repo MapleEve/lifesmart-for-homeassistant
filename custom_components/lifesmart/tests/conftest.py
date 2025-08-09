@@ -207,7 +207,7 @@ def mock_client_class(mock_sensor_devices_only):
     调用都会返回一个我们可以控制的新实例。
     """
     with patch(
-        "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient",
+        "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient",
         autospec=True,
     ) as mock_class:
         # 配置默认的实例行为

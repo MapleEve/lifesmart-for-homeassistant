@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from io import BytesIO
 from typing import Any
 
-from .const import (
+from ..const import (
     # --- 核心常量 ---
     SUBDEVICE_INDEX_KEY,
 )

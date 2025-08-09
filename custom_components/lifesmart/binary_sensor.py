@@ -37,11 +37,9 @@ from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
 )
-from .core.utils import (
+from .core.platform.platform_detection import (
     get_device_platform_mapping,
     get_binary_sensor_io_config,
-    convert_binary_sensor_state,
-    get_binary_sensor_attributes,
     is_momentary_button_device,
     safe_get,
 )
@@ -103,20 +101,58 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         self._sub_data = sub_device_data
         self._entry_id = entry_id
 
-        self._attr_name = f"{self._name} {self._sub_key.upper()}"
-        device_name_slug = self._name.lower().replace(" ", "_")
-        sub_key_slug = self._sub_key.lower()
-        self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
+        # 为bitmask虚拟子设备生成更友好的名称
+        if self._is_bitmask_virtual_subdevice():
+            friendly_name = self._get_bitmask_friendly_name()
+            self._attr_name = f"{self._name} {friendly_name}"
+            device_name_slug = self._name.lower().replace(" ", "_")
+            sub_key_slug = sub_device_key.lower().replace("_bit", "_")
+            self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
+        else:
+            self._attr_name = f"{self._name} {self._sub_key.upper()}"
+            device_name_slug = self._name.lower().replace(" ", "_")
+            sub_key_slug = self._sub_key.lower()
+            self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
 
         self._attr_unique_id = generate_unique_id(
             self.devtype, self.agt, self.me, sub_device_key
         )
         self._update_state(self._sub_data)
 
+    def _get_bitmask_friendly_name(self) -> str:
+        """
+        获取bitmask虚拟子设备的友好名称。
+
+        Returns:
+            友好的设备名称
+        """
+        io_config = get_binary_sensor_io_config(self._raw_device, self._sub_key)
+        friendly_name = io_config.get("friendly_name")
+
+        if friendly_name:
+            return friendly_name
+
+        # Fallback: 使用默认格式
+        return self._sub_key.upper()
+
     @callback
     def _update_state(self, data: dict) -> None:
-        """解析并根据数据更新所有实体状态和属性。"""
-        self._sub_data = data
+        """
+        解析并根据数据更新所有实体状态和属性。
+
+        增强版本：支持bitmask虚拟子设备的数据处理。
+        """
+        # 对于虚拟子设备，需要特殊处理
+        if self._is_bitmask_virtual_subdevice():
+            # 虚拟子设备不直接使用传入的data，而是从原始IO口获取数据
+            source_io_port = self._sub_key.split("_bit")[0]
+            source_io_data = safe_get(
+                self._raw_device, DEVICE_DATA_KEY, source_io_port, default={}
+            )
+            self._sub_data = source_io_data  # 使用原始IO口数据
+        else:
+            self._sub_data = data
+
         device_class = self._determine_device_class()
         if device_class:
             self._attr_device_class = device_class
@@ -158,20 +194,100 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
 
     @callback
     def _parse_state(self) -> bool:
-        """使用工具函数解析设备状态。"""
-        return convert_binary_sensor_state(self.devtype, self._sub_key, self._sub_data)
+        """使用新的逻辑处理器系统解析设备状态。
+
+        增强版本：支持bitmask虚拟子设备状态解析。
+        """
+        # 检查是否为bitmask虚拟子设备
+        if self._is_bitmask_virtual_subdevice():
+            return self._parse_bitmask_bit_state()
+
+        # 原有逻辑
+        from .core.data.processors.io_processors import process_io_data
+
+        io_config = get_binary_sensor_io_config(self._raw_device, self._sub_key)
+        if not io_config:
+            # If no config found, return a basic val != 0 check
+            return self._sub_data.get("val", 0) != 0
+
+        # Use new logic processor system
+        return process_io_data(self.devtype, self._sub_key, io_config, self._sub_data)
+
+    @callback
+    def _is_bitmask_virtual_subdevice(self) -> bool:
+        """判断是否为bitmask虚拟子设备。"""
+        from .core.platform.platform_detection import is_bitmask_virtual_subdevice
+
+        return is_bitmask_virtual_subdevice(self._sub_key)
+
+    @callback
+    def _parse_bitmask_bit_state(self) -> bool:
+        """
+        解析ALM虚拟子设备的bit状态。
+
+        使用新的ALM数据处理器架构，从原始IO口数据中提取特定bit位的状态。
+        """
+        from .core.data.processors.data_processors import (
+            alm_data_processor,
+            is_alm_io_port,
+        )
+
+        # 解析虚拟键格式: {IO口}_bit{位号}
+        if "_bit" not in self._sub_key:
+            return False
+
+        source_io_port = self._sub_key.split("_bit")[0]
+        bit_position_str = self._sub_key.split("_bit")[1]
+
+        # 检查是否为ALM IO口
+        if not is_alm_io_port(source_io_port):
+            return False
+
+        try:
+            bit_position = int(bit_position_str)
+        except ValueError:
+            return False
+
+        # 获取原始IO口数据
+        source_io_data = safe_get(
+            self._raw_device, DEVICE_DATA_KEY, source_io_port, default={}
+        )
+        raw_value = source_io_data.get("val", 0)
+
+        # 使用ALM数据处理器提取bit状态
+        return alm_data_processor.extract_bit_value(raw_value, bit_position)
+
+        # Fallback: 基础位操作
+        try:
+            return bool((raw_value >> bit_position) & 1)
+        except (TypeError, ValueError):
+            return False
 
     @callback
     def _get_attributes(self) -> dict[str, Any]:
-        """使用工具函数获取传感器属性。"""
+        """使用新的逻辑处理器系统获取传感器属性。"""
         # 按钮开关类型初始化事件属性 - 使用映射驱动判断
         if self._is_momentary_button_device():
             return {"last_event": None, "last_event_time": None}
 
-        # 使用工具函数获取设备特定属性
-        return get_binary_sensor_attributes(
-            self.devtype, self._sub_key, self._sub_data, self._attr_is_on
-        )
+        # 使用新的逻辑处理器获取设备特定属性
+        from .core.data.processors.io_processors import process_io_attributes
+
+        io_config = get_binary_sensor_io_config(self._raw_device, self._sub_key)
+        if io_config:
+            try:
+                return process_io_attributes(
+                    self.devtype,
+                    self._sub_key,
+                    io_config,
+                    self._sub_data,
+                    self._attr_is_on,
+                )
+            except Exception:
+                pass
+
+        # Fallback to basic attributes
+        return dict(self._sub_data)
 
     @property
     def device_info(self) -> DeviceInfo:

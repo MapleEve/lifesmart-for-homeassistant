@@ -327,8 +327,11 @@ class DocumentParser:
 
     def _get_default_docs_path(self) -> str:
         """获取默认文档路径"""
+        # 从 .testing/mapping_tool/utils/ 向上4级到项目根目录
         return os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            ),
             "docs",
             "LifeSmart 智慧设备规格属性说明.md",
         )

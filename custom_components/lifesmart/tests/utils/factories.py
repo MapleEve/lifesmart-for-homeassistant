@@ -13,14 +13,14 @@ from unittest.mock import AsyncMock, MagicMock
 from homeassistant import config_entries
 from homeassistant.const import CONF_REGION, CONF_TYPE
 
+from custom_components.lifesmart.core.config.effect_mappings import (
+    DYN_EFFECT_MAP,
+)
 from custom_components.lifesmart.core.const import (
     CONF_LIFESMART_APPKEY,
     CONF_LIFESMART_APPTOKEN,
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERTOKEN,
-)
-from custom_components.lifesmart.core.devices import (
-    DYN_EFFECT_MAP,
 )
 from .constants import (
     DEFAULT_TEST_VALUES,
