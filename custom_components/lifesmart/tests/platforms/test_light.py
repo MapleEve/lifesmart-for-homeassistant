@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.core.const import *
-from custom_components.lifesmart.core.device import DYN_EFFECT_MAP
+from custom_components.lifesmart.core.devices import DYN_EFFECT_MAP
 from custom_components.lifesmart.light import (
     _parse_color_value,
     DEFAULT_MIN_KELVIN,

@@ -15,7 +15,7 @@ LifeSmart 平台检测工具模块。
 
 from typing import Any
 
-from ..device.mapping_engine import mapping_engine
+from ..devices.mapping_engine import mapping_engine
 
 
 def safe_get(data: dict | list, *path, default: Any = None) -> Any:
@@ -221,7 +221,7 @@ def is_momentary_button_device(device_type: str, sub_key: str) -> bool:
         是否为瞬时按钮设备
     """
     # 使用mapping引擎获取设备配置
-    from ..device.mapping import DEVICE_MAPPING
+    from ..devices.mapping import DEVICE_MAPPING
 
     device_config = DEVICE_MAPPING.get(device_type, {})
 
@@ -246,7 +246,7 @@ def get_binary_sensor_io_config(device: dict, sub_key: str) -> dict:
     Returns:
         IO口的配置字典，包含device_class等信息
     """
-    from ..device.mapping import DEVICE_MAPPING
+    from ..devices.mapping import DEVICE_MAPPING
 
     device_type = get_device_effective_type(device)
     device_config = DEVICE_MAPPING.get(device_type, {})

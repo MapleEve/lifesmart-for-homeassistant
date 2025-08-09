@@ -614,9 +614,9 @@ class TestAPIWrapperMethods:
     ):
         """测试EpGet方法的特殊列表响应处理逻辑。"""
         # EpGet返回的是列表，但我们取第一个元素
-        mock_async_call_api.return_value = {"code": 0, "message": [{"device": "data"}]}
+        mock_async_call_api.return_value = {"code": 0, "message": [{"devices": "data"}]}
         result = await client.get_epget_async("hub1", "dev1")
-        assert result == {"device": "data"}, "应该返回列表中的第一个元素"
+        assert result == {"devices": "data"}, "应该返回列表中的第一个元素"
 
         # 测试空列表的情况
         mock_async_call_api.return_value = {"code": 0, "message": []}

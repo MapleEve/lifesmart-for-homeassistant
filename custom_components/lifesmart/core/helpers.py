@@ -92,7 +92,7 @@ def is_versioned_device_type(device: dict, expected_version: str = None) -> bool
     full_cls = device.get(DEVICE_FULLCLS_KEY, "")
 
     # 如果不是版本化设备类型，返回False
-    from .device import VERSIONED_DEVICE_TYPES
+    from .devices import VERSIONED_DEVICE_TYPES
 
     if device_type not in VERSIONED_DEVICE_TYPES:
         return False
@@ -119,7 +119,7 @@ def get_device_version(device: dict) -> str:
     device_type = device.get(DEVICE_TYPE_KEY, "")
     full_cls = device.get(DEVICE_FULLCLS_KEY, "")
 
-    from .device import VERSIONED_DEVICE_TYPES
+    from .devices import VERSIONED_DEVICE_TYPES
 
     if device_type not in VERSIONED_DEVICE_TYPES:
         return ""

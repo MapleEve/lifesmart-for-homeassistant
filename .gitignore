@@ -69,6 +69,7 @@ Thumbs.db
 # Testing artifacts (allow core scripts, exclude generated files)
 *logs*.txt
 /.testing/*
+/tmp
 
 # But keep important testing scripts and directories
 !/.testing/test_ci_locally.sh

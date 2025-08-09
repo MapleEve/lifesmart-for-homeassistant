@@ -110,7 +110,7 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
     @callback
     def _determine_device_class(self) -> SwitchDeviceClass:
         """从DEVICE_MAPPING获取设备类别。"""
-        from .core.device import DEVICE_MAPPING
+        from .core.devices import DEVICE_MAPPING
 
         device_config = DEVICE_MAPPING.get(self.devtype, {})
         switch_config = device_config.get("switch", {})
@@ -126,12 +126,12 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
 
     @callback
     def _parse_state(self, data: dict) -> bool:
-        """Parse the on/off state from device data."""
+        """Parse the on/off state from devices data."""
         return data.get("type", 0) & 0x01 == 1
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device information to link the entity to a single device."""
+        """Return devices information to link the entity to a single devices."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.agt, self.me)},
             name=self._device_name,
@@ -181,7 +181,7 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
                     self.async_write_ha_state()
         except (KeyError, StopIteration):
             _LOGGER.warning(
-                "Could not find device %s during global refresh.", self._attr_unique_id
+                "Could not find devices %s during global refresh.", self._attr_unique_id
             )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

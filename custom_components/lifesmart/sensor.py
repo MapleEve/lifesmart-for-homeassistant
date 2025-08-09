@@ -26,7 +26,7 @@ from .core.const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
 )
-from .core.device import (
+from .core.devices import (
     # 设备映射结构
     DEVICE_MAPPING,
 )
@@ -190,7 +190,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
     @callback
     def _determine_device_class(self) -> SensorDeviceClass | None:
-        """Determine device class using mapping-based approach only."""
+        """Determine devices class using mapping-based approach only."""
         # 完全依赖映射获取设备类别
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         if io_config and "device_class" in io_config:
@@ -396,7 +396,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             if new_sub_data is None:
                 if self.available:
                     _LOGGER.warning(
-                        "Sub-device %s for %s not found, marking as unavailable.",
+                        "Sub-devices %s for %s not found, marking as unavailable.",
                         self._sub_key,
                         self.unique_id,
                     )

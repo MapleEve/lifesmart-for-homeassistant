@@ -1168,7 +1168,7 @@ class TestLifeSmartStateManager:
             mock_hub_instance.devices = [
                 {HUB_ID_KEY: "hub1", DEVICE_ID_KEY: "dev1"},
                 {HUB_ID_KEY: "hub2", DEVICE_ID_KEY: "dev2"},
-                {"invalid": "device"},  # 没有hub_id的设备
+                {"invalid": "devices"},  # 没有hub_id的设备
             ]
 
             mock_config_entry_oapi.add_to_hass(hass)

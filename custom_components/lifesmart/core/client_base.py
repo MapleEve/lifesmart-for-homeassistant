@@ -28,7 +28,7 @@ from .const import (
     CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_TEMP_FCU,
 )
-from .device import (
+from .devices import (
     NON_POSITIONAL_COVER_CONFIG,
     REVERSE_F_HVAC_MODE_MAP,
     LIFESMART_F_FAN_MAP,

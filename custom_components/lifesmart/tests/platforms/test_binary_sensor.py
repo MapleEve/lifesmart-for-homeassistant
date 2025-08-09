@@ -159,20 +159,40 @@ DEVICE_TYPE_MAPPINGS = {
 # 状态测试用例
 STATE_TEST_CASES = [
     # 门窗感应器 - G键：0=开，其他=关
-    {"device": "bs_door", "sub_key": "G", "test_data": {"val": 0}, "expected": True},
-    {"device": "bs_door", "sub_key": "G", "test_data": {"val": 1}, "expected": False},
+    {"devices": "bs_door", "sub_key": "G", "test_data": {"val": 0}, "expected": True},
+    {"devices": "bs_door", "sub_key": "G", "test_data": {"val": 1}, "expected": False},
     # 动态感应器 - M键：非0=检测到
-    {"device": "bs_motion", "sub_key": "M", "test_data": {"val": 1}, "expected": True},
-    {"device": "bs_motion", "sub_key": "M", "test_data": {"val": 0}, "expected": False},
+    {"devices": "bs_motion", "sub_key": "M", "test_data": {"val": 1}, "expected": True},
+    {
+        "devices": "bs_motion",
+        "sub_key": "M",
+        "test_data": {"val": 0},
+        "expected": False,
+    },
     # 水浸传感器 - WA键：非0=检测到水
-    {"device": "bs_water", "sub_key": "WA", "test_data": {"val": 1}, "expected": True},
-    {"device": "bs_water", "sub_key": "WA", "test_data": {"val": 0}, "expected": False},
+    {"devices": "bs_water", "sub_key": "WA", "test_data": {"val": 1}, "expected": True},
+    {
+        "devices": "bs_water",
+        "sub_key": "WA",
+        "test_data": {"val": 0},
+        "expected": False,
+    },
     # 烟雾感应器 - P1键：非0=检测到烟雾
-    {"device": "bs_smoke", "sub_key": "P1", "test_data": {"val": 1}, "expected": True},
-    {"device": "bs_smoke", "sub_key": "P1", "test_data": {"val": 0}, "expected": False},
+    {"devices": "bs_smoke", "sub_key": "P1", "test_data": {"val": 1}, "expected": True},
+    {
+        "devices": "bs_smoke",
+        "sub_key": "P1",
+        "test_data": {"val": 0},
+        "expected": False,
+    },
     # 人体存在感应器 - P1键：非0=检测到人体
-    {"device": "bs_radar", "sub_key": "P1", "test_data": {"val": 1}, "expected": True},
-    {"device": "bs_radar", "sub_key": "P1", "test_data": {"val": 0}, "expected": False},
+    {"devices": "bs_radar", "sub_key": "P1", "test_data": {"val": 1}, "expected": True},
+    {
+        "devices": "bs_radar",
+        "sub_key": "P1",
+        "test_data": {"val": 0},
+        "expected": False,
+    },
 ]
 
 # 按钮事件测试用例
@@ -366,7 +386,7 @@ class TestDeviceClassification:
             ["bs_door", "bs_motion", "bs_water", "bs_lock", "bs_button"]
         )
         device = find_test_device(mock_lifesmart_devices, device_me)
-        # For duplicate device IDs, find the binary sensor device specifically
+        # For duplicate devices IDs, find the binary sensor devices specifically
         if device is None or sub_key not in device.get("data", {}):
             # Try to find the Door Sensor (SL_SC_G) specifically by hub ID
             device = find_test_device(mock_lifesmart_devices, device_me, get_hub_id(6))
@@ -496,7 +516,7 @@ class TestStateParsingLogic:
             ["bs_door", "bs_motion", "bs_water"]
         )
         device = find_test_device(mock_lifesmart_devices, device_me)
-        # For duplicate device IDs, find the binary sensor device specifically
+        # For duplicate devices IDs, find the binary sensor devices specifically
         if device is None or sub_key not in device.get("data", {}):
             # Try to find the Door Sensor (SL_SC_G) specifically by hub ID
             device = find_test_device(mock_lifesmart_devices, device_me, get_hub_id(6))

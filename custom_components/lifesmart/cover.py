@@ -38,7 +38,7 @@ from .core.const import (
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
 )
-from .core.device import (
+from .core.devices import (
     DEVICE_MAPPING,
 )
 from .core.entity import LifeSmartEntity

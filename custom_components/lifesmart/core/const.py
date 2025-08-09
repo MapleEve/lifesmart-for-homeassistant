@@ -10,7 +10,7 @@
 保持单一职责原则，只定义纯常量。
 
 设备映射和helper函数已迁移到:
-- device/mapping.py: 设备配置映射和helper函数
+- devices/mapping.py: 设备配置映射和helper函数
 - utils/: 工具函数模块
 """
 

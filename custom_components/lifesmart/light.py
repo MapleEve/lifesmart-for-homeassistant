@@ -54,7 +54,7 @@ from .core.const import (
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
 )
-from .core.device import (
+from .core.devices import (
     DYN_EFFECT_MAP,
     DYN_EFFECT_LIST,
     ALL_EFFECT_LIST,

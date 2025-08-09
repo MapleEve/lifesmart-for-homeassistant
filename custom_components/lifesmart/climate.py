@@ -38,7 +38,7 @@ from .core.const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
 )
-from .core.device import (
+from .core.devices import (
     LIFESMART_HVAC_MODE_MAP,
     LIFESMART_CP_AIR_HVAC_MODE_MAP,
     LIFESMART_CP_AIR_FAN_MAP,

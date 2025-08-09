@@ -14,7 +14,7 @@ sys.path.insert(
 )
 
 try:
-    # Import the original device mappings
+    # Import the original devices mappings
     from core.device.mapping import (
         DEVICE_MAPPING,
         VERSIONED_DEVICE_TYPES,

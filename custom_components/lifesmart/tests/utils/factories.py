@@ -19,7 +19,7 @@ from custom_components.lifesmart.core.const import (
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERTOKEN,
 )
-from custom_components.lifesmart.core.device import (
+from custom_components.lifesmart.core.devices import (
     DYN_EFFECT_MAP,
 )
 from .constants import (

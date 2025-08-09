@@ -1489,7 +1489,7 @@ NON_POSITIONAL_COVER_CONFIG = {
 #
 # 📋 **迁移指南**：
 # - 旧代码: `if device_type in ALL_SWITCH_TYPES`
-# - 新代码: `platforms = get_device_platform_mapping(device);`
+# - 新代码: `platforms = get_device_platform_mapping(devices);`
 #           `if Platform.SWITCH in platforms`
 #
 # 🔍 **技术优势**：

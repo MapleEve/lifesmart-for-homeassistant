@@ -78,7 +78,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
         devices = await client.async_get_all_devices()
 
         if not isinstance(devices, list):
-            _LOGGER.error("API did not return a valid device list: %s", devices)
+            _LOGGER.error("API did not return a valid devices list: %s", devices)
             raise ConfigEntryAuthFailed("invalid_response")
         if len(devices) == 0:
             _LOGGER.warning("No devices found for this user.")

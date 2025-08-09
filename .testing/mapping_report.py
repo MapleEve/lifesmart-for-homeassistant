@@ -503,7 +503,7 @@ class DeviceAttributeAnalyzer:
             current_mapping = device_config
 
             # 检查每个平台的IO配置
-            device_suggestions = {"device": device_name, "platforms": {}}
+            device_suggestions = {"devices": device_name, "platforms": {}}
 
             has_missing = False
 
@@ -653,7 +653,7 @@ class DeviceAttributeAnalyzer:
         ]
 
         for device_suggestion in missing_devices:
-            device_name = device_suggestion["device"]
+            device_name = device_suggestion["devices"]
             report.append(f"## 🔸 **{device_name}**")
             report.append("")
 
@@ -690,7 +690,7 @@ class DeviceAttributeAnalyzer:
         patches = {}
 
         for device_suggestion in missing_devices:
-            device_name = device_suggestion["device"]
+            device_name = device_suggestion["devices"]
             patches[device_name] = {}
 
             for platform, platform_data in device_suggestion["platforms"].items():
@@ -4098,8 +4098,8 @@ if __name__ == "__main__":
         elif isinstance(section_devices, list):
             # 处理列表结构的设备组
             for device_data in section_devices:
-                if isinstance(device_data, dict) and "device" in device_data:
-                    device_type = device_data["device"]
+                if isinstance(device_data, dict) and "devices" in device_data:
+                    device_type = device_data["devices"]
                     if device_type in DEVICE_MAPPING:
                         recommended_order.append(device_type)
 
@@ -4204,7 +4204,7 @@ if __name__ == "__main__":
         match_score = len(matched_ios) / total_ios if total_ios > 0 else 0
 
         device_info = {
-            "device": device,
+            "devices": device,
             "doc_ios": sorted(doc_ios_set),
             "mapped_ios": sorted(mapped_ios_set),
             "match_score": match_score,
@@ -4229,7 +4229,7 @@ if __name__ == "__main__":
         io_report.append("✅ **完美匹配设备详情**")
         io_report.append("-" * 50)
         for device_info in perfect_match:
-            io_report.append(f"🔸 **{device_info['device']}**")
+            io_report.append(f"🔸 **{device_info['devices']}**")
             io_report.append(f"   IO口: {', '.join(device_info['doc_ios'])}")
             io_report.append(f"   匹配度: {device_info['match_score']:.1%}")
             io_report.append("")
@@ -4239,7 +4239,7 @@ if __name__ == "__main__":
         io_report.append("⚠️ **部分匹配设备详情**")
         io_report.append("-" * 50)
         for device_info in partial_match:
-            io_report.append(f"🔸 **{device_info['device']}**")
+            io_report.append(f"🔸 **{device_info['devices']}**")
             io_report.append(f"   官方IO口: {', '.join(device_info['doc_ios'])}")
             io_report.append(f"   映射IO口: {', '.join(device_info['mapped_ios'])}")
             io_report.append(f"   匹配度: {device_info['match_score']:.1%}")
@@ -4258,7 +4258,7 @@ if __name__ == "__main__":
         io_report.append("❌ **不匹配设备详情**")
         io_report.append("-" * 50)
         for device_info in mismatch:
-            io_report.append(f"🔸 **{device_info['device']}**")
+            io_report.append(f"🔸 **{device_info['devices']}**")
             io_report.append(f"   官方IO口: {', '.join(device_info['doc_ios'])}")
             io_report.append(f"   映射IO口: {', '.join(device_info['mapped_ios'])}")
             io_report.append(f"   匹配度: {device_info['match_score']:.1%}")

@@ -157,7 +157,7 @@ STANDARD_CONFIG_FIELDS = [
 
 # 测试用的错误消息常量
 TEST_ERROR_MESSAGES = {
-    "device_not_found": "Device with me '{}' not found in device list",
+    "device_not_found": "Device with me '{}' not found in devices list",
     "invalid_hub_id": "Invalid hub ID format: {}",
     "missing_data_field": "Required data field '{}' is missing",
 }
