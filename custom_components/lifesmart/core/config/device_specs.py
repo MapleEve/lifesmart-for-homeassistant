@@ -3673,11 +3673,11 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SPWM": {
         "name": "PWM调光开关控制器",
-        "switch": {
+        "light": {
             "P1": {
-                "description": "开关",
+                "description": "可调亮度灯光",
                 "rw": "RW",
-                "data_type": "dimmer_switch",
+                "data_type": "brightness_light",
                 "conversion": "type_bit_0",
                 "detailed_description": (
                     "type&1==1 表示处于打开状态；"
@@ -6767,6 +6767,16 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SC_WA": {
         "name": "水浸传感器",
+        "binary_sensor": {
+            "WA": {
+                "description": "水浸检测",
+                "rw": "R",
+                "data_type": "water_leak",
+                "conversion": "val_greater_than_zero",
+                "detailed_description": "`val` 值大于0表示检测到水；val=0表示未检测到水",
+                "device_class": "moisture",
+            },
+        },
         "sensor": {
             "WA": {
                 "description": "导电率",
@@ -7529,6 +7539,24 @@ _RAW_DEVICE_DATA = {
     # 2.8.1 智能门锁系列 (Smart Door Lock Series)
     "SL_LK_LS": {
         "name": "思锁智能门锁",
+        "binary_sensor": {
+            "EVTLO": {
+                "description": "门锁状态",
+                "rw": "R",
+                "data_type": "door_lock",
+                "conversion": "type_bit_0",
+                "detailed_description": "`type&1==1`表示打开；`type&1==0` 表示关闭",
+                "device_class": "lock",
+            },
+            "ALM": {
+                "description": "告警状态",
+                "rw": "R",
+                "data_type": "alarm_status",
+                "conversion": "val_greater_than_zero",
+                "detailed_description": "任何告警位为1时表示有告警",
+                "device_class": "problem",
+            },
+        },
         "sensor": {
             "BAT": {
                 "description": "电量",
