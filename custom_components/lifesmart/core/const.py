@@ -144,20 +144,9 @@ ATTR_INDEX = "idx"  # 子设备索引属性
 ATTR_AZ = "az"  # 区域属性（用于部分第三方设备）
 
 # ================= 认证配置常量 (Authentication Configuration Constants) =================
-REGION_MAPPING = {
-    "AUTO": "AUTO",
-    "cn0": "cn0",
-    "cn1": "cn1",
-    "cn2": "cn2",
-    "us": "us",
-    "eur": "eur",
-    "jp": "jp",
-    "apz": "apz",
-}
-
 # 默认配置值
 DEFAULT_REGION = "AUTO"
-DEFAULT_AUTH_METHOD = "账号密码"
+DEFAULT_AUTH_METHOD = "password"
 DEFAULT_LOCAL_PORT = 8888
 DEFAULT_LOCAL_TIMEOUT = 30
 
