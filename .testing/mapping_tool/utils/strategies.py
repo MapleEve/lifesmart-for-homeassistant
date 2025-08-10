@@ -17,6 +17,7 @@ try:
         PlatformAllocationValidator,
         PlatformAllocationIssue,
     )
+    from .pure_ai_analyzer import PureAIAnalyzer, DeviceAnalysisResult, IOCapability
 except ImportError:
     # Fallback for development
     import sys
@@ -30,6 +31,7 @@ except ImportError:
         PlatformAllocationValidator,
         PlatformAllocationIssue,
     )
+    from pure_ai_analyzer import PureAIAnalyzer, DeviceAnalysisResult, IOCapability
 
 
 @dataclass
@@ -48,12 +50,17 @@ class AnalysisResult:
 
 @dataclass
 class EnhancedAnalysisResult(AnalysisResult):
-    """增强版分析结果，包含平台分配验证信息"""
+    """增强版分析结果，包含平台分配验证信息和纯AI分析"""
 
     platform_allocation_issues: List[PlatformAllocationIssue] = None
     io_capabilities: Dict[str, Any] = None
     platform_allocation_score: float = 1.0
     allocation_recommendations: List[str] = None
+    # 新增纯AI分析字段
+    ai_analysis_result: Optional[DeviceAnalysisResult] = None
+    is_multi_io_device: bool = False
+    bitmask_ios: List[str] = None
+    multi_platform_ios: List[str] = None
 
 
 class DeviceAnalysisStrategy(ABC):
@@ -558,6 +565,8 @@ class EnhancedAnalysisEngine:
             "dynamic": DynamicDeviceStrategy(),
             "versioned": VersionedDeviceStrategy(),
         }
+        # 新增纯AI分析器
+        self.pure_ai_analyzer = PureAIAnalyzer(supported_platforms)
 
     def analyze_devices_with_platform_validation(
         self,
@@ -565,7 +574,7 @@ class EnhancedAnalysisEngine:
         doc_ios_map: Dict[str, List[Dict]],
         raw_devices_data: Optional[Dict[str, Any]] = None,
     ) -> List[EnhancedAnalysisResult]:
-        """带平台分配验证的批量设备分析"""
+        """带平台分配验证的批量设备分析，集成纯AI分析"""
 
         results = []
         enhanced_strategy = EnhancedDeviceAnalysisStrategy(self.supported_platforms)
@@ -591,6 +600,36 @@ class EnhancedAnalysisEngine:
             if raw_devices_data and device_name in raw_devices_data:
                 raw_device_data = raw_devices_data[device_name]
 
+            # 执行纯AI分析
+            ai_analysis_result = None
+            bitmask_ios = []
+            multi_platform_ios = []
+
+            if raw_device_data:
+                try:
+                    ai_analysis_result = self.pure_ai_analyzer.analyze_device_specs(
+                        raw_device_data
+                    )
+
+                    # 提取bitmask IO信息 - 修复：应该是单个IO的bitmask信息
+                    bitmask_ios = []
+                    if ai_analysis_result and ai_analysis_result.bitmask_devices:
+                        # bitmask_devices现在包含的是"platform.io_name"格式的条目
+                        bitmask_ios = [
+                            entry.split(".")[-1] if "." in entry else entry
+                            for entry in ai_analysis_result.bitmask_devices
+                        ]
+
+                    # 提取多平台分配IO信息
+                    if ai_analysis_result and ai_analysis_result.ios:
+                        multi_platform_ios = [
+                            io.name
+                            for io in ai_analysis_result.ios
+                            if io.multi_platform_potential
+                        ]
+                except Exception as e:
+                    print(f"⚠️ 纯AI分析设备{device_name}时出错: {e}")
+
             # 转换为增强结果并添加平台分配分析
             if raw_device_data:
                 enhanced_result = (
@@ -601,6 +640,17 @@ class EnhancedAnalysisEngine:
                         raw_device_data,
                     )
                 )
+
+                # 添加纯AI分析结果
+                enhanced_result.ai_analysis_result = ai_analysis_result
+                enhanced_result.is_multi_io_device = (
+                    ai_analysis_result.is_multi_io_device
+                    if ai_analysis_result
+                    else False
+                )
+                enhanced_result.bitmask_ios = bitmask_ios or []
+                enhanced_result.multi_platform_ios = multi_platform_ios or []
+
             else:
                 # 没有raw data时创建基础的增强结果
                 enhanced_result = EnhancedAnalysisResult(
@@ -616,6 +666,10 @@ class EnhancedAnalysisEngine:
                     io_capabilities={},
                     platform_allocation_score=1.0,
                     allocation_recommendations=[],
+                    ai_analysis_result=ai_analysis_result,
+                    is_multi_io_device=False,
+                    bitmask_ios=[],
+                    multi_platform_ios=[],
                 )
 
             results.append(enhanced_result)
@@ -644,7 +698,7 @@ class EnhancedAnalysisEngine:
     def generate_enhanced_report(
         self, results: List[EnhancedAnalysisResult]
     ) -> Dict[str, Any]:
-        """生成增强版分析报告"""
+        """生成增强版分析报告，包含纯AI分析结果"""
 
         # 基础统计
         total_devices = len(results)
@@ -653,12 +707,26 @@ class EnhancedAnalysisEngine:
             len(r.platform_allocation_issues or []) for r in results
         )
 
+        # 纯AI分析统计
+        multi_io_devices = [r for r in results if r.is_multi_io_device]
+        bitmask_devices = [r for r in results if r.bitmask_ios]
+        multi_platform_devices = [r for r in results if r.multi_platform_ios]
+
         # 平台分配分数统计
         avg_platform_score = (
             sum(r.platform_allocation_score for r in results) / total_devices
             if total_devices > 0
             else 0
         )
+
+        # AI分析置信度统计
+        ai_analyzed_devices = [r for r in results if r.ai_analysis_result]
+        if ai_analyzed_devices:
+            avg_ai_confidence = sum(
+                r.ai_analysis_result.analysis_confidence for r in ai_analyzed_devices
+            ) / len(ai_analyzed_devices)
+        else:
+            avg_ai_confidence = 0
 
         # 问题分类统计
         issue_type_stats = {}
@@ -669,7 +737,7 @@ class EnhancedAnalysisEngine:
                         issue_type_stats.get(issue.issue_type, 0) + 1
                     )
 
-        # 生成设备详情
+        # 生成设备详情（包含AI分析信息）
         problem_devices = []
         for result in results:
             if result.platform_allocation_issues or result.match_score < 0.9:
@@ -684,6 +752,15 @@ class EnhancedAnalysisEngine:
                     "平台分配问题": len(result.platform_allocation_issues or []),
                     "IO口匹配问题": len(result.unmatched_doc)
                     + len(result.unmatched_mapping),
+                    # 新增AI分析字段
+                    "是否多IO设备": result.is_multi_io_device,
+                    "Bitmask IO数": len(result.bitmask_ios or []),
+                    "多平台IO数": len(result.multi_platform_ios or []),
+                    "AI分析置信度": (
+                        round(result.ai_analysis_result.analysis_confidence, 3)
+                        if result.ai_analysis_result
+                        else 0
+                    ),
                 }
                 problem_devices.append(device_info)
 
@@ -697,6 +774,36 @@ class EnhancedAnalysisEngine:
                 "总平台分配问题": total_platform_issues,
                 "平均平台分配分数": round(avg_platform_score, 3),
                 "问题类型分布": issue_type_stats,
+                # 新增AI分析概览
+                "纯AI分析设备数": len(ai_analyzed_devices),
+                "多IO设备数": len(multi_io_devices),
+                "Bitmask设备数": len(bitmask_devices),
+                "多平台分配设备数": len(multi_platform_devices),
+                "平均AI分析置信度": round(avg_ai_confidence, 3),
+            },
+            "纯AI分析结果": {
+                "多IO设备列表": [r.device_name for r in multi_io_devices],
+                "Bitmask设备列表": [r.device_name for r in bitmask_devices],
+                "多平台分配设备列表": [r.device_name for r in multi_platform_devices],
+                "详细AI分析": [
+                    {
+                        "设备名称": r.device_name,
+                        "是否多IO设备": r.is_multi_io_device,
+                        "Bitmask IO": r.bitmask_ios or [],
+                        "多平台IO": r.multi_platform_ios or [],
+                        "AI置信度": (
+                            round(r.ai_analysis_result.analysis_confidence, 3)
+                            if r.ai_analysis_result
+                            else 0
+                        ),
+                        "推荐建议": (
+                            r.ai_analysis_result.recommendations
+                            if r.ai_analysis_result
+                            else []
+                        ),
+                    }
+                    for r in ai_analyzed_devices
+                ],
             },
             "问题设备详情": problem_devices,
             "改进建议": [],  # 可以后续扩展

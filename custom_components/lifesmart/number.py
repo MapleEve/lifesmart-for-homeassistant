@@ -1,4 +1,23 @@
-"""Support for LifeSmart numbers by @MapleEve"""
+"""
+LifeSmart 数值控制器平台支持模块
+
+由 @MapleEve 创建和维护
+
+本模块为LifeSmart平台提供数值控制器设备支持，实现了对各种
+数值型控制参数的调节和管理。
+
+支持的数值控制类型：
+- 温度设定：空调、地暖等温度控制
+- 亮度调节：可调光LED灯亮度控制
+- 音量控制：音响设备音量调节
+- 参数设定：各种设备的数值参数配置
+
+技术特性：
+- 灵活的数值范围和步长配置
+- 多种数值转换模式
+- 支持滑块和数字输入模式
+- 实时数值同步和更新
+"""
 
 import logging
 from typing import Any
@@ -40,7 +59,9 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart numbers from a config entry."""
+    """
+    从配置条目设置 LifeSmart 数值控制器。
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -85,7 +106,9 @@ async def async_setup_entry(
 
 
 class LifeSmartNumber(LifeSmartEntity, NumberEntity):
-    """LifeSmart number implementation."""
+    """
+    LifeSmart 数值控制器实现类。
+    """
 
     def __init__(
         self,
@@ -94,7 +117,9 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
         number_config: dict,
         hub,
     ) -> None:
-        """Initialize the number entity."""
+        """
+        初始化数值实体。
+        """
         super().__init__(device, sub_key, hub)
         self._number_config = number_config
 
@@ -126,7 +151,12 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return unique id for the number."""
+        """
+        返回数值控制器的唯一ID。
+
+        Returns:
+            基于设备和子设备信息的唯一标识符
+        """
         return generate_unique_id(
             self._device.get(DEVICE_TYPE_KEY, ""),
             self._device.get(HUB_ID_KEY, ""),
@@ -136,18 +166,30 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the number entity."""
+        """
+        返回数值实体的名称。
+
+        Returns:
+            组合设备名称和数值控制器名称的字符串
+        """
         device_name = self._device.get(DEVICE_NAME_KEY, "Unknown Device")
         number_name = self._number_config.get("name", self._sub_key)
         return f"{device_name} {number_name}"
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
+        """
+        返回实体是否可用。
+
+        Returns:
+            如果设备有数据则返回True
+        """
         return bool(self._device.get(DEVICE_DATA_KEY, {}))
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set the value."""
+        """
+        设置数值。
+        """
         try:
             # 确保值在有效范围内
             value = max(self.native_min_value, min(self.native_max_value, value))
@@ -175,7 +217,7 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
             )
 
     def _convert_to_device_value(self, ha_value: float) -> Any:
-        """将HA值转换为设备值."""
+        """将HA值转换为设备值。"""
         conversion = self._number_config.get("conversion", "direct")
 
         if conversion == "percentage":
@@ -197,7 +239,7 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
             return ha_value
 
     def _convert_from_device_value(self, device_value: Any) -> float | None:
-        """将设备值转换为HA值."""
+        """将设备值转换为HA值。"""
         if device_value is None:
             return None
 
@@ -231,7 +273,9 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
             return None
 
     async def _send_number_command(self, cmd_type: int, value: Any) -> None:
-        """Send command to number control."""
+        """
+        向数值控制器发送命令。
+        """
         await self._hub.async_send_command(
             self._device[HUB_ID_KEY],
             self._device[DEVICE_ID_KEY],
@@ -242,7 +286,9 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """
+        处理来自协调器的更新数据。
+        """
         device_data = self._device.get(DEVICE_DATA_KEY, {})
         io_data = device_data.get(self._sub_key)
 
@@ -258,7 +304,9 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
+        """
+        订阅状态更新。
+        """
         await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
@@ -272,7 +320,9 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """
+        返回设备信息。
+        """
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.get(DEVICE_ID_KEY))},
             name=self._device.get(DEVICE_NAME_KEY),

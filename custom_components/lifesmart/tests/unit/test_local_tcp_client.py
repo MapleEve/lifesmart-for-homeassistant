@@ -20,6 +20,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from homeassistant.components.climate import HVACMode, FAN_LOW, FAN_MEDIUM, FAN_HIGH
 
+from custom_components.lifesmart.core.client.local_tcp_client import LifeSmartTCPClient
+from custom_components.lifesmart.core.client.protocol import (
+    LifeSmartProtocol,
+    LifeSmartPacketFactory,
+)
+from custom_components.lifesmart.core.config.cover_mappings import (
+    NON_POSITIONAL_COVER_CONFIG,
+)
 from custom_components.lifesmart.core.const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -29,16 +37,11 @@ from custom_components.lifesmart.core.const import (
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_TEMP_FCU,
     CMD_TYPE_SET_RAW_ON,
+    GARAGE_DOOR_TYPES,
+    # DOOYA_TYPES 已迁移至 core/config/device_specs.py
+    # 直接使用 "SL_DOOYA" 字符串代替集合
 )
-from custom_components.lifesmart.core.device import (
-    NON_POSITIONAL_COVER_CONFIG,
-)
-from custom_components.lifesmart.core.helpers import normalize_device_names
-from custom_components.lifesmart.core.local_tcp_client import LifeSmartLocalTCPClient
-from custom_components.lifesmart.core.protocol import (
-    LifeSmartProtocol,
-    LifeSmartPacketFactory,
-)
+from custom_components.lifesmart.core.data.conversion import normalize_device_names
 
 
 # ==================== 测试数据和Fixtures ====================
@@ -69,13 +72,13 @@ def mock_connection():
 @pytest.fixture
 def test_client():
     """提供标准的测试客户端实例。"""
-    return LifeSmartLocalTCPClient("localhost", 9999, "test_user", "test_pass")
+    return LifeSmartTCPClient("localhost", 9999, "test_user", "test_pass")
 
 
 @pytest.fixture
 def mocked_client():
     """提供带有模拟网络发送的客户端实例。"""
-    client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+    client = LifeSmartTCPClient("host", 1234, "user", "pass")
     client._factory = LifeSmartPacketFactory("test_agt", "test_node")
     client._send_packet = AsyncMock(return_value=0)
     return client
@@ -190,7 +193,7 @@ class TestClientInitialization:
 
     def test_client_basic_initialization(self):
         """测试客户端的基本初始化。"""
-        client = LifeSmartLocalTCPClient("192.168.1.100", 8080, "admin", "password")
+        client = LifeSmartTCPClient("192.168.1.100", 8080, "admin", "password")
 
         assert client.host == "192.168.1.100", "主机地址应该正确设置"
         assert client.port == 8080, "端口应该正确设置"
@@ -203,7 +206,7 @@ class TestClientInitialization:
 
     def test_client_initialization_with_config_agt(self):
         """测试带有配置AGT的客户端初始化。"""
-        client = LifeSmartLocalTCPClient(
+        client = LifeSmartTCPClient(
             "host", 1234, "user", "pass", config_agt="custom_agt"
         )
 
@@ -250,7 +253,7 @@ class TestNetworkConnectionManagement:
     ):
         """测试成功的连接和登录流程。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("localhost", 9999, "user", "pass")
+        client = LifeSmartTCPClient("localhost", 9999, "user", "pass")
         callback = AsyncMock()
 
         # 启动连接任务
@@ -278,7 +281,7 @@ class TestNetworkConnectionManagement:
         reader, writer, mock_open = mock_connection
         mock_open.side_effect = ConnectionRefusedError("连接被拒绝")
 
-        client = LifeSmartLocalTCPClient("invalid.host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("invalid.host", 1234, "user", "pass")
 
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(client.async_connect(None), timeout=0.1)
@@ -289,7 +292,7 @@ class TestNetworkConnectionManagement:
     ):
         """测试登录失败的处理。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
 
         # 模拟登录失败
         reader.feed_data(sample_packets["login_failure"])
@@ -305,7 +308,7 @@ class TestNetworkConnectionManagement:
     ):
         """测试check_login方法的认证错误处理。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
 
         # 模拟登录失败响应
         reader.feed_data(sample_packets["login_failure"])
@@ -317,7 +320,7 @@ class TestNetworkConnectionManagement:
     async def test_disconnect_functionality(self, mock_connection, sample_packets):
         """测试断开连接功能。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
 
         # 建立连接
         connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
@@ -341,7 +344,7 @@ class TestNetworkConnectionManagement:
     @pytest.mark.asyncio
     async def test_network_send_when_disconnected(self):
         """测试断开状态下发送数据的处理。"""
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
         client.writer = None  # 模拟未连接状态
 
         with patch(
@@ -355,7 +358,7 @@ class TestNetworkConnectionManagement:
     @pytest.mark.asyncio
     async def test_check_login_connection_closed_by_peer(self):
         """测试check_login过程中连接被对端关闭的情况"""
-        client = LifeSmartLocalTCPClient("192.168.1.100", 8888, "user", "pass")
+        client = LifeSmartTCPClient("192.168.1.100", 8888, "user", "pass")
 
         mock_reader = AsyncMock()
         mock_writer = MagicMock()
@@ -375,7 +378,7 @@ class TestNetworkConnectionManagement:
     @pytest.mark.asyncio
     async def test_check_login_eof_error_handling(self):
         """测试check_login过程中EOFError的处理"""
-        client = LifeSmartLocalTCPClient("192.168.1.100", 8888, "user", "pass")
+        client = LifeSmartTCPClient("192.168.1.100", 8888, "user", "pass")
 
         mock_reader = AsyncMock()
         mock_writer = MagicMock()
@@ -432,7 +435,7 @@ class TestNetworkConnectionManagement:
     @pytest.mark.asyncio
     async def test_check_login_writer_close_error_handling(self):
         """测试check_login过程中writer关闭错误的处理"""
-        client = LifeSmartLocalTCPClient("192.168.1.100", 8888, "user", "pass")
+        client = LifeSmartTCPClient("192.168.1.100", 8888, "user", "pass")
 
         mock_reader = AsyncMock()
         mock_writer = MagicMock()
@@ -465,7 +468,7 @@ class TestDeviceManagementAndDataProcessing:
     async def test_device_loading_and_processing(self, mock_connection, sample_packets):
         """测试设备加载和处理流程。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
 
         async def mock_open_side_effect(*args, **kwargs):
             # 正确处理协程调用，等待真实的mock对象
@@ -507,7 +510,7 @@ class TestDeviceManagementAndDataProcessing:
     async def test_device_loading_timeout(self, mock_connection, sample_packets):
         """测试设备加载超时处理。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
 
         async def mock_open_side_effect(*args, **kwargs):
             # 正确处理协程调用，等待真实的mock对象
@@ -533,7 +536,7 @@ class TestDeviceManagementAndDataProcessing:
     async def test_status_update_processing(self, mock_connection, sample_packets):
         """测试状态更新的处理。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
         callback = AsyncMock()
 
         # 建立连接并加载设备
@@ -569,7 +572,7 @@ class TestDeviceManagementAndDataProcessing:
     async def test_device_deletion_handling(self, mock_connection, sample_packets):
         """测试设备删除事件的处理。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
         callback = AsyncMock()
 
         # 建立连接并加载设备
@@ -630,7 +633,7 @@ class TestHeartbeatAndConnectionMaintenance:
     async def test_idle_timeout_heartbeat(self, mock_connection, sample_packets):
         """测试空闲超时时的心跳发送。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
 
         # 缩短空闲超时时间以便快速测试
         client.IDLE_TIMEOUT = 0.1
@@ -672,7 +675,7 @@ class TestHeartbeatAndConnectionMaintenance:
     async def test_heartbeat_response_handling(self, mock_connection, sample_packets):
         """测试心跳响应的处理。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
         client.IDLE_TIMEOUT = 0.1
 
         connect_task = asyncio.create_task(client.async_connect(AsyncMock()))
@@ -777,11 +780,11 @@ class TestDeviceControlMethods:
                 "stop_cover_async",
                 ("P3", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF),
             ),
-            # 杜亚类型窗帘
-            (list(DOOYA_TYPES)[0], "open_cover_async", ("P2", CMD_TYPE_SET_VAL, 100)),
-            (list(DOOYA_TYPES)[0], "close_cover_async", ("P2", CMD_TYPE_SET_VAL, 0)),
+            # 杜亚类型窗帘 (SL_DOOYA)
+            ("SL_DOOYA", "open_cover_async", ("P2", CMD_TYPE_SET_VAL, 100)),
+            ("SL_DOOYA", "close_cover_async", ("P2", CMD_TYPE_SET_VAL, 0)),
             (
-                list(DOOYA_TYPES)[0],
+                "SL_DOOYA",
                 "stop_cover_async",
                 ("P2", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF),
             ),
@@ -830,8 +833,8 @@ class TestDeviceControlMethods:
     @pytest.mark.parametrize(
         "device_type, position, expected_call",
         [
-            (list(GARAGE_DOOR_TYPES)[0], 75, ("dev1", "P3", CMD_TYPE_SET_VAL, 75)),
-            (list(DOOYA_TYPES)[0], 25, ("dev1", "P2", CMD_TYPE_SET_VAL, 25)),
+            ("SL_GARAGE", 75, ("dev1", "P3", CMD_TYPE_SET_VAL, 75)),
+            ("SL_DOOYA", 25, ("dev1", "P2", CMD_TYPE_SET_VAL, 25)),
         ],
         ids=["GarageDoorPosition", "DooyaPosition"],
     )
@@ -1182,7 +1185,7 @@ class TestErrorHandlingAndEdgeCases:
     ):
         """测试格式错误的状态更新处理。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
         callback = AsyncMock()
 
         # 建立连接
@@ -1250,7 +1253,7 @@ class TestPerformanceAndConcurrency:
     ):
         """测试高频状态更新的处理。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
         callback = AsyncMock()
 
         # 建立连接
@@ -1292,7 +1295,7 @@ class TestPerformanceAndConcurrency:
     async def test_memory_usage_under_load(self, mock_connection, sample_packets):
         """测试负载下的内存使用情况。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartLocalTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient("host", 1234, "user", "pass")
 
         # 建立连接
         connect_task = asyncio.create_task(client.async_connect(AsyncMock()))

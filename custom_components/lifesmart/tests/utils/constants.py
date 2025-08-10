@@ -102,6 +102,7 @@ FRIENDLY_DEVICE_NAMES = {
     "if3b2": "SL_SW_IF3",  # 特殊测试设备
     # 灯光设备
     "light_bright": "SL_LI_WW",
+    "White Light Bulb": "SL_LI_WW",  # 用于brightness light测试
     "light_dimmer": "SL_LI_WW_V1",
     "light_quantum": "OD_WE_QUAN",
     "light_spotrgb": "SL_SPOT",

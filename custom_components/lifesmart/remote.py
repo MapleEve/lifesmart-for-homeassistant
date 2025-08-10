@@ -123,7 +123,7 @@ class LifeSmartRemoteEntity(RemoteEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """返回实体的额外状态属性。"""
-        return {
+        attrs = {
             "category": self._category,
             "brand": self._brand,
             "model_index": self._idx,
@@ -132,6 +132,53 @@ class LifeSmartRemoteEntity(RemoteEntity):
             "available_keys": self._available_keys,
             "remote_id": self._remote_id,
         }
+
+        # 为空调设备添加详细的功能信息
+        if self._category == "ac" and hasattr(self, "_ac_features"):
+            ac_features = self._ac_features
+
+            # 温度范围信息
+            if "temp_range" in ac_features:
+                temp_range = ac_features["temp_range"]
+                attrs["temperature_range"] = {
+                    "min": temp_range.get("min"),
+                    "max": temp_range.get("max"),
+                    "unit": "℃",
+                }
+                attrs["temperature_values"] = temp_range.get("values", [])
+
+            # 支持的运行模式
+            if "supported_modes" in ac_features:
+                attrs["supported_modes"] = ac_features["supported_modes"]
+
+            # 风速档位信息
+            if "wind_levels" in ac_features:
+                attrs["wind_levels"] = ac_features["wind_levels"]
+
+            # 摆风模式
+            if "swing_modes" in ac_features:
+                attrs["swing_modes"] = ac_features["swing_modes"]
+
+            # 电源选项
+            if "power_values" in ac_features:
+                attrs["power_options"] = ac_features["power_values"]
+
+            # 原始按键列表(针对keys模式)
+            if "available_keys" in ac_features:
+                attrs["raw_keys"] = ac_features["available_keys"]
+
+            # 功能完整性标识
+            attrs["feature_completeness"] = {
+                "has_temperature_range": "temp_range" in ac_features,
+                "has_mode_list": "supported_modes" in ac_features,
+                "has_wind_levels": "wind_levels" in ac_features,
+                "has_swing_modes": "swing_modes" in ac_features,
+                "parsing_method": (
+                    "ability_array" if "temp_range" in ac_features else "keys_array"
+                ),
+            }
+
+        return attrs
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -239,9 +286,184 @@ class LifeSmartRemoteEntity(RemoteEntity):
         await self._client.async_ir_control(self._device_id, ac_options)
 
     def _parse_ac_features(self, features: dict[str, Any]) -> list[str]:
-        """解析空调设备的功能特性。"""
-        # 空调设备的标准功能
-        ac_keys = [
+        """解析空调设备的功能特性。
+
+        根据API返回的数据结构解析空调遥控器支持的功能：
+        - code_mode="full": 解析ability数组，获取详细功能信息
+        - code_mode="keys": 直接使用keys列表
+        - 其他情况: 回退到默认功能列表
+        """
+        try:
+            # 检查API数据格式
+            if not isinstance(features, dict):
+                _LOGGER.warning(
+                    "遥控器 %s 收到非字典格式的features数据: %s",
+                    self._attr_name,
+                    type(features),
+                )
+                return self._get_default_ac_keys()
+
+            code_mode = features.get("code_mode", "unknown")
+
+            if code_mode == "full":
+                # 解析完整模式的ability数组
+                return self._parse_full_mode_ac(features)
+            elif code_mode == "keys":
+                # 解析按键模式的keys数组
+                return self._parse_keys_mode_ac(features)
+            elif "keys" in features:
+                # 无code_mode但有keys字段，按普通设备处理
+                return self._parse_keys_mode_ac(features)
+            elif "ability" in features:
+                # 无code_mode但有ability字段，按完整模式处理
+                return self._parse_full_mode_ac(features)
+            else:
+                _LOGGER.debug(
+                    "遥控器 %s 收到未知格式的features，使用默认功能: %s",
+                    self._attr_name,
+                    features,
+                )
+                return self._get_default_ac_keys()
+
+        except Exception as e:
+            _LOGGER.warning(
+                "遥控器 %s 解析features时发生错误: %s，使用默认功能",
+                self._attr_name,
+                e,
+            )
+            return self._get_default_ac_keys()
+
+    def _parse_full_mode_ac(self, features: dict[str, Any]) -> list[str]:
+        """解析完整模式的空调功能 (code_mode="full")。
+
+        解析ability数组中的详细功能信息，生成对应的按键列表。
+        """
+        available_keys = []
+        abilities = features.get("ability", [])
+
+        # 初始化附加信息存储
+        if not hasattr(self, "_ac_features"):
+            self._ac_features = {}
+
+        for ability_info in abilities:
+            if not isinstance(ability_info, dict):
+                continue
+
+            ability_name = ability_info.get("ability")
+            ability_values = ability_info.get("values", [])
+
+            if ability_name == "power":
+                # 电源控制
+                available_keys.append("power")
+                self._ac_features["power_values"] = ability_values
+
+            elif ability_name == "mode":
+                # 模式控制
+                available_keys.append("mode")
+                self._ac_features["supported_modes"] = ability_values
+                # 为支持的模式添加对应按键
+                for mode in ability_values:
+                    if mode in ["auto", "cool", "heat", "dry", "fan"]:
+                        mode_key = f"mode_{mode}"
+                        if mode_key not in available_keys:
+                            available_keys.append(mode_key)
+
+            elif ability_name == "temp":
+                # 温度控制
+                available_keys.extend(["temp_up", "temp_down"])
+                # 计算温度范围
+                try:
+                    temp_values = [int(v) for v in ability_values if str(v).isdigit()]
+                    if temp_values:
+                        self._ac_features["temp_range"] = {
+                            "min": min(temp_values),
+                            "max": max(temp_values),
+                            "values": sorted(temp_values),
+                        }
+                except (ValueError, TypeError) as e:
+                    _LOGGER.debug(
+                        "遥控器 %s 解析温度范围时出错: %s",
+                        self._attr_name,
+                        e,
+                    )
+
+            elif ability_name == "wind":
+                # 风速控制
+                available_keys.append("wind")
+                self._ac_features["wind_levels"] = ability_values
+                # 为不同风速添加具体按键
+                for level in ability_values:
+                    if str(level).lower() != "auto":  # auto已经包含在wind中
+                        wind_key = f"wind_{level}"
+                        if wind_key not in available_keys:
+                            available_keys.append(wind_key)
+
+            elif ability_name == "swing":
+                # 摆风控制
+                available_keys.append("swing")
+                self._ac_features["swing_modes"] = ability_values
+
+        # 如果没有解析到任何功能，返回默认功能
+        if not available_keys:
+            _LOGGER.debug(
+                "遥控器 %s 未从完整模式中解析到功能，使用默认功能",
+                self._attr_name,
+            )
+            return self._get_default_ac_keys()
+
+        # 去重并排序
+        return sorted(list(set(available_keys)))
+
+    def _parse_keys_mode_ac(self, features: dict[str, Any]) -> list[str]:
+        """解析按键模式的空调功能 (code_mode="keys")。
+
+        对于code_mode为"keys"的空调，直接使用keys列表作为按键。
+        """
+        keys = features.get("keys", [])
+
+        if not isinstance(keys, list):
+            _LOGGER.debug(
+                "遥控器 %s 的keys不是列表格式: %s",
+                self._attr_name,
+                type(keys),
+            )
+            return self._get_default_ac_keys()
+
+        # 过滤并清理keys
+        processed_keys = []
+        for key in keys:
+            if isinstance(key, (str, int, float)):
+                key_str = str(key).strip()
+                if key_str:
+                    processed_keys.append(key_str)
+
+        if not processed_keys:
+            _LOGGER.debug(
+                "遥控器 %s 的keys列表为空或无效",
+                self._attr_name,
+            )
+            return self._get_default_ac_keys()
+
+        # 存储keys信息供状态属性使用
+        if not hasattr(self, "_ac_features"):
+            self._ac_features = {}
+        self._ac_features["available_keys"] = processed_keys
+
+        _LOGGER.debug(
+            "遥控器 %s 从按键模式解析到 %d 个功能: %s",
+            self._attr_name,
+            len(processed_keys),
+            processed_keys[:10],  # 显示前10个避免日志过长
+        )
+
+        return processed_keys
+
+    def _get_default_ac_keys(self) -> list[str]:
+        """获取默认的空调功能列表。
+
+        在API解析失败或数据不完整时作为回退方案。
+        """
+        return [
             "power",
             "mode",
             "temp_up",
@@ -249,9 +471,6 @@ class LifeSmartRemoteEntity(RemoteEntity):
             "wind",
             "swing",
         ]
-
-        # TODO: 根据API返回的features进一步解析支持的功能
-        return ac_keys
 
     def _parse_normal_features(self, features: dict[str, Any]) -> list[str]:
         """解析普通设备的功能特性。"""

@@ -17,7 +17,7 @@ LifeSmart O(1)直接映射处理器
 import logging
 import struct
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class TypeBit0Processor(DirectProcessor):
 class RGBWProcessor(DirectProcessor):
     """RGBW颜色处理器 - O(1)实现"""
 
-    def process_value(self, raw_value: Any, type_value: int = 0) -> Dict[str, Any]:
+    def process_value(self, raw_value: Any, type_value: int = 0) -> dict[str, Any]:
         """解析RGBW位值"""
         val = int(raw_value) if raw_value else 0
         return {
@@ -219,7 +219,7 @@ class WaterLeakSensorProcessor(DirectProcessor):
 class BitmaskAlarmProcessor(DirectProcessor):
     """位运算告警处理器 - O(1)实现"""
 
-    def process_value(self, raw_value: Any, type_value: int = 0) -> Dict[str, bool]:
+    def process_value(self, raw_value: Any, type_value: int = 0) -> dict[str, bool]:
         """处理位运算告警"""
         val = int(raw_value) if raw_value else 0
         return {
@@ -239,7 +239,7 @@ class BitmaskAlarmProcessor(DirectProcessor):
 class BitmaskConfigProcessor(DirectProcessor):
     """位掩码配置处理器 - O(1)实现"""
 
-    def process_value(self, raw_value: Any, type_value: int = 0) -> Dict[str, Any]:
+    def process_value(self, raw_value: Any, type_value: int = 0) -> dict[str, Any]:
         """解析位掩码配置"""
         val = int(raw_value) if raw_value else 0
         config = {}
@@ -268,7 +268,7 @@ class BitmaskConfigProcessor(DirectProcessor):
 class CoverPositionProcessor(DirectProcessor):
     """窗帘位置处理器 - O(1)实现"""
 
-    def process_value(self, raw_value: Any, type_value: int = 0) -> Dict[str, Any]:
+    def process_value(self, raw_value: Any, type_value: int = 0) -> dict[str, Any]:
         """处理窗帘位置和移动状态"""
         val = int(raw_value) if raw_value else 0
 
@@ -308,7 +308,7 @@ class ProcessorRegistry:
     """O(1)处理器注册表 - 零查找延迟"""
 
     def __init__(self):
-        self._processors: Dict[str, DirectProcessor] = {}
+        self._processors: dict[str, DirectProcessor] = {}
         self._register_all_processors()
 
     def _register_all_processors(self):
@@ -343,7 +343,7 @@ class ProcessorRegistry:
         """O(1)处理器获取 - 单次字典查找"""
         return self._processors.get(processor_type)
 
-    def list_processors(self) -> Dict[str, DirectProcessor]:
+    def list_processors(self) -> dict[str, DirectProcessor]:
         """获取所有已注册的处理器"""
         return dict(self._processors)
 
@@ -354,7 +354,7 @@ class ProcessorRegistry:
 _processor_registry = ProcessorRegistry()
 
 
-def process_io_data(io_config: Dict[str, Any], raw_data: Dict[str, Any]) -> Any:
+def process_io_data(io_config: dict[str, Any], raw_data: dict[str, Any]) -> Any:
     """
     O(1)IO数据处理统一接口
 
@@ -410,6 +410,8 @@ __all__ = [
     "get_processor_registry",
     # 处理器基类
     "DirectProcessor",
+    # 基础处理器
+    "TypeBit0Processor",
     # 处理器注册表
     "ProcessorRegistry",
 ]

@@ -29,30 +29,23 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from custom_components.lifesmart.core.const import *
 from custom_components.lifesmart.core.config.effect_mappings import (
     DYN_EFFECT_MAP,
     ALL_EFFECT_MAP,
 )
+from custom_components.lifesmart.core.const import *
 from custom_components.lifesmart.light import (
     _parse_color_value,
     DEFAULT_MIN_KELVIN,
     DEFAULT_MAX_KELVIN,
 )
 from ..utils.constants import (
-    FRIENDLY_DEVICE_NAMES,
     TEST_HUB_IDS,
 )
-from ..utils.factories import create_devices_by_category
 from ..utils.helpers import (
     get_entity_unique_id,
-    assert_platform_entity_count_matches_devices,
-    verify_platform_entity_count,
-    get_platform_device_types_for_testing,
     find_device_by_friendly_name,
     validate_device_data,
-    group_devices_by_hub,
-    filter_devices_by_hub,
 )
 
 
@@ -85,46 +78,61 @@ class TestLightSetup:
         """测试从共享 fixtures 成功设置所有灯光实体类型。"""
         # 直接检查实际创建的实体
         actual_light_entities = hass.states.async_entity_ids(LIGHT_DOMAIN)
-        
+
         # 基本验证 - 确保有一些灯光实体被创建
         assert len(actual_light_entities) > 0, "应该至少创建一个灯光实体"
-        
+
         # 检查具体的重要灯光实体是否被创建并且状态可访问
         expected_entities = [
             "light.white_light_bulb_p1",  # 基于白光灯泡设备
             "light.rgb_light_strip_rgb",  # RGB 灯带
             "light.rgbw_light_strip_rgbw",  # RGBW 灯带的 RGBW 通道
-            "light.rgbw_light_strip_dyn",   # RGBW 灯带的 DYN 通道
+            "light.rgbw_light_strip_dyn",  # RGBW 灯带的 DYN 通道
         ]
-        
+
         created_entities = []
         state_accessible_entities = []
-        
+
         for entity_id in expected_entities:
             if entity_id in actual_light_entities:
                 created_entities.append(entity_id)
-                
+
                 # P2B: State Access Error Fixes - 立即测试状态访问
                 try:
                     state = hass.states.get(entity_id)
                     if state is not None:
                         state_accessible_entities.append(entity_id)
                         # 基本状态验证
-                        assert hasattr(state, 'state'), f"{entity_id} state object should have 'state' attribute"
-                        assert state.state in ['on', 'off', 'unknown', 'unavailable'], f"{entity_id} should have valid state"
+                        assert hasattr(
+                            state, "state"
+                        ), f"{entity_id} state object should have 'state' attribute"
+                        assert state.state in [
+                            "on",
+                            "off",
+                            "unknown",
+                            "unavailable",
+                        ], f"{entity_id} should have valid state"
                 except Exception as e:
                     # 这里记录状态访问错误但不要让测试失败
                     print(f"State access error for {entity_id}: {e}")
-        
-        # P2A: Entity ID Mapping 成功验证 
-        assert len(created_entities) >= 3, f"应该创建至少 3 个预期的实体，实际创建: {created_entities}"
-        
+
+        # P2A: Entity ID Mapping 成功验证
+        assert (
+            len(created_entities) >= 3
+        ), f"应该创建至少 3 个预期的实体，实际创建: {created_entities}"
+
         # P2B: State Access 成功验证
-        assert len(state_accessible_entities) >= 2, f"应该有至少 2 个实体状态可访问，实际可访问: {state_accessible_entities}"
-        
-        print(f"\n✅ P2 SUCCESS: Created entities: {len(created_entities)}, State accessible: {len(state_accessible_entities)}")
-        print(f"All created light entities ({len(actual_light_entities)}): {actual_light_entities[:10]}...") # Show first 10
-        
+        assert (
+            len(state_accessible_entities) >= 2
+        ), f"应该有至少 2 个实体状态可访问，实际可访问: {state_accessible_entities}"
+
+        print(
+            f"\n✅ P2 SUCCESS: Created entities: {len(created_entities)}, State accessible: {len(state_accessible_entities)}"
+        )
+        print(
+            f"All created light entities ({len(actual_light_entities)}): {actual_light_entities[:10]}..."
+        )  # Show first 10
+
         # 确认非灯光设备或子项没有被错误创建
         assert (
             hass.states.get("light.garage_door_p2") is None
@@ -1452,7 +1460,9 @@ class TestLightCoverageEnhancement:
         self, hass: HomeAssistant, setup_integration
     ):
         """测试_create_light_entity函数处理不支持的子设备键时返回默认实体。"""
-        from custom_components.lifesmart.light import _create_light_entity_from_mapping as _create_light_entity
+        from custom_components.lifesmart.light import (
+            _create_light_entity_from_mapping as _create_light_entity,
+        )
         from custom_components.lifesmart.core.const import DEVICE_TYPE_KEY
 
         # 创建一个测试设备，其sub_key不匹配任何特殊条件
@@ -2292,7 +2302,9 @@ class TestLightErrorHandlingAndEdgeCases:
         self, hass: HomeAssistant
     ):
         """测试_create_light_entity函数处理多种特殊设备类型。"""
-        from custom_components.lifesmart.light import _create_light_entity_from_mapping as _create_light_entity
+        from custom_components.lifesmart.light import (
+            _create_light_entity_from_mapping as _create_light_entity,
+        )
         from custom_components.lifesmart.core.const import DEVICE_TYPE_KEY
 
         mock_client = MagicMock()

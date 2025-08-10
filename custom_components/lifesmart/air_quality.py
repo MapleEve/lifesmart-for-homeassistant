@@ -1,4 +1,24 @@
-"""Support for LifeSmart air quality sensors by @MapleEve"""
+"""
+LifeSmart 空气质量传感器平台支持模块
+
+由 @MapleEve 创建和维护
+
+本模块为LifeSmart平台提供空气质量传感器支持，实现了对各种空气质量指标的
+全面监测和数据处理。
+
+支持的空气质量指标：
+- AQI (空气质量指数)
+- PM2.5 (细颗粒物)
+- PM10 (可吸入颗粒物)
+- CO2 (二氧化碳浓度)
+- VOC (挥发性有机化合物)
+
+技术特性：
+- 配置驱动的IO口检测
+- 智能数据处理和转换
+- 实时状态更新机制
+- 符合Home Assistant标准的空气质量等级映射
+"""
 
 import logging
 from typing import Any
@@ -50,7 +70,24 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart air quality sensors from a config entry."""
+    """
+    从配置条目异步设置 LifeSmart 空气质量传感器。
+
+    此函数负责遍历所有设备，识别空气质量类型设备，并为每个设备创建
+    相应的Home Assistant实体。支持设备排除配置和动态设备发现。
+
+    Args:
+        hass: Home Assistant核心实例，提供数据存储和事件调度
+        config_entry: 集成配置条目，包含用户配置和运行时数据
+        async_add_entities: HA实体添加回调函数，用于注册新实体
+
+    Returns:
+        无返回值，通过async_add_entities回调添加实体
+
+    注意事项:
+        - 会自动跳过排除列表中的设备
+        - 只为存在实际数据的子设备创建实体
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -93,7 +130,18 @@ async def async_setup_entry(
 
 
 class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
-    """LifeSmart air quality sensor implementation."""
+    """
+    LifeSmart 空气质量传感器实现类。
+
+    继承自LifeSmartEntity和AirQualityEntity，负责空气质量传感器的状态管理
+    和数据处理逻辑。实现了完整的空气质量监测功能。
+
+    主要职责:
+    - 解析和处理多种空气质量指标
+    - 实现符合HA标准的空气质量等级映射
+    - 提供实时状态更新和全局刷新
+    - 自动生成友好的传感器名称
+    """
 
     def __init__(
         self,
@@ -103,7 +151,16 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
         sub_device_key: str,
         sub_device_data: dict[str, Any],
     ) -> None:
-        """Initialize the air quality sensor."""
+        """
+        初始化空气质量传感器。
+
+        Args:
+            raw_device: 原始设备数据字典
+            client: LifeSmart API客户端实例
+            entry_id: 配置条目ID
+            sub_device_key: 子设备键名
+            sub_device_data: 子设备数据
+        """
         super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
@@ -123,7 +180,12 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
 
     @callback
     def _generate_air_quality_name(self) -> str | None:
-        """Generate user-friendly air quality sensor name."""
+        """
+        生成用户友好的空气质量传感器名称。
+
+        Returns:
+            生成的传感器显示名称字符串
+        """
         base_name = self._name
         # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
@@ -133,7 +195,15 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
         return f"{base_name} Air Quality {self._sub_key.upper()}"
 
     def _get_io_config(self, metric: str) -> dict | None:
-        """从DEVICE_MAPPING中获取空气质量指标的配置。"""
+        """
+        从DEVICE_MAPPING中获取空气质量指标的配置。
+
+        Args:
+            metric: 要查找的指标类型，如'aqi', 'pm25'等
+
+        Returns:
+            包含处理器配置的字典，如果未找到则返回None
+        """
         from .core.config.mapping import DEVICE_MAPPING
 
         device_type = self._raw_device.get(DEVICE_TYPE_KEY)
@@ -152,7 +222,11 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
 
     @callback
     def _update_air_quality_values(self) -> None:
-        """Update air quality values from device data."""
+        """
+        从设备数据更新空气质量数值。
+
+        解析各种空气质量指标并设置相应的属性值。
+        """
         # AQI (Air Quality Index)
         aqi_config = self._get_io_config("aqi")
         if aqi_config:
@@ -234,7 +308,12 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """
+        返回设备信息。
+
+        Returns:
+            包含设备标识、名称等信息的DeviceInfo对象
+        """
         return DeviceInfo(
             identifiers={(DOMAIN, self.agt, self.me)},
             name=self._device_name,
@@ -244,7 +323,11 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
+        """
+        订阅状态更新。
+
+        设置实时更新和全局刷新的事件监听器。
+        """
         await super().async_added_to_hass()
 
         # 实体特定更新
@@ -266,7 +349,12 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
         )
 
     async def _handle_update(self, new_data: dict) -> None:
-        """Handle real-time updates."""
+        """
+        处理实时状态更新。
+
+        Args:
+            new_data: 包含更新数据的字典
+        """
         try:
             if not new_data:
                 return
@@ -301,7 +389,11 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
             )
 
     async def _handle_global_refresh(self) -> None:
-        """Handle periodic full data refresh."""
+        """
+        处理周期性的全数据刷新。
+
+        检查设备可用性并更新状态。
+        """
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(

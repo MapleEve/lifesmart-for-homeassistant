@@ -181,6 +181,32 @@ def create_service_call(
         return call
 
 
+def get_collection_type():
+    """
+    获取兼容的Collection类型
+
+    在不同Python版本中，Collection类型的导入位置不同：
+    - Python 3.9+: 从 collections.abc 导入
+    - Python 3.8: 从 typing 导入 (已弃用)
+    - 某些HA版本: 可能需要特殊处理
+    """
+    try:
+        # 标准方式：从collections.abc导入
+        from collections.abc import Collection
+
+        return Collection
+    except ImportError:
+        try:
+            # 备用方式：从typing导入 (旧版本)
+            from typing import Collection
+
+            return Collection
+        except ImportError:
+            # 最终备用：创建一个简单的基类
+            _LOGGER.warning("无法导入Collection类型，使用简单基类")
+            return object
+
+
 def setup_logging():
     """设置兼容性日志"""
     _LOGGER.info("LifeSmart兼容性模块已加载")
@@ -212,37 +238,32 @@ def get_button_device_class():
 
 def get_platform_constants():
     """
-    获取兼容的平台常量
+    获取版本兼容的HA平台常量
 
-    某些平台类型在不同HA版本中支持情况不同：
-    - HA 2025.8.0+: EVENT, VALVE, AIR_QUALITY 全部支持
-    - HA 2023.6.0: 只支持 AIR_QUALITY，不支持 EVENT, VALVE
+    基于当前支持的最低HA版本 2022.10.0 进行优化：
+    - EVENT, VALVE, AIR_QUALITY 平台在该版本中已经支持
+    - 移除了不必要的兼容性检查，简化代码逻辑
+
+    Returns:
+        dict: 包含平台常量的字典
     """
-    try:
-        from homeassistant.const import Platform
+    from homeassistant.const import Platform
 
-        # 检查各个平台是否存在，不存在就用字符串
-        platforms = {}
-
-        # EVENT 平台 - 新版本支持
-        if hasattr(Platform, "EVENT"):
-            platforms["EVENT"] = Platform.EVENT
-        else:
-            platforms["EVENT"] = "event"  # 回退到字符串
-
-        # VALVE 平台 - 新版本支持
-        if hasattr(Platform, "VALVE"):
-            platforms["VALVE"] = Platform.VALVE
-        else:
-            platforms["VALVE"] = "valve"  # 回退到字符串
-
-        # AIR_QUALITY 平台 - 大多数版本都支持
-        if hasattr(Platform, "AIR_QUALITY"):
-            platforms["AIR_QUALITY"] = Platform.AIR_QUALITY
-        else:
-            platforms["AIR_QUALITY"] = "air_quality"  # 回退到字符串
-
-        return platforms
-    except ImportError:
-        # 如果Platform不存在，使用字符串
-        return {"EVENT": "event", "VALVE": "valve", "AIR_QUALITY": "air_quality"}
+    return {
+        "EVENT": Platform.EVENT,
+        "VALVE": Platform.VALVE,
+        "AIR_QUALITY": Platform.AIR_QUALITY,
+        "BUTTON": Platform.BUTTON,
+        "SWITCH": Platform.SWITCH,
+        "LIGHT": Platform.LIGHT,
+        "SENSOR": Platform.SENSOR,
+        "BINARY_SENSOR": Platform.BINARY_SENSOR,
+        "COVER": Platform.COVER,
+        "CLIMATE": Platform.CLIMATE,
+        "FAN": Platform.FAN,
+        "LOCK": Platform.LOCK,
+        "NUMBER": Platform.NUMBER,
+        "REMOTE": Platform.REMOTE,
+        "SCENE": Platform.SCENE,
+        "SIREN": Platform.SIREN,
+    }

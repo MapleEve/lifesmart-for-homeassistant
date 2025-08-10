@@ -1,4 +1,22 @@
-"""Support for LifeSmart buttons by @MapleEve"""
+"""
+LifeSmart 按钮平台支持模块
+
+由 @MapleEve 创建和维护
+
+本模块为LifeSmart平台提供按钮设备支持，实现了对各种智能按钮的
+控制和状态管理。
+
+支持的按钮类型：
+- 物理按钮：墙面开关、控制面板按钮
+- 虚拟按钮：场景触发、功能按钮
+- 系统按钮：复位、配对等特殊功能
+
+技术特性：
+- 配置驱动的按钮检测和创建
+- 支持多种按钮设备类别
+- 统一的按钮按下命令处理
+- 与设备状态的同步更新
+"""
 
 import logging
 
@@ -13,6 +31,7 @@ from .core.const import (
     # 核心常量
     DOMAIN,
     MANUFACTURER,
+    Platform,
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     DEVICE_TYPE_KEY,
@@ -25,7 +44,7 @@ from .core.const import (
 )
 from .core.entity import LifeSmartEntity
 from .core.helpers import generate_unique_id
-from .core.platform.platform_detection import get_device_platform_mapping
+from .core.platform.platform_detection import get_device_platform_mapping, safe_get
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +54,20 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart buttons from a config entry."""
+    """
+    从配置条目设置 LifeSmart 按钮设备。
+
+    此函数负责遍历所有设备，识别支持按钮功能的设备，并为每个
+    按钮子设备创建相应的Home Assistant实体。
+
+    Args:
+        hass: Home Assistant核心实例
+        config_entry: 集成配置条目
+        async_add_entities: 实体添加回调函数
+
+    Returns:
+        无返回值，通过async_add_entities添加实体
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -53,19 +85,18 @@ async def async_setup_entry(
 
         # 检查是否支持按钮平台
         platform_mapping = get_device_platform_mapping(device)
-        if "button" not in platform_mapping:
-            continue
+        button_subdevices = platform_mapping.get(Platform.BUTTON, [])
 
-        button_config = platform_mapping.get("button", {})
-
-        # 为每个支持的按钮子设备创建实体
-        for btn_key, btn_config in button_config.items():
-            if isinstance(btn_config, dict) and btn_config.get("enabled", True):
+        # 为每个按钮子设备创建实体
+        for btn_key in button_subdevices:
+            btn_data = safe_get(device, DEVICE_DATA_KEY, btn_key, default={})
+            if btn_data:  # 只有当按钮数据存在时才创建实体
                 button = LifeSmartButton(
-                    device,
-                    btn_key,
-                    btn_config,
-                    hub,
+                    raw_device=device,
+                    client=hub.get_client(),
+                    entry_id=config_entry.entry_id,
+                    sub_device_key=btn_key,
+                    sub_device_data=btn_data,
                 )
                 buttons.append(button)
                 _LOGGER.debug(
@@ -80,32 +111,59 @@ async def async_setup_entry(
 
 
 class LifeSmartButton(LifeSmartEntity, ButtonEntity):
-    """LifeSmart button implementation."""
+    """
+    LifeSmart 按钮设备实现类。
+
+    继承自LifeSmartEntity和ButtonEntity，提供完整的按钮功能。
+    支持多种按钮类型和设备类别。
+
+    主要功能:
+    - 按钮按下事件处理
+    - 设备类别自动识别
+    - 状态同步和更新
+    """
 
     def __init__(
         self,
-        device: dict,
-        sub_key: str,
-        btn_config: dict,
-        hub,
+        raw_device: dict,
+        client,
+        entry_id: str,
+        sub_device_key: str,
+        sub_device_data: dict,
     ) -> None:
-        """Initialize the button."""
-        super().__init__(device, sub_key, hub)
-        self._btn_config = btn_config
+        """
+        初始化按钮设备。
+
+        Args:
+            raw_device: 原始设备数据字典
+            client: LifeSmart 客户端实例
+            entry_id: 配置条目 ID
+            sub_device_key: 子设备键名
+            sub_device_data: 子设备数据字典
+        """
+        super().__init__(raw_device, sub_device_key, client)
+        self._btn_config = sub_device_data
         self._attr_device_class = ButtonDeviceClass.GENERIC
 
         # 从配置中获取设备类别
-        if "device_class" in btn_config:
+        if "device_class" in sub_device_data:
             try:
-                self._attr_device_class = ButtonDeviceClass(btn_config["device_class"])
+                self._attr_device_class = ButtonDeviceClass(
+                    sub_device_data["device_class"]
+                )
             except ValueError:
                 _LOGGER.warning(
-                    "Invalid button device class: %s", btn_config["device_class"]
+                    "Invalid button device class: %s", sub_device_data["device_class"]
                 )
 
     @property
     def unique_id(self) -> str:
-        """Return unique id for the button."""
+        """
+        返回按钮的唯一ID。
+
+        Returns:
+            基于设备类型和子设备键的唯一标识符
+        """
         return generate_unique_id(
             self._device.get(DEVICE_TYPE_KEY, ""),
             self._device.get(HUB_ID_KEY, ""),
@@ -115,18 +173,32 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the button."""
+        """
+        返回按钮的名称。
+
+        Returns:
+            组合设备名称和按钮名称的字符串
+        """
         device_name = self._device.get(DEVICE_NAME_KEY, "Unknown Device")
         btn_name = self._btn_config.get("name", self._sub_key)
         return f"{device_name} {btn_name}"
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
+        """
+        返回实体是否可用。
+
+        Returns:
+            如果设备有数据则返回True
+        """
         return bool(self._device.get(DEVICE_DATA_KEY, {}))
 
     async def async_press(self) -> None:
-        """Press the button."""
+        """
+        按下按钮。
+
+        向设备发送按钮按下命令。
+        """
         try:
             # 发送按钮按下命令
             await self._hub.async_send_command(
@@ -153,12 +225,20 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """
+        处理来自协调器的更新数据。
+
+        按钮不需要状态更新，但保持连接以确保设备在线状态正确。
+        """
         # 按钮不需要状态更新，但保持连接以确保设备在线状态正确
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
+        """
+        订阅状态更新。
+
+        设置全局更新的事件监听器。
+        """
         await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
@@ -170,7 +250,12 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """
+        返回设备信息。
+
+        Returns:
+            包含设备标识和属性信息的DeviceInfo对象
+        """
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.get(DEVICE_ID_KEY))},
             name=self._device.get(DEVICE_NAME_KEY),

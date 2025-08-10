@@ -130,15 +130,15 @@ class TestIntegrationLifecycle:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ) as mock_hub_setup:
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     result = await hass.config_entries.async_setup(
@@ -173,15 +173,15 @@ class TestIntegrationLifecycle:
         mock_devices = []
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ) as mock_hub_setup:
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     result = await hass.config_entries.async_setup(
@@ -217,15 +217,15 @@ class TestIntegrationLifecycle:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     with patch.object(
@@ -274,15 +274,15 @@ class TestIntegrationLifecycle:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             side_effect=ConfigEntryNotReady("Mock setup failure"),
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                "custom_components.lifesmart.LifeSmartHub.get_client",
                 return_value=failed_client,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartStateManager",
+                    "custom_components.lifesmart.core.hub.LifeSmartStateManager",
                     return_value=mock_state_manager,
                 ):
                     # 应该抛出ConfigEntryNotReady异常
@@ -310,15 +310,15 @@ class TestIntegrationLifecycle:
 
         # 先设置集成
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -326,7 +326,7 @@ class TestIntegrationLifecycle:
 
         # 测试卸载
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_unload"
+            "custom_components.lifesmart.LifeSmartHub.async_unload"
         ) as mock_hub_unload:
             with patch.object(
                 hass.config_entries, "async_unload_platforms", return_value=True
@@ -365,15 +365,15 @@ class TestIntegrationLifecycle:
 
         # 设置集成
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -381,9 +381,9 @@ class TestIntegrationLifecycle:
 
         # 重新加载
         with (
-            patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload"),
+            patch("custom_components.lifesmart.LifeSmartHub.async_unload"),
             patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+                "custom_components.lifesmart.LifeSmartHub.async_setup",
                 return_value=True,
             ),
         ):
@@ -425,7 +425,7 @@ class TestErrorHandlingAndRecovery:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             side_effect=exception_type,
         ):
             result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -458,15 +458,15 @@ class TestErrorHandlingAndRecovery:
 
         # 先设置集成
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -474,7 +474,7 @@ class TestErrorHandlingAndRecovery:
 
         # 测试卸载时的错误
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_unload",
+            "custom_components.lifesmart.LifeSmartHub.async_unload",
             side_effect=Exception("卸载错误"),
         ):
             with patch.object(
@@ -529,7 +529,7 @@ class TestErrorHandlingAndRecovery:
 
         # Mock Hub 创建失败来模拟配置不完整的情况
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.__init__",
+            "custom_components.lifesmart.LifeSmartHub.__init__",
             side_effect=Exception("配置数据不完整"),
         ):
             result = await hass.config_entries.async_setup(incomplete_entry.entry_id)
@@ -557,15 +557,15 @@ class TestErrorHandlingAndRecovery:
         failed_client = create_mock_failed_oapi_client()
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                "custom_components.lifesmart.LifeSmartHub.get_client",
                 return_value=failed_client,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                    "custom_components.lifesmart.LifeSmartHub.get_devices",
                     return_value=[],
                 ):
                     # 设置集成
@@ -617,15 +617,15 @@ class TestErrorHandlingAndRecovery:
         successful_client = create_mock_oapi_client()
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                "custom_components.lifesmart.LifeSmartHub.get_client",
                 return_value=failed_client,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                    "custom_components.lifesmart.LifeSmartHub.get_devices",
                     return_value=[],
                 ):
                     # 初始设置
@@ -669,11 +669,11 @@ class TestErrorHandlingAndRecovery:
             return True
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             side_effect=mock_setup_with_device_failure,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                "custom_components.lifesmart.LifeSmartHub.get_client",
                 return_value=failed_client,
             ):
                 # 设置应该失败，因为无法获取设备
@@ -710,15 +710,15 @@ class TestPlatformLoading:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     with patch.object(
@@ -769,15 +769,15 @@ class TestPlatformLoading:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     with patch.object(
@@ -812,22 +812,22 @@ class TestPlatformLoading:
 
         # 先设置
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
                     await hass.async_block_till_done()
 
         # 测试卸载
-        with patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload"):
+        with patch("custom_components.lifesmart.LifeSmartHub.async_unload"):
             with patch.object(
                 hass.config_entries,
                 "async_unload_platforms",
@@ -879,15 +879,15 @@ class TestServiceRegistration:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -915,15 +915,15 @@ class TestServiceRegistration:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -958,15 +958,15 @@ class TestServiceRegistration:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1007,15 +1007,15 @@ class TestServiceRegistration:
         mock_config_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1050,15 +1050,15 @@ class TestServiceRegistration:
 
         # 设置集成
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1068,7 +1068,7 @@ class TestServiceRegistration:
         assert hass.services.has_service(DOMAIN, "trigger_scene"), "服务应该已注册"
 
         # 卸载集成
-        with patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload"):
+        with patch("custom_components.lifesmart.LifeSmartHub.async_unload"):
             with patch.object(
                 hass.config_entries, "async_unload_platforms", return_value=True
             ):
@@ -1131,15 +1131,15 @@ class TestConfigEntryLifecycle:
         cloud_entry.add_to_hass(hass)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=cloud_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     result1 = await hass.config_entries.async_setup(
@@ -1201,15 +1201,15 @@ class TestConfigEntryLifecycle:
             return True
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             side_effect=slow_setup,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     setup_task = hass.async_create_task(
@@ -1244,15 +1244,15 @@ class TestConfigEntryLifecycle:
 
         # 设置集成
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1305,15 +1305,15 @@ class TestConcurrencyAndPerformance:
 
         # 并发设置
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     setup_tasks = [
@@ -1351,15 +1351,15 @@ class TestConcurrencyAndPerformance:
             return True
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             side_effect=timeout_setup,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     # 使用超时来防止测试永远等待
@@ -1386,15 +1386,15 @@ class TestConcurrencyAndPerformance:
 
         # 设置集成
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ):
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                "custom_components.lifesmart.LifeSmartHub.get_devices",
                 return_value=mock_lifesmart_devices,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                    "custom_components.lifesmart.LifeSmartHub.get_client",
                     return_value=mock_client,
                 ):
                     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1408,7 +1408,7 @@ class TestConcurrencyAndPerformance:
         assert "devices" in entry_data, "应该包含devices数据"
 
         # 卸载并验证清理
-        with patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload"):
+        with patch("custom_components.lifesmart.LifeSmartHub.async_unload"):
             await hass.config_entries.async_unload(mock_config_entry.entry_id)
             await hass.async_block_till_done()
 
@@ -1440,15 +1440,15 @@ class TestConcurrencyAndPerformance:
         for cycle in range(3):
             # 设置
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+                "custom_components.lifesmart.LifeSmartHub.async_setup",
                 return_value=True,
             ):
                 with patch(
-                    "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+                    "custom_components.lifesmart.LifeSmartHub.get_devices",
                     return_value=mock_lifesmart_devices,
                 ):
                     with patch(
-                        "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+                        "custom_components.lifesmart.LifeSmartHub.get_client",
                         return_value=mock_client,
                     ):
                         result = await hass.config_entries.async_setup(
@@ -1458,7 +1458,7 @@ class TestConcurrencyAndPerformance:
                         assert result is True, f"循环 {cycle}: 设置应该成功"
 
             # 卸载
-            with patch("custom_components.lifesmart.hub.LifeSmartHub.async_unload"):
+            with patch("custom_components.lifesmart.LifeSmartHub.async_unload"):
                 result = await hass.config_entries.async_unload(
                     mock_config_entry.entry_id
                 )

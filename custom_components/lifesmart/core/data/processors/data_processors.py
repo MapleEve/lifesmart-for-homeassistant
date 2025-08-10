@@ -15,7 +15,7 @@
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 
@@ -66,7 +66,7 @@ class ALMDataProcessor:
     - 符合Clean Architecture
     """
 
-    def process_alm_value(self, alm_value: int) -> List[ALMBitResult]:
+    def process_alm_value(self, alm_value: int) -> list[ALMBitResult]:
         """处理ALM数值，提取所有bit状态
 
         这是核心数据处理方法，直接处理数值数据，不解析文档。
@@ -149,7 +149,7 @@ class ALMDataProcessor:
 
     def generate_alm_subdevices(
         self, io_port: str = "ALM"
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> dict[str, dict[str, Any]]:
         """生成ALM虚拟子设备配置
 
         基于预定义的ALM配置生成虚拟子设备。
@@ -197,7 +197,7 @@ def is_alm_io_port(io_port: str) -> bool:
     return io_port.upper() == "ALM"
 
 
-def process_alm_data(alm_value: int) -> List[ALMBitResult]:
+def process_alm_data(alm_value: int) -> list[ALMBitResult]:
     """处理ALM数据的便捷函数
 
     Args:
@@ -209,7 +209,7 @@ def process_alm_data(alm_value: int) -> List[ALMBitResult]:
     return alm_data_processor.process_alm_value(alm_value)
 
 
-def get_alm_subdevices() -> Dict[str, Dict[str, Any]]:
+def get_alm_subdevices() -> dict[str, dict[str, Any]]:
     """获取ALM子设备配置的便捷函数
 
     Returns:
@@ -233,7 +233,7 @@ class EVTLODataProcessor:
     - 符合Clean Architecture
     """
 
-    def process_evtlo_value(self, val: int, type_val: int) -> List[EVTLODataResult]:
+    def process_evtlo_value(self, val: int, type_val: int) -> list[EVTLODataResult]:
         """处理EVTLO数值，提取有用的门锁数据
 
         只处理真正有用户价值的信息，避免无意义拆分。
@@ -266,7 +266,7 @@ class EVTLODataProcessor:
         return results
 
     def extract_data_value(
-        self, data_key: str, val: int, type_val: int, config: Dict[str, Any]
+        self, data_key: str, val: int, type_val: int, config: dict[str, Any]
     ) -> Any:
         """从原始数据中提取特定数据项的值
 
@@ -314,7 +314,7 @@ class EVTLODataProcessor:
 
     def generate_evtlo_subdevices(
         self, io_port: str = "EVTLO"
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> dict[str, dict[str, Any]]:
         """生成EVTLO虚拟子设备配置
 
         只生成有价值的子设备，避免无意义拆分。
@@ -363,7 +363,7 @@ def is_evtlo_io_port(io_port: str) -> bool:
     return io_port.upper() == "EVTLO"
 
 
-def process_evtlo_data(val: int, type_val: int) -> List[EVTLODataResult]:
+def process_evtlo_data(val: int, type_val: int) -> list[EVTLODataResult]:
     """处理EVTLO数据的便捷函数
 
     Args:
@@ -376,7 +376,7 @@ def process_evtlo_data(val: int, type_val: int) -> List[EVTLODataResult]:
     return evtlo_data_processor.process_evtlo_value(val, type_val)
 
 
-def get_evtlo_subdevices() -> Dict[str, Dict[str, Any]]:
+def get_evtlo_subdevices() -> dict[str, dict[str, Any]]:
     """获取EVTLO子设备配置的便捷函数
 
     Returns:

@@ -61,6 +61,7 @@ from .core.const import (
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
 )
+from .core.data.processors.io_processors import process_io_value, process_light_state
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
     generate_unique_id,
@@ -75,9 +76,6 @@ _LOGGER = logging.getLogger(__name__)
 # --- 遵循 HA 最佳实践：直接定义开尔文范围 ---
 DEFAULT_MIN_KELVIN = 2700
 DEFAULT_MAX_KELVIN = 6500
-
-
-from .core.data.processors.io_processors import process_io_value
 
 
 def _parse_color_value(value: int, has_white: bool) -> tuple:
@@ -125,8 +123,8 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
         from .core.helpers import get_device_version
 
         device_version = get_device_version(device)
-        if device_version and device_version in mapping:
-            mapping = mapping[device_version]
+        if device_version and device_version in mapping.get("version_modes", {}):
+            mapping = mapping["version_modes"][device_version]
         else:
             return None
 
@@ -394,9 +392,14 @@ class LifeSmartLight(LifeSmartBaseLight):
     def _initialize_state(self) -> None:
         """初始化通用灯状态 - 使用新的逻辑处理器系统。"""
 
-        light_state = process_light_state(
-            self.devtype, self._sub_key or "main", self._sub_data
-        )
+        # 构建IO配置用于process_light_state
+        io_config = {
+            "processor_type": "type_bit_0_switch",
+            "has_brightness": False,
+            "has_color": False,
+            "has_color_temp": False,
+        }
+        light_state = process_light_state(io_config, self._sub_data)
         self._attr_is_on = light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
@@ -409,9 +412,15 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
     def _initialize_state(self) -> None:
         """初始化亮度灯状态 - 使用新的逻辑处理器系统。"""
 
-        light_state = process_light_state(
-            self.devtype, self._sub_key or "main", self._sub_data
-        )
+        # 构建IO配置用于亮度灯处理
+        io_config = {
+            "processor_type": "type_bit_0_switch",
+            "has_brightness": True,
+            "has_color": False,
+            "has_color_temp": False,
+            "brightness_processor": "direct_value",
+        }
+        light_state = process_light_state(io_config, self._sub_data)
         self._attr_is_on = light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -495,7 +504,13 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
         p2_data = safe_get(data, "P2", default={})
 
         # 使用新的逻辑处理器获取开关状态
-        p1_light_state = process_light_state(self.devtype, "P1", p1_data)
+        p1_io_config = {
+            "processor_type": "type_bit_0_switch",
+            "has_brightness": True,
+            "has_color": False,
+            "has_color_temp": False,
+        }
+        p1_light_state = process_light_state(p1_io_config, p1_data)
         self._attr_is_on = p1_light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.COLOR_TEMP
         self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
@@ -610,9 +625,15 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
         """初始化SPOT RGB灯状态 - 使用新的逻辑处理器系统。"""
 
         sub_data = self._sub_data
-        light_state = process_light_state(
-            self.devtype, self._sub_key or "RGB", sub_data
-        )
+        # 构建SPOT RGB灯的IO配置
+        io_config = {
+            "processor_type": "type_bit_0_switch",
+            "has_brightness": False,
+            "has_color": True,
+            "has_color_temp": False,
+            "color_processor": "rgbw_color",
+        }
+        light_state = process_light_state(io_config, sub_data)
 
         self._attr_is_on = light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.RGB
@@ -749,7 +770,13 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
         p2_data = safe_get(data, "P2", default={})
 
         # 使用新的逻辑处理器获取P1开关状态
-        p1_light_state = process_light_state(self.devtype, "P1", p1_data)
+        p1_io_config = {
+            "processor_type": "type_bit_0_switch",
+            "has_brightness": True,
+            "has_color": False,
+            "has_color_temp": False,
+        }
+        p1_light_state = process_light_state(p1_io_config, p1_data)
         self._attr_is_on = p1_light_state.get("is_on", False)
 
         # 处理亮度
@@ -870,7 +897,15 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
         """初始化单IO RGBW灯状态 - 使用新的逻辑处理器系统。"""
 
         sub_data = self._sub_data
-        light_state = process_light_state(self.devtype, self._sub_key, sub_data)
+        # 构建单IO RGBW灯的IO配置
+        io_config = {
+            "processor_type": "type_bit_0_switch",
+            "has_brightness": True,
+            "has_color": True,
+            "has_color_temp": False,
+            "color_processor": "rgbw_color",
+        }
+        light_state = process_light_state(io_config, sub_data)
 
         self._attr_is_on = light_state.get("is_on", False)
         self._attr_supported_color_modes = {ColorMode.RGBW}
@@ -1033,9 +1068,14 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
         dyn_data = safe_get(data, self._effect_io, default={})
 
         # 使用新的逻辑处理器获取颜色IO开关状态
-        color_light_state = process_light_state(
-            self.devtype, self._color_io, color_data
-        )
+        color_io_config = {
+            "processor_type": "type_bit_0_switch",
+            "has_brightness": True,
+            "has_color": True,
+            "has_color_temp": False,
+            "color_processor": "rgbw_color",
+        }
+        color_light_state = process_light_state(color_io_config, color_data)
         self._attr_is_on = color_light_state.get("is_on", False)
         self._attr_brightness = 255 if self._attr_is_on else 0
         self._attr_supported_color_modes = {ColorMode.RGBW}
@@ -1210,7 +1250,14 @@ class LifeSmartCoverLight(LifeSmartBaseLight):
     def _initialize_state(self) -> None:
         """初始化车库门灯状态 - 使用新的逻辑处理器系统。"""
 
-        light_state = process_light_state(self.devtype, self._sub_key, self._sub_data)
+        # 构建车库门灯的IO配置
+        io_config = {
+            "processor_type": "type_bit_0_switch",
+            "has_brightness": False,
+            "has_color": False,
+            "has_color_temp": False,
+        }
+        light_state = process_light_state(io_config, self._sub_data)
         self._attr_is_on = light_state.get("is_on", False)
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}

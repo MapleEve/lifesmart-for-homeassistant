@@ -18,6 +18,12 @@ from homeassistant.const import (
     Platform,
 )
 
+from .compatibility import get_platform_constants
+
+_platform_constants = get_platform_constants()
+_EVENT_PLATFORM = _platform_constants.get("EVENT")
+_VALVE_PLATFORM = _platform_constants.get("VALVE")
+
 # ================= 重要技术说明 (Critical Technical Documentation) =================
 
 """
@@ -27,29 +33,35 @@ from homeassistant.const import (
 以下是关键技术要点，修改时务必理解这些规则：
 
 1. 【动态设备分类规则】
-   某些设备(如SL_P通用控制器、SL_NATURE超能面板)根据配置参数动态决定功能：
-   - SL_P通用控制器：根据P1口的工作模式(P1>>24)&0xE决定是开关、窗帘还是传感器
-   - SL_NATURE超能面板：根据P5口值(P5&0xFF)决定是开关版(1)还是温控版(3/6)
-   - 动态分类必须在utils/platform_detection.py中实现，不能仅依赖设备类型判断
+   某些设备根据配置参数动态决定功能：
+   - SL_P通用控制器：根据P1口工作模式(P1>>24)&0xE决定是开关、窗帘还是传感器
+   - SL_NATURE超能面板：根据P5口值(P5&0xFF)决定是开关版(1)还是温控版(3/6)  
+   - 动态分类实现在core/platform/platform_detection.py中，不能仅依赖设备类型判断
 
 2. 【IO口数据格式和位运算规则】
    LifeSmart使用type和val两个字段表示IO口状态：
-   - type字段：奇偶性(type&1)表示开关状态，1开启/0关闭
-   - val字段：根据设备类型表示亮度、温度、颜色等具体数值
+   - type字段：奇偶性(type&1)表示开关状态，1=开启/0=关闭
+   - val字段：根据设备类型表示亮度、温度、颜色等具体数值  
    - 浮点数据：当(type&0x7e)==0x2时，val为IEEE754浮点数的32位整数表示
-   - 详细转换逻辑见utils/conversion.py中的转换函数
+   - 详细转换逻辑见core/data/conversion.py中的转换函数
 
 3. 【设备版本区分机制】
    部分设备通过fullCls字段区分版本，必须正确识别：
    - SL_SW_DM1_V1: 动态调光开关(带传感器)
    - SL_SW_DM1_V2: 基础调光开关(可控硅)
-   - 版本区分逻辑位于utils/platform_detection.py
+   - 版本区分逻辑位于core/platform/platform_detection.py
 
 4. 【多平台设备支持】
    单个物理设备可支持多个Home Assistant平台：
-   - 如SL_OL_W: 同时支持switch(开关功能)和light(指示灯)
-   - 平台映射通过device/raw_data.py和mapping_engine.py定义
-   - 动态平台检测通过utils/platform_detection.py实现
+   - 如SL_OE_3C: 同时支持switch(开关功能)、sensor(用电量、功率)
+   - 平台映射通过core/config/device_specs.py和mapping_engine.py定义
+   - 动态平台检测通过core/platform/platform_detection.py实现
+
+5. 【版本兼容性】
+   本集成支持HA版本：2022.10.0 to latest
+   - 兼容性处理统一在core/compatibility.py中管理
+   - 移除了过时的兼容代码，基于最低支持版本优化
+   - 平台常量通过get_platform_constants()统一获取
 """
 
 # ================= 核心配置常量 (Core Configuration Constants) =================
@@ -161,8 +173,9 @@ HTTP_TIMEOUT = 30  # HTTP请求超时时间(秒)
 HTTP_MAX_RETRIES = 3  # HTTP请求最大重试次数
 
 # ================= Home Assistant 平台支持 (HA Platform Support) =================
-# Home Assistant 支持的平台列表 (扩充版)
-SUPPORTED_PLATFORMS = {
+# Home Assistant 支持的平台列表
+# Build supported platforms dynamically based on HA version
+_BASE_PLATFORMS = {
     Platform.SWITCH,
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
@@ -172,15 +185,21 @@ SUPPORTED_PLATFORMS = {
     Platform.BUTTON,  # 新增: 按钮平台
     Platform.FAN,  # 新增: 风扇平台
     Platform.LOCK,  # 新增: 门锁平台
-    Platform.EVENT,  # 新增: 事件平台
     Platform.CAMERA,  # 新增: 摄像头平台
     Platform.REMOTE,
     Platform.NUMBER,  # 新增: 数值平台
     Platform.AIR_QUALITY,  # 新增: 空气质量平台
     Platform.SIREN,  # 新增: 警报平台
     Platform.SCENE,  # 新增: 场景平台
-    Platform.VALVE,  # 新增: 阀门平台
 }
+
+SUPPORTED_PLATFORMS = _BASE_PLATFORMS.copy()
+
+if _EVENT_PLATFORM is not None:
+    SUPPORTED_PLATFORMS.add(_EVENT_PLATFORM)  # 新增: 事件平台 (仅限新版本HA)
+
+if _VALVE_PLATFORM is not None:
+    SUPPORTED_PLATFORMS.add(_VALVE_PLATFORM)  # 新增: 阀门平台 (仅限支持的HA版本)
 
 # ================= 新增平台相关常量 (New Platform Constants) =================
 
@@ -234,14 +253,20 @@ VALVE_OPERATION_TIME = 10  # 阀门操作时间(秒)
 VALVE_STATE_OPEN = 1
 VALVE_STATE_CLOSED = 0
 
+# Cover平台相关配置已迁移到新架构
+# 车库门类型和杜亚类型配置现在位于: core/config/device_specs.py
+
 # ================= 注意：设备类型映射已迁移 =================
 #
 # 设备类型到平台的映射已迁移到配置层，遵循"所有的东西以doc为准，不要信const"原则：
-# - 静态映射: core/config/device_specs.py (基于官方文档)
-# - 动态检测: core/platform/platform_detection.py (运行时检测)
-# - 映射转换: core/config/mapping_engine.py (自动生成HA格式)
+# - 设备规格定义: core/config/device_specs.py (基于官方文档《LifeSmart智慧设备规格属性说明.md》)
+# - 动态平台检测: core/platform/platform_detection.py (运行时检测)
+# - 映射引擎转换: core/config/mapping_engine.py (自动生成HA格式)
+# - 设备数据处理: core/data/processors/ (数据处理和验证)
 #
+# 版本兼容性处理已统一移至core/compatibility.py，基于最低支持版本2022.10.0优化。
 # 不再在const.py中硬编码设备类型集合，所有设备类型信息应从官方文档获取。
+#
 # 门锁解锁方式映射
 UNLOCK_METHOD = {
     0: "None",

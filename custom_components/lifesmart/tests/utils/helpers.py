@@ -10,7 +10,6 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from custom_components.lifesmart.core.const import DEVICE_ID_KEY
@@ -27,22 +26,24 @@ from .constants import (
 # ============================================================================
 
 
-def get_expected_entity_id_from_device(platform_domain: str, device: dict, sub_key: str = None) -> str:
+def get_expected_entity_id_from_device(
+    platform_domain: str, device: dict, sub_key: str = None
+) -> str:
     """
     根据设备数据生成期望的 entity_id。
-    
+
     这个函数模拟 LifeSmartBaseLight 中的 object_id 生成逻辑。
-    
+
     Args:
         platform_domain: 平台域名，如 'light'
         device: 设备数据字典
         sub_key: 子设备键名（可选）
-        
+
     Returns:
         期望的 entity_id
     """
     base_name = device.get("name", "Unknown Device")
-    
+
     if sub_key:
         # 有子设备的情况，模拟 LifeSmartBaseLight 的逻辑
         sub_key_slug = sub_key.lower()
@@ -50,7 +51,7 @@ def get_expected_entity_id_from_device(platform_domain: str, device: dict, sub_k
     else:
         # 没有子设备的情况
         object_id = base_name.lower().replace(" ", "_")
-    
+
     return f"{platform_domain}.{object_id}"
 
 
@@ -571,7 +572,9 @@ def _calculate_expected_entity_count_for_platform(
                     expected_count += count * multiplier
         except Exception:
             # 如果新系统出现问题，基本的设备类型检查作为回退
-            if platform_domain == "climate" and ("NATURE" in device_type or "AIR_P" in device_type):
+            if platform_domain == "climate" and (
+                "NATURE" in device_type or "AIR_P" in device_type
+            ):
                 expected_count += count * multiplier
 
     return expected_count
@@ -708,7 +711,7 @@ def get_platform_device_types_for_testing(platform_domain):
             "devtype": device_type,
             "data": _get_mock_device_data(device_type),
         }
-        
+
         try:
             platforms = get_device_platform_mapping(mock_device)
             platform_map = {
@@ -719,7 +722,7 @@ def get_platform_device_types_for_testing(platform_domain):
                 "climate": Platform.CLIMATE,
                 "cover": Platform.COVER,
             }
-            
+
             target_platform = platform_map.get(platform_domain)
             if target_platform and target_platform in platforms:
                 device_types.add(device_type)
@@ -727,13 +730,19 @@ def get_platform_device_types_for_testing(platform_domain):
             # 如果新系统出现问题，使用基本的类型检查
             if platform_domain == "light" and "LI_" in device_type:
                 device_types.add(device_type)
-            elif platform_domain == "switch" and ("SW_" in device_type or "OL_" in device_type):
+            elif platform_domain == "switch" and (
+                "SW_" in device_type or "OL_" in device_type
+            ):
                 device_types.add(device_type)
             elif platform_domain == "sensor" and "SC_" in device_type:
                 device_types.add(device_type)
-            elif platform_domain == "climate" and ("NATURE" in device_type or "AIR_P" in device_type):
+            elif platform_domain == "climate" and (
+                "NATURE" in device_type or "AIR_P" in device_type
+            ):
                 device_types.add(device_type)
-            elif platform_domain == "cover" and ("DOOYA" in device_type or "ETDOOR" in device_type):
+            elif platform_domain == "cover" and (
+                "DOOYA" in device_type or "ETDOOR" in device_type
+            ):
                 device_types.add(device_type)
 
     return sorted(list(device_types))

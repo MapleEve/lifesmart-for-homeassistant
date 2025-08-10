@@ -16,7 +16,7 @@ import logging
 import time
 import traceback
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Callable
 
 import aiohttp
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, ConfigEntry
@@ -93,7 +93,7 @@ class LifeSmartHub:
         self.devices: list[dict] = []
         self._state_manager: Optional[LifeSmartStateManager] = None
         self._local_task: Optional[asyncio.Task] = None
-        self._refresh_task_unsub: Optional[callable] = None
+        self._refresh_task_unsub: Optional[Callable[[], None]] = None
 
     async def async_setup(self) -> bool:
         """异步设置 Hub，包括客户端创建、设备获取和后台任务启动。
@@ -491,7 +491,7 @@ class LifeSmartStateManager:
         config_entry: ConfigEntry,
         client: LifeSmartOpenAPIClient,
         ws_url: str,
-        refresh_callback: callable,
+        refresh_callback: Callable[[], None],
         retry_interval: int = 10,
         max_retries: int = 60,
     ) -> None:

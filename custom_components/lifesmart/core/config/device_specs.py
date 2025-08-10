@@ -14,7 +14,8 @@ from typing import Dict, Any
 # 总设备数量
 TOTAL_DEVICES = 125
 
-# ================= 设备映射按官方文档顺序排列 (Device Mapping in Official Documentation Order) =================
+# ================= 设备映射按官方文档顺序排列 =================
+# (Device Mapping in Official Documentation Order)
 # 🚨 严格按照官方文档 "LifeSmart 智慧设备规格属性说明.md" 的章节顺序排列
 # 🚨 2.1 插座系列 → 2.2 开关系列 → 2.3 窗帘控制 → 2.4 灯光系列 → ... → 2.14 超能面板
 
@@ -29,7 +30,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -53,7 +57,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -77,7 +84,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -101,7 +111,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -125,7 +138,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -149,7 +165,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -174,7 +193,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -195,7 +217,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "energy",
                 "conversion": "ieee754_float",
-                "detailed_description": "为累计用电量，`val` 值为 `IEEE754` 浮点数的32位整数表示，`v` 值为浮点数，单位为度(kwh)",
+                "detailed_description": (
+                    "为累计用电量，`val` 值为 `IEEE754` 浮点数的32位整数表示，"
+                    "`v` 值为浮点数，单位为度(kwh)"
+                ),
                 "device_class": "energy",
                 "unit_of_measurement": "kWh",
                 "state_class": "total_increasing",
@@ -217,7 +242,9 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "power_threshold",
                 "conversion": "val_direct",
-                "detailed_description": "功率门限，用电保护，值为整数，超出门限则会断电，单位为w",
+                "detailed_description": (
+                    "功率门限，用电保护，值为整数，超出门限则会断电，单位为w"
+                ),
                 "commands": {
                     "enable": {
                         "type": 129,
@@ -249,7 +276,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -270,7 +300,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "energy",
                 "conversion": "ieee754_float",
-                "detailed_description": "为累计用电量，`val` 值为 `IEEE754` 浮点数的32位整数表示，`v` 值为浮点数，单位为度(kwh)",
+                "detailed_description": (
+                    "为累计用电量，`val` 值为 `IEEE754` 浮点数的32位整数表示，"
+                    "`v` 值为浮点数，单位为度(kwh)"
+                ),
                 "device_class": "energy",
                 "unit_of_measurement": "kWh",
                 "state_class": "total_increasing",
@@ -292,7 +325,9 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "power_threshold",
                 "conversion": "val_direct",
-                "detailed_description": "功率门限，用电保护，值为整数，超出门限则会断电，单位为w",
+                "detailed_description": (
+                    "功率门限，用电保护，值为整数，超出门限则会断电，单位为w"
+                ),
                 "commands": {
                     "enable": {
                         "type": 129,
@@ -324,7 +359,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -345,7 +383,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "energy",
                 "conversion": "ieee754_float",
-                "detailed_description": "为累计用电量，`val` 值为 `IEEE754` 浮点数的32位整数表示，`v` 值为浮点数，单位为度(kwh)",
+                "detailed_description": (
+                    "为累计用电量，`val` 值为 `IEEE754` 浮点数的32位整数表示，"
+                    "`v` 值为浮点数，单位为度(kwh)"
+                ),
                 "device_class": "energy",
                 "unit_of_measurement": "kWh",
                 "state_class": "total_increasing",
@@ -367,7 +408,9 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "power_threshold",
                 "conversion": "val_direct",
-                "detailed_description": "功率门限，用电保护，值为整数，超出门限则会断电，单位为w",
+                "detailed_description": (
+                    "功率门限，用电保护，值为整数，超出门限则会断电，单位为w"
+                ),
                 "commands": {
                     "enable": {
                         "type": 129,
@@ -401,7 +444,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -422,7 +468,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，取值范围：0~1023"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -449,7 +498,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，取值范围：0~1023"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -481,7 +533,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -500,7 +555,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -521,7 +579,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -548,7 +612,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -575,7 +645,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -602,7 +678,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -634,7 +716,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -653,7 +738,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -672,7 +760,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -693,7 +784,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -720,7 +817,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -747,7 +850,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -774,7 +883,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -801,7 +916,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -828,7 +949,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -861,7 +988,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -880,7 +1010,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -899,7 +1032,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -921,7 +1057,10 @@ _RAW_DEVICE_DATA = {
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
                 "range": "0-1023",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，取值范围：0~1023"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -949,7 +1088,10 @@ _RAW_DEVICE_DATA = {
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
                 "range": "0-1023",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，取值范围：0~1023"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -981,7 +1123,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1000,7 +1145,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1019,7 +1167,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1041,7 +1192,10 @@ _RAW_DEVICE_DATA = {
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
                 "range": "0-1023",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，取值范围：0~1023"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1069,7 +1223,10 @@ _RAW_DEVICE_DATA = {
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
                 "range": "0-1023",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，取值范围：0~1023"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1101,7 +1258,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1120,7 +1280,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1139,7 +1302,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1160,7 +1326,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1187,7 +1359,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1214,7 +1392,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1241,7 +1425,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1268,7 +1458,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1295,7 +1491,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1327,7 +1529,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1346,7 +1551,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1365,7 +1573,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1386,7 +1597,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1413,7 +1630,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1440,7 +1663,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1467,7 +1696,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1494,7 +1729,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1521,7 +1762,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1553,7 +1800,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1572,7 +1822,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1591,7 +1844,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1612,7 +1868,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1639,7 +1901,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1666,7 +1934,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1693,7 +1967,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1720,7 +2000,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1747,7 +2033,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1779,7 +2071,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1798,7 +2093,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1819,7 +2117,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1846,7 +2150,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1873,7 +2183,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1900,7 +2216,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1932,7 +2254,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1951,7 +2276,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1972,7 +2300,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -1999,7 +2333,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2026,7 +2366,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2053,7 +2399,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2085,7 +2437,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2104,7 +2459,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2125,7 +2483,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2152,7 +2516,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2179,7 +2549,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2206,7 +2582,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2238,7 +2620,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2257,7 +2642,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2278,7 +2666,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2305,7 +2699,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2332,7 +2732,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2359,7 +2765,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2391,7 +2803,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2412,7 +2827,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2439,7 +2860,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2471,7 +2898,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2492,7 +2922,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2519,7 +2955,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2551,7 +2993,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2572,7 +3017,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2599,7 +3050,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2631,7 +3088,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2652,7 +3112,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2679,7 +3145,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2711,7 +3183,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2732,7 +3207,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2759,7 +3240,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2792,7 +3279,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2828,7 +3318,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2847,7 +3340,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2883,7 +3379,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2902,7 +3401,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2921,7 +3423,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2957,7 +3462,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -2978,7 +3486,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -2993,7 +3504,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3012,7 +3526,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3033,7 +3550,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -3048,7 +3568,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3067,7 +3590,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3086,7 +3612,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3107,7 +3636,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -3147,7 +3679,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "dimmer_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1==1 表示处于打开状态；type&1==0 表示处于关闭状态；val 值为亮度值，可调范围：[0-255]，值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                "detailed_description": (
+                    "type&1==1 表示处于打开状态；"
+                    "type&1==0 表示处于关闭状态；"
+                    "val 值为亮度值，可调范围：[0-255]，值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3179,7 +3715,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3198,7 +3737,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3217,7 +3759,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3236,7 +3781,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3255,7 +3803,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3274,7 +3825,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3293,7 +3847,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3312,7 +3869,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3331,7 +3891,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3366,7 +3929,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值 `v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值 `v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -3386,7 +3952,11 @@ _RAW_DEVICE_DATA = {
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "detailed_description": (
+                            "`type&1==1`表示处于打开状态；"
+                            "`type&1==0`表示处于关闭状态；"
+                            "`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
+                        ),
                         "commands": {
                             "on": {
                                 "type": 129,
@@ -3413,7 +3983,15 @@ _RAW_DEVICE_DATA = {
                         "rw": "RW",
                         "data_type": "indicator_light",
                         "conversion": "val_direct",
-                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，它有灯光处于打开状态下的指示灯亮度和灯光处于关闭状态下的指示灯亮度。`bit8-bit15`：用于指示灯光处于打开状态下的指示灯亮度 `bit0-bit7`：用于指示灯光处于关闭状态下的指示灯亮度 每8个bit可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮。",
+                        "detailed_description": (
+                            "`type&1==1`表示处于打开状态；"
+                            "`type&1==0`表示处于关闭状态；"
+                            "`val` 值为亮度值，它有灯光处于打开状态下的指示灯亮度和"
+                            "灯光处于关闭状态下的指示灯亮度。`bit8-bit15`：用于指示"
+                            "灯光处于打开状态下的指示灯亮度 `bit0-bit7`：用于指示"
+                            "灯光处于关闭状态下的指示灯亮度 每8个bit可调范围：[0,255], "
+                            "值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮。"
+                        ),
                         "commands": {
                             "on": {
                                 "type": 129,
@@ -3490,7 +4068,11 @@ _RAW_DEVICE_DATA = {
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "detailed_description": (
+                            "`type&1==1`表示处于打开状态；"
+                            "`type&1==0`表示处于关闭状态；"
+                            "`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
+                        ),
                         "commands": {
                             "on": {
                                 "type": 129,
@@ -3518,7 +4100,11 @@ _RAW_DEVICE_DATA = {
                         "data_type": "indicator_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "detailed_description": (
+                            "`type&1==1`表示处于打开状态；"
+                            "`type&1==0`表示处于关闭状态；"
+                            "`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
+                        ),
                         "commands": {
                             "on": {
                                 "type": 129,
@@ -3552,7 +4138,11 @@ _RAW_DEVICE_DATA = {
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "detailed_description": (
+                            "`type&1==1`表示处于打开状态；"
+                            "`type&1==0`表示处于关闭状态；"
+                            "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
+                        ),
                         "commands": {
                             "on": {
                                 "type": 129,
@@ -3595,7 +4185,11 @@ _RAW_DEVICE_DATA = {
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                        "detailed_description": (
+                            "`type&1==1`表示处于打开状态；"
+                            "`type&1==0`表示处于关闭状态；"
+                            "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
+                        ),
                         "commands": {
                             "on": {
                                 "type": 129,
@@ -3640,7 +4234,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1==1,表示打开(忽略`val` 值)；type&1==0,表示关闭(忽略`val` 值)；",
+                "detailed_description": (
+                    "type&1==1,表示打开(忽略`val` 值)；"
+                    "type&1==0,表示关闭(忽略`val` 值)；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3664,7 +4261,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1==1,表示打开(忽略`val` 值)；type&1==0,表示关闭(忽略`val` 值)；",
+                "detailed_description": (
+                    "type&1==1,表示打开(忽略`val` 值)；"
+                    "type&1==0,表示关闭(忽略`val` 值)；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3683,7 +4283,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1==1,表示打开(忽略`val` 值)；type&1==0,表示关闭(忽略`val` 值)；",
+                "detailed_description": (
+                    "type&1==1,表示打开(忽略`val` 值)；"
+                    "type&1==0,表示关闭(忽略`val` 值)；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3707,7 +4310,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1==1,表示打开(忽略`val` 值)；type&1==0,表示关闭(忽略`val` 值)；",
+                "detailed_description": (
+                    "type&1==1,表示打开(忽略`val` 值)；"
+                    "type&1==0,表示关闭(忽略`val` 值)；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3726,7 +4332,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1==1,表示打开(忽略`val` 值)；type&1==0,表示关闭(忽略`val` 值)；",
+                "detailed_description": (
+                    "type&1==1,表示打开(忽略`val` 值)；"
+                    "type&1==0,表示关闭(忽略`val` 值)；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3745,7 +4354,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1==1,表示打开(忽略`val` 值)；type&1==0,表示关闭(忽略`val` 值)；",
+                "detailed_description": (
+                    "type&1==1,表示打开(忽略`val` 值)；"
+                    "type&1==0,表示关闭(忽略`val` 值)；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3770,7 +4382,12 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "button_events",
                 "conversion": "val_direct",
-                "detailed_description": "`type` 的值定义如下: `type&1==1`，表示有按键事件产生；`type&1==0`,表示按键事件消失；`val` 值指明按键事件类型，只有在 `type&1==1` 才有效，`val` 的值定义如下：1：单击事件 2：双击事件 255：长按事件",
+                "detailed_description": (
+                    "`type` 的值定义如下: `type&1==1`，表示有按键事件产生；"
+                    "`type&1==0`,表示按键事件消失；"
+                    "`val` 值指明按键事件类型，只有在 `type&1==1` 才有效，"
+                    "`val` 的值定义如下：1：单击事件 2：双击事件 255：长按事件"
+                ),
                 "device_class": "identify",
             },
         },
@@ -3780,7 +4397,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery_level",
                 "conversion": "voltage_to_percentage",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0，100]，它是根据 `val` 电压值换算的。",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0，100]，它是根据 `val` 电压值换算的。"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -3796,7 +4416,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3817,7 +4440,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3844,7 +4473,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3876,7 +4511,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3895,7 +4533,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3916,7 +4557,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3943,7 +4590,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3970,7 +4623,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -3997,7 +4656,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4029,7 +4694,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4048,7 +4716,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4067,7 +4738,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4088,7 +4762,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4115,7 +4795,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4142,7 +4828,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4169,7 +4861,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4196,7 +4894,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4223,7 +4927,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4256,7 +4966,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4280,7 +4993,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4299,7 +5015,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4323,7 +5042,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4342,7 +5064,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4361,7 +5086,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4386,7 +5114,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "brightness",
                 "conversion": "val_to_brightness",
-                "detailed_description": "`type&1==1`表示打开(忽略`val` 值);`type&1==0`表示关闭(忽略`val` 值);val指示灯光的亮度值范围[0，255]，255亮度最大。",
+                "detailed_description": (
+                    "`type&1==1`表示打开(忽略`val` 值);"
+                    "`type&1==0`表示关闭(忽略`val` 值);"
+                    "val指示灯光的亮度值范围[0，255]，255亮度最大。"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4428,7 +5160,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4447,7 +5182,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4466,7 +5204,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4485,7 +5226,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4504,7 +5248,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4523,7 +5270,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4544,7 +5294,20 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "scene_config",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值为面板上六个按键的功能配置参数。`bit0-bit3`:设置P1;`bit4-bit7`:设置P2;`bit8-bit11`：设置P3;`bit12-bit15`: 设置P4;`bit16-bit19`:设置P5;`bit20-bit23`：设置P6;如上划分每4个bit分别代表对应面板上的按钮设置，我们按照每4个bit的值来看功能的定义设置，以P1的设置为例：值为0时：表示自复位开关，默认5s自动关;值为1、2、3时：分别对应面板物理设备上的继电器L1，那么该P1的开关操作就是操作的继电器L1的开关；值为4~14时：表示自复位开关自定义延迟关的时间，若x表示满足当前区间的值，那么延迟关时间的计算公式为：(5+(X-3)*15) 单位为秒S。值为15时：表示通用开关，不会自动关。当P1~P6设置为绑定继电器时，当前为普通开关控制器。",
+                "detailed_description": (
+                    "`val` 值为面板上六个按键的功能配置参数。"
+                    "`bit0-bit3`:设置P1;`bit4-bit7`:设置P2;`bit8-bit11`：设置P3;"
+                    "`bit12-bit15`: 设置P4;`bit16-bit19`:设置P5;`bit20-bit23`：设置P6;"
+                    "如上划分每4个bit分别代表对应面板上的按钮设置，"
+                    "我们按照每4个bit的值来看功能的定义设置，以P1的设置为例："
+                    "值为0时：表示自复位开关，默认5s自动关;"
+                    "值为1、2、3时：分别对应面板物理设备上的继电器L1，"
+                    "那么该P1的开关操作就是操作的继电器L1的开关；"
+                    "值为4~14时：表示自复位开关自定义延迟关的时间，"
+                    "若x表示满足当前区间的值，那么延迟关时间的计算公式为："
+                    "(5+(X-3)*15) 单位为秒S。值为15时：表示通用开关，不会自动关。"
+                    "当P1~P6设置为绑定继电器时，当前为普通开关控制器。"
+                ),
                 "commands": {
                     "config": {
                         "type": 255,
@@ -4609,7 +5372,10 @@ _RAW_DEVICE_DATA = {
                 "data_type": "brightness_light",
                 "conversion": "val_direct",
                 "range": "0~1023",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val`表示指示灯亮度值，取值范围：0~1023",
+                "detailed_description": (
+                    "`type&1==1`表示打开；`type&1==0`表示关闭；"
+                    "`val`表示指示灯亮度值，取值范围：0~1023"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4713,7 +5479,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4740,7 +5512,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4767,7 +5545,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4847,7 +5631,14 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "position_status",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示控制正在运行；`type&1==0`表示没有运行；当正在运行的时候即(`type&1==1`):,`val%0x80==0x80`表示正在开，否则表示正在关；`val%0x7F`的值表示窗帘打开的百分比([0,100]);若`val%0x7F`大于100则表示获取不到位置信息，只有执行全开或全关之后才能重新获取位置信息。",
+                "detailed_description": (
+                    "`type&1==1`表示控制正在运行；"
+                    "`type&1==0`表示没有运行；"
+                    "当正在运行的时候即(`type&1==1`):,`val%0x80==0x80`表示正在开，否则表示正在关；"
+                    "`val%0x7F`的值表示窗帘打开的百分比([0,100]);"
+                    "若`val%0x7F`大于100则表示获取不到位置信息，"
+                    "只有执行全开或全关之后才能重新获取位置信息。"
+                ),
             },
             "P2": {
                 "description": "窗帘控制",
@@ -4930,7 +5721,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "voltage",
                 "conversion": "friendly_val",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0，100]，它是根据val电压值换算的。",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0，100]，它是根据val电压值换算的。"
+                ),
                 "device_class": "voltage",
                 "state_class": "measurement",
             },
@@ -4946,7 +5740,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -4973,7 +5773,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "dynamic_effect",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开动态；`type&1==0`表示关闭动态；`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义",
+                "detailed_description": (
+                    "`type&1==1`表示打开动态；"
+                    "`type&1==0`表示关闭动态；"
+                    "`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义"
+                ),
                 "commands": {
                     "enable": {
                         "type": 129,
@@ -5005,7 +5809,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5032,7 +5842,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "dynamic_effect",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开动态；`type&1==0`表示关闭动态；`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义",
+                "detailed_description": (
+                    "`type&1==1`表示打开动态；"
+                    "`type&1==0`表示关闭动态；"
+                    "`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义"
+                ),
                 "commands": {
                     "enable": {
                         "type": 129,
@@ -5065,7 +5879,15 @@ _RAW_DEVICE_DATA = {
                 "data_type": "rgb_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:White, （当White>0时，表示动态模式）具体动态值请参考：附录3.2动态颜色(DYN)定义",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    "`type&1==0`表示关闭；"
+                    "`val` 值为颜色值，大小4个字节，定义如下："
+                    "`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, "
+                    "`bit16`~`bit23`:Red, `bit24`~`bit31`:White, "
+                    "(当White>0时，表示动态模式)"
+                    "具体动态值请参考：附录3.2动态颜色(DYN)定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5099,7 +5921,11 @@ _RAW_DEVICE_DATA = {
                 "data_type": "brightness_light",
                 "conversion": "val_direct",
                 "range": "0-100",
-                "detailed_description": "`type&1==1`表示打开(忽略`val` 值)；`type&1==0`表示关闭(忽略`val` 值)；`val`指示灯光的亮度值范围[0,100]，100亮度最大",
+                "detailed_description": (
+                    "`type&1==1`表示打开(忽略`val` 值)；"
+                    "`type&1==0`表示关闭(忽略`val` 值)；"
+                    "`val`指示灯光的亮度值范围[0,100]，100亮度最大"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5123,7 +5949,14 @@ _RAW_DEVICE_DATA = {
                 "data_type": "quantum_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": "`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24~bit31`:White, （当White>0时，表示动态模式）具体动态值请参考：附录3.2动态颜色(DYN)定义, 附录3.3量子灯特殊(DYN)定义",
+                "detailed_description": (
+                    "`val` 值为颜色值，大小4个字节，定义如下："
+                    "`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, "
+                    "`bit16`~`bit23`:Red, `bit24~bit31`:White, "
+                    "(当White>0时，表示动态模式)"
+                    "具体动态值请参考：附录3.2动态颜色(DYN)定义, "
+                    "附录3.3量子灯特殊(DYN)定义"
+                ),
                 "commands": {
                     "set_color": {
                         "type": 255,
@@ -5143,7 +5976,11 @@ _RAW_DEVICE_DATA = {
                 "data_type": "brightness_light",
                 "conversion": "val_direct",
                 "range": "0-255",
-                "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                "detailed_description": (
+                    "`type&1==1`表示处于打开状态；"
+                    "`type&1==0`表示处于关闭状态；"
+                    "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5195,7 +6032,18 @@ _RAW_DEVICE_DATA = {
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White/DYN。例如：红色：`0x00FF0000`, 白色：`0xFF000000`。`bit24~bit31`即可以设置白光又可以设置动态。当其值在[0~100]表示设置的是白光，0表示不显示白光，100表示白光最亮；当其值大于等于128表示设置为动态模式，具体动态值请参考：附录3.2 动态颜色(DYN)定义",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    "`type&1==0`表示关闭；"
+                    "`val` 值为颜色值，大小4个字节，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green "
+                    "- `bit16~bit23`: Red - `bit24~bit31`: White/DYN。"
+                    "例如：红色：`0x00FF0000`, 白色：`0xFF000000`。"
+                    "`bit24~bit31`即可以设置白光又可以设置动态。"
+                    "当其值在[0~100]表示设置的是白光，0表示不显示白光，"
+                    "100表示白光最亮；"
+                    "当其值大于等于128表示设置为动态模式，具体动态值请参考：附录3.2 动态颜色(DYN)定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5244,7 +6092,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5260,7 +6111,13 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭；`val` 表示指示灯亮度值，定义如下：- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - `bit24~bit31`: White（当 White>0 时，表示动态模式）具体动态值请参考：附录3.1动态颜色（`DYN`）定义",
+                "detailed_description": (
+                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
+                    "`val` 表示指示灯亮度值，定义如下："
+                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
+                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
+                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5287,7 +6144,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "dynamic_effect",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开动态；`type&1==0`表示关闭动态；`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义",
+                "detailed_description": (
+                    "`type&1==1`表示打开动态；"
+                    "`type&1==0`表示关闭动态；"
+                    "`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义"
+                ),
                 "commands": {
                     "enable": {
                         "type": 129,
@@ -5320,7 +6181,15 @@ _RAW_DEVICE_DATA = {
                 "data_type": "rgb_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:White, （当White>0时，表示动态模式）具体动态值请参考：附录3.2动态颜色(DYN)定义",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    "`type&1==0`表示关闭；"
+                    "`val` 值为颜色值，大小4个字节，定义如下："
+                    "`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, "
+                    "`bit16`~`bit23`:Red, `bit24`~`bit31`:White, "
+                    "(当White>0时，表示动态模式)"
+                    "具体动态值请参考：附录3.2动态颜色(DYN)定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5353,7 +6222,15 @@ _RAW_DEVICE_DATA = {
                 "data_type": "rgb_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭；`val` 值为颜色值，大小4个字节，定义如下：`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, `bit16`~`bit23`:Red, `bit24`~`bit31`:White, （当White>0时，表示动态模式）具体动态值请参考：附录3.2动态颜色(DYN)定义",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    "`type&1==0`表示关闭；"
+                    "`val` 值为颜色值，大小4个字节，定义如下："
+                    "`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, "
+                    "`bit16`~`bit23`:Red, `bit24`~`bit31`:White, "
+                    "(当White>0时，表示动态模式)"
+                    "具体动态值请参考：附录3.2动态颜色(DYN)定义"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5386,7 +6263,11 @@ _RAW_DEVICE_DATA = {
                 "data_type": "brightness_light",
                 "conversion": "val_direct",
                 "range": "0-255",
-                "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                "detailed_description": (
+                    "`type&1==1`表示处于打开状态；"
+                    "`type&1==0`表示处于关闭状态；"
+                    "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5424,7 +6305,13 @@ _RAW_DEVICE_DATA = {
                 "data_type": "nightlight_brightness",
                 "conversion": "val_direct",
                 "range": "0,63,127,195,255",
-                "detailed_description": "`val` 值为夜灯亮度，共有5档，亮度从低到高分别如下：0、63、127、195、255。0表示夜灯处于关闭状态，255表示夜灯处于最亮状态。注意：若亮度值为其它值则根据如下规则判断亮度档位：0：关闭档，>=196：最亮档，>=128并且<=195：次亮档，>=64并且<=127：第三亮档，>0并且<=63：第四亮档",
+                "detailed_description": (
+                    "`val` 值为夜灯亮度，共有5档，亮度从低到高分别如下："
+                    "0、63、127、195、255。0表示夜灯处于关闭状态，"
+                    "255表示夜灯处于最亮状态。注意：若亮度值为其它值则根据如下规则判断亮度档位："
+                    "0：关闭档，>=196：最亮档，>=128并且<=195：次亮档，"
+                    ">=64并且<=127：第三亮档，>0并且<=63：第四亮档"
+                ),
                 "commands": {
                     "set_brightness": {
                         "type": 207,
@@ -5443,7 +6330,11 @@ _RAW_DEVICE_DATA = {
                 "data_type": "brightness_light",
                 "conversion": "val_direct",
                 "range": "0-255",
-                "detailed_description": "`type&1==1`表示处于打开状态；`type&1==0`表示处于关闭状态；`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮",
+                "detailed_description": (
+                    "`type&1==1`表示处于打开状态；"
+                    "`type&1==0`表示处于关闭状态；"
+                    "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5481,7 +6372,13 @@ _RAW_DEVICE_DATA = {
                 "data_type": "nightlight_brightness",
                 "conversion": "val_direct",
                 "range": "0,63,127,195,255",
-                "detailed_description": "`val` 值为夜灯亮度，共有5档，亮度从低到高分别如下：0、63、127、195、255。0表示夜灯处于关闭状态，255表示夜灯处于最亮状态。注意：若亮度值为其它值则根据如下规则判断亮度档位：0：关闭档，>=196：最亮档，>=128并且<=195：次亮档，>=64并且<=127：第三亮档，>0并且<=63：第四亮档",
+                "detailed_description": (
+                    "`val` 值为夜灯亮度，共有5档，亮度从低到高分别如下："
+                    "0、63、127、195、255。0表示夜灯处于关闭状态，"
+                    "255表示夜灯处于最亮状态。注意：若亮度值为其它值则根据如下规则判断亮度档位："
+                    "0：关闭档，>=196：最亮档，>=128并且<=195：次亮档，"
+                    ">=64并且<=127：第三亮档，>0并且<=63：第四亮档"
+                ),
                 "commands": {
                     "set_brightness": {
                         "type": 207,
@@ -5499,7 +6396,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -5535,7 +6435,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5550,7 +6453,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "door_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示处于打开状态(忽略`val` 值)；`type&1==0`表示处于吸合状态(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示处于打开状态(忽略`val` 值)；"
+                    "`type&1==0`表示处于吸合状态(忽略`val` 值)"
+                ),
                 "device_class": "door",
             },
             "B": {
@@ -5558,7 +6464,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "button_status",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示按键处于按下状态(忽略`val` 值)；`type&1==0`表示按键处于松开状态(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
+                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
+                ),
                 "device_class": "moving",
             },
             "AXS": {
@@ -5576,7 +6485,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5591,7 +6503,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "door_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示处于打开状态(忽略`val` 值)；`type&1==0`表示处于吸合状态(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示处于打开状态(忽略`val` 值)；"
+                    "`type&1==0`表示处于吸合状态(忽略`val` 值)"
+                ),
                 "device_class": "door",
             },
             "AXS": {
@@ -5599,7 +6514,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "vibration_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示处于震动状态；`type&1==0`表示无震动状态；`val` 值表示震动强度",
+                "detailed_description": (
+                    "`type&1==1`表示处于震动状态；`type&1==0`表示无震动状态；"
+                    "`val` 值表示震动强度"
+                ),
                 "device_class": "vibration",
             },
         },
@@ -5609,7 +6527,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5634,7 +6555,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5659,7 +6583,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5684,7 +6611,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5729,7 +6659,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5774,7 +6707,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5819,7 +6755,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5844,7 +6783,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据`val`电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -5977,7 +6919,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "co2_concentration",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示co2浓度值，`v` 值表示实际值(单位：ppm)，参考：`val`<=500：优，`val`<=700：良，`val`<=1000：中，`val`>1000：差",
+                "detailed_description": (
+                    "`val` 值表示co2浓度值，`v` 值表示实际值(单位：ppm)，参考："
+                    "`val`<=500：优，`val`<=700：良，`val`<=1000：中，`val`>1000：差"
+                ),
                 "device_class": "carbon_dioxide",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
@@ -5987,7 +6932,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "tvoc_concentration",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示tvoc原始浓度值，它是TVOC浓度值*1000，实际浓度值=原始浓度值/1000，`v` 值表示实际值(单位：mg/m3)，参考：`val`<0.34：优，`val`<0.68：良，`val`<=1.02：中，`val`>1.02：差",
+                "detailed_description": (
+                    "`val` 值表示tvoc原始浓度值，它是TVOC浓度值*1000，实际浓度值=原始浓度值/1000，"
+                    "`v` 值表示实际值(单位：mg/m3)，参考：`val`<0.34：优，`val`<0.68：良，"
+                    "`val`<=1.02：中，`val`>1.02：差"
+                ),
                 "device_class": "volatile_organic_compounds",
                 "unit_of_measurement": "mg/m³",
                 "state_class": "measurement",
@@ -5997,7 +6946,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6047,7 +6999,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "如果使用9V的电池，则实际电压值=(`val`/100)*3，注意：其值可能会超过9V，例如9.58V；如果外接12V供电，则该值无效。`v` 值将表示当前剩余电量百分比，值范围[0,100]",
+                "detailed_description": (
+                    "如果使用9V的电池，则实际电压值=(`val`/100)*3，注意：其值可能会超过9V，"
+                    "例如9.58V；如果外接12V供电，则该值无效。`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6082,7 +7038,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "co2_concentration",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示co2浓度值，`v` 值表示实际值(单位：ppm)，参考：`val`<=500：优，`val`<=700：良，`val`<=1000：中，`val`>1000：差",
+                "detailed_description": (
+                    "`val` 值表示co2浓度值，`v` 值表示实际值(单位：ppm)，参考："
+                    "`val`<=500：优，`val`<=700：良，`val`<=1000：中，`val`>1000：差"
+                ),
                 "device_class": "carbon_dioxide",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
@@ -6092,7 +7051,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6127,7 +7089,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "radar_config",
                 "conversion": "val_direct",
-                "detailed_description": "包含动态锁定时间与灵敏度设置。其中：`bit0-bit7`：动态锁定时间，取值范围为：1-255，具体锁定时间为：配置值*4，单位为秒，例如`bit0-bit7`配置值为16，则表示动态锁定时间为64秒。`bit8-bit25`：灵敏度，灵敏度默认值为4，范围1-255，值越小则越灵敏",
+                "detailed_description": (
+                    "包含动态锁定时间与灵敏度设置。其中：`bit0-bit7`：动态锁定时间，取值范围为：1-255，"
+                    "具体锁定时间为：配置值*4，单位为秒，例如`bit0-bit7`配置值为16，则表示动态锁定时间为64秒。"
+                    "`bit8-bit25`：灵敏度，灵敏度默认值为4，范围1-255，值越小则越灵敏"
+                ),
                 "commands": {
                     "set_config": {
                         "type": 206,
@@ -6145,7 +7111,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "door_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示处于打开状态(忽略`val` 值)；`type&1==0`表示处于吸合状态(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示处于打开状态(忽略`val` 值)；"
+                    "`type&1==0`表示处于吸合状态(忽略`val` 值)"
+                ),
                 "device_class": "door",
             },
             "TR": {
@@ -6161,7 +7130,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "door_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示处于打开状态(忽略`val` 值)；`type&1==0`表示处于吸合状态(忽略`val` 值)；需要接外部感应器，如果没有接则type值为1",
+                "detailed_description": (
+                    "`type&1==1`表示处于打开状态(忽略`val` 值)；"
+                    "`type&1==0`表示处于吸合状态(忽略`val` 值)；"
+                    "需要接外部感应器，如果没有接则type值为1"
+                ),
                 "device_class": "door",
             },
         },
@@ -6181,7 +7154,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，"
+                    "它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6196,7 +7172,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "motion_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示侦测到人体移动(忽略`val` 值)；`type&1==0`表示没有侦测到人体移动(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示侦测到人体移动(忽略`val` 值)；"
+                    "`type&1==0`表示没有侦测到人体移动(忽略`val` 值)"
+                ),
                 "device_class": "motion",
             },
             "TR": {
@@ -6224,7 +7203,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，"
+                    "它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6239,7 +7221,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "siren_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示警铃播放(忽略`val` 值)；`type&1==0`表示正常(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示警铃播放(忽略`val` 值)；"
+                    "`type&1==0`表示正常(忽略`val` 值)"
+                ),
                 "device_class": "sound",
             },
             "TR": {
@@ -6267,7 +7252,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据val电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，"
+                    "它是根据val电压值换算的。注意：`type&1==1`表示低电报警状态"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6279,7 +7267,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "alarm_config",
                 "conversion": "val_direct",
-                "detailed_description": "`val`为32bit值，描述如下(16进制)：`0xAABBCCDD`：`AABB`表示警报持续时长，单位为0.1秒；`CC`是声音强度(136-255)，255最强，136最弱；`DD`表示音频序号：0：无，1：信息，2：告警",
+                "detailed_description": (
+                    "`val`为32bit值，描述如下(16进制)：`0xAABBCCDD`：`AABB`表示警报持续时长，单位为0.1秒；"
+                    "`CC`是声音强度(136-255)，255最强，136最弱；`DD`表示音频序号：0：无，1：信息，2：告警"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -6311,7 +7302,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "button_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示按键处于按下状态(忽略`val` 值)；`type&1==0`表示按键处于松开状态(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
+                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
+                ),
                 "device_class": "moving",
             },
             "eB2": {
@@ -6319,7 +7313,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "button_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示按键处于按下状态(忽略`val` 值)；`type&1==0`表示按键处于松开状态(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
+                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
+                ),
                 "device_class": "moving",
             },
             "eB3": {
@@ -6327,7 +7324,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "button_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示按键处于按下状态(忽略`val` 值)；`type&1==0`表示按键处于松开状态(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
+                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
+                ),
                 "device_class": "moving",
             },
             "eB4": {
@@ -6335,7 +7335,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "button_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示按键处于按下状态(忽略`val` 值)；`type&1==0`表示按键处于松开状态(忽略`val` 值)",
+                "detailed_description": (
+                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
+                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
+                ),
                 "device_class": "moving",
             },
         },
@@ -6345,7 +7348,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，"
+                    "它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6360,7 +7366,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "noise_level",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示噪音值大于告警门限；`type&1==0`表示噪音值没有超过告警门限；`val`表示当前噪音值，单位为分贝",
+                "detailed_description": (
+                    "`type&1==1`表示噪音值大于告警门限；"
+                    "`type&1==0`表示噪音值没有超过告警门限；"
+                    "`val`表示当前噪音值，单位为分贝"
+                ),
                 "device_class": "sound_pressure",
                 "unit_of_measurement": "dB",
                 "state_class": "measurement",
@@ -6382,7 +7392,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "threshold_config",
                 "conversion": "val_direct",
-                "detailed_description": "`val`为32bit值(十六进制)：`0xAABBCCDD`：`DD`表示告警门限值，数值单位为分贝，取值范围[0,255]；`CC`表示采样值1，取值范围[0,255]；`BB`表示采样值2，取值范围[0,255]；`CCBB`共同作用形成越限率",
+                "detailed_description": (
+                    "`val`为32bit值(十六进制)：`0xAABBCCDD`：`DD`表示告警门限值，数值单位为分贝，取值范围[0,255]；"
+                    "`CC`表示采样值1，取值范围[0,255]；`BB`表示采样值2，取值范围[0,255]；"
+                    "`CCBB`共同作用形成越限率"
+                ),
                 "commands": {
                     "set_threshold": {
                         "type": 255,
@@ -6395,7 +7409,14 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "alarm_config",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示处于报警状态；`type&1==0`表示处于正常状态；`val`为32bit值，描述如下(16进制)：`0xAABBCCDD`：`AABB`表示警报持续时长，单位为0.1秒，等于65535则表示一直持续；`CC`是声音强度，0表示没有声音，其它值表示有声音；`DD`表示音频模式：0：无声音，1：指示音，2：告警音，0x7F：测试音，0x80-0xFF：自定义模式",
+                "detailed_description": (
+                    "`type&1==1`表示处于报警状态；"
+                    "`type&1==0`表示处于正常状态；"
+                    "`val`为32bit值，描述如下(16进制)：`0xAABBCCDD`：`AABB`表示警报持续时长，"
+                    "单位为0.1秒，等于65535则表示一直持续；"
+                    "`CC`是声音强度，0表示没有声音，其它值表示有声音；"
+                    "`DD`表示音频模式：0：无声音，1：指示音，2：告警音，0x7F：测试音，0x80-0xFF：自定义模式"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -6524,28 +7545,67 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTOP": {
                 "description": "操作记录",
                 "rw": "R",
                 "data_type": "operation_record",
                 "conversion": "val_direct",
-                "detailed_description": "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or `type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) `val`的通用的编码次序是：[1Byte的记录 类型][2Byte的用户id][1Byte的用户 flag] 用户标志flag：`bit01=11`表示管理 员，01表示普通用户，00表示已经删除了",
+                "detailed_description": (
+                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
+                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
+                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
+                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
+                    "01表示普通用户，00表示已经删除了"
+                ),
             },
         },
     },
@@ -6567,28 +7627,67 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTOP": {
                 "description": "操作记录",
                 "rw": "R",
                 "data_type": "operation_record",
                 "conversion": "val_direct",
-                "detailed_description": "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or `type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) `val`的通用的编码次序是：[1Byte的记录 类型][2Byte的用户id][1Byte的用户 flag] 用户标志flag：`bit01=11`表示管理 员，01表示普通用户，00表示已经删除了",
+                "detailed_description": (
+                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
+                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
+                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
+                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
+                    "01表示普通用户，00表示已经删除了"
+                ),
             },
         },
     },
@@ -6610,28 +7709,67 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTOP": {
                 "description": "操作记录",
                 "rw": "R",
                 "data_type": "operation_record",
                 "conversion": "val_direct",
-                "detailed_description": "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or `type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) `val`的通用的编码次序是：[1Byte的记录 类型][2Byte的用户id][1Byte的用户 flag] 用户标志flag：`bit01=11`表示管理 员，01表示普通用户，00表示已经删除了",
+                "detailed_description": (
+                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
+                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
+                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
+                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
+                    "01表示普通用户，00表示已经删除了"
+                ),
             },
         },
     },
@@ -6653,28 +7791,67 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTOP": {
                 "description": "操作记录",
                 "rw": "R",
                 "data_type": "operation_record",
                 "conversion": "val_direct",
-                "detailed_description": "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or `type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) `val`的通用的编码次序是：[1Byte的记录 类型][2Byte的用户id][1Byte的用户 flag] 用户标志flag：`bit01=11`表示管理 员，01表示普通用户，00表示已经删除了",
+                "detailed_description": (
+                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
+                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
+                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
+                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
+                    "01表示普通用户，00表示已经删除了"
+                ),
             },
         },
     },
@@ -6696,28 +7873,67 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTOP": {
                 "description": "操作记录",
                 "rw": "R",
                 "data_type": "operation_record",
                 "conversion": "val_direct",
-                "detailed_description": "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or `type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) `val`的通用的编码次序是：[1Byte的记录 类型][2Byte的用户id][1Byte的用户 flag] 用户标志flag：`bit01=11`表示管理 员，01表示普通用户，00表示已经删除了",
+                "detailed_description": (
+                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
+                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
+                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
+                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
+                    "01表示普通用户，00表示已经删除了"
+                ),
             },
         },
     },
@@ -6739,28 +7955,67 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTOP": {
                 "description": "操作记录",
                 "rw": "R",
                 "data_type": "operation_record",
                 "conversion": "val_direct",
-                "detailed_description": "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or `type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) `val`的通用的编码次序是：[1Byte的记录 类型][2Byte的用户id][1Byte的用户 flag] 用户标志flag：`bit01=11`表示管理 员，01表示普通用户，00表示已经删除了",
+                "detailed_description": (
+                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
+                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
+                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
+                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
+                    "01表示普通用户，00表示已经删除了"
+                ),
             },
         },
     },
@@ -6782,28 +8037,67 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTOP": {
                 "description": "操作记录",
                 "rw": "R",
                 "data_type": "operation_record",
                 "conversion": "val_direct",
-                "detailed_description": "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or `type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) `val`的通用的编码次序是：[1Byte的记录 类型][2Byte的用户id][1Byte的用户 flag] 用户标志flag：`bit01=11`表示管理 员，01表示普通用户，00表示已经删除了",
+                "detailed_description": (
+                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
+                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
+                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
+                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
+                    "01表示普通用户，00表示已经删除了"
+                ),
             },
         },
     },
@@ -6825,28 +8119,67 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTOP": {
                 "description": "操作记录",
                 "rw": "R",
                 "data_type": "operation_record",
                 "conversion": "val_direct",
-                "detailed_description": "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or `type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) `val`的通用的编码次序是：[1Byte的记录 类型][2Byte的用户id][1Byte的用户 flag] 用户标志flag：`bit01=11`表示管理 员，01表示普通用户，00表示已经删除了",
+                "detailed_description": (
+                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
+                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
+                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
+                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
+                    "01表示普通用户，00表示已经删除了"
+                ),
             },
         },
     },
@@ -6869,21 +8202,54 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTBEL": {
                 "description": "门铃消息",
@@ -6912,21 +8278,54 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
             "EVTBEL": {
                 "description": "门铃消息",
@@ -6947,7 +8346,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`,`val` 值忽略表示打开；`type&1==0`,`val` 值忽略表示关闭；",
+                "detailed_description": (
+                    "`type&1==1`,`val` 值忽略表示打开；"
+                    "`type&1==0`,`val` 值忽略表示关闭；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -6966,7 +8368,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "hvac_mode",
                 "conversion": "val_direct",
-                "detailed_description": "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; 3:Cool 制冷; 4:Heat 制热; 5:Dry除湿",
+                "detailed_description": (
+                    "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; "
+                    "3:Cool 制冷; 4:Heat 制热; 5:Dry除湿"
+                ),
                 "commands": {
                     "set_mode": {
                         "type": 206,
@@ -6979,7 +8384,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; `val>=65`:高档",
+                "detailed_description": (
+                    "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; "
+                    "`val>=65`:高档"
+                ),
                 "commands": {
                     "set_fan_speed": {
                         "type": 206,
@@ -6992,7 +8400,9 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10",
+                "detailed_description": (
+                    "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10"
+                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
@@ -7007,7 +8417,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`type==0x08`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10",
+                "detailed_description": (
+                    "`type==0x08`,`v` 值表示实际温度值，"
+                    "`val` 值表示原始温度值，它是温度值*10"
+                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -7045,7 +8458,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": "`val`值定义如下: 0:关闭; 1:1档; 2:2档; 3:3档 注意：只有在模式处于手动模式下该参数设置才有效",
+                "detailed_description": (
+                    "`val`值定义如下: 0:关闭; 1:1档; 2:2档; 3:3档 注意：只有在模式处于手动模式下"
+                    "该参数设置才有效"
+                ),
                 "commands": {
                     "set_config": {
                         "type": 206,
@@ -7075,7 +8491,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "voc_concentration",
                 "conversion": "val_div_10",
-                "detailed_description": "`val`值表示原始VOC值，且`val`值减小10倍为真实值，`v`值表示实际值(单位：ppm)",
+                "detailed_description": (
+                    "`val`值表示原始VOC值，且`val`值减小10倍为真实值，"
+                    "`v`值表示实际值(单位：ppm)"
+                ),
                 "device_class": "volatile_organic_compounds",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
@@ -7257,7 +8676,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`,`val`值忽略表示打开；`type&1==0`，`val`值忽略表示关闭",
+                "detailed_description": (
+                    "`type&1==1`,`val`值忽略表示打开；"
+                    "`type&1==0`，`val`值忽略表示关闭"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -7276,7 +8698,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "hvac_mode",
                 "conversion": "val_direct",
-                "detailed_description": "`type==0xCE`，`val`值表示模式，定义如下：1:Auto自动；2:Fan吹风；3:Cool制冷；4:Heat制热；5:Dry除湿",
+                "detailed_description": (
+                    "`type==0xCE`，`val`值表示模式，定义如下：1:Auto自动；2:Fan吹风；"
+                    "3:Cool制冷；4:Heat制热；5:Dry除湿"
+                ),
                 "commands": {
                     "set_config": {
                         "type": 206,
@@ -7289,7 +8714,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`type==0x88`,`v`值表示实际温度值，`val`值表示原始温度值，它是温度值*10",
+                "detailed_description": (
+                    "`type==0x88`,`v`值表示实际温度值，"
+                    "`val`值表示原始温度值，它是温度值*10"
+                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
@@ -7319,7 +8747,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`type==0x08`,`v`值表示实际温度值，`val`值表示原始温度值，它是温度值*10",
+                "detailed_description": (
+                    "`type==0x08`,`v`值表示实际温度值，"
+                    "`val`值表示原始温度值，它是温度值*10"
+                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -7334,7 +8765,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "hvac_mode",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`,`val`值忽略表示打开；该IO的type和val字段说明，详见文档表2-19-1",
+                "detailed_description": (
+                    "`type&1==1`,`val`值忽略表示打开；"
+                    "该IO的type和val字段说明，详见文档表2-19-1"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -7384,14 +8818,20 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val`表示告警信息，可参考：bit0:高温保护；bit1:低温保护；bit2:int_sensor；bit3:ext_sensor；bit4:低电量；bit5:设备掉线",
+                "detailed_description": (
+                    "`val`表示告警信息，可参考：bit0:高温保护；bit1:低温保护；bit2:int_sensor；"
+                    "bit3:ext_sensor；bit4:低电量；bit5:设备掉线"
+                ),
             },
             "P6": {
                 "description": "电量",
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -7406,7 +8846,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`，`val`值忽略表示打开；`type&1==0`，`val`值忽略表示关闭",
+                "detailed_description": (
+                    "`type&1==1`，`val`值忽略表示打开；"
+                    "`type&1==0`，`val`值忽略表示关闭"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -7425,7 +8868,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "config_bitmask",
                 "conversion": "val_direct",
-                "detailed_description": "`val`值定义如下：温度限制0-5位：17+val(17~80)；回差6-9位：使用温度(v+1)*0.5作为回差参数；控温模式10-11位：0/1:in；2:out；3:all",
+                "detailed_description": (
+                    "`val`值定义如下：温度限制0-5位：17+val(17~80)；回差6-9位：使用温度(v+1)*0.5作为回差参数；"
+                    "控温模式10-11位：0/1:in；2:out；3:all"
+                ),
                 "commands": {
                     "set_config": {
                         "type": 206,
@@ -7455,7 +8901,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "valve_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "type值定义如下：0x80:阀门关；0x81:阀门开；`val`值类型为浮点数值，表示的是电量统计",
+                "detailed_description": (
+                    "type值定义如下：0x80:阀门关；0x81:阀门开；"
+                    "`val`值类型为浮点数值，表示的是电量统计"
+                ),
                 "device_class": "opening",
             },
         },
@@ -7633,7 +9082,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "control_config",
                 "conversion": "val_direct",
-                "detailed_description": "32位控制参数：31bit软件配置标志，24-27bit工作模式，16-18bit延时使能，0-15bit延时秒数",
+                "detailed_description": (
+                    "32位控制参数：31bit软件配置标志，24-27bit工作模式，"
+                    "16-18bit延时使能，0-15bit延时秒数"
+                ),
                 "commands": {
                     "set_config": {
                         "type": 206,
@@ -7852,7 +9304,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "control_config",
                 "conversion": "val_direct",
-                "detailed_description": "32位控制参数：31bit恒为1(软件可配置)，24-27bit工作模式，16-18bit延时使能，0-15bit延时秒数",
+                "detailed_description": (
+                    "32位控制参数：31bit恒为1(软件可配置)，24-27bit工作模式，"
+                    "16-18bit延时使能，0-15bit延时秒数"
+                ),
                 "commands": {
                     "set_config": {
                         "type": 206,
@@ -7874,7 +9329,11 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "kWh",
                 "device_class": "energy",
                 "state_class": "total_increasing",
-                "detailed_description": "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为度(kwh)。注意：`v` 值可以直接使用，若不存在`v` 值，则需要手动转换。其值类型为IEEE 754浮点数的32位整数布局。",
+                "detailed_description": (
+                    "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，"
+                    "`v` 值为浮点数，单位为度(kwh)。注意：`v` 值可以直接使用，"
+                    "若不存在`v` 值，则需要手动转换。其值类型为IEEE 754浮点数的32位整数布局。"
+                ),
             },
             "EP": {
                 "description": "功率",
@@ -7884,7 +9343,10 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "W",
                 "device_class": "power",
                 "state_class": "measurement",
-                "detailed_description": "为当前负载功率，`v` 值为浮点数，单位为w。注意：`v` 值可以直接使用，若不存在`v` 值，则需要手动转换。其值类型为IEEE 754浮点数的32位整数布局。",
+                "detailed_description": (
+                    "为当前负载功率，`v` 值为浮点数，单位为w。注意：`v` 值可以直接使用，若不存在`v` 值，"
+                    "则需要手动转换。其值类型为IEEE 754浮点数的32位整数布局。"
+                ),
             },
         },
     },
@@ -7906,21 +9368,54 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹 或卡片超过10次就报警) `bit1`：1为劫持报警（输入防劫持密码或防 劫持指纹开锁就报警) `bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 `bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 `bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警",
+                "detailed_description": (
+                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
+                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
+                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
+                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
+                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
+                ),
             },
             "EVTLO": {
                 "description": "实时开锁",
                 "rw": "R",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0` 表示关闭； `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁(12v开锁信号开锁)； 7：APP开启； 8：蓝牙开锁； 9：手动开锁； 15：出错) `bit16~27`表示用户编号； `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁 的情况，单开时`bit0~15`为开锁信息，其 他位为0；双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) `val`的长度有8/24/32bit三种类型",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0` 表示关闭；"
+                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁(12v开锁信号开锁)；"
+                    " 7：APP开启；"
+                    " 8：蓝牙开锁；"
+                    " 9：手动开锁；"
+                    " 15：出错) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
+                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
+                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
+                    "`val`的长度有8/24/32bit三种类型"
+                ),
             },
             "HISLK": {
                 "description": "最近一次开锁信息",
                 "rw": "R",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示打开； `type&1==0`表示关闭； `val` 值定义如下： `bit0~11`表示用户编号； `bit12~15`表示开锁方式：( 0：未定义； 1：密码； 2：指纹； 3:`NFC`; 4：机械钥匙； 5：远程开锁； 7：APP开启) `bit16~27`表示用户编号； `bit28~31`表示开锁方式: （同上定义）",
+                "detailed_description": (
+                    "`type&1==1`表示打开；"
+                    " `type&1==0`表示关闭；"
+                    " `val` 值定义如下： `bit0~11`表示用户编号；"
+                    " `bit12~15`表示开锁方式：( 0：未定义；"
+                    " 1：密码；"
+                    " 2：指纹；"
+                    " 3:`NFC`; 4：机械钥匙；"
+                    " 5：远程开锁；"
+                    " 7：APP开启) `bit16~27`表示用户编号；"
+                    " `bit28~31`表示开锁方式: （同上定义）"
+                ),
             },
         },
     },
@@ -7932,7 +9427,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -7951,7 +9449,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -7970,7 +9471,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -7994,7 +9498,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -8018,7 +9525,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`,`val` 值忽略表示打开；`type&1==0`,`val` 值忽略表示关闭；",
+                "detailed_description": (
+                    "`type&1==1`,`val` 值忽略表示打开；"
+                    "`type&1==0`,`val` 值忽略表示关闭；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -8037,7 +9547,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "hvac_mode",
                 "conversion": "val_direct",
-                "detailed_description": "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; 3:Cool 制冷; 4:Heat 制热; 5:Dry除湿",
+                "detailed_description": (
+                    "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; "
+                    "3:Cool 制冷; 4:Heat 制热; 5:Dry除湿"
+                ),
                 "commands": {
                     "set_mode": {
                         "type": 206,
@@ -8050,7 +9563,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; `val>=65`:高档",
+                "detailed_description": (
+                    "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; "
+                    "`val>=65`:高档"
+                ),
                 "commands": {
                     "set_fan_speed": {
                         "type": 206,
@@ -8063,7 +9579,9 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10",
+                "detailed_description": (
+                    "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10"
+                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
@@ -8078,7 +9596,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`type==0x08`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10",
+                "detailed_description": (
+                    "`type==0x08`,`v` 值表示实际温度值，"
+                    "`val` 值表示原始温度值，它是温度值*10"
+                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -8093,7 +9614,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`,`val` 值忽略表示打开；`type&1==0`,`val` 值忽略表示关闭；",
+                "detailed_description": (
+                    "`type&1==1`,`val` 值忽略表示打开；"
+                    "`type&1==0`,`val` 值忽略表示关闭；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -8112,7 +9636,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "hvac_mode",
                 "conversion": "val_direct",
-                "detailed_description": "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; 3:Cool 制冷; 4:Heat 制热; 5:Dry除湿",
+                "detailed_description": (
+                    "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; "
+                    "3:Cool 制冷; 4:Heat 制热; 5:Dry除湿"
+                ),
                 "commands": {
                     "set_mode": {
                         "type": 206,
@@ -8125,7 +9652,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; `val>=65`:高档",
+                "detailed_description": (
+                    "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; "
+                    "`val>=65`:高档"
+                ),
                 "commands": {
                     "set_fan_speed": {
                         "type": 206,
@@ -8138,7 +9668,9 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10",
+                "detailed_description": (
+                    "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10"
+                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
@@ -8153,7 +9685,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`type==0x08`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10",
+                "detailed_description": (
+                    "`type==0x08`,`v` 值表示实际温度值，"
+                    "`val` 值表示原始温度值，它是温度值*10"
+                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -8168,7 +9703,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1` 表示打开(忽略 `val` 值)；`type&1==0` 表示关闭(忽略 `val` 值)",
+                "detailed_description": (
+                    "`type&1==1` 表示打开(忽略 `val` 值)；"
+                    "`type&1==0` 表示关闭(忽略 `val` 值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -8202,14 +9740,20 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值表示风速，0:停止, val<30:低档, val<65:中档, val>=65:高档",
+                "detailed_description": (
+                    "`val` 值表示风速，0:停止, val<30:低档, "
+                    "val<65:中档, val>=65:高档"
+                ),
             },
             "F2": {
                 "description": "排风风速",
                 "rw": "R",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值表示风速，0:停止, val<30:低档, val<65:中档, val>=65:高档",
+                "detailed_description": (
+                    "`val` 值表示风速，0:停止, val<30:低档, "
+                    "val<65:中档, val>=65:高档"
+                ),
             },
             "T": {
                 "description": "环境温度",
@@ -8231,7 +9775,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "generic_value",
                 "conversion": "ieee754_or_friendly",
-                "detailed_description": "为当前接入设备的值，`val` 值为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为具体接入设备当前的单位",
+                "detailed_description": (
+                    "为当前接入设备的值，`val` 值为IEEE754浮点数的32位整数表示，"
+                    "`v` 值为浮点数，单位为具体接入设备当前的单位"
+                ),
             },
         },
     },
@@ -8244,7 +9791,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1=1，`val` 值忽略表示打开；type&1=0，`val` 值忽略表示关闭；",
+                "detailed_description": (
+                    "type&1=1，`val` 值忽略表示打开；"
+                    "type&1=0，`val` 值忽略表示关闭；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -8263,7 +9813,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1=1,`val` 值忽略表示打开；type&1=0，`val` 值忽略表示关闭；(Lx，x为1时，即L1表示第一位开关的IO控制口，多位开关时x可取值为3，L3则表示第三位开关的IO控制口）",
+                "detailed_description": (
+                    "type&1=1,`val` 值忽略表示打开；type&1=0，`val` 值忽略表示关闭；"
+                    "(Lx，x为1时，即L1表示第一位开关的IO控制口，"
+                    "多位开关时x可取值为3，L3则表示第三位开关的IO控制口）"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -8284,7 +9838,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "generic_value",
                 "conversion": "ieee754_or_friendly",
-                "detailed_description": "为当前接入设备的值，`val` 值为为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为具体接入设备当前的单位。如：接入设备为压力传感器，那么val为当前接入设备的压力值，单位以接入设备的单位设定为准。",
+                "detailed_description": (
+                    "为当前接入设备的值，`val` 值为为IEEE754浮点数的32位整数表示，"
+                    "`v` 值为浮点数，单位为具体接入设备当前的单位。如：接入设备为压力传感器，"
+                    "那么val为当前接入设备的压力值，单位以接入设备的单位设定为准。"
+                ),
             },
             "EE": {
                 "description": "用电量",
@@ -8294,7 +9852,10 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "kWh",
                 "device_class": "energy",
                 "state_class": "total_increasing",
-                "detailed_description": "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为度(kwh)。",
+                "detailed_description": (
+                    "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，"
+                    "`v` 值为浮点数，单位为度(kwh)。"
+                ),
             },
             "EE*": {
                 "description": "多路用电量",
@@ -8304,7 +9865,10 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "kWh",
                 "device_class": "energy",
                 "state_class": "total_increasing",
-                "detailed_description": "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，`v` 值为浮点数，单位为度(kwh)。(EEx，x取值为数字)",
+                "detailed_description": (
+                    "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，"
+                    "`v` 值为浮点数，单位为度(kwh)。(EEx，x取值为数字)"
+                ),
             },
             "EP": {
                 "description": "功率",
@@ -8574,7 +10138,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，它是根据 `val` 电压值换算的",
+                "detailed_description": (
+                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据 `val` 电压值换算的"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -8617,7 +10184,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val`值表示原始电压值，`v`值将表示当前剩余电量百分比，值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态",
+                "detailed_description": (
+                    "`val`值表示原始电压值，`v`值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -8671,7 +10241,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": "`val`表示原始电压值，`v`值将表示当前剩余电量百分比，值范围[0,100]，它是根据val电压值换算的。注意：当前只有FRAME设备有该属性",
+                "detailed_description": (
+                    "`val`表示原始电压值，`v`值将表示当前剩余电量百分比，"
+                    "值范围[0,100]，它是根据val电压值换算的。注意：当前只有FRAME设备有该属性"
+                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -8682,7 +10255,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "camera_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val`值定义如下（按位表示值）：第0位：表示是否有外接电源，1表示有外接电源，0表示没有；第1位：是否为旋转云台，1表示摄像头在旋转云台上，0表示没有；第2位：表示是否正在旋转，1表示正在旋转。注意：当前只有FRAME设备有该属性",
+                "detailed_description": (
+                    "`val`值定义如下（按位表示值）：第0位：表示是否有外接电源，1表示有外接电源，0表示没有；"
+                    "第1位：是否为旋转云台，1表示摄像头在旋转云台上，0表示没有；"
+                    "第2位：表示是否正在旋转，1表示正在旋转。注意：当前只有FRAME设备有该属性"
+                ),
                 "availability_condition": "dev_rt == 'LSCAM:LSCAMV1'",
             },
         },
@@ -8696,7 +10273,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开(忽略`val`值)；`type&1==0`表示关闭(忽略`val`值)",
+                "detailed_description": (
+                    "`type&1==1`表示打开(忽略`val`值)；"
+                    "`type&1==0`表示关闭(忽略`val`值)"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -8717,7 +10297,12 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "garage_door_status",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示控制正在运行；`type&1==0`表示没有运行；当正在运行的时候即(`type&1==1`):`val&0x80==0x80`表示正在开，否则表示正在关；`val&0x7F`的值表示车库门打开的百分比",
+                "detailed_description": (
+                    "`type&1==1`表示控制正在运行；"
+                    "`type&1==0`表示没有运行；"
+                    "当正在运行的时候即(`type&1==1`):`val&0x80==0x80`表示正在开，否则表示正在关；"
+                    "`val&0x7F`的值表示车库门打开的百分比"
+                ),
             },
             "P3": {
                 "description": "车库门控制",
@@ -8759,7 +10344,14 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "alarm_playback",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1==1,表示正在播放(忽略`val` 值)；type&1==0,表示没有播放(忽略`val` 值)；val为32bit值，描述如下(16进制)：0xAABBCCDD AABB表示时间或者循环次数(最高位1表示次数，否则为时间，时间单位为秒)；CC是音量(只有16级，使用高4位，若CC值等于0将采用P2 IO定义的音量值，否则将使用CC值做为音量值)；DD表示音频序号；",
+                "detailed_description": (
+                    "type&1==1,表示正在播放(忽略`val` 值)；"
+                    "type&1==0,表示没有播放(忽略`val` 值)；"
+                    "val为32bit值，描述如下(16进制)：0xAABBCCDD "
+                    "AABB表示时间或者循环次数(最高位1表示次数，否则为时间，时间单位为秒)；"
+                    "CC是音量(只有16级，使用高4位，若CC值等于0将采用P2 IO定义的音量值，否则将使用CC值做为音量值)；"
+                    "DD表示音频序号；"
+                ),
                 "commands": {
                     "on": {
                         "type": 129,
@@ -8786,7 +10378,11 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "volume_control",
                 "conversion": "type_bit_0",
-                "detailed_description": "type&1==1表示处于正常模式；type&1==0表示处于静音模式；`val` 值表示音量值，只有16级，使用高4位。即有效位为：0x000000F0",
+                "detailed_description": (
+                    "type&1==1表示处于正常模式；"
+                    "type&1==0表示处于静音模式；"
+                    "`val` 值表示音量值，只有16级，使用高4位。即有效位为：0x000000F0"
+                ),
                 "commands": {
                     "unmute": {
                         "type": 129,
@@ -8824,7 +10420,10 @@ _RAW_DEVICE_DATA = {
                     "rw": "RW",
                     "data_type": "binary_switch",
                     "conversion": "type_bit_0",
-                    "detailed_description": "type&1==1,表示打开(忽略`val` 值)；type&1==0,表示关闭(忽略`val` 值)；",
+                    "detailed_description": (
+                        "type&1==1,表示打开(忽略`val` 值)；"
+                        "type&1==0,表示关闭(忽略`val` 值)；"
+                    ),
                     "commands": {
                         "on": {
                             "type": 129,
@@ -8853,14 +10452,20 @@ _RAW_DEVICE_DATA = {
                     "rw": "R",
                     "data_type": "device_type",
                     "conversion": "val_direct",
-                    "detailed_description": "val&0xFF指示设备种类。1：开关面板 2：POE面板 3：温控面板 6：温控面板 注意：值必须是3或者6才是温控面板，否则是其它类型的设备。",
+                    "detailed_description": (
+                        "val&0xFF指示设备种类。1：开关面板 2：POE面板 3：温控面板 6：温控面板 "
+                        "注意：值必须是3或者6才是温控面板，否则是其它类型的设备。"
+                    ),
                 },
                 "P6": {
                     "description": "CFG配置",
                     "rw": "RW",
                     "data_type": "config_bitmask",
                     "conversion": "val_direct",
-                    "detailed_description": "(val>>6)&0x7 指示设备类型 0：新风模式 1：风机盘管（单阀）模式 2：水地暖模式 3：风机盘管+水地暖模式 4: 风机盘管（双阀）模式 5：水地暖+新风模式",
+                    "detailed_description": (
+                        "(val>>6)&0x7 指示设备类型 0：新风模式 1：风机盘管（单阀）模式 "
+                        "2：水地暖模式 3：风机盘管+水地暖模式 4: 风机盘管（双阀）模式 5：水地暖+新风模式"
+                    ),
                     "commands": {
                         "set_config": {
                             "type": 255,
@@ -8873,7 +10478,10 @@ _RAW_DEVICE_DATA = {
                     "rw": "RW",
                     "data_type": "hvac_mode",
                     "conversion": "val_direct",
-                    "detailed_description": "3：Cool制冷 4：Heat 制热 7：DN地暖 8：DN_Heat 地暖+空调 注意：P6 CFG配置不同，支持的MODE也会不同",
+                    "detailed_description": (
+                        "3：Cool制冷 4：Heat 制热 7：DN地暖 8：DN_Heat 地暖+空调 "
+                        "注意：P6 CFG配置不同，支持的MODE也会不同"
+                    ),
                     "commands": {
                         "set_config": {
                             "type": 206,
@@ -8901,7 +10509,11 @@ _RAW_DEVICE_DATA = {
                     "rw": "RW",
                     "data_type": "fan_speed",
                     "conversion": "val_direct",
-                    "detailed_description": "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动 注意：P6 CFG配置不同，支持的tF也会不同",
+                    "detailed_description": (
+                        "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 "
+                        "30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动 "
+                        "注意：P6 CFG配置不同，支持的tF也会不同"
+                    ),
                     "commands": {
                         "set_config": {
                             "type": 206,
@@ -8914,7 +10526,10 @@ _RAW_DEVICE_DATA = {
                     "rw": "R",
                     "data_type": "fan_speed",
                     "conversion": "val_direct",
-                    "detailed_description": "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动",
+                    "detailed_description": (
+                        "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 "
+                        "30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动"
+                    ),
                 },
             },
             "binary_sensor": {
@@ -8966,14 +10581,21 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "config_bitmask",
                 "conversion": "val_direct",
-                "detailed_description": "配置功能：bit0：热回水开关，bit1：地暖开关，bit2：制热开关，bit3：制冷开关，bit4：通风开关，bit5：除湿开关，bit6：加湿开关，bit7：应急通风开关，bit8：应急加热开关，bit9：应急制冷开关",
+                "detailed_description": (
+                    "配置功能：bit0：热回水开关，bit1：地暖开关，bit2：制热开关，"
+                    "bit3：制冷开关，bit4：通风开关，bit5：除湿开关，bit6：加湿开关，"
+                    "bit7：应急通风开关，bit8：应急加热开关，bit9：应急制冷开关"
+                ),
             },
             "P7": {
                 "description": "MODE模式",
                 "rw": "RW",
                 "data_type": "hvac_mode",
                 "conversion": "val_direct",
-                "detailed_description": "运行模式：1制热、2制冷、3通风、4除湿、5加湿、6应急通风、7应急加热、8应急制冷、16自动",
+                "detailed_description": (
+                    "运行模式：1制热、2制冷、3通风、4除湿、5加湿、"
+                    "6应急通风、7应急加热、8应急制冷、16自动"
+                ),
                 "commands": {
                     "set_config": {
                         "type": 206,
@@ -9000,7 +10622,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "RW",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动 注意：P6 CFG配置不同，支持的tF也会不同",
+                "detailed_description": (
+                    "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 30<=val<65：Medium中档 "
+                    "65<=val<100：High高档 101：Auto自动 注意：P6 CFG配置不同，支持的tF也会不同"
+                ),
                 "commands": {
                     "set_config": {
                         "type": 206,
@@ -9024,7 +10649,10 @@ _RAW_DEVICE_DATA = {
                 "rw": "R",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动",
+                "detailed_description": (
+                    "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 "
+                    "30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动"
+                ),
             },
         },
         "binary_sensor": {

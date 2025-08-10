@@ -1,4 +1,23 @@
-"""Support for LifeSmart scenes by @MapleEve"""
+"""
+LifeSmart 场景平台支持模块
+
+由 @MapleEve 创建和维护
+
+本模块为LifeSmart平台提供智能场景设备支持，实现了对各种
+智能场景的激活和管理。
+
+支持的场景类型：
+- 预设场景：回家、离家、睡眠模式
+- 自定义场景：用户配置的个性化场景
+- 情景模式：日间、夜间、聚会模式
+- 系统场景：安全、应急等特殊场景
+
+技术特性：
+- 一键激活多设备协同控制
+- 场景状态跟踪和记录
+- 智能场景名称识别
+- 实时激活事件监测
+"""
 
 import logging
 from typing import Any
@@ -37,7 +56,9 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart scenes from a config entry."""
+    """
+    从配置条目设置 LifeSmart 场景设备。
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -80,7 +101,9 @@ async def async_setup_entry(
 
 
 class LifeSmartScene(LifeSmartEntity, Scene):
-    """LifeSmart scene implementation."""
+    """
+    LifeSmart 场景设备实现类。
+    """
 
     def __init__(
         self,
@@ -90,7 +113,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
         sub_device_key: str,
         sub_device_data: dict[str, Any],
     ) -> None:
-        """Initialize the scene."""
+        """
+        初始化场景设备。
+        """
         super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
@@ -112,7 +137,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
 
     @callback
     def _generate_scene_name(self) -> str | None:
-        """Generate user-friendly scene name."""
+        """
+        生成用户友好的场景名称。
+        """
         base_name = self._name
         # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
@@ -129,7 +156,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
 
     @callback
     def _extract_scene_id(self) -> int | None:
-        """Extract scene ID from device data."""
+        """
+        从设备数据中提取场景ID。
+        """
         # 从val字段获取场景ID
         scene_id = self._sub_data.get("val")
         if scene_id is not None:
@@ -138,7 +167,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
 
     @callback
     def _extract_scene_name(self) -> str | None:
-        """Extract scene name from device data."""
+        """
+        从设备数据中提取场景名称。
+        """
         # 尝试从不同的字段获取场景名称
         scene_name = self._sub_data.get("scene_name") or self._sub_data.get("name")
         if scene_name:
@@ -152,7 +183,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
         return None
 
     async def async_activate(self, **kwargs) -> None:
-        """Activate the scene."""
+        """
+        激活场景。
+        """
         try:
             # 发送场景激活命令
             await self._client.async_send_command(
@@ -188,7 +221,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return extra state attributes for this scene."""
+        """
+        为该场景返回额外的状态属性。
+        """
         # Get base attributes from parent class
         base_attrs = super().extra_state_attributes or {}
 
@@ -212,7 +247,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """
+        返回设备信息。
+        """
         return DeviceInfo(
             identifiers={(DOMAIN, self.agt, self.me)},
             name=self._device_name,
@@ -222,7 +259,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
+        """
+        订阅状态更新。
+        """
         await super().async_added_to_hass()
 
         # 实体特定更新
@@ -244,7 +283,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
         )
 
     async def _handle_update(self, new_data: dict) -> None:
-        """Handle real-time updates."""
+        """
+        处理实时状态更新。
+        """
         try:
             if not new_data:
                 return
@@ -298,7 +339,9 @@ class LifeSmartScene(LifeSmartEntity, Scene):
             )
 
     async def _handle_global_refresh(self) -> None:
-        """Handle periodic full data refresh."""
+        """
+        处理周期性的全数据刷新。
+        """
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(

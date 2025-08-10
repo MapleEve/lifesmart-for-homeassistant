@@ -13,10 +13,13 @@
 
 import pytest
 
+from custom_components.lifesmart.core.data.conversion import (
+    normalize_device_names,
+)
 from custom_components.lifesmart.core.helpers import (
     generate_unique_id,
 )
-from custom_components.lifesmart.core.utils import (
+from custom_components.lifesmart.core.platform.platform_detection import (
     get_switch_subdevices,
     get_binary_sensor_subdevices,
     get_cover_subdevices,
@@ -28,7 +31,6 @@ from custom_components.lifesmart.core.utils import (
     is_light,
     is_sensor,
     is_switch,
-    normalize_device_names,
     safe_get,
 )
 

@@ -6,12 +6,12 @@
 只实现真正有用户价值的功能，避免过度拆分。
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 
 # 开锁方式映射
-UNLOCK_METHODS: Dict[int, str] = {
+UNLOCK_METHODS: dict[int, str] = {
     0: "未定义",
     1: "密码",
     2: "指纹",
@@ -25,7 +25,7 @@ UNLOCK_METHODS: Dict[int, str] = {
 }
 
 # 有价值的EVTLO数据提取配置
-EVTLO_DATA_CONFIG: Dict[str, Dict[str, Any]] = {
+EVTLO_DATA_CONFIG: dict[str, dict[str, Any]] = {
     "lock_status": {
         "name": "门锁状态",
         "description": "门锁开关状态",
@@ -64,7 +64,7 @@ EVTLO_DATA_CONFIG: Dict[str, Dict[str, Any]] = {
 }
 
 
-def get_evtlo_config(data_key: str) -> Optional[Dict[str, Any]]:
+def get_evtlo_config(data_key: str) -> Optional[dict[str, Any]]:
     """获取指定EVTLO数据的配置
 
     Args:
@@ -76,7 +76,7 @@ def get_evtlo_config(data_key: str) -> Optional[Dict[str, Any]]:
     return EVTLO_DATA_CONFIG.get(data_key)
 
 
-def get_all_evtlo_configs() -> Dict[str, Dict[str, Any]]:
+def get_all_evtlo_configs() -> dict[str, dict[str, Any]]:
     """获取所有EVTLO配置"""
     return EVTLO_DATA_CONFIG.copy()
 

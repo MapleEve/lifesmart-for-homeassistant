@@ -52,7 +52,25 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart binary sensors from a config entry."""
+    """
+    从配置条目异步设置 LifeSmart 二元传感器设备。
+
+    此函数负责遍历所有设备，识别二元传感器类型设备，并为每个设备创建
+    相应的Home Assistant实体。支持设备排除配置和bitmask多设备生成。
+
+    Args:
+        hass: Home Assistant核心实例，提供数据存储和事件调度
+        config_entry: 集成配置条目，包含用户配置和运行时数据
+        async_add_entities: HA实体添加回调函数，用于注册新实体
+
+    Returns:
+        无返回值，通过async_add_entities回调添加实体
+
+    注意事项:
+        - 会自动跳过排除列表中的设备
+        - 支持bitmask虚拟子设备生成
+        - 支持瞬时按钮设备的自动复位机制
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -85,7 +103,23 @@ async def async_setup_entry(
 
 
 class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
-    """LifeSmart binary sensor entity with enhanced compatibility."""
+    """
+    LifeSmart 二元传感器设备实体类。
+
+    继承自LifeSmartEntity和BinarySensorEntity，负责二元传感器的状态管理
+    和数据处理逻辑。实现了增强的兼容性和完整的设备控制功能。
+
+    主要职责:
+    - 解析和处理各种二元传感器状态
+    - 实现瞬时按钮设备的自动复位机制
+    - 支持bitmask虚拟子设备的状态管理
+    - 提供实时状态更新和设备类别识别
+
+    技术特点:
+    - 配置驱动的设备类别检测
+    - 智能的状态处理和转换
+    - 完整的错误处理和日志记录
+    """
 
     def __init__(
         self,
@@ -95,7 +129,16 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         sub_device_key: str,
         sub_device_data: dict[str, Any],
     ) -> None:
-        """Initialize the binary sensor."""
+        """
+        初始化二元传感器设备。
+
+        Args:
+            raw_device: 原始设备数据字典
+            client: LifeSmart API客户端实例
+            entry_id: 配置条目ID
+            sub_device_key: 子设备键名，用于多IO设备
+            sub_device_data: 子设备数据，包含IO口状态信息
+        """
         super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
@@ -175,7 +218,11 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             # 使用 Home Assistant 的调度器在短暂延迟后将状态重置为 "off"
             @callback
             def reset_state_callback(_now):
-                """Reset state to off."""
+                """
+                将瞬时按钮状态重置为关闭。
+
+                用于模拟按钮按下后的自动复位行为。
+                """
                 self._attr_is_on = False
                 self.async_write_ha_state()
 
@@ -211,7 +258,7 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             return self._sub_data.get("val", 0) != 0
 
         # Use new logic processor system
-        return process_io_data(self.devtype, self._sub_key, io_config, self._sub_data)
+        return process_io_data(io_config, self._sub_data)
 
     @callback
     def _is_bitmask_virtual_subdevice(self) -> bool:
@@ -303,16 +350,30 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique identifier for this entity."""
+        """
+        返回此实体的唯一标识符。
+
+        Returns:
+            基于设备类型、网关ID、设备ID和子设备键的唯一标识符
+        """
         return self._attr_unique_id
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
+        """
+        返回实体的状态属性。
+
+        Returns:
+            包含设备状态信息的属性字典
+        """
         return self._attrs
 
     async def async_added_to_hass(self) -> None:
-        """Register update listeners."""
+        """
+        注册状态更新监听器。
+
+        设置实时更新和全局刷新的事件监听器。
+        """
         # 实时更新事件
         self.async_on_remove(
             async_dispatcher_connect(

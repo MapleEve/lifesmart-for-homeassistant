@@ -6,12 +6,12 @@ ALM位掩码配置 - 配置层专用
 将配置从数据处理器中分离出来，实现配置驱动的架构。
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 
 # ALM字段位掩码定义配置
-ALM_BIT_CONFIG: Dict[int, Dict[str, Any]] = {
+ALM_BIT_CONFIG: dict[int, dict[str, Any]] = {
     0: {
         "name": "error_alarm",
         "description": "错误报警",
@@ -85,7 +85,7 @@ ALM_BIT_CONFIG: Dict[int, Dict[str, Any]] = {
 }
 
 
-def get_alm_bit_config(bit_position: int) -> Optional[Dict[str, Any]]:
+def get_alm_bit_config(bit_position: int) -> Optional[dict[str, Any]]:
     """获取指定位的配置
 
     Args:
@@ -97,7 +97,7 @@ def get_alm_bit_config(bit_position: int) -> Optional[Dict[str, Any]]:
     return ALM_BIT_CONFIG.get(bit_position)
 
 
-def get_all_alm_bits() -> Dict[int, Dict[str, Any]]:
+def get_all_alm_bits() -> dict[int, dict[str, Any]]:
     """获取所有ALM位配置"""
     return ALM_BIT_CONFIG.copy()
 

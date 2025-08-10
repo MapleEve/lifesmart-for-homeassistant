@@ -22,6 +22,8 @@ from .const import (
 )
 from .platform import get_device_platform_mapping
 
+# 从 data.conversion 导入兼容性函数
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -91,10 +93,11 @@ def is_versioned_device_type(device: dict, expected_version: str = None) -> bool
     device_type = device.get(DEVICE_TYPE_KEY, "")
     full_cls = device.get(DEVICE_FULLCLS_KEY, "")
 
-    # 如果不是版本化设备类型，返回False
-    from .devices import VERSIONED_DEVICE_TYPES
+    # 临时实现：基于常见的版本化设备类型进行检查
+    # TODO: 替换为完整的VERSIONED_DEVICE_TYPES导入，当设备模块可用时
+    known_versioned_types = ["SL_LI_WW", "SL_SW_DM1", "SL_LK_DJ", "SL_SC_BB", "SL_P_IR"]
 
-    if device_type not in VERSIONED_DEVICE_TYPES:
+    if device_type not in known_versioned_types:
         return False
 
     # 如果没有指定期望版本，只要是版本化设备就返回True
@@ -119,9 +122,11 @@ def get_device_version(device: dict) -> str:
     device_type = device.get(DEVICE_TYPE_KEY, "")
     full_cls = device.get(DEVICE_FULLCLS_KEY, "")
 
-    from .devices import VERSIONED_DEVICE_TYPES
+    # 临时实现：基于常见的版本化设备类型进行检查
+    # TODO: 替换为完整的VERSIONED_DEVICE_TYPES导入，当设备模块可用时
+    known_versioned_types = ["SL_LI_WW", "SL_SW_DM1", "SL_LK_DJ", "SL_SC_BB", "SL_P_IR"]
 
-    if device_type not in VERSIONED_DEVICE_TYPES:
+    if device_type not in known_versioned_types:
         return ""
 
     # 从fullCls中提取版本信息

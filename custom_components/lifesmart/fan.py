@@ -1,4 +1,24 @@
-"""Support for LifeSmart fans by @MapleEve"""
+"""
+LifeSmart 风扇平台支持模块
+
+由 @MapleEve 创建和维护
+
+本模块为LifeSmart平台提供风扇设备支持，实现了对各种智能风扇的
+全面控制和状态管理。
+
+支持的风扇功能：
+- 开关控制：基础的开启和关闭功能
+- 速度调节：多级速度控制和百分比设置
+- 预设模式：自动、睡眠、自然风等模式
+- 摆动功能：水平摆动和垂直摆动
+- 方向控制：正向和反向旋转
+
+技术特性：
+- 灵活的速度级别配置
+- Home Assistant 标准百分比速度接口
+- 实时状态同步和更新
+- 完整的错误处理和日志记录
+"""
 
 import logging
 from typing import Any
@@ -49,7 +69,14 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart fans from a config entry."""
+    """
+    从配置条目设置 LifeSmart 风扇设备。
+
+    Args:
+        hass: Home Assistant核心实例
+        config_entry: 集成配置条目
+        async_add_entities: 实体添加回调函数
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -94,7 +121,12 @@ async def async_setup_entry(
 
 
 class LifeSmartFan(LifeSmartEntity, FanEntity):
-    """LifeSmart fan implementation."""
+    """
+    LifeSmart 风扇设备实现类。
+
+    继承自LifeSmartEntity和FanEntity，提供完整的风扇控制功能。
+    支持速度调节、预设模式、摆动和方向控制。
+    """
 
     def __init__(
         self,
@@ -103,7 +135,15 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
         fan_config: dict,
         hub,
     ) -> None:
-        """Initialize the fan."""
+        """
+        初始化风扇设备。
+
+        Args:
+            device: 设备数据字典
+            sub_key: 子设备键名
+            fan_config: 风扇配置信息
+            hub: LifeSmart Hub实例
+        """
         super().__init__(device, sub_key, hub)
         self._fan_config = fan_config
         self._attr_supported_features = FanEntityFeature.SET_SPEED
@@ -160,7 +200,14 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn the fan on."""
+        """
+        开启风扇。
+
+        Args:
+            percentage: 目标速度百分比
+            preset_mode: 预设模式
+            **kwargs: 其他参数
+        """
         try:
             if preset_mode:
                 await self.async_set_preset_mode(preset_mode)
@@ -181,7 +228,12 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the fan off."""
+        """
+        关闭风扇。
+
+        Args:
+            **kwargs: 其他参数
+        """
         try:
             await self._send_fan_command(CMD_TYPE_OFF, 0)
         except Exception as err:
@@ -193,7 +245,12 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             )
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set the speed percentage of the fan."""
+        """
+        设置风扇速度百分比。
+
+        Args:
+            percentage: 速度百分比 (0-100)
+        """
         if percentage == 0:
             await self.async_turn_off()
             return
@@ -212,7 +269,12 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset mode of the fan."""
+        """
+        设置风扇的预设模式。
+
+        Args:
+            preset_mode: 预设模式名称
+        """
         if preset_mode not in (self.preset_modes or []):
             _LOGGER.warning("Invalid preset mode: %s", preset_mode)
             return
@@ -236,7 +298,12 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             )
 
     async def async_oscillate(self, oscillating: bool) -> None:
-        """Set oscillation of the fan."""
+        """
+        设置风扇摆动。
+
+        Args:
+            oscillating: 是否摆动
+        """
         if not (self.supported_features & FanEntityFeature.OSCILLATE):
             return
 
@@ -253,7 +320,12 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             )
 
     async def async_set_direction(self, direction: str) -> None:
-        """Set the direction of the fan."""
+        """
+        设置风扇旋转方向。
+
+        Args:
+            direction: 旋转方向 ("forward" 或 "reverse")
+        """
         if not (self.supported_features & FanEntityFeature.DIRECTION):
             return
 
@@ -271,7 +343,13 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             )
 
     async def _send_fan_command(self, cmd_type: int, value: Any) -> None:
-        """Send command to fan."""
+        """
+        向风扇发送控制命令。
+
+        Args:
+            cmd_type: 命令类型
+            value: 命令数值
+        """
         await self._hub.async_send_command(
             self._device[HUB_ID_KEY],
             self._device[DEVICE_ID_KEY],
@@ -282,7 +360,9 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """
+        处理来自协调器的更新数据。
+        """
         device_data = self._device.get(DEVICE_DATA_KEY, {})
         io_data = device_data.get(self._sub_key)
 
@@ -325,7 +405,9 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
+        """
+        订阅状态更新。
+        """
         await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
@@ -339,7 +421,9 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """
+        返回设备信息。
+        """
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.get(DEVICE_ID_KEY))},
             name=self._device.get(DEVICE_NAME_KEY),

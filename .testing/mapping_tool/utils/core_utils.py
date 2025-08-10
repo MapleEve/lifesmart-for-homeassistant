@@ -625,8 +625,17 @@ class DocumentCleaner:
 
     @staticmethod
     def clean_io_port(io_port: str) -> str:
-        """清理IO口名称 - 使用RegexCache优化"""
-        return RegexCache.clean_io_port_name(io_port)
+        """清理IO口名称 - 移除HTML标签和Markdown格式符号"""
+        if not io_port:
+            return ""
+
+        # 首先移除HTML标签
+        cleaned = RegexCache.clean_io_port_name(io_port)
+
+        # 移除Markdown格式的反引号
+        cleaned = cleaned.strip("`")
+
+        return cleaned.strip()
 
     @staticmethod
     def is_valid_io_content(io_port: str) -> bool:

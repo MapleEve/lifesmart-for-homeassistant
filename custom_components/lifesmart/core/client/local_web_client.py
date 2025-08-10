@@ -8,3 +8,15 @@
 import logging
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class LifeSmartWebClient:
+    """LifeSmart Web API 客户端（兼容性存根）"""
+
+    def __init__(self, *args, **kwargs):
+        """初始化Web客户端"""
+        pass
+
+    async def async_send_command(self, *args, **kwargs):
+        """发送命令（兼容性方法）"""
+        pass

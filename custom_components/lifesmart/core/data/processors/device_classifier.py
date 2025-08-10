@@ -16,7 +16,7 @@ LifeSmart 动态设备分类器 - 支持复杂条件评估
 import ast
 import logging
 import operator
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class SafeExpressionEvaluator:
     def __init__(self):
         self.variables = {}
 
-    def evaluate(self, expression: str, variables: Dict[str, Any]) -> Any:
+    def evaluate(self, expression: str, variables: dict[str, Any]) -> Any:
         """
         安全评估表达式
 
@@ -291,7 +291,7 @@ class DeviceClassifier:
         _LOGGER.debug("Control device could not be classified")
         return None
 
-    def get_supported_variables(self, condition: str) -> List[str]:
+    def get_supported_variables(self, condition: str) -> list[str]:
         """
         获取条件表达式中使用的变量列表
 
@@ -329,28 +329,6 @@ class DeviceClassifier:
             return True
         except SyntaxError:
             return False
-
-    def get_supported_variables(self, condition: str) -> List[str]:
-        """
-        获取条件表达式中使用的变量列表
-
-        Args:
-            condition: 条件表达式
-
-        Returns:
-            变量名列表，如 ["P1", "P5"]
-        """
-        try:
-            tree = ast.parse(condition, mode="eval")
-            variables = []
-
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Name):
-                    variables.append(node.id)
-
-            return list(set(variables))  # 去重
-        except Exception:
-            return []
 
 
 # 创建全局分类器实例

@@ -1,4 +1,24 @@
-"""Support for LifeSmart locks by @MapleEve"""
+"""
+LifeSmart 门锁平台支持模块
+
+由 @MapleEve 创建和维护
+
+本模块为LifeSmart平台提供智能门锁设备支持，实现了对各种
+智能门锁的完整控制和状态监控。
+
+支持的门锁功能：
+- 上锁/解锁控制
+- 开门功能 (门閻控制)
+- 门锁状态监测
+- 解锁方式记录
+- 电池电量监测
+
+技术特性：
+- 安全的门锁控制协议
+- 多种解锁方式支持
+- 实时状态同步
+- 完整的错误处理和日志记录
+"""
 
 import logging
 from typing import Any
@@ -41,7 +61,9 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart locks from a config entry."""
+    """
+    从配置条目设置 LifeSmart 门锁设备。
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -86,7 +108,9 @@ async def async_setup_entry(
 
 
 class LifeSmartLock(LifeSmartEntity, LockEntity):
-    """LifeSmart lock implementation."""
+    """
+    LifeSmart 门锁设备实现类。
+    """
 
     def __init__(
         self,
@@ -95,7 +119,9 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
         lock_config: dict,
         hub,
     ) -> None:
-        """Initialize the lock."""
+        """
+        初始化门锁设备。
+        """
         super().__init__(device, sub_key, hub)
         self._lock_config = lock_config
         self._attr_supported_features = LockEntityFeature.OPEN
@@ -146,7 +172,9 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
         return attributes
 
     async def async_lock(self, **kwargs: Any) -> None:
-        """Lock the lock."""
+        """
+        上锁。
+        """
         try:
             self._attr_is_locking = True
             self.async_write_ha_state()
@@ -171,7 +199,9 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
             self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs: Any) -> None:
-        """Unlock the lock."""
+        """
+        解锁。
+        """
         try:
             self._attr_is_unlocking = True
             self.async_write_ha_state()
@@ -196,7 +226,9 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
             self.async_write_ha_state()
 
     async def async_open(self, **kwargs: Any) -> None:
-        """Open (unlatch) the lock."""
+        """
+        开门（门闻解锁）。
+        """
         if not (self.supported_features & LockEntityFeature.OPEN):
             return
 
@@ -219,7 +251,9 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
             )
 
     async def _send_lock_command(self, cmd_type: int, value: Any) -> None:
-        """Send command to lock."""
+        """
+        向门锁发送控制命令。
+        """
         await self._hub.async_send_command(
             self._device[HUB_ID_KEY],
             self._device[DEVICE_ID_KEY],
@@ -230,7 +264,9 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """
+        处理来自协调器的更新数据。
+        """
         device_data = self._device.get(DEVICE_DATA_KEY, {})
 
         # 检查门锁状态数据
@@ -268,7 +304,9 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
+        """
+        订阅状态更新。
+        """
         await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
@@ -282,7 +320,9 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """
+        返回设备信息。
+        """
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.get(DEVICE_ID_KEY))},
             name=self._device.get(DEVICE_NAME_KEY),

@@ -1,4 +1,15 @@
-"""Support for LifeSmart sensors by @MapleEve"""
+"""
+LifeSmart 传感器平台实现。
+
+本模块实现LifeSmart智能家居系统的传感器实体，支持：
+- 映射驱动的设备检测和配置
+- 通配符IO口展开处理
+- 增强型数据转换和状态处理
+- 实时状态更新和全局数据刷新
+
+创建者：@MapleEve
+技术架构：基于DEVICE_MAPPING的统一配置管理
+"""
 
 import logging
 from typing import Any
@@ -90,7 +101,11 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart from a config entry."""
+    """
+    设置LifeSmart传感器平台。
+
+    从配置条目初始化传感器实体，使用映射驱动的设备检测。
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -144,7 +159,15 @@ async def async_setup_entry(
 
 
 class LifeSmartSensor(LifeSmartEntity, SensorEntity):
-    """LifeSmart sensor entity with enhanced compatibility."""
+    """
+    LifeSmart传感器实体，具有增强的兼容性支持。
+
+    主要功能：
+    - 基于DEVICE_MAPPING的设备类别和单位检测
+    - 映射驱动的数值转换和状态处理
+    - 实时更新和全局刷新支持
+    - 设备在线状态管理
+    """
 
     def __init__(
         self,
@@ -154,7 +177,16 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         sub_device_key: str,
         sub_device_data: dict[str, Any],
     ) -> None:
-        """Initialize the sensor."""
+        """
+        初始化传感器实体。
+
+        Args:
+            raw_device: 原始设备数据
+            client: 客户端连接对象
+            entry_id: 配置条目ID
+            sub_device_key: 子设备键名
+            sub_device_data: 子设备数据
+        """
         super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
@@ -178,7 +210,11 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
     @callback
     def _generate_sensor_name(self) -> str | None:
-        """Generate user-friendly sensor name."""
+        """
+        生成用户友好的传感器名称。
+
+        优先使用子设备的自定义名称，否则使用基础名称+IO口索引。
+        """
         base_name = self._name
         # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
@@ -189,7 +225,11 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
     @callback
     def _determine_device_class(self) -> SensorDeviceClass | None:
-        """Determine devices class using mapping-based approach only."""
+        """
+        使用映射驱动方法确定设备类别。
+
+        完全依赖DEVICE_MAPPING中的配置获取设备类别。
+        """
         # 完全依赖映射获取设备类别
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         if io_config and "device_class" in io_config:
@@ -199,7 +239,11 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
     @callback
     def _determine_unit(self) -> str | None:
-        """Determine unit using mapping-based approach only."""
+        """
+        使用映射驱动方法确定测量单位。
+
+        完全依赖DEVICE_MAPPING中的配置获取单位信息。
+        """
         # 完全依赖映射获取单位
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         if io_config and "unit_of_measurement" in io_config:
@@ -219,10 +263,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         # 完全依赖映射的转换逻辑，工具函数内部已处理v/val优先级
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         if io_config:
-            device_type = self._raw_device.get(DEVICE_TYPE_KEY, "UNKNOWN")
-            return process_io_data(
-                device_type, self._sub_key, io_config, self._sub_data
-            )
+            return process_io_data(io_config, self._sub_data)
 
         # 如果映射中没有转换配置，尝试直接使用v字段
         value = self._sub_data.get("v")
@@ -248,7 +289,11 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
     @callback
     def _convert_raw_value(self, raw_value: Any) -> float | int | None:
-        """Convert raw value using mapping-based conversion only."""
+        """
+        使用映射驱动方法转换原始数值。
+
+        仅依赖DEVICE_MAPPING中的转换配置进行数值转换。
+        """
         if raw_value is None:
             return None
 
@@ -265,10 +310,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         # 完全依赖映射的转换逻辑，工具函数内部已处理IEEE754转换
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         if io_config:
-            device_type = self._raw_device.get(DEVICE_TYPE_KEY, "UNKNOWN")
-            enhanced_value = process_io_data(
-                device_type, self._sub_key, io_config, self._sub_data
-            )
+            enhanced_value = process_io_data(io_config, self._sub_data)
             if enhanced_value is not None:
                 return enhanced_value
 
@@ -278,13 +320,35 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
     @callback
     def _get_extra_attributes(self) -> dict[str, Any] | None:
         """从DEVICE_MAPPING获取额外状态属性。"""
-        # TODO: 将这些特殊属性配置移到DEVICE_MAPPING中
-        # 当前暂时保留硬编码，但应该在映射中定义extra_attributes字段
-        return None
+        # 从DEVICE_MAPPING获取IO配置
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if not io_config:
+            return None
+
+        # 获取extra_attributes配置
+        extra_attributes = io_config.get("extra_attributes")
+        if not extra_attributes:
+            return None
+
+        # 处理静态和动态属性
+        result = {}
+        for attr_name, attr_value in extra_attributes.items():
+            if isinstance(attr_value, str) and attr_value in self._sub_data:
+                # 动态属性：引用IO数据字段
+                result[attr_name] = self._sub_data.get(attr_value)
+            else:
+                # 静态属性：直接使用配置值
+                result[attr_name] = attr_value
+
+        return result if result else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return extra state attributes for this sensor."""
+        """
+        返回此传感器的额外状态属性。
+
+        合并基础属性和传感器特定属性。
+        """
         # Get base attributes from parent class
         base_attrs = super().extra_state_attributes
         # Get sensor-specific extra attributes
@@ -311,7 +375,11 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Register update listeners."""
+        """
+        注册更新监听器。
+
+        设置实时更新和全局刷新的事件监听器。
+        """
         # 实时更新事件
         self.async_on_remove(
             async_dispatcher_connect(
@@ -330,7 +398,11 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         )
 
     async def _handle_update(self, new_data: dict) -> None:
-        """Handle real-time updates."""
+        """
+        处理实时更新数据。
+
+        使用映射驱动的转换逻辑处理收到的实时状态更新。
+        """
         try:
             if not new_data:
                 _LOGGER.warning(
@@ -354,10 +426,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             # 使用新的业务逻辑处理器进行映射驱动的数值转换
             io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
             if io_config:
-                device_type = self._raw_device.get(DEVICE_TYPE_KEY, "UNKNOWN")
-                new_value = process_io_data(
-                    device_type, self._sub_key, io_config, io_data
-                )
+                new_value = process_io_data(io_config, io_data)
             else:
                 new_value = None
 
@@ -373,7 +442,11 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
 
     async def _handle_global_refresh(self) -> None:
-        """Handle periodic full data refresh with availability check."""
+        """
+        处理周期性全量数据刷新，包含可用性检查。
+
+        检查设备和子设备的存在性，更新可用性状态。
+        """
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(

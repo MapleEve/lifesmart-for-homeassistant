@@ -14,7 +14,7 @@ LifeSmart 动态映射解析引擎 - 增强版
 - 命令类型常量映射
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional, Dict
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate.const import (
@@ -64,12 +64,10 @@ try:
 except ImportError:
     DATA_PROCESSORS_AVAILABLE = False
 
-# TODO 暂时注释掉有问题的导入，后续修复
-# from ..data.processors.logic_processors import (
-#     get_processor_registry,
-#     DirectProcessor,
-#     TypeBit0Processor,
-# )
+# 导入逻辑处理器
+from ..data.processors.logic_processors import (
+    get_processor_registry,
+)
 
 
 class EnhancedMappingEngine:
@@ -163,7 +161,7 @@ class EnhancedMappingEngine:
         }
 
         # 集成业务逻辑处理器
-        self.logic_registry = None  # logic_registry - 暂时保持None
+        self.logic_registry = get_processor_registry()
 
         # 导入设备分类器
         try:
@@ -217,7 +215,7 @@ class EnhancedMappingEngine:
                 return None
         return self.runtime_manager
 
-    def register_dynamic_device(self, device: Dict[str, Any], hass=None) -> bool:
+    def register_dynamic_device(self, device: dict[str, Any], hass=None) -> bool:
         """
         注册动态设备到运行时管理器
 
@@ -233,7 +231,7 @@ class EnhancedMappingEngine:
             return runtime_manager.register_device(device)
         return False
 
-    def convert_data_to_ha_mapping(self, raw_data: Dict) -> Dict:
+    def convert_data_to_ha_mapping(self, raw_data: dict) -> dict:
         """
         将纯数据层的配置转换为HA规范的映射配置
 
@@ -301,8 +299,8 @@ class EnhancedMappingEngine:
             return key
 
     def resolve_device_mapping_from_data(
-        self, device: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, device: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         从纯数据层解析设备映射，返回HA规范的配置
         增强版本：集成业务逻辑处理器
@@ -343,8 +341,8 @@ class EnhancedMappingEngine:
         return ha_config
 
     def convert_data_to_ha_mapping_with_logic(
-        self, raw_data: Dict, device: Dict[str, Any]
-    ) -> Dict:
+        self, raw_data: dict, device: dict[str, Any]
+    ) -> dict:
         """
         将纯数据层的配置转换为HA规范的映射配置
         增强版本：集成业务逻辑处理
@@ -411,8 +409,8 @@ class EnhancedMappingEngine:
         return result
 
     def _process_io_config_with_logic(
-        self, io_config: Dict[str, Any], io_data: Dict[str, Any], device_type: str
-    ) -> Dict[str, Any]:
+        self, io_config: dict[str, Any], io_data: dict[str, Any], device_type: str
+    ) -> dict[str, Any]:
         """
         处理单个IO口配置，应用业务逻辑处理器
 
@@ -427,12 +425,15 @@ class EnhancedMappingEngine:
         # 先进行基本的HA常量转换
         processed_config = self.convert_data_to_ha_mapping(io_config)
 
-        # 查找合适的逻辑处理器 - 暂时跳过
-        processor = None  # self.logic_registry.find_processor(...)
+        # 查找合适的逻辑处理器
+        processor = None
+        processor_type = processed_config.get("processor_type")
+        if processor_type and self.logic_registry:
+            processor = self.logic_registry.get_processor(processor_type)
 
         if processor:
             # 应用业务逻辑处理器的元数据
-            processed_config["_logic_processor"] = processor.get_pattern_name()
+            processed_config["_logic_processor"] = processor.get_processor_type()
             processed_config["_can_process_value"] = True
 
             # 如果有实际数据，也处理一下作为示例
@@ -451,8 +452,8 @@ class EnhancedMappingEngine:
         return processed_config
 
     def _resolve_dynamic_device_with_logic(
-        self, raw_config: Dict[str, Any], device: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, raw_config: dict[str, Any], device: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         解析动态设备配置，使用逻辑处理器
 
@@ -541,8 +542,8 @@ class EnhancedMappingEngine:
         self,
         device_type: str,
         io_port: str,
-        io_config: Dict[str, Any],
-        raw_data: Dict[str, Any],
+        io_config: dict[str, Any],
+        raw_data: dict[str, Any],
     ) -> Any:
         """
         处理设备IO口的实际数据值
@@ -560,7 +561,7 @@ class EnhancedMappingEngine:
         # 暂时返回原始数据，后续实现具体的IO处理逻辑
         return raw_data.get("val", raw_data.get("v"))
 
-    def apply_ha_constants_to_mapping(self, mapping_config: Dict) -> Dict:
+    def apply_ha_constants_to_mapping(self, mapping_config: dict) -> dict:
         """
         将HA标准常量应用到mapping配置中（兼容性方法）
 
@@ -603,7 +604,7 @@ class EnhancedMappingEngine:
 
         return result
 
-    def resolve_device_mapping(self, device: Dict[str, Any]) -> Dict[str, List[str]]:
+    def resolve_device_mapping(self, device: dict[str, Any]) -> dict[str, list[str]]:
         """
         解析设备映射，返回平台到IO口的映射（兼容性方法）
 
@@ -649,8 +650,8 @@ class EnhancedMappingEngine:
         return self._resolve_static_mapping(device_config, device_data)
 
     def _extract_platform_mapping(
-        self, ha_config: Dict, device_data: Dict
-    ) -> Dict[str, List[str]]:
+        self, ha_config: dict, device_data: dict
+    ) -> dict[str, list[str]]:
         """
         从HA配置中提取平台到IO口的映射
 
@@ -687,22 +688,14 @@ class EnhancedMappingEngine:
                 platform_mapping[platform] = io_ports
 
         # 第二步：处理多平台虚拟设备生成
-        if MULTI_PLATFORM_AVAILABLE and multi_platform_processor_registry:
-            multi_platform_devices = self._generate_multi_platform_virtual_devices(
-                ha_config, device_data
-            )
-
-            # 合并多平台虚拟设备到platform_mapping
-            for platform, virtual_devices in multi_platform_devices.items():
-                if platform not in platform_mapping:
-                    platform_mapping[platform] = []
-                platform_mapping[platform].extend(virtual_devices)
+        # 注意：多平台虚拟设备功能当前未实现，跳过此步骤
+        # TODO: 实现多平台虚拟设备生成功能
 
         return platform_mapping
 
     def _expand_bitmask_for_io(
-        self, io_port: str, io_config: Dict, io_data: Dict
-    ) -> List[str]:
+        self, io_port: str, io_config: dict, io_data: dict
+    ) -> list[str]:
         """
         为单个IO口扩展ALM虚拟子设备
 
@@ -716,8 +709,6 @@ class EnhancedMappingEngine:
         Returns:
             虚拟子设备键列表
         """
-        from ..data.processors.data_processors import is_alm_io_port, get_alm_subdevices
-
         # 检查是否为ALM IO口
         if not is_alm_io_port(io_port):
             return []
@@ -728,8 +719,8 @@ class EnhancedMappingEngine:
         return list(virtual_subdevices.keys())
 
     def _generate_multi_platform_virtual_devices(
-        self, ha_config: Dict, device_data: Dict
-    ) -> Dict[str, List[str]]:
+        self, ha_config: dict, device_data: dict
+    ) -> dict[str, list[str]]:
         """
         生成多平台虚拟设备
 
@@ -752,11 +743,8 @@ class EnhancedMappingEngine:
                     continue
 
                 # 查找适合的多平台处理器
-                platform_devices = (
-                    multi_platform_processor_registry.generate_all_virtual_devices(
-                        io_port, io_config
-                    )
-                )
+                # 注意：多平台处理器当前未实现，返回空结果
+                platform_devices = {}
 
                 # 合并结果
                 for target_platform, virtual_devices in platform_devices.items():
@@ -770,8 +758,8 @@ class EnhancedMappingEngine:
         return multi_platform_devices
 
     def _resolve_dynamic_classification(
-        self, device_config: Dict, device_data: Dict
-    ) -> Dict[str, List[str]]:
+        self, device_config: dict, device_data: dict
+    ) -> dict[str, list[str]]:
         """解析动态分类设备"""
         dynamic_config = device_config["dynamic_classification"]
         classification_type = dynamic_config.get("type")
@@ -784,8 +772,8 @@ class EnhancedMappingEngine:
         return {}
 
     def _resolve_conditional_classification(
-        self, dynamic_config: Dict, device_data: Dict
-    ) -> Dict[str, List[str]]:
+        self, dynamic_config: dict, device_data: dict
+    ) -> dict[str, list[str]]:
         """解析条件分类设备"""
         condition_field = dynamic_config.get("condition_field")
         condition_expression = dynamic_config.get("condition_expression")
@@ -809,8 +797,8 @@ class EnhancedMappingEngine:
         return self._resolve_static_mapping(selected_mode, device_data)
 
     def _resolve_bitwise_classification(
-        self, dynamic_config: Dict, device_data: Dict
-    ) -> Dict[str, List[str]]:
+        self, dynamic_config: dict, device_data: dict
+    ) -> dict[str, list[str]]:
         """解析位操作分类设备"""
         source_field = dynamic_config.get("source_field")
         bit_patterns = dynamic_config.get("bit_patterns", {})
@@ -840,12 +828,25 @@ class EnhancedMappingEngine:
         return result_mapping
 
     def _resolve_versioned_device(
-        self, device_config: Dict, device: Dict
-    ) -> Dict[str, List[str]]:
+        self, device_config: dict, device: dict
+    ) -> dict[str, list[str]]:
         """解析版本化设备"""
         versioned_config = device_config["versioned"]
-        version_field = versioned_config.get("version_field", "version")
-        versions = versioned_config.get("versions", {})
+
+        # 处理不同的versioned配置格式
+        if isinstance(versioned_config, bool):
+            # 布尔值格式，使用version_modes
+            if versioned_config and "version_modes" in device_config:
+                version_field = "version"
+                versions = device_config["version_modes"]
+            else:
+                return {}
+        elif isinstance(versioned_config, dict):
+            # 字典格式，使用标准结构
+            version_field = versioned_config.get("version_field", "version")
+            versions = versioned_config.get("versions", {})
+        else:
+            return {}
 
         # 从设备信息中获取版本
         device_version = device.get(version_field, "default")
@@ -854,8 +855,8 @@ class EnhancedMappingEngine:
         return self._resolve_static_mapping(selected_config, device.get("data", {}))
 
     def _resolve_static_mapping(
-        self, device_config: Dict, device_data: Dict
-    ) -> Dict[str, List[str]]:
+        self, device_config: dict, device_data: dict
+    ) -> dict[str, list[str]]:
         """解析静态设备映射"""
         platform_mapping = {}
 
@@ -915,7 +916,7 @@ class EnhancedMappingEngine:
 
     def get_bitmask_virtual_config(
         self, device_type: str, virtual_key: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         获取ALM虚拟子设备的配置。
 
@@ -928,8 +929,6 @@ class EnhancedMappingEngine:
         Returns:
             虚拟子设备的配置字典
         """
-        from ..data.processors.data_processors import is_alm_io_port, get_alm_subdevices
-
         # 解析虚拟键格式: {IO口}_bit{位号}
         if "_bit" not in virtual_key:
             return {}
@@ -952,7 +951,7 @@ class EnhancedMappingEngine:
 
     def get_multi_platform_virtual_config(
         self, device_type: str, virtual_key: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         获取多平台虚拟设备的配置。
 
@@ -963,8 +962,8 @@ class EnhancedMappingEngine:
         Returns:
             虚拟设备的配置字典
         """
-        if not MULTI_PLATFORM_AVAILABLE or not multi_platform_processor_registry:
-            return {}
+        # 多平台虚拟设备功能当前未实现
+        return {}
 
         from .device_specs import DEVICE_SPECS_DATA
 
@@ -1001,11 +1000,8 @@ class EnhancedMappingEngine:
             return {}
 
         # 使用多平台处理器生成虚拟设备
-        platform_devices = (
-            multi_platform_processor_registry.generate_all_virtual_devices(
-                source_io_port, source_io_config
-            )
-        )
+        # 注意：多平台处理器当前未实现，返回空结果
+        platform_devices = {}
 
         # 查找匹配的虚拟设备
         for virtual_devices in platform_devices.values():
@@ -1085,35 +1081,35 @@ class EnhancedMappingEngine:
         return None
 
     # 业务逻辑方法占位符
-    def _parse_lock_event(self, data: Dict) -> Dict:
+    def _parse_lock_event(self, data: dict) -> dict:
         """解析门锁事件"""
         return {}
 
-    def _parse_door_sensor(self, data: Dict) -> Dict:
+    def _parse_door_sensor(self, data: dict) -> dict:
         """解析门窗传感器"""
         return {}
 
-    def _parse_motion_sensor(self, data: Dict) -> Dict:
+    def _parse_motion_sensor(self, data: dict) -> dict:
         """解析运动传感器"""
         return {}
 
-    def _parse_defed_device(self, data: Dict) -> Dict:
+    def _parse_defed_device(self, data: dict) -> dict:
         """解析云防设备"""
         return {}
 
-    def _parse_water_sensor(self, data: Dict) -> Dict:
+    def _parse_water_sensor(self, data: dict) -> dict:
         """解析水浸传感器"""
         return {}
 
-    def _parse_smoke_sensor(self, data: Dict) -> Dict:
+    def _parse_smoke_sensor(self, data: dict) -> dict:
         """解析烟雾传感器"""
         return {}
 
-    def _parse_radar_sensor(self, data: Dict) -> Dict:
+    def _parse_radar_sensor(self, data: dict) -> dict:
         """解析人体存在传感器"""
         return {}
 
-    def _parse_climate_device(self, data: Dict) -> Dict:
+    def _parse_climate_device(self, data: dict) -> dict:
         """解析温控设备"""
         return {}
 

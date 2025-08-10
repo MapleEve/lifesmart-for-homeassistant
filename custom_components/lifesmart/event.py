@@ -1,4 +1,15 @@
-"""Support for LifeSmart events by @MapleEve"""
+"""
+LifeSmart 事件平台实现。
+
+本模块实现LifeSmart智能家居系统的事件实体，支持：
+- 多类型事件处理（按钮、传感器、门窗等）
+- 映射驱动的事件配置和检测
+- 智能事件类型判断和数据处理
+- 实时事件触发和状态同步
+
+创建者：@MapleEve
+技术架构：基于DEVICE_MAPPING的统一配置管理
+"""
 
 import logging
 from typing import Any
@@ -36,7 +47,11 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart events from a config entry."""
+    """
+    设置LifeSmart事件平台。
+
+    从配置条目初始化事件实体，根据设备类型自动检测支持的事件类型。
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -81,7 +96,11 @@ async def async_setup_entry(
 
 
 class LifeSmartEvent(LifeSmartEntity, EventEntity):
-    """LifeSmart event implementation."""
+    """
+    LifeSmart事件实现。
+
+    支持多类型设备的事件处理，包括按钮、传感器、门窗感应器等。
+    """
 
     def __init__(
         self,
@@ -90,7 +109,15 @@ class LifeSmartEvent(LifeSmartEntity, EventEntity):
         event_config: dict,
         hub,
     ) -> None:
-        """Initialize the event entity."""
+        """
+        初始化事件实体。
+
+        Args:
+            device: 设备信息字典
+            sub_key: 子设备键名
+            event_config: 事件配置信息
+            hub: 集线器对象
+        """
         super().__init__(device, sub_key, hub)
         self._event_config = event_config
 
@@ -111,7 +138,9 @@ class LifeSmartEvent(LifeSmartEntity, EventEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return unique id for the event."""
+        """
+        返回事件的唯一ID。
+        """
         return generate_unique_id(
             self._device.get(DEVICE_TYPE_KEY, ""),
             self._device.get(HUB_ID_KEY, ""),
@@ -121,18 +150,28 @@ class LifeSmartEvent(LifeSmartEntity, EventEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the event entity."""
+        """
+        返回事件实体的名称。
+        """
         device_name = self._device.get(DEVICE_NAME_KEY, "Unknown Device")
         event_name = self._event_config.get("name", self._sub_key)
         return f"{device_name} {event_name}"
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
+        """
+        返回True如果实体可用。
+        """
         return bool(self._device.get(DEVICE_DATA_KEY, {}))
 
     def _trigger_event(self, event_type: str, event_data: dict | None = None) -> None:
-        """Trigger an event."""
+        """
+        触发事件。
+
+        Args:
+            event_type: 事件类型
+            event_data: 事件数据（可选）
+        """
         if event_type not in self.event_types:
             _LOGGER.warning("Unsupported event type: %s", event_type)
             return
@@ -149,7 +188,11 @@ class LifeSmartEvent(LifeSmartEntity, EventEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """
+        处理来自协调器的更新数据。
+
+        处理IO数据并根据数值变化触发相应事件。
+        """
         device_data = self._device.get(DEVICE_DATA_KEY, {})
         io_data = device_data.get(self._sub_key)
 
@@ -171,7 +214,15 @@ class LifeSmartEvent(LifeSmartEntity, EventEntity):
         self.async_write_ha_state()
 
     def _determine_event(self, processed_value: Any) -> tuple[str | None, dict]:
-        """根据处理后的值确定事件类型和数据."""
+        """
+        根据处理后的值确定事件类型和数据。
+
+        Args:
+            processed_value: 经过处理的设备数据值
+
+        Returns:
+            tuple: (event_type, event_data) 事件类型和数据
+        """
         event_data = {}
 
         if isinstance(processed_value, dict):
@@ -226,7 +277,9 @@ class LifeSmartEvent(LifeSmartEntity, EventEntity):
         return event_type, event_data
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
+        """
+        订阅状态更新。
+        """
         await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
@@ -238,7 +291,9 @@ class LifeSmartEvent(LifeSmartEntity, EventEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """
+        返回设备信息。
+        """
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.get(DEVICE_ID_KEY))},
             name=self._device.get(DEVICE_NAME_KEY),

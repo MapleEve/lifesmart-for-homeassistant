@@ -17,11 +17,10 @@ from io import BytesIO
 
 import pytest
 
-from custom_components.lifesmart.core.protocol import (
+from custom_components.lifesmart.core.client.protocol import (
     LifeSmartProtocol,
     LifeSmartPacketFactory,
-    LSTimestamp,
-    LSEncoder,
+    # LSTimestamp, LSEncoder 在新架构中已重构
 )
 
 

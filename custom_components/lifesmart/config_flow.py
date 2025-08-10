@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import SelectSelectorMode
 
-import custom_components.lifesmart.core.client.local_tcp_client
+from .core.client.local_tcp_client import LifeSmartTCPClient
 from .core.client.openapi_client import LifeSmartOpenAPIClient
 from .core.const import (
     CONF_AI_INCLUDE_AGTS,
@@ -42,7 +42,20 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
-    """Validate the user input allows us to connect."""
+    """
+    验证用户输入允许我们连接到LifeSmart服务。
+
+    Args:
+        hass: Home Assistant核心实例
+        data: 用户输入的配置数据
+
+    Returns:
+        验证成功时返回包含连接信息的字典
+
+    Raises:
+        vol.Invalid: 当配置数据验证失败时
+        ConfigEntryAuthFailed: 当认证失败时
+    """
     # 注意：这个函数现在只在成功时返回值，失败时直接抛出异常
     # 错误处理逻辑移至调用方 (各个 step 中)
     try:
@@ -98,9 +111,22 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
 async def validate_local_input(
     hass: HomeAssistant, data: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate the user input for local connection."""
+    """
+    验证用户输入的本地连接配置。
+
+    Args:
+        hass: Home Assistant核心实例
+        data: 用户输入的本地连接配置数据
+
+    Returns:
+        验证成功时返回包含本地连接信息的字典
+
+    Raises:
+        vol.Invalid: 当配置数据验证失败时
+        ConfigEntryNotReady: 当本地连接测试失败时
+    """
     try:
-        dev = custom_components.lifesmart.core.local_tcp_client.LifeSmartTCPClient(
+        dev = LifeSmartTCPClient(
             data[CONF_HOST],
             data[CONF_PORT],
             data[CONF_USERNAME],
@@ -398,27 +424,9 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         super().__init__()
 
-        # 兼容性：处理不同HA版本的config_entry访问方式
-        # HA 2025.7.4+: config_entry属性存在但在init期间不可访问
-        # HA 2024.12.0: config_entry属性存在且可访问
-        # HA 2024.2.0及以下: config_entry属性不存在，需要手动设置
-        config_entry_available = False
-        try:
-            # 尝试检查config_entry是否可用（但不访问它，因为可能抛出ValueError）
-            if hasattr(self, "config_entry"):
-                # 属性存在，但可能在init期间不可访问
-                config_entry_available = True
-        except (AttributeError, ValueError):
-            # 属性不存在或不可访问
-            pass
-
-        # 只有在config_entry不可用时才手动设置
-        if not config_entry_available:
-            self.config_entry = config_entry
-
-        # 保存config_entry引用，用于后续访问
+        # 基于最低支持版本2022.10.0，config_entry属性已存在
+        # 直接保存配置条目引用，无需复杂的兼容性检查
         self._config_entry_ref = config_entry
-
         self.options_data = dict(config_entry.options)
         self.temp_data = {}
 

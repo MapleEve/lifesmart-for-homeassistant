@@ -56,9 +56,15 @@ async def async_setup_entry(
 
         # 为每个switch子设备创建实体
         for sub_key in switch_subdevices:
+            # 获取子设备数据
+            sub_device_data = device.get(DEVICE_DATA_KEY, {}).get(sub_key, {})
             switches.append(
                 LifeSmartSwitch(
-                    device, sub_key, hub.get_client(), config_entry.entry_id
+                    device,
+                    sub_key,
+                    hub.get_client(),
+                    config_entry.entry_id,
+                    sub_device_data,
                 )
             )
 
@@ -76,15 +82,13 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
         sub_device_key: str,
         client: Any,
         entry_id: str,
+        sub_device_data: dict[str, Any],
     ) -> None:
         """Initialize the switch."""
         super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._entry_id = entry_id
-
-        self._sub_data = self._raw_device.get(DEVICE_DATA_KEY, {}).get(
-            self._sub_key, {}
-        )
+        self._sub_data = sub_device_data
 
         self._attr_unique_id = generate_unique_id(
             self.devtype, self.agt, self.me, sub_device_key

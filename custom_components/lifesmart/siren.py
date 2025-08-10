@@ -1,4 +1,23 @@
-"""Support for LifeSmart sirens by @MapleEve"""
+"""
+LifeSmart 警报器平台支持模块
+
+由 @MapleEve 创建和维护
+
+本模块为LifeSmart平台提供警报器设备支持，实现了对各种
+智能警报器的全面控制和状态管理。
+
+支持的警报功能：
+- 声音警报：多种音量等级和声音模式
+- 闪光警报：可视化警报指示
+- 定时警报：可设置警报持续时间
+- 紧急模式：安全防护和紧急通知
+
+技术特性：
+- 灵活的音量控制和持续时间设定
+- 自动关闭功能防止长时间警报
+- 实时状态监控和更新
+- 与安防系统的完美集成
+"""
 
 import logging
 from typing import Any
@@ -41,7 +60,9 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart sirens from a config entry."""
+    """
+    从配置条目设置 LifeSmart 警报器。
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -84,7 +105,9 @@ async def async_setup_entry(
 
 
 class LifeSmartSiren(LifeSmartEntity, SirenEntity):
-    """LifeSmart siren implementation."""
+    """
+    LifeSmart 警报器实现类。
+    """
 
     def __init__(
         self,
@@ -94,7 +117,9 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
         sub_device_key: str,
         sub_device_data: dict[str, Any],
     ) -> None:
-        """Initialize the siren."""
+        """
+        初始化警报器。
+        """
         super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
@@ -126,7 +151,9 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
 
     @callback
     def _generate_siren_name(self) -> str | None:
-        """Generate user-friendly siren name."""
+        """
+        生成用户友好的警报器名称。
+        """
         base_name = self._name
         # 如果子设备有自己的名字，则使用它
         sub_name = self._sub_data.get(DEVICE_NAME_KEY)
@@ -137,14 +164,18 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
 
     @callback
     def _extract_initial_state(self) -> bool:
-        """Extract initial siren state from device data."""
+        """
+        从设备数据中提取警报器的初始状态。
+        """
         # 检查type字段的最低位确定开关状态
         siren_type = self._sub_data.get("type", 0)
         return bool(siren_type & 1)
 
     @callback
     def _extract_volume_level(self) -> int | None:
-        """Extract volume level from device data."""
+        """
+        从设备数据中提取音量级别。
+        """
         # 从val字段提取音量级别
         volume = self._sub_data.get("val")
         if volume is not None:
@@ -155,16 +186,22 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return True if the siren is on."""
+        """
+        返回警报器是否开启。
+        """
         return self._attr_is_on
 
     @property
     def volume_level(self) -> int | None:
-        """Return the volume level of the siren."""
+        """
+        返回警报器的音量级别。
+        """
         return self._attr_volume_level
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn on the siren."""
+        """
+        开启警报器。
+        """
         try:
             # 获取参数
             duration = kwargs.get("duration", SIREN_DURATION)
@@ -214,7 +251,9 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
             )
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn off the siren."""
+        """
+        关闭警报器。
+        """
         try:
             await self._client.async_send_command(
                 self.agt,
@@ -241,7 +280,9 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
             )
 
     async def async_set_volume_level(self, volume_level: int) -> None:
-        """Set the volume level of the siren."""
+        """
+        设置警报器的音量级别。
+        """
         try:
             # 确保音量在有效范围内
             volume_level = max(1, min(len(SIREN_VOLUME_LEVELS), volume_level))
@@ -273,7 +314,9 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
             )
 
     async def _auto_turn_off(self, duration: int) -> None:
-        """Auto turn off the siren after specified duration."""
+        """
+        指定持续时间后自动关闭警报器。
+        """
         import asyncio
 
         try:
@@ -294,7 +337,9 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device info."""
+        """
+        返回设备信息。
+        """
         return DeviceInfo(
             identifiers={(DOMAIN, self.agt, self.me)},
             name=self._device_name,
@@ -304,7 +349,9 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
+        """
+        订阅状态更新。
+        """
         await super().async_added_to_hass()
 
         # 实体特定更新
@@ -326,7 +373,9 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
         )
 
     async def _handle_update(self, new_data: dict) -> None:
-        """Handle real-time updates."""
+        """
+        处理实时状态更新。
+        """
         try:
             if not new_data:
                 return
@@ -368,7 +417,9 @@ class LifeSmartSiren(LifeSmartEntity, SirenEntity):
             )
 
     async def _handle_global_refresh(self) -> None:
-        """Handle periodic full data refresh."""
+        """
+        处理周期性的全数据刷新。
+        """
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(

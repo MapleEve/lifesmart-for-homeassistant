@@ -6,12 +6,12 @@ Data Validation Module - 数据验证模块
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_io_data(io_data: Dict[str, Any]) -> bool:
+def validate_io_data(io_data: dict[str, Any]) -> bool:
     """
     验证IO口数据的有效性。
 
@@ -35,7 +35,7 @@ def validate_io_data(io_data: Dict[str, Any]) -> bool:
     return True
 
 
-def validate_device_data(device: Dict[str, Any]) -> bool:
+def validate_device_data(device: dict[str, Any]) -> bool:
     """
     验证设备数据的完整性。
 
@@ -64,7 +64,7 @@ def validate_device_data(device: Dict[str, Any]) -> bool:
     return True
 
 
-def validate_hub_data(hub: Dict[str, Any]) -> bool:
+def validate_hub_data(hub: dict[str, Any]) -> bool:
     """
     验证智慧中心数据的有效性。
 

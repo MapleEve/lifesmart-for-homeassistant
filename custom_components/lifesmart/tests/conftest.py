@@ -207,7 +207,7 @@ def mock_client_class(mock_sensor_devices_only):
     调用都会返回一个我们可以控制的新实例。
     """
     with patch(
-        "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient",
+        "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient",
         autospec=True,
     ) as mock_class:
         # 配置默认的实例行为
@@ -312,9 +312,7 @@ def mock_hub_class():
     这允许我们验证其方法（如 `async_setup`, `async_unload`）是否在集成的生命周期中
     （设置、卸载、重载）被正确调用。
     """
-    with patch(
-        "custom_components.lifesmart.core.hub.LifeSmartHub", autospec=True
-    ) as mock_class:
+    with patch("custom_components.lifesmart.LifeSmartHub", autospec=True) as mock_class:
         # 获取实例的 mock，以便我们可以配置和断言它的方法
         instance = mock_class.return_value
         instance.async_setup = AsyncMock(return_value=True)
@@ -389,19 +387,19 @@ def mock_hub_for_testing():
     """
     with (
         patch(
-            "custom_components.lifesmart.core.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.LifeSmartHub.async_setup",
             return_value=True,
         ) as mock_hub_setup,
         patch(
-            "custom_components.lifesmart.core.hub.LifeSmartHub.get_devices",
+            "custom_components.lifesmart.LifeSmartHub.get_devices",
             return_value=[],
         ) as mock_get_devices,
         patch(
-            "custom_components.lifesmart.core.hub.LifeSmartHub.get_client",
+            "custom_components.lifesmart.LifeSmartHub.get_client",
             return_value=MagicMock(),
         ) as mock_get_client,
         patch(
-            "custom_components.lifesmart.core.hub.LifeSmartHub.async_unload",
+            "custom_components.lifesmart.LifeSmartHub.async_unload",
             return_value=True,
         ) as mock_hub_unload,
     ):
@@ -441,12 +439,11 @@ async def setup_integration_light_only(
     hub_instance = create_mock_hub(mock_light_devices_only, mock_client)
     hub_instance.get_exclude_config.return_value = (set(), set())
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
     mock_hub_class.assert_called_once()
@@ -480,12 +477,11 @@ async def setup_integration_climate_only(
     hub_instance = create_mock_hub(mock_climate_devices_only, mock_client)
     hub_instance.get_exclude_config.return_value = (set(), set())
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
     mock_hub_class.assert_called_once()
@@ -519,12 +515,11 @@ async def setup_integration_sensor_only(
     hub_instance = create_mock_hub(mock_sensor_devices_only, mock_client)
     hub_instance.get_exclude_config.return_value = (set(), set())
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
     mock_hub_class.assert_called_once()
@@ -558,12 +553,11 @@ async def setup_integration_binary_sensor_only(
     hub_instance = create_mock_hub(mock_binary_sensor_devices_only, mock_client)
     hub_instance.get_exclude_config.return_value = (set(), set())
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
     mock_hub_class.assert_called_once()
@@ -597,12 +591,11 @@ async def setup_integration_switch_only(
     hub_instance = create_mock_hub(mock_switch_devices_only, mock_client)
     hub_instance.get_exclude_config.return_value = (set(), set())
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
     mock_hub_class.assert_called_once()
@@ -636,12 +629,11 @@ async def setup_integration_cover_only(
     hub_instance = create_mock_hub(mock_cover_devices_only, mock_client)
     hub_instance.get_exclude_config.return_value = (set(), set())
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
     mock_hub_class.assert_called_once()
@@ -676,17 +668,16 @@ async def setup_integration_spot_rgb_only(
     """
     mock_config_entry.add_to_hass(hass)
 
-    # 配置 mock hub 实例
     # 使用工厂函数创建mock hub实例
     devices = [mock_device_spot_rgb_light]
     hub_instance = create_mock_hub(devices, mock_client)
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
 
@@ -711,12 +702,12 @@ async def setup_integration_dual_io_light_only(
     devices = [mock_device_dual_io_rgbw_light]
     hub_instance = create_mock_hub(devices, mock_client)
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
 
@@ -742,14 +733,30 @@ async def setup_integration_single_io_rgbw_only(
     devices = [create_mock_device_single_io_rgb_light()]
     hub_instance = create_mock_hub(devices, mock_client)
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        return_value=hub_instance,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
+
+
+@pytest.fixture
+def mock_device_spot_rgb_light():
+    """创建SPOT RGB灯测试设备。"""
+    from .utils.factories import create_mock_device_spot_rgb_light
+
+    return create_mock_device_spot_rgb_light()
+
+
+@pytest.fixture
+def mock_device_dual_io_rgbw_light():
+    """创建双IO RGBW灯测试设备。"""
+    from .utils.factories import create_mock_device_dual_io_rgbw_light
+
+    return create_mock_device_dual_io_rgbw_light()
 
 
 # 全局标志，确保banner只显示一次

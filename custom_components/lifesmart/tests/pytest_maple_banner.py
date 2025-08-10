@@ -8,7 +8,7 @@ import platform
 import subprocess
 import sys
 from datetime import datetime
-from typing import Tuple, Dict
+from typing import Tuple
 
 
 def get_git_info() -> Tuple[str, str]:
@@ -37,7 +37,7 @@ def get_git_info() -> Tuple[str, str]:
         return "unknown", "unknown"
 
 
-def get_environment_info() -> Dict[str, str]:
+def get_environment_info() -> dict[str, str]:
     """收集所有环境信息"""
     info = {}
 

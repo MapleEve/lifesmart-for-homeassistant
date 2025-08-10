@@ -1,19 +1,35 @@
-"""Custom exceptions for the LifeSmart integration by @MapleEve"""
+"""
+LifeSmart集成的自定义异常类。
+
+定义了LifeSmart智能家居系统集成的各类异常：
+- 基础异常类：LifeSmartError
+- API错误异常：LifeSmartAPIError
+- 身份验证失败异常：LifeSmartAuthError
+
+创建者：@MapleEve
+技术架构：分层异常处理机制
+"""
 
 
 class LifeSmartError(Exception):
-    """Base exception for all LifeSmart integration errors."""
+    """
+    LifeSmart集成的基础异常类。
+
+    所有LifeSmart集成相关异常的父类。
+    """
 
     pass
 
 
 class LifeSmartAPIError(LifeSmartError):
     """
-    Exception raised for errors returned by the LifeSmart API (non-auth).
+    LifeSmart API错误异常（非身份验证错误）。
+
+    当LifeSmart API返回错误时抛出此异常。
 
     Attributes:
-        message -- explanation of the error
-        code -- the error code returned by the API
+        message: 错误说明
+        code: API返回的错误代码
     """
 
     def __init__(self, message: str, code: int | None = None):
@@ -23,9 +39,9 @@ class LifeSmartAPIError(LifeSmartError):
 
 class LifeSmartAuthError(LifeSmartAPIError):
     """
-    Exception raised for authentication failures.
+    身份验证失败异常。
 
-    This is a specific type of API error related to login or token issues.
+    这是与登录或令牌问题相关的特定API错误类型。
     """
 
     pass

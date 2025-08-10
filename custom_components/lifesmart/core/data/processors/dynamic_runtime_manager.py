@@ -13,9 +13,9 @@ LifeSmart 动态设备运行时管理器
 """
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Callable
+from typing import Any, Dict, Optional, Set, Callable
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class DeviceModeChangeEvent:
     device_type: str
     old_mode: Optional[str]
     new_mode: Optional[str]
-    changed_parameters: Dict[str, Any]
+    changed_parameters: dict[str, Any]
     timestamp: datetime
 
 
@@ -40,9 +40,10 @@ class DynamicDeviceState:
     device_type: str
     current_mode: Optional[str]
     supported_platforms: Set[str]
-    active_entities: Dict[str, List[str]]  # platform -> entity_ids
+    active_entities: dict[str, list[str]]  # platform -> entity_ids
     last_evaluation: datetime
     watch_parameters: Set[str]  # 需要监控的参数，如 ["P1", "P5"]
+    last_data: dict[str, Any] = field(default_factory=dict)  # 存储最后已知的设备数据
 
 
 class DynamicDeviceRuntimeManager:
@@ -60,10 +61,10 @@ class DynamicDeviceRuntimeManager:
         self.hass = hass
 
         # 动态设备状态跟踪
-        self.tracked_devices: Dict[str, DynamicDeviceState] = {}
+        self.tracked_devices: dict[str, DynamicDeviceState] = {}
 
         # 模式变化回调
-        self.mode_change_callbacks: List[Callable] = []
+        self.mode_change_callbacks: list[Callable] = []
 
         # 支持的动态设备类型
         self.supported_dynamic_types = {"SL_NATURE", "SL_P", "SL_JEMA"}
@@ -73,7 +74,7 @@ class DynamicDeviceRuntimeManager:
 
         _LOGGER.debug("Dynamic device runtime manager initialized")
 
-    def register_device(self, device: Dict[str, Any]) -> bool:
+    def register_device(self, device: dict[str, Any]) -> bool:
         """
         注册需要动态管理的设备
 
@@ -126,7 +127,7 @@ class DynamicDeviceRuntimeManager:
         return True
 
     def update_device_data(
-        self, device_id: str, new_data: Dict[str, Any]
+        self, device_id: str, new_data: dict[str, Any]
     ) -> Optional[DeviceModeChangeEvent]:
         """
         更新设备数据并检查是否需要模式切换
@@ -342,7 +343,7 @@ class DynamicDeviceRuntimeManager:
 
     def _detect_parameter_changes(
         self, device_state: DynamicDeviceState, new_data: Dict
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         检测关键参数是否发生变化
 
@@ -355,13 +356,92 @@ class DynamicDeviceRuntimeManager:
         """
         changed_params = {}
 
-        # TODO: 需要与之前的数据进行比较
-        # 这里简化处理，只要有监控参数的数据更新就认为可能发生变化
+        # 获取上次保存的数据进行比较
+        last_data = device_state.last_data
+
         for param in device_state.watch_parameters:
             if param in new_data:
-                changed_params[param] = new_data[param]
+                # 检查参数是否真正发生了变化
+                if self._is_parameter_changed(last_data.get(param), new_data[param]):
+                    changed_params[param] = new_data[param]
+                    _LOGGER.debug(
+                        "Parameter %s changed for device %s: %s -> %s",
+                        param,
+                        device_state.device_id,
+                        last_data.get(param),
+                        new_data[param],
+                    )
+
+        # 更新最后已知数据（只保存监控的参数以节省内存）
+        if changed_params:
+            for param in device_state.watch_parameters:
+                if param in new_data:
+                    device_state.last_data[param] = self._create_parameter_snapshot(
+                        new_data[param]
+                    )
 
         return changed_params
+
+    def _is_parameter_changed(self, old_param: Any, new_param: Any) -> bool:
+        """
+        比较单个参数是否发生变化
+
+        Args:
+            old_param: 旧参数值
+            new_param: 新参数值
+
+        Returns:
+            True if parameter changed
+        """
+        try:
+            # 如果没有历史数据，认为是变化
+            if old_param is None:
+                return True
+
+            # 对于字典类型（LifeSmart IO口数据格式）
+            if isinstance(new_param, dict) and isinstance(old_param, dict):
+                # 比较关键字段
+                key_fields = ["val", "v", "type"]
+                for field_name in key_fields:
+                    old_val = old_param.get(field_name)
+                    new_val = new_param.get(field_name)
+                    if old_val != new_val:
+                        return True
+                return False
+
+            # 对于其他类型，直接比较值
+            return old_param != new_param
+
+        except Exception as e:
+            _LOGGER.debug("Error comparing parameters: %s", e)
+            # 发生异常时，认为参数发生了变化（安全起见）
+            return True
+
+    def _create_parameter_snapshot(self, param_data: Any) -> Any:
+        """
+        创建参数数据快照（浅拷贝关键字段）
+
+        Args:
+            param_data: 参数数据
+
+        Returns:
+            参数快照
+        """
+        try:
+            if isinstance(param_data, dict):
+                # 只保存关键字段，减少内存使用
+                snapshot = {}
+                key_fields = ["val", "v", "type"]
+                for field_name in key_fields:
+                    if field_name in param_data:
+                        snapshot[field_name] = param_data[field_name]
+                return snapshot
+            else:
+                # 对于非字典类型，直接返回值
+                return param_data
+        except Exception as e:
+            _LOGGER.debug("Error creating parameter snapshot: %s", e)
+            return param_data
 
     def _notify_mode_change(self, event: DeviceModeChangeEvent):
         """

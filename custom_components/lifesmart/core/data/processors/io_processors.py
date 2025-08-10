@@ -17,7 +17,7 @@ LifeSmart O(1)配置驱动IO处理器 - 零硬编码纯新架构
 import datetime
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from .logic_processors import process_io_data, get_processor_registry
 from ...const import (
@@ -35,8 +35,8 @@ class AttributeGenerator(ABC):
 
     @abstractmethod
     def generate_attributes(
-        self, io_config: Dict[str, Any], raw_data: Dict[str, Any], current_state: Any
-    ) -> Dict[str, Any]:
+        self, io_config: dict[str, Any], raw_data: dict[str, Any], current_state: Any
+    ) -> dict[str, Any]:
         """生成IO口属性"""
         pass
 
@@ -50,8 +50,8 @@ class DefaultAttributeGenerator(AttributeGenerator):
     """默认属性生成器 - 返回原始数据"""
 
     def generate_attributes(
-        self, io_config: Dict[str, Any], raw_data: Dict[str, Any], current_state: Any
-    ) -> Dict[str, Any]:
+        self, io_config: dict[str, Any], raw_data: dict[str, Any], current_state: Any
+    ) -> dict[str, Any]:
         """生成默认属性"""
         return dict(raw_data)
 
@@ -63,8 +63,8 @@ class DoorLockAttributeGenerator(AttributeGenerator):
     """门锁属性生成器 - 配置驱动"""
 
     def generate_attributes(
-        self, io_config: Dict[str, Any], raw_data: Dict[str, Any], current_state: Any
-    ) -> Dict[str, Any]:
+        self, io_config: dict[str, Any], raw_data: dict[str, Any], current_state: Any
+    ) -> dict[str, Any]:
         """生成门锁事件属性"""
         val = raw_data.get("val", 0)
 
@@ -99,8 +99,8 @@ class DoorLockAlarmAttributeGenerator(AttributeGenerator):
     """门锁报警属性生成器"""
 
     def generate_attributes(
-        self, io_config: Dict[str, Any], raw_data: Dict[str, Any], current_state: Any
-    ) -> Dict[str, Any]:
+        self, io_config: dict[str, Any], raw_data: dict[str, Any], current_state: Any
+    ) -> dict[str, Any]:
         """生成门锁报警属性"""
         val = raw_data.get("val", 0)
         attr_config = io_config.get("attribute_config", {})
@@ -115,8 +115,8 @@ class WaterSensorAttributeGenerator(AttributeGenerator):
     """水浸传感器属性生成器"""
 
     def generate_attributes(
-        self, io_config: Dict[str, Any], raw_data: Dict[str, Any], current_state: Any
-    ) -> Dict[str, Any]:
+        self, io_config: dict[str, Any], raw_data: dict[str, Any], current_state: Any
+    ) -> dict[str, Any]:
         """生成水浸传感器属性"""
         val = raw_data.get("val", 0)
         attr_config = io_config.get("attribute_config", {})
@@ -134,8 +134,8 @@ class BitmaskAlarmAttributeGenerator(AttributeGenerator):
     """位运算告警属性生成器"""
 
     def generate_attributes(
-        self, io_config: Dict[str, Any], raw_data: Dict[str, Any], current_state: Any
-    ) -> Dict[str, Any]:
+        self, io_config: dict[str, Any], raw_data: dict[str, Any], current_state: Any
+    ) -> dict[str, Any]:
         """生成位运算告警属性"""
         val = raw_data.get("val", 0)
         attr_config = io_config.get("attribute_config", {})
@@ -170,7 +170,7 @@ class AttributeGeneratorRegistry:
     """O(1)属性生成器注册表"""
 
     def __init__(self):
-        self._generators: Dict[str, AttributeGenerator] = {}
+        self._generators: dict[str, AttributeGenerator] = {}
         self._register_all_generators()
 
     def _register_all_generators(self):
@@ -192,7 +192,7 @@ class AttributeGeneratorRegistry:
         """O(1)属性生成器获取"""
         return self._generators.get(generator_type)
 
-    def list_generators(self) -> Dict[str, AttributeGenerator]:
+    def list_generators(self) -> dict[str, AttributeGenerator]:
         """获取所有已注册的生成器"""
         return dict(self._generators)
 
@@ -203,7 +203,7 @@ class AttributeGeneratorRegistry:
 _attribute_registry = AttributeGeneratorRegistry()
 
 
-def process_io_value(io_config: Dict[str, Any], raw_data: Dict[str, Any]) -> Any:
+def process_io_value(io_config: dict[str, Any], raw_data: dict[str, Any]) -> Any:
     """
     O(1)IO数值处理统一接口
 
@@ -218,8 +218,8 @@ def process_io_value(io_config: Dict[str, Any], raw_data: Dict[str, Any]) -> Any
 
 
 def process_io_attributes(
-    io_config: Dict[str, Any], raw_data: Dict[str, Any], current_state: Any
-) -> Dict[str, Any]:
+    io_config: dict[str, Any], raw_data: dict[str, Any], current_state: Any
+) -> dict[str, Any]:
     """
     O(1)IO属性处理统一接口 - 完全配置驱动，零硬编码
 
@@ -252,8 +252,8 @@ def process_io_attributes(
 
 
 def process_light_state(
-    io_config: Dict[str, Any], raw_data: Dict[str, Any]
-) -> Dict[str, Any]:
+    io_config: dict[str, Any], raw_data: dict[str, Any]
+) -> dict[str, Any]:
     """
     O(1)灯光状态处理统一接口 - 配置驱动实现
 
@@ -310,7 +310,7 @@ def process_light_state(
     return result
 
 
-def get_friendly_value(io_config: Dict[str, Any], raw_data: Dict[str, Any]) -> Any:
+def get_friendly_value(io_config: dict[str, Any], raw_data: dict[str, Any]) -> Any:
     """
     O(1)获取友好值统一接口 - 与process_io_value等效
     """
@@ -318,7 +318,7 @@ def get_friendly_value(io_config: Dict[str, Any], raw_data: Dict[str, Any]) -> A
 
 
 def classify_device_mode(
-    device_config: Dict[str, Any], device_data: Dict[str, Any]
+    device_config: dict[str, Any], device_data: dict[str, Any]
 ) -> str:
     """
     O(1)设备模式分类接口 - 配置驱动实现
@@ -346,7 +346,7 @@ def classify_device_mode(
 
 
 def _classify_conditional_device(
-    config: Dict[str, Any], device_data: Dict[str, Any]
+    config: dict[str, Any], device_data: dict[str, Any]
 ) -> str:
     """条件分类设备 - 配置驱动"""
     condition_field = config.get("condition_field")
@@ -381,7 +381,7 @@ def _classify_conditional_device(
 
 
 def _classify_bitwise_device(
-    config: Dict[str, Any], device_data: Dict[str, Any]
+    config: dict[str, Any], device_data: dict[str, Any]
 ) -> str:
     """位操作分类设备 - 配置驱动"""
     source_field = config.get("source_field")
@@ -413,13 +413,13 @@ class EnhancedIOProcessor:
         self._attribute_registry = _attribute_registry
 
     def process_io_value(
-        self, io_config: Dict[str, Any], raw_data: Dict[str, Any]
+        self, io_config: dict[str, Any], raw_data: dict[str, Any]
     ) -> Any:
         """处理IO口数据值 - O(1)实现"""
         return process_io_value(io_config, raw_data)
 
     def get_enhanced_value(
-        self, io_config: Dict[str, Any], raw_data: Dict[str, Any]
+        self, io_config: dict[str, Any], raw_data: dict[str, Any]
     ) -> Any:
         """获取增强转换值 - O(1)实现"""
         return process_io_value(io_config, raw_data)

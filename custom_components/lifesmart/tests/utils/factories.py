@@ -522,6 +522,7 @@ def create_dimmer_light_devices():
             "agt": get_hub_id(3),  # Dimmer lights
             "me": "light_bright",  # 友好设备ID，用于测试
             "devtype": "SL_LI_WW",
+            "fullCls": "SL_LI_WW_V1",  # 指定版本信息
             "name": "White Light Bulb",
             "data": {"P1": {"type": 129, "val": 80}},  # 亮度80%
             "stat": 1,
