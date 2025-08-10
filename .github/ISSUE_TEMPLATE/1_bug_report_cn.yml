@@ -52,9 +52,20 @@ body:
       description: 请提供一个清晰且简洁的描述，说明您期望发生什么。
   - type: textarea
     attributes:
-      label: '📝 补充信息'
-      description: 如果您的问题需要进一步说明，或者您遇到的问题无法在一个简单的示例中复现，请在这里添加更多信息。
-  - type: textarea
-    attributes:
-      label: '调试日志'
-      description: 如果您已启用调试模式，请在此处粘贴调试日志。对于 EpGetAll API 和 Websocket 返回的内容。（敏感信息可以替换掉，如pwd,userid,token,usertoken）
+      label: '📝 补充信息与诊断数据'
+      description: |
+        **请提供问题的补充信息：**
+        
+        如果您的问题需要进一步说明，或者您遇到的问题无法轻松复现，请在这里添加更多信息。
+        
+        **📊 诊断数据（强烈推荐）：**
+        为了帮助我们快速定位问题，请上传 Home Assistant 的诊断数据文件：
+        1. 进入 设置 → 设备与服务 → LifeSmart
+        2. 点击 "下载诊断" 按钮
+        3. 在此上传 .json 文件或粘贴内容
+        
+        对于特定设备问题，您还可以下载设备级别的诊断数据：
+        1. 进入 设置 → 设备与服务 → LifeSmart → [选择具体设备]
+        2. 为该设备点击 "下载诊断"
+        
+        诊断数据包含全面的系统信息，帮助我们在无需手动收集日志的情况下定位问题。

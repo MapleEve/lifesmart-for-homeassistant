@@ -31,49 +31,13 @@ from custom_components.lifesmart.core.platform.platform_detection import (
     is_light,
     is_sensor,
     is_switch,
+    is_switch_subdevice,
+    is_binary_sensor_subdevice,
+    is_cover_subdevice,
+    is_light_subdevice,
+    is_sensor_subdevice,
     safe_get,
 )
-
-
-# 基于现有函数实现缺失的子设备检查函数
-def is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
-    """检查是否为二进制传感器子设备"""
-    from ..utils.factories import create_mock_device
-
-    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
-    return sub_key in get_binary_sensor_subdevices(mock_device)
-
-
-def is_cover_subdevice(device_type: str, sub_key: str) -> bool:
-    """检查是否为窗帘子设备"""
-    from ..utils.factories import create_mock_device
-
-    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
-    return sub_key in get_cover_subdevices(mock_device)
-
-
-def is_light_subdevice(device_type: str, sub_key: str) -> bool:
-    """检查是否为灯光子设备"""
-    from ..utils.factories import create_mock_device
-
-    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
-    return sub_key in get_light_subdevices(mock_device)
-
-
-def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
-    """检查是否为传感器子设备"""
-    from ..utils.factories import create_mock_device
-
-    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
-    return sub_key in get_sensor_subdevices(mock_device)
-
-
-def is_switch_subdevice(device_type: str, sub_key: str) -> bool:
-    """检查是否为开关子设备"""
-    from ..utils.factories import create_mock_device
-
-    mock_device = create_mock_device(device_type, {sub_key: {"val": 1}})
-    return sub_key in get_switch_subdevices(mock_device)
 
 
 from ..utils.factories import (
@@ -230,9 +194,9 @@ class TestDeviceTypeCheckers:
 
     def test_is_sensor_with_factory_devices(self):
         """使用工厂函数创建的设备数据测试 is_sensor 函数。"""
-        # 获取传感器类设备
+        # 获取传感器类设备 (包含二进制传感器，因为锁电池传感器在binary_sensor类别中)
         sensor_devices = create_devices_by_category(
-            ["environment_sensor", "power_meter_plug"]
+            ["environment_sensor", "power_meter_plug", "binary_sensor"]
         )
 
         # 环境传感器
@@ -707,7 +671,7 @@ class TestSubdeviceLogicParametrized:
                 "SL_ETDOOR",
                 "P2",
                 False,
-            ),  # garage door P2不是开关（在GARAGE_DOOR_TYPES中）
+            ),  # garage door P2不是开关（SL_ETDOOR类型）
             ("SL_SC_BB_V2", "P1", False),  # 按钮开关P1不是开关子设备
             ("SL_SW_IF3", "L1", True),  # 标准开关
             ("SL_SW_IF3", "P4", False),  # P4不是开关子设备（支持的开关类型中P4被排除）
@@ -717,7 +681,9 @@ class TestSubdeviceLogicParametrized:
     )
     def test_switch_subdevice_logic(self, device_type, sub_key, expected):
         """测试开关子设备判断逻辑。"""
-        from custom_components.lifesmart.core.helpers import is_switch_subdevice
+        from custom_components.lifesmart.core.platform.platform_detection import (
+            is_switch_subdevice,
+        )
 
         result = is_switch_subdevice(device_type, sub_key)
         assert (
@@ -754,9 +720,9 @@ class TestSubdeviceLogicParametrized:
         "device_type,sub_key,expected",
         [
             # === 窗帘子设备测试 ===
-            ("SL_ETDOOR", "P2", True),  # garage door P2（在GARAGE_DOOR_TYPES中）
-            ("SL_ETDOOR", "HS", True),  # garage door HS（在GARAGE_DOOR_TYPES中）
-            ("SL_DOOYA", "P1", True),  # 杜亚窗帘（在DOOYA_TYPES中）
+            ("SL_ETDOOR", "P2", True),  # garage door P2（SL_ETDOOR类型）
+            ("SL_ETDOOR", "HS", True),  # garage door HS（SL_ETDOOR类型）
+            ("SL_DOOYA", "P1", True),  # 杜亚窗帘（SL_DOOYA类型）
             (
                 "SL_SW_WIN",
                 "OP",
@@ -2058,7 +2024,7 @@ class TestDeviceTypeClassificationComprehensive:
                     "data": {"L1": {"type": 129}, "L2": {"type": 128}},
                 },
                 True,
-                False,
+                True,  # SL_SW_IF3在DEVICE_SPECS_DATA中有light配置
                 False,
                 False,
                 False,
@@ -2230,8 +2196,8 @@ class TestDeviceTypeClassificationComprehensive:
                 False,
                 False,
                 False,
-                False,
-                False,
+                True,  # SL_CP_DN在DEVICE_SPECS_DATA中有binary_sensor配置(P2)
+                True,  # SL_CP_DN在DEVICE_SPECS_DATA中有sensor配置(P4,P5)
                 True,
             ),
             # 通用控制器开关模式 (工作模式8) - 注意：SL_P在ALL_SENSOR_TYPES中
@@ -2304,7 +2270,7 @@ class TestDeviceTypeClassificationComprehensive:
         - 复合设备（如计量插座、智能锁）的多重分类
         - 特殊设备（如超能面板、通用控制器）的条件分类
         """
-        from custom_components.lifesmart.core.helpers import (
+        from custom_components.lifesmart.core.platform.platform_detection import (
             is_switch,
             is_light,
             is_cover,

@@ -19,6 +19,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .core.const import DOMAIN, SUPPORTED_PLATFORMS, UPDATE_LISTENER
 from .core.hub import LifeSmartHub
+from .core import compatibility  # Expose compatibility for backward compatibility
 from .services import LifeSmartServiceManager
 
 _LOGGER = logging.getLogger(__name__)

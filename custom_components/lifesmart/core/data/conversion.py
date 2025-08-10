@@ -172,6 +172,7 @@ def normalize_device_names(dev_dict: dict) -> dict:
     规范化设备名称。
 
     从helpers.py迁移，用于处理设备名称标准化。
+    现在支持复杂的占位符替换功能。
 
     Args:
         dev_dict: 原始设备字典
@@ -179,12 +180,15 @@ def normalize_device_names(dev_dict: dict) -> dict:
     Returns:
         规范化后的设备字典
     """
+    import re
+
     if not isinstance(dev_dict, dict):
         return dev_dict
 
-    normalized = dev_dict.copy()
+    # 深拷贝设备字典，避免修改原始数据
+    normalized = _deep_copy_dict(dev_dict)
 
-    # 规范化设备名称
+    # 规范化主设备名称
     if "name" in normalized:
         name = normalized["name"]
         if isinstance(name, str):
@@ -194,7 +198,60 @@ def normalize_device_names(dev_dict: dict) -> dict:
             name = name.replace("（", "(").replace("）", ")")
             normalized["name"] = name
 
+    # 处理子设备名称占位符替换
+    parent_name = normalized.get("name", "")
+    if isinstance(parent_name, str) and "_chd" in normalized:
+        chd_data = normalized["_chd"]
+        if isinstance(chd_data, dict) and "m" in chd_data:
+            m_data = chd_data["m"]
+            if isinstance(m_data, dict) and "_chd" in m_data:
+                sub_chd_data = m_data["_chd"]
+                if isinstance(sub_chd_data, dict):
+                    # 遍历所有子设备进行名称处理
+                    for sub_key, sub_device in sub_chd_data.items():
+                        if isinstance(sub_device, dict) and "name" in sub_device:
+                            sub_name = sub_device["name"]
+                            if isinstance(sub_name, str):
+                                # 替换 {$EPN} 占位符为父设备名称
+                                processed_name = sub_name.replace("{$EPN}", parent_name)
+
+                                # 替换其他占位符为其内容（去掉花括号）
+                                # 正则表达式匹配 {大写字母、数字、下划线} 的模式
+                                processed_name = re.sub(
+                                    r"\{([A-Z0-9_]+)\}", r"\1", processed_name
+                                )
+
+                                # 清理多余的空格
+                                processed_name = " ".join(processed_name.split())
+
+                                # 更新处理后的名称
+                                sub_device["name"] = processed_name
+
     return normalized
+
+
+def _deep_copy_dict(original: dict) -> dict:
+    """
+    深拷贝字典，避免修改原始数据。
+
+    Args:
+        original: 原始字典
+
+    Returns:
+        深拷贝后的字典
+    """
+    result = {}
+    for key, value in original.items():
+        if isinstance(value, dict):
+            result[key] = _deep_copy_dict(value)
+        elif isinstance(value, list):
+            result[key] = [
+                _deep_copy_dict(item) if isinstance(item, dict) else item
+                for item in value
+            ]
+        else:
+            result[key] = value
+    return result
 
 
 def convert_temperature_decimal(temp_val: int) -> float:

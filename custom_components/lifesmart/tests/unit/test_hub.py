@@ -104,7 +104,7 @@ class TestLifeSmartHub:
 
         # 模拟OAPI客户端创建失败
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartOAPIClient",
+            "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient",
             side_effect=Exception("客户端创建失败"),
         ):
             with pytest.raises(ConfigEntryNotReady, match="Hub 设置失败"):
@@ -129,7 +129,7 @@ class TestLifeSmartHub:
 
         # 模拟客户端正常创建但获取设备失败
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartOAPIClient"
+            "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient"
         ) as mock_client_cls:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
@@ -152,7 +152,7 @@ class TestLifeSmartHub:
 
         # 模拟设备注册失败
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartOAPIClient"
+            "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient"
         ) as mock_client_cls:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
@@ -170,7 +170,7 @@ class TestLifeSmartHub:
             ]
 
             with patch(
-                "custom_components.lifesmart.hub.dr.async_get"
+                "homeassistant.helpers.device_registry.async_get"
             ) as mock_get_registry:
                 mock_registry = MagicMock()
                 mock_get_registry.return_value = mock_registry
@@ -191,7 +191,7 @@ class TestLifeSmartHub:
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartOAPIClient"
+            "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient"
         ) as mock_client_cls:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
@@ -203,7 +203,7 @@ class TestLifeSmartHub:
             # get_wss_url is already properly mocked in create_mock_oapi_client()
 
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartStateManager"
+                "custom_components.lifesmart.core.hub.LifeSmartStateManager"
             ) as mock_state_mgr_cls:
                 mock_state_mgr = MagicMock()
                 mock_state_mgr_cls.return_value = mock_state_mgr
@@ -236,7 +236,7 @@ class TestLifeSmartHub:
         hub = LifeSmartHub(hass, mock_config_entry_local)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartLocalTCPClient"
+            "custom_components.lifesmart.core.client.local_tcp_client.LifeSmartTCPClient"
         ) as mock_client_cls:
             mock_client = AsyncMock()
             mock_client_cls.return_value = mock_client
@@ -264,7 +264,7 @@ class TestLifeSmartHub:
         hub = LifeSmartHub(hass, password_config_entry)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartOAPIClient"
+            "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient"
         ) as mock_client_cls:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
@@ -274,9 +274,17 @@ class TestLifeSmartHub:
             }
             mock_client.async_get_all_devices.return_value = []
 
-            with patch(
-                "custom_components.lifesmart.hub.async_track_time_interval"
-            ) as mock_track:
+            with (
+                patch(
+                    "custom_components.lifesmart.core.hub.async_track_time_interval"
+                ) as mock_track,
+                patch(
+                    "custom_components.lifesmart.core.hub.LifeSmartStateManager"
+                ) as mock_state_mgr_cls,
+            ):
+                mock_state_mgr = MagicMock()
+                mock_state_mgr.stop = AsyncMock()
+                mock_state_mgr_cls.return_value = mock_state_mgr
                 result = await hub.async_setup()
                 assert result is True, "设置应该成功"
                 # 验证刷新任务被创建
@@ -293,7 +301,7 @@ class TestLifeSmartHub:
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartOAPIClient"
+            "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient"
         ) as mock_client_cls:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
@@ -323,7 +331,7 @@ class TestLifeSmartHub:
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartOAPIClient"
+            "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient"
         ) as mock_client_cls:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
@@ -336,7 +344,7 @@ class TestLifeSmartHub:
 
             # Instead of testing get_ws_timeout call, test that the state manager is created
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartStateManager"
+                "custom_components.lifesmart.core.hub.LifeSmartStateManager"
             ) as mock_state_mgr_cls:
                 mock_state_mgr = MagicMock()
                 mock_state_mgr.stop = AsyncMock()  # Make stop method async
@@ -380,7 +388,7 @@ class TestLifeSmartHub:
         mock_devices = [{"agt": "hub1", "me": "dev1", "devtype": "SL_SW"}]
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartOAPIClient"
+            "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient"
         ) as mock_client_class:
             mock_client = create_mock_oapi_client()
             mock_client_class.return_value = mock_client
@@ -392,7 +400,7 @@ class TestLifeSmartHub:
             # get_wss_url is already properly mocked in create_mock_oapi_client()
 
             with patch(
-                "custom_components.lifesmart.hub.LifeSmartStateManager"
+                "custom_components.lifesmart.core.hub.LifeSmartStateManager"
             ) as mock_state_manager_class:
                 # 创建正确的mock实例，区分同步和异步方法
                 mock_state_manager_instance = MagicMock()
@@ -423,9 +431,17 @@ class TestLifeSmartHub:
         hub = LifeSmartHub(hass, mock_config_entry_local)
         mock_devices = [{"agt": "hub1", "me": "dev1", "devtype": "SL_SW"}]
 
-        with patch(
-            "custom_components.lifesmart.hub.LifeSmartLocalTCPClient"
-        ) as mock_client_class:
+        with (
+            patch(
+                "custom_components.lifesmart.core.hub.LifeSmartTCPClient"
+            ) as mock_client_class,
+            patch(
+                "custom_components.lifesmart.core.hub.LifeSmartStateManager"
+            ) as mock_state_mgr_cls,
+        ):
+            mock_state_mgr = MagicMock()
+            mock_state_mgr.stop = AsyncMock()
+            mock_state_mgr_cls.return_value = mock_state_mgr
             mock_client = mock_client_class.return_value
             mock_client.async_get_all_devices = AsyncMock(return_value=mock_devices)
 
@@ -456,7 +472,7 @@ class TestLifeSmartHub:
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartOAPIClient"
+            "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient"
         ) as mock_client_class:
             mock_client = create_mock_oapi_client()
             mock_client_class.return_value = mock_client
@@ -521,7 +537,7 @@ class TestLifeSmartHub:
         }
 
         with patch(
-            "custom_components.lifesmart.hub.dispatcher_send"
+            "custom_components.lifesmart.core.hub.dispatcher_send"
         ) as mock_dispatcher:
             await hub.data_update_handler(raw_data)
             mock_dispatcher.assert_called_once()
@@ -567,7 +583,7 @@ class TestLifeSmartHub:
         hub._local_task = real_task
 
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartLocalTCPClient"
+            "custom_components.lifesmart.core.client.local_tcp_client.LifeSmartTCPClient"
         ) as mock_local_client:
             # 设置 client 为本地客户端类型
             hub.client = mock_local_client.return_value
@@ -606,7 +622,7 @@ class TestLifeSmartStateManager:
     def mock_state_manager_class(self):
         """Mock LifeSmartStateManager 类本身，避免创建真实实例。"""
         with patch(
-            "custom_components.lifesmart.hub.LifeSmartStateManager"
+            "custom_components.lifesmart.core.hub.LifeSmartStateManager"
         ) as mock_class:
             mock_instance = MagicMock()
             mock_instance.hass = None
@@ -945,7 +961,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试定时刷新功能 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
 
@@ -959,7 +977,7 @@ class TestLifeSmartStateManager:
             hub = mock_hub_class(hass, mock_config_entry_oapi)
 
             with patch(
-                "custom_components.lifesmart.hub.dispatcher_send"
+                "homeassistant.helpers.dispatcher.dispatcher_send"
             ) as mock_dispatcher:
                 await hub._async_periodic_refresh()
                 mock_hub_instance._async_periodic_refresh.assert_called_once()
@@ -969,7 +987,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试定时刷新遇到错误的情况 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
 
@@ -991,7 +1011,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_local, mock_hub_for_testing
     ):
         """测试本地模式连接失败的处理 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance.async_setup = AsyncMock(side_effect=ConfigEntryNotReady())
@@ -1006,7 +1028,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_local, mock_hub_for_testing
     ):
         """测试本地模式设置时的异常处理 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance.async_setup = AsyncMock(side_effect=ConfigEntryNotReady())
@@ -1021,7 +1045,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试密码登录时的认证错误处理 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance.async_setup = AsyncMock(side_effect=ConfigEntryNotReady())
@@ -1046,7 +1072,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试 API 错误的处理 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance.async_setup = AsyncMock(side_effect=ConfigEntryNotReady())
@@ -1061,7 +1089,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试被过滤设备的数据更新处理 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance.data_update_handler = AsyncMock()
@@ -1096,7 +1126,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试数据更新处理中的错误处理 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance.data_update_handler = AsyncMock()
@@ -1127,7 +1159,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试 AI 事件处理 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance._handle_ai_event = MagicMock()
@@ -1161,7 +1195,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试中枢设备注册功能 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance._async_register_hubs = AsyncMock()
@@ -1182,7 +1218,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_local, mock_hub_for_testing
     ):
         """测试本地任务清理功能 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance._cleanup_local_task = AsyncMock()
@@ -1198,7 +1236,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_oapi, mock_hub_for_testing
     ):
         """测试设置过程中的令牌更新 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance.async_setup = AsyncMock(return_value=True)
@@ -1219,7 +1259,9 @@ class TestLifeSmartStateManager:
         self, hass: HomeAssistant, mock_config_entry_local, mock_hub_for_testing
     ):
         """测试本地更新回调 - 使用Hub类的单元测试。"""
-        with patch("custom_components.lifesmart.hub.LifeSmartHub") as mock_hub_class:
+        with patch(
+            "custom_components.lifesmart.core.hub.LifeSmartHub"
+        ) as mock_hub_class:
             mock_hub_instance = MagicMock()
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance._local_update_callback = AsyncMock()

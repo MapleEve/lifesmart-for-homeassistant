@@ -240,18 +240,17 @@ def get_platform_constants():
     """
     获取版本兼容的HA平台常量
 
-    基于当前支持的最低HA版本 2022.10.0 进行优化：
-    - EVENT, VALVE, AIR_QUALITY 平台在该版本中已经支持
-    - 移除了不必要的兼容性检查，简化代码逻辑
+    基于当前支持的最低HA版本 2022.10.0 进行优化，但需要处理新平台的兼容性：
+    - EVENT 平台在 HA 2024.4+ 中引入
+    - VALVE 平台在 HA 2023.11+ 中引入
+    - 其他平台在 2022.10.0 中已支持
 
     Returns:
         dict: 包含平台常量的字典
     """
     from homeassistant.const import Platform
 
-    return {
-        "EVENT": Platform.EVENT,
-        "VALVE": Platform.VALVE,
+    result = {
         "AIR_QUALITY": Platform.AIR_QUALITY,
         "BUTTON": Platform.BUTTON,
         "SWITCH": Platform.SWITCH,
@@ -267,3 +266,16 @@ def get_platform_constants():
         "SCENE": Platform.SCENE,
         "SIREN": Platform.SIREN,
     }
+
+    # 检查较新的平台是否存在
+    try:
+        result["EVENT"] = Platform.EVENT
+    except AttributeError:
+        result["EVENT"] = None
+
+    try:
+        result["VALVE"] = Platform.VALVE
+    except AttributeError:
+        result["VALVE"] = None
+
+    return result

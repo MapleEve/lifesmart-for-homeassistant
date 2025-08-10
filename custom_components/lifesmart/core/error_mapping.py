@@ -1,8 +1,10 @@
-"""由 @MapleEve 实现的 LifeSmart 诊断与错误处理模块。
+"""LifeSmart API错误码映射和用户友好错误处理模块。
 
-此模块定义了 LifeSmart API 可能返回的错误码，并提供了将这些错误码
-转换为用户可读的描述、解决方案建议和逻辑分类的功能。
+此模块提供LifeSmart API错误码到中文描述、解决方案建议
+和逻辑分类的映射功能，用于改善用户体验和故障排查。
 这有助于在日志中提供更清晰的错误信息，并指导用户解决问题。
+
+由 @MapleEve 创建，作为集成架构重构的一部分。
 """
 
 from typing import Tuple, Optional

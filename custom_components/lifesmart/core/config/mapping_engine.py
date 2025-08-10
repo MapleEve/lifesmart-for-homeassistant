@@ -340,10 +340,10 @@ class EnhancedMappingEngine:
                 if not device_version:
                     device_version = device.get("version", "default")
 
-                # 获取版本对应的配置
+                # 获取版本对应的配置 - 增强的回退机制
                 versions = raw_config["version_modes"]
-                selected_config = versions.get(
-                    str(device_version), versions.get("default", {})
+                selected_config = self._get_versioned_config_with_fallback(
+                    versions, device_version, device.get("devtype", "")
                 )
 
                 # 将版本配置转换为HA规范并应用业务逻辑处理
@@ -596,6 +596,11 @@ class EnhancedMappingEngine:
                                     )
                                 )
 
+            # 合并设备的固有配置（如传感器平台）
+            self._merge_inherent_platforms(
+                result, raw_config, device_data, device.get("devtype", "")
+            )
+
             return result
 
         elif device_mode == "climate_mode" and "climate_mode" in raw_config:
@@ -628,6 +633,11 @@ class EnhancedMappingEngine:
                 # 如果有传感器IO口，生成传感器平台
                 if sensor_ios:
                     result["sensor"] = sensor_ios
+
+            # 合并设备的固有配置（如传感器平台）
+            self._merge_inherent_platforms(
+                result, raw_config, device_data, device.get("devtype", "")
+            )
 
             return result
 
@@ -674,6 +684,11 @@ class EnhancedMappingEngine:
                                 )
                             )
 
+            # 合并设备的固有配置（如传感器平台）
+            self._merge_inherent_platforms(
+                result, raw_config, device_data, device.get("devtype", "")
+            )
+
             return result
 
         elif device_mode == "free_mode":
@@ -709,6 +724,11 @@ class EnhancedMappingEngine:
                 if platform_name in free_config:
                     result[platform_name] = free_config[platform_name]
 
+            # 合并设备的固有配置（如传感器平台）
+            self._merge_inherent_platforms(
+                result, raw_config, device_data, device.get("devtype", "")
+            )
+
             return result
 
         else:
@@ -717,6 +737,44 @@ class EnhancedMappingEngine:
                 "_device_mode": device_mode,
                 "_error": f"Unknown device mode: {device_mode}",
             }
+
+    def _merge_inherent_platforms(
+        self, result: dict, raw_config: dict, device_data: dict, device_type: str
+    ) -> None:
+        """
+        合并设备的固有平台配置到动态模式结果中
+
+        Args:
+            result: 动态模式的结果配置
+            raw_config: 设备原始配置
+            device_data: 设备数据
+            device_type: 设备类型
+        """
+        # 需要合并的固有平台配置
+        inherent_platforms = [
+            "sensor",
+            "binary_sensor",
+            "light",
+            "switch",
+            "cover",
+            "climate",
+        ]
+
+        for platform_name in inherent_platforms:
+            if platform_name in raw_config and platform_name not in result:
+                # 只在结果中不存在时才添加，避免覆盖模式特定的配置
+                platform_config = raw_config[platform_name]
+                if isinstance(platform_config, dict):
+                    result[platform_name] = {}
+                    for io_port, io_config in platform_config.items():
+                        if isinstance(io_config, dict):
+                            result[platform_name][io_port] = (
+                                self._process_io_config_with_logic(
+                                    io_config,
+                                    device_data.get(io_port, {}),
+                                    device_type,
+                                )
+                            )
 
     def process_device_io_value(
         self,
@@ -1042,8 +1100,10 @@ class EnhancedMappingEngine:
         else:
             return {}
 
-        # 选择对应的版本配置
-        selected_config = versions.get(str(device_version), versions.get("default", {}))
+        # 选择对应的版本配置 - 使用增强的回退机制
+        selected_config = self._get_versioned_config_with_fallback(
+            versions, device_version, device.get("devtype", "")
+        )
         return self._resolve_static_mapping(selected_config, device.get("data", {}))
 
     def _extract_version_from_fullcls(self, device: dict) -> str:
@@ -1384,6 +1444,50 @@ class EnhancedMappingEngine:
             return True
 
         return False
+
+    def _get_versioned_config_with_fallback(
+        self, versions: dict, device_version: str, device_type: str
+    ) -> dict:
+        """
+        获取版本化设备配置，支持智能回退机制
+
+        Args:
+            versions: 版本配置字典
+            device_version: 设备版本
+            device_type: 设备类型 (用于日志)
+
+        Returns:
+            选中的版本配置字典
+        """
+        # 1. 优先使用精确匹配的版本
+        if str(device_version) in versions:
+            return versions[str(device_version)]
+
+        # 2. 尝试使用default版本
+        if "default" in versions:
+            return versions["default"]
+
+        # 3. 智能回退：选择第一个可用版本
+        if versions:
+            first_version_key = next(iter(versions.keys()))
+            first_version_config = versions[first_version_key]
+
+            # 记录回退决策（如果有日志系统）
+            try:
+                import logging
+
+                _LOGGER = logging.getLogger(__name__)
+                _LOGGER.debug(
+                    f"Device {device_type}: version '{device_version}' not found, "
+                    f"falling back to '{first_version_key}' (available: {list(versions.keys())})"
+                )
+            except:
+                pass  # 忽略日志错误
+
+            return first_version_config
+
+        # 4. 最后兜底：返回空配置
+        return {}
 
 
 # 创建全局引擎实例

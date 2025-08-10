@@ -2,7 +2,7 @@
 
 import logging
 
-from custom_components.lifesmart.core import local_web_client
+from custom_components.lifesmart.core.client import local_web_client
 
 
 class TestLocalWebClientModule:
@@ -18,7 +18,7 @@ class TestLocalWebClientModule:
         assert isinstance(local_web_client._LOGGER, logging.Logger)
         assert (
             local_web_client._LOGGER.name
-            == "custom_components.lifesmart.core.local_web_client"
+            == "custom_components.lifesmart.core.client.local_web_client"
         )
 
     def test_module_docstring(self):

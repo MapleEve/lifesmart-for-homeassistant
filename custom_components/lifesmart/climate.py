@@ -45,6 +45,10 @@ from .core.const import (
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
+    CLIMATE_DEFAULT_MIN_TEMP,
+    CLIMATE_DEFAULT_MAX_TEMP,
+    CLIMATE_HVAC_MIN_TEMP,
+    CLIMATE_HVAC_MAX_TEMP,
 )
 from .core.data.conversion import (
     get_f_fan_mode,
@@ -292,7 +296,10 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             HVACMode.DRY,
         ]
         self._attr_fan_modes = list(LIFESMART_F_HVAC_MODE_MAP.keys())
-        self._attr_min_temp, self._attr_max_temp = 10, 35
+        self._attr_min_temp, self._attr_max_temp = (
+            CLIMATE_HVAC_MIN_TEMP,
+            CLIMATE_HVAC_MAX_TEMP,
+        )
 
     def _init_sl_uaccb(self):
         """初始化 SL_UACCB 空调控制器 (其逻辑与 V_AIR_P 几乎相同)。"""
@@ -323,7 +330,10 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         modes = modes_map.get(cfg_mode, [])
         self._attr_hvac_modes = [HVACMode.OFF] + modes
         self._attr_fan_modes = list(LIFESMART_TF_FAN_MAP.keys())
-        self._attr_min_temp, self._attr_max_temp = 10, 35
+        self._attr_min_temp, self._attr_max_temp = (
+            CLIMATE_HVAC_MIN_TEMP,
+            CLIMATE_HVAC_MAX_TEMP,
+        )
 
     def _init_sl_fcu(self):
         """初始化 SL_FCU 星玉温控面板 (其逻辑与 SL_NATURE 相同)。"""
@@ -337,7 +347,10 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        self._attr_min_temp, self._attr_max_temp = 5, 35
+        self._attr_min_temp, self._attr_max_temp = (
+            CLIMATE_DEFAULT_MIN_TEMP,
+            CLIMATE_DEFAULT_MAX_TEMP,
+        )
 
     def _init_sl_cp_air(self):
         """初始化 SL_CP_AIR 风机盘管。"""
@@ -356,7 +369,10 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             HVACMode.AUTO,
         ]
         self._attr_fan_modes = list(LIFESMART_CP_AIR_FAN_MAP.keys())
-        self._attr_min_temp, self._attr_max_temp = 10, 35
+        self._attr_min_temp, self._attr_max_temp = (
+            CLIMATE_HVAC_MIN_TEMP,
+            CLIMATE_HVAC_MAX_TEMP,
+        )
 
     def _init_sl_cp_vl(self):
         """初始化 SL_CP_VL 温控阀门。"""
@@ -370,7 +386,10 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        self._attr_min_temp, self._attr_max_temp = 5, 35
+        self._attr_min_temp, self._attr_max_temp = (
+            CLIMATE_DEFAULT_MIN_TEMP,
+            CLIMATE_DEFAULT_MAX_TEMP,
+        )
 
     def _init_sl_tr_acipm(self):
         """初始化 SL_TR_ACIPM 新风系统。"""

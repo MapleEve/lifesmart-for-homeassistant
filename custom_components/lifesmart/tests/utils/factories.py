@@ -61,9 +61,20 @@ def create_mock_oapi_client(*, spec=None):
     )
 
     # 设置默认的成功响应
-    mock_client.async_refresh_token.return_value = True
+    mock_client.async_refresh_token.return_value = {
+        "usertoken": DEFAULT_TEST_VALUES["usertoken"],
+        "expiredtime": 9999999999,
+    }
     mock_client.async_get_all_devices.return_value = []
-    mock_client.login_async.return_value = True
+    mock_client.login_async.return_value = {
+        "usertoken": DEFAULT_TEST_VALUES["usertoken"],
+        "userid": DEFAULT_TEST_VALUES["userid"],
+        "region": DEFAULT_TEST_VALUES["region"],
+    }
+
+    # 为测试兼容性添加_mock_*属性别名
+    mock_client._mock_get_all_devices = mock_client.async_get_all_devices
+    mock_client._mock_refresh_token = mock_client.async_refresh_token
 
     return mock_client
 

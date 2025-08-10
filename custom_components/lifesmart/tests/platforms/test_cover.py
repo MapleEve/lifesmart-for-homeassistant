@@ -103,7 +103,7 @@ class TestCoverSetup:
 
         # 使用修改后的设备列表重新加载集成
         # 完全模拟Hub的设置过程 - 需要在 __init__ 模块级别 patch
-        with patch("custom_components.lifesmart.LifeSmartHub") as MockHubClass:
+        with patch("custom_components.lifesmart.core.hub.LifeSmartHub") as MockHubClass:
             # 使用工厂函数创建标准的Mock Hub
             mock_hub_instance = create_mock_hub(mock_lifesmart_devices, mock_client)
             MockHubClass.return_value = mock_hub_instance

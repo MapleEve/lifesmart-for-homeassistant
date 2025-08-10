@@ -20,7 +20,8 @@ import pytest
 from custom_components.lifesmart.core.client.protocol import (
     LifeSmartProtocol,
     LifeSmartPacketFactory,
-    # LSTimestamp, LSEncoder 在新架构中已重构
+    LSTimestamp,
+    LSEncoder,
 )
 
 

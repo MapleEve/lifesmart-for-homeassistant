@@ -35,13 +35,13 @@ _VALVE_PLATFORM = _platform_constants.get("VALVE")
 1. 【动态设备分类规则】
    某些设备根据配置参数动态决定功能：
    - SL_P通用控制器：根据P1口工作模式(P1>>24)&0xE决定是开关、窗帘还是传感器
-   - SL_NATURE超能面板：根据P5口值(P5&0xFF)决定是开关版(1)还是温控版(3/6)  
+   - SL_NATURE超能面板：根据P5口值(P5&0xFF)决定是开关版(1)还是温控版(3/6)
    - 动态分类实现在core/platform/platform_detection.py中，不能仅依赖设备类型判断
 
 2. 【IO口数据格式和位运算规则】
    LifeSmart使用type和val两个字段表示IO口状态：
    - type字段：奇偶性(type&1)表示开关状态，1=开启/0=关闭
-   - val字段：根据设备类型表示亮度、温度、颜色等具体数值  
+   - val字段：根据设备类型表示亮度、温度、颜色等具体数值
    - 浮点数据：当(type&0x7e)==0x2时，val为IEEE754浮点数的32位整数表示
    - 详细转换逻辑见core/data/conversion.py中的转换函数
 
@@ -167,10 +167,22 @@ DEFAULT_LOCAL_TIMEOUT = 30
 WS_HEARTBEAT_INTERVAL = 30  # 心跳间隔(秒)
 WS_RECONNECT_DELAY = 5  # 重连延迟(秒)
 WS_MAX_RECONNECT_ATTEMPTS = 10  # 最大重连次数
+WS_RECEIVE_TIMEOUT = 30  # WebSocket接收消息超时(秒)
+WS_CLOSE_TIMEOUT = 5.0  # WebSocket关闭超时(秒)
+WS_HEARTBEAT_TIMEOUT = 5.0  # WebSocket心跳超时(秒)
 
 # HTTP请求配置
 HTTP_TIMEOUT = 30  # HTTP请求超时时间(秒)
 HTTP_MAX_RETRIES = 3  # HTTP请求最大重试次数
+
+# TCP连接配置
+TCP_CONNECT_TIMEOUT = 5  # TCP连接超时(秒)
+TCP_READ_TIMEOUT = 10  # TCP读取超时(秒)
+TCP_DEFAULT_TIMEOUT = 10  # TCP默认超时(秒)
+
+# 平台实体相关超时
+BINARY_SENSOR_BUTTON_RESET_DELAY = 0.5  # 二进制传感器按钮重置延迟(秒)
+CONCURRENCY_QUEUE_TIMEOUT = 0.1  # 并发管理队列超时(秒)
 
 # ================= Home Assistant 平台支持 (HA Platform Support) =================
 # Home Assistant 支持的平台列表
@@ -233,6 +245,16 @@ CAMERA_SNAPSHOT_TIMEOUT = 5  # 快照超时时间(秒)
 NUMBER_MIN_VALUE = 0
 NUMBER_MAX_VALUE = 100
 NUMBER_STEP = 1
+
+# 气候平台相关
+CLIMATE_DEFAULT_MIN_TEMP = 5  # 默认最低温度(摄氏度)
+CLIMATE_DEFAULT_MAX_TEMP = 35  # 默认最高温度(摄氏度)
+CLIMATE_HVAC_MIN_TEMP = 10  # HVAC最低温度(摄氏度)
+CLIMATE_HVAC_MAX_TEMP = 35  # HVAC最高温度(摄氏度)
+
+# 灯光平台相关
+LIGHT_DEFAULT_MIN_KELVIN = 2700  # 默认最低色温(K)
+LIGHT_DEFAULT_MAX_KELVIN = 6500  # 默认最高色温(K)
 
 # 空气质量平台相关
 AIR_QUALITY_EXCELLENT = 0  # 优

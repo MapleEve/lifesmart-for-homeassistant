@@ -34,8 +34,9 @@ from .core.const import (
     DOMAIN,
     LIFESMART_REGION_OPTIONS,
 )
-from .core.diagnostics import get_error_advice
+from .core.error_mapping import get_error_advice
 from .core.exceptions import LifeSmartAuthError
+from .core.config_state import ConfigFlowStateManager
 from .core.platform.platform_detection import safe_get
 
 _LOGGER = logging.getLogger(__name__)
@@ -161,7 +162,8 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
-        self.config_data = {}
+        # 使用新的状态管理器替代简单的config_data字典
+        self._state = ConfigFlowStateManager.create_state()
 
     # 统一的流程结束处理函数
     async def _async_finish_flow(self, validation_result: dict[str, Any]) -> FlowResult:
@@ -257,35 +259,39 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle cloud setup: Step 1 - Basic info and auth method."""
         try:
-
-            if not hasattr(self, "config_data"):
-                self.config_data = {}
-
-            if self._reauth_entry:
-                self.config_data.update(self._reauth_entry.data)
+            # 使用状态管理器的统一状态管理
+            base_config = self._reauth_entry.data.copy() if self._reauth_entry else {}
 
             if user_input is not None:
-                self.config_data.update(user_input)
-                if user_input[CONF_LIFESMART_AUTH_METHOD] == "token":
+                # 使用状态管理器更新配置，会自动验证
+                self._state.update_config(base_config, user_input)
+
+                # 根据认证方式跳转到下一步
+                if self._state.config_data[CONF_LIFESMART_AUTH_METHOD] == "token":
                     return await self.async_step_cloud_token()
                 return await self.async_step_cloud_password()
+
+            # 使用状态管理器获取默认值，可以处理重认证情况
+            if self._reauth_entry:
+                self._state.set_reauth_entry(self._reauth_entry)
+            defaults = self._state.get_default_values("cloud")
 
             cloud_schema = vol.Schema(
                 {
                     vol.Required(
                         CONF_LIFESMART_APPKEY,
-                        default=self.config_data.get(CONF_LIFESMART_APPKEY, ""),
+                        default=defaults.get(CONF_LIFESMART_APPKEY, ""),
                     ): str,
                     vol.Required(
                         CONF_LIFESMART_APPTOKEN,
-                        default=self.config_data.get(CONF_LIFESMART_APPTOKEN, ""),
+                        default=defaults.get(CONF_LIFESMART_APPTOKEN, ""),
                     ): str,
                     vol.Required(
                         CONF_LIFESMART_USERID,
-                        default=self.config_data.get(CONF_LIFESMART_USERID, ""),
+                        default=defaults.get(CONF_LIFESMART_USERID, ""),
                     ): str,
                     vol.Required(
-                        CONF_REGION, default=self.config_data.get(CONF_REGION, "cn2")
+                        CONF_REGION, default=defaults.get(CONF_REGION, "cn2")
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=LIFESMART_REGION_OPTIONS,
@@ -295,9 +301,7 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     vol.Required(
                         CONF_LIFESMART_AUTH_METHOD,
-                        default=self.config_data.get(
-                            CONF_LIFESMART_AUTH_METHOD, "token"
-                        ),
+                        default=defaults.get(CONF_LIFESMART_AUTH_METHOD, "token"),
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
                             options=["token", "password"],
@@ -308,6 +312,12 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             )
             return self.async_show_form(step_id="cloud", data_schema=cloud_schema)
+        except vol.Invalid:
+            # 验证错误，显示错误信息并重新显示表单
+            errors = {"base": "invalid_auth"}
+            return self.async_show_form(
+                step_id="cloud", data_schema=cloud_schema, errors=errors
+            )
         except Exception as e:
             _LOGGER.exception("Unexpected error in async_step_cloud: %s", e)
             return self.async_abort(reason="unknown_error")
@@ -318,15 +328,18 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle cloud setup: Step 2 - Enter User Token."""
         errors = {}
         if user_input is not None:
-            self.config_data.update(user_input)
+            # 使用状态管理器更新配置
+            self._state.update_config({}, user_input)
             try:
-                validation_result = await validate_input(self.hass, self.config_data)
+                validation_result = await validate_input(
+                    self.hass, self._state.config_data
+                )
                 return await self._async_finish_flow(validation_result)
             except AbortFlow:
                 raise
             except LifeSmartAuthError as e:
                 _LOGGER.error("配置流程认证失败: %s", e)
-                # 从异常中获取错误码
+                # 使用统一的错误处理机制
                 if e.code:
                     _, advice, _ = get_error_advice(e.code)
                     errors["base"] = advice
@@ -338,13 +351,16 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("配置流程发生未知错误: %s", e, exc_info=True)
                 errors["base"] = "unknown"
 
+        # 使用状态管理器获取默认值
+        defaults = self._state.get_default_values("cloud_token")
+
         return self.async_show_form(
             step_id="cloud_token",
             data_schema=vol.Schema(
                 {
                     vol.Required(
                         CONF_LIFESMART_USERTOKEN,
-                        default=self.config_data.get(CONF_LIFESMART_USERTOKEN, ""),
+                        default=defaults.get(CONF_LIFESMART_USERTOKEN, ""),
                     ): str
                 }
             ),
@@ -357,9 +373,12 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle cloud setup: Step 2 - Enter User Password."""
         errors = {}
         if user_input is not None:
-            self.config_data.update(user_input)
+            # 使用状态管理器更新配置
+            self._state.update_config({}, user_input)
             try:
-                validation_result = await validate_input(self.hass, self.config_data)
+                validation_result = await validate_input(
+                    self.hass, self._state.config_data
+                )
                 return await self._async_finish_flow(validation_result)
             except AbortFlow:
                 raise
@@ -403,8 +422,9 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("重新认证失败：无法找到配置条目 %s", entry_id)
             return self.async_abort(reason="reauth_entry_not_found")
 
-        # 将现有数据预填充到流程中
-        self.config_data = self._reauth_entry.data.copy()
+        # 使用状态管理器初始化重认证状态
+        self._state = ConfigFlowStateManager.create_reauth_state(self._reauth_entry)
+
         # 直接进入云端配置的第一步
         return await self.async_step_cloud()
 

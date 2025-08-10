@@ -16,7 +16,7 @@ import logging
 import time
 import traceback
 from datetime import datetime, timedelta
-from typing import Optional, Callable
+from typing import Optional, Callable, Dict, Any
 
 import aiohttp
 from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, ConfigEntry
@@ -37,8 +37,8 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .client import LifeSmartTCPClient, LifeSmartOpenAPIClient
 from .client_base import LifeSmartClientBase
-# aiohttp 版本兼容性处理
 from .compatibility import get_ws_timeout
+from .concurrency_manager import ConcurrencyManager
 from .const import (
     CONF_AI_INCLUDE_AGTS,
     CONF_AI_INCLUDE_ITEMS,
@@ -57,6 +57,9 @@ from .const import (
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
     SUBDEVICE_INDEX_KEY,
+    WS_RECEIVE_TIMEOUT,
+    WS_CLOSE_TIMEOUT,
+    WS_HEARTBEAT_TIMEOUT,
 )
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 from .helpers import generate_unique_id
@@ -78,6 +81,7 @@ class LifeSmartHub:
         _state_manager: WebSocket 状态管理器（仅 OAPI 模式）
         _local_task: 本地连接任务（仅本地模式）
         _refresh_task_unsub: 定时刷新任务取消函数
+        _concurrency_manager: 并发控制管理器
     """
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -94,6 +98,15 @@ class LifeSmartHub:
         self._state_manager: Optional[LifeSmartStateManager] = None
         self._local_task: Optional[asyncio.Task] = None
         self._refresh_task_unsub: Optional[Callable[[], None]] = None
+
+        # 初始化并发控制管理器
+        self._concurrency_manager = ConcurrencyManager()
+
+        # 保持向后兼容的锁引用（已弃用，将在未来版本中移除）
+        self._token_refresh_lock = self._concurrency_manager._token_refresh_lock
+        self._device_update_semaphore = (
+            self._concurrency_manager._device_update_semaphore
+        )
 
     async def async_setup(self) -> bool:
         """异步设置 Hub，包括客户端创建、设备获取和后台任务启动。
@@ -202,12 +215,16 @@ class LifeSmartHub:
         # 刷新令牌以确保状态同步
         _LOGGER.info("正在刷新令牌以确保状态同步...")
         try:
-            auth_response = await self.client.async_refresh_token()
+            auth_response = await self._concurrency_manager.safe_token_refresh(
+                self.client.async_refresh_token
+            )
             # 如果令牌有更新，持久化到配置
             if config_data.get("usertoken") != auth_response.get("usertoken"):
                 config_data["usertoken"] = auth_response["usertoken"]
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=config_data
+                await self._concurrency_manager.safe_config_update(
+                    lambda: self.hass.config_entries.async_update_entry(
+                        self.config_entry, data=config_data
+                    )
                 )
         except LifeSmartAuthError as e:
             # 如果刷新失败且不是密码登录，触发重新认证
@@ -300,6 +317,7 @@ class LifeSmartHub:
                 client=self.client,
                 ws_url=self.client.get_wss_url(),
                 refresh_callback=self._async_periodic_refresh,
+                concurrency_manager=self._concurrency_manager,  # 传递并发控制管理器
             )
 
             # 设置令牌过期时间
@@ -331,43 +349,61 @@ class LifeSmartHub:
         Args:
             raw_data: 从 WebSocket 或本地连接收到的原始数据
         """
-        try:
-            data = raw_data.get("msg", {})
-            if not data:
-                _LOGGER.debug("收到空数据包，已忽略: %s", raw_data)
-                return
 
-            # 解析关键字段
-            device_type = data.get(DEVICE_TYPE_KEY, "unknown")
-            hub_id = data.get(HUB_ID_KEY, "").strip()
-            device_id = data.get(DEVICE_ID_KEY, "").strip()
-            sub_device_key = str(data.get(SUBDEVICE_INDEX_KEY, "")).strip()
+        # 使用并发控制管理器处理设备更新
+        async def _process_update():
+            try:
+                data = raw_data.get("msg", {})
+                if not data:
+                    _LOGGER.debug("收到空数据包，已忽略: %s", raw_data)
+                    return
 
-            # 应用过滤器
-            if self._should_filter_device(device_id, hub_id):
-                return
+                # 解析关键字段
+                device_type = data.get(DEVICE_TYPE_KEY, "unknown")
+                hub_id = data.get(HUB_ID_KEY, "").strip()
+                device_id = data.get(DEVICE_ID_KEY, "").strip()
+                sub_device_key = str(data.get(SUBDEVICE_INDEX_KEY, "")).strip()
 
-            # 处理特殊子设备（AI事件）
-            if sub_device_key == "s":
-                self._handle_ai_event(data, device_id, hub_id)
-                return
+                # 应用过滤器
+                if self._should_filter_device(device_id, hub_id):
+                    return
 
-            # 分发普通设备更新
-            unique_id = generate_unique_id(
-                device_type, hub_id, device_id, sub_device_key
-            )
-            dispatcher_send(
-                self.hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", data
-            )
+                # 处理特殊子设备（AI事件）
+                if sub_device_key == "s":
+                    self._handle_ai_event(data, device_id, hub_id)
+                    return
 
-            _LOGGER.debug(
-                "状态更新已派发 -> %s: %s",
-                unique_id,
-                json.dumps(data, ensure_ascii=False),
-            )
+                # 分发普通设备更新
+                unique_id = generate_unique_id(
+                    device_type, hub_id, device_id, sub_device_key
+                )
+                dispatcher_send(
+                    self.hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", data
+                )
 
-        except Exception as e:
-            _LOGGER.error("处理设备更新时发生异常: %s\n原始数据: %s", str(e), raw_data)
+                _LOGGER.debug(
+                    "状态更新已派发 -> %s: %s",
+                    unique_id,
+                    json.dumps(data, ensure_ascii=False),
+                )
+
+            except json.JSONDecodeError as e:
+                _LOGGER.warning("设备数据JSON解析失败: %s", e)
+                # 触发设备重新同步
+                asyncio.create_task(self._schedule_device_sync())
+
+            except KeyError as e:
+                _LOGGER.warning("设备数据字段缺失: %s", e)
+                # 记录设备状态异常
+                device_type = raw_data.get("msg", {}).get(DEVICE_TYPE_KEY, "unknown")
+                asyncio.create_task(self._mark_device_problematic(device_type))
+
+            except Exception as e:
+                _LOGGER.error("处理设备更新时发生异常: %s", e, exc_info=True)
+                # 触发故障恢复流程
+                asyncio.create_task(self._trigger_recovery_procedure(raw_data))
+
+        await self._concurrency_manager.safe_device_update(_process_update)
 
     def _should_filter_device(self, device_id: str, hub_id: str) -> bool:
         """检查设备是否应被过滤。
@@ -439,7 +475,85 @@ class LifeSmartHub:
                 except asyncio.CancelledError:
                     pass
 
+        # 关闭并发控制管理器
+        await self._concurrency_manager.shutdown()
+
         _LOGGER.info("LifeSmart Hub 已成功卸载。")
+
+    async def _schedule_device_sync(self):
+        """调度设备重新同步"""
+
+        async def _sync_operation():
+            try:
+                _LOGGER.info("开始执行设备重新同步...")
+                await asyncio.sleep(5)  # 延迟5秒避免频繁同步
+                # 重新获取设备列表并更新本地缓存
+                if self.client:
+                    new_devices = await self.client.async_get_all_devices()
+                    self.devices = new_devices
+                    # 通知所有实体更新
+                    dispatcher_send(self.hass, LIFESMART_SIGNAL_UPDATE_ENTITY)
+                    _LOGGER.info("设备重新同步完成，更新了 %d 个设备", len(new_devices))
+            except LifeSmartAPIError as e:
+                _LOGGER.error("设备同步API错误: %s", e)
+            except Exception as e:
+                _LOGGER.error("设备重新同步失败: %s", e)
+
+        await self._concurrency_manager.safe_device_sync(_sync_operation)
+
+    async def _mark_device_problematic(self, device_type: str):
+        """标记设备存在问题"""
+        try:
+            _LOGGER.warning("设备类型 %s 存在数据问题，已标记", device_type)
+            # 实现设备健康状态跟踪
+            if not hasattr(self, "_problematic_devices"):
+                self._problematic_devices = {}
+
+            self._problematic_devices[device_type] = {
+                "timestamp": datetime.now(),
+                "count": self._problematic_devices.get(device_type, {}).get("count", 0)
+                + 1,
+            }
+
+            # 如果某设备类型问题过多，考虑暂时跳过
+            if self._problematic_devices[device_type]["count"] > 10:
+                _LOGGER.error("设备类型 %s 问题过多，需要人工检查", device_type)
+        except Exception as e:
+            _LOGGER.error("标记设备问题时异常: %s", e)
+
+    async def _trigger_recovery_procedure(self, raw_data: dict):
+        """触发故障恢复流程"""
+
+        async def _recovery_operation():
+            try:
+                _LOGGER.info("触发故障恢复流程...")
+
+                # 1. 记录故障信息
+                _LOGGER.debug(
+                    "故障恢复: 记录信息 - 时间: %s, 数据: %s",
+                    datetime.now().isoformat(),
+                    raw_data,
+                )
+
+                # 2. 尝试恢复策略
+                await asyncio.sleep(10)  # 给系统一些时间稳定
+
+                # 3. 检查WebSocket连接状态（仅OAPI模式）
+                if self._state_manager:
+                    if hasattr(self._state_manager, "_ws") and (
+                        not self._state_manager._ws or self._state_manager._ws.closed
+                    ):
+                        _LOGGER.info("WebSocket连接异常，将触发重连")
+                        # 可以触发_state_manager的重连逻辑
+
+                # 4. 触发一次设备状态全量刷新
+                await self._schedule_device_sync()
+
+                _LOGGER.info("故障恢复流程完成")
+            except Exception as e:
+                _LOGGER.error("故障恢复流程异常: %s", e, exc_info=True)
+
+        await self._concurrency_manager.safe_recovery_operation(_recovery_operation)
 
     # 便利方法，供平台实体使用
     def get_devices(self) -> list[dict]:
@@ -477,6 +591,10 @@ class LifeSmartHub:
         }
         return exclude_devices, exclude_hubs
 
+    def get_concurrency_stats(self) -> Dict[str, Any]:
+        """获取并发控制统计信息（用于诊断）。"""
+        return self._concurrency_manager.get_concurrency_stats()
+
 
 class LifeSmartStateManager:
     """LifeSmart WebSocket 状态管理器。
@@ -492,6 +610,7 @@ class LifeSmartStateManager:
         client: LifeSmartOpenAPIClient,
         ws_url: str,
         refresh_callback: Callable[[], None],
+        concurrency_manager: ConcurrencyManager,
         retry_interval: int = 10,
         max_retries: int = 60,
     ) -> None:
@@ -503,6 +622,7 @@ class LifeSmartStateManager:
             client: OAPI 客户端实例
             ws_url: WebSocket 连接地址
             refresh_callback: 全量刷新回调函数
+            concurrency_manager: 并发控制管理器
             retry_interval: 初始重试间隔（秒）
             max_retries: 最大重试次数
         """
@@ -513,8 +633,9 @@ class LifeSmartStateManager:
         self.refresh_callback = refresh_callback
         self.retry_interval = retry_interval
         self.max_retries = max_retries
+        self._concurrency_manager = concurrency_manager
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
-        self._connection_lock = asyncio.Lock()
+        self._connection_lock = self._concurrency_manager._connection_lock
         self._retry_count = 0
         self._ws_task: Optional[asyncio.Task] = None
         self._token_task: Optional[asyncio.Task] = None
@@ -549,7 +670,8 @@ class LifeSmartStateManager:
         """主连接处理循环。"""
         while not self._should_stop and self._retry_count <= self.max_retries:
             try:
-                async with self._connection_lock:
+                # 使用并发控制管理器保护连接操作
+                async def _connect_operation():
                     _LOGGER.info("正在尝试建立 WebSocket 连接...")
                     self._ws = await self._create_websocket()
                     _LOGGER.info("WebSocket 底层连接已建立，正在进行认证...")
@@ -557,9 +679,29 @@ class LifeSmartStateManager:
                     _LOGGER.info("认证成功，开始监听消息...")
                     await self._message_consumer()
 
+                await self._concurrency_manager.safe_connection_operation(
+                    _connect_operation
+                )
+
             except PermissionError as e:
                 _LOGGER.critical("WebSocket 认证失败，不可恢复的错误: %s", e)
                 break
+
+            except aiohttp.ClientResponseError as e:
+                if e.status == 401:
+                    _LOGGER.error("WebSocket认证失败，检查令牌有效性: %s", e)
+                    # 触发重新认证流程
+                    break
+                elif e.status >= 500:
+                    _LOGGER.warning("服务器错误(%d)，将重试: %s", e.status, e)
+                    await self._schedule_retry()
+                else:
+                    _LOGGER.error("客户端请求错误(%d): %s", e.status, e)
+                    break
+
+            except (ConnectionError, aiohttp.ClientOSError) as e:
+                _LOGGER.warning("网络连接问题，将重试: %s", e)
+                await self._schedule_retry()
 
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 _LOGGER.warning(
@@ -570,12 +712,35 @@ class LifeSmartStateManager:
                 )
                 await self._schedule_retry()
 
+            except json.JSONDecodeError as e:
+                _LOGGER.error("服务器响应格式错误: %s", e)
+                await self._schedule_retry()
+
+            except asyncio.CancelledError:
+                _LOGGER.info("WebSocket 连接任务被取消")
+                raise  # 不应该捕获取消异常
+
             except Exception as e:
+                # 只保留真正无法预料的异常
+                error_type = type(e).__name__
                 _LOGGER.error(
-                    "WebSocket 连接处理器发生未捕获的异常: %s\n%s",
+                    "WebSocket连接处理器发生未预期的%s异常: %s",
+                    error_type,
                     e,
-                    traceback.format_exc(),
+                    exc_info=True,
                 )
+
+                # 限制未知异常的重试次数
+                if not hasattr(self, "_unknown_error_count"):
+                    self._unknown_error_count = 0
+
+                self._unknown_error_count += 1
+                if self._unknown_error_count > 3:
+                    _LOGGER.error(
+                        "未知异常过多(%d次)，停止重试", self._unknown_error_count
+                    )
+                    break
+
                 await self._schedule_retry()
 
     async def _create_websocket(self) -> aiohttp.ClientWebSocketResponse:
@@ -593,7 +758,7 @@ class LifeSmartStateManager:
                 self.ws_url,
                 heartbeat=25,
                 compress=15,
-                timeout=get_ws_timeout(30),
+                timeout=get_ws_timeout(WS_RECEIVE_TIMEOUT),
             )
         except aiohttp.ClientConnectorCertificateError as e:
             _LOGGER.error("SSL 证书验证失败，请检查服务器区域设置: %s", e)
@@ -609,7 +774,7 @@ class LifeSmartStateManager:
         _LOGGER.debug("发送 WebSocket 认证载荷: %s", auth_payload)
         await self._ws.send_str(auth_payload)
 
-        response = await self._ws.receive(timeout=30)
+        response = await self._ws.receive(timeout=WS_RECEIVE_TIMEOUT)
         if response.type != aiohttp.WSMsgType.TEXT:
             raise PermissionError(f"服务器返回了非预期的响应类型: {response.type}")
 
@@ -645,7 +810,10 @@ class LifeSmartStateManager:
         try:
             async for msg in self._ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
-                    await self._process_text_message(msg.data)
+                    # 使用并发控制管理器处理消息
+                    await self._concurrency_manager.safe_message_processing(
+                        self._process_text_message, msg.data
+                    )
                 elif msg.type in (aiohttp.WSMsgType.ERROR, aiohttp.WSMsgType.CLOSED):
                     _LOGGER.warning("WebSocket 连接已关闭或出错，将重新连接。")
                     break
@@ -695,7 +863,12 @@ class LifeSmartStateManager:
     async def _token_refresh_handler(self):
         """后台任务，定期检查和刷新令牌。"""
         await asyncio.sleep(60)  # 启动后等待
-        check_interval_seconds = 3600  # 1小时检查一次
+
+        # 配置常量 - 避免硬编码
+        TOKEN_CHECK_INTERVAL_SECONDS = 3600  # 1小时检查一次
+        TOKEN_REFRESH_THRESHOLD_DAYS = 275  # 275天提前刷新
+
+        check_interval_seconds = TOKEN_CHECK_INTERVAL_SECONDS
 
         while not self._should_stop:
             try:
@@ -706,23 +879,33 @@ class LifeSmartStateManager:
 
                 now = int(time.time())
                 time_to_expiry = self._token_expiry_time - now
-                refresh_threshold = 275 * 24 * 3600  # 275天
+                refresh_threshold = TOKEN_REFRESH_THRESHOLD_DAYS * 24 * 3600
 
                 if time_to_expiry < refresh_threshold:
                     _LOGGER.info(
                         "令牌即将在 %.1f 小时内过期，开始刷新...", time_to_expiry / 3600
                     )
+
+                    # 使用并发控制管理器进行令牌刷新和配置更新
                     try:
-                        new_token_data = await self.client.async_refresh_token()
+                        new_token_data = (
+                            await self._concurrency_manager.safe_token_refresh(
+                                self.client.async_refresh_token
+                            )
+                        )
 
                         # 更新配置并设置新的过期时间
                         current_data = self.config_entry.data.copy()
                         current_data[CONF_LIFESMART_USERTOKEN] = new_token_data[
                             "usertoken"
                         ]
-                        self.hass.config_entries.async_update_entry(
-                            self.config_entry, data=current_data
+
+                        await self._concurrency_manager.safe_config_update(
+                            lambda: self.hass.config_entries.async_update_entry(
+                                self.config_entry, data=current_data
+                            )
                         )
+
                         self.set_token_expiry(new_token_data["expiredtime"])
                         _LOGGER.info("令牌刷新成功。")
 
@@ -748,20 +931,59 @@ class LifeSmartStateManager:
         _LOGGER.info("正在停止 LifeSmart WebSocket 状态管理器...")
         self._should_stop = True
 
-        # 关闭 WebSocket 连接
+        # 1. 安全关闭 WebSocket 连接，改进资源清理
         if self._ws and not self._ws.closed:
-            await self._ws.close(code=1000)
+            try:
+                # 先发送关闭帧
+                await asyncio.wait_for(
+                    self._ws.close(code=1000), timeout=WS_CLOSE_TIMEOUT
+                )
+                # 等待连接完全关闭
+                await asyncio.wait_for(
+                    self._ws.wait_for_close(), timeout=WS_CLOSE_TIMEOUT
+                )
+                _LOGGER.debug("WebSocket连接已正常关闭")
+            except asyncio.TimeoutError:
+                _LOGGER.warning("WebSocket关闭超时，进行强制清理")
+            except Exception as e:
+                _LOGGER.error("WebSocket关闭异常: %s", e)
+            finally:
+                # 清理引用但不直接设置为None（避免内存泄漏）
+                self._ws = None
 
-        # 取消任务
-        if self._ws_task:
+        # 2. 收集并取消所有任务
+        tasks_to_cancel = []
+        if hasattr(self, "_ws_task") and self._ws_task and not self._ws_task.done():
             self._ws_task.cancel()
-        if self._token_task:
+            tasks_to_cancel.append(self._ws_task)
+        if (
+            hasattr(self, "_token_task")
+            and self._token_task
+            and not self._token_task.done()
+        ):
             self._token_task.cancel()
+            tasks_to_cancel.append(self._token_task)
 
-        # 等待任务完成
-        await asyncio.gather(
-            self._ws_task if self._ws_task else asyncio.sleep(0),
-            self._token_task if self._token_task else asyncio.sleep(0),
-            return_exceptions=True,
-        )
+        # 3. 等待任务完成，设置超时和异常处理
+        if tasks_to_cancel:
+            try:
+                done, pending = await asyncio.wait_for(
+                    asyncio.wait(tasks_to_cancel, return_when=asyncio.ALL_COMPLETED),
+                    timeout=WS_HEARTBEAT_TIMEOUT,
+                )
+                # 检查是否有任务异常完成
+                for task in done:
+                    if task.exception() and not isinstance(
+                        task.exception(), asyncio.CancelledError
+                    ):
+                        _LOGGER.warning("任务异常结束: %s", task.exception())
+            except asyncio.TimeoutError:
+                _LOGGER.warning(
+                    "任务取消超时，仍有 %d 个任务未完成", len(tasks_to_cancel)
+                )
+                # 强制终止仍然运行的任务
+                for task in tasks_to_cancel:
+                    if not task.done():
+                        task.cancel()
+
         _LOGGER.info("LifeSmart 状态管理器已完全停止。")

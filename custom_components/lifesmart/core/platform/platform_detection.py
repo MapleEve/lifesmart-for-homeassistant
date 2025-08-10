@@ -63,7 +63,7 @@ def get_device_platform_mapping(device: dict) -> dict[str, list[str]]:
     这个函数现在使用新的mapping引擎，支持动态分类设备和复杂业务逻辑。
     单个物理设备可以使用不同IO口支持多个平台。
 
-    临时修复：为测试环境添加基本的SL_LI_WW设备支持，直到mapping引擎完整实现。
+    临时修复：为测试环境添加基本的设备支持，直到mapping引擎完整实现。
 
     Args:
         device: 设备字典，包含设备的基本信息和数据。
@@ -75,32 +75,56 @@ def get_device_platform_mapping(device: dict) -> dict[str, list[str]]:
             "sensor": ["P2"]
         }
     """
+    # 处理 int 类型的 devtype
+    device_type = device.get("devtype", "")
+    if isinstance(device_type, int):
+        device_type = str(device_type)
+        device = {**device, "devtype": device_type}
+
     # 使用新的mapping引擎解析设备映射
     mapping_result = mapping_engine.resolve_device_mapping(device)
 
-    # 临时修复：如果mapping引擎返回空结果，使用基本的设备类型映射
-    if not mapping_result:
-        device_type = device.get("devtype", "")
+    # 处理映射结果，合并 switch 和 switch_extra 到 switch 平台
+    if mapping_result:
+        final_platforms = {}
 
-        # SL_LI_WW设备类型的基本映射
-        if device_type == "SL_LI_WW":
-            device_data = device.get("data", {})
-            platforms = {}
+        for platform_name, ios in mapping_result.items():
+            if platform_name in ["name", "_device_mode", "_error"]:
+                continue
 
-            # 检查是否有P1端口（亮度控制）
-            if "P1" in device_data:
-                p1_data = device_data["P1"]
-                # type=129表示亮度控制
-                if p1_data.get("type") == 129:
-                    platforms["light"] = ["P1"]
+            if isinstance(ios, dict):
+                final_platforms[platform_name] = list(ios.keys())
+            elif isinstance(ios, list):
+                final_platforms[platform_name] = ios
 
-            return platforms
+        # 特殊处理: 合并 switch_extra 到 switch
+        if "switch_extra" in final_platforms:
+            if "switch" not in final_platforms:
+                final_platforms["switch"] = []
+            final_platforms["switch"].extend(final_platforms["switch_extra"])
+            del final_platforms["switch_extra"]
 
-        # SL_LI_WW_V1和SL_LI_WW_V2的映射（如果直接使用版本化类型）
-        elif device_type.startswith("SL_LI_WW_V"):
-            return {"light": ["P1", "P2"]}  # P1=亮度，P2=色温
+        # 特殊处理: SL_NATURE 设备总是包含开关平台（兼容性处理）
+        if device_type == "SL_NATURE":
+            # SL_NATURE 在 is_switch() 检查时总是返回 True，但在获取子设备时按实际模式返回
+            # 只有在开关模式(P5=1)时才添加开关子设备
+            if "switch" not in final_platforms:
+                # 在温控模式下，不添加开关子设备，但 is_switch() 仍然返回 True
+                # 这通过在 is_switch() 函数中单独处理
+                pass
+            # 如果已经有开关平台，保持不变
 
-    return mapping_result
+        # 如果有结果，返回
+        if final_platforms:
+            return final_platforms
+
+    # 完全依赖映射引擎，不再有硬编码回退
+    return {}
+
+
+# DEPRECATED: 硬编码映射函数已完全移除
+# 现在完全依赖DEVICE_SPECS_DATA映射引擎
+# 如果设备映射失败，需要在DEVICE_SPECS_DATA中补全对应设备配置
 
 
 def is_binary_sensor(device: dict) -> bool:
@@ -135,6 +159,12 @@ def is_sensor(device: dict) -> bool:
 
 def is_switch(device: dict) -> bool:
     """检查设备是否支持switch平台。"""
+    device_type = device.get("devtype", "")
+
+    # 特殊处理: SL_NATURE 设备作为设备类型总是支持开关功能
+    if device_type == "SL_NATURE":
+        return True
+
     platforms = get_device_platform_mapping(device)
     return "switch" in platforms
 
@@ -447,6 +477,96 @@ def get_bitmask_virtual_subdevice_config(device: dict, virtual_key: str) -> dict
     virtual_subdevices = get_alm_subdevices()
 
     return virtual_subdevices.get(virtual_key, {})
+
+
+def is_switch_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为开关子设备。
+
+    Args:
+        device_type: 设备类型
+        sub_key: 子设备键名
+
+    Returns:
+        是否为开关子设备
+    """
+    # 处理大小写转换
+    normalized_sub_key = sub_key.upper() if sub_key.lower() == "o" else sub_key
+
+    mock_device = {"devtype": device_type, "data": {normalized_sub_key: {"val": 1}}}
+    subdevices = get_switch_subdevices(mock_device)
+    return normalized_sub_key in subdevices
+
+
+def is_binary_sensor_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为二进制传感器子设备。
+
+    Args:
+        device_type: 设备类型
+        sub_key: 子设备键名
+
+    Returns:
+        是否为二进制传感器子设备
+    """
+    # 处理大小写转换
+    normalized_sub_key = sub_key.upper() if sub_key.lower() == "o" else sub_key
+
+    mock_device = {"devtype": device_type, "data": {normalized_sub_key: {"val": 1}}}
+    subdevices = get_binary_sensor_subdevices(mock_device)
+    return normalized_sub_key in subdevices
+
+
+def is_cover_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为窗帘子设备。
+
+    Args:
+        device_type: 设备类型
+        sub_key: 子设备键名
+
+    Returns:
+        是否为窗帘子设备
+    """
+    # 处理大小写转换
+    normalized_sub_key = sub_key.upper() if sub_key.lower() == "o" else sub_key
+
+    mock_device = {"devtype": device_type, "data": {normalized_sub_key: {"val": 1}}}
+    subdevices = get_cover_subdevices(mock_device)
+    return normalized_sub_key in subdevices
+
+
+def is_light_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为灯光子设备。
+
+    Args:
+        device_type: 设备类型
+        sub_key: 子设备键名
+
+    Returns:
+        是否为灯光子设备
+    """
+    # 处理大小写转换
+    normalized_sub_key = sub_key.upper() if sub_key.lower() == "o" else sub_key
+
+    mock_device = {"devtype": device_type, "data": {normalized_sub_key: {"val": 1}}}
+    subdevices = get_light_subdevices(mock_device)
+    return normalized_sub_key in subdevices
+
+
+def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
+    """检查是否为传感器子设备。
+
+    Args:
+        device_type: 设备类型
+        sub_key: 子设备键名
+
+    Returns:
+        是否为传感器子设备
+    """
+    # 处理大小写转换
+    normalized_sub_key = sub_key.upper() if sub_key.lower() == "o" else sub_key
+
+    mock_device = {"devtype": device_type, "data": {normalized_sub_key: {"val": 1}}}
+    subdevices = get_sensor_subdevices(mock_device)
+    return normalized_sub_key in subdevices
 
 
 def is_bitmask_virtual_subdevice(sub_key: str) -> bool:

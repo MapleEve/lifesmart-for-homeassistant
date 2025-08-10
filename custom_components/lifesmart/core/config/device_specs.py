@@ -10702,6 +10702,63 @@ _RAW_DEVICE_DATA = {
             },
         },
     },
+    # ================= 缺失设备补充 (Missing Devices) =================
+    "SL_SC_GD": {
+        "name": "车库门控制器",
+        "cover": {
+            "P1": {
+                "description": "车库门控制",
+                "rw": "RW",
+                "data_type": "cover_control",
+                "conversion": "val_direct",
+                "detailed_description": "车库门开关控制",
+                "device_class": "garage",
+                "commands": {
+                    "open": {
+                        "type": 129,
+                        "val": 1,
+                        "description": "打开车库门",
+                    },
+                    "close": {
+                        "type": 128,
+                        "val": 0,
+                        "description": "关闭车库门",
+                    },
+                },
+            },
+        },
+        "light": {
+            "HS": {
+                "description": "车库门灯光",
+                "rw": "RW",
+                "data_type": "binary_switch",
+                "conversion": "type_bit_0",
+                "detailed_description": "车库门照明灯控制",
+                "commands": {
+                    "on": {
+                        "type": 129,
+                        "val": 1,
+                        "description": "开灯",
+                    },
+                    "off": {
+                        "type": 128,
+                        "val": 0,
+                        "description": "关灯",
+                    },
+                },
+            },
+        },
+        "binary_sensor": {
+            "G": {
+                "description": "车库门状态传感器",
+                "rw": "R",
+                "data_type": "binary_sensor",
+                "conversion": "type_bit_0",
+                "detailed_description": "车库门开关状态检测",
+                "device_class": "garage_door",
+            },
+        },
+    },
 }
 
 

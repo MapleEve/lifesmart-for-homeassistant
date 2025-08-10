@@ -312,7 +312,9 @@ def mock_hub_class():
     这允许我们验证其方法（如 `async_setup`, `async_unload`）是否在集成的生命周期中
     （设置、卸载、重载）被正确调用。
     """
-    with patch("custom_components.lifesmart.LifeSmartHub", autospec=True) as mock_class:
+    with patch(
+        "custom_components.lifesmart.core.hub.LifeSmartHub", autospec=True
+    ) as mock_class:
         # 获取实例的 mock，以便我们可以配置和断言它的方法
         instance = mock_class.return_value
         instance.async_setup = AsyncMock(return_value=True)
@@ -387,19 +389,19 @@ def mock_hub_for_testing():
     """
     with (
         patch(
-            "custom_components.lifesmart.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.async_setup",
             return_value=True,
         ) as mock_hub_setup,
         patch(
-            "custom_components.lifesmart.LifeSmartHub.get_devices",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.get_devices",
             return_value=[],
         ) as mock_get_devices,
         patch(
-            "custom_components.lifesmart.LifeSmartHub.get_client",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.get_client",
             return_value=MagicMock(),
         ) as mock_get_client,
         patch(
-            "custom_components.lifesmart.LifeSmartHub.async_unload",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.async_unload",
             return_value=True,
         ) as mock_hub_unload,
     ):

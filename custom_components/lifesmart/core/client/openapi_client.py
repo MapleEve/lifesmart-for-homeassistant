@@ -16,13 +16,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from ..client_base import LifeSmartClientBase
+from ..const import HTTP_TIMEOUT
 from ..const import (
     # --- 设备类型和映射 ---
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     SUBDEVICE_INDEX_KEY,
 )
-from ..diagnostics import get_error_advice
+from ..error_mapping import get_error_advice
 from ..exceptions import LifeSmartAPIError, LifeSmartAuthError
 
 _LOGGER = logging.getLogger(__name__)
@@ -495,7 +496,9 @@ class LifeSmartOpenAPIClient(LifeSmartClientBase):
     # 基类抽象方法的实现
     # ====================================================================
 
-    async def _async_get_all_devices(self, timeout=10) -> list[dict[str, Any]]:
+    async def _async_get_all_devices(
+        self, timeout=HTTP_TIMEOUT
+    ) -> list[dict[str, Any]]:
         """
         [云端实现] 通过调用 EpGetAll API 获取所有设备信息。
         """

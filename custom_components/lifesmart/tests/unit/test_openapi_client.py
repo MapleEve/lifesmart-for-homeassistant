@@ -36,14 +36,14 @@ from custom_components.lifesmart.core.const import (
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_TEMP_FCU,
-    GARAGE_DOOR_TYPES,
-    DOOYA_TYPES,
 )
 from custom_components.lifesmart.core.exceptions import (
     LifeSmartAPIError,
     LifeSmartAuthError,
 )
-from custom_components.lifesmart.core.openapi_client import LifeSmartOAPIClient
+from custom_components.lifesmart.core.client.openapi_client import (
+    LifeSmartOpenAPIClient,
+)
 
 
 # ==================== 测试数据和Fixtures ====================
@@ -64,8 +64,8 @@ def client_config():
 
 @pytest.fixture
 def client(hass, client_config):
-    """提供一个标准的 LifeSmartOAPIClient 实例，包含所有必要参数。"""
-    return LifeSmartOAPIClient(
+    """提供一个标准的 LifeSmartOpenAPIClient 实例，包含所有必要参数。"""
+    return LifeSmartOpenAPIClient(
         hass,
         client_config["region"],
         client_config["appkey"],
@@ -80,7 +80,7 @@ def client(hass, client_config):
 def mock_async_call_api():
     """Mock _async_call_api 方法，用于测试上层辅助函数。"""
     with patch(
-        "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._async_call_api",
+        "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient._async_call_api",
         new_callable=AsyncMock,
     ) as mock_func:
         mock_func.return_value = {"code": 0, "message": "success"}  # 默认返回成功
@@ -101,7 +101,7 @@ class TestClientInitialization:
 
     def test_client_initialization_with_all_params(self, hass, client_config):
         """测试使用完整参数初始化客户端。"""
-        client = LifeSmartOAPIClient(
+        client = LifeSmartOpenAPIClient(
             hass,
             client_config["region"],
             client_config["appkey"],
@@ -121,7 +121,7 @@ class TestClientInitialization:
 
     def test_client_initialization_without_password(self, hass, client_config):
         """测试不提供密码参数的初始化。"""
-        client = LifeSmartOAPIClient(
+        client = LifeSmartOpenAPIClient(
             hass,
             client_config["region"],
             client_config["appkey"],
@@ -171,7 +171,7 @@ class TestURLAndConfiguration:
         self, hass, region, expected_api_url, expected_wss_url
     ):
         """测试不同区域的API和WebSocket URL生成逻辑。"""
-        client = LifeSmartOAPIClient(hass, region, "k", "t", "ut", "uid")
+        client = LifeSmartOpenAPIClient(hass, region, "k", "t", "ut", "uid")
 
         assert (
             client._get_api_url() == expected_api_url
@@ -214,7 +214,7 @@ class TestCoreAPICall:
                 client, "_post_and_parse", return_value={"code": 0}
             ) as mock_post,
             patch(
-                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._get_signature"
+                "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient._get_signature"
             ) as mock_get_signature,
         ):
             mock_get_signature.return_value = "mocked_signature"
@@ -244,7 +244,7 @@ class TestCoreAPICall:
                 client, "_post_and_parse", return_value={"code": 0}
             ) as mock_post,
             patch(
-                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._get_signature"
+                "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient._get_signature"
             ) as mock_get_signature,
         ):
             mock_get_signature.return_value = "mocked_signature"
@@ -294,7 +294,7 @@ class TestCoreAPICall:
     async def test_post_and_parse_network_failure(self, client):
         """测试网络请求失败的处理。"""
         with patch(
-            "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._post_async",
+            "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient._post_async",
             new_callable=AsyncMock,
         ) as mock_post:
             mock_post.side_effect = ClientError("Connection failed")
@@ -306,7 +306,7 @@ class TestCoreAPICall:
     async def test_post_and_parse_json_decode_failure(self, client):
         """测试JSON解析失败的处理。"""
         with patch(
-            "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient._post_async",
+            "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient._post_async",
             new_callable=AsyncMock,
         ) as mock_post:
             mock_post.return_value = "invalid json response"
@@ -451,7 +451,7 @@ class TestWebSocketManagement:
     )
     def test_wss_url_generation_for_regions(self, hass, region, expected_wss_url):
         """测试不同区域的WebSocket URL生成。"""
-        client = LifeSmartOAPIClient(hass, region, "k", "t", "ut", "uid")
+        client = LifeSmartOpenAPIClient(hass, region, "k", "t", "ut", "uid")
         wss_url = client.get_wss_url()
 
         assert wss_url == expected_wss_url, f"区域{region}的WebSocket URL应该正确"
@@ -737,25 +737,25 @@ class TestCoverControlHelpers:
             # 定位窗帘 - GARAGE_DOOR类型
             (
                 "open_cover_async",
-                list(GARAGE_DOOR_TYPES)[0],
+                "SL_ETDOOR",
                 [("P3", CMD_TYPE_SET_VAL, 100)],
             ),
             (
                 "close_cover_async",
-                list(GARAGE_DOOR_TYPES)[0],
+                "SL_ETDOOR",
                 [("P3", CMD_TYPE_SET_VAL, 0)],
             ),
             (
                 "stop_cover_async",
-                list(GARAGE_DOOR_TYPES)[0],
+                "SL_ETDOOR",
                 [("P3", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF)],
             ),
             # 定位窗帘 - DOOYA类型
-            ("open_cover_async", list(DOOYA_TYPES)[0], [("P2", CMD_TYPE_SET_VAL, 100)]),
-            ("close_cover_async", list(DOOYA_TYPES)[0], [("P2", CMD_TYPE_SET_VAL, 0)]),
+            ("open_cover_async", "SL_DOOYA", [("P2", CMD_TYPE_SET_VAL, 100)]),
+            ("close_cover_async", "SL_DOOYA", [("P2", CMD_TYPE_SET_VAL, 0)]),
             (
                 "stop_cover_async",
-                list(DOOYA_TYPES)[0],
+                "SL_DOOYA",
                 [("P2", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF)],
             ),
             # 非定位窗帘
@@ -779,9 +779,19 @@ class TestCoverControlHelpers:
         self, client, method_name, device_type, expected_calls
     ):
         """测试窗帘控制方法对不同设备类型的处理。"""
+        # 创建设备对象
+        test_device = {
+            "agt": "agt",
+            "me": "me",
+            "devtype": device_type,
+            "name": f"Test {device_type}",
+            "data": {"P1": {"type": 129, "val": 0}},
+            "stat": 1,
+        }
+
         with patch.object(client, "set_single_ep_async") as mock_set:
             method = getattr(client, method_name)
-            await method("agt", "me", device_type)
+            await method("agt", "me", test_device)
 
             for expected_idx, expected_cmd, expected_val in expected_calls:
                 mock_set.assert_called_with(
@@ -792,8 +802,8 @@ class TestCoverControlHelpers:
     @pytest.mark.parametrize(
         "device_type, position, should_call, expected_args",
         [
-            (list(DOOYA_TYPES)[0], 50, True, ("P2", CMD_TYPE_SET_VAL, 50)),
-            (list(GARAGE_DOOR_TYPES)[0], 80, True, ("P3", CMD_TYPE_SET_VAL, 80)),
+            ("SL_DOOYA", 50, True, ("P2", CMD_TYPE_SET_VAL, 50)),
+            ("SL_ETDOOR", 80, True, ("P3", CMD_TYPE_SET_VAL, 80)),
             ("SL_SW_WIN", 50, False, None),  # 非定位窗帘不支持位置设置
         ],
         ids=["DooyaPosition", "GarageDoorPosition", "NonPositionalUnsupported"],
@@ -802,8 +812,18 @@ class TestCoverControlHelpers:
         self, client, device_type, position, should_call, expected_args
     ):
         """测试窗帘位置设置方法。"""
+        # 创建设备对象
+        test_device = {
+            "agt": "agt",
+            "me": "me",
+            "devtype": device_type,
+            "name": f"Test {device_type}",
+            "data": {"P1": {"type": 129, "val": 0}},
+            "stat": 1,
+        }
+
         with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
-            await client.set_cover_position_async("agt", "me", position, device_type)
+            await client.set_cover_position_async("agt", "me", position, test_device)
 
             if should_call:
                 mock_set.assert_called_with("agt", "me", *expected_args)
@@ -828,9 +848,19 @@ class TestClimateControlHelpers:
         self, client, device_type, hvac_mode, current_val, expected_calls_count
     ):
         """测试HVAC模式控制方法。"""
+        # 创建设备对象
+        test_device = {
+            "agt": "agt",
+            "me": "me",
+            "devtype": device_type,
+            "name": f"Test {device_type}",
+            "data": {"P1": {"type": 129, "val": 0}},
+            "stat": 1,
+        }
+
         with patch.object(client, "set_single_ep_async") as mock_set:
             await client.async_set_climate_hvac_mode(
-                "agt", "me", device_type, hvac_mode, current_val
+                "agt", "me", test_device, hvac_mode, current_val
             )
             assert (
                 mock_set.call_count == expected_calls_count
@@ -851,9 +881,19 @@ class TestClimateControlHelpers:
         self, client, device_type, temperature, expected_conversion
     ):
         """测试温度控制方法。"""
+        # 创建设备对象
+        test_device = {
+            "agt": "agt",
+            "me": "me",
+            "devtype": device_type,
+            "name": f"Test {device_type}",
+            "data": {"P1": {"type": 129, "val": 0}},
+            "stat": 1,
+        }
+
         with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
             await client.async_set_climate_temperature(
-                "agt", "me", device_type, temperature
+                "agt", "me", test_device, temperature
             )
 
             if expected_conversion:
@@ -883,9 +923,19 @@ class TestClimateControlHelpers:
         self, client, device_type, fan_mode, current_val, expected_conversion
     ):
         """测试风扇模式控制方法。"""
+        # 创建设备对象
+        test_device = {
+            "agt": "agt",
+            "me": "me",
+            "devtype": device_type,
+            "name": f"Test {device_type}",
+            "data": {"P1": {"type": 129, "val": 0}},
+            "stat": 1,
+        }
+
         with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
             await client.async_set_climate_fan_mode(
-                "agt", "me", device_type, fan_mode, current_val
+                "agt", "me", test_device, fan_mode, current_val
             )
 
             if expected_conversion:
@@ -905,7 +955,15 @@ class TestErrorHandlingAndEdgeCases:
         """测试不支持的设备类型处理。"""
         with patch.object(client, "set_single_ep_async") as mock_set:
             # 测试窗帘控制
-            result = await client.open_cover_async("agt", "me", "UNSUPPORTED_TYPE")
+            unsupported_device = {
+                "agt": "agt",
+                "me": "me",
+                "devtype": "UNSUPPORTED_TYPE",
+                "name": "Unsupported Device",
+                "data": {},
+                "stat": 1,
+            }
+            result = await client.open_cover_async("agt", "me", unsupported_device)
             assert result == -1, "不支持的设备类型应该返回-1"
             mock_set.assert_not_called()
             assert "UNSUPPORTED_TYPE" in caplog.text, "应该记录不支持的设备类型"
@@ -915,7 +973,7 @@ class TestErrorHandlingAndEdgeCases:
 
             # 测试风扇模式控制
             result = await client.async_set_climate_fan_mode(
-                "agt", "me", "UNSUPPORTED_TYPE", FAN_LOW
+                "agt", "me", unsupported_device, FAN_LOW
             )
             assert result == -1, "不支持的设备类型应该返回-1"
             mock_set.assert_not_called()
@@ -953,7 +1011,7 @@ class TestCompatibilityAndIntegration:
     async def test_home_assistant_session_integration(self, client):
         """测试与Home Assistant HTTP会话的集成。"""
         with patch(
-            "custom_components.lifesmart.core.openapi_client.async_get_clientsession"
+            "custom_components.lifesmart.core.client.openapi_client.async_get_clientsession"
         ) as mock_get_session:
             mock_session = AsyncMock()
             mock_get_session.return_value = mock_session

@@ -65,6 +65,20 @@ Installation and updates are available via HACS.
 
 ---
 
+## 🆘 Troubleshooting
+
+If you encounter any issues with the integration, check our comprehensive troubleshooting guide:
+
+📖 **[Troubleshooting Guide](./troubleshooting.md)** - Solutions for common problems
+
+The guide covers:
+- Connection issues (cloud & local modes)
+- Device problems (unavailable, not updating)  
+- Performance optimization
+- How to generate diagnostics data for issue reports
+
+---
+
 ## Initialization
 
 ### Prerequisites

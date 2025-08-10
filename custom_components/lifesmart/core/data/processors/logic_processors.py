@@ -168,6 +168,71 @@ class LockEventProcessor(DirectProcessor):
         return "lock_event"
 
 
+class EVTLOProcessor(DirectProcessor):
+    """EVTLO锁设备事件处理器 - 实用版本
+
+    处理EVTLO格式的锁设备数据，提取用户ID、解锁方法和状态信息。
+    适合家用规模的简化实现，无需过度优化。
+    """
+
+    def process_value(self, raw_value: Any, type_value: int = 0) -> dict:
+        """处理EVTLO锁设备数据
+
+        Args:
+            raw_value: 原始数值，通常是32位整数
+            type_value: 类型值（可选）
+
+        Returns:
+            包含解析后锁设备信息的字典
+        """
+        val = int(raw_value) if raw_value else 0
+
+        if val == 0:
+            return {
+                "user_id": 0,
+                "unlock_method": 0,
+                "lock_status": "unknown",
+                "event_type": "none",
+                "is_valid": False,
+            }
+
+        # 基础位运算提取 - 简单实用版本
+        user_id = val & 0xFFF  # 12位用户ID (0-4095)
+        unlock_method_id = (val >> 12) & 0xF  # 4位解锁方法 (0-15)
+        status_flags = (val >> 16) & 0xFFFF  # 16位状态标志
+
+        # 解锁方法映射 - 实用版本
+        unlock_methods = {
+            0: "unknown",
+            1: "fingerprint",
+            2: "password",
+            3: "card",
+            4: "key",
+            5: "remote",
+            6: "indoor",
+            7: "emergency",
+            15: "invalid",
+        }
+
+        # 状态判断 - 简化版本
+        unlock_method = unlock_methods.get(unlock_method_id, "unknown")
+        is_unlock_event = unlock_method_id != 15 and user_id > 0
+
+        return {
+            "user_id": user_id,
+            "unlock_method": unlock_method,
+            "unlock_method_id": unlock_method_id,
+            "lock_status": "unlocked" if is_unlock_event else "locked",
+            "event_type": "unlock" if is_unlock_event else "status",
+            "status_flags": status_flags,
+            "raw_value": val,
+            "is_valid": val != 0,
+        }
+
+    def get_processor_type(self) -> str:
+        return "evtlo_lock"
+
+
 class DoorWindowSensorProcessor(DirectProcessor):
     """门窗感应器处理器 - O(1)实现"""
 
@@ -323,6 +388,7 @@ class ProcessorRegistry:
             IEEE754FloatProcessor(),
             # 专用业务逻辑处理器
             LockEventProcessor(),
+            EVTLOProcessor(),  # 新增EVTLO处理器
             DoorWindowSensorProcessor(),
             MotionSensorProcessor(),
             SecurityAlarmProcessor(),

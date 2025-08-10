@@ -48,9 +48,20 @@ body:
       description: A clear and concise description of what you expected to happen.
   - type: textarea
     attributes:
-      label: '📝 Additional Information'
-      description: If your problem needs further explanation, or if the issue you're seeing cannot be reproduced in a gist, please add more information here.
-  - type: textarea
-    attributes:
-      label: 'Debug Log'
-      description: If you have enabled debug mode, please paste the debug log here. For EpGetAll API and Websocket returns.(Sensitive information MUST be replaced, such as pwd, userid, token, usertoken)
+      label: '📝 Additional Information & Diagnostics'
+      description: |
+        **Please provide additional information about your issue:**
+        
+        If your problem needs further explanation, or if the issue you're seeing cannot be reproduced easily, please add more information here.
+        
+        **📊 Diagnostics Data (Highly Recommended):**
+        To help us identify issues quickly, please upload the diagnostics file from Home Assistant:
+        1. Go to Settings → Devices & Services → LifeSmart
+        2. Click "Download diagnostics" button
+        3. Upload the .json file here or paste the content
+        
+        For device-specific issues, you can also download device-level diagnostics:
+        1. Go to Settings → Devices & Services → LifeSmart → [Select specific device]
+        2. Click "Download diagnostics" for that device
+        
+        The diagnostics data contains comprehensive system information that helps us identify issues without requiring manual log collection.

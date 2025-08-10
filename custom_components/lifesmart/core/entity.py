@@ -5,11 +5,14 @@
 由 @MapleEve 创建，作为集成架构重构的一部分。
 """
 
+import asyncio
 import logging
 from typing import Any
 
 from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import utcnow
 
 from .client_base import LifeSmartClientBase
 from .const import DEVICE_ID_KEY, DEVICE_NAME_KEY, DEVICE_TYPE_KEY, HUB_ID_KEY
@@ -62,6 +65,11 @@ class LifeSmartEntity(Entity):
         self._attr_available = True
         self._unavailable_functions = set()  # 记录不可用的功能
         self._platform_errors = {}  # 记录平台错误
+
+        # 资源清理管理
+        self._cleanup_tasks = []  # 存储需要清理的异步任务
+        self._registered_listeners = []  # 存储注册的监听器
+        self._cleanup_callbacks = []  # 存储自定义清理回调
 
     @property
     def _name(self) -> str:
@@ -244,3 +252,122 @@ class LifeSmartEntity(Entity):
                 exc_info=True,
             )
             raise
+
+    def add_cleanup_task(self, task) -> None:
+        """添加需要在实体移除时清理的异步任务。
+
+        Args:
+            task: 需要清理的异步任务
+        """
+        if task and not task.done():
+            self._cleanup_tasks.append(task)
+            _LOGGER.debug("为实体 %s 添加清理任务: %s", self.entity_id, task)
+
+    def add_cleanup_callback(self, callback) -> None:
+        """添加自定义清理回调函数。
+
+        Args:
+            callback: 在实体移除时调用的清理回调
+        """
+        if callable(callback):
+            self._cleanup_callbacks.append(callback)
+            _LOGGER.debug("为实体 %s 添加清理回调: %s", self.entity_id, callback)
+
+    def register_listener(self, remove_listener) -> None:
+        """注册监听器的移除函数。
+
+        Args:
+            remove_listener: 用于移除监听器的函数
+        """
+        if callable(remove_listener):
+            self._registered_listeners.append(remove_listener)
+            _LOGGER.debug("为实体 %s 注册监听器移除函数", self.entity_id)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """在实体从 Home Assistant 中移除时进行资源清理。
+
+        此方法实现了标准的资源清理模式，确保所有异步资源得到正确释放。
+        包括：
+        - 取消所有注册的监听器
+        - 清理未完成的异步任务
+        - 执行自定义清理回调
+        - 释放客户端资源
+        """
+        _LOGGER.debug("开始实体 %s 的资源清理", self.entity_id)
+
+        cleanup_errors = []
+
+        # 1. 清理注册的监听器
+        if self._registered_listeners:
+            _LOGGER.debug("清理 %d 个监听器", len(self._registered_listeners))
+            for remove_listener in self._registered_listeners:
+                try:
+                    if callable(remove_listener):
+                        remove_listener()
+                        _LOGGER.debug("成功移除监听器")
+                except Exception as e:
+                    error_msg = f"移除监听器时发生错误: {e}"
+                    cleanup_errors.append(error_msg)
+                    _LOGGER.warning("%s - 实体: %s", error_msg, self.entity_id)
+
+        # 2. 清理异步任务
+        if self._cleanup_tasks:
+            _LOGGER.debug("清理 %d 个异步任务", len(self._cleanup_tasks))
+            for task in self._cleanup_tasks:
+                try:
+                    if not task.done():
+                        task.cancel()
+                        try:
+                            await task
+                        except Exception:
+                            pass  # 忽略取消任务的异常
+                        _LOGGER.debug("成功取消异步任务")
+                except Exception as e:
+                    error_msg = f"取消异步任务时发生错误: {e}"
+                    cleanup_errors.append(error_msg)
+                    _LOGGER.warning("%s - 实体: %s", error_msg, self.entity_id)
+
+        # 3. 执行自定义清理回调
+        if self._cleanup_callbacks:
+            _LOGGER.debug("执行 %d 个清理回调", len(self._cleanup_callbacks))
+            for callback in self._cleanup_callbacks:
+                try:
+                    if callable(callback):
+                        if asyncio.iscoroutinefunction(callback):
+                            await callback()
+                        else:
+                            callback()
+                        _LOGGER.debug("成功执行清理回调")
+                except Exception as e:
+                    error_msg = f"执行清理回调时发生错误: {e}"
+                    cleanup_errors.append(error_msg)
+                    _LOGGER.warning("%s - 实体: %s", error_msg, self.entity_id)
+
+        # 4. 释放客户端资源（如果需要）
+        try:
+            if hasattr(self._client, "cleanup") and callable(self._client.cleanup):
+                if asyncio.iscoroutinefunction(self._client.cleanup):
+                    await self._client.cleanup()
+                else:
+                    self._client.cleanup()
+                _LOGGER.debug("成功清理客户端资源")
+        except Exception as e:
+            error_msg = f"清理客户端资源时发生错误: {e}"
+            cleanup_errors.append(error_msg)
+            _LOGGER.warning("%s - 实体: %s", error_msg, self.entity_id)
+
+        # 5. 清空内部列表
+        self._cleanup_tasks.clear()
+        self._registered_listeners.clear()
+        self._cleanup_callbacks.clear()
+
+        # 6. 记录清理结果
+        if cleanup_errors:
+            _LOGGER.error(
+                "实体 %s 资源清理完成，但有 %d 个错误: %s",
+                self.entity_id,
+                len(cleanup_errors),
+                "; ".join(cleanup_errors),
+            )
+        else:
+            _LOGGER.debug("实体 %s 资源清理成功完成", self.entity_id)

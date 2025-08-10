@@ -16,7 +16,7 @@ LifeSmart 动态设备分类器 - 支持复杂条件评估
 import ast
 import logging
 import operator
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List, Tuple
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,10 +147,404 @@ class SafeExpressionEvaluator:
 
 
 class DeviceClassifier:
-    """动态设备分类器，根据运行时数据确定设备模式"""
+    """动态设备分类器，根据运行时数据确定设备模式和智能IO分类"""
 
     def __init__(self):
         self.evaluator = SafeExpressionEvaluator()
+
+        # IO模式特征库（增强版）
+        self.io_classification_patterns = {
+            "switch_pattern": {
+                "indicators": {
+                    "type_values": [128, 129],
+                    "val_binary": True,
+                    "rw_capability": True,
+                },
+                "confidence_weight": 0.9,
+                "platform_mapping": "switch",
+                "description": "开关控制模式",
+            },
+            "light_dimmer_pattern": {
+                "indicators": {
+                    "type_values": [129],
+                    "val_range": (0, 255),
+                    "rw_capability": True,
+                },
+                "confidence_weight": 0.8,
+                "platform_mapping": "light",
+                "description": "调光灯光模式",
+            },
+            "temperature_sensor_pattern": {
+                "indicators": {
+                    "has_v_field": True,
+                    "val_temperature_range": (-400, 800),
+                    "read_only": True,
+                },
+                "confidence_weight": 0.95,
+                "platform_mapping": "sensor",
+                "device_class": "temperature",
+                "description": "温度传感器模式",
+            },
+            "binary_sensor_pattern": {
+                "indicators": {
+                    "type_values": [132, 133],
+                    "val_binary": True,
+                    "read_only": True,
+                },
+                "confidence_weight": 0.85,
+                "platform_mapping": "binary_sensor",
+                "description": "二进制传感器模式",
+            },
+            "generic_sensor_pattern": {
+                "indicators": {"read_only": True, "numeric_value": True},
+                "confidence_weight": 0.6,
+                "platform_mapping": "sensor",
+                "description": "通用传感器模式",
+            },
+        }
+
+    def classify_io_port_intelligent(
+        self,
+        io_data: Dict[str, Any],
+        io_port: str,
+        historical_data: Optional[List[Dict]] = None,
+    ) -> Tuple[str, float, Dict[str, Any]]:
+        """
+        智能分类IO端口类型（增强版）
+
+        Args:
+            io_data: IO端口当前数据
+            io_port: IO端口名称
+            historical_data: 历史数据用于模式分析
+
+        Returns:
+            (platform_type, confidence, classification_details)
+        """
+        if not io_data:
+            return "unknown", 0.0, {"reason": "No data available"}
+
+        classification_scores = {}
+        analysis_details = {
+            "io_port": io_port,
+            "current_data": io_data,
+            "pattern_analysis": {},
+        }
+
+        # 分析各种模式
+        for pattern_name, pattern_config in self.io_classification_patterns.items():
+            score = self._evaluate_io_pattern(io_data, pattern_config, historical_data)
+            weighted_score = score * pattern_config["confidence_weight"]
+            classification_scores[pattern_name] = weighted_score
+
+            analysis_details["pattern_analysis"][pattern_name] = {
+                "raw_score": score,
+                "weighted_score": weighted_score,
+                "description": pattern_config["description"],
+            }
+
+        # 选择最佳匹配
+        if classification_scores:
+            best_pattern = max(classification_scores, key=classification_scores.get)
+            best_score = classification_scores[best_pattern]
+            best_config = self.io_classification_patterns[best_pattern]
+
+            platform_type = best_config["platform_mapping"]
+
+            # 置信度调整
+            confidence = self._calculate_adjusted_confidence(
+                best_score, io_data, historical_data
+            )
+
+            analysis_details.update(
+                {
+                    "best_pattern": best_pattern,
+                    "platform_type": platform_type,
+                    "base_confidence": best_score,
+                    "adjusted_confidence": confidence,
+                    "device_class": best_config.get("device_class"),
+                    "reasoning": self._generate_classification_reasoning(
+                        best_pattern, best_config, io_data
+                    ),
+                }
+            )
+
+            return platform_type, confidence, analysis_details
+
+        return "unknown", 0.0, analysis_details
+
+    def analyze_io_patterns_multi_mode(
+        self, device_data: Dict[str, Any], device_mode: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        分析多模式设备的IO模式（支持动态切换）
+
+        Args:
+            device_data: 设备数据，包含所有IO端口
+            device_mode: 当前设备模式（可选）
+
+        Returns:
+            多模式分析结果
+        """
+        analysis_result = {
+            "device_mode": device_mode,
+            "io_classifications": {},
+            "platform_summary": {},
+            "mode_compatibility": {},
+            "recommendations": [],
+        }
+
+        # 分析每个IO端口
+        for io_port, io_data in device_data.items():
+            if not isinstance(io_data, dict):
+                continue
+
+            platform_type, confidence, details = self.classify_io_port_intelligent(
+                io_data, io_port
+            )
+
+            analysis_result["io_classifications"][io_port] = {
+                "platform_type": platform_type,
+                "confidence": confidence,
+                "details": details,
+            }
+
+            # 统计平台分布
+            if platform_type != "unknown":
+                if platform_type not in analysis_result["platform_summary"]:
+                    analysis_result["platform_summary"][platform_type] = []
+                analysis_result["platform_summary"][platform_type].append(
+                    {"io_port": io_port, "confidence": confidence}
+                )
+
+        # 生成建议
+        analysis_result["recommendations"] = self._generate_io_recommendations(
+            analysis_result["platform_summary"]
+        )
+
+        return analysis_result
+
+    def detect_mode_switching_capability(
+        self, raw_config: Dict, device_data: Dict
+    ) -> Dict[str, Any]:
+        """
+        检测设备的模式切换能力
+
+        Args:
+            raw_config: 设备原始配置
+            device_data: 当前设备数据
+
+        Returns:
+            模式切换能力分析结果
+        """
+        capability_analysis = {
+            "is_dynamic": raw_config.get("dynamic", False),
+            "available_modes": [],
+            "current_mode": None,
+            "mode_conditions": {},
+            "switching_parameters": set(),
+            "mode_stability": "unknown",
+        }
+
+        if not capability_analysis["is_dynamic"]:
+            return capability_analysis
+
+        # 分析可用模式
+        variables = self._extract_variables_from_device_data(device_data)
+
+        # SL_NATURE风格的模式检测
+        if "switch_mode" in raw_config and "climate_mode" in raw_config:
+            capability_analysis["available_modes"] = ["switch_mode", "climate_mode"]
+
+            # 检测当前模式
+            current_mode = self._classify_nature_device(raw_config, variables)
+            capability_analysis["current_mode"] = current_mode
+
+            # 记录模式条件
+            capability_analysis["mode_conditions"] = {
+                "switch_mode": raw_config["switch_mode"].get("condition"),
+                "climate_mode": raw_config["climate_mode"].get("condition"),
+            }
+
+        # SL_P风格的模式检测
+        elif "control_modes" in raw_config:
+            control_modes = raw_config["control_modes"]
+            capability_analysis["available_modes"] = list(control_modes.keys())
+
+            # 检测当前模式
+            current_mode = self._classify_control_device(raw_config, variables)
+            capability_analysis["current_mode"] = current_mode
+
+            # 记录模式条件
+            for mode_name, mode_config in control_modes.items():
+                if "condition" in mode_config:
+                    capability_analysis["mode_conditions"][mode_name] = mode_config[
+                        "condition"
+                    ]
+
+        # 提取切换参数
+        for condition in capability_analysis["mode_conditions"].values():
+            if condition:
+                params = self.get_supported_variables(condition)
+                capability_analysis["switching_parameters"].update(params)
+
+        capability_analysis["switching_parameters"] = list(
+            capability_analysis["switching_parameters"]
+        )
+
+        return capability_analysis
+
+    def _evaluate_io_pattern(
+        self,
+        io_data: Dict,
+        pattern_config: Dict,
+        historical_data: Optional[List] = None,
+    ) -> float:
+        """评估IO数据与特定模式的匹配度"""
+        indicators = pattern_config.get("indicators", {})
+        score = 0.0
+        total_checks = 0
+
+        # 检查type值模式
+        if "type_values" in indicators:
+            total_checks += 1
+            if io_data.get("type") in indicators["type_values"]:
+                score += 1.0
+
+        # 检查二进制值模式
+        if "val_binary" in indicators and indicators["val_binary"]:
+            total_checks += 1
+            if io_data.get("val") in [0, 1]:
+                score += 1.0
+
+        # 检查数值范围
+        if "val_range" in indicators:
+            total_checks += 1
+            val = io_data.get("val")
+            if val is not None:
+                min_val, max_val = indicators["val_range"]
+                if min_val <= val <= max_val:
+                    score += 1.0
+
+        # 检查v字段存在
+        if "has_v_field" in indicators and indicators["has_v_field"]:
+            total_checks += 1
+            if "v" in io_data:
+                score += 1.0
+
+        # 检查温度范围（特殊处理）
+        if "val_temperature_range" in indicators:
+            total_checks += 1
+            val = io_data.get("val")
+            if val is not None:
+                min_temp, max_temp = indicators["val_temperature_range"]
+                if min_temp <= val <= max_temp:
+                    score += 1.0
+
+        # 检查数值类型
+        if "numeric_value" in indicators and indicators["numeric_value"]:
+            total_checks += 1
+            val = io_data.get("val")
+            if isinstance(val, (int, float)):
+                score += 1.0
+
+        # 历史数据一致性
+        if historical_data:
+            total_checks += 1
+            consistency = self._check_pattern_consistency(
+                io_data, historical_data, indicators
+            )
+            score += consistency
+
+        return score / total_checks if total_checks > 0 else 0.0
+
+    def _calculate_adjusted_confidence(
+        self, base_score: float, io_data: Dict, historical_data: Optional[List] = None
+    ) -> float:
+        """计算调整后的置信度"""
+        confidence = base_score
+
+        # 数据质量调整
+        if "v" in io_data and "val" in io_data:
+            confidence += 0.1  # 数据完整性奖励
+
+        # 历史数据支持
+        if historical_data and len(historical_data) >= 5:
+            confidence += 0.05  # 历史数据丰富性奖励
+
+        # 确保在有效范围内
+        return min(1.0, max(0.0, confidence))
+
+    def _check_pattern_consistency(
+        self, current_data: Dict, historical_data: List, indicators: Dict
+    ) -> float:
+        """检查模式一致性"""
+        if not historical_data:
+            return 0.0
+
+        consistency_score = 0.0
+        checks = 0
+
+        # 检查type值一致性
+        if "type_values" in indicators:
+            checks += 1
+            current_type = current_data.get("type")
+            if current_type in indicators["type_values"]:
+                consistency_score += 1.0
+
+        # 检查值范围一致性
+        if "val_range" in indicators:
+            checks += 1
+            current_val = current_data.get("val")
+            if current_val is not None:
+                min_val, max_val = indicators["val_range"]
+                if min_val <= current_val <= max_val:
+                    consistency_score += 1.0
+
+        return consistency_score / checks if checks > 0 else 0.0
+
+    def _extract_variables_from_device_data(self, device_data: Dict) -> Dict[str, Any]:
+        """从设备数据中提取变量"""
+        variables = {}
+        for io_port, io_data in device_data.items():
+            if isinstance(io_data, dict) and "val" in io_data:
+                variables[io_port] = io_data["val"]
+        return variables
+
+    def _generate_classification_reasoning(
+        self, pattern_name: str, pattern_config: Dict, io_data: Dict
+    ) -> str:
+        """生成分类推理说明"""
+        reasoning_parts = [f"匹配模式: {pattern_config['description']}"]
+
+        # 分析关键指标
+        indicators = pattern_config.get("indicators", {})
+        current_type = io_data.get("type")
+        current_val = io_data.get("val")
+
+        if "type_values" in indicators and current_type in indicators["type_values"]:
+            reasoning_parts.append(f"type值({current_type})符合模式")
+
+        if "val_binary" in indicators and current_val in [0, 1]:
+            reasoning_parts.append("二进制值特征")
+
+        if "has_v_field" in indicators and "v" in io_data:
+            reasoning_parts.append("具有v字段（温度特征）")
+
+        return "; ".join(reasoning_parts)
+
+    def _generate_io_recommendations(self, platform_summary: Dict) -> List[str]:
+        """生成IO配置建议"""
+        recommendations = []
+
+        for platform_type, ios in platform_summary.items():
+            high_confidence_ios = [io for io in ios if io["confidence"] >= 0.8]
+            if high_confidence_ios:
+                io_list = [io["io_port"] for io in high_confidence_ios]
+                recommendations.append(
+                    f"建议将{', '.join(io_list)}配置为{platform_type}平台"
+                )
+
+        return recommendations
 
     def classify_device(self, raw_config: Dict, device_data: Dict) -> Optional[str]:
         """
@@ -247,7 +641,14 @@ class DeviceClassifier:
         control_modes = raw_config.get("control_modes", {})
 
         # 遍历所有控制模式，按优先级检查
-        mode_priority = ["cover_mode", "curtain_mode", "sensor_mode", "free_mode"]
+        # switch_mode应该优先检查，因为开关是最基本的功能
+        mode_priority = [
+            "switch_mode",
+            "cover_mode",
+            "curtain_mode",
+            "sensor_mode",
+            "free_mode",
+        ]
 
         for mode_name in mode_priority:
             if mode_name not in control_modes:

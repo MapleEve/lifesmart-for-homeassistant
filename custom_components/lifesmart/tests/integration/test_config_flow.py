@@ -747,7 +747,7 @@ class TestEdgeCases:
         }
 
         with patch(
-            "custom_components.lifesmart.config_flow.LifeSmartOAPIClient"
+            "custom_components.lifesmart.config_flow.LifeSmartOpenAPIClient"
         ) as mock_client_cls:
             mock_client = AsyncMock()
             mock_client_cls.return_value = mock_client
@@ -775,7 +775,7 @@ class TestEdgeCases:
         }
 
         with patch(
-            "custom_components.lifesmart.config_flow.LifeSmartOAPIClient"
+            "custom_components.lifesmart.config_flow.LifeSmartOpenAPIClient"
         ) as mock_client_cls:
             # 使用工厂函数创建的失败客户端
             mock_client_cls.return_value = mock_failed_client
@@ -981,7 +981,7 @@ class TestConfigFlowErrorPaths:
         """测试密码认证失败的情况。"""
         # 模拟登录失败 - 直接在validate_input函数级别进行模拟
         with patch(
-            "custom_components.lifesmart.config_flow.LifeSmartOAPIClient"
+            "custom_components.lifesmart.config_flow.LifeSmartOpenAPIClient"
         ) as mock_client_class:
             # 创建mock实例
             mock_instance = mock_client_class.return_value
@@ -1016,7 +1016,7 @@ class TestConfigFlowErrorPaths:
         }
 
         with patch(
-            "custom_components.lifesmart.config_flow.LifeSmartOAPIClient"
+            "custom_components.lifesmart.config_flow.LifeSmartOpenAPIClient"
         ) as mock_client_class:
             # 创建mock实例
             mock_instance = mock_client_class.return_value
@@ -1056,7 +1056,7 @@ class TestConfigFlowErrorPaths:
         mock_login_response = {"region": "cn2"}  # 只有region，没有usertoken
 
         with patch(
-            "custom_components.lifesmart.config_flow.LifeSmartOAPIClient"
+            "custom_components.lifesmart.config_flow.LifeSmartOpenAPIClient"
         ) as mock_client_class:
             # 创建mock实例
             mock_instance = mock_client_class.return_value

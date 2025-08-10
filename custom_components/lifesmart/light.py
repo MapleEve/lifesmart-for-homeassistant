@@ -344,45 +344,104 @@ class LifeSmartBaseLight(LifeSmartEntity, LightEntity):
         except (KeyError, StopIteration):
             _LOGGER.warning("在全局刷新期间未能找到设备 %s。", self._attr_unique_id)
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light with robust optimistic update."""
-        original_is_on = self._attr_is_on
+    def _get_state_attributes(self) -> list[str]:
+        """
+        返回需要在乐观更新中保存和恢复的属性列表。
+        子类应该重写此方法以指定它们的特定属性。
+        """
+        return ["_attr_is_on"]
 
-        self._attr_is_on = True
+    def _prepare_turn_on_command(self, **kwargs: Any) -> dict:
+        """
+        准备开灯命令。返回包含命令信息的字典。
+        子类应该重写此方法以实现特定的开灯逻辑。
+
+        Returns:
+            dict: 包含 'method'（要调用的client方法名）和 'args'（参数）的字典
+        """
+        return {
+            "method": "turn_on_light_switch_async",
+            "args": [self._sub_key, self.agt, self.me],
+            "kwargs": {},
+        }
+
+    def _prepare_turn_off_command(self, **kwargs: Any) -> dict:
+        """
+        准备关灯命令。返回包含命令信息的字典。
+        子类应该重写此方法以实现特定的关灯逻辑。
+
+        Returns:
+            dict: 包含 'method'（要调用的client方法名）和 'args'（参数）的字典
+        """
+        return {
+            "method": "turn_off_light_switch_async",
+            "args": [self._sub_key, self.agt, self.me],
+            "kwargs": {},
+        }
+
+    def _apply_optimistic_update(self, turn_on: bool, **kwargs: Any) -> None:
+        """
+        执行乐观更新。子类可以重写此方法来处理特定的属性更新。
+
+        Args:
+            turn_on: True表示开灯，False表示关灯
+            **kwargs: 来自HA的参数
+        """
+        self._attr_is_on = turn_on
+
+    async def _optimistic_command_template(self, turn_on: bool, **kwargs: Any) -> None:
+        """
+        乐观更新模板方法。实现通用的乐观更新流程。
+
+        Args:
+            turn_on: True表示开灯，False表示关灯
+            **kwargs: 来自HA的参数
+        """
+        # 1. 保存原始状态
+        state_attrs = self._get_state_attributes()
+        original_state = {}
+        for attr in state_attrs:
+            if hasattr(self, attr):
+                original_state[attr] = getattr(self, attr)
+
+        # 2. 执行乐观更新
+        self._apply_optimistic_update(turn_on, **kwargs)
         self.async_write_ha_state()
 
+        # 3. 准备和执行命令
         try:
-            await self._client.turn_on_light_switch_async(
-                self._sub_key, self.agt, self.me
-            )
+            if turn_on:
+                command_info = self._prepare_turn_on_command(**kwargs)
+            else:
+                command_info = self._prepare_turn_off_command(**kwargs)
+
+            # 获取client方法
+            method_name = command_info["method"]
+            method = getattr(self._client, method_name)
+
+            # 调用方法
+            await method(*command_info["args"], **command_info["kwargs"])
+
         except Exception as e:
             _LOGGER.error(
-                "Failed to turn on light %s. Reverting state. Error: %s",
+                "Failed to %s light %s. Reverting state. Error: %s",
+                "turn on" if turn_on else "turn off",
                 self.entity_id,
                 e,
             )
-            self._attr_is_on = original_is_on
+            # 4. 恢复原始状态
+            for attr, value in original_state.items():
+                if hasattr(self, attr):
+                    setattr(self, attr, value)
             self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light with robust optimistic update."""
+        await self._optimistic_command_template(True, **kwargs)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light with robust optimistic update."""
-        original_is_on = self._attr_is_on
-
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
-        try:
-            await self._client.turn_off_light_switch_async(
-                self._sub_key, self.agt, self.me
-            )
-        except Exception as e:
-            _LOGGER.error(
-                "Failed to turn off light %s. Reverting state. Error: %s",
-                self.entity_id,
-                e,
-            )
-            self._attr_is_on = original_is_on
-            self.async_write_ha_state()
+        await self._optimistic_command_template(False, **kwargs)
 
 
 class LifeSmartLight(LifeSmartBaseLight):
@@ -432,58 +491,32 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
         elif (val := safe_get(self._sub_data, "val")) is not None:
             self._attr_brightness = val
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light with robust optimistic update."""
-        original_is_on = self._attr_is_on
-        original_brightness = self._attr_brightness
+    def _get_state_attributes(self) -> list[str]:
+        """返回需要在乐观更新中保存和恢复的属性列表。"""
+        return ["_attr_is_on", "_attr_brightness"]
 
-        self._attr_is_on = True
+    def _apply_optimistic_update(self, turn_on: bool, **kwargs: Any) -> None:
+        """执行乐观更新，处理亮度属性。"""
+        super()._apply_optimistic_update(turn_on, **kwargs)
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
-        self.async_write_ha_state()
 
-        try:
-            if ATTR_BRIGHTNESS in kwargs:
-                await self._client.async_send_single_command(
+    def _prepare_turn_on_command(self, **kwargs: Any) -> dict:
+        """准备亮度灯开灯命令。"""
+        if ATTR_BRIGHTNESS in kwargs:
+            return {
+                "method": "async_send_single_command",
+                "args": [
                     self.agt,
                     self.me,
                     self._sub_key,
                     CMD_TYPE_SET_VAL,
                     self._attr_brightness,
-                )
-            else:
-                await self._client.turn_on_light_switch_async(
-                    self._sub_key, self.agt, self.me
-                )
-        except Exception as e:
-            _LOGGER.error(
-                "Failed to turn on light %s. Reverting state. Error: %s",
-                self.entity_id,
-                e,
-            )
-            self._attr_is_on = original_is_on
-            self._attr_brightness = original_brightness
-            self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light with robust optimistic update."""
-        original_is_on = self._attr_is_on
-
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
-        try:
-            await self._client.turn_off_light_switch_async(
-                self._sub_key, self.agt, self.me
-            )
-        except Exception as e:
-            _LOGGER.error(
-                "Failed to turn off light %s. Reverting state. Error: %s",
-                self.entity_id,
-                e,
-            )
-            self._attr_is_on = original_is_on
-            self.async_write_ha_state()
+                ],
+                "kwargs": {},
+            }
+        else:
+            return super()._prepare_turn_on_command(**kwargs)
 
 
 class LifeSmartDimmerLight(LifeSmartBaseLight):
@@ -523,13 +556,13 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
                 self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin
             )
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light with robust optimistic update."""
-        original_is_on = self._attr_is_on
-        original_brightness = self._attr_brightness
-        original_color_temp = self._attr_color_temp_kelvin
+    def _get_state_attributes(self) -> list[str]:
+        """返回需要在乐观更新中保存和恢复的属性列表。"""
+        return ["_attr_is_on", "_attr_brightness", "_attr_color_temp_kelvin"]
 
-        self._attr_is_on = True
+    def _apply_optimistic_update(self, turn_on: bool, **kwargs: Any) -> None:
+        """执行乐观更新，处理亮度和色温属性。"""
+        super()._apply_optimistic_update(turn_on, **kwargs)
         if ATTR_BRIGHTNESS in kwargs:
             self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
@@ -540,77 +573,56 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
             self._attr_color_temp_kelvin = max(
                 min_k, min(kwargs[ATTR_COLOR_TEMP_KELVIN], max_k)
             )
-        self.async_write_ha_state()
 
-        try:
-            io_commands = []
-            # 只有在提供了相关参数时才构建命令
-            if ATTR_BRIGHTNESS in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs:
-                # 确保我们有值可以发送，即使只提供了其中一个参数
-                brightness = (
-                    self._attr_brightness if self._attr_brightness is not None else 255
-                )
-                kelvin = (
-                    self._attr_color_temp_kelvin
-                    if self._attr_color_temp_kelvin is not None
-                    else self._attr_min_color_temp_kelvin
-                )
-
-                min_k, max_k = (
-                    self._attr_min_color_temp_kelvin,
-                    self._attr_max_color_temp_kelvin,
-                )
-                clamped_kelvin = max(min_k, min(kelvin, max_k))
-                ratio = (
-                    ((clamped_kelvin - min_k) / (max_k - min_k))
-                    if (max_k - min_k) != 0
-                    else 0
-                )
-                temp_val = round(255 - (ratio * 255))
-
-                io_commands.extend(
-                    [
-                        {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": brightness},
-                        {"idx": "P2", "type": CMD_TYPE_SET_VAL, "val": temp_val},
-                    ]
-                )
-
-            if io_commands:
-                await self._client.async_send_multi_command(
-                    self.agt, self.me, io_commands
-                )
-
-            # 无论如何，最后都要确保灯是开启状态
-            await self._client.turn_on_light_switch_async("P1", self.agt, self.me)
-
-        except Exception as e:
-            _LOGGER.error(
-                "Failed to turn on light %s. Reverting state. Error: %s",
-                self.entity_id,
-                e,
+    def _prepare_turn_on_command(self, **kwargs: Any) -> dict:
+        """准备色温灯开灯命令。"""
+        if ATTR_BRIGHTNESS in kwargs or ATTR_COLOR_TEMP_KELVIN in kwargs:
+            # 确保我们有值可以发送，即使只提供了其中一个参数
+            brightness = (
+                self._attr_brightness if self._attr_brightness is not None else 255
             )
-            self._attr_is_on = original_is_on
-            self._attr_brightness = original_brightness
-            self._attr_color_temp_kelvin = original_color_temp
-            self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light with robust optimistic update."""
-        original_is_on = self._attr_is_on
-
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
-        try:
-            await self._client.turn_off_light_switch_async("P1", self.agt, self.me)
-        except Exception as e:
-            _LOGGER.error(
-                "Failed to turn off light %s. Reverting state. Error: %s",
-                self.entity_id,
-                e,
+            kelvin = (
+                self._attr_color_temp_kelvin
+                if self._attr_color_temp_kelvin is not None
+                else self._attr_min_color_temp_kelvin
             )
-            self._attr_is_on = original_is_on
-            self.async_write_ha_state()
+
+            min_k, max_k = (
+                self._attr_min_color_temp_kelvin,
+                self._attr_max_color_temp_kelvin,
+            )
+            clamped_kelvin = max(min_k, min(kelvin, max_k))
+            ratio = (
+                ((clamped_kelvin - min_k) / (max_k - min_k))
+                if (max_k - min_k) != 0
+                else 0
+            )
+            temp_val = round(255 - (ratio * 255))
+
+            io_commands = [
+                {"idx": "P1", "type": CMD_TYPE_SET_VAL, "val": brightness},
+                {"idx": "P2", "type": CMD_TYPE_SET_VAL, "val": temp_val},
+            ]
+
+            return {
+                "method": "async_send_multi_command",
+                "args": [self.agt, self.me, io_commands],
+                "kwargs": {},
+            }
+        else:
+            return {
+                "method": "turn_on_light_switch_async",
+                "args": ["P1", self.agt, self.me],
+                "kwargs": {},
+            }
+
+    def _prepare_turn_off_command(self, **kwargs: Any) -> dict:
+        """准备色温灯关灯命令。"""
+        return {
+            "method": "turn_off_light_switch_async",
+            "args": ["P1", self.agt, self.me],
+            "kwargs": {},
+        }
 
 
 class LifeSmartSPOTRGBLight(LifeSmartBaseLight):

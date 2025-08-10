@@ -57,7 +57,9 @@
       "cannot_connect": "Failed to connect. Please check your network and IP address.",
       "invalid_auth": "Authentication failed. Please check your credentials.",
       "unknown": "An unknown error occurred. Please check the logs.",
-      "invalid_response": "The API returned an invalid response. Please check your credentials and network."
+      "invalid_response": "The API returned an invalid response. Please check your credentials and network.",
+      "invalid_region": "Invalid server region setting. Please select a valid region.",
+      "invalid_auth_method": "Invalid authentication method. Please choose token or password."
     }
   },
   "options": {

@@ -109,7 +109,9 @@ async def setup_integration_fancoil_only(
     # 使用新的辅助函数创建Mock Hub
     mock_hub = create_mock_hub([fancoil_device], mock_client)
 
-    with patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub):
+    with patch(
+        "custom_components.lifesmart.core.hub.LifeSmartHub", return_value=mock_hub
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -137,7 +139,9 @@ async def setup_integration_floorheat_only(
     # 使用新的辅助函数创建Mock Hub
     mock_hub = create_mock_hub([floor_device], mock_client)
 
-    with patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub):
+    with patch(
+        "custom_components.lifesmart.core.hub.LifeSmartHub", return_value=mock_hub
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -165,7 +169,9 @@ async def setup_integration_nature_fancoil_mode(
     # 使用新的辅助函数创建Mock Hub
     mock_hub = create_mock_hub([nature_device], mock_client)
 
-    with patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub):
+    with patch(
+        "custom_components.lifesmart.core.hub.LifeSmartHub", return_value=mock_hub
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.LOADED
@@ -274,7 +280,7 @@ class TestClimateSetup:
         nature_switch["data"]["P5"]["val"] = 1
 
         # 模拟重载过程 - 使用新的 Hub 架构
-        with patch("custom_components.lifesmart.LifeSmartHub") as MockHubClass:
+        with patch("custom_components.lifesmart.core.hub.LifeSmartHub") as MockHubClass:
             # 使用新的辅助函数创建Mock Hub
             mock_hub_instance = create_mock_hub(devices_list, mock_client)
             MockHubClass.return_value = mock_hub_instance
@@ -744,10 +750,13 @@ async def setup_climate_entity_for_errors(
 
         with (
             patch(
-                "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient",
+                "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient",
                 return_value=mock_client,
             ),
-            patch("custom_components.lifesmart.LifeSmartHub", return_value=mock_hub),
+            patch(
+                "custom_components.lifesmart.core.hub.LifeSmartHub",
+                return_value=mock_hub,
+            ),
         ):
             await hass.config_entries.async_setup(setup_entry.entry_id)
             await hass.async_block_till_done()

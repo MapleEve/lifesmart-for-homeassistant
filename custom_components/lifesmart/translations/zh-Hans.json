@@ -57,7 +57,9 @@
       "cannot_connect": "连接失败，请检查您的网络和 IP 地址",
       "invalid_auth": "认证失败，请检查您的凭据是否正确",
       "unknown": "发生未知错误，请检查日志",
-      "invalid_response": "API 返回了无效的响应，请检查您的凭据和网络"
+      "invalid_response": "API 返回了无效的响应，请检查您的凭据和网络",
+      "invalid_region": "无效的服务器区域设置，请选择有效的区域",
+      "invalid_auth_method": "无效的认证方式，请选择 token 或 password"
     }
   },
   "options": {

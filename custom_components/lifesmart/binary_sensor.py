@@ -32,6 +32,7 @@ from .core.const import (
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
+    BINARY_SENSOR_BUTTON_RESET_DELAY,  # 新增常量
 )
 from .core.entity import LifeSmartEntity
 from .core.helpers import (
@@ -226,7 +227,9 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
                 self._attr_is_on = False
                 self.async_write_ha_state()
 
-            async_call_later(self.hass, 0.5, reset_state_callback)
+            async_call_later(
+                self.hass, BINARY_SENSOR_BUTTON_RESET_DELAY, reset_state_callback
+            )
 
     @callback
     def _determine_device_class(self) -> BinarySensorDeviceClass | None:
