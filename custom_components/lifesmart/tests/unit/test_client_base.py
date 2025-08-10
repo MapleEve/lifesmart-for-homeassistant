@@ -206,11 +206,10 @@ class TestCoverControl:
     async def test_open_cover_garage_door(self, mock_client):
         """测试开启车库门类型的窗帘。"""
         from custom_components.lifesmart.core.const import (
-            GARAGE_DOOR_TYPES,
             CMD_TYPE_SET_VAL,
         )
 
-        garage_door_type = list(GARAGE_DOOR_TYPES)[0]
+        garage_door_type = "SL_ETDOOR"
 
         result = await mock_client.open_cover_async("agt1", "cover1", garage_door_type)
 
@@ -222,9 +221,9 @@ class TestCoverControl:
     @pytest.mark.asyncio
     async def test_open_cover_dooya_type(self, mock_client):
         """测试开启杜亚类型的窗帘。"""
-        from custom_components.lifesmart.core.const import DOOYA_TYPES, CMD_TYPE_SET_VAL
+        from custom_components.lifesmart.core.const import CMD_TYPE_SET_VAL
 
-        dooya_type = list(DOOYA_TYPES)[0]
+        dooya_type = "SL_DOOYA"
 
         result = await mock_client.open_cover_async("agt1", "cover1", dooya_type)
 

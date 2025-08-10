@@ -37,9 +37,6 @@ from custom_components.lifesmart.core.const import (
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_TEMP_FCU,
     CMD_TYPE_SET_RAW_ON,
-    GARAGE_DOOR_TYPES,
-    # DOOYA_TYPES 已迁移至 core/config/device_specs.py
-    # 直接使用 "SL_DOOYA" 字符串代替集合
 )
 from custom_components.lifesmart.core.data.conversion import normalize_device_names
 
@@ -766,17 +763,17 @@ class TestDeviceControlMethods:
         [
             # 车库门类型窗帘
             (
-                list(GARAGE_DOOR_TYPES)[0],
+                "SL_ETDOOR",
                 "open_cover_async",
                 ("P3", CMD_TYPE_SET_VAL, 100),
             ),
             (
-                list(GARAGE_DOOR_TYPES)[0],
+                "SL_ETDOOR",
                 "close_cover_async",
                 ("P3", CMD_TYPE_SET_VAL, 0),
             ),
             (
-                list(GARAGE_DOOR_TYPES)[0],
+                "SL_ETDOOR",
                 "stop_cover_async",
                 ("P3", CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF),
             ),
