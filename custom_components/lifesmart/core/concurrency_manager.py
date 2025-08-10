@@ -131,7 +131,11 @@ class ConcurrencyManager:
                     self._held_locks[current_task] = "config_update"
                 _LOGGER.debug("获取配置更新锁: %s", operation_id)
 
-                return await update_func(*args, **kwargs)
+                # 处理同步和异步更新函数
+                result = update_func(*args, **kwargs)
+                if asyncio.iscoroutine(result):
+                    return await result
+                return result
         except Exception as e:
             _LOGGER.error("配置更新操作异常: %s", e)
             raise
