@@ -534,25 +534,35 @@ class EnhancedMappingEngine:
                 io_list = switch_config.get("io", [])
                 sensor_io_list = switch_config.get("sensor_io", [])
 
-                # 添加开关平台
+                # 添加开关平台 - 为所有io端口创建开关配置（即使设备数据中不存在）
                 if io_list:
                     result["switch"] = {}
                     for io_port in io_list:
-                        if io_port in device_data:
-                            # 使用默认开关逻辑
-                            result["switch"][io_port] = {
-                                "description": f"开关{io_port}",
-                                "rw": "RW",
-                                "data_type": "binary_switch",
-                                "conversion": "type_bit_0",
-                                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭",
-                                "_logic_processor": "type_bit_0_switch",
-                            }
+                        # 使用默认开关逻辑
+                        result["switch"][io_port] = {
+                            "description": f"开关{io_port}",
+                            "rw": "RW",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "detailed_description": (
+                                "`type&1==1` 表示打开；`type&1==0` 表示关闭"
+                            ),
+                            "_logic_processor": "type_bit_0_switch",
+                        }
 
-                # 添加传感器平台
+                # 添加传感器平台 - 仅为存在于设备数据中的sensor_io端口
+                # 对于SL_NATURE，排除P5端口（只是设备类型标识符，不是传感器数据）
                 if sensor_io_list:
                     result["sensor"] = {}
                     for io_port in sensor_io_list:
+                        # 对于SL_NATURE的switch_mode，P5只是设备类型标识符，不是传感器数据
+                        if (
+                            io_port == "P5"
+                            and device.get("devtype") == "SL_NATURE"
+                            and device_mode == "switch_mode"
+                        ):
+                            continue
+
                         if io_port in device_data:
                             result["sensor"][io_port] = {
                                 "description": f"传感器{io_port}",
@@ -577,7 +587,7 @@ class EnhancedMappingEngine:
                         result[platform_name] = {}
                         platform_config = switch_config[platform_name]
                         for io_port, io_config in platform_config.items():
-                            if isinstance(io_config, dict) and io_port in device_data:
+                            if isinstance(io_config, dict):
                                 result[platform_name][io_port] = (
                                     self._process_io_config_with_logic(
                                         io_config,
@@ -597,13 +607,27 @@ class EnhancedMappingEngine:
             # 结构: {"P1": {...}, "P4": {...}, "P5": {...}}
             if climate_config:
                 result["climate"] = {}
+
+                # 同时检查是否有传感器IO口需要生成传感器平台
+                sensor_ios = {}
+
                 for io_port, io_config in climate_config.items():
-                    if isinstance(io_config, dict) and io_port in device_data:
-                        result["climate"][io_port] = self._process_io_config_with_logic(
+                    if isinstance(io_config, dict):
+                        processed_config = self._process_io_config_with_logic(
                             io_config,
                             device_data.get(io_port, {}),
                             device.get("devtype", ""),
                         )
+
+                        result["climate"][io_port] = processed_config
+
+                        # 检查是否是传感器IO口（有device_class、unit_of_measurement等传感器特征）
+                        if self._is_sensor_io_config(io_config):
+                            sensor_ios[io_port] = processed_config
+
+                # 如果有传感器IO口，生成传感器平台
+                if sensor_ios:
+                    result["sensor"] = sensor_ios
 
             return result
 
@@ -641,7 +665,7 @@ class EnhancedMappingEngine:
                     result[platform_name] = {}
                     platform_config = cover_config[platform_name]
                     for io_port, io_config in platform_config.items():
-                        if isinstance(io_config, dict) and io_port in device_data:
+                        if isinstance(io_config, dict):
                             result[platform_name][io_port] = (
                                 self._process_io_config_with_logic(
                                     io_config,
@@ -649,6 +673,41 @@ class EnhancedMappingEngine:
                                     device.get("devtype", ""),
                                 )
                             )
+
+            return result
+
+        elif device_mode == "free_mode":
+            # 处理自由模式 - SL_P设备的默认模式
+            free_config = None
+
+            # 从 control_modes 中获取 free_mode 配置
+            if (
+                "control_modes" in raw_config
+                and "free_mode" in raw_config["control_modes"]
+            ):
+                free_config = raw_config["control_modes"]["free_mode"]
+            elif "free_mode" in raw_config:
+                free_config = raw_config["free_mode"]
+
+            if not free_config:
+                return {
+                    "_device_mode": device_mode,
+                    "_error": "free_mode configuration not found",
+                }
+
+            result = {"_device_mode": device_mode}
+
+            # 直接从 free_config 中提取平台配置
+            for platform_name in [
+                "binary_sensor",
+                "sensor",
+                "switch",
+                "light",
+                "cover",
+                "climate",
+            ]:
+                if platform_name in free_config:
+                    result[platform_name] = free_config[platform_name]
 
             return result
 
@@ -795,11 +854,11 @@ class EnhancedMappingEngine:
             # 提取该平台的IO口列表
             io_ports = []
             for io_port, io_config in ios.items():
-                if isinstance(io_config, dict) and io_port in device_data:
+                if isinstance(io_config, dict):
                     io_ports.append(io_port)
 
                     # 检查是否需要bitmask扩展（仅对binary_sensor）
-                    if platform == "binary_sensor":
+                    if platform == "binary_sensor" and io_port in device_data:
                         expanded_subdevices = self._expand_bitmask_for_io(
                             io_port, io_config, device_data.get(io_port, {})
                         )
@@ -1271,6 +1330,60 @@ class EnhancedMappingEngine:
     def _parse_climate_device(self, data: dict) -> dict:
         """解析温控设备"""
         return {}
+
+    def _is_sensor_io_config(self, io_config: dict) -> bool:
+        """
+        判断一个IO配置是否是传感器配置
+
+        传感器IO配置通常包含以下特征之一：
+        - device_class: 传感器设备类别
+        - unit_of_measurement: 测量单位
+        - state_class: 状态类别（measurement, total_increasing等）
+        - data_type: 数据类型为temperature、humidity等传感器类型
+
+        Args:
+            io_config: IO配置字典
+
+        Returns:
+            是否是传感器配置
+        """
+        if not isinstance(io_config, dict):
+            return False
+
+        # 检查是否有传感器特征
+        sensor_features = ["device_class", "unit_of_measurement", "state_class"]
+
+        # 如果有任何传感器特征，则认为是传感器
+        if any(feature in io_config for feature in sensor_features):
+            return True
+
+        # 检查data_type是否是传感器类型
+        data_type = io_config.get("data_type", "")
+        sensor_data_types = [
+            "temperature",
+            "humidity",
+            "pressure",
+            "voltage",
+            "current",
+            "power",
+            "energy",
+            "sensor",  # 通用传感器类型
+        ]
+
+        if data_type in sensor_data_types:
+            return True
+
+        # 检查rw特征，只读的通常是传感器（但不绝对）
+        rw = io_config.get("rw", "")
+        if rw == "R" and data_type not in [
+            "device_type",
+            "config_bitmask",
+            "hvac_mode",
+            "fan_speed",
+        ]:
+            return True
+
+        return False
 
 
 # 创建全局引擎实例
