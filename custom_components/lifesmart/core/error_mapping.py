@@ -1,145 +1,290 @@
-"""LifeSmart API错误码映射和用户友好错误处理模块。
+"""LifeSmart API error code mapping and user-friendly error handling module.
 
-此模块提供LifeSmart API错误码到中文描述、解决方案建议
-和逻辑分类的映射功能，用于改善用户体验和故障排查。
-这有助于在日志中提供更清晰的错误信息，并指导用户解决问题。
+This module provides mapping from LifeSmart API error codes to localized descriptions,
+solution suggestions, and logical categories for improved user experience and
+troubleshooting. This helps provide clearer error messages in logs and guides
+users to resolve issues.
 
-由 @MapleEve 创建，作为集成架构重构的一部分。
+Created by @MapleEve as part of the integration architecture refactoring.
 """
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, TYPE_CHECKING
 
-# 错误码 -> (中文描述, 解决方案建议, 逻辑分类)
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+# Error code -> (translation_key_prefix, category_key)
+# Translation keys will be: {prefix}.description, {prefix}.advice
 ERROR_CODE_MAPPING = {
-    # --- 请求与认证 (Request & Auth) ---
-    10001: (
-        "请求格式错误",
-        "请校验发送的JSON数据结构及字段类型是否符合API文档。",
-        "数据校验",
-    ),
-    10002: ("AppKey不存在", "请在集成配置中检查您的AppKey是否正确填写。", "配置问题"),
-    10003: (
-        "不支持HTTP GET请求",
-        "这是一个开发错误，该接口应使用POST方法。",
-        "方法调用",
-    ),
-    10004: ("签名非法", "请检查签名算法、时间戳或凭据是否正确。", "安全策略"),
-    10005: (
-        "用户没有授权",
-        "请检查用户令牌(UserToken)是否正确，或到LifeSmart平台检查授权。",
-        "用户授权",
-    ),
-    10006: (
-        "用户授权已经过期",
-        "用户令牌(UserToken)已失效，请在选项中重新进行认证以获取新令牌。",
-        "用户授权",
-    ),
-    10007: (
-        "非法访问",
-        "您的IP地址可能不在白名单中，请检查LifeSmart平台的安全设置。",
-        "安全策略",
-    ),
-    10010: ("Method非法", "调用的API方法名称不存在或已被弃用。", "方法调用"),
-    10012: ("用户名已存在", "此用户名已被注册，请更换用户名。", "配置问题"),
-    10015: (
-        "权限不够",
-        "当前账户权限不足以执行此操作，请联系管理员提升权限。",
-        "权限管理",
-    ),
-    10018: (
-        "GPS位置非法访问拒绝",
-        "请检查应用的地理位置权限或相关场景的地理围栏设置。",
-        "安全策略",
-    ),
-    10022: (
-        "请求地址需要重定向",
-        "API服务器地址可能已变更，请尝试更新集成。",
-        "服务端错误",
-    ),
-    # --- 服务器与网络 (Server & Network) ---
-    10008: (
-        "内部错误",
-        "LifeSmart服务器内部发生未知错误，请稍后重试或联系技术支持。",
-        "服务端错误",
-    ),
-    10011: (
-        "操作超时",
-        "网络连接不稳定或LifeSmart服务器响应超时，请检查您的网络连接。",
-        "网络问题",
-    ),
-    # --- 设备与资源 (Device & Resource) ---
-    10009: (
-        "设置属性失败",
-        "检查设备是否在线且支持该属性设置，或查看日志获取详细信息。",
-        "设备操作",
-    ),
-    10013: (
-        "设备没准备好",
-        "设备当前可能离线或正忙，请确保设备在线后重试。",
-        "设备操作",
-    ),
-    10014: (
-        "设备已经被其他账户注册",
-        "请先从原账户中解绑该设备，然后再尝试添加。",
-        "设备管理",
-    ),
-    10016: (
-        "设备不支持该操作",
-        "您尝试的操作不被此设备型号支持，请查阅设备文档。",
-        "设备操作",
-    ),
-    10017: ("数据非法", "提交给设备的参数值或格式不正确，请检查。", "数据校验"),
-    10019: (
-        "请求对象不存在",
-        "请求中的设备ID、场景ID等不存在，请检查配置或设备是否已被删除。",
-        "资源定位",
-    ),
-    10020: ("设备已经存在账户中", "此设备已在您的账户下，无需重复添加。", "设备管理"),
+    # --- Request & Auth ---
+    10001: ("error.api.10001", "data_validation"),
+    10002: ("error.api.10002", "config_issues"),
+    10003: ("error.api.10003", "method_call"),
+    10004: ("error.api.10004", "security_policy"),
+    10005: ("error.api.10005", "user_authorization"),
+    10006: ("error.api.10006", "user_authorization"),
+    10007: ("error.api.10007", "security_policy"),
+    10010: ("error.api.10010", "method_call"),
+    10012: ("error.api.10012", "config_issues"),
+    10015: ("error.api.10015", "permission_management"),
+    10018: ("error.api.10018", "security_policy"),
+    10022: ("error.api.10022", "server_error"),
+    # --- Server & Network ---
+    10008: ("error.api.10008", "server_error"),
+    10011: ("error.api.10011", "network_issues"),
+    # --- Device & Resource ---
+    10009: ("error.api.10009", "device_operation"),
+    10013: ("error.api.10013", "device_operation"),
+    10014: ("error.api.10014", "device_management"),
+    10016: ("error.api.10016", "device_operation"),
+    10017: ("error.api.10017", "data_validation"),
+    10019: ("error.api.10019", "resource_location"),
+    10020: ("error.api.10020", "device_management"),
 }
 
-# 解决方案建议分组，为某一类问题提供通用的解决思路
-RECOMMENDATION_GROUP = {
-    "配置问题": "请检查您在Home Assistant中的LifeSmart集成配置。",
-    "用户授权": "请在“选项”中重新进行认证，或检查您在LifeSmart平台的账户授权。",
-    "安全策略": "请检查您在LifeSmart开发者平台的安全设置，如IP白名单。",
-    "权限管理": "请联系您的LifeSmart账户管理员调整权限。",
-    "服务端错误": "这通常是LifeSmart服务器的临时问题，请稍后重试或联系其技术支持。",
-    "网络问题": "请检查您的家庭网络连接以及到互联网的连接。",
-    "设备操作": "请检查设备是否在线、固件是否最新，以及操作是否被设备支持。",
-    "设备管理": "请在LifeSmart官方App中管理您的设备。",
-    "数据校验": "这是一个潜在的集成Bug，请向开发者报告此问题。",
-    "方法调用": "这是一个潜在的集成Bug，请向开发者报告此问题。",
-    "资源定位": "请检查相关自动化或脚本中引用的设备/场景ID是否正确。",
-    "default": "发生未知错误，请查看Home Assistant日志获取详细信息，或联系集成开发者。",
+# Category key mapping for translation
+CATEGORY_TRANSLATION_KEYS = {
+    "config_issues": "error.category.config_issues",
+    "user_authorization": "error.category.user_authorization",
+    "security_policy": "error.category.security_policy",
+    "permission_management": "error.category.permission_management",
+    "server_error": "error.category.server_error",
+    "network_issues": "error.category.network_issues",
+    "device_operation": "error.category.device_operation",
+    "device_management": "error.category.device_management",
+    "data_validation": "error.category.data_validation",
+    "method_call": "error.category.method_call",
+    "resource_location": "error.category.resource_location",
+    "default": "error.category.default",
+}
+
+# Recommendation group translation keys
+RECOMMENDATION_TRANSLATION_KEYS = {
+    "config_issues": "error.recommendation.config_issues",
+    "user_authorization": "error.recommendation.user_authorization",
+    "security_policy": "error.recommendation.security_policy",
+    "permission_management": "error.recommendation.permission_management",
+    "server_error": "error.recommendation.server_error",
+    "network_issues": "error.recommendation.network_issues",
+    "device_operation": "error.recommendation.device_operation",
+    "device_management": "error.recommendation.device_management",
+    "data_validation": "error.recommendation.data_validation",
+    "method_call": "error.recommendation.method_call",
+    "resource_location": "error.recommendation.resource_location",
+    "default": "error.recommendation.default",
 }
 
 
-def get_error_advice(error_code: int) -> Tuple[str, str, Optional[str]]:
-    """根据错误码获取其描述、解决方案和分类。
+def get_error_advice(
+    error_code: int,
+    hass: Optional["HomeAssistant"] = None,
+    translation_domain: str = "lifesmart",
+) -> Tuple[str, str, Optional[str]]:
+    """Get error description, advice, and category for an error code.
 
     Args:
-        error_code: 从API返回的数字错误码。
+        error_code: The numeric error code from API response.
+        hass: HomeAssistant instance for translation (optional).
+        translation_domain: Translation domain to use (default: "lifesmart").
 
     Returns:
-        一个元组，包含：
-        - desc (str): 错误的中文描述。
-        - advice (str): 针对该错误的具体解决方案建议。
-        - category (str | None): 错误的逻辑分类，或None。
+        A tuple containing:
+        - desc (str): Error description (translated if hass provided).
+        - advice (str): Solution advice (translated if hass provided).
+        - category (str | None): Error logical category, or None.
     """
     if error_code in ERROR_CODE_MAPPING:
-        desc, advice, category = ERROR_CODE_MAPPING[error_code]
+        translation_key_prefix, category_key = ERROR_CODE_MAPPING[error_code]
+
+        if hass is not None:
+            # TODO: Implement proper async translation integration with HA
+            # For now, use fallback mode until proper async context is available
+            desc, advice = _get_fallback_messages(error_code)
+            category = category_key
+        else:
+            # Fallback mode - use hardcoded English messages
+            desc, advice = _get_fallback_messages(error_code)
+            category = category_key
+
         return desc, advice, category
 
-    # 对于未在映射中定义的错误码，动态生成一个通用描述
+    # For undefined error codes, generate dynamic description
     error_ranges = {
-        (10000, 10100): "API请求或认证错误",
-        (10100, 10200): "设备操作或状态错误",
-        (20000, 20100): "服务端内部错误",
+        (10000, 10100): "api_auth",
+        (10100, 10200): "device_operation",
+        (20000, 20100): "server_internal",
     }
-    desc = next(
+
+    range_key = next(
         (v for k, v in error_ranges.items() if k[0] <= error_code < k[1]),
-        "未知业务错误",
+        "unknown",
     )
-    # 提供一个默认的解决方案建议
-    advice = "这是一个未明确定义的错误，请查看日志或联系开发者获取帮助。"
+
+    if hass is not None:
+        desc = _get_range_description_with_fallback(
+            translation_domain, range_key, error_code
+        )
+
+        advice = (
+            "This is an undefined error, please check logs "
+            "or contact developer for help."
+        )
+    else:
+        # Fallback messages
+        range_descriptions = {
+            "api_auth": "API request or authentication error",
+            "device_operation": "Device operation or status error",
+            "server_internal": "Server internal error",
+            "unknown": "Unknown business error",
+        }
+        desc = range_descriptions.get(range_key, "Unknown error")
+        advice = (
+            "This is an undefined error, please check logs "
+            "or contact developer for help."
+        )
+
     return desc, advice, None
+
+
+def _get_range_description_with_fallback(
+    translation_domain: str, range_key: str, error_code: int
+) -> str:
+    """Get range description with fallback to English.
+
+    Args:
+        translation_domain: Translation domain.
+        range_key: The range key (api_auth, device_operation, etc).
+        error_code: The error code number.
+
+    Returns:
+        Range description string.
+    """
+    # For now, use fallback descriptions until proper async integration is implemented
+    range_descriptions = {
+        "api_auth": "API request or authentication error",
+        "device_operation": "Device operation or status error",
+        "server_internal": "Server internal error",
+        "unknown": "Unknown business error",
+    }
+    return range_descriptions.get(range_key, f"Error {error_code}")
+
+
+def _get_fallback_messages(error_code: int) -> Tuple[str, str]:
+    """Get fallback English messages for error codes when translations are unavailable.
+
+    Args:
+        error_code: The numeric error code.
+
+    Returns:
+        A tuple of (description, advice) in English.
+    """
+    fallback_messages = {
+        10001: (
+            "Invalid request format",
+            "Please verify the JSON data structure and field types "
+            "conform to the API documentation.",
+        ),
+        10002: (
+            "AppKey does not exist",
+            "Please check that your AppKey is correctly filled "
+            "in the integration configuration.",
+        ),
+        10003: (
+            "HTTP GET request not supported",
+            "This is a development error, this interface should use POST method.",
+        ),
+        10004: (
+            "Invalid signature",
+            "Please check if the signature algorithm, timestamp "
+            "or credentials are correct.",
+        ),
+        10005: (
+            "User not authorized",
+            "Please check if the user token (UserToken) is correct, "
+            "or check authorization on LifeSmart platform.",
+        ),
+        10006: (
+            "User authorization expired",
+            "User token (UserToken) has expired, please re-authenticate "
+            "in options to get a new token.",
+        ),
+        10007: (
+            "Illegal access",
+            "Your IP address may not be in the whitelist, "
+            "please check LifeSmart platform security settings.",
+        ),
+        10008: (
+            "Internal error",
+            "LifeSmart server internal unknown error occurred, "
+            "please retry later or contact technical support.",
+        ),
+        10009: (
+            "Failed to set property",
+            "Check if device is online and supports this property setting, "
+            "or view logs for detailed information.",
+        ),
+        10010: (
+            "Illegal method",
+            "The called API method name does not exist or has been deprecated.",
+        ),
+        10011: (
+            "Operation timeout",
+            "Network connection is unstable or LifeSmart server response "
+            "timeout, please check your network connection.",
+        ),
+        10012: (
+            "Username already exists",
+            "This username has been registered, please change username.",
+        ),
+        10013: (
+            "Device not ready",
+            "Device may currently be offline or busy, "
+            "please ensure device is online then retry.",
+        ),
+        10014: (
+            "Device already registered by another account",
+            "Please first unbind this device from original account, then try adding.",
+        ),
+        10015: (
+            "Insufficient permissions",
+            "Current account permissions are insufficient to perform "
+            "this operation, please contact administrator to elevate permissions.",
+        ),
+        10016: (
+            "Device does not support this operation",
+            "The operation you attempted is not supported by this device "
+            "model, please consult device documentation.",
+        ),
+        10017: (
+            "Invalid data",
+            "Parameter values or formats submitted to device are "
+            "incorrect, please check.",
+        ),
+        10018: (
+            "GPS location illegal access denied",
+            "Please check application's geographic location permissions "
+            "or related scene geofence settings.",
+        ),
+        10019: (
+            "Requested object does not exist",
+            "Device ID, scene ID etc. in request do not exist, "
+            "please check configuration or if device has been deleted.",
+        ),
+        10020: (
+            "Device already exists in account",
+            "This device is already under your account, no need to add repeatedly.",
+        ),
+        10022: (
+            "Request address needs redirection",
+            "API server address may have changed, please try updating integration.",
+        ),
+    }
+
+    return fallback_messages.get(
+        error_code,
+        (
+            f"Unknown error {error_code}",
+            "This is an undefined error, please check logs "
+            "or contact developer for help.",
+        ),
+    )
