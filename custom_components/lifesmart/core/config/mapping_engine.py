@@ -325,6 +325,32 @@ class EnhancedMappingEngine:
         if raw_config.get("dynamic", False):
             return self._resolve_dynamic_device_with_logic(raw_config, device)
 
+        # 检查是否是版本化设备
+        if "versioned" in raw_config:
+            # 对于版本化设备，先获取正确的版本配置，然后转换为HA格式
+            versioned_config = raw_config["versioned"]
+
+            if (
+                isinstance(versioned_config, bool)
+                and versioned_config
+                and "version_modes" in raw_config
+            ):
+                # 提取版本信息
+                device_version = self._extract_version_from_fullcls(device)
+                if not device_version:
+                    device_version = device.get("version", "default")
+
+                # 获取版本对应的配置
+                versions = raw_config["version_modes"]
+                selected_config = versions.get(
+                    str(device_version), versions.get("default", {})
+                )
+
+                # 将版本配置转换为HA规范并应用业务逻辑处理
+                return self.convert_data_to_ha_mapping_with_logic(
+                    selected_config, device
+                )
+
         # 将纯数据转换为HA规范配置，并应用业务逻辑处理
         ha_config = self.convert_data_to_ha_mapping_with_logic(raw_config, device)
 
@@ -333,10 +359,6 @@ class EnhancedMappingEngine:
             return self._resolve_dynamic_classification(
                 ha_config, device.get("data", {})
             )
-
-        # 检查是否是版本化设备
-        if "versioned" in ha_config:
-            return self._resolve_versioned_device(ha_config, device)
 
         return ha_config
 
@@ -422,6 +444,17 @@ class EnhancedMappingEngine:
         Returns:
             处理后的IO口配置
         """
+        # 防护检查：如果io_config不是字典，返回简化配置
+        if not isinstance(io_config, dict):
+            return {
+                "description": str(io_config) if io_config else "Unknown",
+                "rw": "RW",
+                "data_type": "generic",
+                "conversion": "val_direct",
+                "_logic_processor": "none",
+                "_can_process_value": False,
+            }
+
         # 先进行基本的HA常量转换
         processed_config = self.convert_data_to_ha_mapping(io_config)
 
@@ -474,41 +507,84 @@ class EnhancedMappingEngine:
         )
 
         # 根据分类结果选择对应的配置
-        if device_mode == "switch_mode" and "switch_mode" in raw_config:
-            # 处理开关模式
-            switch_config = raw_config["switch_mode"]
-            io_list = switch_config.get("io", [])
-            sensor_io_list = switch_config.get("sensor_io", [])
+        if device_mode == "switch_mode":
+            # 处理开关模式 - 支持两种配置结构
+            switch_config = None
+
+            # 方法1: 从顶层直接获取 (SL_NATURE风格)
+            if "switch_mode" in raw_config:
+                switch_config = raw_config["switch_mode"]
+            # 方法2: 从control_modes中获取 (SL_P风格)
+            elif (
+                "control_modes" in raw_config
+                and "switch_mode" in raw_config["control_modes"]
+            ):
+                switch_config = raw_config["control_modes"]["switch_mode"]
+
+            if not switch_config:
+                return {
+                    "_device_mode": device_mode,
+                    "_error": "switch_mode configuration not found",
+                }
 
             result = {"_device_mode": device_mode}
 
-            # 添加开关平台
-            if io_list:
-                result["switch"] = {}
-                for io_port in io_list:
-                    if io_port in device_data:
-                        # 使用默认开关逻辑
-                        result["switch"][io_port] = {
-                            "description": f"开关{io_port}",
-                            "rw": "RW",
-                            "data_type": "binary_switch",
-                            "conversion": "type_bit_0",
-                            "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭",
-                            "_logic_processor": "type_bit_0_switch",
-                        }
+            # 方法1: SL_NATURE风格 - 使用io列表
+            if "io" in switch_config:
+                io_list = switch_config.get("io", [])
+                sensor_io_list = switch_config.get("sensor_io", [])
 
-            # 添加传感器平台
-            if sensor_io_list:
-                result["sensor"] = {}
-                for io_port in sensor_io_list:
-                    if io_port in device_data:
-                        result["sensor"][io_port] = {
-                            "description": f"传感器{io_port}",
-                            "rw": "R",
-                            "data_type": "sensor",
-                            "conversion": "val_direct",
-                            "_logic_processor": "direct_value_passthrough",
-                        }
+                # 添加开关平台
+                if io_list:
+                    result["switch"] = {}
+                    for io_port in io_list:
+                        if io_port in device_data:
+                            # 使用默认开关逻辑
+                            result["switch"][io_port] = {
+                                "description": f"开关{io_port}",
+                                "rw": "RW",
+                                "data_type": "binary_switch",
+                                "conversion": "type_bit_0",
+                                "detailed_description": "`type&1==1` 表示打开；`type&1==0` 表示关闭",
+                                "_logic_processor": "type_bit_0_switch",
+                            }
+
+                # 添加传感器平台
+                if sensor_io_list:
+                    result["sensor"] = {}
+                    for io_port in sensor_io_list:
+                        if io_port in device_data:
+                            result["sensor"][io_port] = {
+                                "description": f"传感器{io_port}",
+                                "rw": "R",
+                                "data_type": "sensor",
+                                "conversion": "val_direct",
+                                "_logic_processor": "direct_value_passthrough",
+                            }
+
+            # 方法2: SL_P风格 - 直接包含平台配置
+            else:
+                # 直接从 switch_config 中提取平台配置
+                for platform_name in [
+                    "switch",
+                    "sensor",
+                    "binary_sensor",
+                    "light",
+                    "cover",
+                    "climate",
+                ]:
+                    if platform_name in switch_config:
+                        result[platform_name] = {}
+                        platform_config = switch_config[platform_name]
+                        for io_port, io_config in platform_config.items():
+                            if isinstance(io_config, dict) and io_port in device_data:
+                                result[platform_name][io_port] = (
+                                    self._process_io_config_with_logic(
+                                        io_config,
+                                        device_data.get(io_port, {}),
+                                        device.get("devtype", ""),
+                                    )
+                                )
 
             return result
 
@@ -517,17 +593,62 @@ class EnhancedMappingEngine:
             climate_config = raw_config["climate_mode"].get("climate", {})
             result = {"_device_mode": device_mode}
 
-            for platform, ios in climate_config.items():
-                if isinstance(ios, dict):
-                    result[platform] = {}
-                    for io_port, io_config in ios.items():
-                        result[platform][io_port] = self._process_io_config_with_logic(
+            # climate_config直接包含IO端口配置，而不是平台嵌套
+            # 结构: {"P1": {...}, "P4": {...}, "P5": {...}}
+            if climate_config:
+                result["climate"] = {}
+                for io_port, io_config in climate_config.items():
+                    if isinstance(io_config, dict) and io_port in device_data:
+                        result["climate"][io_port] = self._process_io_config_with_logic(
                             io_config,
                             device_data.get(io_port, {}),
                             device.get("devtype", ""),
                         )
-                else:
-                    result[platform] = ios
+
+            return result
+
+        elif device_mode == "cover_mode":
+            # 处理窗帘模式 - 支持两种配置结构
+            cover_config = None
+
+            # 方法1: 从顶层直接获取 (SL_NATURE风格)
+            if "cover_mode" in raw_config:
+                cover_config = raw_config["cover_mode"]
+            # 方法2: 从control_modes中获取 (SL_P风格)
+            elif (
+                "control_modes" in raw_config
+                and "cover_mode" in raw_config["control_modes"]
+            ):
+                cover_config = raw_config["control_modes"]["cover_mode"]
+
+            if not cover_config:
+                return {
+                    "_device_mode": device_mode,
+                    "_error": "cover_mode configuration not found",
+                }
+
+            result = {"_device_mode": device_mode}
+
+            # 直接从 cover_config 中提取平台配置
+            for platform_name in [
+                "cover",
+                "sensor",
+                "binary_sensor",
+                "light",
+                "switch",
+            ]:
+                if platform_name in cover_config:
+                    result[platform_name] = {}
+                    platform_config = cover_config[platform_name]
+                    for io_port, io_config in platform_config.items():
+                        if isinstance(io_config, dict) and io_port in device_data:
+                            result[platform_name][io_port] = (
+                                self._process_io_config_with_logic(
+                                    io_config,
+                                    device_data.get(io_port, {}),
+                                    device.get("devtype", ""),
+                                )
+                            )
 
             return result
 
@@ -837,22 +958,60 @@ class EnhancedMappingEngine:
         if isinstance(versioned_config, bool):
             # 布尔值格式，使用version_modes
             if versioned_config and "version_modes" in device_config:
-                version_field = "version"
+                # 修复: 对于LifeSmart设备，版本信息从fullCls字段提取
                 versions = device_config["version_modes"]
+
+                # 从fullCls字段提取版本信息
+                device_version = self._extract_version_from_fullcls(device)
+
+                # 如果没有提取到版本，尝试直接从version字段获取
+                if not device_version:
+                    device_version = device.get("version", "default")
+
             else:
                 return {}
         elif isinstance(versioned_config, dict):
             # 字典格式，使用标准结构
             version_field = versioned_config.get("version_field", "version")
             versions = versioned_config.get("versions", {})
+
+            # 对于LifeSmart设备，优先从fullCls字段提取版本
+            if version_field == "version" and device.get("fullCls"):
+                device_version = self._extract_version_from_fullcls(device)
+            else:
+                device_version = device.get(version_field, "default")
         else:
             return {}
 
-        # 从设备信息中获取版本
-        device_version = device.get(version_field, "default")
+        # 选择对应的版本配置
         selected_config = versions.get(str(device_version), versions.get("default", {}))
-
         return self._resolve_static_mapping(selected_config, device.get("data", {}))
+
+    def _extract_version_from_fullcls(self, device: dict) -> str:
+        """
+        从fullCls字段中提取版本信息
+
+        Args:
+            device: 设备字典
+
+        Returns:
+            版本字符串，如"V1", "V2"等，未找到时返回空字符串
+        """
+        full_cls = device.get("fullCls", "")
+        device_type = device.get("devtype", "")
+
+        if not full_cls or not device_type:
+            return ""
+
+        # 提取版本号，例如：SL_SW_DM1_V1 -> V1
+        if f"{device_type}_V1" in full_cls:
+            return "V1"
+        elif f"{device_type}_V2" in full_cls:
+            return "V2"
+        elif f"{device_type}_V3" in full_cls:
+            return "V3"
+
+        return ""
 
     def _resolve_static_mapping(
         self, device_config: dict, device_data: dict
