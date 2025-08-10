@@ -237,7 +237,7 @@ class SmartIOAllocationAnalyzer:
             self.analysis_engine = None
 
         # 智能过滤配置
-        self.confidence_threshold = 0.95  # 高置信度阈值，超过此值自动过滤
+        self.confidence_threshold = 0.7  # 调整置信度阈值，适应多平台配置
         self.filtered_devices = []  # 被过滤的100%匹配设备
         self.focus_devices = []  # 需要关注的差异设备
 

@@ -5,14 +5,13 @@
 基于官方文档直接进行NLP分析，实时生成对比分析结果
 """
 
-import re
-import json
 import os
-from datetime import datetime
-from typing import Dict, List, Any, Optional, Set
-from dataclasses import dataclass
-from enum import Enum
+import re
 from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Any, Set
 
 
 class PlatformType(Enum):
@@ -66,16 +65,16 @@ class IOPlatformClassifier:
 
     # 设备类型优先级映射 - 基于设备名称前缀
     DEVICE_TYPE_PRIORITIES = {
-        "SL_SW_": {"switch": 0.9, "light": 0.8},  # 开关设备
-        "SL_SF_": {"switch": 0.9, "light": 0.8},  # 流光开关设备
-        "SL_SC_": {"sensor": 0.9, "binary_sensor": 0.8},  # 传感器设备
-        "SL_LK_": {"lock": 0.95},  # 智能锁设备
-        "SL_WH_": {"sensor": 0.9, "binary_sensor": 0.8},  # 水传感器设备
-        "SL_P_": {"cover": 0.9},  # 窗帘设备
-        "SL_AC_": {"climate": 0.95},  # 空调设备
-        "SL_OL_": {"light": 0.95},  # 灯光设备
-        "SL_RGBW_": {"light": 0.95},  # RGBW灯光设备
-        "SL_LI_": {"light": 0.95},  # 智能灯设备
+        "SL_SW_": {"switch": 0.95, "light": 0.9},  # 开关设备 - 提高优先级
+        "SL_SF_": {"switch": 0.95, "light": 0.9},  # 流光开关设备 - 提高优先级
+        "SL_SC_": {"sensor": 0.95, "binary_sensor": 0.8},  # 传感器设备
+        "SL_LK_": {"lock": 0.98, "sensor": 0.85},  # 智能锁设备 - 添加sensor支持
+        "SL_WH_": {"sensor": 0.95, "binary_sensor": 0.8},  # 水传感器设备
+        "SL_P_": {"cover": 0.95},  # 窗帘设备
+        "SL_AC_": {"climate": 0.98},  # 空调设备
+        "SL_OL_": {"light": 0.98},  # 灯光设备
+        "SL_RGBW_": {"light": 0.98},  # RGBW灯光设备
+        "SL_LI_": {"light": 0.98},  # 智能灯设备
     }
 
     # 平台识别规则：关键词 -> (平台, 置信度)
@@ -162,12 +161,13 @@ class IOPlatformClassifier:
         PlatformType.BINARY_SENSOR: {
             "keywords": [
                 "移动检测",
-                "门禁",
+                "门禁状态",
                 "按键状态",
-                "防拆",
-                "震动",
+                "防拆状态",
+                "震动检测",
                 "警报音",
                 "接近检测",
+                "门窗状态",
                 "M",
                 "G",
                 "B",
@@ -175,24 +175,33 @@ class IOPlatformClassifier:
                 "SR",
                 "TR",
             ],
-            "excluded_device_types": ["SL_SW_", "SL_SF_"],  # 排除开关设备
+            "excluded_device_types": [
+                "SL_SW_",
+                "SL_SF_",
+                "SL_OL_",
+            ],  # 排除开关和灯光设备
             "io_names": [
                 "移动检测",
-                "当前状态",
                 "按键状态",
                 "门禁状态",
                 "警报音",
                 "防拆状态",
+                "门窗状态",
             ],
             "descriptions": [
                 "检测到移动",
-                "打开",
-                "关闭",
                 "按下",
                 "松开",
                 "震动",
                 "警报",
+                "门窗",
             ],
+            "excluded_descriptions": [
+                "开关",
+                "控制",
+                "打开",
+                "关闭",
+            ],  # 排除通用开关描述
             "rw_required": "R",
             "confidence_base": 0.8,
         },
@@ -243,26 +252,35 @@ class IOPlatformClassifier:
         # Climate平台 - 空调/温控
         PlatformType.CLIMATE: {
             "keywords": [
-                "空调",
+                "空调模式",
                 "温控器",
-                "HVAC",
+                "HVAC系统",
                 "制冷模式",
                 "制热模式",
                 "除湿模式",
                 "风速档位",
-                "目标温度",
+                "目标温度设定",
+                "空调控制",
                 "MODE",
                 "tT",
                 "CFG",
                 "tF",
             ],
-            "required_keywords": ["空调", "温控", "HVAC"],  # 必须包含的关键词
+            "required_keywords": [
+                "空调",
+                "温控",
+                "HVAC",
+                "制冷",
+                "制热",
+            ],  # 必须包含的关键词之一
             "excluded_device_types": [
                 "SL_SW_",
                 "SL_SF_",
                 "SL_OL_",
+                "SL_LI_",
+                "SL_RGBW_",
             ],  # 排除开关和灯光设备
-            "io_names": ["模式", "风速", "目标温度", "当前温度", "系统配置"],
+            "io_names": ["空调模式", "风速档位", "目标温度", "当前温度", "系统配置"],
             "descriptions": [
                 "Auto",
                 "Cool",
@@ -272,7 +290,7 @@ class IOPlatformClassifier:
                 "制冷",
                 "制热",
                 "风速",
-                "温度",
+                "空调",
             ],
             "rw_required": "RW",
             "confidence_base": 0.9,
@@ -325,7 +343,7 @@ class IOPlatformClassifier:
             ):
                 continue
 
-            # 检查必需关键词
+            # 检查必需关键词 - 至少匹配一个
             required_keywords = rules.get("required_keywords", [])
             if required_keywords:
                 has_required = any(
@@ -335,11 +353,21 @@ class IOPlatformClassifier:
                 if not has_required:
                     continue
 
+            # 检查排除描述
+            excluded_descriptions = rules.get("excluded_descriptions", [])
+            if excluded_descriptions:
+                has_excluded = any(
+                    excluded_desc in io_description
+                    for excluded_desc in excluded_descriptions
+                )
+                if has_excluded:
+                    continue
+
             confidence = cls._calculate_confidence(
                 io_name, io_description, rw_permission, rules, device_name
             )
 
-            if confidence > 0.12:  # 进一步降低置信度阈值
+            if confidence > 0.25:  # 提高最低置信度阈值，减少噪音
                 reasoning = cls._generate_reasoning(
                     io_name, io_description, rw_permission, rules, confidence
                 )
@@ -401,12 +429,12 @@ class IOPlatformClassifier:
                     keyword_matches += 1
 
         if keyword_matches > 0:
-            # 提高关键词匹配的权重，特别是对短IO名称
-            weight = 0.5 if keyword_matches > 1 else 0.4
+            # 提高关键词匹配的权重，增强NLP识别能力
+            weight = 0.7 if keyword_matches > 1 else 0.6
             confidence += (
                 base_confidence
                 * weight
-                * min(keyword_matches / len(rules["keywords"]) * 2, 1.0)
+                * min(keyword_matches / len(rules["keywords"]) * 2.5, 1.0)
             )
 
         # IO名称匹配
@@ -417,7 +445,7 @@ class IOPlatformClassifier:
 
         if name_matches > 0:
             confidence += (
-                base_confidence * 0.3 * min(name_matches / len(rules["io_names"]), 1.0)
+                base_confidence * 0.35 * min(name_matches / len(rules["io_names"]), 1.0)
             )
 
         # 描述匹配
@@ -429,7 +457,7 @@ class IOPlatformClassifier:
         if desc_matches > 0:
             confidence += (
                 base_confidence
-                * 0.2
+                * 0.25
                 * min(desc_matches / len(rules["descriptions"]), 1.0)
             )
 
@@ -438,7 +466,7 @@ class IOPlatformClassifier:
             rules["rw_required"] == rw_permission
             or rules["rw_required"] in rw_permission
         ):
-            confidence += base_confidence * 0.1
+            confidence += base_confidence * 0.15
 
         # 设备类型一致性调整 - 基于设备名称前缀
         if device_name:
@@ -453,10 +481,14 @@ class IOPlatformClassifier:
 
             if platform_name in device_type_priorities:
                 # 设备类型匹配，提升置信度
-                confidence *= device_type_priorities[platform_name]
+                priority_boost = device_type_priorities[platform_name]
+                confidence = (
+                    confidence * priority_boost
+                    + (1 - confidence) * priority_boost * 0.3
+                )
             elif device_type_priorities:  # 有设备类型映射但不匹配当前平台
-                # 设备类型不匹配，降低置信度
-                confidence *= 0.3
+                # 设备类型不匹配，适度降低置信度（支持多平台设备）
+                confidence *= 0.5
 
         return min(confidence, 1.0)
 
@@ -560,24 +592,28 @@ class DevicePlatformAnalyzer:
 
         # 开关设备逻辑验证
         if device_name.startswith("SL_SW_") or device_name.startswith("SL_SF_"):
-            # 开关设备不应该有 binary_sensor 或 climate
+            # 开关设备严格排除不相关平台
             invalid_platforms = {
                 PlatformType.BINARY_SENSOR,
                 PlatformType.CLIMATE,
                 PlatformType.SENSOR,
+                PlatformType.COVER,
+                PlatformType.LOCK,
             }
             suggested_platforms = suggested_platforms - invalid_platforms
 
             # 确保包含基础平台
             io_names = [io.get("name", "") for io in ios_data]
             has_switch_ios = any(
-                io_name in ["L1", "L2", "L3", "P1", "P2", "P3", "O"]
+                io_name
+                in ["L1", "L2", "L3", "P1", "P2", "P3", "O", "Ctrl1", "Ctrl2", "Ctrl3"]
                 for io_name in io_names
             )
             has_light_ios = any(
                 "dark" in io_name.lower()
                 or "bright" in io_name.lower()
                 or "RGB" in io_name.upper()
+                or "DYN" in io_name.upper()
                 for io_name in io_names
             )
 
@@ -585,6 +621,10 @@ class DevicePlatformAnalyzer:
                 suggested_platforms.add(PlatformType.SWITCH)
             if has_light_ios:
                 suggested_platforms.add(PlatformType.LIGHT)
+
+            # 如果没有明确的平台，默认添加switch
+            if not suggested_platforms:
+                suggested_platforms.add(PlatformType.SWITCH)
 
         # 传感器设备逻辑验证
         elif device_name.startswith("SL_SC_") or device_name.startswith("SL_WH_"):
@@ -710,8 +750,11 @@ class DocumentBasedComparisonAnalyzer:
         for line_no, line in enumerate(lines, 1):
             line = line.strip()
 
-            # 跳过第三方设备部分（标题行）
-            if "第三方设备" in line and ("##" in line or "###" in line):
+            # 跳过第三方设备部分（标题行）- 改进检测逻辑
+            if ("第三方设备" in line or "Third-party" in line.lower()) and (
+                "##" in line or "###" in line or line.startswith("#")
+            ):
+                print(f"📝 检测到第三方设备章节，停止解析: {line[:50]}")
                 break
 
             # 解析表格行
@@ -723,11 +766,16 @@ class DocumentBasedComparisonAnalyzer:
                 table_lines_found += 1
                 columns = [col.strip() for col in line.split("|")[1:-1]]
 
-                # 跳过表头行
-                if len(columns) >= 5 and (
-                    "Devtype" in columns[0] or "**Devtype" in columns[0]
+                # 跳过表头行 - 改进识别逻辑
+                if len(columns) >= 4 and (
+                    "Devtype" in columns[0]
+                    or "**Devtype" in columns[0]
+                    or "设备类型" in columns[0]
+                    or "Device" in columns[0]
+                    or "IO口" in columns[1]
+                    or "Port" in columns[1].lower()
                 ):
-                    print(f"📝 跳过表头行 {line_no}: {columns[0]}")
+                    print(f"📝 跳过表头行 {line_no}: {columns[0][:20]}...")
                     continue
 
                 if len(columns) >= 5:
@@ -745,10 +793,18 @@ class DocumentBasedComparisonAnalyzer:
                         extracted_devices = []
 
                         for device_line in device_names:
+                            # 增强设备名称提取，支持多种格式
                             device_matches = re.findall(
-                                r"`([A-Z][A-Z0-9_:]+)`", device_line
+                                r"`([A-Z][A-Z0-9_:]+)`|\*\*([A-Z][A-Z0-9_:]+)\*\*|([A-Z][A-Z0-9_:]+)(?=\s|$)",
+                                device_line,
                             )
-                            extracted_devices.extend(device_matches)
+                            # 处理匹配结果，包含多个分组
+                            for match in device_matches:
+                                device_name = match[0] or match[1] or match[2]
+                                if (
+                                    device_name and len(device_name) >= 4
+                                ):  # 过滤太短的名称
+                                    extracted_devices.append(device_name)
 
                         if extracted_devices:
                             current_devices = extracted_devices
@@ -822,13 +878,33 @@ class DocumentBasedComparisonAnalyzer:
             if not device_name:
                 return False
 
-            # 开关设备不应分类为binary_sensor或climate
+            # 开关设备不应分类为binary_sensor、climate或sensor
             if device_name.startswith(("SL_SW_", "SL_SF_")):
-                return platform in ["binary_sensor", "climate", "sensor"]
+                return platform in [
+                    "binary_sensor",
+                    "climate",
+                    "sensor",
+                    "cover",
+                    "lock",
+                ]
 
             # 灯光设备不应分类为binary_sensor或climate
             if device_name.startswith(("SL_OL_", "SL_LI_", "SL_RGBW_")):
-                return platform in ["binary_sensor", "climate"]
+                return platform in ["binary_sensor", "climate", "switch", "cover"]
+
+            # 传感器设备不应分类为switch或light
+            if device_name.startswith(("SL_SC_", "SL_WH_")):
+                return platform in ["switch", "light", "cover", "climate"]
+
+            # 空调设备不应分类为switch、light或sensor
+            if device_name.startswith("SL_AC_"):
+                return platform in [
+                    "switch",
+                    "light",
+                    "binary_sensor",
+                    "sensor",
+                    "cover",
+                ]
 
             return False
 
@@ -910,20 +986,20 @@ class DocumentBasedComparisonAnalyzer:
         # 空调平台规则 - 更严格的匹配
         if any(
             keyword in io_name.upper() or keyword in io_description
-            for keyword in ["MODE", "tT", "CFG", "空调模式", "风速档位", "目标温度"]
+            for keyword in ["MODE", "tT", "CFG"]
         ):
             if not should_exclude_platform("climate"):
-                # 额外检查：必须是真正的空调设备
-                if device_name.startswith("SL_AC_") or any(
+                # 严格检查：必须是真正的空调设备且包含空调相关描述
+                if device_name.startswith("SL_AC_") and any(
                     ac_keyword in io_description
-                    for ac_keyword in ["空调", "制冷", "制热", "HVAC"]
+                    for ac_keyword in ["空调", "制冷", "制热", "HVAC", "风速", "模式"]
                 ):
                     results.append(
                         {
                             "name": io_name,
                             "platform": "climate",
-                            "confidence": 0.9,
-                            "reasoning": f"空调控制IO口: {io_name}",
+                            "confidence": 0.95,
+                            "reasoning": f"空调控制IO口: {io_name}, 设备类型匹配",
                         }
                     )
 
@@ -975,12 +1051,29 @@ class DocumentBasedComparisonAnalyzer:
             match_type = "完全匹配"
             confidence = ai_data.get("confidence", 0.9)
             differences = []
-        elif existing_platforms & ai_platforms:  # 有交集
-            match_type = "部分匹配"
-            confidence = ai_data.get("confidence", 0.7) * 0.8
-            differences = [
-                f"平台差异: 现有{existing_platforms} vs AI建议{ai_platforms}"
-            ]
+        elif existing_platforms & ai_platforms:  # 有交集 - 增强多平台设备支持
+            # 计算交集比例，认可多平台配置的合理性
+            intersection_size = len(existing_platforms & ai_platforms)
+            total_platforms = len(existing_platforms | ai_platforms)
+            overlap_ratio = (
+                intersection_size / total_platforms if total_platforms > 0 else 0
+            )
+
+            # 对于较高的重叠率，认为是完全匹配
+            if overlap_ratio >= 0.6:  # 60%以上重叠认为完全匹配
+                match_type = "完全匹配"
+                confidence = ai_data.get("confidence", 0.8) * (
+                    0.8 + overlap_ratio * 0.2
+                )
+                differences = [
+                    f"多平台配置（重叠率{overlap_ratio:.1%}）: 现有{existing_platforms} vs AI建议{ai_platforms}"
+                ]
+            else:
+                match_type = "部分匹配"
+                confidence = ai_data.get("confidence", 0.7) * 0.8
+                differences = [
+                    f"平台差异: 现有{existing_platforms} vs AI建议{ai_platforms}"
+                ]
         else:  # 完全不同
             match_type = "平台不匹配"
             confidence = ai_data.get("confidence", 0.6) * 0.5
