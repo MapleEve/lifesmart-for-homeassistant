@@ -8420,6 +8420,11 @@ _RAW_DEVICE_DATA = {
                     "set_fan_speed": {
                         "type": 206,
                         "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
+                        "fan_modes": {
+                            "low": 15,
+                            "medium": 45,
+                            "high": 75,
+                        },
                     },
                 },
             },
@@ -8494,6 +8499,11 @@ _RAW_DEVICE_DATA = {
                     "set_config": {
                         "type": 206,
                         "description": "设置风速",
+                        "fan_modes": {
+                            "low": 1,
+                            "medium": 2,
+                            "high": 3,
+                        },
                     },
                 },
             },
@@ -8865,6 +8875,16 @@ _RAW_DEVICE_DATA = {
                 "state_class": "measurement",
             },
         },
+        "binary_sensor": {
+            "P5": {
+                "description": "告警状态",
+                "rw": "R",
+                "data_type": "alarm_status",
+                "conversion": "val_direct",
+                "detailed_description": "基于P5传感器值的二进制告警状态，有告警时为True",
+                "device_class": "problem",
+            },
+        },
     },
     "SL_DN": {
         "name": "星玉地暖",
@@ -8995,7 +9015,7 @@ _RAW_DEVICE_DATA = {
                 },
             },
             "cover_mode": {
-                "condition": "(P1>>24)&0xe in [2,4,6]",
+                "condition": "(P1>>24)&0xe in [2,4]",
                 "cover": {
                     "P2": {
                         "description": "打开窗帘",
@@ -9158,7 +9178,7 @@ _RAW_DEVICE_DATA = {
                 },
             },
             "cover_mode": {
-                "condition": "(P1>>24)&0xe in [2,4,6]",
+                "condition": "(P1>>24)&0xe in [2,4]",
                 "cover": {
                     "P2": {
                         "description": "Ctrl1打开窗帘",
@@ -9599,6 +9619,11 @@ _RAW_DEVICE_DATA = {
                     "set_fan_speed": {
                         "type": 206,
                         "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
+                        "fan_modes": {
+                            "low": 15,
+                            "medium": 45,
+                            "high": 75,
+                        },
                     },
                 },
             },
@@ -9688,6 +9713,11 @@ _RAW_DEVICE_DATA = {
                     "set_fan_speed": {
                         "type": 206,
                         "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
+                        "fan_modes": {
+                            "low": 15,
+                            "medium": 45,
+                            "high": 75,
+                        },
                     },
                 },
             },
@@ -10546,6 +10576,12 @@ _RAW_DEVICE_DATA = {
                         "set_config": {
                             "type": 206,
                             "description": "设置风速",
+                            "fan_modes": {
+                                "low": 25,
+                                "medium": 50,
+                                "high": 75,
+                                "auto": 101,
+                            },
                         },
                     },
                 },
@@ -10658,6 +10694,12 @@ _RAW_DEVICE_DATA = {
                     "set_config": {
                         "type": 206,
                         "description": "设置风速",
+                        "fan_modes": {
+                            "low": 15,
+                            "medium": 45,
+                            "high": 75,
+                            "auto": 101,
+                        },
                     },
                 },
             },
