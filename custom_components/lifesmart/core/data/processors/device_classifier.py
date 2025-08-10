@@ -689,6 +689,30 @@ class DeviceClassifier:
                         f"Failed to evaluate {mode_name} condition '{condition}': {e}"
                     )
 
+        # 如果所有条件都无法评估，为SL_P设备提供默认模式
+        # 检查是否有任何条件因为缺少变量而无法评估
+        has_evaluation_failures = False
+        for mode_name, mode_config in control_modes.items():
+            condition = mode_config.get("condition")
+            if condition:
+                try:
+                    # 尝试获取条件中使用的变量
+                    required_vars = self.get_supported_variables(condition)
+                    # 检查是否所有必需的变量都不存在
+                    if required_vars and not any(
+                        var in variables for var in required_vars
+                    ):
+                        has_evaluation_failures = True
+                        break
+                except Exception:
+                    has_evaluation_failures = True
+                    break
+
+        # 如果存在评估失败且包含free_mode，默认使用free_mode
+        if has_evaluation_failures and "free_mode" in control_modes:
+            _LOGGER.debug("Control device defaulting to free_mode due to missing data")
+            return "free_mode"
+
         _LOGGER.debug("Control device could not be classified")
         return None
 
