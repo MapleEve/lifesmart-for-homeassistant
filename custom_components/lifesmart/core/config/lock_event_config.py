@@ -10,19 +10,7 @@ from typing import Any, Optional
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 
-# 开锁方式映射
-UNLOCK_METHODS: dict[int, str] = {
-    0: "未定义",
-    1: "密码",
-    2: "指纹",
-    3: "NFC",
-    4: "机械钥匙",
-    5: "远程开锁",
-    7: "APP开启",
-    8: "蓝牙开锁",
-    9: "手动开锁",
-    15: "出错",
-}
+from ..const import UNLOCK_METHOD
 
 # 有价值的EVTLO数据提取配置
 EVTLO_DATA_CONFIG: dict[str, dict[str, Any]] = {
@@ -48,7 +36,7 @@ EVTLO_DATA_CONFIG: dict[str, dict[str, Any]] = {
         "extraction_params": {
             "start_bit": 12,
             "end_bit": 15,
-            "mapping": UNLOCK_METHODS,
+            "mapping": UNLOCK_METHOD,
         },
         "platform": "sensor",
         "friendly_name": "开锁方式",
@@ -90,4 +78,4 @@ def get_unlock_method_name(method_code: int) -> str:
     Returns:
         开锁方式名称
     """
-    return UNLOCK_METHODS.get(method_code, f"未知({method_code})")
+    return UNLOCK_METHOD.get(method_code, f"未知({method_code})")
