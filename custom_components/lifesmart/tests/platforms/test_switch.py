@@ -217,7 +217,7 @@ class TestStandardSwitch:
         # 测试状态更新
         unique_id = get_entity_unique_id(hass, entity_id)
         async_dispatcher_send(
-            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"type": 129}
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"type": CMD_TYPE_ON}
         )
         await hass.async_block_till_done()
         assert (

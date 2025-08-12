@@ -226,11 +226,11 @@ class TestPositionalCover:
     @pytest.mark.parametrize(
         "update_data, expected_pos, expected_state",
         [
-            ({"val": 0, "type": 128}, 0, STATE_CLOSED),
-            ({"val": 100, "type": 128}, 100, STATE_OPEN),
-            ({"val": 50, "type": 128}, 50, STATE_OPEN),
-            ({"val": 50 | 0x80, "type": 129}, 50, STATE_CLOSING),  # 正在关闭
-            ({"val": 50, "type": 129}, 50, STATE_OPENING),  # 正在打开
+            ({"val": 0, "type": CMD_TYPE_OFF}, 0, STATE_CLOSED),
+            ({"val": 100, "type": CMD_TYPE_OFF}, 100, STATE_OPEN),
+            ({"val": 50, "type": CMD_TYPE_OFF}, 50, STATE_OPEN),
+            ({"val": 50 | 0x80, "type": CMD_TYPE_ON}, 50, STATE_CLOSING),  # 正在关闭
+            ({"val": 50, "type": CMD_TYPE_ON}, 50, STATE_OPENING),  # 正在打开
         ],
         ids=[
             "CoverFullyClosed",
@@ -319,7 +319,7 @@ class TestNonPositionalCover:
             COVER_DOMAIN, start_service, {ATTR_ENTITY_ID: self.ENTITY_ID}, blocking=True
         )
         # 2. 模拟设备上报正在移动的状态，以更新内部的 `_last_known_is_opening` 标志
-        moving_data = {"OP": {"type": 128}, "CL": {"type": 128}, "ST": {"type": 128}}
+        moving_data = {"OP": {"type": CMD_TYPE_OFF}, "CL": {"type": CMD_TYPE_OFF}, "ST": {"type": CMD_TYPE_OFF}}
         if start_service == SERVICE_OPEN_COVER:
             moving_data["OP"]["type"] = 129
         else:
@@ -334,7 +334,7 @@ class TestNonPositionalCover:
             COVER_DOMAIN, stop_service, {ATTR_ENTITY_ID: self.ENTITY_ID}, blocking=True
         )
         # 4. 模拟设备上报已停止的状态
-        stopped_data = {"OP": {"type": 128}, "CL": {"type": 128}, "ST": {"type": 128}}
+        stopped_data = {"OP": {"type": CMD_TYPE_OFF}, "CL": {"type": CMD_TYPE_OFF}, "ST": {"type": CMD_TYPE_OFF}}
         async_dispatcher_send(
             hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", stopped_data
         )

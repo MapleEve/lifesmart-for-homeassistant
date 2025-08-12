@@ -265,7 +265,7 @@ class TestLifeSmartBrightnessLight:
         async_dispatcher_send(
             hass,
             f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-            {"type": 128, "val": 50},
+            {"type": CMD_TYPE_OFF, "val": 50},
         )
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_OFF
@@ -273,7 +273,7 @@ class TestLifeSmartBrightnessLight:
         async_dispatcher_send(
             hass,
             f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-            {"type": 129, "val": 75},
+            {"type": CMD_TYPE_ON, "val": 75},
         )
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
@@ -456,7 +456,7 @@ class TestLifeSmartDimmerLight:
         async_dispatcher_send(
             hass,
             f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-            {"P1": {"type": 128, "val": 10}, "P2": {"val": 200}},
+            {"P1": {"type": CMD_TYPE_OFF, "val": 10}, "P2": {"val": 200}},
         )
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
@@ -681,7 +681,7 @@ class TestLifeSmartQuantumLight:
         async_dispatcher_send(
             hass,
             f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-            {"P1": {"type": 129, "val": 200}, "P2": {"val": 0x100A141E}},
+            {"P1": {"type": CMD_TYPE_ON, "val": 200}, "P2": {"val": 0x100A141E}},
         )
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
@@ -806,7 +806,7 @@ class TestLifeSmartSingleIORGBWLight:
         async_dispatcher_send(
             hass,
             f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-            {"type": 129, "val": 0x320A141E},
+            {"type": CMD_TYPE_ON, "val": 0x320A141E},
         )
         await hass.async_block_till_done()
         state = hass.states.get(self.ENTITY_ID)
@@ -957,8 +957,8 @@ class TestLifeSmartDualIORGBWLight:
     ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         update_data = {
-            self.COLOR_IO: {"type": 129, "val": 0x11223344},
-            self.EFFECT_IO: {"type": 129, "val": DYN_EFFECT_MAP["魔力红"]},
+            self.COLOR_IO: {"type": CMD_TYPE_ON, "val": 0x11223344},
+            self.EFFECT_IO: {"type": CMD_TYPE_ON, "val": DYN_EFFECT_MAP["魔力红"]},
         }
         async_dispatcher_send(
             hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
@@ -1170,7 +1170,7 @@ class TestLifeSmartSPOTRGBLight:
         async_dispatcher_send(
             hass,
             f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-            {"type": 129, "val": DYN_EFFECT_MAP["海浪"]},
+            {"type": CMD_TYPE_ON, "val": DYN_EFFECT_MAP["海浪"]},
         )
         await hass.async_block_till_done()
         state = hass.states.get(self.ENTITY_ID)
@@ -1312,8 +1312,8 @@ class TestLifeSmartSPOTRGBWLight:
     ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         update_data = {
-            self.COLOR_IO: {"type": 128, "val": 0},
-            self.EFFECT_IO: {"type": 128, "val": 0},
+            self.COLOR_IO: {"type": CMD_TYPE_OFF, "val": 0},
+            self.EFFECT_IO: {"type": CMD_TYPE_OFF, "val": 0},
         }
         async_dispatcher_send(
             hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", update_data
@@ -1401,7 +1401,7 @@ class TestLifeSmartCoverLight:
     ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
-            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"type": 128}
+            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"type": CMD_TYPE_OFF}
         )
         await hass.async_block_till_done()
         assert hass.states.get(self.ENTITY_ID).state == STATE_OFF
@@ -2136,8 +2136,8 @@ class TestLightErrorHandlingAndEdgeCases:
             "name": "Test Dimmer",
             "devtype": "TEST_DIMMER",
             DEVICE_DATA_KEY: {
-                "P1": {"type": 129, "val": 100},
-                "P2": {"type": 129, "val": 128},
+                "P1": {"type": CMD_TYPE_ON, "val": 100},
+                "P2": {"type": CMD_TYPE_ON, "val": 128},
             },
         }
 
@@ -2190,7 +2190,7 @@ class TestLightErrorHandlingAndEdgeCases:
         async_dispatcher_send(
             hass,
             f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-            {"type": 129, "val": 0x500A141E},  # w_flag = 80 (0x50)
+            {"type": CMD_TYPE_ON, "val": 0x500A141E},  # w_flag = 80 (0x50)
         )
         await hass.async_block_till_done()
 
@@ -2376,7 +2376,7 @@ class TestLightErrorHandlingAndEdgeCases:
             "agt": "test_agt",
             "name": "Test Light",
             "devtype": "TEST_TYPE",
-            DEVICE_DATA_KEY: {"L1": {"type": 129, "val": 100}},
+            DEVICE_DATA_KEY: {"L1": {"type": CMD_TYPE_ON, "val": 100}},
         }
 
         light = LifeSmartLight(raw_device, MagicMock(), "test_entry", "L1")
@@ -2428,8 +2428,8 @@ class TestLightErrorHandlingAndEdgeCases:
             "name": "Test Dimmer",
             "devtype": "TEST_DIMMER",
             DEVICE_DATA_KEY: {
-                "P1": {"type": 129, "val": None},  # val为None
-                "P2": {"type": 129, "val": 128},
+                "P1": {"type": CMD_TYPE_ON, "val": None},  # val为None
+                "P2": {"type": CMD_TYPE_ON, "val": 128},
             },
         }
 
@@ -2454,8 +2454,8 @@ class TestLightErrorHandlingAndEdgeCases:
             "name": "Test Dimmer",
             "devtype": "TEST_DIMMER",
             DEVICE_DATA_KEY: {
-                "P1": {"type": 129, "val": 100},
-                "P2": {"type": 129, "val": None},  # val为None
+                "P1": {"type": CMD_TYPE_ON, "val": 100},
+                "P2": {"type": CMD_TYPE_ON, "val": None},  # val为None
             },
         }
 

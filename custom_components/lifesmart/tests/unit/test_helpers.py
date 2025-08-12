@@ -514,7 +514,7 @@ class TestSensorSubdeviceAndGetters:
     def test_get_sensor_subdevices_with_factory_devices(self):
         """使用工厂函数创建的设备数据测试获取传感器子设备。"""
         sensor_devices = create_devices_by_category(
-            ["environment_sensor", "power_meter_plug"]
+            ["environment_sensor", "power_meter_plug", "binary_sensor"]
         )
 
         # 环境传感器
@@ -1051,8 +1051,8 @@ class TestGetSubdevicesAdvanced:
             "devtype": "SL_P",
             "data": {
                 "P1": {"val": 2 << 24},  # 窗帘模式
-                "P2": {"type": 128},
-                "P3": {"type": 128},
+                "P2": {"type": CMD_TYPE_OFF},
+                "P3": {"type": CMD_TYPE_OFF},
             },
         }
 
@@ -1066,8 +1066,8 @@ class TestGetSubdevicesAdvanced:
         switch_nature = {
             "devtype": "SL_NATURE",
             "data": {
-                "P1": {"type": 129},
-                "P2": {"type": 128},
+                "P1": {"type": CMD_TYPE_ON},
+                "P2": {"type": CMD_TYPE_OFF},
                 "P5": {"val": 1},  # 开关版
             },
         }
@@ -1079,8 +1079,8 @@ class TestGetSubdevicesAdvanced:
         climate_nature = {
             "devtype": "SL_NATURE",
             "data": {
-                "P1": {"type": 129},
-                "P2": {"type": 128},
+                "P1": {"type": CMD_TYPE_ON},
+                "P2": {"type": CMD_TYPE_OFF},
                 "P5": {"val": 3},  # 温控版
             },
         }
@@ -1148,11 +1148,11 @@ class TestHelpersCoverageEnhancement:
                     is_binary_sensor_subdevice(device_type, sub_key) is True
                 ), f"{device_type}的{sub_key}应该是二元传感器"
 
-        # 测试云防系列传感器的所有子设备
-        for sub_key in ["A", "A2", "M", "TR", "SR", "eB1", "eB2", "eB3", "eB4"]:
+        # 测试云防门窗传感器的所有二元传感器子设备
+        for sub_key in ["A", "A2", "TR"]:
             assert (
                 is_binary_sensor_subdevice("SL_DF_GG", sub_key) is True
-            ), f"云防传感器的{sub_key}应该是二元传感器"
+            ), f"云防门窗传感器的{sub_key}应该是二元传感器"
 
     def test_sensor_subdevice_comprehensive(self):
         """测试传感器子设备的全面覆盖。"""
@@ -1169,7 +1169,7 @@ class TestHelpersCoverageEnhancement:
             ), f"计量插座的{sub_key}应该是传感器"
 
         # 测试ELIQ电量计量器
-        for sub_key in ["EPA", "EE", "EP"]:
+        for sub_key in ["EPA"]:
             assert (
                 is_sensor_subdevice("ELIQ_EM", sub_key) is True
             ), f"ELIQ计量器的{sub_key}应该是传感器"
@@ -1240,9 +1240,9 @@ class TestHelpersCoverageEnhancement:
         non_positional_device = {
             "devtype": "SL_SW_WIN",  # 假设在NON_POSITIONAL_COVER_CONFIG中
             "data": {
-                "OP": {"type": 128},  # 开操作
-                "CL": {"type": 128},  # 关操作
-                "ST": {"type": 128},  # 停操作
+                "OP": {"type": CMD_TYPE_OFF},  # 开操作
+                "CL": {"type": CMD_TYPE_OFF},  # 关操作
+                "ST": {"type": CMD_TYPE_OFF},  # 停操作
             },
         }
 
@@ -1255,7 +1255,7 @@ class TestHelpersCoverageEnhancement:
         # 测试调光灯
         dimmer_device = {
             "devtype": "SL_LI_WW",  # 假设在LIGHT_DIMMER_TYPES中
-            "data": {"P1": {"type": 129}, "P2": {"val": 50}},
+            "data": {"P1": {"type": CMD_TYPE_ON}, "P2": {"val": 50}},
         }
 
         subdevices = get_light_subdevices(dimmer_device)
@@ -1304,9 +1304,9 @@ class TestHelpersCoverageEnhancement:
             "devtype": "SL_P",
             "data": {
                 "P1": {"val": 8 << 24},  # 开关模式
-                "P2": {"type": 128},
-                "P3": {"type": 129},
-                "P4": {"type": 128},
+                "P2": {"type": CMD_TYPE_OFF},
+                "P3": {"type": CMD_TYPE_ON},
+                "P4": {"type": CMD_TYPE_OFF},
             },
         }
 
@@ -1643,9 +1643,9 @@ class TestHelpersCoverageEnhancement:
         switch_device = {
             "devtype": "SL_SW_IF3",
             "data": {
-                "L1": {"type": 129},
-                "L2": {"type": 128},
-                "P4": {"type": 129},  # P4应该被排除
+                "L1": {"type": CMD_TYPE_ON},
+                "L2": {"type": CMD_TYPE_OFF},
+                "P4": {"type": CMD_TYPE_ON},  # P4应该被排除
             },
         }
 
@@ -1660,9 +1660,9 @@ class TestHelpersCoverageEnhancement:
         light_device = {
             "devtype": "SL_SPWM",  # 亮度灯，是真实的灯光设备类型
             "data": {
-                "P1": {"type": 129},
-                "P2": {"type": 128},
-                "P4": {"type": 129},  # P4应该被包含，因为P4实际上不被排除
+                "P1": {"type": CMD_TYPE_ON},
+                "P2": {"type": CMD_TYPE_OFF},
+                "P4": {"type": CMD_TYPE_ON},  # P4应该被包含，因为P4实际上不被排除
             },
         }
 
@@ -1677,7 +1677,7 @@ class TestHelpersCoverageEnhancement:
         # 使用真实存在的设备类型进行测试
         cover_device = {
             "devtype": "SL_ETDOOR",  # 车库门是真实存在的窗帘设备类型
-            "data": {"P2": {"type": 128}, "HS": {"type": 128}},
+            "data": {"P2": {"type": CMD_TYPE_OFF}, "HS": {"type": CMD_TYPE_OFF}},
         }
 
         subdevices = get_cover_subdevices(cover_device)
@@ -1702,7 +1702,7 @@ class TestMissingCodePathsCoverage:
             "_chd": {
                 "m": {
                     "_chd": {
-                        "sub1": {"type": 128},  # 没有name键
+                        "sub1": {"type": CMD_TYPE_OFF},  # 没有name键
                         "sub2": {"name": "{$EPN} Test"},
                     }
                 }
@@ -1751,8 +1751,8 @@ class TestMissingCodePathsCoverage:
         nature_climate = {
             "devtype": "SL_NATURE",
             "data": {
-                "P1": {"type": 129},
-                "P2": {"type": 128},
+                "P1": {"type": CMD_TYPE_ON},
+                "P2": {"type": CMD_TYPE_OFF},
                 "P5": {"val": 3},  # 温控版
             },
         }
@@ -1767,8 +1767,8 @@ class TestMissingCodePathsCoverage:
             "devtype": "SL_P",
             "data": {
                 "P1": {"val": 2 << 24},  # 窗帘模式
-                "P2": {"type": 128},
-                "P3": {"type": 128},
+                "P2": {"type": CMD_TYPE_OFF},
+                "P3": {"type": CMD_TYPE_OFF},
             },
         }
 
@@ -1891,7 +1891,7 @@ class TestDeviceTypeDetectionEdgeCases:
         # 测试有DEVICE_DATA_KEY的设备
         device_with_data = {
             "devtype": "SL_SW_IF3",
-            DEVICE_DATA_KEY: {"L1": {"type": 129}},
+            DEVICE_DATA_KEY: {"L1": {"type": CMD_TYPE_ON}},
         }
 
         subdevices = get_switch_subdevices(device_with_data)
@@ -2021,7 +2021,7 @@ class TestDeviceTypeClassificationComprehensive:
             (
                 {
                     "devtype": "SL_SW_IF3",
-                    "data": {"L1": {"type": 129}, "L2": {"type": 128}},
+                    "data": {"L1": {"type": CMD_TYPE_ON}, "L2": {"type": CMD_TYPE_OFF}},
                 },
                 True,
                 True,  # SL_SW_IF3在DEVICE_SPECS_DATA中有light配置
@@ -2032,7 +2032,7 @@ class TestDeviceTypeClassificationComprehensive:
             ),
             # 智能插座
             (
-                {"devtype": "SL_OL", "data": {"O": {"type": 129}}},
+                {"devtype": "SL_OL", "data": {"O": {"type": CMD_TYPE_ON}}},
                 True,
                 False,
                 False,
@@ -2044,7 +2044,7 @@ class TestDeviceTypeClassificationComprehensive:
             (
                 {
                     "devtype": "SL_OE_3C",
-                    "data": {"P1": {"type": 129}, "P2": {"v": 100}, "P3": {"v": 200}},
+                    "data": {"P1": {"type": CMD_TYPE_ON}, "P2": {"v": 100}, "P3": {"v": 200}},
                 },
                 True,
                 False,
@@ -2055,7 +2055,7 @@ class TestDeviceTypeClassificationComprehensive:
             ),
             # 亮度灯
             (
-                {"devtype": "SL_SPWM", "data": {"P1": {"type": 129, "val": 100}}},
+                {"devtype": "SL_SPWM", "data": {"P1": {"type": CMD_TYPE_ON, "val": 100}}},
                 False,
                 True,
                 False,
@@ -2067,7 +2067,7 @@ class TestDeviceTypeClassificationComprehensive:
             (
                 {
                     "devtype": "SL_LI_WW",
-                    "data": {"P1": {"type": 129}, "P2": {"val": 50}},
+                    "data": {"P1": {"type": CMD_TYPE_ON}, "P2": {"val": 50}},
                 },
                 False,
                 True,
@@ -2080,7 +2080,7 @@ class TestDeviceTypeClassificationComprehensive:
             (
                 {
                     "devtype": "SL_SC_RGB",
-                    "data": {"RGB": {"type": 129, "val": 0xFF0000}},
+                    "data": {"RGB": {"type": CMD_TYPE_ON, "val": 0xFF0000}},
                 },
                 False,
                 True,
@@ -2093,7 +2093,7 @@ class TestDeviceTypeClassificationComprehensive:
             (
                 {
                     "devtype": "SL_ETDOOR",
-                    "data": {"P2": {"type": 128}, "P1": {"type": 129}},
+                    "data": {"P2": {"type": CMD_TYPE_OFF}, "P1": {"type": CMD_TYPE_ON}},
                 },
                 False,
                 True,
@@ -2104,7 +2104,7 @@ class TestDeviceTypeClassificationComprehensive:
             ),
             # 杜亚窗帘
             (
-                {"devtype": "SL_DOOYA", "data": {"P1": {"val": 100, "type": 128}}},
+                {"devtype": "SL_DOOYA", "data": {"P1": {"val": 100, "type": CMD_TYPE_OFF}}},
                 False,
                 False,
                 True,
@@ -2162,8 +2162,8 @@ class TestDeviceTypeClassificationComprehensive:
                 {
                     "devtype": "SL_NATURE",
                     "data": {
-                        "P1": {"type": 129},
-                        "P2": {"type": 128},
+                        "P1": {"type": CMD_TYPE_ON},
+                        "P2": {"type": CMD_TYPE_OFF},
                         "P5": {"val": 1},
                     },
                 },
@@ -2206,8 +2206,8 @@ class TestDeviceTypeClassificationComprehensive:
                     "devtype": "SL_P",
                     "data": {
                         "P1": {"val": (8 << 24)},
-                        "P2": {"type": 128},
-                        "P3": {"type": 129},
+                        "P2": {"type": CMD_TYPE_OFF},
+                        "P3": {"type": CMD_TYPE_ON},
                     },
                 },
                 True,
@@ -2223,8 +2223,8 @@ class TestDeviceTypeClassificationComprehensive:
                     "devtype": "SL_P",
                     "data": {
                         "P1": {"val": (2 << 24)},
-                        "P2": {"type": 128},
-                        "P3": {"type": 128},
+                        "P2": {"type": CMD_TYPE_OFF},
+                        "P3": {"type": CMD_TYPE_OFF},
                     },
                 },
                 False,

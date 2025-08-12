@@ -941,7 +941,7 @@ class TestClimateEntityErrorHandling:
         async_dispatcher_send(
             hass,
             f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
-            {"INVALID_PARAM": {"type": 999, "val": "invalid_value"}},
+            {"INVALID_PARAM": {"type": CMD_TYPE_UNKNOWN_999, "val": "invalid_value"}},
         )
         await hass.async_block_till_done()
 

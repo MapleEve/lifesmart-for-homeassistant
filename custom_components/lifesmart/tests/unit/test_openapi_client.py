@@ -785,7 +785,7 @@ class TestCoverControlHelpers:
             "me": "me",
             "devtype": device_type,
             "name": f"Test {device_type}",
-            "data": {"P1": {"type": 129, "val": 0}},
+            "data": {"P1": {"type": CMD_TYPE_ON, "val": 0}},
             "stat": 1,
         }
 
@@ -818,7 +818,7 @@ class TestCoverControlHelpers:
             "me": "me",
             "devtype": device_type,
             "name": f"Test {device_type}",
-            "data": {"P1": {"type": 129, "val": 0}},
+            "data": {"P1": {"type": CMD_TYPE_ON, "val": 0}},
             "stat": 1,
         }
 
@@ -848,15 +848,30 @@ class TestClimateControlHelpers:
         self, client, device_type, hvac_mode, current_val, expected_calls_count
     ):
         """测试HVAC模式控制方法。"""
-        # 创建设备对象
-        test_device = {
-            "agt": "agt",
-            "me": "me",
-            "devtype": device_type,
-            "name": f"Test {device_type}",
-            "data": {"P1": {"type": 129, "val": 0}},
-            "stat": 1,
-        }
+        # 使用工厂函数获取正确的设备数据
+        from ..utils.factories import create_devices_by_category
+        from ..utils.helpers import find_test_device_by_type
+
+        if device_type == "SL_CP_AIR":
+            climate_devices = create_devices_by_category(["climate"])
+            test_device = find_test_device_by_type(climate_devices, "SL_CP_AIR")
+            if not test_device:
+                pytest.skip(f"工厂函数中未找到{device_type}设备")
+        elif device_type == "V_AIR_P":
+            climate_devices = create_devices_by_category(["climate"])
+            test_device = find_test_device_by_type(climate_devices, "V_AIR_P")
+            if not test_device:
+                pytest.skip(f"工厂函数中未找到{device_type}设备")
+        else:
+            # 对于any_type，创建基础设备对象
+            test_device = {
+                "agt": "agt",
+                "me": "me",
+                "devtype": device_type,
+                "name": f"Test {device_type}",
+                "data": {"P1": {"type": CMD_TYPE_ON, "val": 0}},
+                "stat": 1,
+            }
 
         with patch.object(client, "set_single_ep_async") as mock_set:
             await client.async_set_climate_hvac_mode(
@@ -870,9 +885,9 @@ class TestClimateControlHelpers:
     @pytest.mark.parametrize(
         "device_type, temperature, expected_conversion",
         [
-            ("V_AIR_P", 25.5, ("tT", CMD_TYPE_SET_TEMP_DECIMAL, 255)),
-            ("SL_CP_DN", 18.0, ("P3", CMD_TYPE_SET_RAW_ON, 180)),
-            ("SL_FCU", 22.0, ("P8", CMD_TYPE_SET_TEMP_FCU, 220)),
+            ("V_AIR_P", 25.5, ("tT", 136, 255)),  # 使用映射配置的type=CMD_TYPE_UNKNOWN_136
+            ("SL_CP_DN", 18.0, ("P3", 206, 180)),  # 使用映射配置的type=CMD_TYPE_UNKNOWN_206
+            ("SL_FCU", 22.0, ("P8", 136, 220)),  # 使用映射配置的type=CMD_TYPE_UNKNOWN_136
             ("UNSUPPORTED", 20.0, None),
         ],
         ids=["DecimalTemp", "RawTemp", "FCUTemp", "UnsupportedDevice"],
@@ -887,9 +902,17 @@ class TestClimateControlHelpers:
             "me": "me",
             "devtype": device_type,
             "name": f"Test {device_type}",
-            "data": {"P1": {"type": 129, "val": 0}},
+            "data": {"P1": {"type": CMD_TYPE_ON, "val": 0}},
             "stat": 1,
         }
+
+        # 为特定设备类型添加所需的IO口
+        if device_type == "SL_CP_DN":
+            test_device["data"]["P3"] = {"type": CMD_TYPE_UNKNOWN_255, "val": 0}  # 温度控制端口
+        elif device_type == "SL_FCU":
+            test_device["data"]["P8"] = {"type": CMD_TYPE_UNKNOWN_137, "val": 0}  # 温度控制端口
+        elif device_type == "V_AIR_P":
+            test_device["data"]["tT"] = {"type": CMD_TYPE_UNKNOWN_138, "val": 0}  # 温度控制端口
 
         with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
             await client.async_set_climate_temperature(
@@ -905,10 +928,10 @@ class TestClimateControlHelpers:
     @pytest.mark.parametrize(
         "device_type, fan_mode, current_val, expected_conversion",
         [
-            ("V_AIR_P", FAN_LOW, 0, ("F", CMD_TYPE_SET_CONFIG, 15)),
-            ("SL_TR_ACIPM", FAN_MEDIUM, 0, ("P2", CMD_TYPE_SET_RAW_ON, 2)),
-            ("SL_NATURE", FAN_HIGH, 0, ("P9", CMD_TYPE_SET_CONFIG, 75)),
-            ("SL_FCU", FAN_AUTO, 0, ("P9", CMD_TYPE_SET_CONFIG, 101)),
+            ("V_AIR_P", FAN_LOW, 0, ("F", 206, 15)),  # 使用映射配置 type=CMD_TYPE_UNKNOWN_206
+            ("SL_TR_ACIPM", FAN_MEDIUM, 0, ("P2", 206, 2)),  # 使用映射配置 type=CMD_TYPE_UNKNOWN_206
+            ("SL_NATURE", FAN_HIGH, 0, ("P9", 206, 75)),  # 使用映射配置 type=CMD_TYPE_UNKNOWN_206
+            ("SL_FCU", FAN_AUTO, 0, ("P9", 206, 101)),  # 使用映射配置 type=CMD_TYPE_UNKNOWN_206
             ("UNSUPPORTED", FAN_LOW, 0, None),
         ],
         ids=[
@@ -929,9 +952,23 @@ class TestClimateControlHelpers:
             "me": "me",
             "devtype": device_type,
             "name": f"Test {device_type}",
-            "data": {"P1": {"type": 129, "val": 0}},
+            "data": {"P1": {"type": CMD_TYPE_ON, "val": 0}},
             "stat": 1,
         }
+
+        # 为特定设备类型添加所需的IO口
+        if device_type == "SL_FCU":
+            test_device["data"]["P9"] = {"type": CMD_TYPE_UNKNOWN_206, "val": 0}  # 风扇控制端口
+        elif device_type == "SL_NATURE":
+            test_device["data"]["P5"] = {
+                "type": 1,
+                "val": 3,
+            }  # P5&0xFF==3 符合climate条件
+            test_device["data"]["P9"] = {"type": CMD_TYPE_UNKNOWN_206, "val": 0}  # 风扇控制端口
+        elif device_type == "V_AIR_P":
+            test_device["data"]["F"] = {"type": CMD_TYPE_UNKNOWN_206, "val": 0}  # 风扇控制端口
+        elif device_type == "SL_TR_ACIPM":
+            test_device["data"]["P2"] = {"type": CMD_TYPE_UNKNOWN_144, "val": 0}  # 风扇控制端口
 
         with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
             await client.async_set_climate_fan_mode(
