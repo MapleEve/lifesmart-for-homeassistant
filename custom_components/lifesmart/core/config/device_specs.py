@@ -36,12 +36,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -63,12 +63,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -90,12 +90,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -117,12 +117,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -144,12 +144,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -171,12 +171,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -199,12 +199,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -247,21 +247,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "enable": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "使能",
                     },
                     "disable": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "不使能",
                     },
                     "set_threshold_enable": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "使能并且设置门限",
                     },
                     "set_threshold_disable": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "不使能并且设置门限",
                     },
                 },
@@ -282,12 +282,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -330,21 +330,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "enable": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "使能",
                     },
                     "disable": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "不使能",
                     },
                     "set_threshold_enable": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "使能并且设置门限",
                     },
                     "set_threshold_disable": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "不使能并且设置门限",
                     },
                 },
@@ -365,12 +365,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -413,21 +413,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "enable": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "使能",
                     },
                     "disable": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "不使能",
                     },
                     "set_threshold_enable": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "使能并且设置门限",
                     },
                     "set_threshold_disable": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "不使能并且设置门限",
                     },
                 },
@@ -450,12 +450,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -474,21 +474,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯设置亮度",
                     },
                 },
@@ -504,21 +504,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯设置亮度",
                     },
                 },
@@ -539,12 +539,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -561,12 +561,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -588,21 +588,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -621,21 +621,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -654,21 +654,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -687,21 +687,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -722,12 +722,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -744,12 +744,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -766,12 +766,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -793,21 +793,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -826,21 +826,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -859,21 +859,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -892,21 +892,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -925,21 +925,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -958,21 +958,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -994,12 +994,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1016,12 +1016,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1038,12 +1038,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1063,21 +1063,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置亮度值",
                     },
                 },
@@ -1094,21 +1094,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置亮度值",
                     },
                 },
@@ -1129,12 +1129,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1151,12 +1151,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1173,12 +1173,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1198,21 +1198,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置亮度值",
                     },
                 },
@@ -1229,21 +1229,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置亮度值",
                     },
                 },
@@ -1264,12 +1264,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1286,12 +1286,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1308,12 +1308,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1335,21 +1335,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1368,21 +1368,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1401,21 +1401,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1434,21 +1434,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1467,21 +1467,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1500,21 +1500,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1535,12 +1535,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1557,12 +1557,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1579,12 +1579,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1606,21 +1606,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1639,21 +1639,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1672,21 +1672,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1705,21 +1705,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1738,21 +1738,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1771,21 +1771,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1806,12 +1806,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1828,12 +1828,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1850,12 +1850,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -1877,21 +1877,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1910,21 +1910,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1943,21 +1943,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1976,21 +1976,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2009,21 +2009,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2042,21 +2042,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2077,12 +2077,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2099,12 +2099,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2126,21 +2126,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2159,21 +2159,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2192,21 +2192,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2225,21 +2225,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2260,12 +2260,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2282,12 +2282,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2309,21 +2309,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2342,21 +2342,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2375,21 +2375,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2408,21 +2408,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2443,12 +2443,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2465,12 +2465,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2492,21 +2492,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2525,21 +2525,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2558,21 +2558,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2591,21 +2591,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2626,12 +2626,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2648,12 +2648,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2675,21 +2675,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2708,21 +2708,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2741,21 +2741,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2774,21 +2774,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2809,12 +2809,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2836,21 +2836,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2869,21 +2869,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2904,12 +2904,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -2931,21 +2931,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2964,21 +2964,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2999,12 +2999,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3026,21 +3026,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3059,21 +3059,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3094,12 +3094,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3121,21 +3121,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3154,21 +3154,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3189,12 +3189,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3216,21 +3216,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3249,21 +3249,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3285,12 +3285,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3324,12 +3324,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3346,12 +3346,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3385,12 +3385,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3407,12 +3407,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3429,12 +3429,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3468,12 +3468,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3510,12 +3510,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3532,12 +3532,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3574,12 +3574,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3596,12 +3596,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3618,12 +3618,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3658,12 +3658,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "-",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3686,21 +3686,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_brightness_on": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "打开并且设置亮度，val=亮度值[0,255]",
                     },
                     "set_brightness_off": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "关闭并设置亮度，val=亮度值[0,255]",
                     },
                 },
@@ -3721,12 +3721,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3743,12 +3743,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3765,12 +3765,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3787,12 +3787,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3809,12 +3809,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3831,12 +3831,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3853,12 +3853,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3875,12 +3875,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3897,12 +3897,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -3959,21 +3959,21 @@ _RAW_DEVICE_DATA = {
                         ),
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
                             "set_brightness_on": {
-                                "type": 207,
+                                "type": CMD_TYPE_SET_VAL,
                                 "description": "打开并且设置亮度，val=亮度值[0,255]",
                             },
                             "set_brightness_off": {
-                                "type": 206,
+                                "type": CMD_TYPE_UNKNOWN_206,
                                 "description": "关闭并设置亮度，val=亮度值[0,255]",
                             },
                         },
@@ -3994,17 +3994,17 @@ _RAW_DEVICE_DATA = {
                         ),
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
                             "set_brightness": {
-                                "type": 223,
+                                "type": CMD_TYPE_UNKNOWN_223,
                                 "description": "设置亮度，val=亮度值[0,65535]",
                             },
                         },
@@ -4039,7 +4039,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "当前调光设置值",
                         "commands": {
                             "set_config": {
-                                "type": 206,
+                                "type": CMD_TYPE_UNKNOWN_206,
                                 "description": "设置调光参数配置",
                             },
                         },
@@ -4052,7 +4052,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "当前动态设置值",
                         "commands": {
                             "set_config": {
-                                "type": 206,
+                                "type": CMD_TYPE_UNKNOWN_206,
                                 "description": "设置动态参数配置",
                             },
                         },
@@ -4075,21 +4075,21 @@ _RAW_DEVICE_DATA = {
                         ),
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
                             "set_brightness_on": {
-                                "type": 207,
+                                "type": CMD_TYPE_SET_VAL,
                                 "description": "打开并且设置亮度，val=亮度值[0,255]",
                             },
                             "set_brightness_off": {
-                                "type": 206,
+                                "type": CMD_TYPE_UNKNOWN_206,
                                 "description": "关闭并设置亮度，val=亮度值[0,255]",
                             },
                         },
@@ -4107,17 +4107,17 @@ _RAW_DEVICE_DATA = {
                         ),
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
                             "set_brightness": {
-                                "type": 207,
+                                "type": CMD_TYPE_SET_VAL,
                                 "description": "设置亮度，val=亮度值[0,255]",
                             },
                         },
@@ -4145,17 +4145,17 @@ _RAW_DEVICE_DATA = {
                         ),
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
                             "set_brightness": {
-                                "type": 207,
+                                "type": CMD_TYPE_SET_VAL,
                                 "description": "设置亮度，val=亮度值[0-255]",
                             },
                         },
@@ -4169,7 +4169,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
                         "commands": {
                             "set_color_temp": {
-                                "type": 207,
+                                "type": CMD_TYPE_SET_VAL,
                                 "description": "设置色温，val=色温值[0-255]",
                             },
                         },
@@ -4192,17 +4192,17 @@ _RAW_DEVICE_DATA = {
                         ),
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
                             "set_brightness": {
-                                "type": 207,
+                                "type": CMD_TYPE_SET_VAL,
                                 "description": "设置亮度，val=亮度值[0-255]",
                             },
                         },
@@ -4216,7 +4216,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
                         "commands": {
                             "set_color_temp": {
-                                "type": 207,
+                                "type": CMD_TYPE_SET_VAL,
                                 "description": "设置色温，val=色温值[0-255]",
                             },
                         },
@@ -4240,12 +4240,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4267,12 +4267,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4289,12 +4289,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4316,12 +4316,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4338,12 +4338,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4360,12 +4360,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4422,12 +4422,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4449,21 +4449,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4482,21 +4482,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4517,12 +4517,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4539,12 +4539,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4566,21 +4566,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4599,21 +4599,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4632,21 +4632,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4665,21 +4665,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4700,12 +4700,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4722,12 +4722,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4744,12 +4744,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4771,21 +4771,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4804,21 +4804,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4837,21 +4837,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4870,21 +4870,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4903,21 +4903,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4936,21 +4936,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4972,12 +4972,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -4999,12 +4999,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5021,12 +5021,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5048,12 +5048,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5070,12 +5070,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5092,12 +5092,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5121,17 +5121,17 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_brightness": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置亮度，val=亮度值[0,255]",
                     },
                 },
@@ -5144,7 +5144,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val` 值为色温值，取值范围[0，255]，0表示暖光，255表示冷光",
                 "commands": {
                     "set_color_temp": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置色温，val=色温值[0,255]",
                     },
                 },
@@ -5166,12 +5166,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5188,12 +5188,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5210,12 +5210,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5232,12 +5232,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5254,12 +5254,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5276,12 +5276,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -5310,7 +5310,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "config": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "下发配置，val=bit0~bit23按对应Px配置值后合并的一个数值",
                     },
                 },
@@ -5330,7 +5330,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示打开窗帘",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行打开窗帘",
                     },
@@ -5344,7 +5344,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示停止当前动作",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行停止窗帘",
                     },
@@ -5358,7 +5358,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示关闭窗帘",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行关闭窗帘",
                     },
@@ -5378,21 +5378,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯设置亮度",
                     },
                 },
@@ -5406,21 +5406,21 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val`表示指示灯亮度值，取值范围：0~1023",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯设置亮度",
                     },
                 },
@@ -5438,7 +5438,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示打开窗帘",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行打开窗帘",
                     },
@@ -5452,7 +5452,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示停止当前动作",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行停止窗帘",
                     },
@@ -5466,7 +5466,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示关闭窗帘",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行关闭窗帘",
                     },
@@ -5488,21 +5488,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5521,21 +5521,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5554,21 +5554,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5586,7 +5586,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示打开窗帘",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行打开窗帘",
                     },
@@ -5600,7 +5600,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示停止当前动作",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行停止窗帘",
                     },
@@ -5614,7 +5614,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示关闭窗帘",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行关闭窗帘",
                     },
@@ -5647,22 +5647,22 @@ _RAW_DEVICE_DATA = {
                 "conversion": "val_direct",
                 "commands": {
                     "open": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "val": 100,
                         "description": "完全打开",
                     },
                     "close": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "val": 0,
                         "description": "完全关闭",
                     },
                     "stop": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "val": 128,
                         "description": "停止窗帘",
                     },
                     "set_position": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "开到百分比，val=percent，percent取值:[0,100]",
                     },
                 },
@@ -5680,7 +5680,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示打开窗帘",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行打开窗帘",
                     },
@@ -5694,7 +5694,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示停止当前动作",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行停止窗帘",
                     },
@@ -5708,7 +5708,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示关闭窗帘",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "执行关闭窗帘",
                     },
@@ -5749,21 +5749,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5780,21 +5780,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "enable": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "使能",
                     },
                     "disable": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_effect_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "使能并设置动态值，val=动态值",
                     },
                     "set_effect_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关闭并设置动态值，val=动态值",
                     },
                 },
@@ -5818,21 +5818,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5849,21 +5849,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "enable": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "使能",
                     },
                     "disable": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_effect_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "使能并设置动态值，val=动态值",
                     },
                     "set_effect_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关闭并设置动态值，val=动态值",
                     },
                 },
@@ -5890,21 +5890,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5928,17 +5928,17 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_brightness": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置亮度，val=亮度值[0-100]",
                     },
                 },
@@ -5959,7 +5959,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_color": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "设置颜色或动态值，val=颜色或动态值",
                     },
                 },
@@ -5983,17 +5983,17 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_brightness": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置亮度，val=亮度值[0-255]",
                     },
                 },
@@ -6046,21 +6046,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -6120,21 +6120,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -6151,21 +6151,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "enable": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "使能",
                     },
                     "disable": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_effect_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "使能并设置动态值，val=动态值",
                     },
                     "set_effect_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关闭并设置动态值，val=动态值",
                     },
                 },
@@ -6192,21 +6192,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -6233,21 +6233,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -6270,17 +6270,17 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_brightness": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置亮度，val=亮度值[0-255]",
                     },
                 },
@@ -6294,7 +6294,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
                 "commands": {
                     "set_color_temp": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置色温，val=色温值[0-255]",
                     },
                 },
@@ -6314,7 +6314,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_brightness": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置亮度，val=亮度值[0、63、127、195、255]",
                     },
                 },
@@ -6337,17 +6337,17 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_brightness": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置亮度，val=亮度值[0-255]",
                     },
                 },
@@ -6361,7 +6361,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
                 "commands": {
                     "set_color_temp": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置色温，val=色温值[0-255]",
                     },
                 },
@@ -6381,7 +6381,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_brightness": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置亮度，val=亮度值[0、63、127、195、255]",
                     },
                 },
@@ -6402,12 +6402,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -6826,7 +6826,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val` 值越大则灵敏度越低，门限越高",
                 "commands": {
                     "set_sensitivity": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置报警器灵敏度",
                     },
                 },
@@ -6839,12 +6839,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`指示报警音正在响，反之则没有报警音",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "手工触发报警音",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "手动消除报警音",
                     },
@@ -6875,7 +6875,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val` 值越大则灵敏度越低，门限越高",
                 "commands": {
                     "set_sensitivity": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置报警器灵敏度",
                     },
                 },
@@ -6888,12 +6888,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`指示报警音正在响，反之则没有报警音",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "手工触发报警音",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "手动消除报警音",
                     },
@@ -7106,7 +7106,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置感应器动态锁定时间与灵敏度",
                     },
                 },
@@ -7283,21 +7283,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "播放",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "停止",
                     },
                     "set_config_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "设置值并播放",
                     },
                     "set_config_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "设置值并停止",
                     },
                 },
@@ -7409,7 +7409,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_threshold": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "修改门限值",
                     },
                 },
@@ -7429,21 +7429,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "播放",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "停止",
                     },
                     "set_config_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "设置值并播放",
                     },
                     "set_config_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "设置值并停止",
                     },
                 },
@@ -7462,12 +7462,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示打开,`val` 值忽略；`type&1==0`表示关闭；",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -7481,7 +7481,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val` 值定义如下：0:auto 1~3:风量1~3 4：风量最大 5:睡眠模式",
                 "commands": {
                     "set_mode": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置运行模式",
                     },
                 },
@@ -8380,12 +8380,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开空调",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭空调",
                     },
@@ -8402,7 +8402,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_mode": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置模式，val=模式值",
                     },
                 },
@@ -8418,7 +8418,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_fan_speed": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
                         "fan_modes": {
                             "low": 15,
@@ -8440,7 +8440,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": 136,
+                        "type": CMD_TYPE_UNKNOWN_136,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -8471,17 +8471,17 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "1:自动; 2:手动; 3:定时",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_mode": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置模式，val=模式值",
                     },
                 },
@@ -8497,7 +8497,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置风速",
                         "fan_modes": {
                             "low": 1,
@@ -8517,7 +8517,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "ppm",
                 "commands": {
                     "set_voc": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置VOC值，需要将真实值扩大10倍",
                     },
                 },
@@ -8570,17 +8570,17 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "该IO的type和val字段说明，详见文档表2-17-1",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置配置，需要保留其他位",
                     },
                 },
@@ -8595,7 +8595,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置目标温度",
                     },
                 },
@@ -8645,17 +8645,17 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "该IO的type和val字段说明，详见文档表2-18-1",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置配置，需要保留其他位",
                     },
                 },
@@ -8670,7 +8670,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置目标温度",
                     },
                 },
@@ -8720,12 +8720,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开空调",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭空调",
                     },
@@ -8742,7 +8742,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置模式",
                     },
                 },
@@ -8760,7 +8760,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": 136,
+                        "type": CMD_TYPE_UNKNOWN_136,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -8773,7 +8773,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val<30`:低档；`val<65`:中档；`val>=65`:高档",
                 "commands": {
                     "set_fan_speed": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置风速，低档val=15；中档val=45；高档val=75",
                     },
                 },
@@ -8809,17 +8809,17 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置配置，需要保留其他位",
                     },
                 },
@@ -8834,7 +8834,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": 136,
+                        "type": CMD_TYPE_UNKNOWN_136,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -8900,12 +8900,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开地暖",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭地暖",
                     },
@@ -8922,7 +8922,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置模式配置",
                     },
                 },
@@ -8937,7 +8937,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置目标温度",
                     },
                 },
@@ -9025,7 +9025,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开窗帘",
                         "commands": {
                             "open": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开窗帘",
                             },
@@ -9039,7 +9039,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示关闭窗帘",
                         "commands": {
                             "close": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "关闭窗帘",
                             },
@@ -9053,7 +9053,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示停止窗帘",
                         "commands": {
                             "stop": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "停止窗帘",
                             },
@@ -9072,12 +9072,12 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
@@ -9091,12 +9091,12 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
@@ -9110,12 +9110,12 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开",
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
@@ -9136,7 +9136,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置控制参数，需要保留未修改的bit位",
                     },
                 },
@@ -9188,7 +9188,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "open": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开窗帘",
                             },
@@ -9202,7 +9202,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "close": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "关闭窗帘",
                             },
@@ -9216,7 +9216,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "stop": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "停止窗帘",
                             },
@@ -9235,12 +9235,12 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
@@ -9254,12 +9254,12 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
@@ -9273,12 +9273,12 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "on": {
-                                "type": 129,
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                                 "description": "打开",
                             },
                             "off": {
-                                "type": 128,
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                                 "description": "关闭",
                             },
@@ -9296,12 +9296,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -9315,12 +9315,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -9334,12 +9334,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -9358,7 +9358,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置控制参数，需要保留未修改的bit位",
                     },
                 },
@@ -9481,12 +9481,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -9503,12 +9503,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -9525,12 +9525,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -9552,12 +9552,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -9579,12 +9579,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开空调",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭空调",
                     },
@@ -9601,7 +9601,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_mode": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置模式，val=模式值",
                     },
                 },
@@ -9617,7 +9617,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_fan_speed": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
                         "fan_modes": {
                             "low": 15,
@@ -9639,7 +9639,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": 136,
+                        "type": CMD_TYPE_UNKNOWN_136,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -9673,12 +9673,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开空调",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭空调",
                     },
@@ -9695,7 +9695,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_mode": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置模式，val=模式值",
                     },
                 },
@@ -9711,7 +9711,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_fan_speed": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
                         "fan_modes": {
                             "low": 15,
@@ -9733,7 +9733,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": 136,
+                        "type": CMD_TYPE_UNKNOWN_136,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -9767,12 +9767,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -9786,7 +9786,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val` 值为模式位掩码，0-1位和2-3位分别控制不同功能",
                 "commands": {
                     "set_mode": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "设置工作模式",
                     },
                 },
@@ -9855,12 +9855,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -9878,12 +9878,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -10158,12 +10158,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`type&1==1`表示开启红外夜灯；`type&1==0`表示关闭红外夜灯",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开启夜灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭夜灯",
                     },
@@ -10337,12 +10337,12 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -10370,22 +10370,22 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "百分比取值范围：[0,100]",
                 "commands": {
                     "open": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "val": 100,
                         "description": "完全打开",
                     },
                     "close": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "val": 0,
                         "description": "完全关闭",
                     },
                     "stop": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "val": 128,
                         "description": "停止车库门开合",
                     },
                     "set_position": {
-                        "type": 207,
+                        "type": CMD_TYPE_SET_VAL,
                         "description": "开到百分比，val=percent，percent取值:[0,100]",
                     },
                 },
@@ -10412,21 +10412,21 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "播放",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "停止",
                     },
                     "set_config_on": {
-                        "type": 255,
+                        "type": CMD_TYPE_UNKNOWN_255,
                         "description": "设置值并播放，val=需要设置的值",
                     },
                     "set_config_off": {
-                        "type": 254,
+                        "type": CMD_TYPE_UNKNOWN_254,
                         "description": "设置值并停止，val=需要设置的值",
                     },
                 },
@@ -10443,17 +10443,17 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "unmute": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "取消静音",
                     },
                     "mute": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "设置静音",
                     },
                     "set_volume": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置音量，val=音量值",
                     },
                 },
@@ -10484,12 +10484,12 @@ _RAW_DEVICE_DATA = {
                     ),
                     "commands": {
                         "on": {
-                            "type": 129,
+                            "type": CMD_TYPE_ON,
                             "val": 1,
                             "description": "打开",
                         },
                         "off": {
-                            "type": 128,
+                            "type": CMD_TYPE_OFF,
                             "val": 0,
                             "description": "关闭",
                         },
@@ -10526,7 +10526,7 @@ _RAW_DEVICE_DATA = {
                     ),
                     "commands": {
                         "set_config": {
-                            "type": 255,
+                            "type": CMD_TYPE_UNKNOWN_255,
                             "description": "设置配置，需要保留其它位",
                         },
                     },
@@ -10542,7 +10542,7 @@ _RAW_DEVICE_DATA = {
                     ),
                     "commands": {
                         "set_config": {
-                            "type": 206,
+                            "type": CMD_TYPE_UNKNOWN_206,
                             "description": "设置模式",
                         },
                     },
@@ -10557,7 +10557,7 @@ _RAW_DEVICE_DATA = {
                     "unit_of_measurement": "°C",
                     "commands": {
                         "set_temperature": {
-                            "type": 136,
+                            "type": CMD_TYPE_UNKNOWN_136,
                             "description": "设置目标温度，val=温度*10",
                         },
                     },
@@ -10574,7 +10574,7 @@ _RAW_DEVICE_DATA = {
                     ),
                     "commands": {
                         "set_config": {
-                            "type": 206,
+                            "type": CMD_TYPE_UNKNOWN_206,
                             "description": "设置风速",
                             "fan_modes": {
                                 "low": 25,
@@ -10629,12 +10629,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "开关状态：0关 1开",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭",
                     },
@@ -10662,7 +10662,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置模式",
                     },
                 },
@@ -10676,7 +10676,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": 136,
+                        "type": CMD_TYPE_UNKNOWN_136,
                         "description": "设置目标温度，val=温度*10",
                     },
                 },
@@ -10692,7 +10692,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": 206,
+                        "type": CMD_TYPE_UNKNOWN_206,
                         "description": "设置风速",
                         "fan_modes": {
                             "low": 15,
@@ -10757,12 +10757,12 @@ _RAW_DEVICE_DATA = {
                 "device_class": "garage",
                 "commands": {
                     "open": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "打开车库门",
                     },
                     "close": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关闭车库门",
                     },
@@ -10778,12 +10778,12 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "车库门照明灯控制",
                 "commands": {
                     "on": {
-                        "type": 129,
+                        "type": CMD_TYPE_ON,
                         "val": 1,
                         "description": "开灯",
                     },
                     "off": {
-                        "type": 128,
+                        "type": CMD_TYPE_OFF,
                         "val": 0,
                         "description": "关灯",
                     },
@@ -10804,6 +10804,186 @@ _RAW_DEVICE_DATA = {
 }
 
 
+# ================= HVAC和风扇映射配置 (从hvac_mappings.py整合) =================
+# 导入HA常量以确保映射正确
+try:
+    from homeassistant.components.climate.const import (
+from custom_components.lifesmart.core.const import CMD_TYPE_OFF, CMD_TYPE_ON, CMD_TYPE_SET_VAL
+        HVACMode,
+        FAN_AUTO,
+        FAN_HIGH,
+        FAN_LOW,
+        FAN_MEDIUM,
+    )
+
+    # ================= 核心温控器HVAC模式映射 =================
+    # 核心温控器HVAC模式映射 - 对应基础的F系列设备
+    # 数值含义：1=自动模式，2=仅送风，3=制冷，4=制热
+    _LIFESMART_F_HVAC_MODE_MAP = {
+        1: HVACMode.AUTO,  # 自动模式 - 系统自动选择制冷或制热
+        2: HVACMode.FAN_ONLY,  # 仅送风模式 - 只有风扇工作，不制冷制热
+        3: HVACMode.COOL,  # 制冷模式 - 空调制冷运行
+        4: HVACMode.HEAT,  # 制热模式 - 空调制热运行
+    }
+    # 反向映射：从Home Assistant模式到LifeSmart数值
+    _REVERSE_F_HVAC_MODE_MAP = {v: k for k, v in _LIFESMART_F_HVAC_MODE_MAP.items()}
+
+    # ================= 扩展HVAC模式映射 =================
+    # 扩展HVAC模式映射 - 支持更多设备类型和特殊模式
+    # 包含地暖、除湿等高级功能，适用于SL_NATURE、FCU等设备
+    _LIFESMART_HVAC_MODE_MAP = {
+        1: HVACMode.AUTO,  # 自动模式 - 智能调节温度
+        2: HVACMode.FAN_ONLY,  # 仅送风模式 - 循环空气但不调温
+        3: HVACMode.COOL,  # 制冷模式 - 降低室内温度
+        4: HVACMode.HEAT,  # 制热模式 - 提高室内温度
+        5: HVACMode.DRY,  # 除湿模式 - 降低室内湿度
+        7: HVACMode.HEAT,  # SL_NATURE/FCU地暖模式 - 地板辐射采暖
+        8: HVACMode.HEAT_COOL,  # SL_NATURE/FCU地暖+空调复合模式 - 同时支持制热制冷
+    }
+    # 反向映射：Home Assistant到LifeSmart模式转换
+    # 注意：制热模式默认映射到标准制热(4)而非地暖(7)
+    _REVERSE_LIFESMART_HVAC_MODE_MAP = {
+        HVACMode.AUTO: 1,  # 自动模式
+        HVACMode.FAN_ONLY: 2,  # 仅送风
+        HVACMode.COOL: 3,  # 制冷
+        HVACMode.HEAT: 4,  # 制热(标准模式)
+        HVACMode.DRY: 5,  # 除湿
+        HVACMode.HEAT_COOL: 8,  # 制热制冷复合模式
+    }
+
+    # ================= 风机盘管模式映射 =================
+    # 风机盘管(Fan Coil Unit)模式映射 - CP_AIR系列设备专用
+    # 数值含义：0=制冷，1=制热，2=仅送风
+    _LIFESMART_CP_AIR_HVAC_MODE_MAP = {
+        0: HVACMode.COOL,  # 制冷模式 - 冷水循环制冷
+        1: HVACMode.HEAT,  # 制热模式 - 热水循环制热
+        2: HVACMode.FAN_ONLY,  # 仅送风模式 - 风机运行但不调温
+    }
+    # 反向映射：Home Assistant到风机盘管模式
+    _REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {
+        v: k for k, v in _LIFESMART_CP_AIR_HVAC_MODE_MAP.items()
+    }
+
+    # ================= 风速映射配置 =================
+
+    # 新风设备风速映射 - ACIPM系列新风机专用
+    # 数值含义：1=低速，2=中速，3=高速
+    _LIFESMART_ACIPM_FAN_MAP = {
+        FAN_LOW: 1,  # 低速档 - 静音运行，适合夜间
+        FAN_MEDIUM: 2,  # 中速档 - 日常通风，平衡噪音和效果
+        FAN_HIGH: 3,  # 高速档 - 快速换气，适合人员密集时
+    }
+    # 反向映射：LifeSmart风速值到Home Assistant风扇模式
+    _REVERSE_LIFESMART_ACIPM_FAN_MAP = {
+        v: k for k, v in _LIFESMART_ACIPM_FAN_MAP.items()
+    }
+
+    # 风机盘管风速映射 - CP_AIR系列设备专用
+    # 数值含义：0=自动，1=低速，2=中速，3=高速
+    _LIFESMART_CP_AIR_FAN_MAP = {
+        FAN_AUTO: 0,  # 自动风速 - 系统根据温差自动调节
+        FAN_LOW: 1,  # 低速档 - 节能静音模式
+        FAN_MEDIUM: 2,  # 中速档 - 标准舒适模式
+        FAN_HIGH: 3,  # 高速档 - 快速调温模式
+    }
+    # 反向映射：LifeSmart风速值到Home Assistant风扇模式
+    _REVERSE_LIFESMART_CP_AIR_FAN_MAP = {
+        v: k for k, v in _LIFESMART_CP_AIR_FAN_MAP.items()
+    }
+
+    # 超能面板风速映射 - SL_NATURE系列超能面板专用
+    # 数值含义：101=自动，15=低速，45=中速，75=高速
+    # 注意：使用百分比数值表示风速级别
+    _LIFESMART_TF_FAN_MAP = {
+        FAN_AUTO: 101,  # 自动模式 - 智能风速调节(数值101为特殊标识)
+        FAN_LOW: 15,  # 低速档 - 15%风速，静音节能
+        FAN_MEDIUM: 45,  # 中速档 - 45%风速，日常使用
+        FAN_HIGH: 75,  # 高速档 - 75%风速，快速换气
+    }
+    # 反向映射：LifeSmart风速百分比到Home Assistant风扇模式
+    _REVERSE_LIFESMART_TF_FAN_MODE_MAP = {
+        v: k for k, v in _LIFESMART_TF_FAN_MAP.items()
+    }
+
+    # V_AIR_P风速映射 - V_AIR_P系列空气处理设备专用
+    # 数值含义：15=低速，45=中速，75=高速(百分比风速)
+    # 注意：该系列不支持自动模式，仅支持手动三档调节
+    _LIFESMART_F_FAN_MAP = {
+        FAN_LOW: 15,  # 低速档 - 15%风速，夜间模式
+        FAN_MEDIUM: 45,  # 中速档 - 45%风速，标准模式
+        FAN_HIGH: 75,  # 高速档 - 75%风速，强力模式
+    }
+    # 反向映射：LifeSmart风速百分比到Home Assistant风扇模式
+    _REVERSE_LIFESMART_F_FAN_MODE_MAP = {v: k for k, v in _LIFESMART_F_FAN_MAP.items()}
+
+    # 导出所有HVAC和风扇映射（保持向后兼容）
+    LIFESMART_F_HVAC_MODE_MAP = _LIFESMART_F_HVAC_MODE_MAP
+    REVERSE_F_HVAC_MODE_MAP = _REVERSE_F_HVAC_MODE_MAP
+    LIFESMART_HVAC_MODE_MAP = _LIFESMART_HVAC_MODE_MAP
+    REVERSE_LIFESMART_HVAC_MODE_MAP = _REVERSE_LIFESMART_HVAC_MODE_MAP
+    LIFESMART_CP_AIR_HVAC_MODE_MAP = _LIFESMART_CP_AIR_HVAC_MODE_MAP
+    REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = _REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP
+    LIFESMART_ACIPM_FAN_MAP = _LIFESMART_ACIPM_FAN_MAP
+    REVERSE_LIFESMART_ACIPM_FAN_MAP = _REVERSE_LIFESMART_ACIPM_FAN_MAP
+    LIFESMART_CP_AIR_FAN_MAP = _LIFESMART_CP_AIR_FAN_MAP
+    REVERSE_LIFESMART_CP_AIR_FAN_MAP = _REVERSE_LIFESMART_CP_AIR_FAN_MAP
+    LIFESMART_TF_FAN_MAP = _LIFESMART_TF_FAN_MAP
+    REVERSE_LIFESMART_TF_FAN_MODE_MAP = _REVERSE_LIFESMART_TF_FAN_MODE_MAP
+    LIFESMART_F_FAN_MAP = _LIFESMART_F_FAN_MAP
+    REVERSE_LIFESMART_F_FAN_MODE_MAP = _REVERSE_LIFESMART_F_FAN_MODE_MAP
+
+except ImportError:
+    # Home Assistant不可用时的降级方案 - 使用空映射
+    LIFESMART_F_HVAC_MODE_MAP = {}
+    REVERSE_F_HVAC_MODE_MAP = {}
+    LIFESMART_HVAC_MODE_MAP = {}
+    REVERSE_LIFESMART_HVAC_MODE_MAP = {}
+    LIFESMART_CP_AIR_HVAC_MODE_MAP = {}
+    REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {}
+    LIFESMART_ACIPM_FAN_MAP = {}
+    REVERSE_LIFESMART_ACIPM_FAN_MAP = {}
+    LIFESMART_CP_AIR_FAN_MAP = {}
+    REVERSE_LIFESMART_CP_AIR_FAN_MAP = {}
+    LIFESMART_TF_FAN_MAP = {}
+    REVERSE_LIFESMART_TF_FAN_MODE_MAP = {}
+    LIFESMART_F_FAN_MAP = {}
+    REVERSE_LIFESMART_F_FAN_MODE_MAP = {}
+
+# ================= 窗帘设备配置 (从cover_mappings.py整合) =================
+
+# 非位置型窗帘设备配置映射 - 仅支持开启/关闭/停止命令
+# 此类设备不支持位置反馈，无法获取精确的开启百分比
+_NON_POSITIONAL_COVER_CONFIG = {
+    # SL_SW_WIN - 窗帘开关面板：专用窗帘控制器
+    # IO口功能：OP=开启窗帘，CL=关闭窗帘，ST=紧急停止
+    "SL_SW_WIN": {"open": "OP", "close": "CL", "stop": "ST"},
+    # SL_P_V2 - 通用控制器V2：多功能控制器的窗帘模式
+    # 注意：这不是版本设备，而是真实的设备型号
+    # IO口功能：P2=开启操作，P3=关闭操作，P4=停止操作
+    "SL_P_V2": {
+        "open": "P2",  # P2口用于向上/开启方向驱动窗帘
+        "close": "P3",  # P3口用于向下/关闭方向驱动窗帘
+        "stop": "P4",  # P4口提供紧急停止功能
+    },
+    # SL_CN_IF - 红外窗帘控制器：通过红外信号控制传统窗帘
+    # IO口功能：P1=开启红外信号，P2=关闭红外信号，P3=停止红外信号
+    "SL_CN_IF": {"open": "P1", "close": "P2", "stop": "P3"},
+    # SL_CN_FE - 新型窗帘控制器：增强型窗帘驱动器
+    # IO口功能：P1=开启驱动，P2=关闭驱动，P3=停止驱动
+    "SL_CN_FE": {"open": "P1", "close": "P2", "stop": "P3"},
+    # SL_P - 通用控制器：多功能智能控制器的窗帘模式
+    # 通过动态检测确定为窗帘模式时使用此配置
+    # IO口功能：P2=开启继电器，P3=关闭继电器，P4=停止继电器
+    "SL_P": {"open": "P2", "close": "P3", "stop": "P4"},
+    # SL_JEMA - JEMA协议控制器：支持JEMA标准的窗帘控制设备
+    # IO口功能：P2=JEMA开启命令，P3=JEMA关闭命令，P4=JEMA停止命令
+    "SL_JEMA": {"open": "P2", "close": "P3", "stop": "P4"},
+}
+
+# 导出窗帘配置（保持向后兼容）
+NON_POSITIONAL_COVER_CONFIG = _NON_POSITIONAL_COVER_CONFIG
+
+
 def get_device_data(device_id: str) -> Dict[str, Any]:
     """获取指定设备的数据"""
     return _RAW_DEVICE_DATA.get(device_id, {})
@@ -10819,6 +10999,33 @@ def get_device_count() -> int:
     return len(_RAW_DEVICE_DATA)
 
 
-# 导出设备数据供外部使用
+# 导出设备数据和配置供外部使用
 DEVICE_SPECS_DATA = _RAW_DEVICE_DATA
 DEVICE_DATA = _RAW_DEVICE_DATA  # 保持向后兼容
+
+# 导出所有配置映射
+__all__ = [
+    # 设备规格数据
+    "DEVICE_SPECS_DATA",
+    "DEVICE_DATA",
+    "get_device_data",
+    "get_all_device_ids",
+    "get_device_count",
+    # HVAC和风扇映射（从hvac_mappings.py迁移）
+    "LIFESMART_F_HVAC_MODE_MAP",
+    "REVERSE_F_HVAC_MODE_MAP",
+    "LIFESMART_HVAC_MODE_MAP",
+    "REVERSE_LIFESMART_HVAC_MODE_MAP",
+    "LIFESMART_CP_AIR_HVAC_MODE_MAP",
+    "REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP",
+    "LIFESMART_ACIPM_FAN_MAP",
+    "REVERSE_LIFESMART_ACIPM_FAN_MAP",
+    "LIFESMART_CP_AIR_FAN_MAP",
+    "REVERSE_LIFESMART_CP_AIR_FAN_MAP",
+    "LIFESMART_TF_FAN_MAP",
+    "REVERSE_LIFESMART_TF_FAN_MODE_MAP",
+    "LIFESMART_F_FAN_MAP",
+    "REVERSE_LIFESMART_F_FAN_MODE_MAP",
+    # 窗帘配置（从cover_mappings.py迁移）
+    "NON_POSITIONAL_COVER_CONFIG",
+]
