@@ -425,8 +425,8 @@ class RuntimeIODiscovery:
                     "data_type": "binary_switch",
                     "conversion": "type_bit_0",
                     "commands": {
-                        "on": {"type": 129, "val": 1, "description": "打开"},
-                        "off": {"type": 128, "val": 0, "description": "关闭"},
+                        "on": {"type": CMD_TYPE_ON, "val": 1, "description": "打开"},
+                        "off": {"type": CMD_TYPE_OFF, "val": 0, "description": "关闭"},
                     },
                 }
             )
@@ -437,7 +437,7 @@ class RuntimeIODiscovery:
                     "data_type": "dimmer",
                     "conversion": "val_direct",
                     "commands": {
-                        "set_brightness": {"type": 129, "description": "设置亮度"}
+                        "set_brightness": {"type": CMD_TYPE_ON, "description": "设置亮度"}
                     },
                 }
             )
@@ -678,6 +678,7 @@ class DynamicDeviceRuntimeManager:
 
         # 获取设备配置
         from ..config.device_specs import DEVICE_SPECS_DATA
+from custom_components.lifesmart.core.const import CMD_TYPE_ON, CMD_TYPE_OFF
 
         raw_config = DEVICE_SPECS_DATA.get(device_type, {})
 

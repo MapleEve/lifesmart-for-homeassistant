@@ -250,7 +250,7 @@ class TestCoverControl:
         from custom_components.lifesmart.core.const import (
             CMD_TYPE_ON,
         )
-        from custom_components.lifesmart.core.config.cover_mappings import (
+        from custom_components.lifesmart.core.config.device_specs import (
             NON_POSITIONAL_COVER_CONFIG,
         )
 
@@ -430,7 +430,7 @@ class TestEdgeCasesAndErrorHandling:
             "devtype": "V_AIR_P",
             "name": "Test V_AIR_P",
             "data": {
-                "O": {"type": 129, "val": 1},
+                "O": {"type": CMD_TYPE_ON, "val": 1},
                 "T": {"v": 24.5, "val": 245},
             },
             "stat": 1,
@@ -509,4 +509,7 @@ class TestMockClientIntegration:
         success_client = create_mock_oapi_client()
 
         assert success_client._mock_get_all_devices.return_value == []
-        assert success_client._mock_refresh_token.return_value is True
+        assert success_client._mock_refresh_token.return_value == {
+            "expiredtime": 9999999999,
+            "usertoken": "mock_usertoken",
+        }

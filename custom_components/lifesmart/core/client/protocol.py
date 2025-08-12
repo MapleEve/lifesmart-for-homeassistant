@@ -575,7 +575,7 @@ class LifeSmartPacketFactory:
 
     def build_set_eeprom_packet(self, devid: str, key: str, val: Any) -> bytes:
         """构建设置设备EEPROM的指令包。"""
-        args = {"type": 255, "valtag": "m", "devid": devid, "key": key, "val": val}
+        args = {"type": CMD_TYPE_UNKNOWN_255, "valtag": "m", "devid": devid, "key": key, "val": val}
         return self._build_packet(args, act="rfSetEEPromA")
 
     def build_add_timer_packet(self, devid: str, croninfo: str, key: str) -> bytes:
