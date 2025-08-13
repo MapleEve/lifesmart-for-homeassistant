@@ -19,10 +19,12 @@ LifeSmart 按钮平台支持模块
 """
 
 import logging
+from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,7 +33,6 @@ from .core.const import (
     # 核心常量
     DOMAIN,
     MANUFACTURER,
-    Platform,
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     DEVICE_TYPE_KEY,
@@ -44,9 +45,43 @@ from .core.const import (
 )
 from .core.entity import LifeSmartEntity
 from .core.helpers import generate_unique_id
-from .core.platform.platform_detection import get_device_platform_mapping, safe_get
+from .core.platform.platform_detection import get_button_subdevices, safe_get
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
+    """
+    Get button IO port configuration information using the mapping engine.
+
+    Args:
+        device: Device dictionary
+        sub_key: IO port key name
+
+    Returns:
+        IO port configuration dictionary, or None if not found
+    """
+    from .core.config.mapping_engine import mapping_engine
+
+    device_config = mapping_engine.resolve_device_mapping_from_data(device)
+    if not device_config:
+        _LOGGER.error("映射引擎无法解析设备配置: %s", device)
+        raise HomeAssistantError(
+            f"Device configuration not found for {device.get('me', 'unknown')}"
+        )
+
+    # Search for IO configuration in button platform
+    button_config = device_config.get("button")
+    if not button_config:
+        return None
+
+    # Check if it's enhanced structure
+    if isinstance(button_config, dict) and sub_key in button_config:
+        io_config = button_config[sub_key]
+        if isinstance(io_config, dict) and "description" in io_config:
+            return io_config
+
+    return None
 
 
 async def async_setup_entry(
@@ -84,13 +119,17 @@ async def async_setup_entry(
             continue
 
         # 检查是否支持按钮平台
-        platform_mapping = get_device_platform_mapping(device)
-        button_subdevices = platform_mapping.get(Platform.BUTTON, [])
+        button_subdevices = get_button_subdevices(device)
 
         # 为每个按钮子设备创建实体
         for btn_key in button_subdevices:
+            # Use helper function to get IO configuration
+            io_config = _get_enhanced_io_config(device, btn_key)
+            if not io_config:
+                continue
+
             btn_data = safe_get(device, DEVICE_DATA_KEY, btn_key, default={})
-            if btn_data:  # 只有当按钮数据存在时才创建实体
+            if btn_data:  # Only create entity when button data exists
                 button = LifeSmartButton(
                     raw_device=device,
                     client=hub.get_client(),
@@ -125,11 +164,11 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
 
     def __init__(
         self,
-        raw_device: dict,
+        raw_device: dict[str, Any],
         client,
         entry_id: str,
         sub_device_key: str,
-        sub_device_data: dict,
+        sub_device_data: dict[str, Any],
     ) -> None:
         """
         初始化按钮设备。
@@ -141,11 +180,23 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
             sub_device_key: 子设备键名
             sub_device_data: 子设备数据字典
         """
-        super().__init__(raw_device, sub_device_key, client)
+        super().__init__(raw_device, client)
+        self._sub_key = sub_device_key
         self._btn_config = sub_device_data
+        self._entry_id = entry_id
+
+        # Generate button name and ID
+        self._attr_name = self._generate_button_name()
+        self._attr_unique_id = generate_unique_id(
+            self.devtype,
+            self.agt,
+            self.me,
+            sub_device_key,
+        )
+
         self._attr_device_class = ButtonDeviceClass.GENERIC
 
-        # 从配置中获取设备类别
+        # Get device class from configuration
         if "device_class" in sub_device_data:
             try:
                 self._attr_device_class = ButtonDeviceClass(
@@ -156,32 +207,21 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
                     "Invalid button device class: %s", sub_device_data["device_class"]
                 )
 
-    @property
-    def unique_id(self) -> str:
+    @callback
+    def _generate_button_name(self) -> str | None:
         """
         返回按钮的唯一ID。
 
         Returns:
             基于设备类型和子设备键的唯一标识符
         """
-        return generate_unique_id(
-            self._device.get(DEVICE_TYPE_KEY, ""),
-            self._device.get(HUB_ID_KEY, ""),
-            self._device.get(DEVICE_ID_KEY, ""),
-            self._sub_key,
-        )
-
-    @property
-    def name(self) -> str:
-        """
-        返回按钮的名称。
-
-        Returns:
-            组合设备名称和按钮名称的字符串
-        """
-        device_name = self._device.get(DEVICE_NAME_KEY, "Unknown Device")
-        btn_name = self._btn_config.get("name", self._sub_key)
-        return f"{device_name} {btn_name}"
+        base_name = self._name
+        # If sub-device has its own name, use it
+        sub_name = self._btn_config.get(DEVICE_NAME_KEY)
+        if sub_name and sub_name != self._sub_key:
+            return f"{base_name} {sub_name}"
+        # Otherwise, use base name + IO port index
+        return f"{base_name} Button {self._sub_key.upper()}"
 
     @property
     def available(self) -> bool:
@@ -191,7 +231,7 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
         Returns:
             如果设备有数据则返回True
         """
-        return bool(self._device.get(DEVICE_DATA_KEY, {}))
+        return bool(self._raw_device.get(DEVICE_DATA_KEY, {}))
 
     async def async_press(self) -> None:
         """
@@ -201,9 +241,9 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
         """
         try:
             # 发送按钮按下命令
-            await self._hub.async_send_command(
-                self._device[HUB_ID_KEY],
-                self._device[DEVICE_ID_KEY],
+            await self._client.async_send_single_command(
+                self.agt,
+                self.me,
                 self._sub_key,
                 CMD_TYPE_PRESS,
                 1,  # 按下状态
@@ -212,14 +252,14 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
             _LOGGER.debug(
                 "Pressed button %s on device %s",
                 self._sub_key,
-                self._device.get(DEVICE_NAME_KEY),
+                self._name,
             )
 
         except Exception as err:
             _LOGGER.error(
                 "Failed to press button %s on device %s: %s",
                 self._sub_key,
-                self._device.get(DEVICE_NAME_KEY),
+                self._name,
                 err,
             )
 
@@ -257,9 +297,9 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
             包含设备标识和属性信息的DeviceInfo对象
         """
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device.get(DEVICE_ID_KEY))},
-            name=self._device.get(DEVICE_NAME_KEY),
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
             manufacturer=MANUFACTURER,
-            model=self._device.get(DEVICE_TYPE_KEY),
-            via_device=(DOMAIN, self._device.get(HUB_ID_KEY)),
+            model=self.devtype,
+            via_device=(DOMAIN, self.agt),
         )

@@ -1,20 +1,91 @@
-"""LifeSmart 集成的中央协调器 Hub。
+"""LifeSmart 智能家居系统集成的中央协调器 Hub。
 
-此模块包含 LifeSmartHub 类，负责：
-- 管理客户端实例（OAPI 或 Local TCP）
-- 维护设备列表
-- 处理实时状态更新分发
-- 管理 WebSocket 连接和令牌刷新
-- 提供统一的数据访问接口
+═══════════════════════════════════════════════════════════════════════════════════
+🏗️ 架构设计理念
+═══════════════════════════════════════════════════════════════════════════════════
 
-由 @MapleEve 创建，作为集成架构重构的一部分。
+本模块实现了 LifeSmart 集成的核心协调器模式，采用三层架构设计：
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 业务层 (Hub Layer)                                                            │
+│ ├── 设备生命周期管理                                                             │
+│ ├── 实时状态更新分发                                                             │
+│ ├── 设备过滤和AI事件处理                                                         │
+│ └── 统一数据访问接口                                                             │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ 🔌 通信层 (Communication Layer)                                                  │
+│ ├── OAPI客户端 (云端REST + WebSocket)                                           │
+│ ├── Local TCP客户端 (本地网关直连)                                              │
+│ └── 自适应网络质量检测                                                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ ⚡ 基础设施层 (Infrastructure Layer)                                            │
+│ ├── 并发控制管理器 (防止竞态条件)                                               │
+│ ├── WebSocket状态管理器 (长连接维护)                                            │
+│ ├── 令牌生命周期管理                                                             │
+│ └── 故障检测与恢复机制                                                           │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════════
+🔥 核心功能特性
+═══════════════════════════════════════════════════════════════════════════════════
+
+🎛️  **双模式通信支持**
+    - OAPI模式：云端REST API + WebSocket实时推送
+    - 本地模式：TCP直连网关，低延迟控制
+    - 动态模式切换和故障转移
+
+🔄  **智能设备状态管理**
+    - 实时WebSocket推送处理
+    - 设备状态缓存和增量更新
+    - 断线重连后的状态同步策略
+
+🛡️  **企业级并发控制**
+    - 令牌刷新防竞态保护
+    - 设备更新并发限制
+    - WebSocket连接独占锁
+    - 消息处理异步队列
+
+🌐  **网络质量自适应**
+    - 实时网络质量检测
+    - 动态调整心跳间隔
+    - 智能重连延迟算法
+    - 网络异常预测和预处理
+
+🔧  **生产级错误处理**
+    - 多层异常捕获和分类
+    - 设备问题标记和跟踪
+    - 自动故障恢复流程
+    - 详细的诊断信息记录
+
+💡  **高级功能集成**
+    - 设备和网关过滤配置
+    - AI事件特殊处理
+    - Home Assistant原生集成
+    - 实时诊断统计接口
+
+═══════════════════════════════════════════════════════════════════════════════════
+⚠️  关键技术考虑
+═══════════════════════════════════════════════════════════════════════════════════
+
+🔐 **安全性**：令牌安全存储、WebSocket认证、本地连接加密
+🚀 **性能**：异步I/O、消息队列、设备状态缓存、网络优化
+🛡️ **可靠性**：故障检测、自动重连、数据一致性保证
+📊 **可观测性**：详细日志、性能统计、网络质量监控
+🔧 **可维护性**：模块化设计、清晰接口、完整测试覆盖
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+作者：@MapleEve
+版本：v2.0 (架构重构版)
+创建日期：2024年
+更新日期：2025年8月
+许可：遵循项目开源许可证
 """
 
 import asyncio
 import json
 import logging
 import time
-import traceback
 from datetime import datetime, timedelta
 from typing import Optional, Callable, Dict, Any
 
@@ -50,6 +121,9 @@ from .const import (
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERPASSWORD,
     CONF_LIFESMART_USERTOKEN,
+    CONF_WS_HEARTBEAT_INTERVAL,
+    CONF_WS_MAX_RECONNECT_ATTEMPTS,
+    CONF_WS_NETWORK_MODE,
     DEVICE_ID_KEY,
     DEVICE_TYPE_KEY,
     DOMAIN,
@@ -57,31 +131,73 @@ from .const import (
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
     SUBDEVICE_INDEX_KEY,
-    WS_RECEIVE_TIMEOUT,
-    WS_CLOSE_TIMEOUT,
-    WS_HEARTBEAT_TIMEOUT,
 )
 from .exceptions import LifeSmartAPIError, LifeSmartAuthError
 from .helpers import generate_unique_id
+from .network_quality_detector import NetworkQualityDetector, calculate_reconnect_delay
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class LifeSmartHub:
-    """LifeSmart 集成的中央协调器。
+    """LifeSmart 智能家居系统集成的中央协调器核心类。
 
-    此类统一管理客户端、设备数据、状态更新分发等核心功能，
-    为各个平台实体提供统一的数据访问接口。
+    ═══════════════════════════════════════════════════════════════════════════════════
+    🎯 设计模式与架构理念
+    ═══════════════════════════════════════════════════════════════════════════════════
+
+    本类采用 **中央协调器模式 (Central Coordinator Pattern)**，作为整个 LifeSmart
+    集成的单一入口点和状态管理中心。设计遵循以下核心原则：
+
+    🏗️ **单一职责原则**：每个方法专注于一个特定的业务功能
+    🔒 **封装性原则**：内部状态通过受控接口访问
+    🔗 **依赖注入原则**：通过构造函数注入核心依赖
+    ♻️  **资源生命周期管理**：完整的创建-使用-销毁循环
+    🛡️ **故障隔离原则**：错误不会级联影响其他组件
+
+    ═══════════════════════════════════════════════════════════════════════════════════
+    📋 核心职责模块
+    ═══════════════════════════════════════════════════════════════════════════════════
+
+    🔌 **客户端生命周期管理**
+       ├── 根据配置创建合适的客户端实例 (OAPI/TCP)
+       ├── 处理客户端认证和令牌管理
+       ├── 管理客户端连接状态和重连逻辑
+       └── 提供统一的客户端访问接口
+
+    📊 **设备数据中心化管理**
+       ├── 维护全局设备列表和状态缓存
+       ├── 处理设备列表的增量和全量更新
+       ├── 实现设备数据的过滤和筛选逻辑
+       └── 为平台实体提供设备数据访问
+
+    🔄 **实时状态更新分发系统**
+       ├── 接收WebSocket/TCP推送的设备状态变更
+       ├── 解析和验证状态更新数据的完整性
+       ├── 通过Home Assistant dispatcher分发更新事件
+       └── 处理特殊事件类型 (如AI事件)
+
+    🌐 **WebSocket长连接维护**
+       ├── 管理与LifeSmart云端的WebSocket连接
+       ├── 处理连接断开和自动重连逻辑
+       ├── 维护心跳和网络质量检测
+       └── 协调令牌刷新和连接认证
+
+    🛡️ **故障检测与恢复机制**
+       ├── 监控各组件的健康状态
+       ├── 实现多级故障恢复策略
+       ├── 记录和分析设备异常模式
+       └── 提供故障诊断和统计接口
 
     Attributes:
-        hass: Home Assistant 核心实例
-        config_entry: 配置条目
-        client: LifeSmart 客户端实例（OAPI 或 Local TCP）
-        devices: 设备列表
-        _state_manager: WebSocket 状态管理器（仅 OAPI 模式）
-        _local_task: 本地连接任务（仅本地模式）
-        _refresh_task_unsub: 定时刷新任务取消函数
-        _concurrency_manager: 并发控制管理器
+        hass (HomeAssistant): Home Assistant核心实例，提供异步事件循环等
+        config_entry (ConfigEntry): 集成配置条目，包含用户配置和选项
+        client (Optional[LifeSmartClientBase]): 统一客户端接口 (OAPI/TCP)
+        devices (list[dict]): 全局设备列表缓存，支持过滤和实时更新
+        _state_manager (Optional[LifeSmartStateManager]): WebSocket状态管理器
+        _local_task (Optional[asyncio.Task]): 本地TCP连接任务
+        _refresh_task_unsub (Optional[Callable]): 定时刷新任务取消函数
+        _concurrency_manager (ConcurrencyManager): 企业级并发控制管理器
     """
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -120,6 +236,9 @@ class LifeSmartHub:
         try:
             # 1. 创建客户端并获取设备
             auth_response = await self._async_create_client_and_get_devices()
+
+            # 记录启动时间用于统计
+            self._startup_time = datetime.now()
 
             # 2. 注册中枢设备
             await self._async_register_hubs()
@@ -595,12 +714,33 @@ class LifeSmartHub:
         """获取并发控制统计信息（用于诊断）。"""
         return self._concurrency_manager.get_concurrency_stats()
 
+    def get_network_stats(self) -> Dict[str, Any]:
+        """获取网络状态统计信息（用于诊断和监控）。"""
+        stats = {}
+        if self._state_manager:
+            stats = self._state_manager.get_network_stats()
+
+        # 添加Hub级别的网络信息
+        stats.update(
+            {
+                "connection_type": (
+                    "cloud" if hasattr(self.client, "get_wss_url") else "local"
+                ),
+                "total_devices": len(self.devices),
+                "hub_active_since": getattr(self, "_startup_time", None),
+            }
+        )
+
+        return stats
+
 
 class LifeSmartStateManager:
     """LifeSmart WebSocket 状态管理器。
 
     负责维护与 LifeSmart 云端的 WebSocket 长连接，处理实时状态更新、
     认证、心跳维持以及连接中断后的自动重连。
+
+    现已集成网络质量检测器，支持根据网络状况自适应调整连接参数。
     """
 
     def __init__(
@@ -623,8 +763,8 @@ class LifeSmartStateManager:
             ws_url: WebSocket 连接地址
             refresh_callback: 全量刷新回调函数
             concurrency_manager: 并发控制管理器
-            retry_interval: 初始重试间隔（秒）
-            max_retries: 最大重试次数
+            retry_interval: 初始重试间隔（秒）- 现在会根据网络质量动态调整
+            max_retries: 最大重试次数 - 现在会根据网络质量动态调整
         """
         self.hass = hass
         self.config_entry = config_entry
@@ -634,6 +774,12 @@ class LifeSmartStateManager:
         self.retry_interval = retry_interval
         self.max_retries = max_retries
         self._concurrency_manager = concurrency_manager
+
+        # 初始化网络质量检测器
+        network_mode = config_entry.options.get(CONF_WS_NETWORK_MODE, "auto")
+        self._network_detector = NetworkQualityDetector(network_mode)
+
+        # WebSocket连接相关
         self._ws: Optional[aiohttp.ClientWebSocketResponse] = None
         self._connection_lock = self._concurrency_manager._connection_lock
         self._retry_count = 0
@@ -643,6 +789,18 @@ class LifeSmartStateManager:
         self._last_disconnect_time: Optional[datetime] = None
         self._token_expiry_time: int = 0
         self._token_refresh_event = asyncio.Event()
+
+        # 网络质量相关状态
+        self._current_network_quality = "normal"
+        self._last_quality_check = 0
+
+        # 获取用户自定义配置
+        self._custom_heartbeat_interval = config_entry.options.get(
+            CONF_WS_HEARTBEAT_INTERVAL
+        )
+        self._custom_max_reconnect_attempts = config_entry.options.get(
+            CONF_WS_MAX_RECONNECT_ATTEMPTS
+        )
 
     def start(self) -> None:
         """启动 WebSocket 连接和令牌刷新管理循环。"""
@@ -753,15 +911,29 @@ class LifeSmartStateManager:
             aiohttp.ClientConnectorCertificateError: SSL 证书验证失败
         """
         session = async_get_clientsession(self.hass)
+
+        # 获取当前网络质量的超时配置
+        timeout_config = self._network_detector.get_timeout_config(
+            self._current_network_quality
+        )
+        heartbeat_interval = self._get_heartbeat_interval()
+
+        _LOGGER.debug(
+            "创建WebSocket连接 - 网络质量: %s, 心跳间隔: %ds, 接收超时: %ds",
+            self._current_network_quality,
+            heartbeat_interval,
+            timeout_config["receive"],
+        )
+
         try:
             return await session.ws_connect(
                 self.ws_url,
-                heartbeat=25,
+                heartbeat=heartbeat_interval,
                 compress=15,
-                timeout=get_ws_timeout(WS_RECEIVE_TIMEOUT),
+                timeout=get_ws_timeout(timeout_config["receive"]),
             )
         except aiohttp.ClientConnectorCertificateError as e:
-            _LOGGER.error("SSL 证书验证失败，请检查服务器区域设置: %s", e)
+            _LOGGER.error("证书验证失败，请检查服务器区域设置: %s", e)
             raise
 
     async def _perform_auth(self):
@@ -770,11 +942,16 @@ class LifeSmartStateManager:
         Raises:
             PermissionError: 认证失败
         """
+        timeout_config = self._network_detector.get_timeout_config(
+            self._current_network_quality
+        )
+        auth_timeout = timeout_config["auth"]
+
         auth_payload = self.client.generate_wss_auth()
         _LOGGER.debug("发送 WebSocket 认证载荷: %s", auth_payload)
         await self._ws.send_str(auth_payload)
 
-        response = await self._ws.receive(timeout=WS_RECEIVE_TIMEOUT)
+        response = await self._ws.receive(timeout=auth_timeout)
         if response.type != aiohttp.WSMsgType.TEXT:
             raise PermissionError(f"服务器返回了非预期的响应类型: {response.type}")
 
@@ -848,15 +1025,27 @@ class LifeSmartStateManager:
             self._last_disconnect_time = datetime.now()
 
         self._retry_count += 1
-        if self._retry_count > self.max_retries:
-            _LOGGER.error("已达到最大重试次数 (%s)，将停止尝试连接。", self.max_retries)
+        max_attempts = self._get_max_reconnect_attempts()
+
+        if self._retry_count > max_attempts:
+            _LOGGER.error("已达到最大重试次数 (%s)，将停止尝试连接。", max_attempts)
             return
 
-        delay = min(self.retry_interval * (2 ** (self._retry_count - 1)), 300)
+        # 使用智能重连延迟计算
+        timeout_config = self._network_detector.get_timeout_config(
+            self._current_network_quality
+        )
+        base_delay = timeout_config["reconnect_base"]
+
+        delay = calculate_reconnect_delay(
+            self._retry_count, base_delay, self._current_network_quality
+        )
+
         _LOGGER.info(
-            "WebSocket 连接断开，将在 %.1f 秒后进行第 %d 次重试。",
+            "WebSocket 连接断开，将在 %.1f 秒后进行第 %d 次重试 (网络质量: %s)。",
             delay,
             self._retry_count,
+            self._current_network_quality,
         )
         await asyncio.sleep(delay)
 
@@ -934,14 +1123,17 @@ class LifeSmartStateManager:
         # 1. 安全关闭 WebSocket 连接，改进资源清理
         if self._ws and not self._ws.closed:
             try:
+                # 获取当前网络质量的超时配置
+                timeout_config = self._network_detector.get_timeout_config(
+                    self._current_network_quality
+                )
+                close_timeout = timeout_config["close"]
+                heartbeat_timeout = timeout_config["heartbeat"]
+
                 # 先发送关闭帧
-                await asyncio.wait_for(
-                    self._ws.close(code=1000), timeout=WS_CLOSE_TIMEOUT
-                )
+                await asyncio.wait_for(self._ws.close(code=1000), timeout=close_timeout)
                 # 等待连接完全关闭
-                await asyncio.wait_for(
-                    self._ws.wait_for_close(), timeout=WS_CLOSE_TIMEOUT
-                )
+                await asyncio.wait_for(self._ws.wait_for_close(), timeout=close_timeout)
                 _LOGGER.debug("WebSocket连接已正常关闭")
             except asyncio.TimeoutError:
                 _LOGGER.warning("WebSocket关闭超时，进行强制清理")
@@ -969,7 +1161,7 @@ class LifeSmartStateManager:
             try:
                 done, pending = await asyncio.wait_for(
                     asyncio.wait(tasks_to_cancel, return_when=asyncio.ALL_COMPLETED),
-                    timeout=WS_HEARTBEAT_TIMEOUT,
+                    timeout=heartbeat_timeout,
                 )
                 # 检查是否有任务异常完成
                 for task in done:
@@ -987,3 +1179,47 @@ class LifeSmartStateManager:
                         task.cancel()
 
         _LOGGER.info("LifeSmart 状态管理器已完全停止。")
+
+    async def _update_network_quality(self):
+        """更新网络质量检测。"""
+        try:
+            new_quality = await self._network_detector.detect_network_quality(
+                self.ws_url
+            )
+            if new_quality != self._current_network_quality:
+                _LOGGER.info(
+                    "网络质量变化: %s -> %s, 调整连接参数",
+                    self._current_network_quality,
+                    new_quality,
+                )
+                self._current_network_quality = new_quality
+                # 重置重试计数器，给新的网络环境更多机会
+                self._retry_count = max(0, self._retry_count - 5)
+        except Exception as e:
+            _LOGGER.warning("网络质量检测失败: %s", e)
+
+    def _get_max_reconnect_attempts(self) -> int:
+        """获取最大重连次数（考虑用户自定义配置）。"""
+        if self._custom_max_reconnect_attempts:
+            return self._custom_max_reconnect_attempts
+        return self._network_detector.get_max_reconnect_attempts(
+            self._current_network_quality
+        )
+
+    def _get_heartbeat_interval(self) -> int:
+        """获取心跳间隔（考虑用户自定义配置）。"""
+        if self._custom_heartbeat_interval:
+            return self._custom_heartbeat_interval
+        return self._network_detector.get_heartbeat_interval(
+            self._current_network_quality
+        )
+
+    def get_network_stats(self) -> Dict[str, Any]:
+        """获取网络质量统计信息。"""
+        return {
+            "current_quality": self._current_network_quality,
+            "detector_stats": self._network_detector.get_stats(),
+            "retry_count": self._retry_count,
+            "max_retries": self._get_max_reconnect_attempts(),
+            "heartbeat_interval": self._get_heartbeat_interval(),
+        }

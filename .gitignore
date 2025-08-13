@@ -81,6 +81,10 @@ Thumbs.db
 /.testing/mapping_tool/*.json
 /.testing/mapping_tool/*SUMMARY*.md
 
+# Backup files
+*.bak
+*.bak2
+
 # Auto-generated .gitignore files
 **/.gitignore
 # But keep the root one

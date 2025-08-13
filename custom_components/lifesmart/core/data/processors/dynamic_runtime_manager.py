@@ -13,10 +13,12 @@ LifeSmart 动态设备运行时管理器
 """
 
 import logging
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Set, Callable, List, Tuple
-import re
+from typing import Any, Dict, Optional, Set, Callable, List
+
+from custom_components.lifesmart.core.const import CMD_TYPE_ON, CMD_TYPE_OFF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -437,7 +439,10 @@ class RuntimeIODiscovery:
                     "data_type": "dimmer",
                     "conversion": "val_direct",
                     "commands": {
-                        "set_brightness": {"type": CMD_TYPE_ON, "description": "设置亮度"}
+                        "set_brightness": {
+                            "type": CMD_TYPE_ON,
+                            "description": "设置亮度",
+                        }
                     },
                 }
             )
@@ -678,7 +683,6 @@ class DynamicDeviceRuntimeManager:
 
         # 获取设备配置
         from ..config.device_specs import DEVICE_SPECS_DATA
-from custom_components.lifesmart.core.const import CMD_TYPE_ON, CMD_TYPE_OFF
 
         raw_config = DEVICE_SPECS_DATA.get(device_type, {})
 

@@ -1,17 +1,57 @@
 #!/usr/bin/env python3
 """
-纯AI文档分析器 - 零依赖版本
+纯AI文档分析器 - 增强版本 v2.0
 完全独立的NLP分析，不依赖homeassistant或其他外部模块
 基于官方文档直接进行NLP分析，实时生成对比分析结果
+
+版本 2.0 更新:
+- 集成spaCy、NLTK、Transformers等NLP库
+- 版本设备映射修复
+- 多平台设备分类器优化
+- 置信度计算算法改进
+- 语义理解和上下文分析
 """
 
+import logging
 import os
 import re
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Any, Set
+from typing import Dict, List, Any, Set, Optional
+
+# NLP库导入 - 可选依赖
+try:
+    import spacy
+    from spacy.matcher import Matcher
+
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+
+try:
+    import nltk
+    from nltk.tokenize import word_tokenize
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+
+    NLTK_AVAILABLE = True
+except ImportError:
+    NLTK_AVAILABLE = False
+
+try:
+    from transformers import pipeline, AutoTokenizer, AutoModel
+    import torch
+
+    TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    TRANSFORMERS_AVAILABLE = False
+
+# 禁用警告以保持输出清洁
+warnings.filterwarnings("ignore")
+logging.getLogger().setLevel(logging.WARNING)
 
 
 class PlatformType(Enum):
@@ -60,8 +100,347 @@ class DeviceAnalysisResult:
     analysis_notes: List[str]
 
 
+class NLPAnalysisConfig:
+    """增强NLP分析配置"""
+
+    enable_semantic_analysis: bool = True
+    enable_context_analysis: bool = True
+    enable_version_device_processing: bool = True
+    confidence_threshold: float = 0.15  # 🔧 优化：适度提升阈值过滤低质量匹配
+    debug_mode: bool = True  # 🔧 启用调试模式以诊断SL_OE_DE解析问题
+    enhanced_parsing: bool = True  # 🔧 新增：启用增强解析模式
+    aggressive_matching: bool = True  # 🔧 新增：启用积极匹配模式
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+
+class VersionedDeviceProcessor:
+    """版本设备处理器 - 解决SL_SW_NS2, SL_OL_W等版本设备映射问题"""
+
+    # 版本设备映射规则 - 基于官方文档的正确映射 - 修复版本
+    VERSION_MAPPING_RULES = {
+        # 🔧 重要修正：大部分设备应该保持原名，不需要版本映射
+        # 只有真正的版本演进设备才需要映射
+        # 实际需要版本映射的设备（极少数）
+        "SL_LI_WW_V1": "SL_LI_WW",  # 智能灯泡V1 -> 基础类型
+        "SL_LI_WW_V2": "SL_LI_WW",  # 智能灯泡V2 -> 基础类型
+        "SL_SW_DM1_V1": "SL_SW_DM1",  # 调光开关V1 -> 基础类型
+        "SL_SW_DM1_V2": "SL_SW_DM1",  # 调光开关V2 -> 基础类型
+        # 🔧 新增：更多版本设备映射
+        "SL_DF_KP_V1": "SL_DF_KP",  # 门铃版本设备
+        "SL_DF_KP_V2": "SL_DF_KP",  # 门铃版本设备
+        # 其他独立设备类型都保持原名，不映射
+        # "SL_SW_NS1": "SL_SW_NS1",  # 保持原名 - 注释掉，让其通过默认逻辑处理
+        # "SL_SW_NS2": "SL_SW_NS2",  # 保持原名
+        # "SL_OL_W": "SL_OL_W",      # 保持原名
+    }
+
+    # 版本设备检测模式 - 多种方式支持
+    VERSION_DETECTION_PATTERNS = [
+        r"([A-Z][A-Z0-9_]+)_V(\d+)$",  # 标准版本模式: SL_SW_DM1_V1
+        r"([A-Z][A-Z0-9_]+)(\d)$",  # 数字后缀模式: SL_SW_NS2
+        r"([A-Z][A-Z0-9_]+)([A-Z]\d*)$",  # 字母数字模式: SL_OL_W, SL_SC_A2
+        # 🔧 新增：更多检测模式
+        r"([A-Z][A-Z0-9_]+)_(V\d+)$",  # 版本标记模式: SL_XX_YY_V1
+        r"([A-Z][A-Z0-9_]+)_([A-Z]+\d*)$",  # 字母+数字后缀: SL_XX_YY_ABC1
+    ]
+
+    @classmethod
+    def extract_base_device_type(cls, device_name: str) -> str:
+        """
+        提取基础设备类型
+
+        Args:
+            device_name: 设备名称
+
+        Returns:
+            基础设备类型
+        """
+        if not device_name:
+            return device_name
+
+        # 直接映射检查
+        if device_name in cls.VERSION_MAPPING_RULES:
+            return cls.VERSION_MAPPING_RULES[device_name]
+
+        # 模式匹配检查
+        for pattern in cls.VERSION_DETECTION_PATTERNS:
+            match = re.match(pattern, device_name)
+            if match:
+                base_type = match.group(1)
+                # 特殊情况处理
+                if base_type.endswith("_") and len(match.groups()) > 1:
+                    # 处理 SL_SW_NS2 -> SL_SW_NS 的情况
+                    return base_type.rstrip("_")
+                return base_type
+
+        return device_name
+
+    @classmethod
+    def is_version_device(cls, device_name: str) -> bool:
+        """
+        检查是否为版本设备
+
+        Args:
+            device_name: 设备名称
+
+        Returns:
+            是否为版本设备
+        """
+        if device_name in cls.VERSION_MAPPING_RULES:
+            return True
+
+        for pattern in cls.VERSION_DETECTION_PATTERNS:
+            if re.match(pattern, device_name):
+                return True
+
+        return False
+
+    @classmethod
+    def get_version_info(cls, device_name: str) -> Dict[str, str]:
+        """
+        获取版本设备信息
+
+        Args:
+            device_name: 设备名称
+
+        Returns:
+            版本信息字典
+        """
+        base_type = cls.extract_base_device_type(device_name)
+        version = "unknown"
+
+        # 提取版本号
+        for pattern in cls.VERSION_DETECTION_PATTERNS:
+            match = re.match(pattern, device_name)
+            if match and len(match.groups()) > 1:
+                version = match.group(2)
+                break
+
+        return {
+            "original_type": device_name,
+            "base_type": base_type,
+            "version": version,
+            "is_version_device": cls.is_version_device(device_name),
+        }
+
+
+class SemanticAnalyzer:
+    """语义分析器 - 使用NLP库进行语义理解"""
+
+    def __init__(self):
+        self.nlp_model = None
+        self.matcher = None
+        self.lemmatizer = None
+        self.classifier = None
+        self._init_nlp_models()
+
+    def _init_nlp_models(self):
+        """初始化NLP模型"""
+        # spaCy初始化
+        if SPACY_AVAILABLE:
+            try:
+                # 优先尝试中文模型
+                try:
+                    self.nlp_model = spacy.load("zh_core_web_sm")
+                except OSError:
+                    # 如果没有中文模型，使用英文模型
+                    try:
+                        self.nlp_model = spacy.load("en_core_web_sm")
+                    except OSError:
+                        # 如果都没有，使用空模型
+                        self.nlp_model = spacy.blank("zh")
+
+                self.matcher = Matcher(self.nlp_model.vocab) if self.nlp_model else None
+                self._setup_spacy_patterns()
+            except Exception as e:
+                print(f"[WARN] spaCy初始化失败: {e}")
+
+        # NLTK初始化
+        if NLTK_AVAILABLE:
+            try:
+                # 下载必要的NLTK数据
+                try:
+                    nltk.data.find("tokenizers/punkt")
+                except LookupError:
+                    nltk.download("punkt", quiet=True)
+
+                try:
+                    nltk.data.find("corpora/stopwords")
+                except LookupError:
+                    nltk.download("stopwords", quiet=True)
+
+                try:
+                    nltk.data.find("corpora/wordnet")
+                except LookupError:
+                    nltk.download("wordnet", quiet=True)
+
+                self.lemmatizer = WordNetLemmatizer()
+            except Exception as e:
+                print(f"[WARN] NLTK初始化失败: {e}")
+
+        # Transformers初始化
+        if TRANSFORMERS_AVAILABLE:
+            try:
+                # 使用轻量级模型进行文本分类
+                self.classifier = pipeline(
+                    "text-classification",
+                    model="distilbert-base-uncased",
+                    device=-1,  # 使用CPU以提高兼容性
+                )
+            except Exception as e:
+                print(f"[WARN] Transformers初始化失败: {e}")
+
+    def _setup_spacy_patterns(self):
+        """设置spaCy模式匹配"""
+        if not self.matcher:
+            return
+
+        # 定义平台相关模式
+        platform_patterns = {
+            "SWITCH_PATTERN": [
+                [
+                    {"LOWER": {"IN": ["开关", "控制", "打开", "关闭"]}},
+                    {"LOWER": {"IN": ["l1", "l2", "l3", "p1", "p2", "p3"]}},
+                ],
+                [{"TEXT": {"REGEX": "^(L|P)\\d+$"}}],
+            ],
+            "SENSOR_PATTERN": [
+                [
+                    {"LOWER": {"IN": ["温度", "湿度", "电量", "电压", "功率"]}},
+                    {"LOWER": {"IN": ["t", "h", "v", "pm", "z"]}},
+                ],
+                [{"TEXT": {"REGEX": "^[THV]$"}}],
+            ],
+            "LIGHT_PATTERN": [
+                [
+                    {"LOWER": {"IN": ["rgb", "rgbw", "灯光", "亮度", "颜色"]}},
+                    {"LOWER": {"IN": ["bright", "dark", "dyn"]}},
+                ]
+            ],
+        }
+
+        for pattern_name, patterns in platform_patterns.items():
+            self.matcher.add(pattern_name, patterns)
+
+    def extract_semantic_features(self, text: str) -> Dict[str, Any]:
+        """
+        提取语义特征
+
+        Args:
+            text: 要分析的文本
+
+        Returns:
+            语义特征字典
+        """
+        features = {
+            "tokens": [],
+            "lemmas": [],
+            "entities": [],
+            "sentiment": None,
+            "key_phrases": [],
+            "technical_terms": [],
+        }
+
+        if not text:
+            return features
+
+        # spaCy分析
+        if self.nlp_model:
+            doc = self.nlp_model(text)
+            features["tokens"] = [token.text for token in doc]
+            features["lemmas"] = [token.lemma_ for token in doc]
+            features["entities"] = [(ent.text, ent.label_) for ent in doc.ents]
+
+            # 匹配模式
+            if self.matcher:
+                matches = self.matcher(doc)
+                features["key_phrases"] = [
+                    doc[start:end].text for match_id, start, end in matches
+                ]
+
+        # NLTK分析
+        if NLTK_AVAILABLE and self.lemmatizer:
+            try:
+                tokens = word_tokenize(text.lower())
+                stop_words = set(stopwords.words("english"))
+                filtered_tokens = [
+                    self.lemmatizer.lemmatize(token)
+                    for token in tokens
+                    if token not in stop_words
+                ]
+                features["filtered_tokens"] = filtered_tokens
+            except Exception:
+                pass
+
+        # Transformers情感分析
+        if self.classifier:
+            try:
+                result = self.classifier(text)
+                features["sentiment"] = result[0] if result else None
+            except Exception:
+                pass
+
+        # 技术术语检测
+        technical_patterns = [
+            r"\b(RGB|RGBW|DYN|MODE|CFG|tT|tF)\b",
+            r"\b[LPTHMVZ]\d*\b",
+            r"\b(开关|控制|传感器|灯光|窗帘|空调)\b",
+        ]
+
+        for pattern in technical_patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            features["technical_terms"].extend(matches)
+
+        return features
+
+    def calculate_semantic_similarity(self, text1: str, text2: str) -> float:
+        """
+        计算语义相似度
+
+        Args:
+            text1: 文本1
+            text2: 文本2
+
+        Returns:
+            相似度分数 (0-1)
+        """
+        if not self.nlp_model or not text1 or not text2:
+            return 0.0
+
+        try:
+            doc1 = self.nlp_model(text1)
+            doc2 = self.nlp_model(text2)
+            return doc1.similarity(doc2)
+        except Exception:
+            return 0.0
+
+
 class IOPlatformClassifier:
-    """IO口平台分类器 - 使用规则匹配进行分类"""
+    """IO口平台分类器 v2.0 - 集成版本设备处理和语义分析"""
+
+    def __init__(self, config: Optional[NLPAnalysisConfig] = None):
+        """
+        初始化分类器
+
+        Args:
+            config: NLP分析配置
+        """
+        self.config = config or NLPAnalysisConfig()
+        self.version_processor = VersionedDeviceProcessor()
+        self.semantic_analyzer = None
+
+        # 根据配置初始化语义分析器
+        if self.config.enable_semantic_analysis:
+            try:
+                self.semantic_analyzer = SemanticAnalyzer()
+                print("[OK] 语义分析器初始化成功")
+            except Exception as e:
+                print(f"[WARN] 语义分析器初始化失败: {e}")
+                self.semantic_analyzer = None
 
     # 设备类型优先级映射 - 基于设备名称前缀
     DEVICE_TYPE_PRIORITIES = {
@@ -70,11 +449,22 @@ class IOPlatformClassifier:
         "SL_SC_": {"sensor": 0.95, "binary_sensor": 0.8},  # 传感器设备
         "SL_LK_": {"lock": 0.98, "sensor": 0.85},  # 智能锁设备 - 添加sensor支持
         "SL_WH_": {"sensor": 0.95, "binary_sensor": 0.8},  # 水传感器设备
-        "SL_P_": {"cover": 0.95},  # 窗帘设备
+        "SL_P_": {"switch": 0.95},  # ✅ 修复：开关控制器系列 (而非窗帘)
         "SL_AC_": {"climate": 0.98},  # 空调设备
-        "SL_OL_": {"light": 0.98},  # 灯光设备
+        # ✅ 修复SL_OL_设备配置 - 应该是开关+灯光而不是纯灯光
+        "SL_OL_": {"switch": 0.95, "light": 0.9},  # 入墙插座 - 开关+灯光
         "SL_RGBW_": {"light": 0.98},  # RGBW灯光设备
         "SL_LI_": {"light": 0.98},  # 智能灯设备
+        # ✅ 关键修复：添加缺失的具体设备类型映射
+        "SL_LI_RGBW": {"light": 0.98},  # 🔧 修复：RGBW灯光设备直接映射
+        "SL_CT_RGBW": {"light": 0.98},  # 🔧 新增：RGBW灯带设备直接映射
+        "SL_CT_": {"light": 0.98},  # 🔧 新增：灯带系列设备
+        "SL_OE_": {"switch": 0.95, "sensor": 0.9},  # 🔧 新增：计量插座系列
+        # ✅ 添加缺失的设备类型优先级 - 修复版本设备支持
+        "SL_SW_NS": {"switch": 0.95, "light": 0.9},  # 新时代开关系列基础类型
+        "SL_SW_NS2": {"switch": 0.95, "light": 0.9},  # 新时代开关V2直接映射
+        "SL_P_SW": {"switch": 0.95},  # 九路开关控制器直接映射
+        "SL_OL_W": {"switch": 0.95, "light": 0.9},  # 入墙插座白光版直接映射
     }
 
     # 平台识别规则：关键词 -> (平台, 置信度)
@@ -89,11 +479,16 @@ class IOPlatformClassifier:
                 "L1",
                 "L2",
                 "L3",
+                # ✅ 添加P系列开关关键词 - 解决SL_P_SW识别问题
                 "P1",
                 "P2",
                 "P3",
                 "P4",
                 "P5",
+                "P6",
+                "P7",
+                "P8",
+                "P9",
                 "O",
                 "Ctrl1",
                 "Ctrl2",
@@ -217,8 +612,16 @@ class IOPlatformClassifier:
                 "DYN",
                 "指示灯",
                 "夜灯",
+                # ✅ 增强dark/bright匹配 - 解决开关指示灯识别
                 "bright",
                 "dark",
+                "dark1",
+                "dark2",
+                "dark3",
+                "bright1",
+                "bright2",
+                "bright3",
+                "指示灯亮度",
                 "LED",
             ],
             "io_names": [
@@ -323,18 +726,60 @@ class IOPlatformClassifier:
         },
     }
 
-    @classmethod
-    def classify_io_platform(
-        cls,
+    def classify_io_platform(  # 增强版本 - 集成版本设备处理和语义分析
+        self,
         io_name: str,
         io_description: str,
         rw_permission: str,
         device_name: str = "",
     ) -> List[IOAnalysisResult]:
-        """分类IO口到相应平台"""
-        results = []
+        """
+        增强版IO口平台分类
 
-        for platform_type, rules in cls.PLATFORM_RULES.items():
+        新增功能:
+        - 版本设备自动映射处理
+        - 语义分析增强置信度计算
+        - 上下文理解改进
+
+        Args:
+            io_name: IO口名称
+            io_description: IO口描述
+            rw_permission: 读写权限
+            device_name: 设备名称
+
+        Returns:
+            分类结果列表
+        """
+        # 版本设备处理 - 首先检查是否为版本设备
+        if self.config.enable_version_device_processing and device_name:
+            version_info = self.version_processor.get_version_info(device_name)
+            if version_info["is_version_device"]:
+                base_device_name = version_info["base_type"]
+                if self.config.debug_mode:
+                    try:
+                        print(f"🔍 版本设备检测: {device_name} -> {base_device_name}")
+                    except UnicodeEncodeError:
+                        print(
+                            f"[DEBUG] 版本设备检测: {device_name} -> {base_device_name}"
+                        )
+                # 使用基础设备类型进行分类以获得正确的优先级
+                device_name = base_device_name
+
+        results = []
+        semantic_features = None
+
+        # 语义特征提取
+        if self.semantic_analyzer and self.config.enable_semantic_analysis:
+            text_to_analyze = f"{io_name} {io_description}"
+            semantic_features = self.semantic_analyzer.extract_semantic_features(
+                text_to_analyze
+            )
+            if self.config.debug_mode:
+                print(
+                    f"\ud83e\udde0 语义特征: {semantic_features.get('technical_terms', [])}"
+                )
+
+        for platform_type, rules in self.PLATFORM_RULES.items():
             # 检查设备类型排除规则
             excluded_types = rules.get("excluded_device_types", [])
             if any(
@@ -344,7 +789,9 @@ class IOPlatformClassifier:
                 continue
 
             # 检查必需关键词 - 至少匹配一个
-            required_keywords = rules.get("required_keywords", [])
+            required_keywords = rules.get("required_keywords", []) or rules.get(
+                "keywords", []
+            )
             if required_keywords:
                 has_required = any(
                     keyword in io_name or keyword in io_description
@@ -363,13 +810,30 @@ class IOPlatformClassifier:
                 if has_excluded:
                     continue
 
-            confidence = cls._calculate_confidence(
-                io_name, io_description, rw_permission, rules, device_name
+            # 增强版置信度计算 - 集成版本设备处理和语义分析
+            confidence = self._calculate_enhanced_confidence(
+                io_name,
+                io_description,
+                rw_permission,
+                rules,
+                device_name,
+                semantic_features,
             )
 
-            if confidence > 0.25:  # 提高最低置信度阈值，减少噪音
-                reasoning = cls._generate_reasoning(
-                    io_name, io_description, rw_permission, rules, confidence
+            # 调试输出 - 帮助诊断SL_LI_RGBW等设备问题
+            if self.config.debug_mode and device_name and "LI_RGBW" in device_name:
+                print(
+                    f"🔍 调试 {device_name}: IO={io_name}, 平台={platform_type.value}, 置信度={confidence:.3f}"
+                )
+
+            if confidence > self.config.confidence_threshold:
+                reasoning = self._generate_enhanced_reasoning(
+                    io_name,
+                    io_description,
+                    rw_permission,
+                    rules,
+                    confidence,
+                    semantic_features,
                 )
 
                 results.append(
@@ -387,12 +851,337 @@ class IOPlatformClassifier:
         results.sort(key=lambda x: x.confidence, reverse=True)
         return results
 
+    def _calculate_enhanced_confidence(
+        self,
+        io_name: str,
+        io_description: str,
+        rw_permission: str,
+        rules: Dict,
+        device_name: str = "",
+        semantic_features: Optional[Dict] = None,
+    ) -> float:
+        """
+        增强版置信度计算 - 集成语义分析
+
+        改进点:
+        - 语义相似度增强
+        - 技术术语识别
+        - 上下文理解
+        - 版本设备优先级处理
+        """
+        confidence = 0.0
+        base_confidence = rules["confidence_base"]
+
+        # 1. 基础关键词匹配 - 增强版，避免短关键词误匹配
+        keyword_matches = 0
+        keyword_weight = 0.0
+        total_keywords = len(rules["keywords"])
+
+        for keyword in rules["keywords"]:
+            match_strength = self._calculate_keyword_match_strength(
+                keyword, io_name, io_description
+            )
+            if match_strength > 0:
+                keyword_matches += 1
+                keyword_weight += match_strength
+
+                # 🔧 新增：积极匹配模式
+                if self.config.aggressive_matching and match_strength > 0.9:
+                    keyword_weight += 0.1  # 高质量匹配额外奖励
+
+        if keyword_matches > 0:
+            # 调整关键词匹配权重 - 更精确的算法
+            avg_match_strength = keyword_weight / keyword_matches
+            keyword_coverage = min(keyword_matches / total_keywords, 1.0)
+
+            # 🔧 改进：综合考虑匹配强度和覆盖率
+            keyword_contribution = (
+                base_confidence
+                * 0.65
+                * avg_match_strength
+                * (0.5 + keyword_coverage * 0.5)
+            )
+            confidence += keyword_contribution
+
+            # 调试输出
+            if self.config.debug_mode and device_name and "LI_RGBW" in device_name:
+                print(
+                    f"🔍 关键词匹配: {keyword_matches}/{total_keywords}, 平均强度: {avg_match_strength:.3f}, 贡献: {keyword_contribution:.3f}"
+                )
+
+        # 2. IO名称匹配
+        name_matches = sum(
+            1 for name_pattern in rules["io_names"] if name_pattern in io_name
+        )
+        if name_matches > 0:
+            confidence += (
+                base_confidence * 0.3 * min(name_matches / len(rules["io_names"]), 1.0)
+            )
+
+        # 3. 描述匹配
+        desc_matches = sum(
+            1
+            for desc_pattern in rules["descriptions"]
+            if desc_pattern.lower() in io_description.lower()
+        )
+        if desc_matches > 0:
+            confidence += (
+                base_confidence
+                * 0.2
+                * min(desc_matches / len(rules["descriptions"]), 1.0)
+            )
+
+        # 4. 读写权限匹配
+        if (
+            rules["rw_required"] == rw_permission
+            or rules["rw_required"] in rw_permission
+        ):
+            confidence += base_confidence * 0.15
+
+        # 5. 设备类型一致性调整 - 增强版本设备支持
+        if device_name:
+            device_type_priorities = self._get_device_type_priority(device_name)
+            platform_name = self._get_platform_name_from_rules(rules)
+
+            # 调试输出 - 帮助诊断设备优先级问题
+            if self.config.debug_mode and device_name and "LI_RGBW" in device_name:
+                print(
+                    f"🔍 设备优先级调试 {device_name}: 优先级={device_type_priorities}, 平台={platform_name}"
+                )
+
+            if platform_name in device_type_priorities:
+                priority_boost = device_type_priorities[platform_name]
+
+                # 🔧 改进：更精确的优先级调整算法
+                device_contribution = (1 - confidence) * priority_boost * 0.4
+                confidence = confidence * priority_boost + device_contribution
+
+                if self.config.debug_mode and device_name and "LI_RGBW" in device_name:
+                    print(
+                        f"🔍 设备优先级提升: {priority_boost}, 贡献: {device_contribution:.3f}"
+                    )
+            elif device_type_priorities:
+                # 适度降低，支持多平台设备
+                confidence *= 0.75  # 不再过度惩罚
+
+        # 6. 语义分析增强
+        if semantic_features and self.semantic_analyzer:
+            semantic_boost = self._calculate_semantic_boost(semantic_features, rules)
+            confidence += semantic_boost
+
+        return min(confidence, 1.0)
+
+    def _calculate_keyword_match_strength(
+        self, keyword: str, io_name: str, io_description: str
+    ) -> float:
+        """
+        计算关键词匹配强度 - 修复版本
+
+        改进:
+        - 短关键词更宽松的匹配规则
+        - 长关键词模糊匹配
+        - 位置权重考虑
+        """
+        if not keyword:
+            return 0.0
+
+        # 🔧 优化：对短关键词（≤3字符）使用更宽松的匹配规则
+        if len(keyword) <= 3:
+            # 精确匹配
+            if keyword == io_name or keyword == io_description:
+                return 1.0
+            # 大小写不敏感精确匹配
+            elif keyword.upper() == io_name.upper():
+                return 0.95
+            # 包含匹配（针对L1, L2等关键词）- 关键修复
+            elif (
+                keyword.upper() in io_name.upper()
+                or keyword.upper() in io_description.upper()
+            ):
+                # 🔧 新增：计算匹配上下文的质量
+                match_quality = self._assess_match_quality(
+                    keyword, io_name, io_description
+                )
+                return 0.7 + (match_quality * 0.2)  # 0.7-0.9范围
+            else:
+                return 0.0
+        else:
+            # 长关键词使用模糊匹配
+            keyword_lower = keyword.lower()
+            if keyword_lower in io_name.lower():
+                # IO名称中的匹配权重更高
+                return 1.0
+            elif keyword_lower in io_description.lower():
+                # 描述中的匹配权重略低
+                return 0.8
+            else:
+                return 0.0
+
+    def _assess_match_quality(
+        self, keyword: str, io_name: str, io_description: str
+    ) -> float:
+        """🔧 新增：评估匹配质量"""
+        quality = 0.5  # 基础质量
+
+        # 完整单词匹配较好
+        if f" {keyword.upper()} " in f" {io_name.upper()} ":
+            quality += 0.3
+
+        # 开始位置匹配较好
+        if io_name.upper().startswith(keyword.upper()):
+            quality += 0.2
+
+        # 描述中的上下文相关性
+        if keyword.upper() in io_description.upper():
+            quality += 0.1
+
+        return min(quality, 1.0)
+
+    def _calculate_semantic_boost(self, semantic_features: Dict, rules: Dict) -> float:
+        """
+        计算语义分析增强的置信度提升
+
+        使用NLP特征：
+        - 技术术语匹配
+        - 关键短语识别
+        - 情感分析（如果可用）
+        """
+        boost = 0.0
+
+        # 技术术语匹配
+        technical_terms = semantic_features.get("technical_terms", [])
+        rule_keywords = rules.get("keywords", [])
+
+        # 计算技术术语交集
+        common_terms = set(term.upper() for term in technical_terms) & set(
+            kw.upper() for kw in rule_keywords
+        )
+        if common_terms:
+            boost += len(common_terms) * 0.05  # 每个匹配的技术术语增加置信度
+
+        # 关键短语匹配
+        key_phrases = semantic_features.get("key_phrases", [])
+        if key_phrases:
+            boost += len(key_phrases) * 0.03
+
+        # 情感分析（如果可用）
+        sentiment = semantic_features.get("sentiment")
+        if sentiment and sentiment.get("score", 0) > 0.8:
+            boost += 0.02  # 高置信度情感小幅提升
+
+        return min(boost, 0.2)  # 限制最大提升幅度
+
+    def _generate_enhanced_reasoning(
+        self,
+        io_name: str,
+        io_description: str,
+        rw_permission: str,
+        rules: Dict,
+        confidence: float,
+        semantic_features: Optional[Dict] = None,
+    ) -> str:
+        """
+        生成增强版分类推理说明
+
+        新增:
+        - 语义分析结果
+        - 技术术语识别
+        - 置信度解释
+        """
+        reasons = []
+
+        # 关键词匹配原因
+        matched_keywords = [
+            kw
+            for kw in rules["keywords"]
+            if self._calculate_keyword_match_strength(kw, io_name, io_description) > 0
+        ]
+        if matched_keywords:
+            reasons.append(f"匹配关键词: {', '.join(matched_keywords[:3])}")
+
+        # IO名称匹配
+        matched_names = [name for name in rules["io_names"] if name in io_name]
+        if matched_names:
+            reasons.append(f"匹配IO名称: {', '.join(matched_names[:2])}")
+
+        # 读写权限
+        if rules["rw_required"] == rw_permission:
+            reasons.append(f"读写权限匹配: {rw_permission}")
+
+        # 语义分析结果
+        if semantic_features:
+            technical_terms = semantic_features.get("technical_terms", [])
+            if technical_terms:
+                reasons.append(f"技术术语: {', '.join(set(technical_terms[:2]))}")
+
+            key_phrases = semantic_features.get("key_phrases", [])
+            if key_phrases:
+                reasons.append(f"关键短语: {', '.join(key_phrases[:2])}")
+
+        return f"置信度{confidence:.3f}: " + " | ".join(reasons)
+
+    def _get_platform_name_from_rules(self, rules: Dict) -> str:
+        """
+        从规则中获取平台名称
+
+        Args:
+            rules: 平台规则字典
+
+        Returns:
+            平台名称字符串
+        """
+        # 从 PLATFORM_RULES 中查找匹配的平台类型
+        for platform_type, platform_rules in self.PLATFORM_RULES.items():
+            if platform_rules == rules:
+                return platform_type.value
+        return "unknown"
+
+    def _get_device_type_priority(self, device_name: str) -> Dict[str, float]:
+        """
+        基于设备名称获取平台优先级 - 优化版本
+
+        改进点:
+        - 精确匹配优先
+        - 按长度排序前缀匹配，优先匹配更具体的前缀
+        - 修复SL_LI_RGBW等复合设备名称匹配问题
+
+        Args:
+            device_name: 设备名称
+
+        Returns:
+            平台优先级字典
+        """
+        # 1. 精确匹配优先 - 修复SL_LI_RGBW等具体设备
+        if device_name in self.DEVICE_TYPE_PRIORITIES:
+            return self.DEVICE_TYPE_PRIORITIES[device_name]
+
+        # 2. 前缀匹配 - 按长度排序，优先匹配更具体的前缀
+        sorted_prefixes = sorted(
+            self.DEVICE_TYPE_PRIORITIES.keys(), key=len, reverse=True  # 长前缀优先
+        )
+
+        for prefix in sorted_prefixes:
+            if device_name.startswith(prefix):
+                return self.DEVICE_TYPE_PRIORITIES[prefix]
+
+        return {}
+
     @classmethod
     def _get_device_type_priority(cls, device_name: str) -> Dict[str, float]:
-        """基于设备名称获取平台优先级"""
-        for prefix, priorities in cls.DEVICE_TYPE_PRIORITIES.items():
+        """基于设备名称获取平台优先级 - 类方法版本"""
+        # 1. 精确匹配优先
+        if device_name in cls.DEVICE_TYPE_PRIORITIES:
+            return cls.DEVICE_TYPE_PRIORITIES[device_name]
+
+        # 2. 前缀匹配 - 按长度排序，优先匹配更具体的前缀
+        sorted_prefixes = sorted(
+            cls.DEVICE_TYPE_PRIORITIES.keys(), key=len, reverse=True
+        )
+
+        for prefix in sorted_prefixes:
             if device_name.startswith(prefix):
-                return priorities
+                return cls.DEVICE_TYPE_PRIORITIES[prefix]
+
         return {}
 
     @classmethod
@@ -653,22 +1442,54 @@ class DocumentBasedComparisonAnalyzer:
     def __init__(self):
         # 不依赖任何外部模块，直接实现简单的文档解析
         self.docs_file_path = self._get_docs_path()
+        # 🔧 新增：使用增强配置
+        self.config = NLPAnalysisConfig(
+            enhanced_parsing=True, aggressive_matching=True, debug_mode=True
+        )
 
     def _get_docs_path(self) -> str:
         """获取官方文档路径"""
-        return os.path.join(
+        docs_path = os.path.join(
             os.path.dirname(
                 os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
             ),
             "docs",
             "LifeSmart 智慧设备规格属性说明.md",
         )
+        print(f"🔍 [DEBUG] 文档路径计算: {docs_path}")
+        print(f"🔍 [DEBUG] 文档存在检查: {os.path.exists(docs_path)}")
+        return docs_path
 
     def _is_valid_device_name(self, name: str) -> bool:
         """检查设备名称是否有效"""
         if not name or len(name) < 3:
             return False
         return bool(re.match(r"^[A-Z][A-Z0-9_:]+$", name))
+
+    def _is_valid_device_name_enhanced(self, name: str) -> bool:
+        """🔧 增强版设备名称有效性检查"""
+        if not name or len(name) < 3:
+            return False
+
+        # 移除空白字符
+        name = name.strip()
+
+        # 基础格式检查：必须以字母开头，包含下划线分隔
+        if not re.match(r"^[A-Z][A-Z0-9_:]+$", name):
+            return False
+
+        # 长度检查：合理的设备名称长度
+        if len(name) < 4 or len(name) > 20:
+            return False
+
+        # 🔧 特殊设备名称白名单检查
+        known_prefixes = ["SL_", "OD_", "V_", "MSL_", "ELIQ_", "LSSS"]
+
+        if any(name.startswith(prefix) for prefix in known_prefixes):
+            return True
+
+        # 如果不在白名单中，进行更严格的检查
+        return "_" in name and len(name.split("_")) >= 2
 
     def analyze_and_compare(
         self, existing_allocation: Dict[str, Any]
@@ -683,7 +1504,7 @@ class DocumentBasedComparisonAnalyzer:
 
         try:
             doc_devices = self._parse_official_document()
-            print(f"✅ 从官方文档提取到 {len(doc_devices)} 个设备")
+            print(f"[OK] 从官方文档提取到 {len(doc_devices)} 个设备")
 
             if doc_devices:
                 print("📋 文档设备示例:")
@@ -708,10 +1529,10 @@ class DocumentBasedComparisonAnalyzer:
                     )
                     ai_analysis_results[device_name] = analysis_result
                 except Exception as e:
-                    print(f"⚠️ 设备{device_name}分析失败: {e}")
+                    print(f"[WARN] 设备{device_name}分析失败: {e}")
                     continue
 
-        print(f"✅ NLP分析了 {len(ai_analysis_results)} 个设备")
+        print(f"[OK] NLP分析了 {len(ai_analysis_results)} 个设备")
 
         # 3. 对比分析
         print("⚖️ 执行NLP分析结果与现有配置的对比...")
@@ -725,11 +1546,11 @@ class DocumentBasedComparisonAnalyzer:
             comparison_results, existing_allocation, ai_analysis_results
         )
 
-        print("✅ 基于官方文档的零依赖分析完成")
+        print("[OK] 基于官方文档的零依赖分析完成")
         return final_results
 
     def _parse_official_document(self) -> Dict[str, List[Dict]]:
-        """解析官方文档 - 简化版实现"""
+        """解析官方文档 - 增强调试版本"""
         if not os.path.exists(self.docs_file_path):
             print(f"❌ 官方文档文件不存在: {self.docs_file_path}")
             return {}
@@ -741,14 +1562,25 @@ class DocumentBasedComparisonAnalyzer:
             print(f"❌ 读取官方文档失败: {e}")
             return {}
 
+        print(f"🔍 [DEBUG] 文档总长度: {len(content)} 字符")
+
         device_ios = {}
         lines = content.split("\n")
         current_devices = []
         table_lines_found = 0
+        target_device_found = False
+
+        print(f"🔍 [DEBUG] 文档总行数: {len(lines)}")
 
         # 简单的表格解析
         for line_no, line in enumerate(lines, 1):
+            original_line = line
             line = line.strip()
+
+            # 专门追踪SL_OE_DE相关行
+            if "SL_OE_DE" in line:
+                print(f"🎯 [DEBUG] 发现SL_OE_DE行 {line_no}: {line}")
+                target_device_found = True
 
             # 跳过第三方设备部分（标题行）- 改进检测逻辑
             if ("第三方设备" in line or "Third-party" in line.lower()) and (
@@ -759,12 +1591,20 @@ class DocumentBasedComparisonAnalyzer:
 
             # 解析表格行
             if line.startswith("|") and "|" in line[1:-1]:
+                (
+                    print(f"🔍 [DEBUG] 表格行 {line_no}: {line[:100]}...")
+                    if len(line) > 100
+                    else print(f"🔍 [DEBUG] 表格行 {line_no}: {line}")
+                )
+
                 # 跳过分隔符行（包含----）
                 if "----" in line:
+                    print(f"🔍 [DEBUG] 跳过分隔符行 {line_no}")
                     continue
 
                 table_lines_found += 1
                 columns = [col.strip() for col in line.split("|")[1:-1]]
+                print(f"🔍 [DEBUG] 列数: {len(columns)}, 列内容: {columns}")
 
                 # 跳过表头行 - 改进识别逻辑
                 if len(columns) >= 4 and (
@@ -775,7 +1615,7 @@ class DocumentBasedComparisonAnalyzer:
                     or "IO口" in columns[1]
                     or "Port" in columns[1].lower()
                 ):
-                    print(f"📝 跳过表头行 {line_no}: {columns[0][:20]}...")
+                    print(f"🔍 [DEBUG] 跳过表头行 {line_no}: {columns[0][:20]}...")
                     continue
 
                 if len(columns) >= 5:
@@ -785,26 +1625,75 @@ class DocumentBasedComparisonAnalyzer:
                     description = columns[3]
                     permissions = columns[4]
 
-                    # 提取设备名称 - 支持多行设备名
+                    print(
+                        f"🔍 [DEBUG] 设备列: '{device_col}', IO端口: '{io_port}', IO名称: '{io_name}'"
+                    )
+
+                    # 提取设备名称 - 支持多行设备名和复合设备名
                     if device_col:
-                        # 处理HTML换行标签和多个设备名
-                        device_names_str = device_col.replace("<br/>", "\n")
-                        device_names = device_names_str.split("\n")
+                        print(f"🔍 [DEBUG] 原始设备列内容: {repr(device_col)}")
+
+                        # 处理HTML换行标签和多个设备名 - 增强版
+                        device_names_str = device_col.replace("<br/>", ",").replace(
+                            "<br>", ","
+                        )
+                        print(f"🔍 [DEBUG] HTML处理后: {repr(device_names_str)}")
+
+                        # 使用更强的分割符支持
+                        device_candidates = re.split(r"[,，\n]", device_names_str)
+                        print(f"🔍 [DEBUG] 分割候选: {device_candidates}")
+
                         extracted_devices = []
 
-                        for device_line in device_names:
-                            # 增强设备名称提取，支持多种格式
+                        for device_candidate in device_candidates:
+                            device_candidate = device_candidate.strip()
+                            if not device_candidate:
+                                continue
+
+                            print(f"🔍 [DEBUG] 处理候选设备: {repr(device_candidate)}")
+
+                            # 🔧 增强设备名称提取，支持多种格式 - 修复SL_LI_RGBW识别
                             device_matches = re.findall(
-                                r"`([A-Z][A-Z0-9_:]+)`|\*\*([A-Z][A-Z0-9_:]+)\*\*|([A-Z][A-Z0-9_:]+)(?=\s|$)",
-                                device_line,
+                                r"`([A-Z][A-Z0-9_:]+)`|\*\*([A-Z][A-Z0-9_:]+)\*\*|([A-Z][A-Z0-9_:]+)(?=\s|$|,|，|<br|\||\n)",
+                                device_candidate,
+                                re.IGNORECASE | re.MULTILINE,
                             )
-                            # 处理匹配结果，包含多个分组
+
+                            # 🔧 新增：如果正则匹配失败，尝试更宽松的匹配
+                            if not device_matches and self.config.enhanced_parsing:
+                                # 备用匹配：更宽松的设备名称识别
+                                backup_matches = re.findall(
+                                    r"\b([A-Z]{2,3}_[A-Z0-9_]{2,})",
+                                    device_candidate,
+                                    re.IGNORECASE,
+                                )
+                                if backup_matches:
+                                    device_matches = [
+                                        (match, "", "") for match in backup_matches
+                                    ]
+                                    if self.config.debug_mode:
+                                        print(
+                                            f"🔧 [BACKUP] 备用匹配成功: {backup_matches}"
+                                        )
+                            print(f"🔍 [DEBUG] Regex匹配结果: {device_matches}")
+
+                            # 🔧 优化匹配结果处理，包含多个分组
                             for match in device_matches:
                                 device_name = match[0] or match[1] or match[2]
-                                if (
-                                    device_name and len(device_name) >= 4
-                                ):  # 过滤太短的名称
-                                    extracted_devices.append(device_name)
+                                print(f"🔍 [DEBUG] 匹配的设备名: {repr(device_name)}")
+
+                                # 🔧 改进设备名称有效性验证
+                                if self._is_valid_device_name_enhanced(device_name):
+                                    extracted_devices.append(
+                                        device_name.strip().upper()
+                                    )
+                                    print(f"🔍 [DEBUG] 已添加设备: {device_name}")
+                                elif self.config.debug_mode:
+                                    print(f"🔍 [DEBUG] 跳过无效设备名: {device_name}")
+
+                        # 去重并保持顺序
+                        extracted_devices = list(dict.fromkeys(extracted_devices))
+                        print(f"🔍 [DEBUG] 最终提取设备列表: {extracted_devices}")
 
                         if extracted_devices:
                             current_devices = extracted_devices
@@ -813,10 +1702,17 @@ class DocumentBasedComparisonAnalyzer:
                                     device_ios[device_name] = []
                             print(f"📝 行{line_no}: 提取设备 {current_devices}")
 
+                            # 专门追踪SL_OE_DE
+                            if "SL_OE_DE" in current_devices:
+                                print(
+                                    f"🎯 [DEBUG] SL_OE_DE已添加到current_devices! 行号: {line_no}"
+                                )
+
                     # 添加IO口信息到所有当前设备
                     if current_devices and io_port and io_name:
                         # 去除IO端口的反引号
                         clean_io_port = io_port.replace("`", "")
+                        print(f"🔍 [DEBUG] 清理后的IO端口: '{clean_io_port}'")
 
                         for device_name in current_devices:
                             io_info = {
@@ -826,11 +1722,35 @@ class DocumentBasedComparisonAnalyzer:
                                 "io_type": io_name,
                             }
                             device_ios[device_name].append(io_info)
+
+                            # 专门追踪SL_OE_DE的IO添加
+                            if device_name == "SL_OE_DE":
+                                print(f"🎯 [DEBUG] 为SL_OE_DE添加IO: {io_info}")
+                                print(
+                                    f"🎯 [DEBUG] SL_OE_DE当前IO总数: {len(device_ios[device_name])}"
+                                )
+
                         print(
                             f"📝 行{line_no}: 添加IO {clean_io_port}({io_name}) 到 {len(current_devices)} 个设备"
                         )
+                elif len(columns) >= 1:
+                    print(f"🔍 [DEBUG] 列数不足5 (当前{len(columns)})，跳过该行")
+                else:
+                    print(f"🔍 [DEBUG] 空表格行，跳过")
 
         print(f"📝 总计处理表格行: {table_lines_found}")
+        print(f"🎯 [DEBUG] SL_OE_DE在文档中发现: {target_device_found}")
+
+        # 检查最终结果
+        if "SL_OE_DE" in device_ios:
+            print(f"🎯 [DEBUG] SL_OE_DE成功解析! IO数量: {len(device_ios['SL_OE_DE'])}")
+            print(f"🎯 [DEBUG] SL_OE_DE的IO详情: {device_ios['SL_OE_DE']}")
+        else:
+            print(f"❌ [DEBUG] SL_OE_DE未在最终结果中找到!")
+            print(
+                f"🔍 [DEBUG] 最终解析的设备列表: {list(device_ios.keys())[:10]}..."
+            )  # 只显示前10个
+
         return device_ios
 
     def _analyze_device_platforms(
@@ -840,15 +1760,42 @@ class DocumentBasedComparisonAnalyzer:
         platform_suggestions = set()
         ios_analysis = []
 
+        # 🔧 调试输出 - 帮助诊断SL_LI_RGBW等设备
+        if (
+            "SL_OE_DE" in device_name
+            or "LI_RGBW" in device_name
+            or "CT_RGBW" in device_name
+        ):
+            print(f"\n🔍 [AI_DEBUG] 分析设备 {device_name}:")
+            print(f"   IO数据: {ios_data}")
+
         for io_data in ios_data:
             io_name = io_data.get("name", "")
             io_description = io_data.get("description", "")
             rw_permission = io_data.get("rw", "R")
 
+            # 🔧 调试输出 - IO级别的详细信息
+            if (
+                "SL_OE_DE" in device_name
+                or "LI_RGBW" in device_name
+                or "CT_RGBW" in device_name
+            ):
+                print(
+                    f"     分析IO: {io_name}, 描述: {io_description}, 权限: {rw_permission}"
+                )
+
             # NLP规则分析，传递设备名称
             suggested_platforms = self._classify_io_platform(
                 io_name, io_description, rw_permission, device_name
             )
+
+            # 🔧 调试输出 - 分类结果
+            if (
+                "SL_OE_DE" in device_name
+                or "LI_RGBW" in device_name
+                or "CT_RGBW" in device_name
+            ):
+                print(f"     分类结果: {suggested_platforms}")
 
             if suggested_platforms:
                 platform_suggestions.update(
@@ -856,9 +1803,42 @@ class DocumentBasedComparisonAnalyzer:
                 )
                 ios_analysis.extend(suggested_platforms)
 
+        # 🔧 调试输出 - 最终结果
+        if (
+            "SL_OE_DE" in device_name
+            or "LI_RGBW" in device_name
+            or "CT_RGBW" in device_name
+        ):
+            print(f"   最终平台建议: {list(platform_suggestions)}")
+            print(f"   分析详情: {ios_analysis}\n")
+
+        # 动态置信度计算 - 基于匹配的IO数量和类型
+        confidence = 0.5  # 基础置信度
+
+        if platform_suggestions:
+            # 有平台建议时提升置信度
+            confidence = 0.7
+
+            # 基于IO数量调整置信度
+            io_count = len(ios_analysis)
+            if io_count >= 2:
+                confidence += min(io_count * 0.1, 0.2)  # 最多增加0.2
+
+            # 基于设备名称特征提升置信度
+            if any(keyword in device_name for keyword in ["RGBW", "LI_", "SW_", "SC_"]):
+                confidence += 0.05
+
+            # 特殊设备类型高置信度
+            if device_name.startswith(("SL_LI_RGBW", "SL_CT_RGBW")):
+                confidence = 0.9  # RGBW设备高置信度
+            elif "RGBW" in device_name or "RGB" in device_name:
+                confidence = 0.85  # 其他RGB设备
+
+        confidence = min(confidence, 1.0)  # 确保不超过1.0
+
         return {
             "platforms": list(platform_suggestions),
-            "confidence": 0.8,  # 基于规则的固定置信度
+            "confidence": confidence,
             "ios": ios_analysis,
         }
 
@@ -871,6 +1851,12 @@ class DocumentBasedComparisonAnalyzer:
     ) -> List[Dict]:
         """NLP规则分类IO口到平台"""
         results = []
+
+        # 🔧 调试输出
+        if "SL_OE_DE" in device_name:
+            print(f"      [IO_CLASSIFY] 分类IO {io_name} (设备: {device_name})")
+            print(f"      [IO_CLASSIFY] 描述: {io_description}")
+            print(f"      [IO_CLASSIFY] 权限: {rw_permission}")
 
         # 设备类型排除检查
         def should_exclude_platform(platform: str) -> bool:
@@ -888,9 +1874,9 @@ class DocumentBasedComparisonAnalyzer:
                     "lock",
                 ]
 
-            # 灯光设备不应分类为binary_sensor或climate
-            if device_name.startswith(("SL_OL_", "SL_LI_", "SL_RGBW_")):
-                return platform in ["binary_sensor", "climate", "switch", "cover"]
+            # 灯光设备不应分类为binary_sensor或climate，但应该允许light平台
+            if device_name.startswith(("SL_OL_", "SL_LI_", "SL_RGBW_", "SL_CT_")):
+                return platform in ["binary_sensor", "climate", "cover"]
 
             # 传感器设备不应分类为switch或light
             if device_name.startswith(("SL_SC_", "SL_WH_")):
@@ -914,14 +1900,15 @@ class DocumentBasedComparisonAnalyzer:
             for keyword in ["L1", "L2", "L3", "P1", "P2", "P3", "O", "开关", "控制"]
         ):
             if rw_permission in ["RW", "W"] and not should_exclude_platform("switch"):
-                results.append(
-                    {
-                        "name": io_name,
-                        "platform": "switch",
-                        "confidence": 0.9,
-                        "reasoning": f"开关控制IO口: {io_name}, RW权限",
-                    }
-                )
+                result = {
+                    "name": io_name,
+                    "platform": "switch",
+                    "confidence": 0.9,
+                    "reasoning": f"开关控制IO口: {io_name}, RW权限",
+                }
+                results.append(result)
+                if "SL_OE_DE" in device_name:
+                    print(f"      [IO_CLASSIFY] 添加switch结果: {result}")
 
         # 传感器平台规则 - 更精确的匹配
         if any(
@@ -929,14 +1916,39 @@ class DocumentBasedComparisonAnalyzer:
             for keyword in ["T", "H", "V", "PM", "温度值", "湿度值", "电量", "电压值"]
         ):
             if rw_permission in ["R", "RW"] and not should_exclude_platform("sensor"):
-                results.append(
-                    {
-                        "name": io_name,
-                        "platform": "sensor",
-                        "confidence": 0.85,
-                        "reasoning": f"传感器IO口: {io_name}, 读取权限",
-                    }
-                )
+                result = {
+                    "name": io_name,
+                    "platform": "sensor",
+                    "confidence": 0.85,
+                    "reasoning": f"传感器IO口: {io_name}, 读取权限",
+                }
+                results.append(result)
+                if "SL_OE_DE" in device_name:
+                    print(f"      [IO_CLASSIFY] 添加sensor结果: {result}")
+
+        # 电表相关IO口特别处理 (针对SL_OE_系列)
+        if any(
+            keyword in io_description
+            for keyword in [
+                "用电量",
+                "功率",
+                "功率门限",
+                "IEEE754",
+                "浮点数",
+                "kwh",
+                "w",
+            ]
+        ):
+            if rw_permission in ["R", "RW"] and not should_exclude_platform("sensor"):
+                result = {
+                    "name": io_name,
+                    "platform": "sensor",
+                    "confidence": 0.9,
+                    "reasoning": f"电表类传感器: {io_name}, 用电量/功率监测",
+                }
+                results.append(result)
+                if "SL_OE_DE" in device_name:
+                    print(f"      [IO_CLASSIFY] 添加电表sensor结果: {result}")
 
         # 二进制传感器规则 - 更精确的关键词
         if any(
@@ -944,27 +1956,56 @@ class DocumentBasedComparisonAnalyzer:
             for keyword in ["M", "G", "B", "移动检测", "门禁", "按键状态", "防拆"]
         ):
             if not should_exclude_platform("binary_sensor"):
-                results.append(
-                    {
-                        "name": io_name,
-                        "platform": "binary_sensor",
-                        "confidence": 0.8,
-                        "reasoning": f"二进制传感器IO口: {io_name}",
-                    }
-                )
+                result = {
+                    "name": io_name,
+                    "platform": "binary_sensor",
+                    "confidence": 0.8,
+                    "reasoning": f"二进制传感器IO口: {io_name}",
+                }
+                results.append(result)
+                if "SL_OE_DE" in device_name:
+                    print(f"      [IO_CLASSIFY] 添加binary_sensor结果: {result}")
 
-        # 灯光平台规则 - 支持bright/dark等开关指示灯
+        # 灯光平台规则 - 支持bright/dark等开关指示灯，优化RGBW匹配
         if any(
             keyword in io_name.upper() or keyword in io_description.upper()
             for keyword in ["RGB", "RGBW", "DYN", "BRIGHT", "DARK", "颜色", "亮度"]
         ):
-            if rw_permission in ["RW", "W"] and not should_exclude_platform("light"):
+            # 专门调试SL_OE_DE
+            if "SL_OE_DE" in device_name:
+                print(
+                    f"      [IO_CLASSIFY] 检测到灯光关键词，但SL_OE_DE是电表设备，跳过"
+                )
+            # 对于RGBW设备，始终添加light平台，不管权限如何
+            elif ("RGBW" in device_name or "RGB" in device_name) and any(
+                kw in io_name.upper() for kw in ["RGBW", "DYN", "RGB"]
+            ):
+                print(f"      🔧 RGBW设备强light平台: {io_name} (设备: {device_name})")
+                results.append(
+                    {
+                        "name": io_name,
+                        "platform": "light",
+                        "confidence": 0.95,
+                        "reasoning": f"RGBW/RGB设备强light平台: {io_name}, 权限={rw_permission}",
+                    }
+                )
+            elif rw_permission in ["RW", "W"] and not should_exclude_platform("light"):
                 results.append(
                     {
                         "name": io_name,
                         "platform": "light",
                         "confidence": 0.9,
                         "reasoning": f"灯光控制IO口: {io_name}",
+                    }
+                )
+            elif not should_exclude_platform("light"):
+                # 如果权限不是RW/W但也不应该排除light平台，则降低置信度但仍添加
+                results.append(
+                    {
+                        "name": io_name,
+                        "platform": "light",
+                        "confidence": 0.7,
+                        "reasoning": f"灯光控制IO口(权限受限): {io_name}, 权限={rw_permission}",
                     }
                 )
 
@@ -1003,6 +2044,13 @@ class DocumentBasedComparisonAnalyzer:
                         }
                     )
 
+        if "SL_OE_DE" in device_name:
+            print(f"      [IO_CLASSIFY] 最终结果数量: {len(results)}")
+            if results:
+                print(f"      [IO_CLASSIFY] 结果详情: {results}")
+            else:
+                print(f"      [IO_CLASSIFY] 无匹配结果!")
+
         return results
 
     def _compare_allocations(
@@ -1027,6 +2075,100 @@ class DocumentBasedComparisonAnalyzer:
 
         return comparison_results
 
+    def _is_version_device_config(self, existing_data: Dict) -> bool:
+        """检测是否为版本设备配置（包含version_modes等）"""
+        if not existing_data:
+            return False
+
+        # 检查是否包含版本相关的配置模式
+        ios = existing_data.get("ios", [])
+        for io in ios:
+            io_name = io.get("name", "")
+            # 如果IO名称是版本号（V1, V2等），说明这是版本设备的内部配置
+            if io_name in ["V1", "V2", "V3"] or io_name.startswith("V"):
+                return True
+
+        # 检查平台配置中是否包含版本模式
+        platforms = existing_data.get("platforms", [])
+        if "version_modes" in platforms:
+            return True
+
+        return False
+
+    def _is_dynamic_device_config(self, existing_data: Dict) -> bool:
+        """检测是否为动态设备配置（如SL_NATURE等）"""
+        if not existing_data:
+            return False
+
+        # 检查是否包含动态配置相关的内部字段
+        ios = existing_data.get("ios", [])
+        for io in ios:
+            io_name = io.get("name", "")
+            # 如果IO名称是内部配置字段，说明这是动态设备的内部配置
+            if io_name in ["condition", "io", "sensor_io"]:
+                return True
+
+        # 检查平台配置中是否包含模式配置
+        platforms = existing_data.get("platforms", [])
+        if any(
+            mode in platforms
+            for mode in ["switch_mode", "climate_mode", "control_modes"]
+        ):
+            return True
+
+        return False
+
+    def _has_special_platforms(self, existing_data: Dict) -> bool:
+        """检测是否包含特殊平台配置（如switch_extra等）"""
+        if not existing_data:
+            return False
+
+        # 检查平台配置中是否包含特殊平台
+        platforms = existing_data.get("platforms", [])
+        special_platforms = [
+            "switch_extra",
+            "control_modes",
+            "free_mode",
+            "cover_mode",
+            "binary_sensor_extra",
+            "sensor_extra",
+            "climate_extra",
+        ]
+
+        if any(special_platform in platforms for special_platform in special_platforms):
+            return True
+
+        return False
+
+    def _create_device_comparison_result(
+        self,
+        device_name: str,
+        match_type: str,
+        confidence: float,
+        differences: List[str],
+        existing_platforms: set,
+        ai_platforms: set,
+        existing_data: Dict,
+        ai_data: Dict,
+    ) -> Dict[str, Any]:
+        """创建设备比较结果的统一方法"""
+        return {
+            "device_name": device_name,
+            "match_type": match_type,
+            "confidence_score": round(confidence, 3),
+            "differences": differences,
+            "existing_platforms": list(existing_platforms),
+            "ai_platforms": list(ai_platforms),
+            "existing_ios": (
+                [io.get("name", "") for io in existing_data.get("ios", [])]
+                if existing_data
+                else []
+            ),
+            "ai_ios": (
+                [io.get("name", "") for io in ai_data.get("ios", [])] if ai_data else []
+            ),
+        }
+
     def _analyze_device_differences(
         self, device_name: str, existing_data: Dict, ai_data: Dict
     ) -> Dict[str, Any]:
@@ -1038,6 +2180,64 @@ class DocumentBasedComparisonAnalyzer:
         )
         ai_platforms = set(ai_data.get("platforms", [])) if ai_data else set()
 
+        # 特殊处理版本设备 - 修复版本设备解析逻辑
+        if existing_data and self._is_version_device_config(existing_data):
+            # 对于版本设备，如果AI没有分析出数据，标记为需要改进解析
+            if not ai_data:
+                match_type = "版本设备解析待改进"
+                confidence = 0.25
+                differences = [f"版本设备需要改进AI解析逻辑: {device_name}"]
+                return self._create_device_comparison_result(
+                    device_name,
+                    match_type,
+                    confidence,
+                    differences,
+                    existing_platforms,
+                    ai_platforms,
+                    existing_data,
+                    ai_data,
+                )
+
+        # 特殊处理动态设备 - 修复动态设备解析逻辑
+        if existing_data and self._is_dynamic_device_config(existing_data):
+            # 对于动态设备（如SL_NATURE），如果AI没有分析出数据，标记为需要改进解析
+            if not ai_data:
+                match_type = "动态设备解析待改进"
+                confidence = 0.25
+                differences = [
+                    f"动态设备需要改进AI解析逻辑: {device_name}，实际IO口应为P1-P10"
+                ]
+                return self._create_device_comparison_result(
+                    device_name,
+                    match_type,
+                    confidence,
+                    differences,
+                    existing_platforms,
+                    ai_platforms,
+                    existing_data,
+                    ai_data,
+                )
+
+        # 特殊处理复杂平台设备 - 改进平台识别逻辑
+        if existing_data and self._has_special_platforms(existing_data):
+            # 对于包含特殊平台的设备（如switch_extra），如果AI没有分析出数据，标记为复杂设备
+            if not ai_data:
+                match_type = "复杂平台设备解析待改进"
+                confidence = 0.25
+                differences = [
+                    f"复杂平台设备需要改进AI解析逻辑: {device_name}，包含特殊平台配置"
+                ]
+                return self._create_device_comparison_result(
+                    device_name,
+                    match_type,
+                    confidence,
+                    differences,
+                    existing_platforms,
+                    ai_platforms,
+                    existing_data,
+                    ai_data,
+                )
+
         # 计算匹配类型和置信度
         if not existing_data and ai_data:
             match_type = "AI独有建议"
@@ -1045,8 +2245,8 @@ class DocumentBasedComparisonAnalyzer:
             differences = ["设备仅存在于AI分析中"]
         elif existing_data and not ai_data:
             match_type = "现有独有"
-            confidence = 0.3
-            differences = ["设备仅存在于现有配置中"]
+            confidence = 0.25
+            differences = ["设备仅在现有配置中存在，可能为已废弃或特殊用途设备"]
         elif existing_platforms == ai_platforms:
             match_type = "完全匹配"
             confidence = ai_data.get("confidence", 0.9)
@@ -1097,22 +2297,16 @@ class DocumentBasedComparisonAnalyzer:
                 if extra_in_existing:
                     differences.append(f"现有配置多余IO口: {list(extra_in_existing)}")
 
-        return {
-            "device_name": device_name,
-            "match_type": match_type,
-            "confidence_score": round(confidence, 3),
-            "differences": differences,
-            "existing_platforms": list(existing_platforms),
-            "ai_platforms": list(ai_platforms),
-            "existing_ios": (
-                [io.get("name", "") for io in existing_data.get("ios", [])]
-                if existing_data
-                else []
-            ),
-            "ai_ios": (
-                [io.get("name", "") for io in ai_data.get("ios", [])] if ai_data else []
-            ),
-        }
+        return self._create_device_comparison_result(
+            device_name,
+            match_type,
+            confidence,
+            differences,
+            existing_platforms,
+            ai_platforms,
+            existing_data,
+            ai_data,
+        )
 
     def _format_as_agent3_results(
         self,

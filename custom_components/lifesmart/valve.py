@@ -30,6 +30,7 @@ from typing import Any
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -314,14 +315,19 @@ class LifeSmartValve(LifeSmartEntity, ValveEntity):
             "unit": "%"
         }
         """
-        from .core.config.mapping import DEVICE_MAPPING
+        from .core.config.mapping_engine import mapping_engine
 
-        device_type = self._raw_device.get(DEVICE_TYPE_KEY)
-        if not device_type or device_type not in DEVICE_MAPPING:
-            return None
+        device_config = mapping_engine.resolve_device_mapping_from_data(
+            self._raw_device
+        )
+        if not device_config:
+            _LOGGER.error("映射引擎无法解析设备配置: %s", self._raw_device)
+            raise HomeAssistantError(
+                f"Device configuration not found for "
+                f"{self._raw_device.get('me', 'unknown')}"
+            )
 
-        mapping = DEVICE_MAPPING[device_type]
-        valve_config = mapping.get("valve", {})
+        valve_config = device_config.get("valve", {})
 
         # 查找特定指标的配置
         for io_key, io_config in valve_config.items():

@@ -21,6 +21,9 @@ from custom_components.lifesmart.core.const import (
     CONF_LIFESMART_APPTOKEN,
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERTOKEN,
+    CMD_TYPE_ON,
+    CMD_TYPE_OFF,
+    CMD_TYPE_SET_CONFIG,
 )
 from .constants import (
     DEFAULT_TEST_VALUES,
@@ -124,10 +127,12 @@ def create_mock_failed_oapi_client():
     """
     mock_client = create_mock_oapi_client()
 
-    # 设置失败响应
+    # 设置失败响应 - 使用正确的方法名
     mock_client.async_refresh_token.return_value = False
     mock_client.login_async.return_value = False
     mock_client.async_get_all_devices.side_effect = Exception("Connection failed")
+    mock_client._async_get_all_devices.side_effect = Exception("Connection failed")
+    mock_client.get_all_device_async.side_effect = Exception("Connection failed")
 
     return mock_client
 
@@ -148,7 +153,7 @@ def create_smart_plug_devices():
             "me": "sw_ol",  # 友好设备ID，用于测试
             "devtype": "SL_OL",
             "name": "Smart Outlet",
-            "data": {"O": {"type": 129, "val": 1}},  # 开启状态，符合文档规范
+            "data": {"O": {"type": CMD_TYPE_ON, "val": 1}},  # 开启状态，符合文档规范
             "stat": 1,
             "ver": "0.0.0.7",
         },
@@ -171,10 +176,10 @@ def create_power_meter_plug_devices():
             "devtype": "SL_OE_3C",
             "name": "Washing Machine Plug",
             "data": {
-                "P1": {"type": 129, "val": 1},  # 开关状态
+                "P1": {"type": CMD_TYPE_ON, "val": 1},  # 开关状态
                 "P2": {"v": 1.5, "val": 1084227584},  # 累计用电量 IEEE754
                 "P3": {"v": 1200.0, "val": 1149239296},  # 当前功率 IEEE754
-                "P4": {"type": 128, "val": 3000},  # 功率门限
+                "P4": {"type": CMD_TYPE_OFF, "val": 3000},  # 功率门限
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -202,9 +207,9 @@ def create_traditional_switch_devices():
             "fullCls": "SL_SW_IF3_V2",
             "name": "smart Switch",  # 文档中的真实名称
             "data": {
-                "L1": {"type": 129, "val": 1, "name": "Living", "v": 1},
-                "L2": {"type": 128, "val": 0, "name": "study", "v": 0},
-                "L3": {"type": 129, "val": 1, "name": "Kid", "v": 1},
+                "L1": {"type": CMD_TYPE_ON, "val": 1, "name": "Living", "v": 1},
+                "L2": {"type": CMD_TYPE_OFF, "val": 0, "name": "study", "v": 0},
+                "L3": {"type": CMD_TYPE_ON, "val": 1, "name": "Kid", "v": 1},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -217,9 +222,9 @@ def create_traditional_switch_devices():
             "fullCls": "SL_SW_IF3_V2",
             "name": "Test Switch IF3B2",
             "data": {
-                "L1": {"type": 129, "val": 1, "name": "TestL1", "v": 1},
-                "L2": {"type": 128, "val": 0, "name": "TestL2", "v": 0},
-                "L3": {"type": 129, "val": 1, "name": "TestL3", "v": 1},
+                "L1": {"type": CMD_TYPE_ON, "val": 1, "name": "TestL1", "v": 1},
+                "L2": {"type": CMD_TYPE_OFF, "val": 0, "name": "TestL2", "v": 0},
+                "L3": {"type": CMD_TYPE_ON, "val": 1, "name": "TestL3", "v": 1},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -232,8 +237,8 @@ def create_traditional_switch_devices():
             "fullCls": "SL_SW_IF2_V2",
             "name": "Dual Switch",
             "data": {
-                "L1": {"type": 129, "val": 1, "name": "Room1", "v": 1},
-                "L2": {"type": 128, "val": 0, "name": "Room2", "v": 0},
+                "L1": {"type": CMD_TYPE_ON, "val": 1, "name": "Room1", "v": 1},
+                "L2": {"type": CMD_TYPE_OFF, "val": 0, "name": "Room2", "v": 0},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -246,7 +251,7 @@ def create_traditional_switch_devices():
             "fullCls": "SL_SW_IF1_V2",
             "name": "Single Switch",
             "data": {
-                "L1": {"type": 129, "val": 1, "name": "MainLight", "v": 1},
+                "L1": {"type": CMD_TYPE_ON, "val": 1, "name": "MainLight", "v": 1},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -259,9 +264,9 @@ def create_traditional_switch_devices():
             "fullCls": "SL_SW_ND3_V2",
             "name": "Star Switch Triple",
             "data": {
-                "P1": {"type": 129, "val": 1, "v": 1},
-                "P2": {"type": 128, "val": 0, "v": 0},
-                "P3": {"type": 129, "val": 1, "v": 1},
+                "P1": {"type": CMD_TYPE_ON, "val": 1, "v": 1},
+                "P2": {"type": CMD_TYPE_OFF, "val": 0, "v": 0},
+                "P3": {"type": CMD_TYPE_ON, "val": 1, "v": 1},
                 "P4": {"val": 3000, "v": 85},  # 电量百分比
             },
             "stat": 1,
@@ -275,8 +280,8 @@ def create_traditional_switch_devices():
             "fullCls": "SL_SW_ND2_V2",
             "name": "Star Switch Dual",
             "data": {
-                "P1": {"type": 129, "val": 1, "v": 1},
-                "P2": {"type": 128, "val": 0, "v": 0},
+                "P1": {"type": CMD_TYPE_ON, "val": 1, "v": 1},
+                "P2": {"type": CMD_TYPE_OFF, "val": 0, "v": 0},
                 "P3": {"val": 3200, "v": 90},  # 电量百分比
             },
             "stat": 1,
@@ -290,7 +295,7 @@ def create_traditional_switch_devices():
             "fullCls": "SL_SW_ND1_V2",
             "name": "Star Switch Single",
             "data": {
-                "P1": {"type": 129, "val": 1, "v": 1},
+                "P1": {"type": CMD_TYPE_ON, "val": 1, "v": 1},
                 "P2": {"val": 3400, "v": 95},  # 电量百分比
             },
             "stat": 1,
@@ -315,15 +320,15 @@ def create_advanced_switch_devices():
             "devtype": "SL_P_SW",
             "name": "9-Way Controller",
             "data": {
-                "P1": {"type": 129, "val": 1},
-                "P2": {"type": 128, "val": 0},
-                "P3": {"type": 129, "val": 1},
-                "P4": {"type": 128, "val": 0},
-                "P5": {"type": 129, "val": 1},
-                "P6": {"type": 128, "val": 0},
-                "P7": {"type": 129, "val": 1},
-                "P8": {"type": 128, "val": 0},
-                "P9": {"type": 129, "val": 1},
+                "P1": {"type": CMD_TYPE_ON, "val": 1},
+                "P2": {"type": CMD_TYPE_OFF, "val": 0},
+                "P3": {"type": CMD_TYPE_ON, "val": 1},
+                "P4": {"type": CMD_TYPE_OFF, "val": 0},
+                "P5": {"type": CMD_TYPE_ON, "val": 1},
+                "P6": {"type": CMD_TYPE_OFF, "val": 0},
+                "P7": {"type": CMD_TYPE_ON, "val": 1},
+                "P8": {"type": CMD_TYPE_OFF, "val": 0},
+                "P9": {"type": CMD_TYPE_ON, "val": 1},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -336,9 +341,9 @@ def create_advanced_switch_devices():
             "name": "Generic Controller Switch",
             "data": {
                 "P1": {"val": (8 << 24)},  # Mode 8: 3-way switch
-                "P2": {"type": 129, "val": 1},
-                "P3": {"type": 128, "val": 0},
-                "P4": {"type": 129, "val": 1},
+                "P2": {"type": CMD_TYPE_ON, "val": 1},
+                "P3": {"type": CMD_TYPE_OFF, "val": 0},
+                "P4": {"type": CMD_TYPE_ON, "val": 1},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -350,9 +355,9 @@ def create_advanced_switch_devices():
             "devtype": "SL_NATURE",
             "name": "Nature Panel Switch",
             "data": {
-                "P1": {"type": 129, "val": 1},
-                "P2": {"type": 128, "val": 0},
-                "P3": {"type": 129, "val": 1},
+                "P1": {"type": CMD_TYPE_ON, "val": 1},
+                "P2": {"type": CMD_TYPE_OFF, "val": 0},
+                "P3": {"type": CMD_TYPE_ON, "val": 1},
                 "P5": {"val": 1},  # P5=1 表示开关面板
             },
             "stat": 1,
@@ -366,9 +371,9 @@ def create_advanced_switch_devices():
             "fullCls": "SL_SW_DM1_V1",  # 文档中的版本标识
             "name": "Dimmer Motion Controller",
             "data": {
-                "P1": {"type": 129, "val": 200},  # 开关状态+亮度值[0-255    ]
+                "P1": {"type": CMD_TYPE_ON, "val": 200},  # 开关状态+亮度值[0-255    ]
                 "P2": {
-                    "type": 129,
+                    "type": CMD_TYPE_ON,
                     "val": 12825,
                 },  # 指示灯亮度 (bit8-15:开启亮度=50, bit0-7:关闭亮度=25)
                 "P3": {"val": 1},  # 移动检测: 1=检测到移动
@@ -386,10 +391,10 @@ def create_advanced_switch_devices():
             "devtype": "SL_SW_RC",
             "name": "Polar Switch RC",
             "data": {
-                "L1": {"type": 129, "val": 1},
-                "L2": {"type": 128, "val": 0},
-                "L3": {"type": 129, "val": 1},
-                "dark": {"type": 129, "val": 512},  # 关状态指示灯亮度[0-1023]
+                "L1": {"type": CMD_TYPE_ON, "val": 1},
+                "L2": {"type": CMD_TYPE_OFF, "val": 0},
+                "L3": {"type": CMD_TYPE_ON, "val": 1},
+                "dark": {"type": CMD_TYPE_ON, "val": 512},  # 关状态指示灯亮度[0-1023]
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -401,11 +406,14 @@ def create_advanced_switch_devices():
             "devtype": "SL_SF_RC",
             "name": "Single Fire Touch Switch",
             "data": {
-                "L1": {"type": 129, "val": 1},  # 第一路开关控制口
-                "L2": {"type": 128, "val": 0},  # 第二路开关控制口
-                "L3": {"type": 129, "val": 1},  # 第三路开关控制口
-                "dark": {"type": 129, "val": 256},  # 关状态时指示灯亮度[0-1023]
-                "bright": {"type": 129, "val": 768},  # 开状态时指示灯亮度[0-1023]
+                "L1": {"type": CMD_TYPE_ON, "val": 1},  # 第一路开关控制口
+                "L2": {"type": CMD_TYPE_OFF, "val": 0},  # 第二路开关控制口
+                "L3": {"type": CMD_TYPE_ON, "val": 1},  # 第三路开关控制口
+                "dark": {"type": CMD_TYPE_ON, "val": 256},  # 关状态时指示灯亮度[0-1023]
+                "bright": {
+                    "type": CMD_TYPE_ON,
+                    "val": 768,
+                },  # 开状态时指示灯亮度[0-1023]
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -417,12 +425,12 @@ def create_advanced_switch_devices():
             "devtype": "SL_SW_NS3",
             "name": "Nature Switch Triple",
             "data": {
-                "L1": {"type": 129, "val": 1},
-                "L2": {"type": 128, "val": 0},
-                "L3": {"type": 129, "val": 1},
-                "dark1": {"type": 129, "val": 0xFF0000},  # Red色指示灯
-                "dark2": {"type": 128, "val": 0x00FF00},  # Green色指示灯
-                "dark3": {"type": 129, "val": 0x0000FF},  # Blue色指示灯
+                "L1": {"type": CMD_TYPE_ON, "val": 1},
+                "L2": {"type": CMD_TYPE_OFF, "val": 0},
+                "L3": {"type": CMD_TYPE_ON, "val": 1},
+                "dark1": {"type": CMD_TYPE_ON, "val": 0xFF0000},  # Red色指示灯
+                "dark2": {"type": CMD_TYPE_OFF, "val": 0x00FF00},  # Green色指示灯
+                "dark3": {"type": CMD_TYPE_ON, "val": 0x0000FF},  # Blue色指示灯
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -434,9 +442,9 @@ def create_advanced_switch_devices():
             "devtype": "SL_SW_MJ3",
             "name": "CUBE Switch Module Triple",
             "data": {
-                "P1": {"type": 129, "val": 1},
-                "P2": {"type": 128, "val": 0},
-                "P3": {"type": 129, "val": 1},
+                "P1": {"type": CMD_TYPE_ON, "val": 1},
+                "P2": {"type": CMD_TYPE_OFF, "val": 0},
+                "P3": {"type": CMD_TYPE_ON, "val": 1},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -448,8 +456,8 @@ def create_advanced_switch_devices():
             "devtype": "SL_SW_MJ2",
             "name": "CUBE Switch Module Dual",
             "data": {
-                "P1": {"type": 129, "val": 1},
-                "P2": {"type": 128, "val": 0},
+                "P1": {"type": CMD_TYPE_ON, "val": 1},
+                "P2": {"type": CMD_TYPE_OFF, "val": 0},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -462,9 +470,9 @@ def create_advanced_switch_devices():
             "fullCls": "SL_SW_DM1_V2",  # V2版本标识
             "name": "Jade Triac Dimmer Switch",
             "data": {
-                "P1": {"type": 129, "val": 180},  # 开关状态+亮度值[0-255]
+                "P1": {"type": CMD_TYPE_ON, "val": 180},  # 开关状态+亮度值[0-255]
                 "P2": {
-                    "type": 129,
+                    "type": CMD_TYPE_ON,
                     "val": 8960,
                 },  # 指示灯亮度 (bit8-15:开启亮度=35, bit0-7:关闭亮度=0)
             },
@@ -478,7 +486,7 @@ def create_advanced_switch_devices():
             "devtype": "SL_MC_ND1",
             "name": "Star Switch Companion Single",
             "data": {
-                "P1": {"type": 129, "val": 1, "v": 1},  # 第一路开关控制口
+                "P1": {"type": CMD_TYPE_ON, "val": 1, "v": 1},  # 第一路开关控制口
                 "P2": {"val": 3200, "v": 88},  # 电量监测: 原始电压值3200, 88%电量
             },
             "stat": 1,
@@ -491,8 +499,8 @@ def create_advanced_switch_devices():
             "devtype": "SL_MC_ND2",
             "name": "Star Switch Companion Dual",
             "data": {
-                "P1": {"type": 129, "val": 1, "v": 1},  # 第一路开关控制口
-                "P2": {"type": 128, "val": 0, "v": 0},  # 第二路开关控制口
+                "P1": {"type": CMD_TYPE_ON, "val": 1, "v": 1},  # 第一路开关控制口
+                "P2": {"type": CMD_TYPE_OFF, "val": 0, "v": 0},  # 第二路开关控制口
                 "P3": {"val": 3100, "v": 85},  # 电量监测: 原始电压值3100, 85%电量
             },
             "stat": 1,
@@ -505,9 +513,9 @@ def create_advanced_switch_devices():
             "devtype": "SL_MC_ND3",
             "name": "Star Switch Companion Triple",
             "data": {
-                "P1": {"type": 129, "val": 1, "v": 1},  # 第一路开关控制口
-                "P2": {"type": 128, "val": 0, "v": 0},  # 第二路开关控制口
-                "P3": {"type": 129, "val": 1, "v": 1},  # 第三路开关控制口
+                "P1": {"type": CMD_TYPE_ON, "val": 1, "v": 1},  # 第一路开关控制口
+                "P2": {"type": CMD_TYPE_OFF, "val": 0, "v": 0},  # 第二路开关控制口
+                "P3": {"type": CMD_TYPE_ON, "val": 1, "v": 1},  # 第三路开关控制口
                 "P4": {"val": 3300, "v": 92},  # 电量监测: 原始电压值3300, 92%电量
             },
             "stat": 1,
@@ -535,17 +543,18 @@ def create_dimmer_light_devices():
             "devtype": "SL_LI_WW",
             "fullCls": "SL_LI_WW_V1",  # 指定版本信息
             "name": "White Light Bulb",
-            "data": {"P1": {"type": 129, "val": 80}},  # 亮度80%
+            "data": {"P1": {"type": CMD_TYPE_ON, "val": 80}},  # 亮度80%
             "stat": 1,
             "ver": "0.0.0.7",
         },
         {
             "agt": get_hub_id(3),  # Dimmer lights
             "me": "light_dimmer",  # 友好设备ID，用于测试
-            "devtype": "SL_LI_WW_V1",  # SL_LI_WW_V1:智能灯泡(冷暖白)
+            "devtype": "SL_LI_WW",  # SL_LI_WW 智能灯泡(冷暖白) V1版本
+            "fullCls": "SL_LI_WW_V1",  # 指定V1版本
             "name": "Smart Bulb Cool Warm",
             "data": {
-                "P1": {"type": 129, "val": 100},  # 亮度100%
+                "P1": {"type": CMD_TYPE_ON, "val": 100},  # 亮度100%
                 "P2": {"val": 27},  # 色温
             },
             "stat": 1,
@@ -554,10 +563,11 @@ def create_dimmer_light_devices():
         {
             "agt": get_hub_id(3),  # Dimmer lights
             "me": "7d1c",
-            "devtype": "SL_LI_WW_V2",  # SL_LI_WW_V2:调光调色智控器(0-10V)
+            "devtype": "SL_LI_WW",  # SL_LI_WW 调光调色智控器(0-10V) V2版本
+            "fullCls": "SL_LI_WW_V2",  # 指定V2版本
             "name": "Dimmer Controller 0-10V",
             "data": {
-                "P1": {"type": 129, "val": 75},
+                "P1": {"type": CMD_TYPE_ON, "val": 75},
                 "P2": {"val": 35},
             },
             "stat": 1,
@@ -581,7 +591,7 @@ def create_rgb_light_devices():
             "me": "6c0b",
             "devtype": "SL_SC_RGB",
             "name": "RGB Light Strip",
-            "data": {"RGB": {"type": 129, "val": 0xFF0000}},  # 红色
+            "data": {"RGB": {"type": CMD_TYPE_ON, "val": 0xFF0000}},  # 红色
             "stat": 1,
             "ver": "0.0.0.7",
         },
@@ -592,8 +602,8 @@ def create_rgb_light_devices():
             "devtype": "SL_CT_RGBW",
             "name": "RGBW Light Strip",
             "data": {
-                "RGBW": {"type": 129, "val": 0x00FF0000},  # 绿色
-                "DYN": {"type": 128, "val": 0},
+                "RGBW": {"type": CMD_TYPE_ON, "val": 0x00FF0000},  # 绿色
+                "DYN": {"type": CMD_TYPE_OFF, "val": 0},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -605,8 +615,8 @@ def create_rgb_light_devices():
             "devtype": "SL_LI_RGBW",
             "name": "RGBW Light Bulb",
             "data": {
-                "RGBW": {"type": 129, "val": 0x0000FF00},  # 蓝色
-                "DYN": {"type": 129, "val": DYN_EFFECT_MAP.get("彩虹", 1)},
+                "RGBW": {"type": CMD_TYPE_ON, "val": 0x0000FF00},  # 蓝色
+                "DYN": {"type": CMD_TYPE_ON, "val": DYN_EFFECT_MAP.get("彩虹", 1)},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -619,7 +629,7 @@ def create_rgb_light_devices():
             "fullCls": "SL_SW_WW_V1",
             "name": "Jade Dimmer Switch",
             "data": {
-                "P1": {"type": 129, "val": 200},  # 亮度控制[0-255    ]
+                "P1": {"type": CMD_TYPE_ON, "val": 200},  # 亮度控制[0-255    ]
                 "P2": {"val": 128},  # 色温控制[0-255], 128=中性色温
             },
             "stat": 1,
@@ -632,7 +642,7 @@ def create_rgb_light_devices():
             "devtype": "SL_LI_GD1",
             "name": "Wall Dimmer Light",
             "data": {
-                "P1": {"type": 129, "val": 180},  # 开关+亮度[0-255]
+                "P1": {"type": CMD_TYPE_ON, "val": 180},  # 开关+亮度[0-255]
                 "P2": {"val": 1},  # 移动检测: 1=检测到移动
                 "P3": {"val": 420},  # 环境光照值(lux)
             },
@@ -646,7 +656,7 @@ def create_rgb_light_devices():
             "devtype": "SL_LI_UG1",
             "name": "Garden Underground Light",
             "data": {
-                "P1": {"type": 129, "val": 0x80FF4000},  # RGB+动态模式
+                "P1": {"type": CMD_TYPE_ON, "val": 0x80FF4000},  # RGB+动态模式
                 "P2": {"val": 250},  # 环境光照值(lux)
                 "P3": {"val": 0},  # 充电指示: 0=未充电
                 "P4": {"val": 3600, "v": 92},  # 电量: v=92%
@@ -685,8 +695,8 @@ def create_spot_light_devices():
             "devtype": "MSL_IRCTL",
             "name": "Super Bowl Bluetooth",
             "data": {
-                "RGBW": {"type": 129, "val": 0xFF8040FF},
-                "DYN": {"type": 129, "val": DYN_EFFECT_MAP.get("海浪", 2)},
+                "RGBW": {"type": CMD_TYPE_ON, "val": 0xFF8040FF},
+                "DYN": {"type": CMD_TYPE_ON, "val": DYN_EFFECT_MAP.get("海浪", 2)},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -698,8 +708,8 @@ def create_spot_light_devices():
             "devtype": "SL_SPOT",
             "name": "Super Bowl CoSS",
             "data": {
-                "RGB": {"type": 129, "val": 0xFF8040},
-                "P1": {"type": 129, "val": 200},  # 亮度控制
+                "RGB": {"type": CMD_TYPE_ON, "val": 0xFF8040},
+                "P1": {"type": CMD_TYPE_ON, "val": 200},  # 亮度控制
                 "P2": {"val": 128},  # 色温控制
             },
             "stat": 1,
@@ -724,7 +734,7 @@ def create_quantum_light_devices():
             "devtype": "OD_WE_QUAN",
             "name": "Quantum Light",
             "data": {
-                "P1": {"type": 129, "val": 85},  # 亮度控制 85%
+                "P1": {"type": CMD_TYPE_ON, "val": 85},  # 亮度控制 85%
                 "P2": {"val": 0x04810130},  # 颜色控制 - 马戏团效果
             },
             "stat": 1,
@@ -1390,9 +1400,9 @@ def create_cover_devices():
             "data": {
                 "P1": {
                     "val": 100,
-                    "type": 128,
+                    "type": CMD_TYPE_OFF,
                 },  # 窗帘状态: 位置100%, 没有运行 (完全打开状态)
-                "P2": {"type": 128, "val": 0},  # 窗帘控制口
+                "P2": {"type": CMD_TYPE_OFF, "val": 0},  # 窗帘控制口
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -1404,9 +1414,9 @@ def create_cover_devices():
             "devtype": "SL_ETDOOR",
             "name": "Garage Door Controller",
             "data": {
-                "P1": {"type": 128, "val": 0},  # 灯光控制: 关闭状态
-                "P2": {"val": 0, "type": 128},  # 车库门状态: 0%关闭, 没有运行
-                "P3": {"type": 128, "val": 0},  # 车库门控制口
+                "P1": {"type": CMD_TYPE_OFF, "val": 0},  # 灯光控制: 关闭状态
+                "P2": {"val": 0, "type": CMD_TYPE_OFF},  # 车库门状态: 0%关闭, 没有运行
+                "P3": {"type": CMD_TYPE_OFF, "val": 0},  # 车库门控制口
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -1418,14 +1428,14 @@ def create_cover_devices():
             "devtype": "SL_SW_WIN",
             "name": "Curtain Control Switch",
             "data": {
-                "OP": {"type": 128, "val": 0},  # 打开窗帘
-                "CL": {"type": 128, "val": 0},  # 关闭窗帘
-                "ST": {"type": 128, "val": 0},  # 停止
-                "P1": {"type": 128, "val": 0},  # 打开窗帘
-                "P2": {"type": 128, "val": 0},  # 停止
-                "P3": {"type": 128, "val": 0},  # 关闭窗帘
-                "dark": {"type": 128, "val": 100},  # 关闭状态时指示灯亮度
-                "bright": {"type": 128, "val": 200},  # 开启状态时指示灯亮度
+                "OP": {"type": CMD_TYPE_OFF, "val": 0},  # 打开窗帘
+                "CL": {"type": CMD_TYPE_OFF, "val": 0},  # 关闭窗帘
+                "ST": {"type": CMD_TYPE_OFF, "val": 0},  # 停止
+                "P1": {"type": CMD_TYPE_OFF, "val": 0},  # 打开窗帘
+                "P2": {"type": CMD_TYPE_OFF, "val": 0},  # 停止
+                "P3": {"type": CMD_TYPE_OFF, "val": 0},  # 关闭窗帘
+                "dark": {"type": CMD_TYPE_OFF, "val": 100},  # 关闭状态时指示灯亮度
+                "bright": {"type": CMD_TYPE_OFF, "val": 200},  # 开启状态时指示灯亮度
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -1438,12 +1448,12 @@ def create_cover_devices():
             "name": "Generic Controller Curtain",
             "data": {
                 "P1": {"val": (4 << 24)},  # Mode 4: 三线窗帘模式
-                "P2": {"type": 128, "val": 0},  # 打开窗帘
-                "P3": {"type": 128, "val": 0},  # 关闭窗帘
-                "P4": {"type": 128, "val": 0},  # 停止窗帘
-                "P5": {"type": 128, "val": 0},  # 状态1 (仅自由模式有效)
-                "P6": {"type": 128, "val": 0},  # 状态2 (仅自由模式有效)
-                "P7": {"type": 128, "val": 0},  # 状态3 (仅自由模式有效)
+                "P2": {"type": CMD_TYPE_OFF, "val": 0},  # 打开窗帘
+                "P3": {"type": CMD_TYPE_OFF, "val": 0},  # 关闭窗帘
+                "P4": {"type": CMD_TYPE_OFF, "val": 0},  # 停止窗帘
+                "P5": {"type": CMD_TYPE_OFF, "val": 0},  # 状态1 (仅自由模式有效)
+                "P6": {"type": CMD_TYPE_OFF, "val": 0},  # 状态2 (仅自由模式有效)
+                "P7": {"type": CMD_TYPE_OFF, "val": 0},  # 状态3 (仅自由模式有效)
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -1456,8 +1466,8 @@ def create_cover_devices():
             "name": "Non-Position Curtain",
             "data": {
                 "P1": {"val": (2 << 24)},  # Mode 2: 开关模式，无位置反馈
-                "P2": {"type": 128, "val": 0},  # 打开状态
-                "P3": {"type": 128, "val": 0},  # 关闭状态
+                "P2": {"type": CMD_TYPE_OFF, "val": 0},  # 打开状态
+                "P3": {"type": CMD_TYPE_OFF, "val": 0},  # 关闭状态
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -1484,7 +1494,7 @@ def create_climate_devices():
             "devtype": "SL_NATURE",
             "name": "Nature Panel Thermo",
             "data": {
-                "P1": {"type": 129, "val": 1},  # 开关: 开启
+                "P1": {"type": CMD_TYPE_ON, "val": 1},  # 开关: 开启
                 "P4": {"v": 22.5, "val": 225},  # T当前温度 (原始值*10)
                 "P5": {"val": 3},  # 设备种类: 3=温控面板
                 "P6": {"val": (1 << 6)},  # CFG配置: 1=风机盘管(单阀)模式
@@ -1504,7 +1514,7 @@ def create_climate_devices():
             "name": "Floor Heating Controller",
             "data": {
                 "P1": {"type": 1, "val": 2147483648},  # 系统配置: 控制位
-                "P2": {"type": 129, "val": 1},  # 继电器开关: 打开
+                "P2": {"type": CMD_TYPE_ON, "val": 1},  # 继电器开关: 打开
                 "P3": {"v": 23.0, "val": 230},  # 目标温度 (原始值*10)
                 "P4": {"v": 21.5, "val": 215},  # 室内温度 (原始值*10)
                 "P5": {"v": 45.0, "val": 450},  # 底版温度 (原始值/10)
@@ -1523,7 +1533,7 @@ def create_climate_devices():
                     "type": 1,
                     "val": (1 << 15) | (1 << 13),
                 },  # 系统配置: 低风速+制热
-                "P2": {"type": 129, "val": 1},  # 阀门状态: 开
+                "P2": {"type": CMD_TYPE_ON, "val": 1},  # 阀门状态: 开
                 "P3": {"val": 1},  # 风速状态: 1=低速
                 "P4": {"v": 25.0, "val": 250},  # 目标温度 (原始值*10)
                 "P5": {"v": 23.5, "val": 235},  # 室内温度 (原始值*10)
@@ -1538,9 +1548,9 @@ def create_climate_devices():
             "devtype": "V_AIR_P",
             "name": "Air Conditioner Panel",
             "data": {
-                "O": {"type": 129, "val": 1},  # 开关: 开启状态
-                "MODE": {"type": 206, "val": 3},  # 模式: 3=Cool制冷
-                "F": {"type": 206, "val": 45},  # 风速: 45=中档
+                "O": {"type": CMD_TYPE_ON, "val": 1},  # 开关: 开启状态
+                "MODE": {"type": CMD_TYPE_SET_CONFIG, "val": 3},  # 模式: 3=Cool制冷
+                "F": {"type": CMD_TYPE_SET_CONFIG, "val": 45},  # 风速: 45=中档
                 "T": {"v": 24.5, "val": 245},  # 当前温度 (原始值*10)
                 "tT": {"v": 26.0, "val": 260},  # 目标温度 (原始值*10)
             },
@@ -1555,7 +1565,10 @@ def create_climate_devices():
             "devtype": "SL_TR_ACIPM",
             "name": "Air System",
             "data": {
-                "P1": {"type": 129, "val": 2},  # 系统配置: 2=手动模式, type=129表示开启
+                "P1": {
+                    "type": CMD_TYPE_ON,
+                    "val": 2,
+                },  # 系统配置: 2=手动模式, type=CMD_TYPE_ON表示开启
                 "P2": {"val": 2},  # 风速: 2=2档
                 "P3": {"v": 0.5, "val": 5},  # 设置VOC (原始值/10)
                 "P4": {"v": 0.3, "val": 3},  # VOC值 (原始值/10)
@@ -1714,7 +1727,7 @@ def create_mock_device_spot_rgb_light() -> dict:
         "me": device_ids["me"],
         "devtype": "SL_SPOT",
         "name": "Spot RGB Single Test",
-        "data": {"RGB": {"type": 129, "val": 0xFF8040}},
+        "data": {"RGB": {"type": CMD_TYPE_ON, "val": 0xFF8040}},
     }
 
 
@@ -1729,8 +1742,8 @@ def create_mock_device_dual_io_rgbw_light() -> dict:
         "devtype": "SL_CT_RGBW",
         "name": "Dual IO RGBW Single Test",
         "data": {
-            "RGBW": {"type": 129, "val": 0x00FF0080},
-            "DYN": {"type": 128, "val": 0},
+            "RGBW": {"type": CMD_TYPE_ON, "val": 0x00FF0080},
+            "DYN": {"type": CMD_TYPE_OFF, "val": 0},
         },
     }
 
@@ -1745,7 +1758,7 @@ def create_mock_device_single_io_rgb_light() -> dict:
         "me": device_ids["me"],
         "devtype": "SL_SC_RGB",
         "name": "Single IO RGB Single Test",
-        "data": {"RGB": {"type": 129, "val": 0x64010203}},
+        "data": {"RGB": {"type": CMD_TYPE_ON, "val": 0x64010203}},
     }
 
 
@@ -1761,7 +1774,7 @@ def create_brightness_light_devices():
             "me": "brightness_controller",  # 友好设备ID，用于测试
             "devtype": "SL_SPWM",
             "name": "Brightness Controller",
-            "data": {"P1": {"type": 129, "val": 128}},  # 中等亮度
+            "data": {"P1": {"type": CMD_TYPE_ON, "val": 128}},  # 中等亮度
             "stat": 1,
             "ver": "0.0.0.7",
         },
@@ -1784,8 +1797,8 @@ def create_rgbw_light_devices():
             "devtype": "SL_LI_RGBW",
             "name": "RGBW Light Bulb",
             "data": {
-                "RGBW": {"type": 129, "val": 0x00FF0000},  # 红色
-                "DYN": {"type": 128, "val": 0},  # 动态效果关闭
+                "RGBW": {"type": CMD_TYPE_ON, "val": 0x00FF0000},  # 红色
+                "DYN": {"type": CMD_TYPE_OFF, "val": 0},  # 动态效果关闭
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -1797,8 +1810,8 @@ def create_rgbw_light_devices():
             "devtype": "SL_CT_RGBW",
             "name": "Single RGB Light Strip",
             "data": {
-                "RGBW": {"type": 129, "val": 0x0000FF00},  # 绿色
-                "DYN": {"type": 128, "val": 0},
+                "RGBW": {"type": CMD_TYPE_ON, "val": 0x0000FF00},  # 绿色
+                "DYN": {"type": CMD_TYPE_OFF, "val": 0},
             },
             "stat": 1,
             "ver": "0.0.0.7",
@@ -1822,7 +1835,7 @@ def create_outdoor_light_devices():
             "devtype": "SL_LI_GD1",
             "name": "Garden Wall Light",
             "data": {
-                "P1": {"type": 129, "val": 200},  # 亮度控制
+                "P1": {"type": CMD_TYPE_ON, "val": 200},  # 亮度控制
                 "P2": {"val": 0},  # 无移动检测
                 "P3": {"val": 500},  # 环境光照
             },
@@ -1836,7 +1849,7 @@ def create_outdoor_light_devices():
             "devtype": "SL_LI_UG1",
             "name": "Garden Underground Light",
             "data": {
-                "P1": {"type": 129, "val": 0x00FFFF00},  # 黄色
+                "P1": {"type": CMD_TYPE_ON, "val": 0x00FFFF00},  # 黄色
                 "P2": {"val": 300},  # 环境光照
                 "P3": {"val": 1},  # 正在充电
                 "P4": {"val": 3800, "v": 85},  # 电量85%
@@ -1863,7 +1876,7 @@ def create_air_purifier_devices():
             "devtype": "OD_MFRESH_M8088",
             "name": "Air Purifier M8088",
             "data": {
-                "O": {"type": 129, "val": 1},  # 开启状态
+                "O": {"type": CMD_TYPE_ON, "val": 1},  # 开启状态
                 "RM": {"val": 0},  # 自动模式
                 "T": {"val": 235, "v": 23.5},  # 温度23.5℃
                 "H": {"val": 550, "v": 55.0},  # 湿度55%
@@ -1933,7 +1946,7 @@ def create_virtual_test_devices():
             "me": virtual_name,
             "devtype": "VIRTUAL_TEST",
             "name": f"Virtual Test Device {i+1}",
-            "data": {"TEST": {"type": 129, "val": 1}},
+            "data": {"TEST": {"type": CMD_TYPE_ON, "val": 1}},
             "stat": 1,
             "ver": "0.0.0.1",
             "_virtual": True,  # 标记为虚拟设备

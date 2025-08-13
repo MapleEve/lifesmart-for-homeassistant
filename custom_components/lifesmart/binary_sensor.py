@@ -1,10 +1,28 @@
 """
-Support for LifeSmart binary sensors by @MapleEve
-LifeSmart 二元传感器平台实现
+LifeSmart二元传感器平台集成模块 - 智能家居感应器设备支持
 
-此模块负责将 LifeSmart 的各种感应器（如门磁、动态感应器、水浸、门锁事件等）
-注册为 Home Assistant 中的二元传感器实体。
+本模块为Home Assistant提供完整的LifeSmart二元传感器设备集成支持，
+负责将各种智能感应器设备注册为标准的二元传感器实体。
 
+支持的设备类型：
+    - 门磁传感器：门窗开关状态检测
+    - PIR动态感应器：人体红外运动检测
+    - 水浸传感器：漏水和水位监测
+    - 烟雾传感器：火灾安全监测
+    - 门锁事件：智能门锁状态和操作事件
+    - 按钮开关：瞬时按键操作检测
+    - ALM复合传感器：多位状态报警设备
+
+技术特性：
+    - 配置驱动的设备分类和状态处理
+    - 支持bitmask虚拟子设备自动生成
+    - 瞬时按钮设备的智能自动复位机制
+    - 实时状态更新和全局数据同步
+    - 完整的设备信息和属性管理
+    - 异常处理和错误恢复机制
+
+作者: @MapleEve
+版本: 兼容HA 2022.10+ 和 LifeSmart 云端/本地API
 """
 
 import logging
@@ -15,7 +33,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
@@ -85,7 +102,7 @@ async def async_setup_entry(
 
         # 使用新的IO映射系统获取设备支持的平台
         platform_mapping = get_device_platform_mapping(device)
-        binary_sensor_subdevices = platform_mapping.get(Platform.BINARY_SENSOR, [])
+        binary_sensor_subdevices = platform_mapping.get("binary_sensor", [])
 
         # 为每个binary_sensor子设备创建实体
         for sub_key in binary_sensor_subdevices:
@@ -257,8 +274,21 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
 
         io_config = get_binary_sensor_io_config(self._raw_device, self._sub_key)
         if not io_config:
-            # If no config found, return a basic val != 0 check
-            return self._sub_data.get("val", 0) != 0
+            # 如果没有配置，使用io_processors统一处理而不是直接访问
+            from .core.data.processors.io_processors import process_io_value
+
+            # 使用type_bit_0_switch处理器作为默认二进制传感器处理逻辑
+            default_config = {"processor_type": "type_bit_0_switch"}
+            try:
+                return bool(process_io_value(default_config, self._sub_data))
+            except Exception as e:
+                _LOGGER.warning(
+                    "Failed to process binary sensor with io_processors for %s: %s",
+                    self.unique_id,
+                    e,
+                )
+                # 最后后备到原始逻辑，但这应该很少发生
+                return self._sub_data.get("val", 0) != 0
 
         # Use new logic processor system
         return process_io_data(io_config, self._sub_data)
@@ -395,7 +425,20 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         )
 
     async def _handle_update(self, data: dict) -> None:
-        """Handle real-time updates."""
+        """
+        处理实时状态更新事件。
+
+        当设备状态发生变化时，此方法会被调用来更新实体的状态和属性。
+        支持增量更新和错误恢复机制。
+
+        Args:
+            data: 从LifeSmart服务接收的设备状态数据字典
+
+        异常处理:
+            - 捕获所有更新异常，记录详细错误信息
+            - 确保单个设备更新失败不影响其他设备
+            - 提供故障恢复和状态同步机制
+        """
         try:
             if data is None:
                 return
@@ -407,7 +450,28 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
 
     async def _handle_global_refresh(self) -> None:
-        """Handle periodic full data refresh."""
+        """
+        处理定期全量数据刷新事件。
+
+        定期从Home Assistant数据存储中获取最新的设备状态，确保实体状态
+        与实际设备状态保持同步。主要用于网络中断恢复和数据一致性保障。
+
+        执行流程:
+            1. 从hass.data获取当前配置条目的所有设备数据
+            2. 根据网关ID和设备ID定位当前设备
+            3. 提取对应子设备键的最新状态数据
+            4. 更新实体状态并写入Home Assistant
+
+        异常处理:
+            - 设备查找失败时静默忽略（设备可能已被删除）
+            - 状态更新异常时记录错误并继续执行
+            - 确保刷新过程不影响其他实体的正常运行
+
+        注意事项:
+            - 此方法通过全局信号调度器触发
+            - 所有同类型实体会同时接收刷新信号
+            - 仅在数据发生实际变化时更新HA状态
+        """
         try:
             # 从hass.data获取最新设备列表
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]

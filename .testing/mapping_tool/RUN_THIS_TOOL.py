@@ -20,126 +20,94 @@ import sys
 from datetime import datetime
 from typing import Dict, Set, List, Any
 
-sys.path.insert(
-    0, os.path.join(os.path.dirname(__file__), "../../custom_components/lifesmart")
-)
+# Add the project root to path for absolute imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+
+# ✅ 修复：实施fail-fast依赖检查，替换危险的静默错误处理
+print("🔍 检查核心依赖...")
+
+# 检查核心模块
+try:
+    from custom_components.lifesmart.core.config.device_specs import _RAW_DEVICE_DATA
+
+    DEVICE_MAPPING = _RAW_DEVICE_DATA
+    print("✅ 设备数据加载成功")
+except ImportError as e:
+    print(f"❌ 关键错误：无法加载设备数据 - {e}")
+    print("🔧 请确保在项目根目录运行此工具")
+    exit(1)
+
+# 检查NLP依赖 - 关键修复：必须先检查NLP依赖再决定是否使用AI分析器
+print("🧠 检查AI分析器NLP依赖...")
+missing_dependencies = []
+try:
+    import spacy
+
+    print("✅ spacy 可用")
+except ImportError:
+    missing_dependencies.append("spacy>=3.7.0")
+    print("❌ spacy 缺失")
 
 try:
-    # Import the device mappings - 适配当前架构
-    from core.config.device_specs import _RAW_DEVICE_DATA
+    import nltk
 
-    # 重命名以保持兼容性
-    DEVICE_MAPPING = _RAW_DEVICE_DATA
+    print("✅ nltk 可用")
+except ImportError:
+    missing_dependencies.append("nltk>=3.8.0")
+    print("❌ nltk 缺失")
 
-    # Import utils modules for enhanced analysis
-    from utils.strategies import EnhancedAnalysisEngine, EnhancedAnalysisResult
-    from utils.io_logic_analyzer import PlatformAllocationValidator
-    from utils.document_parser import DocumentParser
-    from utils.core_utils import DeviceNameUtils, RegexCache
-    from utils.regex_cache import enable_debug_mode, regex_performance_monitor
-    from utils.memory_agent1 import MemoryAgent1, create_memory_agent1
+try:
+    from transformers import pipeline
+
+    print("✅ transformers 可用")
+except ImportError:
+    missing_dependencies.append("transformers>=4.21.0")
+    print("❌ transformers 缺失")
+
+# 如果有缺失依赖，提供明确的修复指导
+if missing_dependencies:
+    print(f"\n❌ 缺失NLP依赖包，AI分析器无法正常工作！")
+    print(f"📦 缺失的包: {', '.join(missing_dependencies)}")
+    print(f"\n🔧 修复方法:")
+    print(f"   cd /Volumes/LocalRAW/lifesmart-HACS-for-hass/.testing/mapping_tool")
+    print(f"   pip install -r requirements.txt")
+    print(f"   # 或者手动安装: pip install {' '.join(missing_dependencies)}")
+    print(f"\n⚠️ 请安装依赖后重新运行工具以获得正确的AI分析结果")
+    exit(1)
+
+# 导入其他工具模块 - 修复相对导入问题，简化导入
+print("🔧 开始导入工具模块...")
+try:
     from utils.pure_ai_analyzer import (
         analyze_document_realtime,
         DocumentBasedComparisonAnalyzer,
     )
 
+    print("✅ AI分析器模块加载成功")
 except ImportError as e:
-    print(f"⚠️ Import warning: {e}")
-    print("🎯 运行智能模式：依赖Agent分析结果，跳过本地模块导入")
+    print(f"❌ AI分析器模块导入失败: {e}")
+    print("🔧 请检查AI分析器模块完整性")
+    exit(1)
 
-    # 创建占位类和函数以避免错误
-    class MockAnalysisResult:
-        def __init__(self):
-            pass
+# 尝试导入其他可选工具模块
+try:
+    from utils.core_utils import DeviceNameUtils, RegexCache
+    from utils.regex_cache import enable_debug_mode, regex_performance_monitor
 
-    class MockComparisonAnalyzer:
-        def analyze_and_compare(self, existing_data):
-            from datetime import datetime
+    print("✅ 核心工具模块加载成功")
+except ImportError as e:
+    print(f"⚠️ 核心工具模块导入失败，使用简化模式: {e}")
 
-            # 从现有数据中提取设备信息
-            existing_devices = existing_data.get("devices", {})
-            comparison_results = []
+    # 创建简化的替代类
+    class DeviceNameUtils:
+        @staticmethod
+        def is_valid_device_name(name):
+            return bool(name and len(name) >= 3)
 
-            print(f"🎯 MockComparisonAnalyzer处理 {len(existing_devices)} 个现有设备")
-
-            # 为每个现有设备生成对比结果
-            for device_name, device_data in existing_devices.items():
-                # 安全地获取平台信息
-                platforms = []
-                if isinstance(device_data, dict):
-                    platforms_data = device_data.get("platforms", {})
-                    if isinstance(platforms_data, dict):
-                        platforms = list(platforms_data.keys())
-                    elif isinstance(platforms_data, list):
-                        platforms = platforms_data
-
-                comparison_results.append(
-                    {
-                        "device_name": device_name,
-                        "match_type": "现有独有",
-                        "confidence_score": 0.3,
-                        "differences": ["设备仅存在于现有配置中"],
-                        "existing_platforms": platforms,
-                        "ai_platforms": [],
-                    }
-                )
-
-            total_devices = len(comparison_results)
-            print(f"   生成了 {total_devices} 个设备的对比结果")
-
-            return {
-                "agent3_results": {
-                    "comparison_results": comparison_results,
-                    "overall_statistics": {
-                        "perfect_match_rate": 0.0,
-                        "total_devices": total_devices,
-                        "match_distribution": {
-                            "perfect_match": 0,
-                            "partial_match": 0,
-                            "platform_mismatch": 0,
-                            "io_missing": 0,
-                            "ai_only": 0,
-                            "existing_only": total_devices,
-                        },
-                    },
-                },
-                "analysis_metadata": {
-                    "tool": "Mock Fallback Analyzer (Fixed)",
-                    "version": "1.1",
-                    "timestamp": datetime.now().isoformat(),
-                },
-            }
-
-    EnhancedAnalysisResult = MockAnalysisResult
-    DocumentBasedComparisonAnalyzer = MockComparisonAnalyzer
-
-    # 修复：即使导入失败也要加载真实设备数据
-    try:
-        device_specs_path = os.path.join(
-            os.path.dirname(__file__),
-            "../../custom_components/lifesmart/core/config/device_specs.py",
-        )
-
-        print(f"🔄 回退模式：直接从文件加载设备数据")
-
-        if os.path.exists(device_specs_path):
-            with open(device_specs_path, "r", encoding="utf-8") as f:
-                content = f.read()
-
-            globals_dict = {}
-            exec(content, globals_dict)
-            DEVICE_MAPPING = globals_dict.get("_RAW_DEVICE_DATA", {})
-
-            print(f"✅ 直接加载成功: {len(DEVICE_MAPPING)}个设备")
-            if DEVICE_MAPPING:
-                print(f"   前5个设备: {list(DEVICE_MAPPING.keys())[:5]}")
-        else:
-            print(f"❌ 设备规格文件不存在: {device_specs_path}")
-            DEVICE_MAPPING = {}
-
-    except Exception as e:
-        print(f"❌ 直接加载设备数据失败: {e}")
-        DEVICE_MAPPING = {}
+    class RegexCache:
+        @staticmethod
+        def is_version_device(name):
+            return "V1" in name or "V2" in name or "V3" in name
 
     def enable_debug_mode():
         pass
@@ -147,70 +115,31 @@ except ImportError as e:
     def regex_performance_monitor(func):
         return func
 
-    def create_memory_agent1(supported_platforms=None, raw_data=None):
-        # 修复：使用真实设备数据而不是空迭代器
-        if not raw_data:
-            raw_data = DEVICE_MAPPING
 
-        class MockMemoryAgent1:
-            def __init__(self):
-                self.device_data = raw_data
+try:
+    from utils.memory_agent1 import MemoryAgent1, create_memory_agent1
 
-            def get_existing_allocation_stream(self):
-                # 返回真实设备数据而不是空迭代器
-                if self.device_data:
-                    # 首先返回元数据
-                    yield {
-                        "metadata": {
-                            "total_devices": len(self.device_data),
-                            "source": "direct_load",
-                            "generation_time": datetime.now().strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            ),
-                        }
-                    }
+    print("✅ 内存代理模块加载成功")
+except ImportError as e:
+    print(f"⚠️ 内存代理模块导入失败，使用简化模式: {e}")
+    MemoryAgent1 = None
+    create_memory_agent1 = None
 
-                    # 然后返回设备数据
-                    for device_name, device_config in self.device_data.items():
-                        platforms = []
-                        ios = []
-                        for key, value in device_config.items():
-                            if key not in [
-                                "name",
-                                "description",
-                                "versioned",
-                                "dynamic",
-                            ]:
-                                platforms.append(key)
-                                if isinstance(value, dict):
-                                    ios.extend(list(value.keys()))
+print("✅ 所有必需工具模块加载完成")
 
-                        yield {
-                            "device": {
-                                "device_name": device_name,
-                                "platforms": platforms,
-                                "ios": [
-                                    {"name": io, "platform": "unknown"} for io in ios
-                                ],
-                            }
-                        }
-                else:
-                    return iter([])
+print("🚀 所有依赖检查通过，启动AI分析引擎...")
 
-            def get_performance_metrics(self):
-                return {
-                    "memory_usage": {"rss_mb": 50.0, "vms_mb": 100.0},
-                    "cache_performance": {"hits": 10, "misses": 2, "hit_rate": 0.83},
-                    "concurrency": {"active_requests": 0, "max_workers": 4},
-                    "data_statistics": {
-                        "processing_time": 0.1,
-                        "total_devices": (
-                            len(self.device_data) if self.device_data else 0
-                        ),
-                    },
-                }
 
-        return MockMemoryAgent1()
+# 创建简化的类型定义
+class EnhancedAnalysisResult:
+    def __init__(self, device_name: str, **kwargs):
+        self.device_name = device_name
+        self.ai_analysis_result = None
+        self.is_multi_io_device = False
+        self.bitmask_ios = []
+        self.multi_platform_ios = []
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class SmartIOAllocationAnalyzer:
@@ -616,7 +545,7 @@ class SmartIOAllocationAnalyzer:
 
             # 创建实时NLP分析器 - 强制使用真实分析器
             try:
-                from utils.pure_ai_analyzer import (
+                from .utils.pure_ai_analyzer import (
                     DocumentBasedComparisonAnalyzer as RealAnalyzer,
                 )
 

@@ -1,17 +1,25 @@
-"""由 @MapleEve 实现的 LifeSmart 集成常量模块。
+"""LifeSmart集成常量模块 - 核心系统配置文件
 
-此文件定义了所有与 LifeSmart 平台交互所需的硬编码常量、设备类型代码、API命令码、
-以及用于在 Home Assistant 和 LifeSmart 之间转换数据的映射。
+@author: MapleEve
+@description: LifeSmart智能家居平台与Home Assistant集成的核心常量定义模块
 
-维护此文件的准确性和清晰度对于整个集成的稳定和可扩展性至关重要。
+⚠️ 重要技术说明 ⚠️
+本文件定义了LifeSmart集成所需的全部硬编码常量、设备类型代码、API命令代码和映射关系。
+维护本文件的准确性和清晰性对整个集成的稳定性和可扩展性至关重要。
 
-重构说明:
-此文件已从原const.py重构，移除所有helper函数和DEVICE_MAPPING，
-保持单一职责原则，只定义纯常量。
+🏗️ 架构重构说明:
+本文件已从原始const.py重构，移除所有辅助函数和DEVICE_MAPPING，
+遵循单一职责原则，仅定义纯常量。符合万人协作级别的代码规范。
 
-设备映射和helper函数已迁移到:
-- devices/mapping.py: 设备配置映射和helper函数
-- utils/: 工具函数模块
+📁 功能模块迁移路径:
+- 设备映射和辅助函数 -> core/config/mapping.py（设备配置映射和辅助函数）
+- 工具函数 -> utils/ 目录（实用工具函数模块）
+- 设备规格定义 -> core/config/device_specs.py（基于官方文档的设备规格）
+- 平台检测逻辑 -> core/platform/platform_detection.py（动态平台检测）
+
+📚 技术文档参考:
+所有设备类型和IO口信息严格按照 docs/LifeSmart智慧设备规格属性说明.md 为准
+不得从代码中推断或猜测任何信息，必须以官方文档为准
 """
 
 from homeassistant.const import (
@@ -30,38 +38,49 @@ _VALVE_PLATFORM = _platform_constants.get("VALVE")
 ⚠️ 重要：LifeSmart设备动态分类和IO口处理技术说明 ⚠️
 
 本集成支持LifeSmart平台的全系列智能设备，包含复杂的动态设备分类逻辑和精确的IO口控制协议。
-以下是关键技术要点，修改时务必理解这些规则：
+以下是进行任何修改时必须理解的关键技术要点，每个开发者都必须深入理解：
 
-1. 【动态设备分类规则】
-   某些设备根据配置参数动态决定功能：
-   - SL_P通用控制器：根据P1口工作模式(P1>>24)&0xE决定是开关、窗帘还是传感器
-   - SL_NATURE超能面板：根据P5口值(P5&0xFF)决定是开关版(1)还是温控版(3/6)
-   - 动态分类实现在core/platform/platform_detection.py中，不能仅依赖设备类型判断
+1. [动态设备分类规则] - 核心业务逻辑
+   某些设备根据配置参数动态确定功能类型：
+   - SL_P 通用控制器：根据P1口工作模式 (P1>>24)&0xE 判断是开关、窗帘还是传感器
+   - SL_NATURE 超级面板：根据P5口数值 (P5&0xFF) 判断是开关版本(1)还是温控版本(3/6)
+   - 动态分类实现位于 core/platform/platform_detection.py，不能仅依靠设备类型判断
+   - 每个设备的分类逻辑都有详细的官方文档说明和测试用例验证
 
-2. 【IO口数据格式和位运算规则】
-   LifeSmart使用type和val两个字段表示IO口状态：
-   - type字段：奇偶性(type&1)表示开关状态，1=开启/0=关闭
+2. [IO口数据格式和位运算规则] - 数据处理核心
+   LifeSmart使用type和val字段表示IO口状态：
+   - type字段：奇偶性 (type&1) 代表开关状态，1=开启/0=关闭
    - val字段：根据设备类型表示亮度、温度、颜色等具体数值
-   - 浮点数据：当(type&0x7e)==0x2时，val为IEEE754浮点数的32位整数表示
-   - 详细转换逻辑见core/data/conversion.py中的转换函数
+   - 浮点数据：当 (type&0x7e)==0x2 时，val为IEEE754浮点数的32位整数表示
+   - 详细转换逻辑见 core/data/conversion.py 中的转换函数
+   - 每种数据类型都有对应的解析和验证逻辑
 
-3. 【设备版本区分机制】
-   部分设备通过fullCls字段区分版本，必须正确识别：
-   - SL_SW_DM1_V1: 动态调光开关(带传感器)
-   - SL_SW_DM1_V2: 基础调光开关(可控硅)
-   - 版本区分逻辑位于core/platform/platform_detection.py
+3. [设备版本区分机制] - 设备识别关键
+   某些设备通过fullCls字段区分版本，必须正确识别：
+   - SL_SW_DM1_V1：动态调光开关（带传感器功能）
+   - SL_SW_DM1_V2：基础调光开关（可控硅调光）
+   - 版本区分逻辑位于 core/platform/platform_detection.py
+   - 版本信息直接影响设备功能和控制协议
 
-4. 【多平台设备支持】
+4. [多平台设备支持] - 设备功能映射
    单个物理设备可支持多个Home Assistant平台：
-   - 如SL_OE_3C: 同时支持switch(开关功能)、sensor(用电量、功率)
-   - 平台映射通过core/config/device_specs.py和mapping_engine.py定义
-   - 动态平台检测通过core/platform/platform_detection.py实现
+   - 示例 SL_OE_3C：同时支持switch（开关功能）、sensor（功耗、功率）
+   - 平台映射通过 core/config/device_specs.py 和 mapping_engine.py 定义
+   - 动态平台检测通过 core/platform/platform_detection.py 实现
+   - 每个平台的实体创建都有独立的逻辑和验证
 
-5. 【版本兼容性】
-   本集成支持HA版本：2022.10.0 to latest
-   - 兼容性处理统一在core/compatibility.py中管理
-   - 移除了过时的兼容代码，基于最低支持版本优化
-   - 平台常量通过get_platform_constants()统一获取
+5. [版本兼容性] - 跨版本支持策略
+   本集成支持HA版本：2022.10.0 到最新版本
+   - 兼容性处理统一在 core/compatibility.py 中
+   - 已移除过时的兼容代码，基于最小支持版本优化
+   - 平台常量统一通过 get_platform_constants() 获取
+   - 每个版本的差异都有详细记录和处理方案
+
+💡 开发者注意事项：
+- 所有设备信息必须以官方文档为准，不得猜测
+- 修改任何设备逻辑前必须先阅读对应文档和映射注释
+- 测试必须覆盖所有设备类型和版本变化
+- 代码注释必须达到万人协作级别的详细程度
 """
 
 # ================= 核心配置常量 (Core Configuration Constants) =================
@@ -105,6 +124,13 @@ CONF_LIFESMART_LOCAL_IP = "local_ip"
 CONF_LIFESMART_LOCAL_PORT = "local_port"
 CONF_LIFESMART_LOCAL_TIMEOUT = "local_timeout"
 
+# WebSocket network optimization configuration items
+CONF_WS_NETWORK_MODE = "ws_network_mode"  # auto, fast, normal, slow
+CONF_WS_HEARTBEAT_INTERVAL = "ws_heartbeat_interval"  # Custom heartbeat interval
+CONF_WS_MAX_RECONNECT_ATTEMPTS = (
+    "ws_max_reconnect_attempts"  # Custom maximum reconnection attempts
+)
+
 # ================= AI 类型常量 (AI Type Constants) =================
 CON_AI_TYPE_SCENE = "scene"
 CON_AI_TYPE_AIB = "aib"
@@ -134,6 +160,19 @@ CMD_TYPE_SET_RAW_ON = 0xFF  # 开灯亮度/配置设置开始(颜色、动态、
 CMD_TYPE_SET_RAW_OFF = 0xFE  # 关灯亮度设置/配置设置停止（颜色、动态、配置值等）
 CMD_TYPE_SET_TEMP_FCU = 0x89  # FCU温控器设置温度的特殊命令码
 
+# 未知命令码 (用于测试和调试)
+CMD_TYPE_UNKNOWN_131 = 0x83  # 未知命令码 131
+CMD_TYPE_UNKNOWN_133 = 0x85  # 未知命令码 133
+CMD_TYPE_UNKNOWN_136 = 0x88  # 未知命令码 136
+CMD_TYPE_UNKNOWN_137 = 0x89  # 未知命令码 137
+CMD_TYPE_UNKNOWN_138 = 0x8A  # 未知命令码 138
+CMD_TYPE_UNKNOWN_144 = 0x90  # 未知命令码 144
+CMD_TYPE_UNKNOWN_206 = 0xCE  # 未知命令码 206
+CMD_TYPE_UNKNOWN_223 = 0xDF  # 未知命令码 223
+CMD_TYPE_UNKNOWN_254 = 0xFE  # 未知命令码 254
+CMD_TYPE_UNKNOWN_255 = 0xFF  # 未知命令码 255
+CMD_TYPE_UNKNOWN_999 = 0x3E7  # 未知命令码 999 (测试用)
+
 # ================= 服务调用相关常量 (Service Call Constants) =================
 SERVICE_SEND_KEYS = "send_keys"  # 发送按键命令服务
 SERVICE_SET_STATE = "set_state"  # 设置设备状态服务
@@ -152,13 +191,54 @@ DEFAULT_LOCAL_TIMEOUT = 30
 
 # ================= 网络通信常量 (Network Communication Constants) =================
 
-# WebSocket连接配置
-WS_HEARTBEAT_INTERVAL = 30  # 心跳间隔(秒)
-WS_RECONNECT_DELAY = 5  # 重连延迟(秒)
-WS_MAX_RECONNECT_ATTEMPTS = 10  # 最大重连次数
-WS_RECEIVE_TIMEOUT = 30  # WebSocket接收消息超时(秒)
-WS_CLOSE_TIMEOUT = 5.0  # WebSocket关闭超时(秒)
-WS_HEARTBEAT_TIMEOUT = 5.0  # WebSocket心跳超时(秒)
+# Layered timeout configuration - Fast network environment (WiFi, Ethernet)
+WS_TIMEOUT_FAST_NETWORK = {
+    "receive": 15,  # Receive timeout (seconds)
+    "auth": 10,  # Authentication timeout (seconds)
+    "close": 5.0,  # Close timeout (seconds)
+    "heartbeat": 5.0,  # Heartbeat timeout (seconds)
+    "reconnect_base": 3,  # Base reconnection interval (seconds)
+}
+
+# Layered timeout configuration - Normal network environment (4G, stable WiFi)
+WS_TIMEOUT_NORMAL_NETWORK = {
+    "receive": 30,  # Receive timeout (seconds)
+    "auth": 20,  # Authentication timeout (seconds)
+    "close": 8.0,  # Close timeout (seconds)
+    "heartbeat": 8.0,  # Heartbeat timeout (seconds)
+    "reconnect_base": 5,  # Base reconnection interval (seconds)
+}
+
+# Layered timeout configuration - Slow network environment (3G, unstable)
+WS_TIMEOUT_SLOW_NETWORK = {
+    "receive": 60,  # Receive timeout (seconds)
+    "auth": 30,  # Authentication timeout (seconds)
+    "close": 10.0,  # Close timeout (seconds)
+    "heartbeat": 10.0,  # Heartbeat timeout (seconds)
+    "reconnect_base": 10,  # Base reconnection interval (seconds)
+}
+
+# Reconnection strategy configuration
+WS_RECONNECT_CONFIG = {
+    "max_attempts_fast": 20,  # Fast network maximum retry attempts
+    "max_attempts_normal": 40,  # Standard network maximum retry attempts
+    "max_attempts_slow": 60,  # Slow network maximum retry attempts
+    "backoff_multiplier": 1.5,  # Backoff multiplier (changed from 2 to 1.5)
+    "max_backoff_seconds": 120,  # Maximum backoff time (seconds) (300→120)
+    "jitter_factor": 0.1,  # Random jitter factor
+}
+
+# Heartbeat configuration - Adaptive based on network quality
+WS_HEARTBEAT_CONFIG = {
+    "fast_network": 15,  # Fast network heartbeat interval (seconds)
+    "normal_network": 25,  # Standard network heartbeat interval (seconds)
+    "slow_network": 40,  # Slow network heartbeat interval (seconds)
+}
+
+# Network quality detection configuration
+WS_CONNECTION_QUALITY_CHECK_INTERVAL = 30  # Quality check interval (seconds)
+WS_LATENCY_THRESHOLD_GOOD = 100  # Good latency threshold (ms)
+WS_LATENCY_THRESHOLD_POOR = 500  # Poor latency threshold (ms)
 
 # HTTP请求配置
 HTTP_TIMEOUT = 30  # HTTP请求超时时间(秒)
@@ -293,7 +373,7 @@ UNLOCK_METHOD = {
     15: "Error",
 }
 
-# 服务器区域选项 (用于配置流程)
+# Server region options (for configuration flow)
 LIFESMART_REGION_OPTIONS = [
     "cn0",
     "cn1",

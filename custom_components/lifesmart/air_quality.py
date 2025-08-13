@@ -26,6 +26,7 @@ from typing import Any
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -196,7 +197,7 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
 
     def _get_io_config(self, metric: str) -> dict | None:
         """
-        从DEVICE_MAPPING中获取空气质量指标的配置。
+        使用映射引擎获取空气质量指标的配置。
 
         Args:
             metric: 要查找的指标类型，如'aqi', 'pm25'等
@@ -204,14 +205,19 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
         Returns:
             包含处理器配置的字典，如果未找到则返回None
         """
-        from .core.config.mapping import DEVICE_MAPPING
+        from .core.config.mapping_engine import mapping_engine
 
-        device_type = self._raw_device.get(DEVICE_TYPE_KEY)
-        if not device_type or device_type not in DEVICE_MAPPING:
-            return None
+        device_config = mapping_engine.resolve_device_mapping_from_data(
+            self._raw_device
+        )
+        if not device_config:
+            _LOGGER.error("映射引擎无法解析设备配置: %s", self._raw_device)
+            raise HomeAssistantError(
+                f"Device configuration not found for "
+                f"{self._raw_device.get('me', 'unknown')}"
+            )
 
-        mapping = DEVICE_MAPPING[device_type]
-        air_quality_config = mapping.get("air_quality", {})
+        air_quality_config = device_config.get("air_quality", {})
 
         # 查找特定指标的配置
         for io_key, io_config in air_quality_config.items():

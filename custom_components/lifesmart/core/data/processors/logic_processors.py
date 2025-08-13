@@ -437,6 +437,11 @@ def process_io_data(io_config: dict[str, Any], raw_data: dict[str, Any]) -> Any:
     Returns:
         处理后的值
     """
+    # 防御性检查：确保raw_data不为None
+    if raw_data is None:
+        _LOGGER.warning("Received None raw_data in process_io_data")
+        return None
+
     # 操作1: 获取处理器类型
     processor_type = io_config.get("processor_type")
     if not processor_type:

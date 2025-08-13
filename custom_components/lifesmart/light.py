@@ -152,6 +152,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -171,7 +172,6 @@ from .core.const import (
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
-    DEVICE_TYPE_KEY,
     DEVICE_VERSION_KEY,
     DOMAIN,
     HUB_ID_KEY,
@@ -183,8 +183,6 @@ from .core.entity import LifeSmartEntity
 from .core.error_handling import (
     OptimisticUpdateMixin,
     get_light_state_attributes,
-    handle_global_refresh,
-    log_device_unavailable,
 )
 from .core.helpers import (
     generate_unique_id,
@@ -303,7 +301,10 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
 
     device_config = mapping_engine.resolve_device_mapping_from_data(device)
     if not device_config:
-        return None
+        _LOGGER.error("映射引擎无法解析设备配置: %s", device)
+        raise HomeAssistantError(
+            f"Device configuration not found for {device.get('me', 'unknown')}"
+        )
 
     # 在light平台中查找IO配置
     light_config = device_config.get("light")
@@ -2264,7 +2265,6 @@ class LifeSmartDualIORGBWLight(LifeSmartBaseLight):
     def _initialize_state(self) -> None:
         """初始化双IO RGBW灯状态 - 使用新的逻辑处理器系统。"""
         from .core.data.processors.logic_processors import process_io_data
-from custom_components.lifesmart.core.const import CMD_TYPE_SET_VAL, CMD_TYPE_SET_RAW_OFF, CMD_TYPE_ON, CMD_TYPE_OFF, CMD_TYPE_SET_RAW_ON
 
         data = self._sub_data
         color_data = safe_get(data, self._color_io, default={})
