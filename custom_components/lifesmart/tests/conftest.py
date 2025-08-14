@@ -766,6 +766,221 @@ def mock_device_dual_io_rgbw_light():
     return create_mock_device_dual_io_rgbw_light()
 
 
+# ============================================================================
+# === Phase 1: 强类型设备测试基础设施 Fixtures ===
+# ============================================================================
+
+
+@pytest.fixture
+def typed_core_devices():
+    """
+    提供所有10个核心设备类型的强类型实例列表。
+
+    这是Phase 1增量基础设施的核心fixture，为强类型测试提供标准设备集。
+    """
+    from .utils.typed_factories import create_typed_core_devices
+
+    return create_typed_core_devices()
+
+
+@pytest.fixture
+def typed_smart_plug():
+    """提供强类型智慧插座设备实例 (SL_OL)"""
+    from .utils.typed_factories import create_typed_smart_plug
+
+    return create_typed_smart_plug()
+
+
+@pytest.fixture
+def typed_power_meter_plug():
+    """提供强类型计量插座设备实例 (SL_OE_3C)"""
+    from .utils.typed_factories import create_typed_power_meter_plug
+
+    return create_typed_power_meter_plug()
+
+
+@pytest.fixture
+def typed_switch_if3():
+    """提供强类型三联开关设备实例 (SL_SW_IF3)"""
+    from .utils.typed_factories import create_typed_switch_if3
+
+    return create_typed_switch_if3()
+
+
+@pytest.fixture
+def typed_dimmer_light():
+    """提供强类型调光灯泡设备实例 (SL_LI_WW)"""
+    from .utils.typed_factories import create_typed_dimmer_light
+
+    return create_typed_dimmer_light()
+
+
+@pytest.fixture
+def typed_rgbw_light():
+    """提供强类型RGBW灯带设备实例 (SL_CT_RGBW)"""
+    from .utils.typed_factories import create_typed_rgbw_light
+
+    return create_typed_rgbw_light()
+
+
+@pytest.fixture
+def typed_environment_sensor():
+    """提供强类型环境传感器设备实例 (SL_SC_THL)"""
+    from .utils.typed_factories import create_typed_environment_sensor
+
+    return create_typed_environment_sensor()
+
+
+@pytest.fixture
+def typed_door_sensor():
+    """提供强类型门窗传感器设备实例 (SL_SC_G)"""
+    from .utils.typed_factories import create_typed_door_sensor
+
+    return create_typed_door_sensor()
+
+
+@pytest.fixture
+def typed_curtain_motor():
+    """提供强类型窗帘电机设备实例 (SL_DOOYA)"""
+    from .utils.typed_factories import create_typed_curtain_motor
+
+    return create_typed_curtain_motor()
+
+
+@pytest.fixture
+def typed_thermostat_panel():
+    """提供强类型温控面板设备实例 (SL_NATURE)"""
+    from .utils.typed_factories import create_typed_thermostat_panel
+
+    return create_typed_thermostat_panel()
+
+
+@pytest.fixture
+def typed_smart_lock():
+    """提供强类型智能门锁设备实例 (SL_LK_LS)"""
+    from .utils.typed_factories import create_typed_smart_lock
+
+    return create_typed_smart_lock()
+
+
+@pytest.fixture
+def typed_switch_devices():
+    """提供所有强类型开关设备实例列表"""
+    from .utils.typed_factories import create_typed_devices_by_platform
+
+    return create_typed_devices_by_platform("switch")
+
+
+@pytest.fixture
+def typed_sensor_devices():
+    """提供所有强类型传感器设备实例列表"""
+    from .utils.typed_factories import create_typed_devices_by_platform
+
+    return create_typed_devices_by_platform("sensor")
+
+
+@pytest.fixture
+def typed_light_devices():
+    """提供所有强类型灯光设备实例列表"""
+    from .utils.typed_factories import create_typed_devices_by_platform
+
+    return create_typed_devices_by_platform("light")
+
+
+@pytest.fixture
+def typed_binary_sensor_devices():
+    """提供所有强类型二进制传感器设备实例列表"""
+    from .utils.typed_factories import create_typed_devices_by_platform
+
+    return create_typed_devices_by_platform("binary_sensor")
+
+
+@pytest.fixture
+def typed_cover_devices():
+    """提供所有强类型窗帘设备实例列表"""
+    from .utils.typed_factories import create_typed_devices_by_platform
+
+    return create_typed_devices_by_platform("cover")
+
+
+@pytest.fixture
+def typed_climate_devices():
+    """提供所有强类型气候控制设备实例列表"""
+    from .utils.typed_factories import create_typed_devices_by_platform
+
+    return create_typed_devices_by_platform("climate")
+
+
+@pytest.fixture
+def typed_lock_devices():
+    """提供所有强类型门锁设备实例列表"""
+    from .utils.typed_factories import create_typed_devices_by_platform
+
+    return create_typed_devices_by_platform("lock")
+
+
+@pytest.fixture
+def typed_device_validator():
+    """提供强类型设备验证器实例"""
+    from .utils.type_validators import TypedDeviceValidator
+
+    return TypedDeviceValidator()
+
+
+@pytest.fixture
+def compatibility_validator():
+    """提供兼容性验证器实例"""
+    from .utils.type_validators import CompatibilityValidator
+
+    return CompatibilityValidator()
+
+
+@pytest.fixture
+def typed_devices_as_dicts(typed_core_devices):
+    """
+    将强类型核心设备转换为字典格式。
+
+    用于测试强类型设备与现有字典系统的兼容性。
+    """
+    from .utils.typed_factories import convert_typed_devices_to_dict
+
+    return convert_typed_devices_to_dict(typed_core_devices)
+
+
+@pytest.fixture
+async def setup_integration_typed_devices_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    typed_devices_as_dicts: list,
+):
+    """
+    专用的setup fixture，使用强类型设备转换的字典数据。
+
+    这个fixture展示了强类型设备如何与现有测试基础设施无缝集成。
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # 使用强类型设备转换的字典数据
+    hub_instance = create_mock_hub(typed_devices_as_dicts, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
 # 全局标志，确保banner只显示一次
 _BANNER_SHOWN = False
 
@@ -807,3 +1022,32 @@ def pytest_configure(config):
     # This hook is called after command line options have been parsed
     # and all plugins and initial conftest files been loaded
     _show_banner_once()
+
+
+# Phase 2: DeviceResolver 核心测试支持
+@pytest.fixture(autouse=True)
+def reset_global_singletons():
+    """
+    在每次测试后自动重置核心组件的全局单例。
+
+    这是确保 Phase 2 DeviceResolver 测试隔离性的关键步骤，
+    防止状态从一个测试泄漏到另一个测试中。
+    """
+    yield  # 运行测试
+
+    # 在测试结束后执行清理
+    try:
+        from custom_components.lifesmart.core.resolver import device_resolver
+
+        device_resolver._global_resolver = None
+    except ImportError:
+        # 如果模块还未导入，跳过清理
+        pass
+
+    try:
+        from custom_components.lifesmart.core.strategies import strategy_factory
+
+        strategy_factory._global_factory = None
+    except ImportError:
+        # 如果模块还未导入，跳过清理
+        pass
