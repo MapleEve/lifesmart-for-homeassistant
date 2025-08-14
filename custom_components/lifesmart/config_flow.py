@@ -451,7 +451,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         super().__init__()
 
         # 基于最低支持版本2022.10.0，config_entry属性已存在
-        # 直接保存配置条目引用，无需复杂的兼容性检查
+        # 直接保存配置条目引用
         self._config_entry_ref = config_entry
         self.options_data = dict(config_entry.options)
         self.temp_data = {}

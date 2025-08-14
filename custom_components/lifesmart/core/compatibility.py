@@ -1,6 +1,6 @@
 """
-Home Assistant 版本兼容性处理模块
-仅包含功能运行时的兼容性函数，支持从 2023.3.0 开始的版本
+Home Assistant 版本差异处理模块
+处理不同 HA 版本之间的 API 差异，支持从 2022.10.0 开始的版本
 """
 
 import logging
@@ -10,9 +10,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_ws_timeout(timeout_seconds: float):
     """
-    获取兼容的WebSocket超时参数
+    获取 WebSocket 超时参数
 
-    在不同aiohttp版本中，WebSocket连接的超时参数格式不同：
+    处理不同 aiohttp 版本中 WebSocket 连接超时参数格式差异：
     - aiohttp 3.8.x: 使用 float 类型
     - aiohttp 3.9.x-3.10.x: 使用 ClientWSTimeout(ws_connect=timeout)
     - aiohttp 3.11.x+: 使用 ClientWSTimeout(ws_receive=timeout, ws_close=timeout)
@@ -34,9 +34,9 @@ def get_ws_timeout(timeout_seconds: float):
 
 def get_climate_entity_features():
     """
-    获取兼容的气候实体功能常量
+    获取气候实体功能常量
 
-    在不同HA版本中，ClimateEntityFeature的属性不同
+    处理不同 HA 版本中 ClimateEntityFeature 的属性差异
     """
     try:
         from homeassistant.components.climate import ClimateEntityFeature
@@ -46,7 +46,7 @@ def get_climate_entity_features():
             # 新版本HA，直接使用官方的ClimateEntityFeature
             return ClimateEntityFeature
         else:
-            # 旧版本没有TURN_ON/TURN_OFF，需要创建兼容类
+            # 旧版本没有TURN_ON/TURN_OFF，需要创建扩展类
             class CompatClimateEntityFeature:
                 def __init__(self):
                     # 复制现有的属性
@@ -86,7 +86,7 @@ def get_climate_entity_features():
                 SUPPORT_AUX_HEAT,
             )
 
-            # 创建一个兼容类来模拟新的枚举
+            # 创建一个扩展类来模拟新的枚举
             class CompatClimateEntityFeature:
                 def __init__(self):
                     self.TARGET_TEMPERATURE = SUPPORT_TARGET_TEMPERATURE
@@ -135,9 +135,9 @@ def create_service_call(
     domain: str, service: str, service_data: dict = None, hass=None
 ):
     """
-    创建兼容的服务调用对象
+    创建服务调用对象
 
-    不同HA版本中，ServiceCall的创建方式可能不同
+    处理不同 HA 版本中 ServiceCall 的创建方式差异
     - HA 2025.7.4+: 需要 hass 参数
     - HA 2024.x: 不需要 hass 参数
     """
@@ -183,12 +183,12 @@ def create_service_call(
 
 def get_collection_type():
     """
-    获取兼容的Collection类型
+    获取 Collection 类型
 
-    在不同Python版本中，Collection类型的导入位置不同：
+    处理不同 Python 版本中 Collection 类型的导入位置差异：
     - Python 3.9+: 从 collections.abc 导入
     - Python 3.8: 从 typing 导入 (已弃用)
-    - 某些HA版本: 可能需要特殊处理
+    - 某些 HA 版本: 可能需要特殊处理
     """
     try:
         # 标准方式：从collections.abc导入
@@ -208,17 +208,17 @@ def get_collection_type():
 
 
 def setup_logging():
-    """设置兼容性日志"""
-    _LOGGER.info("LifeSmart兼容性模块已加载")
+    """设置日志"""
+    _LOGGER.info("LifeSmart版本差异处理模块已加载")
 
 
 def get_button_device_class():
     """
-    获取兼容的按钮设备类
+    获取按钮设备类
 
-    在不同HA版本中，ButtonDeviceClass的IDENTIFY属性支持情况不同：
+    处理不同 HA 版本中 ButtonDeviceClass 的 IDENTIFY 属性支持差异：
     - HA 2024.8+: 支持 ButtonDeviceClass.IDENTIFY ('identify')
-    - HA 2023.6.0: ButtonDeviceClass存在但没有IDENTIFY属性
+    - HA 2023.6.0: ButtonDeviceClass 存在但没有 IDENTIFY 属性
     """
     try:
         from homeassistant.components.button import ButtonDeviceClass
@@ -238,9 +238,9 @@ def get_button_device_class():
 
 def get_platform_constants():
     """
-    获取版本兼容的HA平台常量
+    获取 HA 平台常量
 
-    基于当前支持的最低HA版本 2022.10.0 进行优化，但需要处理新平台的兼容性：
+    基于当前支持的最低 HA 版本 2022.10.0 进行优化，处理新平台的版本差异：
     - EVENT 平台在 HA 2024.4+ 中引入
     - VALVE 平台在 HA 2023.11+ 中引入
     - 其他平台在 2022.10.0 中已支持

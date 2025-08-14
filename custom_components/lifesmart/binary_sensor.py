@@ -22,7 +22,7 @@ LifeSmart二元传感器平台集成模块 - 智能家居感应器设备支持
     - 异常处理和错误恢复机制
 
 作者: @MapleEve
-版本: 兼容HA 2022.10+ 和 LifeSmart 云端/本地API
+版本: 支持HA 2022.10+ 和 LifeSmart 云端/本地API
 """
 
 import logging
@@ -126,7 +126,7 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
     LifeSmart 二元传感器设备实体类。
 
     继承自LifeSmartEntity和BinarySensorEntity，负责二元传感器的状态管理
-    和数据处理逻辑。实现了增强的兼容性和完整的设备控制功能。
+    和数据处理逻辑。实现了增强的稳定性和完整的设备控制功能。
 
     主要职责:
     - 解析和处理各种二元传感器状态

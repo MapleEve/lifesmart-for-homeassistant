@@ -163,25 +163,32 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
         数据转换等）都依赖于此函数返回的配置信息。配置格式必须符合增强
         结构标准，即包含 "description" 字段的字典格式。
     """
-    from .core.config.mapping_engine import mapping_engine
+    # Phase 2: 使用DeviceResolver统一接口 - 简化8行代码为2行
+    from .core.resolver import get_device_resolver
 
-    device_config = mapping_engine.resolve_device_mapping_from_data(device)
-    if not device_config:
-        _LOGGER.error("映射引擎无法解析设备配置: %s", device)
-        raise HomeAssistantError(
-            f"Device configuration not found for {device.get('me', 'unknown')}"
-        )
+    resolver = get_device_resolver()
+    platform_config = resolver.get_platform_config(device, "sensor")
 
-    # 在sensor平台中查找IO配置
-    sensor_config = device_config.get("sensor")
-    if not sensor_config:
+    if not platform_config:
         return None
 
-    # 检查是否为增强结构
-    if isinstance(sensor_config, dict) and sub_key in sensor_config:
-        io_config = sensor_config[sub_key]
-        if isinstance(io_config, dict) and "description" in io_config:
-            return io_config
+    # 检查特定IO配置
+    if sub_key in platform_config.ios:
+        io_config = platform_config.ios[sub_key]
+        if io_config.is_valid():
+            # 转换为原格式
+            return {
+                "description": io_config.description,
+                "cmd_type": io_config.cmd_type,
+                "idx": io_config.idx,
+                "device_class": io_config.device_class,
+                "state_class": io_config.state_class,
+                "unit_of_measurement": io_config.unit_of_measurement,
+                "icon": io_config.icon,
+                "entity_category": io_config.entity_category,
+                "value_template": io_config.value_template,
+                "state_mapping": io_config.state_mapping,
+            }
 
     return None
 

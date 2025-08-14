@@ -301,7 +301,6 @@ HUB_BUSINESS_LOGIC_TEST_VALUES = {
     "device_identifier_1": "dev1",
     "device_identifier_2": "dev2",
     "test_device_type": "test_type",
-    
     # OAPI认证测试常量
     "test_appkey_oapi": "test_appkey",
     "test_apptoken_oapi": "test_apptoken",
@@ -309,17 +308,14 @@ HUB_BUSINESS_LOGIC_TEST_VALUES = {
     "test_usertoken_oapi": "test_usertoken",
     "new_token_refresh": "new_token",
     "token_expiry_time": 9999999999,
-    
     # 本地网络配置常量
     "local_test_ip": "192.168.1.100",
     "local_test_port": 8888,
     "local_admin_user": "admin",
     "local_admin_pass": "admin",
-    
     # WebSocket测试常量
     "test_websocket_url": "wss://test.com/ws",
     "test_websocket_local": "ws://localhost/test",
-    
     # 设备数据测试常量
     "test_device_name": "Test Device",
     "scene_device_prefix": "scene",
@@ -327,7 +323,6 @@ HUB_BUSINESS_LOGIC_TEST_VALUES = {
     "ai_hub_identifier": "ai_hub",
     "filtered_device_id": "filtered_device",
     "filtered_hub_id": "filtered_hub",
-    
     # 测试配置条目ID
     "test_entry_oapi_id": "test_entry_oapi",
     "test_entry_local_id": "test_entry_local",
@@ -342,19 +337,16 @@ CLIENT_BASE_TEST_VALUES = {
     "command_device_1": "dev1",
     "command_io_l1": "L1",
     "command_type_generic": "type",
-    
     # 场景控制测试常量
     "scene_identifier_1": "scene1",
     "scene_hub_default": "0000",
     "scene_device_default": "LS",
-    
     # IO口标识符常量
     "io_port_p1": "P1",
     "io_port_open": "OP",
-    "io_port_close": "CL", 
+    "io_port_close": "CL",
     "io_port_stop": "ST",
     "io_port_position": "PE",
-    
     # 客户端测试数值参数（保留为业务验证值）
     # 注意：以下数值是业务逻辑验证值，不应修改
     # "command_value_on": 1,
@@ -370,25 +362,21 @@ CLIENT_BASE_TEST_VALUES = {
 HUB_BUSINESS_LOGIC_EXTENDED = {
     # 排除配置测试常量
     "exclude_devices_list": "dev1,dev2",
-    "exclude_hubs_list": "hub2", 
+    "exclude_hubs_list": "hub2",
     "exclude_device_1": "dev1",
     "exclude_device_2": "dev2",
     "exclude_hub_2": "hub2",
-    
     # 本地测试账号常量
     "local_test_user": "test_user",
     "local_test_password": "test_pass",
-    
     # 设备类型测试常量
     "device_type_switch": "SL_SW",
     "device_type_scene": "SL_SCENE",
-    
     # AI事件测试常量
     "ai_include_devices": "ai_device",
     "ai_include_hubs": "ai_hub",
     "ai_filtered_device": "filtered_device",
     "ai_filtered_hub": "filtered_hub",
-    
     # 测试数据标识符
     "test_data_generic": "test",
     "test_data_value": "data",
@@ -396,7 +384,8 @@ HUB_BUSINESS_LOGIC_EXTENDED = {
     "test_invalid_value": "data",
 }
 
-
+# 网络配置常量
+NETWORK_CONFIG = {
     # 网络配置常量
     "test_ip": "192.168.1.100",
     "test_port": 3000,

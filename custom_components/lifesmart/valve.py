@@ -315,24 +315,26 @@ class LifeSmartValve(LifeSmartEntity, ValveEntity):
             "unit": "%"
         }
         """
-        from .core.config.mapping_engine import mapping_engine
+        # Phase 2: 使用DeviceResolver统一接口 - 简化8行为3行
+        from .core.resolver import get_device_resolver
 
-        device_config = mapping_engine.resolve_device_mapping_from_data(
-            self._raw_device
-        )
-        if not device_config:
-            _LOGGER.error("映射引擎无法解析设备配置: %s", self._raw_device)
-            raise HomeAssistantError(
-                f"Device configuration not found for "
-                f"{self._raw_device.get('me', 'unknown')}"
-            )
+        resolver = get_device_resolver()
+        platform_config = resolver.get_platform_config(self._raw_device, "valve")
 
-        valve_config = device_config.get("valve", {})
+        if not platform_config:
+            return None
 
         # 查找特定指标的配置
-        for io_key, io_config in valve_config.items():
-            if isinstance(io_config, dict) and io_config.get("metric") == metric:
-                return io_config
+        for io_key, io_config in platform_config.ios.items():
+            if hasattr(io_config, "metric") and getattr(io_config, "metric") == metric:
+                return {
+                    "processor_type": getattr(
+                        io_config, "processor_type", "direct_value"
+                    ),
+                    "metric": metric,
+                    "scale_factor": getattr(io_config, "scale_factor", 1.0),
+                    "unit": getattr(io_config, "unit", None),
+                }
 
         return None
 
@@ -528,7 +530,7 @@ class LifeSmartValve(LifeSmartEntity, ValveEntity):
         Returns:
             dict: 包含以下键的属性字典:
                 - position: 当前位置百分比
-                - position_percentage: 位置百分比（兼容性）
+                - position_percentage: 位置百分比
                 - valve_state: 文本状态描述 ("open" 或 "closed")
                 - 其他从父类继承的属性
 

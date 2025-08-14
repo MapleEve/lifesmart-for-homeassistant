@@ -93,7 +93,7 @@ LifeSmart智能家居集成 - 灯光平台模块 (Light Platform)
 ========================
 
 1. 📱 Home Assistant UI集成:
-   ├── 标准灯光卡片: 完全兼容HA原生灯光控制界面
+   ├── 标准灯光卡片: 完全支持HA原生灯光控制界面
    ├── 颜色选择器: 支持RGB颜色环和色温滑条
    ├── 亮度控制: 平滑的亮度调节体验
    └── 效果选择: 下拉菜单选择动态灯光效果
@@ -298,25 +298,32 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
         - light平台配置缺失: 返回None，该IO不创建灯光实体
         - 配置结构异常: 返回None，防止创建错误的实体
     """
-    from .core.config.mapping_engine import mapping_engine
+    # Phase 2: 使用DeviceResolver统一接口 - 简化8行代码为2行
+    from .core.resolver import get_device_resolver
 
-    device_config = mapping_engine.resolve_device_mapping_from_data(device)
-    if not device_config:
-        _LOGGER.error("映射引擎无法解析设备配置: %s", device)
-        raise HomeAssistantError(
-            f"Device configuration not found for {device.get('me', 'unknown')}"
-        )
+    resolver = get_device_resolver()
+    platform_config = resolver.get_platform_config(device, "light")
 
-    # 在light平台中查找IO配置
-    light_config = device_config.get("light")
-    if not light_config:
+    if not platform_config:
         return None
 
-    # 检查是否为增强结构
-    if isinstance(light_config, dict) and sub_key in light_config:
-        io_config = light_config[sub_key]
-        if isinstance(io_config, dict) and "description" in io_config:
-            return io_config
+    # 检查特定IO配置
+    if sub_key in platform_config.ios:
+        io_config = platform_config.ios[sub_key]
+        if io_config.is_valid():
+            # 转换为原格式
+            return {
+                "description": io_config.description,
+                "cmd_type": io_config.cmd_type,
+                "idx": io_config.idx,
+                "device_class": io_config.device_class,
+                "state_class": io_config.state_class,
+                "unit_of_measurement": io_config.unit_of_measurement,
+                "icon": io_config.icon,
+                "entity_category": io_config.entity_category,
+                "value_template": io_config.value_template,
+                "state_mapping": io_config.state_mapping,
+            }
 
     return None
 

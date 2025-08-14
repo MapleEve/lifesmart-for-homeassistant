@@ -105,7 +105,7 @@ class LifeSmartServiceManager:
                 "category": call.data["category"],
                 "brand": call.data["brand"],
                 "key": call.data.get("key")
-                or call.data.get("keys"),  # 兼容key和keys参数
+                or call.data.get("keys"),  # 支持key和keys参数
                 "power": call.data["power"],
                 "mode": call.data["mode"],
                 "temp": call.data["temp"],

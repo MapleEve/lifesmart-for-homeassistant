@@ -41,6 +41,7 @@ from homeassistant.const import (
 )
 
 from .third_party_mapping import THIRD_PARTY_MAPPING
+from .device_spec_registry import get_device_spec_registry, DeviceSpecRegistry
 from ..const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -71,9 +72,14 @@ from ..data.processors.logic_processors import (
 
 
 class EnhancedMappingEngine:
-    """增强的动态映射解析引擎，支持纯数据层转换"""
+    """增强的动态映射解析引擎，支持纯数据层转换
 
-    def __init__(self):
+    Phase 1架构分离：集成DeviceSpecRegistry，分离数据存储职责
+    """
+
+    def __init__(self, device_registry: Optional[DeviceSpecRegistry] = None):
+        # Phase 1: 集成DeviceSpecRegistry
+        self.device_registry = device_registry or get_device_spec_registry()
         # HA标准常量映射
         self.ha_constants = {
             # 设备类常量
@@ -313,8 +319,8 @@ class EnhancedMappingEngine:
         """
         device_type = device.get("devtype")
 
-        # 从mapping_data导入纯数据
-        from .device_specs import DEVICE_SPECS_DATA
+        # Phase 1: 使用DeviceSpecRegistry替换直接导入
+        # 保持向后兼容的数据访问方式
 
         # 处理版本化设备类型 - 使用THIRD_PARTY_MAPPING进行正确的版本映射
         base_device_type = device_type
@@ -322,11 +328,11 @@ class EnhancedMappingEngine:
             # 从第三方映射中获取基础设备类型
             base_device_type = THIRD_PARTY_MAPPING[device_type]
 
-        # 首先尝试完整设备类型
-        raw_config = DEVICE_SPECS_DATA.get(device_type, {})
+        # Phase 1: 使用DeviceSpecRegistry获取设备规格
+        raw_config = self.device_registry.get_device_spec(device_type)
         if not raw_config:
             # 如果完整类型不存在，再尝试基础类型
-            raw_config = DEVICE_SPECS_DATA.get(base_device_type, {})
+            raw_config = self.device_registry.get_device_spec(base_device_type)
 
         if not raw_config:
             return {}
@@ -874,15 +880,17 @@ class EnhancedMappingEngine:
         device_type = device.get("devtype")
         device_data = device.get("data", {})
 
-        # 从raw_data获取设备配置并转换为HA格式
+        # Phase 1: 使用DeviceSpecRegistry获取设备配置并转换为HA格式
         try:
-            from .device_specs import DEVICE_SPECS_DATA
-
-            raw_config = DEVICE_SPECS_DATA.get(device_type, {})
+            raw_config = self.device_registry.get_device_spec(device_type)
             device_config = (
                 self.convert_data_to_ha_mapping(raw_config) if raw_config else {}
             )
-        except ImportError:
+        except Exception as e:
+            import logging
+
+            _LOGGER = logging.getLogger(__name__)
+            _LOGGER.warning(f"Failed to get device spec for {device_type}: {e}")
             return {}
 
         # 应用HA常量到配置

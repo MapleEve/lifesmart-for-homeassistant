@@ -1315,9 +1315,17 @@ class LifeSmartClientBase(ABC):
 
         device_type = get_device_effective_type(device)
 
-        # 获取设备映射配置
-        device_mapping = mapping_engine.resolve_device_mapping_from_data(device)
-        cover_config = device_mapping.get("cover", {})
+        # Phase 2: 使用DeviceResolver统一接口 - 简化设备映射获取
+        from .resolver import get_device_resolver
+
+        resolver = get_device_resolver()
+        platform_config = resolver.get_platform_config(device, "cover")
+
+        if not platform_config:
+            _LOGGER.warning("设备不支持cover平台: %s", device)
+            return -1
+
+        cover_config = platform_config.ios
 
         # 查找合适的IO口进行操作
         for io_port, io_config in cover_config.items():

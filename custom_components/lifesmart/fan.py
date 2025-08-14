@@ -81,25 +81,24 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
     Returns:
         IO口的配置信息字典，如果不存在则返回None
     """
-    from .core.config.mapping_engine import mapping_engine
+    # Phase 2: 使用DeviceResolver统一接口 - 简化8行为3行
+    from .core.resolver import get_device_resolver
 
-    device_config = mapping_engine.resolve_device_mapping_from_data(device)
-    if not device_config:
-        _LOGGER.error("映射引擎无法解析设备配置: %s", device)
-        raise HomeAssistantError(
-            f"Device configuration not found for {device.get('me', 'unknown')}"
-        )
+    resolver = get_device_resolver()
+    platform_config = resolver.get_platform_config(device, "fan")
 
-    # 在fan平台中查找IO配置
-    fan_config = device_config.get("fan")
-    if not fan_config:
+    if not platform_config:
         return None
 
-    # 检查是否为增强结构
-    if isinstance(fan_config, dict) and sub_key in fan_config:
-        io_config = fan_config[sub_key]
-        if isinstance(io_config, dict) and "description" in io_config:
-            return io_config
+    # 检查IO配置是否存在
+    io_config = platform_config.ios.get(sub_key)
+    if io_config and io_config.description:
+        return {
+            "description": io_config.description,
+            "data_type": io_config.data_type,
+            "rw": io_config.rw,
+            "device_class": getattr(io_config, "device_class", None),
+        }
 
     return None
 

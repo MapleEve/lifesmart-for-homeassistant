@@ -22,7 +22,7 @@
 │   ├── hub.py           # 🏢 中央协调器 - 管理设备连接和数据流
 │   ├── client_base.py   # 🔌 客户端抽象层 - TCP/OpenAPI双协议支持
 │   ├── const.py         # 📋 常量定义 - 域名、平台、消息类型等
-│   └── compatibility.py # 🔄 向后兼容层 - 处理版本差异
+│   └── compatibility.py # 🔄 版本差异处理 - 处理HA版本差异
 ├── services.py          # 🛠️  服务管理器 - 注册LifeSmart专用服务
 └── [platform].py       # 📱 平台实现 - sensor, light, climate等
 
@@ -48,7 +48,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .core import compatibility  # Expose compatibility for backward compatibility
+from .core import compatibility  # 导出版本差异处理功能
 from .core.const import DOMAIN, SUPPORTED_PLATFORMS, UPDATE_LISTENER
 from .core.hub import LifeSmartHub
 from .services import LifeSmartServiceManager

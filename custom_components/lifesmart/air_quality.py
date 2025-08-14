@@ -205,24 +205,30 @@ class LifeSmartAirQuality(LifeSmartEntity, AirQualityEntity):
         Returns:
             包含处理器配置的字典，如果未找到则返回None
         """
-        from .core.config.mapping_engine import mapping_engine
+        # Phase 2: 使用DeviceResolver统一接口 - 简化8行为3行
+        from .core.resolver import get_device_resolver
 
-        device_config = mapping_engine.resolve_device_mapping_from_data(
-            self._raw_device
-        )
-        if not device_config:
-            _LOGGER.error("映射引擎无法解析设备配置: %s", self._raw_device)
+        resolver = get_device_resolver()
+        platform_config = resolver.get_platform_config(self._raw_device, "air_quality")
+
+        if not platform_config:
+            _LOGGER.error("设备不支持air_quality平台: %s", self._raw_device)
             raise HomeAssistantError(
                 f"Device configuration not found for "
                 f"{self._raw_device.get('me', 'unknown')}"
             )
 
-        air_quality_config = device_config.get("air_quality", {})
-
         # 查找特定指标的配置
-        for io_key, io_config in air_quality_config.items():
-            if isinstance(io_config, dict) and io_config.get("metric") == metric:
-                return io_config
+        for io_key, io_config in platform_config.ios.items():
+            if hasattr(io_config, "metric") and getattr(io_config, "metric") == metric:
+                return {
+                    "processor_type": getattr(
+                        io_config, "processor_type", "direct_value"
+                    ),
+                    "metric": metric,
+                    "scale_factor": getattr(io_config, "scale_factor", 1.0),
+                    "unit": getattr(io_config, "unit", None),
+                }
 
         return None
 

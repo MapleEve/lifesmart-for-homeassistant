@@ -198,25 +198,15 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
     @callback
     def _determine_device_class(self) -> SwitchDeviceClass:
         """使用映射引擎获取设备类别。"""
-        from .core.config.mapping_engine import mapping_engine
+        # Phase 2: 使用DeviceResolver统一接口
+        from .core.resolver import get_device_resolver
 
-        device_config = mapping_engine.resolve_device_mapping_from_data(
-            self._raw_device
-        )
-        if not device_config:
-            _LOGGER.error("映射引擎无法解析设备配置: %s", self._raw_device)
-            raise HomeAssistantError(
-                f"Device configuration not found for "
-                f"{self._raw_device.get('me', 'unknown')}"
-            )
-
-        switch_config = device_config.get("switch", {})
-        io_config = switch_config.get(self._sub_key, {})
+        resolver = get_device_resolver()
+        io_config = resolver.get_io_config(self._raw_device, "switch", self._sub_key)
 
         # 从配置中获取设备类别
-        device_class = io_config.get("device_class")
-        if device_class:
-            return device_class
+        if io_config and io_config.device_class:
+            return io_config.device_class
 
         # 默认为开关
         return SwitchDeviceClass.SWITCH
@@ -246,21 +236,19 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
         - 其他根据设备特性配置的处理器
         """
         from .core.data.processors.logic_processors import process_io_data
-        from .core.config.mapping_engine import mapping_engine
 
-        # 使用映射引擎获取IO配置
-        device_config = mapping_engine.resolve_device_mapping_from_data(
-            self._raw_device
-        )
+        # Phase 2: 使用DeviceResolver统一接口 - 简化12行为3行
+        from .core.resolver import get_device_resolver
 
-        if not device_config:
-            _LOGGER.error("映射引擎无法解析设备配置: %s", self._raw_device)
-            raise HomeAssistantError(
-                f"Device configuration not found for "
-                f"{self._raw_device.get('me', 'unknown')}"
-            )
+        resolver = get_device_resolver()
+        result = resolver.resolve_device_config(self._raw_device)
 
-        switch_config = device_config.get("switch", {})
+        if not result.success:
+            raise HomeAssistantError(result.error_message)
+
+        # 直接从原始映射获取processor_type
+        raw_mapping = result.device_config.source_mapping
+        switch_config = raw_mapping.get("switch", {})
         io_config = switch_config.get(self._sub_key, {})
 
         if not io_config:
