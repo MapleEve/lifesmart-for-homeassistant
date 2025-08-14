@@ -11,7 +11,6 @@ LifeSmart 设备规格纯数据层 - (125 个设备)
 
 from typing import Dict, Any
 
-# 导入必要的常量
 try:
     from custom_components.lifesmart.core.const import (
         CMD_TYPE_ON,
@@ -10960,8 +10959,16 @@ def get_device_count() -> int:
     return len(_RAW_DEVICE_DATA)
 
 
-# 窗帘配置（保持向后兼容）
-NON_POSITIONAL_COVER_CONFIG = {"SL_SW_WIN": {"open": "OP", "close": "CL", "stop": "ST"}}
+# 无位置窗帘配置映射 (用于告诉设备平台哪些没有位置只能乐观判断开合运动状态)
+NON_POSITIONAL_COVER_CONFIG = {
+    "SL_SW_WIN": {"open": "OP", "close": "CL", "stop": "ST"},
+    "SL_P_V2": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_CN_IF": {"open": "P1", "close": "P2", "stop": "P3"},
+    "SL_CN_FE": {"open": "P1", "close": "P2", "stop": "P3"},
+    # 通用控制器
+    "SL_P": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_JEMA": {"open": "P2", "close": "P3", "stop": "P4"},
+}
 
 # ================= HVAC 和风扇映射配置 =================
 # 由 @MapleEve 创建和维护 - 从hvac_mappings.py迁移而来
