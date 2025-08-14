@@ -1,5 +1,0 @@
-# LifeSmart Mapping Tool - Minimal Dependencies
-# Only essential dependencies for core functionality
-
-# Optional: AI analysis (can run without this)
-spacy>=3.7.0

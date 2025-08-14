@@ -22,7 +22,7 @@ Installation and updates are available via HACS.
 
 ---
 
-## Features
+## Core Features
 
 - **Dual Connection Modes**: Cloud and Local modes (choose between LifeSmart API or local Hub)
 - **Comprehensive Device Support**: Switches, sensors, locks, controllers, sockets, curtain motors, lights, SPOT,
@@ -72,8 +72,9 @@ If you encounter any issues with the integration, check our comprehensive troubl
 📖 **[Troubleshooting Guide](./troubleshooting.md)** - Solutions for common problems
 
 The guide covers:
+
 - Connection issues (cloud & local modes)
-- Device problems (unavailable, not updating)  
+- Device problems (unavailable, not updating)
 - Performance optimization
 - How to generate diagnostics data for issue reports
 
@@ -219,7 +220,7 @@ pip install pytest-asyncio pytest-cov flake8 black
 
 # Or use traditional venv setup
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 pip install black flake8 pytest
 ```
