@@ -22,6 +22,8 @@ from ..const import (
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     SUBDEVICE_INDEX_KEY,
+    # --- 红外码API类型常量 ---
+    IR_CODE_TYPE_STANDARD,
 )
 from ..error_mapping import get_error_advice
 from ..exceptions import LifeSmartAPIError, LifeSmartAuthError
@@ -844,7 +846,9 @@ class LifeSmartOpenAPIClient(LifeSmartClientBase):
                 hex_data = str(ir_data)
 
             # 构建SendCodes格式的数据包
-            keys_data = json.dumps([{"param": {"data": hex_data, "type": 1}}])
+            keys_data = json.dumps(
+                [{"param": {"data": hex_data, "type": IR_CODE_TYPE_STANDARD}}]
+            )
 
             params = {
                 "agt": "unknown",  # 需要从设备信息中获取

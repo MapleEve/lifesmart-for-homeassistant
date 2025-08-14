@@ -250,7 +250,7 @@ class TestLifeSmartBrightnessLight:
         assert state.state == STATE_ON
         assert state.attributes.get(ATTR_BRIGHTNESS) == 150
         mock_client.async_send_single_command.assert_called_with(
-            hub_id, device_me, self.SUB_KEY, 0xCF, 150
+            hub_id, device_me, self.SUB_KEY, CMD_TYPE_SET_VAL, 150
         )
 
     @pytest.mark.asyncio
@@ -440,8 +440,8 @@ class TestLifeSmartDimmerLight:
             hub_id,
             device_me,
             [
-                {"idx": self.SUB_KEY, "type": 0xCF, "val": 200},
-                {"idx": "P2", "type": 0xCF, "val": expected_temp_val},
+                {"idx": self.SUB_KEY, "type": CMD_TYPE_SET_VAL, "val": 200},
+                {"idx": "P2", "type": CMD_TYPE_SET_VAL, "val": expected_temp_val},
             ],
         )
 
@@ -617,7 +617,13 @@ class TestLifeSmartQuantumLight:
         mock_client.async_send_multi_command.assert_called_with(
             hub_id,
             device_me,
-            [{"idx": "P2", "type": 0xFF, "val": ALL_EFFECT_MAP["魔力红"]}],
+            [
+                {
+                    "idx": "P2",
+                    "type": CMD_TYPE_SET_RAW_ON,
+                    "val": ALL_EFFECT_MAP["魔力红"],
+                }
+            ],
         )
         # 测试颜色设置 (不包含亮度)
         await hass.services.async_call(
@@ -632,7 +638,7 @@ class TestLifeSmartQuantumLight:
         mock_client.async_send_multi_command.assert_called_with(
             hub_id,
             device_me,
-            [{"idx": "P2", "type": 0xFF, "val": 0x280A141E}],
+            [{"idx": "P2", "type": CMD_TYPE_SET_RAW_ON, "val": 0x280A141E}],
         )
 
     @pytest.mark.asyncio
@@ -661,8 +667,8 @@ class TestLifeSmartQuantumLight:
             hub_id,
             device_me,
             [
-                {"idx": self.SUB_KEY, "type": 0xCF, "val": 128},
-                {"idx": "P2", "type": 0xFF, "val": 0x280A141E},
+                {"idx": self.SUB_KEY, "type": CMD_TYPE_SET_VAL, "val": 128},
+                {"idx": "P2", "type": CMD_TYPE_SET_RAW_ON, "val": 0x280A141E},
             ],
         )
         # 验证确保灯开启的命令也被调用
@@ -1401,7 +1407,9 @@ class TestLifeSmartCoverLight:
     ):
         unique_id = get_entity_unique_id(hass, self.ENTITY_ID)
         async_dispatcher_send(
-            hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", {"type": CMD_TYPE_OFF}
+            hass,
+            f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}",
+            {"type": CMD_TYPE_OFF},
         )
         await hass.async_block_till_done()
         assert hass.states.get(self.ENTITY_ID).state == STATE_OFF

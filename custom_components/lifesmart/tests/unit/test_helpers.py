@@ -13,6 +13,7 @@
 
 import pytest
 
+from custom_components.lifesmart.core.const import CMD_TYPE_ON, CMD_TYPE_OFF
 from custom_components.lifesmart.core.data.conversion import (
     normalize_device_names,
 )
@@ -38,8 +39,6 @@ from custom_components.lifesmart.core.platform.platform_detection import (
     is_sensor_subdevice,
     safe_get,
 )
-
-
 from ..utils.factories import (
     create_devices_by_category,
 )
@@ -2044,7 +2043,11 @@ class TestDeviceTypeClassificationComprehensive:
             (
                 {
                     "devtype": "SL_OE_3C",
-                    "data": {"P1": {"type": CMD_TYPE_ON}, "P2": {"v": 100}, "P3": {"v": 200}},
+                    "data": {
+                        "P1": {"type": CMD_TYPE_ON},
+                        "P2": {"v": 100},
+                        "P3": {"v": 200},
+                    },
                 },
                 True,
                 False,
@@ -2055,7 +2058,10 @@ class TestDeviceTypeClassificationComprehensive:
             ),
             # 亮度灯
             (
-                {"devtype": "SL_SPWM", "data": {"P1": {"type": CMD_TYPE_ON, "val": 100}}},
+                {
+                    "devtype": "SL_SPWM",
+                    "data": {"P1": {"type": CMD_TYPE_ON, "val": 100}},
+                },
                 False,
                 True,
                 False,
@@ -2104,7 +2110,10 @@ class TestDeviceTypeClassificationComprehensive:
             ),
             # 杜亚窗帘
             (
-                {"devtype": "SL_DOOYA", "data": {"P1": {"val": 100, "type": CMD_TYPE_OFF}}},
+                {
+                    "devtype": "SL_DOOYA",
+                    "data": {"P1": {"val": 100, "type": CMD_TYPE_OFF}},
+                },
                 False,
                 False,
                 True,

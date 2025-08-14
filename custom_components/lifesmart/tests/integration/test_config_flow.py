@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.core.const import (
@@ -42,7 +42,7 @@ from custom_components.lifesmart.core.const import (
     DOMAIN,
 )
 from custom_components.lifesmart.core.exceptions import LifeSmartAuthError
-from ..utils.constants import DEFAULT_TEST_VALUES
+from ..utils.constants import DEFAULT_TEST_VALUES, CONFIG_FLOW_TEST_VALUES
 
 # ==================== 测试数据 ====================
 
@@ -54,10 +54,10 @@ MOCK_CLOUD_CREDENTIALS = {
 }
 
 MOCK_LOCAL_CREDENTIALS = {
-    CONF_HOST: "192.168.1.100",
-    CONF_PORT: 3000,
-    CONF_USERNAME: "admin",
-    CONF_PASSWORD: "admin_password",
+    CONF_HOST: CONFIG_FLOW_TEST_VALUES["test_ip"],
+    CONF_PORT: CONFIG_FLOW_TEST_VALUES["test_port"],
+    CONF_USERNAME: CONFIG_FLOW_TEST_VALUES["test_username"],
+    CONF_PASSWORD: CONFIG_FLOW_TEST_VALUES["test_password"],
 }
 
 MOCK_VALIDATION_SUCCESS = {
@@ -72,7 +72,7 @@ MOCK_VALIDATION_WITH_NEW_TOKEN = {
     "title": f"LifeSmart ({DEFAULT_TEST_VALUES['userid']})",
     "data": {
         **MOCK_CLOUD_CREDENTIALS,
-        CONF_LIFESMART_USERTOKEN: "newly_fetched_token",
+        CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["new_token"],
     },
 }
 
@@ -94,7 +94,7 @@ def mock_validate():
 def mock_validate_local():
     """模拟本地连接验证。"""
     with patch(
-        "custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient.check_login",
+        "custom_components.lifesmart.core.client.local_tcp_client.LifeSmartTCPClient.check_login",
         new_callable=AsyncMock,
     ) as mock_func:
         yield mock_func
@@ -108,10 +108,10 @@ def mock_config_entry():
         data={
             CONF_TYPE: config_entries.CONN_CLASS_CLOUD_PUSH,
             **MOCK_CLOUD_CREDENTIALS,
-            CONF_LIFESMART_USERTOKEN: "existing_token",
-            CONF_LIFESMART_AUTH_METHOD: "token",
+            CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["existing_token"],
+            CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES["token_auth_method"],
         },
-        entry_id="test_entry_cloud",
+        entry_id=CONFIG_FLOW_TEST_VALUES["cloud_entry_id"],
     )
 
 
@@ -154,7 +154,7 @@ class TestUserFlow:
         )
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "cloud_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["cloud_connection"]}
         )
 
         assert result["type"] == FlowResultType.FORM, "应该显示表单"
@@ -168,7 +168,7 @@ class TestUserFlow:
         )
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "local_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["local_connection"]}
         )
 
         assert result["type"] == FlowResultType.FORM, "应该显示表单"
@@ -193,13 +193,18 @@ class TestCloudFlow:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "cloud_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["cloud_connection"]}
         )
 
         # 选择 Token 认证
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_CLOUD_CREDENTIALS, CONF_LIFESMART_AUTH_METHOD: "token"},
+            {
+                **MOCK_CLOUD_CREDENTIALS,
+                CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                    "token_auth_method"
+                ],
+            },
         )
         assert result["step_id"] == "cloud_token", "应该进入 Token 输入步骤"
 
@@ -229,24 +234,31 @@ class TestCloudFlow:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "cloud_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["cloud_connection"]}
         )
 
         # 选择密码认证
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_CLOUD_CREDENTIALS, CONF_LIFESMART_AUTH_METHOD: "password"},
+            {
+                **MOCK_CLOUD_CREDENTIALS,
+                CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                    "password_auth_method"
+                ],
+            },
         )
         assert result["step_id"] == "cloud_password", "应该进入密码输入步骤"
 
         # 提供密码并完成
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_LIFESMART_USERPASSWORD: "mock_password"}
+            result["flow_id"],
+            {CONF_LIFESMART_USERPASSWORD: CONFIG_FLOW_TEST_VALUES["mock_password"]},
         )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY, "应该创建配置条目"
         assert (
-            result["data"][CONF_LIFESMART_USERTOKEN] == "newly_fetched_token"
+            result["data"][CONF_LIFESMART_USERTOKEN]
+            == CONFIG_FLOW_TEST_VALUES["new_token"]
         ), "应该保存新 Token"
 
     @pytest.mark.asyncio
@@ -258,7 +270,8 @@ class TestCloudFlow:
 
         result = await self._start_cloud_token_flow(hass)
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_LIFESMART_USERTOKEN: "invalid_token"}
+            result["flow_id"],
+            {CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["invalid_token"]},
         )
 
         assert result["type"] == FlowResultType.FORM, "应该重新显示表单"
@@ -272,7 +285,8 @@ class TestCloudFlow:
 
         result = await self._start_cloud_token_flow(hass)
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_LIFESMART_USERTOKEN: "any_token"}
+            result["flow_id"],
+            {CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["any_token"]},
         )
 
         assert result["type"] == FlowResultType.FORM, "应该重新显示表单"
@@ -285,7 +299,8 @@ class TestCloudFlow:
 
         result = await self._start_cloud_token_flow(hass)
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_LIFESMART_USERTOKEN: "any_token"}
+            result["flow_id"],
+            {CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["any_token"]},
         )
 
         assert result["type"] == FlowResultType.FORM, "应该重新显示表单"
@@ -297,11 +312,16 @@ class TestCloudFlow:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "cloud_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["cloud_connection"]}
         )
         return await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_CLOUD_CREDENTIALS, CONF_LIFESMART_AUTH_METHOD: "token"},
+            {
+                **MOCK_CLOUD_CREDENTIALS,
+                CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                    "token_auth_method"
+                ],
+            },
         )
 
 
@@ -318,7 +338,7 @@ class TestLocalFlow:
     async def test_local_connection_success(self, hass: HomeAssistant):
         """测试本地连接成功配置。"""
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": CONFIG_FLOW_TEST_VALUES["test_user_source"]}
         )
 
         result = await hass.config_entries.flow.async_configure(
@@ -327,7 +347,7 @@ class TestLocalFlow:
 
         # 模拟成功的本地连接验证
         with patch(
-            "custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient.check_login",
+            "custom_components.lifesmart.core.client.local_tcp_client.LifeSmartTCPClient.check_login",
             return_value=True,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -335,7 +355,9 @@ class TestLocalFlow:
             )
 
         assert result["type"] == FlowResultType.CREATE_ENTRY, "应该创建配置条目"
-        assert result["title"] == "Local Hub (192.168.1.100)", "标题应该包含 IP"
+        assert result["title"] == CONFIG_FLOW_TEST_VALUES[
+            "local_hub_title_format"
+        ].format(CONFIG_FLOW_TEST_VALUES["test_ip"]), "标题应该包含 IP"
         assert result["data"] == {
             **MOCK_LOCAL_CREDENTIALS,
             CONF_TYPE: config_entries.CONN_CLASS_LOCAL_PUSH,
@@ -348,7 +370,7 @@ class TestLocalFlow:
 
         # 模拟认证失败
         with patch(
-            "custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient.check_login",
+            "custom_components.lifesmart.core.client.local_tcp_client.LifeSmartTCPClient.check_login",
             side_effect=ConnectionResetError("Authentication failed"),
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -368,7 +390,7 @@ class TestLocalFlow:
 
         # 模拟连接超时
         with patch(
-            "custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient.check_login",
+            "custom_components.lifesmart.core.client.local_tcp_client.LifeSmartTCPClient.check_login",
             side_effect=asyncio.TimeoutError("Connection timeout"),
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -387,7 +409,7 @@ class TestLocalFlow:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         return await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "local_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["local_connection"]}
         )
 
 
@@ -402,7 +424,9 @@ class TestReauthFlow:
         """测试重新认证步骤验证失败。"""
         # 创建现有配置条目
         mock_entry = MockConfigEntry(
-            domain=DOMAIN, data=MOCK_CLOUD_CREDENTIALS, unique_id="test_reauth"
+            domain=DOMAIN,
+            data=MOCK_CLOUD_CREDENTIALS,
+            unique_id=CONFIG_FLOW_TEST_VALUES["reauth_entry_id"],
         )
         mock_entry.add_to_hass(hass)
 
@@ -426,7 +450,9 @@ class TestReauthFlow:
                 result["flow_id"],
                 {
                     **MOCK_CLOUD_CREDENTIALS,
-                    CONF_LIFESMART_AUTH_METHOD: "token",
+                    CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                        "token_auth_method"
+                    ],
                 },
             )
 
@@ -434,7 +460,7 @@ class TestReauthFlow:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 {
-                    CONF_LIFESMART_USERTOKEN: "new_token",
+                    CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["new_token"],
                 },
             )
 
@@ -469,7 +495,9 @@ class TestReauthFlow:
                 ],
                 CONF_LIFESMART_USERID: mock_config_entry.data[CONF_LIFESMART_USERID],
                 CONF_REGION: mock_config_entry.data[CONF_REGION],
-                CONF_LIFESMART_AUTH_METHOD: "password",
+                CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                    "password_auth_method"
+                ],
             },
         )
 
@@ -478,14 +506,15 @@ class TestReauthFlow:
             "homeassistant.config_entries.ConfigEntries.async_reload", return_value=True
         ) as mock_reload:
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_LIFESMART_USERPASSWORD: "new_password"}
+                result["flow_id"],
+                {CONF_LIFESMART_USERPASSWORD: CONFIG_FLOW_TEST_VALUES["new_password"]},
             )
 
             assert result["type"] == FlowResultType.ABORT, "重新认证应该中止流程"
             assert result["reason"] == "reauth_successful", "中止原因应该是成功"
             assert (
                 mock_config_entry.data[CONF_LIFESMART_USERTOKEN]
-                == "newly_fetched_token"
+                == CONFIG_FLOW_TEST_VALUES["new_token"]
             ), "Token 应该更新"
             mock_reload.assert_called_once_with(
                 mock_config_entry.entry_id
@@ -533,7 +562,7 @@ class TestOptionsFlow:
             domain=DOMAIN,
             data=MOCK_CLOUD_CREDENTIALS,
             options={},
-            unique_id="test_options",
+            unique_id=CONFIG_FLOW_TEST_VALUES["options_entry_id"],
         )
         mock_entry.add_to_hass(hass)
 
@@ -571,11 +600,13 @@ class TestOptionsFlow:
             domain=DOMAIN,
             data={
                 **MOCK_CLOUD_CREDENTIALS,
-                CONF_LIFESMART_AUTH_METHOD: "token",
+                CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                    "token_auth_method"
+                ],
                 CONF_TYPE: config_entries.CONN_CLASS_CLOUD_PUSH,
             },
             options={},
-            unique_id="test_auth_token",
+            unique_id=CONFIG_FLOW_TEST_VALUES["auth_token_entry_id"],
         )
         mock_entry.add_to_hass(hass)
 
@@ -589,7 +620,8 @@ class TestOptionsFlow:
 
         # 选择token认证方法
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {CONF_LIFESMART_AUTH_METHOD: "token"}
+            result["flow_id"],
+            {CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES["token_auth_method"]},
         )
 
         # 模拟Token认证更新失败
@@ -598,7 +630,8 @@ class TestOptionsFlow:
             side_effect=Exception("Token验证失败"),
         ):
             result = await hass.config_entries.options.async_configure(
-                result["flow_id"], {CONF_LIFESMART_USERTOKEN: "invalid_new_token"}
+                result["flow_id"],
+                {CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["invalid_token"]},
             )
 
         # 应该显示表单并包含错误
@@ -614,11 +647,13 @@ class TestOptionsFlow:
             domain=DOMAIN,
             data={
                 **MOCK_CLOUD_CREDENTIALS,
-                CONF_LIFESMART_AUTH_METHOD: "password",
+                CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                    "password_auth_method"
+                ],
                 CONF_TYPE: config_entries.CONN_CLASS_CLOUD_PUSH,
             },
             options={},
-            unique_id="test_auth_password",
+            unique_id=CONFIG_FLOW_TEST_VALUES["auth_password_entry_id"],
         )
         mock_entry.add_to_hass(hass)
 
@@ -632,7 +667,12 @@ class TestOptionsFlow:
 
         # 选择password认证方法
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {CONF_LIFESMART_AUTH_METHOD: "password"}
+            result["flow_id"],
+            {
+                CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                    "password_auth_method"
+                ]
+            },
         )
 
         # 模拟密码认证更新失败
@@ -641,7 +681,12 @@ class TestOptionsFlow:
             side_effect=Exception("密码验证失败"),
         ):
             result = await hass.config_entries.options.async_configure(
-                result["flow_id"], {CONF_LIFESMART_USERPASSWORD: "wrong_new_password"}
+                result["flow_id"],
+                {
+                    CONF_LIFESMART_USERPASSWORD: CONFIG_FLOW_TEST_VALUES[
+                        "wrong_new_password"
+                    ]
+                },
             )
 
         # 应该显示表单并包含错误
@@ -740,7 +785,7 @@ class TestEdgeCases:
         """测试 validate_input 中 API 返回非列表设备数据的情况。"""
         test_data = {
             CONF_LIFESMART_APPKEY: "test_key",
-            CONF_LIFESMART_APPTOKEN: "test_token",
+            CONF_LIFESMART_APPTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
             CONF_LIFESMART_USERID: "test_user",
             CONF_LIFESMART_USERTOKEN: "test_usertoken",
             CONF_REGION: "cn2",
@@ -762,13 +807,11 @@ class TestEdgeCases:
                 await validate_input(hass, test_data)
 
     @pytest.mark.asyncio
-    async def test_validate_input_lifesmart_auth_error(
-        self, hass: HomeAssistant, mock_failed_client
-    ):
-        """测试 validate_input 中 LifeSmartAuthError 异常处理。使用失败客户端工厂函数。"""
+    async def test_validate_input_lifesmart_auth_error(self, hass: HomeAssistant):
+        """测试 validate_input 中 LifeSmartAuthError 异常处理。使用直接mock。"""
         test_data = {
             CONF_LIFESMART_APPKEY: "test_key",
-            CONF_LIFESMART_APPTOKEN: "test_token",
+            CONF_LIFESMART_APPTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
             CONF_LIFESMART_USERID: "test_user",
             CONF_LIFESMART_USERTOKEN: "test_usertoken",
             CONF_REGION: "cn2",
@@ -777,16 +820,17 @@ class TestEdgeCases:
         with patch(
             "custom_components.lifesmart.config_flow.LifeSmartOpenAPIClient"
         ) as mock_client_cls:
-            # 使用工厂函数创建的失败客户端
-            mock_client_cls.return_value = mock_failed_client
-
-            # 模拟 LifeSmartAuthError 异常
+            # 创建新的mock实例
+            mock_client = mock_client_cls.return_value
+            # 设置必要的async方法
+            mock_client.async_get_all_devices = AsyncMock()
+            # 直接设置 LifeSmartAuthError 异常
             mock_client.async_get_all_devices.side_effect = LifeSmartAuthError(
                 "认证失败"
             )
 
             # 应该重新抛出为 ConfigEntryAuthFailed
-            with pytest.raises(Exception, match=".*认证失败.*"):
+            with pytest.raises(ConfigEntryAuthFailed, match=".*认证失败.*"):
                 await validate_input(hass, test_data)
 
     @pytest.mark.asyncio
@@ -799,7 +843,7 @@ class TestEdgeCases:
 
         # 选择本地连接
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "local_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["local_connection"]}
         )
 
         # 模拟本地验证时发生未知异常
@@ -810,10 +854,10 @@ class TestEdgeCases:
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 {
-                    CONF_HOST: "192.168.1.100",
-                    CONF_PORT: 8888,
-                    CONF_USERNAME: "admin",
-                    CONF_PASSWORD: "admin",
+                    CONF_HOST: CONFIG_FLOW_TEST_VALUES["test_ip"],
+                    CONF_PORT: CONFIG_FLOW_TEST_VALUES["alt_port"],
+                    CONF_USERNAME: CONFIG_FLOW_TEST_VALUES["test_username"],
+                    CONF_PASSWORD: CONFIG_FLOW_TEST_VALUES["test_username"],
                 },
             )
 
@@ -833,7 +877,7 @@ class TestEdgeCases:
 
         # 选择云端连接
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "cloud_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["cloud_connection"]}
         )
 
         # 应该正常进入云端配置步骤
@@ -850,7 +894,7 @@ class TestEdgeCases:
 
         # 选择云端连接
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "cloud_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["cloud_connection"]}
         )
 
         # 配置基本云端信息
@@ -858,10 +902,12 @@ class TestEdgeCases:
             result["flow_id"],
             {
                 CONF_LIFESMART_APPKEY: "test_key",
-                CONF_LIFESMART_APPTOKEN: "test_token",
+                CONF_LIFESMART_APPTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
                 CONF_LIFESMART_USERID: "test_user",
                 CONF_REGION: "cn2",
-                CONF_LIFESMART_AUTH_METHOD: "token",
+                CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                    "token_auth_method"
+                ],
             },
         )
 
@@ -889,7 +935,7 @@ class TestEdgeCases:
 
         # 选择云端连接
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "cloud_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["cloud_connection"]}
         )
 
         # 配置基本云端信息
@@ -897,7 +943,7 @@ class TestEdgeCases:
             result["flow_id"],
             {
                 CONF_LIFESMART_APPKEY: "test_key",
-                CONF_LIFESMART_APPTOKEN: "test_token",
+                CONF_LIFESMART_APPTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
                 CONF_LIFESMART_USERID: "test_user",
                 CONF_REGION: "cn2",
                 CONF_LIFESMART_AUTH_METHOD: "password",
@@ -934,7 +980,7 @@ class TestEdgeCases:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_TYPE: "cloud_push"}
+            result["flow_id"], {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["cloud_connection"]}
         )
 
         with patch(
@@ -943,10 +989,16 @@ class TestEdgeCases:
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                {**MOCK_CLOUD_CREDENTIALS, CONF_LIFESMART_AUTH_METHOD: "token"},
+                {
+                    **MOCK_CLOUD_CREDENTIALS,
+                    CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                        "token_auth_method"
+                    ],
+                },
             )
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_LIFESMART_USERTOKEN: "any_token"}
+                result["flow_id"],
+                {CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["any_token"]},
             )
 
         assert result["type"] == FlowResultType.ABORT, "应该中止流程"
@@ -960,13 +1012,13 @@ class TestEdgeCases:
         test_data = {
             CONF_REGION: "cn2",
             CONF_LIFESMART_APPKEY: "test_key",
-            CONF_LIFESMART_APPTOKEN: "test_token",
+            CONF_LIFESMART_APPTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
             CONF_LIFESMART_USERID: "test_user",
-            CONF_LIFESMART_USERTOKEN: "test_token",
+            CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
         }
 
         with patch(
-            "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient.async_get_all_devices",
+            "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient._async_get_all_devices",
             return_value=[],
         ):
             result = await validate_input(hass, test_data)
@@ -989,11 +1041,13 @@ class TestConfigFlowErrorPaths:
             mock_instance.async_get_all_devices = AsyncMock(return_value=[])
 
             from custom_components.lifesmart.config_flow import validate_input
-            from homeassistant.exceptions import ConfigEntryNotReady
+            from homeassistant.exceptions import (
+                ConfigEntryNotReady,
+            )
 
             test_data = {
                 CONF_LIFESMART_APPKEY: "test_key",
-                CONF_LIFESMART_APPTOKEN: "test_token",
+                CONF_LIFESMART_APPTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
                 CONF_LIFESMART_USERID: "test_user",
                 CONF_LIFESMART_USERPASSWORD: "wrong_password",
                 CONF_LIFESMART_AUTH_METHOD: "password",
@@ -1010,9 +1064,9 @@ class TestConfigFlowErrorPaths:
         """测试从登录响应中更新userid的情况。"""
         # 模拟登录成功并返回新的userid
         mock_login_response = {
-            "usertoken": "new_token",
+            "usertoken": CONFIG_FLOW_TEST_VALUES["new_token"],
             "region": "us",
-            "userid": "normalized_user_id",  # 规范化后的userid
+            "userid": CONFIG_FLOW_TEST_VALUES["normalized_user_id"],  # 规范化后的userid
         }
 
         with patch(
@@ -1022,15 +1076,15 @@ class TestConfigFlowErrorPaths:
             mock_instance = mock_client_class.return_value
             mock_instance.login_async = AsyncMock(return_value=mock_login_response)
             mock_instance.async_get_all_devices = AsyncMock(
-                return_value=[{"id": "test_device"}]
+                return_value=[{"id": CONFIG_FLOW_TEST_VALUES["test_device_id"]}]
             )
 
             from custom_components.lifesmart.config_flow import validate_input
 
             test_data = {
                 CONF_LIFESMART_APPKEY: "test_key",
-                CONF_LIFESMART_APPTOKEN: "test_token",
-                CONF_LIFESMART_USERID: "original_user_id",
+                CONF_LIFESMART_APPTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
+                CONF_LIFESMART_USERID: CONFIG_FLOW_TEST_VALUES["original_user_id"],
                 CONF_LIFESMART_USERPASSWORD: "test_password",
                 CONF_LIFESMART_AUTH_METHOD: "password",
             }
@@ -1043,10 +1097,12 @@ class TestConfigFlowErrorPaths:
 
             # 测试mock实际上在工作，所以得到我们设置的值而不是conftest.py的默认值
             assert (
-                result["data"][CONF_LIFESMART_USERID] == "normalized_user_id"
+                result["data"][CONF_LIFESMART_USERID]
+                == CONFIG_FLOW_TEST_VALUES["normalized_user_id"]
             )  # 来自我们的mock
             assert (
-                result["data"][CONF_LIFESMART_USERTOKEN] == "new_token"
+                result["data"][CONF_LIFESMART_USERTOKEN]
+                == CONFIG_FLOW_TEST_VALUES["new_token"]
             )  # 来自我们的mock
 
     @pytest.mark.asyncio
@@ -1062,18 +1118,20 @@ class TestConfigFlowErrorPaths:
             mock_instance = mock_client_class.return_value
             mock_instance.login_async = AsyncMock(return_value=mock_login_response)
             mock_instance.async_get_all_devices = AsyncMock(
-                return_value=[{"id": "test_device"}]
+                return_value=[{"id": CONFIG_FLOW_TEST_VALUES["test_device_id"]}]
             )
 
             from custom_components.lifesmart.config_flow import validate_input
 
             test_data = {
                 CONF_LIFESMART_APPKEY: "test_key",
-                CONF_LIFESMART_APPTOKEN: "test_token",
+                CONF_LIFESMART_APPTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
                 CONF_LIFESMART_USERID: "test_user",
                 CONF_LIFESMART_USERPASSWORD: "test_password",
                 CONF_LIFESMART_AUTH_METHOD: "password",
-                CONF_LIFESMART_USERTOKEN: "original_token",  # 原有token
+                CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES[
+                    "original_token"
+                ],  # 原有token
             }
 
             result = await validate_input(hass, test_data)
@@ -1084,7 +1142,8 @@ class TestConfigFlowErrorPaths:
 
             # 当登录响应缺少usertoken时，应该保持原有的token
             assert (
-                result["data"][CONF_LIFESMART_USERTOKEN] == "original_token"
+                result["data"][CONF_LIFESMART_USERTOKEN]
+                == CONFIG_FLOW_TEST_VALUES["original_token"]
             )  # 保持原有token
             assert result["data"][CONF_REGION] == "cn2"  # 来自我们的mock
 
@@ -1093,7 +1152,9 @@ class TestConfigFlowErrorPaths:
         """测试重新认证触发的情况。"""
         # 创建一个已存在的配置条目
         mock_entry = MockConfigEntry(
-            domain=DOMAIN, data=MOCK_CLOUD_CREDENTIALS, unique_id="test_unique_id"
+            domain=DOMAIN,
+            data=MOCK_CLOUD_CREDENTIALS,
+            unique_id=CONFIG_FLOW_TEST_VALUES["unique_test_id"],
         )
         mock_entry.add_to_hass(hass)
 
@@ -1119,10 +1180,14 @@ class TestConfigFlowErrorPaths:
             domain=DOMAIN,
             data={
                 **MOCK_CLOUD_CREDENTIALS,
-                CONF_LIFESMART_AUTH_METHOD: "token",
-                CONF_TYPE: "cloud_push",  # 明确指定云端连接类型
+                CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                    "token_auth_method"
+                ],
+                CONF_TYPE: CONFIG_FLOW_TEST_VALUES[
+                    "cloud_connection"
+                ],  # 明确指定云端连接类型
             },
-            unique_id="test_unique_id",
+            unique_id=CONFIG_FLOW_TEST_VALUES["unique_test_id"],
         )
         mock_entry.add_to_hass(hass)
 
@@ -1146,12 +1211,17 @@ class TestConfigFlowErrorPaths:
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
             )
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_TYPE: "local_push"}
+                result["flow_id"],
+                {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["local_connection"]},
             )
 
             # 输入本地连接信息
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_HOST: "192.168.1.100", CONF_PORT: 8080}
+                result["flow_id"],
+                {
+                    CONF_HOST: CONFIG_FLOW_TEST_VALUES["test_ip"],
+                    CONF_PORT: CONFIG_FLOW_TEST_VALUES["local_port"],
+                },
             )
 
             # 应该显示错误
@@ -1175,7 +1245,7 @@ class TestConfigFlowErrorPaths:
                 "title": "Test",
                 "data": {
                     **MOCK_CLOUD_CREDENTIALS,
-                    CONF_LIFESMART_USERTOKEN: "test_token",
+                    CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"],
                 },
             },
         ):
@@ -1184,14 +1254,21 @@ class TestConfigFlowErrorPaths:
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
             )
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_TYPE: "cloud_push"}
+                result["flow_id"],
+                {CONF_TYPE: CONFIG_FLOW_TEST_VALUES["cloud_connection"]},
             )
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
-                {**MOCK_CLOUD_CREDENTIALS, CONF_LIFESMART_AUTH_METHOD: "token"},
+                {
+                    **MOCK_CLOUD_CREDENTIALS,
+                    CONF_LIFESMART_AUTH_METHOD: CONFIG_FLOW_TEST_VALUES[
+                        "token_auth_method"
+                    ],
+                },
             )
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_LIFESMART_USERTOKEN: "test_token"}
+                result["flow_id"],
+                {CONF_LIFESMART_USERTOKEN: CONFIG_FLOW_TEST_VALUES["test_token"]},
             )
 
             assert result["type"] in [FlowResultType.CREATE_ENTRY, FlowResultType.ABORT]

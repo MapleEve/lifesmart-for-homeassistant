@@ -23,6 +23,7 @@ from custom_components.lifesmart.core.client.protocol import (
     LSTimestamp,
     LSEncoder,
 )
+from custom_components.lifesmart.tests.utils.constants import PROTOCOL_TEST_VALUES
 
 
 # ==================== 测试数据和Fixtures ====================
@@ -37,7 +38,10 @@ def protocol():
 @pytest.fixture
 def packet_factory():
     """提供标准的数据包工厂实例。"""
-    return LifeSmartPacketFactory(node_agt="test_agt", node="test_node")
+    return LifeSmartPacketFactory(
+        node_agt=PROTOCOL_TEST_VALUES["test_agt"],
+        node=PROTOCOL_TEST_VALUES["test_node"],
+    )
 
 
 @pytest.fixture
@@ -111,7 +115,7 @@ class TestProtocolDataTypeEncoding:
         complex_data = [
             {
                 "device_info": {
-                    "id": "dev_001",
+                    "id": PROTOCOL_TEST_VALUES["test_device_001"],
                     "type": "switch",
                     "properties": {
                         "channels": ["L1", "L2", "L3"],
@@ -169,7 +173,7 @@ class TestProtocolSpecialTypes:
 
     def test_timestamp_type_encoding_decoding(self, protocol: LifeSmartProtocol):
         """测试时间戳类型的编码和解码。"""
-        timestamp_value = 1634567890
+        timestamp_value = PROTOCOL_TEST_VALUES["test_timestamp"]
 
         # 手动构建时间戳数据
         encoded_bytes = b"\x06\x01" + protocol._encode_varint(timestamp_value << 1)
@@ -241,11 +245,17 @@ class TestProtocolSpecialTypes:
         encoder = LSEncoder()
 
         # 测试LSTimestamp编码
-        timestamp = LSTimestamp(index=1, value=1634567890, raw_data=b"\x01\x02\x03")
+        timestamp = LSTimestamp(
+            index=1,
+            value=PROTOCOL_TEST_VALUES["test_timestamp"],
+            raw_data=b"\x01\x02\x03",
+        )
         timestamp_json = encoder.encode({"ts": timestamp})
         decoded_timestamp = json.loads(timestamp_json)
 
-        assert decoded_timestamp["ts"] == 1634567890, "LSTimestamp应该被编码为数值"
+        assert (
+            decoded_timestamp["ts"] == PROTOCOL_TEST_VALUES["test_timestamp"]
+        ), "LSTimestamp应该被编码为数值"
 
         # 测试普通类型保持不变
         normal_data = {"string": "test", "number": 42, "boolean": True, "null": None}
@@ -687,7 +697,9 @@ class TestProtocolPerformanceAndLimits:
                     {
                         "worker_id": worker_id,
                         "timestamp": int(time.time()),
-                        "data": f"worker_{worker_id}_data",
+                        "data": PROTOCOL_TEST_VALUES["worker_data_prefix"].format(
+                            worker_id=worker_id
+                        ),
                     }
                 ]
 

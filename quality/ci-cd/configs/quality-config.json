@@ -1,0 +1,65 @@
+{
+  "code_style": {
+    "enabled": true,
+    "tools": [
+      "black",
+      "isort"
+    ],
+    "black_config": "--line-length=88 --target-version=py311",
+    "isort_config": "--profile=black"
+  },
+  "type_safety": {
+    "enabled": true,
+    "tools": [
+      "mypy"
+    ],
+    "mypy_config": "--strict --python-version=3.11 --ignore-missing-imports"
+  },
+  "security_scan": {
+    "enabled": true,
+    "tools": [
+      "bandit"
+    ],
+    "severity_threshold": "medium",
+    "exclude_patterns": [
+      "*/tests/*",
+      "*/test_*"
+    ]
+  },
+  "linting": {
+    "enabled": true,
+    "tools": [
+      "ruff"
+    ],
+    "ruff_config": "--select=E,W,F,B,C,N --line-length=88"
+  },
+  "hardcode_detection": {
+    "enabled": true,
+    "patterns": [
+      "SL_",
+      "OE_",
+      "DE_",
+      "SPOT_",
+      "LS_",
+      "CMD_",
+      "ATTR_"
+    ],
+    "exclude_files": [
+      "*/const.py",
+      "*/constants.py",
+      "*/__init__.py"
+    ]
+  },
+  "test_coverage": {
+    "enabled": true,
+    "minimum_coverage": 90.0,
+    "exclude_patterns": [
+      "*/tests/*"
+    ]
+  },
+  "general": {
+    "fail_on_warning": false,
+    "parallel_execution": true,
+    "timeout_seconds": 300
+  }
+}

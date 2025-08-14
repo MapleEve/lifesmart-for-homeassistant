@@ -14,10 +14,10 @@ LifeSmart 风扇平台支持模块
 - 方向控制：正向和反向旋转
 
 技术特性：
-- 灵活的速度级别配置
-- Home Assistant 标准百分比速度接口
-- 实时状态同步和更新
-- 完整的错误处理和日志记录
+- 配置驱动的IO口检测
+- 使用mapping_engine统一配置管理
+- 统一的状态更新和错误处理
+- 符合四层架构原则
 """
 
 import logging
@@ -29,6 +29,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,9 +44,9 @@ from .core.const import (
     MANUFACTURER,
     HUB_ID_KEY,
     DEVICE_ID_KEY,
-    DEVICE_TYPE_KEY,
     DEVICE_NAME_KEY,
     DEVICE_DATA_KEY,
+    DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     # 风扇平台相关
     FAN_SPEED_LEVELS,
@@ -58,10 +59,49 @@ from .core.const import (
 )
 from .core.data.processors import process_io_data
 from .core.entity import LifeSmartEntity
+from .core.error_handling import (
+    handle_global_refresh,
+    log_device_unavailable,
+    log_subdevice_unavailable,
+)
 from .core.helpers import generate_unique_id
-from .core.platform.platform_detection import get_device_platform_mapping
+from .core.platform.platform_detection import get_fan_subdevices, safe_get
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
+    """
+    使用映射引擎获取fan IO口的配置信息。
+
+    Args:
+        device: 设备字典
+        sub_key: IO口键名
+
+    Returns:
+        IO口的配置信息字典，如果不存在则返回None
+    """
+    from .core.config.mapping_engine import mapping_engine
+
+    device_config = mapping_engine.resolve_device_mapping_from_data(device)
+    if not device_config:
+        _LOGGER.error("映射引擎无法解析设备配置: %s", device)
+        raise HomeAssistantError(
+            f"Device configuration not found for {device.get('me', 'unknown')}"
+        )
+
+    # 在fan平台中查找IO配置
+    fan_config = device_config.get("fan")
+    if not fan_config:
+        return None
+
+    # 检查是否为增强结构
+    if isinstance(fan_config, dict) and sub_key in fan_config:
+        io_config = fan_config[sub_key]
+        if isinstance(io_config, dict) and "description" in io_config:
+            return io_config
+
+    return None
 
 
 async def async_setup_entry(
@@ -88,32 +128,30 @@ async def async_setup_entry(
         ):
             continue
 
-        device_type = device.get(DEVICE_TYPE_KEY)
-        if not device_type:
-            continue
+        # 使用工具函数获取设备的fan子设备列表
+        fan_subdevices = get_fan_subdevices(device)
 
-        # 检查是否支持风扇平台
-        platform_mapping = get_device_platform_mapping(device)
-        if "fan" not in platform_mapping:
-            continue
+        # 为每个fan子设备创建实体
+        for sub_key in fan_subdevices:
+            # 使用工具函数获取IO配置
+            io_config = _get_enhanced_io_config(device, sub_key)
+            if not io_config:
+                continue
 
-        fan_config = platform_mapping.get("fan", {})
-
-        # 为每个支持的风扇子设备创建实体
-        for fan_key, fan_config in fan_config.items():
-            if isinstance(fan_config, dict) and fan_config.get("enabled", True):
-                fan = LifeSmartFan(
-                    device,
-                    fan_key,
-                    fan_config,
-                    hub,
-                )
-                fans.append(fan)
-                _LOGGER.debug(
-                    "Added fan %s for device %s",
-                    fan_key,
-                    device.get(DEVICE_NAME_KEY),
-                )
+            # 根据IO配置创建相应的风扇实体
+            fan = LifeSmartFan(
+                raw_device=device,
+                client=hub.get_client(),
+                entry_id=config_entry.entry_id,
+                sub_device_key=sub_key,
+                sub_device_data=safe_get(device, DEVICE_DATA_KEY, sub_key, default={}),
+            )
+            fans.append(fan)
+            _LOGGER.debug(
+                "Added fan %s for device %s",
+                sub_key,
+                device.get(DEVICE_NAME_KEY),
+            )
 
     if fans:
         async_add_entities(fans)
@@ -130,33 +168,50 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
 
     def __init__(
         self,
-        device: dict,
-        sub_key: str,
-        fan_config: dict,
-        hub,
+        raw_device: dict[str, Any],
+        client: Any,
+        entry_id: str,
+        sub_device_key: str,
+        sub_device_data: dict[str, Any],
     ) -> None:
         """
         初始化风扇设备。
 
         Args:
-            device: 设备数据字典
-            sub_key: 子设备键名
-            fan_config: 风扇配置信息
-            hub: LifeSmart Hub实例
+            raw_device: 原始设备数据字典
+            client: LifeSmart 客户端实例
+            entry_id: 配置条目ID
+            sub_device_key: 子设备键名
+            sub_device_data: 子设备数据字典
         """
-        super().__init__(device, sub_key, hub)
-        self._fan_config = fan_config
-        self._attr_supported_features = FanEntityFeature.SET_SPEED
+        super().__init__(raw_device, client)
+        self._sub_key = sub_device_key
+        self._sub_data = sub_device_data
+        self._entry_id = entry_id
+
+        # 生成风扇名称和ID
+        self._attr_name = self._generate_fan_name()
+        self._attr_unique_id = generate_unique_id(
+            self.devtype,
+            self.agt,
+            self.me,
+            sub_device_key,
+        )
 
         # 从配置获取支持的功能
-        if fan_config.get("supports_preset_modes", False):
-            self._attr_supported_features |= FanEntityFeature.PRESET_MODE
+        self._attr_supported_features = FanEntityFeature.SET_SPEED
 
-        if fan_config.get("supports_oscillate", False):
-            self._attr_supported_features |= FanEntityFeature.OSCILLATE
+        # 获取IO配置以确定支持的功能
+        io_config = _get_enhanced_io_config(raw_device, sub_device_key)
+        if io_config:
+            if io_config.get("supports_preset_modes", False):
+                self._attr_supported_features |= FanEntityFeature.PRESET_MODE
 
-        if fan_config.get("supports_direction", False):
-            self._attr_supported_features |= FanEntityFeature.DIRECTION
+            if io_config.get("supports_oscillate", False):
+                self._attr_supported_features |= FanEntityFeature.OSCILLATE
+
+            if io_config.get("supports_direction", False):
+                self._attr_supported_features |= FanEntityFeature.DIRECTION
 
         # 设置速度级别和预设模式
         self._attr_speed_count = len(FAN_SPEED_LEVELS)
@@ -166,33 +221,71 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             else None
         )
 
-        self._attr_is_on = False
-        self._attr_percentage = 0
-        self._attr_preset_mode = None
-        self._attr_oscillating = False
-        self._attr_current_direction = "forward"
+        # 初始化状态
+        self._initialize_state()
 
-    @property
-    def unique_id(self) -> str:
-        """Return unique id for the fan."""
-        return generate_unique_id(
-            self._device.get(DEVICE_TYPE_KEY, ""),
-            self._device.get(HUB_ID_KEY, ""),
-            self._device.get(DEVICE_ID_KEY, ""),
-            self._sub_key,
-        )
+    @callback
+    def _generate_fan_name(self) -> str | None:
+        """
+        生成用户友好的风扇名称。
+        """
+        base_name = self._name
+        # 如果子设备有自己的名字，则使用它
+        sub_name = self._sub_data.get(DEVICE_NAME_KEY)
+        if sub_name and sub_name != self._sub_key:
+            return f"{base_name} {sub_name}"
+        # 否则，使用基础名 + IO口索引
+        return f"{base_name} Fan {self._sub_key.upper()}"
 
-    @property
-    def name(self) -> str:
-        """Return the name of the fan."""
-        device_name = self._device.get(DEVICE_NAME_KEY, "Unknown Device")
-        fan_name = self._fan_config.get("name", self._sub_key)
-        return f"{device_name} {fan_name}"
+    @callback
+    def _initialize_state(self) -> None:
+        """从子设备数据初始化风扇状态。"""
+        # 获取增强的IO配置
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return bool(self._device.get(DEVICE_DATA_KEY, {}))
+        if io_config:
+            # 使用配置的处理器
+            processed_data = process_io_data(io_config, self._sub_data)
+            if isinstance(processed_data, dict):
+                self._attr_is_on = processed_data.get("is_on", False)
+
+                # 更新速度百分比
+                if "speed_level" in processed_data:
+                    speed_level = processed_data["speed_level"]
+                    if speed_level in FAN_SPEED_LEVELS:
+                        self._attr_percentage = ordered_list_item_to_percentage(
+                            FAN_SPEED_LEVELS, speed_level
+                        )
+                    else:
+                        self._attr_percentage = 0
+
+                # 更新预设模式
+                self._attr_preset_mode = processed_data.get("preset_mode")
+
+                # 更新摆动状态
+                self._attr_oscillating = processed_data.get("oscillating", False)
+
+                # 更新方向
+                self._attr_current_direction = processed_data.get(
+                    "direction", "forward"
+                )
+            else:
+                # 简单布尔值处理
+                self._attr_is_on = bool(processed_data)
+                self._attr_percentage = 50 if self._attr_is_on else 0
+        else:
+            # 降级处理：直接解析type字段
+            fan_type = self._sub_data.get("type", 0)
+            self._attr_is_on = bool(fan_type & 1)
+            self._attr_percentage = 50 if self._attr_is_on else 0
+
+        # 默认值设置
+        if not hasattr(self, "_attr_preset_mode"):
+            self._attr_preset_mode = None
+        if not hasattr(self, "_attr_oscillating"):
+            self._attr_oscillating = False
+        if not hasattr(self, "_attr_current_direction"):
+            self._attr_current_direction = "forward"
 
     async def async_turn_on(
         self,
@@ -223,7 +316,7 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             _LOGGER.error(
                 "Failed to turn on fan %s on device %s: %s",
                 self._sub_key,
-                self._device.get(DEVICE_NAME_KEY),
+                self._name,
                 err,
             )
 
@@ -240,7 +333,7 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             _LOGGER.error(
                 "Failed to turn off fan %s on device %s: %s",
                 self._sub_key,
-                self._device.get(DEVICE_NAME_KEY),
+                self._name,
                 err,
             )
 
@@ -264,7 +357,7 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             _LOGGER.error(
                 "Failed to set fan speed %s on device %s: %s",
                 self._sub_key,
-                self._device.get(DEVICE_NAME_KEY),
+                self._name,
                 err,
             )
 
@@ -293,7 +386,7 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             _LOGGER.error(
                 "Failed to set fan preset mode %s on device %s: %s",
                 self._sub_key,
-                self._device.get(DEVICE_NAME_KEY),
+                self._name,
                 err,
             )
 
@@ -315,7 +408,7 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             _LOGGER.error(
                 "Failed to set fan oscillation %s on device %s: %s",
                 self._sub_key,
-                self._device.get(DEVICE_NAME_KEY),
+                self._name,
                 err,
             )
 
@@ -338,7 +431,7 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             _LOGGER.error(
                 "Failed to set fan direction %s on device %s: %s",
                 self._sub_key,
-                self._device.get(DEVICE_NAME_KEY),
+                self._name,
                 err,
             )
 
@@ -350,74 +443,13 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
             cmd_type: 命令类型
             value: 命令数值
         """
-        await self._hub.async_send_command(
-            self._device[HUB_ID_KEY],
-            self._device[DEVICE_ID_KEY],
+        await self._client.async_send_single_command(
+            self.agt,
+            self.me,
             self._sub_key,
             cmd_type,
             value,
         )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """
-        处理来自协调器的更新数据。
-        """
-        device_data = self._device.get(DEVICE_DATA_KEY, {})
-        io_data = device_data.get(self._sub_key)
-
-        if io_data is None:
-            return
-
-        # 处理IO数据
-        processed_value = process_io_data(io_data, self._fan_config)
-
-        # 更新状态
-        if isinstance(processed_value, dict):
-            self._attr_is_on = processed_value.get("is_on", False)
-
-            # 更新速度百分比
-            if "speed_level" in processed_value:
-                speed_level = processed_value["speed_level"]
-                if speed_level in FAN_SPEED_LEVELS:
-                    self._attr_percentage = ordered_list_item_to_percentage(
-                        FAN_SPEED_LEVELS, speed_level
-                    )
-                else:
-                    self._attr_percentage = 0
-
-            # 更新预设模式
-            if "preset_mode" in processed_value:
-                self._attr_preset_mode = processed_value["preset_mode"]
-
-            # 更新摆动状态
-            if "oscillating" in processed_value:
-                self._attr_oscillating = processed_value["oscillating"]
-
-            # 更新方向
-            if "direction" in processed_value:
-                self._attr_current_direction = processed_value["direction"]
-        else:
-            # 简单布尔值处理
-            self._attr_is_on = bool(processed_value)
-            self._attr_percentage = 50 if self._attr_is_on else 0
-
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """
-        订阅状态更新。
-        """
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                LIFESMART_SIGNAL_UPDATE_ENTITY,
-                self._handle_coordinator_update,
-            )
-        )
-        # 初始状态更新
-        self._handle_coordinator_update()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -425,9 +457,143 @@ class LifeSmartFan(LifeSmartEntity, FanEntity):
         返回设备信息。
         """
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device.get(DEVICE_ID_KEY))},
-            name=self._device.get(DEVICE_NAME_KEY),
+            identifiers={(DOMAIN, self.agt, self.me)},
+            name=self._device_name,
             manufacturer=MANUFACTURER,
-            model=self._device.get(DEVICE_TYPE_KEY),
-            via_device=(DOMAIN, self._device.get(HUB_ID_KEY)),
+            model=self.devtype,
+            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
+            via_device=(DOMAIN, self.agt),
         )
+
+    async def async_added_to_hass(self) -> None:
+        """
+        订阅状态更新。
+        """
+        await super().async_added_to_hass()
+
+        # 实体特定更新
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{self._attr_unique_id}",
+                self._handle_update,
+            )
+        )
+
+        # 全局更新
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                LIFESMART_SIGNAL_UPDATE_ENTITY,
+                self._handle_global_refresh,
+            )
+        )
+
+    async def _handle_update(self, new_data: dict) -> None:
+        """
+        处理来自设备的实时状态更新。
+        """
+        try:
+            if not new_data:
+                return
+
+            # 提取IO数据
+            io_data = {}
+            if "msg" in new_data and isinstance(new_data["msg"], dict):
+                io_data = new_data["msg"].get(self._sub_key, {})
+            elif self._sub_key in new_data:
+                io_data = new_data[self._sub_key]
+            else:
+                io_data = new_data
+
+            if not io_data:
+                return
+
+            # 更新子设备数据
+            self._sub_data.update(io_data)
+
+            # 重新初始化状态
+            old_state = {
+                "is_on": self._attr_is_on,
+                "percentage": self._attr_percentage,
+                "preset_mode": self._attr_preset_mode,
+                "oscillating": self._attr_oscillating,
+                "direction": self._attr_current_direction,
+            }
+
+            self._initialize_state()
+
+            new_state = {
+                "is_on": self._attr_is_on,
+                "percentage": self._attr_percentage,
+                "preset_mode": self._attr_preset_mode,
+                "oscillating": self._attr_oscillating,
+                "direction": self._attr_current_direction,
+            }
+
+            # 如果状态有变化，更新HA状态
+            if old_state != new_state:
+                self.async_write_ha_state()
+
+        except Exception as e:
+            _LOGGER.error(
+                "Error handling fan update for %s: %s", self._attr_unique_id, e
+            )
+
+    @handle_global_refresh()
+    async def _handle_global_refresh(self) -> None:
+        """
+        处理周期性的全数据刷新。
+        """
+        devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
+        current_device = next(
+            (
+                d
+                for d in devices
+                if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
+            ),
+            None,
+        )
+
+        if current_device is None:
+            if self.available:
+                log_device_unavailable(self.unique_id, "global refresh")
+                self._attr_available = False
+                self.async_write_ha_state()
+            return
+
+        new_sub_data = safe_get(current_device, DEVICE_DATA_KEY, self._sub_key)
+        if new_sub_data is None:
+            if self.available:
+                log_subdevice_unavailable(self.unique_id, self._sub_key)
+                self._attr_available = False
+                self.async_write_ha_state()
+            return
+
+        if not self.available:
+            self._attr_available = True
+
+        # 保存旧状态用于比较
+        old_state = {
+            "is_on": self._attr_is_on,
+            "percentage": self._attr_percentage,
+            "preset_mode": self._attr_preset_mode,
+            "oscillating": self._attr_oscillating,
+            "direction": self._attr_current_direction,
+        }
+
+        # 更新数据并重新初始化状态
+        self._sub_data = new_sub_data
+        self._initialize_state()
+
+        new_state = {
+            "is_on": self._attr_is_on,
+            "percentage": self._attr_percentage,
+            "preset_mode": self._attr_preset_mode,
+            "oscillating": self._attr_oscillating,
+            "direction": self._attr_current_direction,
+        }
+
+        # 如果状态有变化，更新HA状态
+        if old_state != new_state:
+            self.async_write_ha_state()

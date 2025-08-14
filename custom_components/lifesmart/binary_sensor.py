@@ -52,6 +52,7 @@ from .core.const import (
     BINARY_SENSOR_BUTTON_RESET_DELAY,  # 新增常量
 )
 from .core.entity import LifeSmartEntity
+from .core.error_handling import DeviceMappingNotFoundError
 from .core.helpers import (
     generate_unique_id,
 )
@@ -274,21 +275,10 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
 
         io_config = get_binary_sensor_io_config(self._raw_device, self._sub_key)
         if not io_config:
-            # 如果没有配置，使用io_processors统一处理而不是直接访问
-            from .core.data.processors.io_processors import process_io_value
-
-            # 使用type_bit_0_switch处理器作为默认二进制传感器处理逻辑
-            default_config = {"processor_type": "type_bit_0_switch"}
-            try:
-                return bool(process_io_value(default_config, self._sub_data))
-            except Exception as e:
-                _LOGGER.warning(
-                    "Failed to process binary sensor with io_processors for %s: %s",
-                    self.unique_id,
-                    e,
-                )
-                # 最后后备到原始逻辑，但这应该很少发生
-                return self._sub_data.get("val", 0) != 0
+            # 严格要求：没有映射配置时抛出错误，不允许fallback到默认处理器
+            raise DeviceMappingNotFoundError(
+                f"设备 {self._device_id} 的二元传感器 {self._sub_key} 没有找到映射配置"
+            )
 
         # Use new logic processor system
         return process_io_data(io_config, self._sub_data)
@@ -337,12 +327,6 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         # 使用ALM数据处理器提取bit状态
         return alm_data_processor.extract_bit_value(raw_value, bit_position)
 
-        # Fallback: 基础位操作
-        try:
-            return bool((raw_value >> bit_position) & 1)
-        except (TypeError, ValueError):
-            return False
-
     @callback
     def _get_attributes(self) -> dict[str, Any]:
         """使用新的逻辑处理器系统获取传感器属性。"""
@@ -366,8 +350,10 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             except Exception:
                 pass
 
-        # Fallback to basic attributes
-        return dict(self._sub_data)
+        # 严格要求：没有映射配置时抛出错误，不允许fallback到默认行为
+        raise DeviceMappingNotFoundError(
+            f"设备 {self.devtype} 的二元传感器 {self._sub_key} 没有找到属性映射配置"
+        )
 
     @property
     def device_info(self) -> DeviceInfo:

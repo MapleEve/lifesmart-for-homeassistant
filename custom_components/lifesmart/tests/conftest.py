@@ -19,6 +19,11 @@ from custom_components.lifesmart.core.const import (
     CONF_EXCLUDE_ITEMS,
     CONF_EXCLUDE_AGTS,
 )
+from .utils.constants import (
+    REGION_IDENTIFIERS,
+    TEST_CONFIG_ENTRY,
+    TEST_EXCLUSION_CONFIG,
+)
 from .utils.helpers import create_mock_hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -216,7 +221,7 @@ def mock_client_class(mock_sensor_devices_only):
         instance.login_async.return_value = {
             "usertoken": "mock_new_usertoken",
             "userid": "mock_userid",
-            "region": "cn2",
+            "region": REGION_IDENTIFIERS["china_region"],
         }
         instance.async_refresh_token.return_value = {
             "usertoken": "mock_refreshed_usertoken",
@@ -295,11 +300,11 @@ def mock_config_entry(mock_config_data) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data=mock_config_data,
-        entry_id="mock_entry_id_12345",
-        title="LifeSmart Mock",
+        entry_id=TEST_CONFIG_ENTRY["mock_entry_id"],
+        title=TEST_CONFIG_ENTRY["mock_title"],
         options={
-            CONF_EXCLUDE_ITEMS: "excluded_device",
-            CONF_EXCLUDE_AGTS: "excluded_hub",
+            CONF_EXCLUDE_ITEMS: TEST_EXCLUSION_CONFIG["excluded_device"],
+            CONF_EXCLUDE_AGTS: TEST_EXCLUSION_CONFIG["excluded_hub"],
         },
     )
 

@@ -35,6 +35,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.core.const import (
     DOMAIN,
+    CMD_TYPE_ON,
 )
 from custom_components.lifesmart.core.exceptions import (
     LifeSmartAPIError,

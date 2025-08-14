@@ -372,6 +372,46 @@ class ConfigurationError(LifeSmartError):
     pass
 
 
+class DeviceMappingNotFoundError(ConfigurationError):
+    """
+    设备映射配置未找到错误
+
+    当设备或IO口的映射配置在映射引擎中不存在时抛出此异常：
+    - 设备类型映射缺失
+    - IO口配置缺失
+    - 平台映射规则不存在
+    - 属性处理器配置缺失
+
+    处理策略:
+    1. **严格要求**: 不允许fallback到默认行为
+    2. **明确错误**: 提供清晰的配置缺失信息
+    3. **架构边界**: 维护三层架构的严格边界
+    4. **配置修复**: 指导用户补充缺失的映射配置
+
+    架构原则:
+    - 严格映射驱动，无配置时不能静默fallback
+    - 维护Platform → Mapping Engine → Device Specs的清晰边界
+    - 暴露配置问题以改善系统健壮性
+
+    使用场景:
+    - binary_sensor设备无映射配置
+    - sensor设备IO口配置缺失
+    - light设备属性处理器未定义
+    - cover设备控制映射不存在
+
+    示例:
+        def get_device_config(self, device_type, io_key):
+            config = self.mapping_engine.get_config(device_type, io_key)
+            if not config:
+                raise DeviceMappingNotFoundError(
+                    f"设备 {device_type} 的 {io_key} 映射配置未找到"
+                )
+            return config
+    """
+
+    pass
+
+
 # =====================================================
 # 2. 错误消息模板 - 结构化错误报告系统
 # =====================================================

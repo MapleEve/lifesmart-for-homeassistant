@@ -160,18 +160,20 @@ CMD_TYPE_SET_RAW_ON = 0xFF  # 开灯亮度/配置设置开始(颜色、动态、
 CMD_TYPE_SET_RAW_OFF = 0xFE  # 关灯亮度设置/配置设置停止（颜色、动态、配置值等）
 CMD_TYPE_SET_TEMP_FCU = 0x89  # FCU温控器设置温度的特殊命令码
 
-# 未知命令码 (用于测试和调试)
-CMD_TYPE_UNKNOWN_131 = 0x83  # 未知命令码 131
-CMD_TYPE_UNKNOWN_133 = 0x85  # 未知命令码 133
-CMD_TYPE_UNKNOWN_136 = 0x88  # 未知命令码 136
-CMD_TYPE_UNKNOWN_137 = 0x89  # 未知命令码 137
-CMD_TYPE_UNKNOWN_138 = 0x8A  # 未知命令码 138
-CMD_TYPE_UNKNOWN_144 = 0x90  # 未知命令码 144
-CMD_TYPE_UNKNOWN_206 = 0xCE  # 未知命令码 206
-CMD_TYPE_UNKNOWN_223 = 0xDF  # 未知命令码 223
-CMD_TYPE_UNKNOWN_254 = 0xFE  # 未知命令码 254
-CMD_TYPE_UNKNOWN_255 = 0xFF  # 未知命令码 255
-CMD_TYPE_UNKNOWN_999 = 0x3E7  # 未知命令码 999 (测试用)
+# 语义化命令码 (已清理所有UNKNOWN标记)
+CMD_TYPE_SET_INDICATOR_BRIGHTNESS = 0xDF  # SL_SW_DM1 指示灯亮度控制
+
+# 注意: CMD_TYPE_UNKNOWN_144 (0x90) 和 CMD_TYPE_UNKNOWN_999 (0x3E7) 已删除
+# 原因: 基于ZEN专家评审，这些不是有效的命令码
+
+# 数据类型常量 (Data Type Constants)
+DATA_TYPE_BASE = 0  # 基础数据类型（用于RGBW处理器等）
+DATA_TYPE_STATE_ON = 1  # 状态开启标识
+DATA_TYPE_SENSOR = 1  # 传感器数据类型
+
+# ================= 红外码API类型常量 (IR Code API Type Constants) =================
+# 用于超级碗红外码API的数据类型标识
+IR_CODE_TYPE_STANDARD = 1  # 标准红外码数据类型 (用于SendCodes API的type字段)
 
 # ================= 服务调用相关常量 (Service Call Constants) =================
 SERVICE_SEND_KEYS = "send_keys"  # 发送按键命令服务

@@ -47,6 +47,10 @@ from custom_components.lifesmart.core.exceptions import (
     LifeSmartAuthError,
 )
 from custom_components.lifesmart.core.hub import LifeSmartHub
+from ..utils.constants import (
+    HUB_BUSINESS_LOGIC_TEST_VALUES,
+    HUB_BUSINESS_LOGIC_EXTENDED,
+)
 from ..utils.factories import create_mock_oapi_client
 
 
@@ -57,13 +61,17 @@ def mock_config_entry_oapi():
         domain=DOMAIN,
         data={
             CONF_TYPE: CONN_CLASS_CLOUD_PUSH,
-            CONF_LIFESMART_APPKEY: "test_appkey",
-            CONF_LIFESMART_APPTOKEN: "test_apptoken",
-            CONF_LIFESMART_USERID: "test_userid",
-            CONF_LIFESMART_USERTOKEN: "test_usertoken",
+            CONF_LIFESMART_APPKEY: HUB_BUSINESS_LOGIC_TEST_VALUES["test_appkey_oapi"],
+            CONF_LIFESMART_APPTOKEN: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                "test_apptoken_oapi"
+            ],
+            CONF_LIFESMART_USERID: HUB_BUSINESS_LOGIC_TEST_VALUES["test_userid_oapi"],
+            CONF_LIFESMART_USERTOKEN: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                "test_usertoken_oapi"
+            ],
             CONF_LIFESMART_AUTH_METHOD: "token",
         },
-        entry_id="test_entry_oapi",
+        entry_id=HUB_BUSINESS_LOGIC_TEST_VALUES["test_entry_oapi_id"],
     )
 
 
@@ -74,12 +82,12 @@ def mock_config_entry_local():
         domain=DOMAIN,
         data={
             CONF_TYPE: "local_push",
-            CONF_HOST: "192.168.1.100",
+            CONF_HOST: HUB_BUSINESS_LOGIC_TEST_VALUES["local_test_ip"],
             CONF_PORT: 8080,
-            CONF_USERNAME: "test_user",
-            CONF_PASSWORD: "test_pass",
+            CONF_USERNAME: HUB_BUSINESS_LOGIC_EXTENDED["local_test_user"],
+            CONF_PASSWORD: HUB_BUSINESS_LOGIC_EXTENDED["local_test_password"],
         },
-        entry_id="test_entry_local",
+        entry_id=HUB_BUSINESS_LOGIC_TEST_VALUES["test_entry_local_id"],
     )
 
 
@@ -93,10 +101,18 @@ class TestLifeSmartHub:
             domain=DOMAIN,
             data={
                 CONF_TYPE: CONN_CLASS_CLOUD_PUSH,
-                CONF_LIFESMART_APPKEY: "test_key",
-                CONF_LIFESMART_APPTOKEN: "test_token",
-                CONF_LIFESMART_USERID: "test_user",
-                CONF_LIFESMART_USERTOKEN: "test_usertoken",
+                CONF_LIFESMART_APPKEY: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                    "test_appkey_oapi"
+                ],
+                CONF_LIFESMART_APPTOKEN: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                    "test_apptoken_oapi"
+                ],
+                CONF_LIFESMART_USERID: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                    "test_userid_oapi"
+                ],
+                CONF_LIFESMART_USERTOKEN: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                    "test_usertoken_oapi"
+                ],
             },
         )
 
@@ -104,7 +120,7 @@ class TestLifeSmartHub:
 
         # 模拟OAPI客户端创建失败
         with patch(
-            "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient",
+            "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient",
             side_effect=Exception("客户端创建失败"),
         ):
             with pytest.raises(ConfigEntryNotReady, match="Hub 设置失败"):
@@ -117,10 +133,18 @@ class TestLifeSmartHub:
             domain=DOMAIN,
             data={
                 CONF_TYPE: CONN_CLASS_CLOUD_PUSH,
-                CONF_LIFESMART_APPKEY: "test_key",
-                CONF_LIFESMART_APPTOKEN: "test_token",
-                CONF_LIFESMART_USERID: "test_user",
-                CONF_LIFESMART_USERTOKEN: "test_usertoken",
+                CONF_LIFESMART_APPKEY: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                    "test_appkey_oapi"
+                ],
+                CONF_LIFESMART_APPTOKEN: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                    "test_apptoken_oapi"
+                ],
+                CONF_LIFESMART_USERID: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                    "test_userid_oapi"
+                ],
+                CONF_LIFESMART_USERTOKEN: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                    "test_usertoken_oapi"
+                ],
             },
         )
         mock_config_entry.add_to_hass(hass)
@@ -134,8 +158,8 @@ class TestLifeSmartHub:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
-                "usertoken": "test_usertoken",
-                "expiredtime": 9999999999,
+                "usertoken": HUB_BUSINESS_LOGIC_TEST_VALUES["test_usertoken_oapi"],
+                "expiredtime": HUB_BUSINESS_LOGIC_TEST_VALUES["token_expiry_time"],
             }
             mock_client.async_get_all_devices.side_effect = Exception("获取设备失败")
 
@@ -157,15 +181,17 @@ class TestLifeSmartHub:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
-                "usertoken": "test_usertoken",
-                "expiredtime": 9999999999,
+                "usertoken": HUB_BUSINESS_LOGIC_TEST_VALUES["test_usertoken_oapi"],
+                "expiredtime": HUB_BUSINESS_LOGIC_TEST_VALUES["token_expiry_time"],
             }
             mock_client.async_get_all_devices.return_value = [
                 {
-                    HUB_ID_KEY: "test_hub",
-                    DEVICE_ID_KEY: "test_device",
-                    DEVICE_TYPE_KEY: "test_type",
-                    "name": "Test Device",
+                    HUB_ID_KEY: HUB_BUSINESS_LOGIC_TEST_VALUES["test_hub_primary"],
+                    DEVICE_ID_KEY: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                        "test_device_primary"
+                    ],
+                    DEVICE_TYPE_KEY: HUB_BUSINESS_LOGIC_TEST_VALUES["test_device_type"],
+                    "name": HUB_BUSINESS_LOGIC_TEST_VALUES["test_device_name"],
                 }
             ]
 
@@ -196,8 +222,8 @@ class TestLifeSmartHub:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
-                "usertoken": "test_usertoken",
-                "expiredtime": 9999999999,
+                "usertoken": HUB_BUSINESS_LOGIC_TEST_VALUES["test_usertoken_oapi"],
+                "expiredtime": HUB_BUSINESS_LOGIC_TEST_VALUES["token_expiry_time"],
             }
             mock_client.async_get_all_devices.return_value = []
             # get_wss_url is already properly mocked in create_mock_oapi_client()
@@ -225,10 +251,10 @@ class TestLifeSmartHub:
             domain=DOMAIN,
             data={
                 CONF_TYPE: "local_push",
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 8888,
-                CONF_USERNAME: "admin",
-                CONF_PASSWORD: "admin",
+                CONF_HOST: HUB_BUSINESS_LOGIC_TEST_VALUES["local_test_ip"],
+                CONF_PORT: HUB_BUSINESS_LOGIC_TEST_VALUES["local_test_port"],
+                CONF_USERNAME: HUB_BUSINESS_LOGIC_TEST_VALUES["local_admin_user"],
+                CONF_PASSWORD: HUB_BUSINESS_LOGIC_TEST_VALUES["local_admin_pass"],
             },
         )
         mock_config_entry_local.add_to_hass(hass)
@@ -236,7 +262,7 @@ class TestLifeSmartHub:
         hub = LifeSmartHub(hass, mock_config_entry_local)
 
         with patch(
-            "custom_components.lifesmart.core.client.local_tcp_client.LifeSmartTCPClient"
+            "custom_components.lifesmart.core.hub.LifeSmartTCPClient"
         ) as mock_client_cls:
             mock_client = AsyncMock()
             mock_client_cls.return_value = mock_client
@@ -269,8 +295,8 @@ class TestLifeSmartHub:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
-                "usertoken": "test_usertoken",
-                "expiredtime": 9999999999,
+                "usertoken": HUB_BUSINESS_LOGIC_TEST_VALUES["test_usertoken_oapi"],
+                "expiredtime": HUB_BUSINESS_LOGIC_TEST_VALUES["token_expiry_time"],
             }
             mock_client.async_get_all_devices.return_value = []
 
@@ -306,11 +332,14 @@ class TestLifeSmartHub:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
-                "usertoken": "test_usertoken",
-                "expiredtime": 9999999999,
+                "usertoken": HUB_BUSINESS_LOGIC_TEST_VALUES["test_usertoken_oapi"],
+                "expiredtime": HUB_BUSINESS_LOGIC_TEST_VALUES["token_expiry_time"],
             }
             mock_client.async_get_all_devices.return_value = [
-                {"agt": "hub1", "me": "dev1"}
+                {
+                    "agt": HUB_BUSINESS_LOGIC_TEST_VALUES["hub_identifier_1"],
+                    "me": HUB_BUSINESS_LOGIC_TEST_VALUES["device_identifier_1"],
+                }
             ]
 
             # 设置client实例
@@ -336,8 +365,8 @@ class TestLifeSmartHub:
             mock_client = create_mock_oapi_client()
             mock_client_cls.return_value = mock_client
             mock_client.async_refresh_token.return_value = {
-                "usertoken": "test_usertoken",
-                "expiredtime": 9999999999,
+                "usertoken": HUB_BUSINESS_LOGIC_TEST_VALUES["test_usertoken_oapi"],
+                "expiredtime": HUB_BUSINESS_LOGIC_TEST_VALUES["token_expiry_time"],
             }
             mock_client.async_get_all_devices.return_value = []
             # get_wss_url is already properly mocked in create_mock_oapi_client()
@@ -385,17 +414,23 @@ class TestLifeSmartHub:
         mock_config_entry_oapi.add_to_hass(hass)
 
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
-        mock_devices = [{"agt": "hub1", "me": "dev1", "devtype": "SL_SW"}]
+        mock_devices = [
+            {
+                "agt": HUB_BUSINESS_LOGIC_TEST_VALUES["hub_identifier_1"],
+                "me": HUB_BUSINESS_LOGIC_TEST_VALUES["device_identifier_1"],
+                "devtype": HUB_BUSINESS_LOGIC_EXTENDED["device_type_switch"],
+            }
+        ]
 
         with patch(
-            "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient"
+            "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient"
         ) as mock_client_class:
             mock_client = create_mock_oapi_client()
             mock_client_class.return_value = mock_client
             mock_client.async_get_all_devices.return_value = mock_devices
             mock_client.async_refresh_token.return_value = {
-                "usertoken": "new_token",
-                "expiredtime": 9999999999,
+                "usertoken": HUB_BUSINESS_LOGIC_TEST_VALUES["new_token_refresh"],
+                "expiredtime": HUB_BUSINESS_LOGIC_TEST_VALUES["token_expiry_time"],
             }
             # get_wss_url is already properly mocked in create_mock_oapi_client()
 
@@ -429,7 +464,13 @@ class TestLifeSmartHub:
         mock_config_entry_local.add_to_hass(hass)
 
         hub = LifeSmartHub(hass, mock_config_entry_local)
-        mock_devices = [{"agt": "hub1", "me": "dev1", "devtype": "SL_SW"}]
+        mock_devices = [
+            {
+                "agt": HUB_BUSINESS_LOGIC_TEST_VALUES["hub_identifier_1"],
+                "me": HUB_BUSINESS_LOGIC_TEST_VALUES["device_identifier_1"],
+                "devtype": HUB_BUSINESS_LOGIC_EXTENDED["device_type_switch"],
+            }
+        ]
 
         with (
             patch(
@@ -472,7 +513,7 @@ class TestLifeSmartHub:
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
 
         with patch(
-            "custom_components.lifesmart.core.client.openapi_client.LifeSmartOpenAPIClient"
+            "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient"
         ) as mock_client_class:
             mock_client = create_mock_oapi_client()
             mock_client_class.return_value = mock_client
@@ -491,7 +532,12 @@ class TestLifeSmartHub:
 
         hub = LifeSmartHub(hass, mock_config_entry_oapi)
         mock_client = MagicMock()
-        mock_devices = [{"agt": "hub1", "me": "dev1"}]
+        mock_devices = [
+            {
+                "agt": HUB_BUSINESS_LOGIC_TEST_VALUES["hub_identifier_1"],
+                "me": HUB_BUSINESS_LOGIC_TEST_VALUES["device_identifier_1"],
+            }
+        ]
 
         hub.client = mock_client
         hub.devices = mock_devices
@@ -499,7 +545,10 @@ class TestLifeSmartHub:
         # 使用 async_update_entry 来正确设置选项
         hass.config_entries.async_update_entry(
             mock_config_entry_oapi,
-            options={"exclude": "dev1,dev2", "exclude_agt": "hub2"},
+            options={
+                "exclude": HUB_BUSINESS_LOGIC_EXTENDED["exclude_devices_list"],
+                "exclude_agt": HUB_BUSINESS_LOGIC_EXTENDED["exclude_hubs_list"],
+            },
         )
 
         # 测试 get_client
@@ -510,8 +559,13 @@ class TestLifeSmartHub:
 
         # 测试 get_exclude_config
         exclude_devices, exclude_hubs = hub.get_exclude_config()
-        assert exclude_devices == {"dev1", "dev2"}, "排除设备列表应该正确解析"
-        assert exclude_hubs == {"hub2"}, "排除Hub列表应该正确解析"
+        assert exclude_devices == {
+            HUB_BUSINESS_LOGIC_EXTENDED["exclude_device_1"],
+            HUB_BUSINESS_LOGIC_EXTENDED["exclude_device_2"],
+        }, "排除设备列表应该正确解析"
+        assert exclude_hubs == {
+            HUB_BUSINESS_LOGIC_EXTENDED["exclude_hub_2"]
+        }, "排除Hub列表应该正确解析"
 
     @pytest.mark.asyncio
     async def test_data_update_handler(
@@ -531,7 +585,7 @@ class TestLifeSmartHub:
             "msg": {
                 DEVICE_TYPE_KEY: "SL_SW",
                 HUB_ID_KEY: "hub1",
-                DEVICE_ID_KEY: "dev1",
+                DEVICE_ID_KEY: HUB_BUSINESS_LOGIC_TEST_VALUES["device_identifier_1"],
                 SUBDEVICE_INDEX_KEY: "L1",
             }
         }
@@ -550,7 +604,7 @@ class TestLifeSmartHub:
             "msg": {
                 DEVICE_TYPE_KEY: "SL_SCENE",
                 HUB_ID_KEY: "hub1",
-                DEVICE_ID_KEY: "dev1",
+                DEVICE_ID_KEY: HUB_BUSINESS_LOGIC_TEST_VALUES["device_identifier_1"],
                 SUBDEVICE_INDEX_KEY: "s",
             }
         }
@@ -583,7 +637,7 @@ class TestLifeSmartHub:
         hub._local_task = real_task
 
         with patch(
-            "custom_components.lifesmart.core.client.local_tcp_client.LifeSmartTCPClient"
+            "custom_components.lifesmart.core.hub.LifeSmartTCPClient"
         ) as mock_local_client:
             # 设置 client 为本地客户端类型
             hub.client = mock_local_client.return_value
@@ -968,7 +1022,12 @@ class TestLifeSmartStateManager:
             mock_hub_class.return_value = mock_hub_instance
 
             mock_client = create_mock_oapi_client()
-            mock_devices = [{"agt": "hub1", "me": "dev1"}]
+            mock_devices = [
+                {
+                    "agt": HUB_BUSINESS_LOGIC_TEST_VALUES["hub_identifier_1"],
+                    "me": HUB_BUSINESS_LOGIC_TEST_VALUES["device_identifier_1"],
+                }
+            ]
 
             mock_hub_instance.client = mock_client
             mock_client.async_get_all_devices.return_value = mock_devices
@@ -1113,7 +1172,9 @@ class TestLifeSmartStateManager:
                 "msg": {
                     DEVICE_TYPE_KEY: "SL_SW",
                     HUB_ID_KEY: "filtered_hub",
-                    DEVICE_ID_KEY: "dev1",
+                    DEVICE_ID_KEY: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                        "device_identifier_1"
+                    ],
                     SUBDEVICE_INDEX_KEY: "L1",
                 }
             }
@@ -1146,7 +1207,9 @@ class TestLifeSmartStateManager:
                 "msg": {
                     DEVICE_TYPE_KEY: "SL_SW",
                     HUB_ID_KEY: "hub1",
-                    DEVICE_ID_KEY: "dev1",
+                    DEVICE_ID_KEY: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                        "device_identifier_1"
+                    ],
                     SUBDEVICE_INDEX_KEY: "L1",
                 }
             }
@@ -1202,7 +1265,12 @@ class TestLifeSmartStateManager:
             mock_hub_class.return_value = mock_hub_instance
             mock_hub_instance._async_register_hubs = AsyncMock()
             mock_hub_instance.devices = [
-                {HUB_ID_KEY: "hub1", DEVICE_ID_KEY: "dev1"},
+                {
+                    HUB_ID_KEY: HUB_BUSINESS_LOGIC_TEST_VALUES["hub_identifier_1"],
+                    DEVICE_ID_KEY: HUB_BUSINESS_LOGIC_TEST_VALUES[
+                        "device_identifier_1"
+                    ],
+                },
                 {HUB_ID_KEY: "hub2", DEVICE_ID_KEY: "dev2"},
                 {"invalid": "devices"},  # 没有hub_id的设备
             ]

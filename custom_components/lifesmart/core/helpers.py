@@ -15,6 +15,10 @@ import re
 
 from homeassistant.const import Platform
 
+# 导入第三方设备和版本设备支持
+from .config.mapping import (
+    is_versioned_device,
+)
 from .const import (
     DEVICE_FULLCLS_KEY,
     DEVICE_TYPE_KEY,
@@ -93,11 +97,8 @@ def is_versioned_device_type(device: dict, expected_version: str = None) -> bool
     device_type = device.get(DEVICE_TYPE_KEY, "")
     full_cls = device.get(DEVICE_FULLCLS_KEY, "")
 
-    # 临时实现：基于常见的版本化设备类型进行检查
-    # TODO: 替换为完整的VERSIONED_DEVICE_TYPES导入，当设备模块可用时
-    known_versioned_types = ["SL_LI_WW", "SL_SW_DM1", "SL_LK_DJ", "SL_SC_BB", "SL_P_IR"]
-
-    if device_type not in known_versioned_types:
+    # 直接使用恢复的第三方映射数据
+    if not is_versioned_device(device_type):
         return False
 
     # 如果没有指定期望版本，只要是版本化设备就返回True
@@ -122,11 +123,8 @@ def get_device_version(device: dict) -> str:
     device_type = device.get(DEVICE_TYPE_KEY, "")
     full_cls = device.get(DEVICE_FULLCLS_KEY, "")
 
-    # 临时实现：基于常见的版本化设备类型进行检查
-    # TODO: 替换为完整的VERSIONED_DEVICE_TYPES导入，当设备模块可用时
-    known_versioned_types = ["SL_LI_WW", "SL_SW_DM1", "SL_LK_DJ", "SL_SC_BB", "SL_P_IR"]
-
-    if device_type not in known_versioned_types:
+    # 直接使用恢复的第三方映射数据
+    if not is_versioned_device(device_type):
         return ""
 
     # 从fullCls中提取版本信息

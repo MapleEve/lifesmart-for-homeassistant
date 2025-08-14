@@ -1,56 +1,5 @@
-# LifeSmart Mapping Tool NLP Dependencies
-# Pure AI文档分析器 - NLP功能所需依赖
-# Updated: 2025-08-11
+# LifeSmart Mapping Tool - Minimal Dependencies
+# Only essential dependencies for core functionality
 
-# =============================================================================
-# Core NLP Libraries (Optional - 纯AI分析器支持)
-# =============================================================================
-
-# spaCy - 主要的NLP处理库
+# Optional: AI analysis (can run without this)
 spacy>=3.7.0
-# 中文语言模型（可选安装）
-# python -m spacy download zh_core_web_sm
-# 英文语言模型（可选安装） 
-# python -m spacy download en_core_web_sm
-
-# NLTK - 自然语言处理工具包
-nltk>=3.8.0
-
-# Transformers - Hugging Face模型库
-transformers>=4.21.0
-
-# =============================================================================
-# Machine Learning backends (可选)
-# =============================================================================
-
-# PyTorch - 深度学习框架
-torch>=2.0.0
-
-# NumPy - 数值计算
-numpy>=1.24.0
-
-# =============================================================================
-# Core Python utilities (必需)
-# =============================================================================
-
-# 正则表达式支持
-regex>=2023.6.3
-
-# =============================================================================
-# Installation Notes
-# =============================================================================
-# 
-# 完全可选安装：
-# - 如果不安装这些依赖，pure_ai_analyzer.py 仍然可以正常运行
-# - 系统会自动检测可用的NLP库并使用基础的规则引擎
-# - 安装NLP库后可以获得更高的语义分析精度
-#
-# 推荐安装方式：
-# 1. 基础功能：无需安装任何依赖
-# 2. 增强NLP：pip install spacy nltk
-# 3. 完整AI：pip install -r requirements.txt
-#
-# 语言模型安装（可选）：
-# python -m spacy download zh_core_web_sm  # 中文模型
-# python -m spacy download en_core_web_sm  # 英文模型
-# python -m nltk.downloader punkt stopwords wordnet  # NLTK数据

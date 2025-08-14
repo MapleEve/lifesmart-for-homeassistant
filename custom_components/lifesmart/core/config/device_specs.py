@@ -26,11 +26,12 @@ try:
         CMD_TYPE_FAN,
         CMD_TYPE_LOCK,
         CMD_TYPE_BUTTON,
-        CMD_TYPE_UNKNOWN_136,
-        CMD_TYPE_UNKNOWN_206,
-        CMD_TYPE_UNKNOWN_223,
-        CMD_TYPE_UNKNOWN_254,
-        CMD_TYPE_UNKNOWN_255,
+        CMD_TYPE_SET_TEMP_DECIMAL,
+        CMD_TYPE_PRESS,
+        CMD_TYPE_SET_CONFIG,
+        CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
+        CMD_TYPE_SET_RAW_OFF,
+        CMD_TYPE_SET_RAW_ON,
     )
 except ImportError:
     # 回退定义，如果无法导入const模块
@@ -46,11 +47,12 @@ except ImportError:
     CMD_TYPE_FAN = "FAN"
     CMD_TYPE_LOCK = "LOCK"
     CMD_TYPE_BUTTON = "BUTTON"
-    CMD_TYPE_UNKNOWN_136 = 136
-    CMD_TYPE_UNKNOWN_206 = 206
-    CMD_TYPE_UNKNOWN_223 = 223
-    CMD_TYPE_UNKNOWN_254 = 254
-    CMD_TYPE_UNKNOWN_255 = 255
+    CMD_TYPE_SET_TEMP_DECIMAL = 0x88
+    CMD_TYPE_PRESS = 0x89
+    CMD_TYPE_SET_CONFIG = 0xCE
+    CMD_TYPE_SET_INDICATOR_BRIGHTNESS = 223
+    CMD_TYPE_SET_RAW_OFF = 0xFE
+    CMD_TYPE_SET_RAW_ON = 0xFF
 
 try:
     from homeassistant.components.climate.const import (
@@ -324,7 +326,7 @@ _RAW_DEVICE_DATA = {
                         "description": "使能并且设置门限",
                     },
                     "set_threshold_disable": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "不使能并且设置门限",
                     },
                 },
@@ -407,7 +409,7 @@ _RAW_DEVICE_DATA = {
                         "description": "使能并且设置门限",
                     },
                     "set_threshold_disable": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "不使能并且设置门限",
                     },
                 },
@@ -490,7 +492,7 @@ _RAW_DEVICE_DATA = {
                         "description": "使能并且设置门限",
                     },
                     "set_threshold_disable": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "不使能并且设置门限",
                     },
                 },
@@ -547,11 +549,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯设置亮度",
                     },
                 },
@@ -577,11 +579,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯设置亮度",
                     },
                 },
@@ -661,11 +663,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -694,11 +696,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -727,11 +729,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -760,11 +762,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -866,11 +868,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -899,11 +901,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -932,11 +934,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -965,11 +967,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -998,11 +1000,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1031,11 +1033,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1136,11 +1138,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置亮度值",
                     },
                 },
@@ -1167,11 +1169,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置亮度值",
                     },
                 },
@@ -1271,11 +1273,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置亮度值",
                     },
                 },
@@ -1302,11 +1304,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置亮度值",
                     },
                 },
@@ -1408,11 +1410,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1441,11 +1443,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1474,11 +1476,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1507,11 +1509,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1540,11 +1542,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1573,11 +1575,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1679,11 +1681,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1712,11 +1714,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1745,11 +1747,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1778,11 +1780,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1811,11 +1813,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1844,11 +1846,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1950,11 +1952,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -1983,11 +1985,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2016,11 +2018,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2049,11 +2051,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2082,11 +2084,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2115,11 +2117,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2199,11 +2201,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2232,11 +2234,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2265,11 +2267,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2298,11 +2300,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2382,11 +2384,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2415,11 +2417,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2448,11 +2450,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2481,11 +2483,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2565,11 +2567,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2598,11 +2600,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2631,11 +2633,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2664,11 +2666,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2748,11 +2750,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2781,11 +2783,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2814,11 +2816,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2847,11 +2849,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2909,11 +2911,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -2942,11 +2944,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3004,11 +3006,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3037,11 +3039,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3099,11 +3101,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3132,11 +3134,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3194,11 +3196,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3227,11 +3229,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3289,11 +3291,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3322,11 +3324,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -3763,7 +3765,7 @@ _RAW_DEVICE_DATA = {
                         "description": "打开并且设置亮度，val=亮度值[0,255]",
                     },
                     "set_brightness_off": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "关闭并设置亮度，val=亮度值[0,255]",
                     },
                 },
@@ -4094,7 +4096,7 @@ _RAW_DEVICE_DATA = {
                                 "description": "打开并且设置亮度，val=亮度值[0,255]",
                             },
                             "set_brightness_off": {
-                                "type": CMD_TYPE_UNKNOWN_206,
+                                "type": CMD_TYPE_SET_CONFIG,
                                 "description": "关闭并设置亮度，val=亮度值[0,255]",
                             },
                         },
@@ -4125,7 +4127,7 @@ _RAW_DEVICE_DATA = {
                                 "description": "关闭",
                             },
                             "set_brightness": {
-                                "type": CMD_TYPE_UNKNOWN_223,
+                                "type": CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
                                 "description": "设置亮度，val=亮度值[0,65535]",
                             },
                         },
@@ -4160,7 +4162,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "当前调光设置值",
                         "commands": {
                             "set_config": {
-                                "type": CMD_TYPE_UNKNOWN_206,
+                                "type": CMD_TYPE_SET_CONFIG,
                                 "description": "设置调光参数配置",
                             },
                         },
@@ -4173,7 +4175,7 @@ _RAW_DEVICE_DATA = {
                         "detailed_description": "当前动态设置值",
                         "commands": {
                             "set_config": {
-                                "type": CMD_TYPE_UNKNOWN_206,
+                                "type": CMD_TYPE_SET_CONFIG,
                                 "description": "设置动态参数配置",
                             },
                         },
@@ -4210,7 +4212,7 @@ _RAW_DEVICE_DATA = {
                                 "description": "打开并且设置亮度，val=亮度值[0,255]",
                             },
                             "set_brightness_off": {
-                                "type": CMD_TYPE_UNKNOWN_206,
+                                "type": CMD_TYPE_SET_CONFIG,
                                 "description": "关闭并设置亮度，val=亮度值[0,255]",
                             },
                         },
@@ -4580,11 +4582,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4613,11 +4615,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4697,11 +4699,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4730,11 +4732,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4763,11 +4765,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4796,11 +4798,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4902,11 +4904,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4935,11 +4937,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -4968,11 +4970,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5001,11 +5003,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5034,11 +5036,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5067,11 +5069,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5431,7 +5433,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "config": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "下发配置，val=bit0~bit23按对应Px配置值后合并的一个数值",
                     },
                 },
@@ -5509,11 +5511,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯设置亮度",
                     },
                 },
@@ -5537,11 +5539,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_brightness_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯设置亮度",
                     },
                 },
@@ -5619,11 +5621,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5652,11 +5654,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5685,11 +5687,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5778,7 +5780,7 @@ _RAW_DEVICE_DATA = {
                         "description": "完全关闭",
                     },
                     "stop": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "val": 128,
                         "description": "停止窗帘",
                     },
@@ -5880,11 +5882,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5911,11 +5913,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关闭",
                     },
                     "set_effect_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "使能并设置动态值，val=动态值",
                     },
                     "set_effect_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关闭并设置动态值，val=动态值",
                     },
                 },
@@ -5949,11 +5951,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -5980,11 +5982,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关闭",
                     },
                     "set_effect_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "使能并设置动态值，val=动态值",
                     },
                     "set_effect_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关闭并设置动态值，val=动态值",
                     },
                 },
@@ -6021,11 +6023,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -6080,7 +6082,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_color": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "设置颜色或动态值，val=颜色或动态值",
                     },
                 },
@@ -6177,11 +6179,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -6251,11 +6253,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -6282,11 +6284,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关闭",
                     },
                     "set_effect_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "使能并设置动态值，val=动态值",
                     },
                     "set_effect_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关闭并设置动态值，val=动态值",
                     },
                 },
@@ -6323,11 +6325,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -6364,11 +6366,11 @@ _RAW_DEVICE_DATA = {
                         "description": "关灯",
                     },
                     "set_color_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
@@ -6947,7 +6949,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val` 值越大则灵敏度越低，门限越高",
                 "commands": {
                     "set_sensitivity": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置报警器灵敏度",
                     },
                 },
@@ -6996,7 +6998,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val` 值越大则灵敏度越低，门限越高",
                 "commands": {
                     "set_sensitivity": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置报警器灵敏度",
                     },
                 },
@@ -7227,7 +7229,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置感应器动态锁定时间与灵敏度",
                     },
                 },
@@ -7414,11 +7416,11 @@ _RAW_DEVICE_DATA = {
                         "description": "停止",
                     },
                     "set_config_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "设置值并播放",
                     },
                     "set_config_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "设置值并停止",
                     },
                 },
@@ -7530,7 +7532,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_threshold": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "修改门限值",
                     },
                 },
@@ -7560,11 +7562,11 @@ _RAW_DEVICE_DATA = {
                         "description": "停止",
                     },
                     "set_config_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "设置值并播放",
                     },
                     "set_config_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "设置值并停止",
                     },
                 },
@@ -8523,7 +8525,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_mode": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置模式，val=模式值",
                     },
                 },
@@ -8539,7 +8541,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_fan_speed": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
                         "fan_modes": {
                             "low": 15,
@@ -8561,7 +8563,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": CMD_TYPE_UNKNOWN_136,
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -8602,7 +8604,7 @@ _RAW_DEVICE_DATA = {
                         "description": "关闭",
                     },
                     "set_mode": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置模式，val=模式值",
                     },
                 },
@@ -8618,7 +8620,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置风速",
                         "fan_modes": {
                             "low": 1,
@@ -8638,7 +8640,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "ppm",
                 "commands": {
                     "set_voc": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置VOC值，需要将真实值扩大10倍",
                     },
                 },
@@ -8701,7 +8703,7 @@ _RAW_DEVICE_DATA = {
                         "description": "关闭",
                     },
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置配置，需要保留其他位",
                     },
                 },
@@ -8716,7 +8718,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置目标温度",
                     },
                 },
@@ -8776,7 +8778,7 @@ _RAW_DEVICE_DATA = {
                         "description": "关闭",
                     },
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置配置，需要保留其他位",
                     },
                 },
@@ -8791,7 +8793,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置目标温度",
                     },
                 },
@@ -8863,7 +8865,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置模式",
                     },
                 },
@@ -8881,7 +8883,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": CMD_TYPE_UNKNOWN_136,
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -8894,7 +8896,7 @@ _RAW_DEVICE_DATA = {
                 "detailed_description": "`val<30`:低档；`val<65`:中档；`val>=65`:高档",
                 "commands": {
                     "set_fan_speed": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置风速，低档val=15；中档val=45；高档val=75",
                     },
                 },
@@ -8940,7 +8942,7 @@ _RAW_DEVICE_DATA = {
                         "description": "关闭",
                     },
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置配置，需要保留其他位",
                     },
                 },
@@ -8955,7 +8957,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": CMD_TYPE_UNKNOWN_136,
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -9043,7 +9045,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置模式配置",
                     },
                 },
@@ -9058,7 +9060,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置目标温度",
                     },
                 },
@@ -9257,7 +9259,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置控制参数，需要保留未修改的bit位",
                     },
                 },
@@ -9479,7 +9481,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置控制参数，需要保留未修改的bit位",
                     },
                 },
@@ -9722,7 +9724,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_mode": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置模式，val=模式值",
                     },
                 },
@@ -9738,7 +9740,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_fan_speed": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
                         "fan_modes": {
                             "low": 15,
@@ -9760,7 +9762,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": CMD_TYPE_UNKNOWN_136,
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -9816,7 +9818,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_mode": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置模式，val=模式值",
                     },
                 },
@@ -9832,7 +9834,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_fan_speed": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
                         "fan_modes": {
                             "low": 15,
@@ -9854,7 +9856,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": CMD_TYPE_UNKNOWN_136,
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
                         "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
@@ -10501,7 +10503,7 @@ _RAW_DEVICE_DATA = {
                         "description": "完全关闭",
                     },
                     "stop": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "val": 128,
                         "description": "停止车库门开合",
                     },
@@ -10543,11 +10545,11 @@ _RAW_DEVICE_DATA = {
                         "description": "停止",
                     },
                     "set_config_on": {
-                        "type": CMD_TYPE_UNKNOWN_255,
+                        "type": CMD_TYPE_SET_RAW_ON,
                         "description": "设置值并播放，val=需要设置的值",
                     },
                     "set_config_off": {
-                        "type": CMD_TYPE_UNKNOWN_254,
+                        "type": CMD_TYPE_SET_RAW_OFF,
                         "description": "设置值并停止，val=需要设置的值",
                     },
                 },
@@ -10574,7 +10576,7 @@ _RAW_DEVICE_DATA = {
                         "description": "设置静音",
                     },
                     "set_volume": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置音量，val=音量值",
                     },
                 },
@@ -10647,7 +10649,7 @@ _RAW_DEVICE_DATA = {
                     ),
                     "commands": {
                         "set_config": {
-                            "type": CMD_TYPE_UNKNOWN_255,
+                            "type": CMD_TYPE_SET_RAW_ON,
                             "description": "设置配置，需要保留其它位",
                         },
                     },
@@ -10663,7 +10665,7 @@ _RAW_DEVICE_DATA = {
                     ),
                     "commands": {
                         "set_config": {
-                            "type": CMD_TYPE_UNKNOWN_206,
+                            "type": CMD_TYPE_SET_CONFIG,
                             "description": "设置模式",
                         },
                     },
@@ -10678,7 +10680,7 @@ _RAW_DEVICE_DATA = {
                     "unit_of_measurement": "°C",
                     "commands": {
                         "set_temperature": {
-                            "type": CMD_TYPE_UNKNOWN_136,
+                            "type": CMD_TYPE_SET_TEMP_DECIMAL,
                             "description": "设置目标温度，val=温度*10",
                         },
                     },
@@ -10695,7 +10697,7 @@ _RAW_DEVICE_DATA = {
                     ),
                     "commands": {
                         "set_config": {
-                            "type": CMD_TYPE_UNKNOWN_206,
+                            "type": CMD_TYPE_SET_CONFIG,
                             "description": "设置风速",
                             "fan_modes": {
                                 "low": 25,
@@ -10783,7 +10785,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置模式",
                     },
                 },
@@ -10797,7 +10799,7 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
-                        "type": CMD_TYPE_UNKNOWN_136,
+                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
                         "description": "设置目标温度，val=温度*10",
                     },
                 },
@@ -10813,7 +10815,7 @@ _RAW_DEVICE_DATA = {
                 ),
                 "commands": {
                     "set_config": {
-                        "type": CMD_TYPE_UNKNOWN_206,
+                        "type": CMD_TYPE_SET_CONFIG,
                         "description": "设置风速",
                         "fan_modes": {
                             "low": 15,

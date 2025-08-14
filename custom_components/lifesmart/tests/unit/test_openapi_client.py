@@ -27,6 +27,9 @@ from homeassistant.components.climate import (
     FAN_AUTO,
 )
 
+from custom_components.lifesmart.core.client.openapi_client import (
+    LifeSmartOpenAPIClient,
+)
 from custom_components.lifesmart.core.const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -34,15 +37,10 @@ from custom_components.lifesmart.core.const import (
     CMD_TYPE_SET_VAL,
     CMD_TYPE_SET_CONFIG,
     CMD_TYPE_SET_TEMP_DECIMAL,
-    CMD_TYPE_SET_RAW_ON,
-    CMD_TYPE_SET_TEMP_FCU,
 )
 from custom_components.lifesmart.core.exceptions import (
     LifeSmartAPIError,
     LifeSmartAuthError,
-)
-from custom_components.lifesmart.core.client.openapi_client import (
-    LifeSmartOpenAPIClient,
 )
 
 
@@ -885,9 +883,21 @@ class TestClimateControlHelpers:
     @pytest.mark.parametrize(
         "device_type, temperature, expected_conversion",
         [
-            ("V_AIR_P", 25.5, ("tT", 136, 255)),  # 使用映射配置的type=CMD_TYPE_UNKNOWN_136
-            ("SL_CP_DN", 18.0, ("P3", 206, 180)),  # 使用映射配置的type=CMD_TYPE_UNKNOWN_206
-            ("SL_FCU", 22.0, ("P8", 136, 220)),  # 使用映射配置的type=CMD_TYPE_UNKNOWN_136
+            (
+                "V_AIR_P",
+                25.5,
+                ("tT", 136, 255),
+            ),  # 使用映射配置的type=0x88 (136)
+            (
+                "SL_CP_DN",
+                18.0,
+                ("P3", 206, 180),
+            ),  # 使用映射配置的type=0xCE (206)
+            (
+                "SL_FCU",
+                22.0,
+                ("P8", 136, 220),
+            ),  # 使用映射配置的type=0x88 (136)
             ("UNSUPPORTED", 20.0, None),
         ],
         ids=["DecimalTemp", "RawTemp", "FCUTemp", "UnsupportedDevice"],
@@ -908,11 +918,20 @@ class TestClimateControlHelpers:
 
         # 为特定设备类型添加所需的IO口
         if device_type == "SL_CP_DN":
-            test_device["data"]["P3"] = {"type": CMD_TYPE_UNKNOWN_255, "val": 0}  # 温度控制端口
+            test_device["data"]["P3"] = {
+                "type": 0xFF,  # 255
+                "val": 0,
+            }  # 温度控制端口
         elif device_type == "SL_FCU":
-            test_device["data"]["P8"] = {"type": CMD_TYPE_UNKNOWN_137, "val": 0}  # 温度控制端口
+            test_device["data"]["P8"] = {
+                "type": 0x89,  # 137
+                "val": 0,
+            }  # 温度控制端口
         elif device_type == "V_AIR_P":
-            test_device["data"]["tT"] = {"type": CMD_TYPE_UNKNOWN_138, "val": 0}  # 温度控制端口
+            test_device["data"]["tT"] = {
+                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                "val": 0,
+            }  # 温度控制端口
 
         with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
             await client.async_set_climate_temperature(
@@ -928,10 +947,30 @@ class TestClimateControlHelpers:
     @pytest.mark.parametrize(
         "device_type, fan_mode, current_val, expected_conversion",
         [
-            ("V_AIR_P", FAN_LOW, 0, ("F", 206, 15)),  # 使用映射配置 type=CMD_TYPE_UNKNOWN_206
-            ("SL_TR_ACIPM", FAN_MEDIUM, 0, ("P2", 206, 2)),  # 使用映射配置 type=CMD_TYPE_UNKNOWN_206
-            ("SL_NATURE", FAN_HIGH, 0, ("P9", 206, 75)),  # 使用映射配置 type=CMD_TYPE_UNKNOWN_206
-            ("SL_FCU", FAN_AUTO, 0, ("P9", 206, 101)),  # 使用映射配置 type=CMD_TYPE_UNKNOWN_206
+            (
+                "V_AIR_P",
+                FAN_LOW,
+                0,
+                ("F", 206, 15),
+            ),  # 使用映射配置 type=0xCE (206)
+            (
+                "SL_TR_ACIPM",
+                FAN_MEDIUM,
+                0,
+                ("P2", 206, 2),
+            ),  # 使用映射配置 type=0xCE (206)
+            (
+                "SL_NATURE",
+                FAN_HIGH,
+                0,
+                ("P9", 206, 75),
+            ),  # 使用映射配置 type=0xCE (206)
+            (
+                "SL_FCU",
+                FAN_AUTO,
+                0,
+                ("P9", 206, 101),
+            ),  # 使用映射配置 type=0xCE (206)
             ("UNSUPPORTED", FAN_LOW, 0, None),
         ],
         ids=[
@@ -958,17 +997,29 @@ class TestClimateControlHelpers:
 
         # 为特定设备类型添加所需的IO口
         if device_type == "SL_FCU":
-            test_device["data"]["P9"] = {"type": CMD_TYPE_UNKNOWN_206, "val": 0}  # 风扇控制端口
+            test_device["data"]["P9"] = {
+                "type": 0xCE,  # 206
+                "val": 0,
+            }  # 风扇控制端口
         elif device_type == "SL_NATURE":
             test_device["data"]["P5"] = {
                 "type": 1,
                 "val": 3,
             }  # P5&0xFF==3 符合climate条件
-            test_device["data"]["P9"] = {"type": CMD_TYPE_UNKNOWN_206, "val": 0}  # 风扇控制端口
+            test_device["data"]["P9"] = {
+                "type": 0xCE,  # 206
+                "val": 0,
+            }  # 风扇控制端口
         elif device_type == "V_AIR_P":
-            test_device["data"]["F"] = {"type": CMD_TYPE_UNKNOWN_206, "val": 0}  # 风扇控制端口
+            test_device["data"]["F"] = {
+                "type": 0xCE,  # 206
+                "val": 0,
+            }  # 风扇控制端口
         elif device_type == "SL_TR_ACIPM":
-            test_device["data"]["P2"] = {"type": CMD_TYPE_UNKNOWN_144, "val": 0}  # 风扇控制端口
+            test_device["data"]["P2"] = {
+                "type": 0x90,  # 原CMD_TYPE_UNKNOWN_144
+                "val": 0,
+            }  # 风扇控制端口
 
         with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
             await client.async_set_climate_fan_mode(

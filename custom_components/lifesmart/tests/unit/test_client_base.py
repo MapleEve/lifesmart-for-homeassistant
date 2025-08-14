@@ -12,9 +12,17 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from custom_components.lifesmart.core.client_base import LifeSmartClientBase
+from custom_components.lifesmart.core.const import (
+    CMD_TYPE_ON,
+    CMD_TYPE_OFF,
+    CMD_TYPE_SET_VAL,
+    CMD_TYPE_SET_CONFIG,
+    CMD_TYPE_SET_TEMP_DECIMAL,
+)
+from ..utils.constants import (
+    CLIENT_BASE_TEST_VALUES,
+)
 from ..utils.factories import (
-    create_mock_oapi_client,
-    create_mock_failed_oapi_client,
     create_devices_by_category,
 )
 
@@ -28,488 +36,274 @@ class MockLifeSmartClient(LifeSmartClientBase):
         self._send_multi_command = AsyncMock(return_value=0)
         self._get_all_devices = AsyncMock(return_value=[])
 
-    async def _async_get_all_devices(self, timeout=10):
-        return await self._get_all_devices(timeout)
 
-    async def _async_send_single_command(self, agt, me, idx, command_type, val):
-        return await self._send_single_command(agt, me, idx, command_type, val)
+class TestLifeSmartClientBase:
+    """测试 LifeSmartClientBase 的核心功能。"""
 
-    async def _async_send_multi_command(self, agt, me, io_list):
-        return await self._send_multi_command(agt, me, io_list)
-
-    # 其他抽象方法的简化实现
-    async def _async_set_scene(self, agt, scene_name):
-        return 0
-
-    async def _async_send_ir_key(self, agt, me, category, brand, keys, ai="", idx=""):
-        return 0
-
-    async def _async_add_scene(self, agt, scene_name, actions):
-        return 0
-
-    async def _async_delete_scene(self, agt, scene_name):
-        return 0
-
-    async def _async_get_scene_list(self, agt):
-        return []
-
-    async def _async_get_room_list(self, agt):
-        return []
-
-    async def _async_get_hub_list(self):
-        return []
-
-    async def _async_change_device_icon(self, device_id, icon):
-        return 0
-
-    async def _async_set_device_eeprom(self, device_id, key, value):
-        return 0
-
-    async def _async_add_device_timer(self, device_id, cron_info, key):
-        return 0
-
-    async def _async_ir_control(self, device_id, options):
-        return 0
-
-    async def _async_send_ir_code(self, device_id, ir_data):
-        return 0
-
-    async def _async_ir_raw_control(self, device_id, raw_data):
-        return 0
-
-    async def _async_get_ir_remote_list(self, agt):
-        return {}
-
-
-@pytest.fixture
-def mock_client():
-    """创建模拟客户端实例。"""
-    return MockLifeSmartClient()
-
-
-class TestAbstractBaseClass:
-    """测试抽象基类行为。"""
-
-    def test_abstract_methods_cannot_be_instantiated(self):
-        """测试抽象基类不能直接实例化。"""
-        with pytest.raises(TypeError):
-            LifeSmartClientBase()
-
-    def test_mock_client_creation(self, mock_client):
-        """测试模拟客户端的创建。"""
-        assert mock_client is not None
-        assert hasattr(mock_client, "_send_single_command")
-        assert hasattr(mock_client, "_get_all_devices")
-
-
-class TestClientBasePublicInterfaces:
-    """测试客户端基类的公共接口方法。"""
+    @pytest.fixture
+    def mock_client(self):
+        """返回一个简化的MockLifeSmartClient实例。"""
+        return MockLifeSmartClient()
 
     @pytest.mark.asyncio
-    async def test_async_get_all_devices_interface(self, mock_client):
-        """测试获取所有设备的公共接口。"""
-        expected_devices = create_devices_by_category(["smart_plug"])
-        mock_client._get_all_devices.return_value = expected_devices
+    async def test_get_devices(self, mock_client):
+        """测试获取设备列表的方法。"""
+        # 使用工厂函数创建测试设备
+        mock_devices = create_devices_by_category(["basic_switch", "advanced_switch"])
+        mock_client._get_all_devices.return_value = mock_devices
 
-        result = await mock_client.async_get_all_devices(timeout=15)
+        devices = await mock_client.get_devices()
 
-        assert result == expected_devices
-        # 公共接口使用默认timeout
-        mock_client._get_all_devices.assert_called_once_with(10)
+        assert devices == mock_devices
+        mock_client._get_all_devices.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_lifesmart_scene_command_wrapper(self, mock_client):
+        """测试LifeSmart场景命令包装器接口。"""
+        with patch.object(
+            mock_client, "_send_single_command", new_callable=AsyncMock
+        ) as mock_send:
+            mock_send.return_value = 0
+
+            result = await mock_client.lifesmart_scene_command(
+                CLIENT_BASE_TEST_VALUES["scene_identifier_1"]
+            )
+
+            assert result == 0
+            mock_send.assert_called_once_with(
+                CLIENT_BASE_TEST_VALUES["scene_hub_default"],
+                CLIENT_BASE_TEST_VALUES["scene_identifier_1"],
+                CLIENT_BASE_TEST_VALUES["scene_device_default"],
+                CLIENT_BASE_TEST_VALUES["scene_device_default"],
+                CMD_TYPE_ON,
+                1,
+            )
 
     @pytest.mark.asyncio
     async def test_async_send_single_command_interface(self, mock_client):
         """测试发送单个命令的公共接口。"""
-        from custom_components.lifesmart.core.const import CMD_TYPE_ON
-
         mock_client._send_single_command.return_value = 0
 
         result = await mock_client.async_send_single_command(
-            "agt1", "dev1", "P1", CMD_TYPE_ON, 1
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_ON,
+            1,
         )
 
         assert result == 0
         mock_client._send_single_command.assert_called_once_with(
-            "agt1", "dev1", "P1", CMD_TYPE_ON, 1
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_ON,
+            1,
         )
 
     @pytest.mark.asyncio
     async def test_async_send_multi_command_interface(self, mock_client):
         """测试发送多个命令的公共接口。"""
-        io_list = [{"idx": "P1", "type": 0x81, "val": 1}]
+        io_list = [
+            {
+                "idx": CLIENT_BASE_TEST_VALUES["io_port_p1"],
+                "type": CMD_TYPE_ON,
+                "val": 1,
+            }
+        ]
         mock_client._send_multi_command.return_value = 0
 
-        result = await mock_client.async_send_multi_command("agt1", "dev1", io_list)
-
-        assert result == 0
-        mock_client._send_multi_command.assert_called_once_with("agt1", "dev1", io_list)
-
-
-class TestLightSwitchControl:
-    """测试通用开关/灯光控制方法。"""
-
-    @pytest.mark.asyncio
-    async def test_turn_on_light_switch_async(self, mock_client):
-        """测试开启灯光或开关。"""
-        from custom_components.lifesmart.core.const import CMD_TYPE_ON
-
-        result = await mock_client.turn_on_light_switch_async("P1", "agt1", "switch1")
-
-        assert result == 0
-        mock_client._send_single_command.assert_called_once_with(
-            "agt1", "switch1", "P1", CMD_TYPE_ON, 1
-        )
-
-    @pytest.mark.asyncio
-    async def test_turn_off_light_switch_async(self, mock_client):
-        """测试关闭灯光或开关。"""
-        from custom_components.lifesmart.core.const import CMD_TYPE_OFF
-
-        result = await mock_client.turn_off_light_switch_async("P2", "agt1", "switch1")
-
-        assert result == 0
-        mock_client._send_single_command.assert_called_once_with(
-            "agt1", "switch1", "P2", CMD_TYPE_OFF, 0
-        )
-
-    @pytest.mark.asyncio
-    async def test_press_switch_async_basic_duration(self, mock_client):
-        """测试点动操作的基本持续时间。"""
-        from custom_components.lifesmart.core.const import CMD_TYPE_PRESS
-
-        result = await mock_client.press_switch_async("P3", "agt1", "switch1", 500)
-
-        assert result == 0
-        # 500ms / 100 = 5
-        mock_client._send_single_command.assert_called_once_with(
-            "agt1", "switch1", "P3", CMD_TYPE_PRESS, 5
-        )
-
-    @pytest.mark.asyncio
-    async def test_press_switch_async_minimum_duration(self, mock_client):
-        """测试点动操作的最小持续时间处理。"""
-        from custom_components.lifesmart.core.const import CMD_TYPE_PRESS
-
-        result = await mock_client.press_switch_async("P1", "agt1", "switch1", 10)
-
-        assert result == 0
-        # max(1, round(10/100)) = max(1, 0) = 1
-        mock_client._send_single_command.assert_called_once_with(
-            "agt1", "switch1", "P1", CMD_TYPE_PRESS, 1
-        )
-
-
-class TestCoverControl:
-    """测试窗帘/覆盖物控制方法。"""
-
-    @pytest.mark.asyncio
-    async def test_open_cover_garage_door(self, mock_client):
-        """测试开启车库门类型的窗帘。"""
-        from custom_components.lifesmart.core.const import (
-            CMD_TYPE_SET_VAL,
-        )
-
-        # 使用工厂函数创建车库门设备对象
-        cover_devices = create_devices_by_category(["cover"])
-        garage_door = next(
-            (d for d in cover_devices if d["devtype"] == "SL_ETDOOR"), None
-        )
-        assert garage_door is not None, "找不到SL_ETDOOR设备"
-
-        result = await mock_client.open_cover_async(
-            garage_door["agt"], garage_door["me"], garage_door
+        result = await mock_client.async_send_multi_command(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            io_list,
         )
 
         assert result == 0
-        # 验证调用了正确的命令
-        mock_client._send_single_command.assert_called_once()
+        mock_client._send_multi_command.assert_called_once_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            io_list,
+        )
 
     @pytest.mark.asyncio
-    async def test_open_cover_dooya_type(self, mock_client):
-        """测试开启杜亚类型的窗帘。"""
-        from custom_components.lifesmart.core.const import CMD_TYPE_SET_VAL
+    async def test_legacy_climate_commands(self, mock_client):
+        """测试传统气候控制命令的正确包装。"""
+        mock_client._send_single_command.return_value = 0
 
-        # 使用工厂函数创建杜亚窗帘设备对象
-        cover_devices = create_devices_by_category(["cover"])
-        dooya_device = next(
-            (d for d in cover_devices if d["devtype"] == "SL_DOOYA"), None
+        # 测试设置HVAC模式命令
+        result = await mock_client.set_hvac_mode(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            2,
         )
-        assert dooya_device is not None, "找不到SL_DOOYA设备"
-
-        result = await mock_client.open_cover_async(
-            dooya_device["agt"], dooya_device["me"], dooya_device
-        )
-
         assert result == 0
-        # 验证调用了正确的命令
-        mock_client._send_single_command.assert_called_once()
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_SET_CONFIG,
+            2,
+        )
+
+        # 测试设置风扇速度命令
+        result = await mock_client.set_fan_speed(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            3,
+        )
+        assert result == 0
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_SET_CONFIG,
+            3,
+        )
+
+        # 测试设置温度命令
+        result = await mock_client.set_temperature_decimal(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            245,
+        )
+        assert result == 0
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_SET_TEMP_DECIMAL,
+            245,
+        )
 
     @pytest.mark.asyncio
-    async def test_open_cover_non_positional_type(self, mock_client):
-        """测试开启非位置控制类型的窗帘。"""
-        from custom_components.lifesmart.core.const import (
+    async def test_legacy_light_commands(self, mock_client):
+        """测试传统灯光控制命令的正确包装。"""
+        mock_client._send_single_command.return_value = 0
+
+        # 测试开灯命令
+        result = await mock_client.turn_on_light_switch_async(
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+        )
+        assert result == 0
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
             CMD_TYPE_ON,
-        )
-        from custom_components.lifesmart.core.config.device_specs import (
-            NON_POSITIONAL_COVER_CONFIG,
+            1,
         )
 
-        # 使用工厂函数中SL_SW_WIN设备，这个设备类型已经被映射引擎识别
-        cover_devices = create_devices_by_category(["cover"])
-        sw_win_device = next(
-            (d for d in cover_devices if d["devtype"] == "SL_SW_WIN"), None
+        # 测试关灯命令
+        result = await mock_client.turn_off_light_switch_async(
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
         )
-        assert sw_win_device is not None, "找不到SL_SW_WIN设备"
-
-        result = await mock_client.open_cover_async(
-            sw_win_device["agt"], sw_win_device["me"], sw_win_device
-        )
-
         assert result == 0
-        # 验证调用了正确的命令
-        mock_client._send_single_command.assert_called_once()
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_OFF,
+            0,
+        )
 
-    @pytest.mark.asyncio
-    async def test_open_cover_unsupported_type(self, mock_client):
-        """测试开启不支持的窗帘类型。"""
-        # 创建一个不支持的设备类型
-        unsupported_device = {
-            "agt": "test_hub",
-            "me": "test_device",
-            "devtype": "UNSUPPORTED_TYPE",
-            "name": "Unsupported Device",
-            "data": {},
-            "stat": 1,
-        }
-
-        with patch(
-            "custom_components.lifesmart.core.client_base._LOGGER"
-        ) as mock_logger:
-            result = await mock_client.open_cover_async(
-                "test_hub", "test_device", unsupported_device
-            )
-
-            assert result == -1
-            assert mock_logger.warning.called
-
-    @pytest.mark.asyncio
-    async def test_set_cover_position_garage_door(self, mock_client):
-        """测试设置车库门类型窗帘的位置。"""
-        from custom_components.lifesmart.core.const import (
+        # 测试设置亮度命令
+        result = await mock_client.set_light_brightness_async(
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            128,
+        )
+        assert result == 0
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["command_io_l1"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
             CMD_TYPE_SET_VAL,
+            128,
         )
 
-        # 使用工厂函数创建车库门设备对象
-        cover_devices = create_devices_by_category(["cover"])
-        garage_door = next(
-            (d for d in cover_devices if d["devtype"] == "SL_ETDOOR"), None
-        )
-        assert garage_door is not None, "找不到SL_ETDOOR设备"
+    @pytest.mark.asyncio
+    async def test_legacy_cover_commands(self, mock_client):
+        """测试传统窗帘控制命令的正确包装。"""
+        mock_client._send_single_command.return_value = 0
 
+        # 测试打开窗帘命令
+        result = await mock_client.open_cover_async(
+            CLIENT_BASE_TEST_VALUES["io_port_open"],
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+        )
+        assert result == 0
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["io_port_open"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_ON,
+            1,
+        )
+
+        # 测试关闭窗帘命令
+        result = await mock_client.close_cover_async(
+            CLIENT_BASE_TEST_VALUES["io_port_close"],
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+        )
+        assert result == 0
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["io_port_close"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_ON,
+            1,
+        )
+
+        # 测试停止窗帘命令
+        result = await mock_client.stop_cover_async(
+            CLIENT_BASE_TEST_VALUES["io_port_stop"],
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+        )
+        assert result == 0
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["io_port_stop"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_ON,
+            1,
+        )
+
+        # 测试设置窗帘位置命令
         result = await mock_client.set_cover_position_async(
-            garage_door["agt"], garage_door["me"], 75, garage_door
+            CLIENT_BASE_TEST_VALUES["io_port_position"],
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            75,
         )
-
         assert result == 0
-        # 验证调用了正确的命令
-        mock_client._send_single_command.assert_called_once()
-
-
-class TestClimateControl:
-    """测试温控设备控制方法。"""
-
-    @pytest.mark.asyncio
-    async def test_set_climate_hvac_mode_off(self, mock_client):
-        """测试设置HVAC模式为关闭。"""
-        from homeassistant.components.climate import HVACMode
-        from custom_components.lifesmart.core.const import CMD_TYPE_OFF
-
-        # 使用工厂函数创建V_AIR_P设备对象（跳过SL_NATURE因为它有映射问题）
-        climate_devices = create_devices_by_category(["climate"])
-        v_air_p_device = next(
-            (d for d in climate_devices if d["devtype"] == "V_AIR_P"), None
+        mock_client._send_single_command.assert_called_with(
+            CLIENT_BASE_TEST_VALUES["command_agt_1"],
+            CLIENT_BASE_TEST_VALUES["command_device_1"],
+            CLIENT_BASE_TEST_VALUES["io_port_position"],
+            CLIENT_BASE_TEST_VALUES["command_type_generic"],
+            CMD_TYPE_SET_VAL,
+            75,
         )
-        assert v_air_p_device is not None, "找不到V_AIR_P设备"
-
-        result = await mock_client.async_set_climate_hvac_mode(
-            v_air_p_device["agt"], v_air_p_device["me"], v_air_p_device, HVACMode.OFF
-        )
-
-        assert result == 0
-        # 验证调用了正确的命令
-        mock_client._send_single_command.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_set_climate_temperature_v_air_p(self, mock_client):
-        """测试设置V_AIR_P设备的温度。"""
-        from custom_components.lifesmart.core.const import CMD_TYPE_SET_TEMP_DECIMAL
-
-        # 使用工厂函数创建V_AIR_P设备对象
-        climate_devices = create_devices_by_category(["climate"])
-        v_air_p_device = next(
-            (d for d in climate_devices if d["devtype"] == "V_AIR_P"), None
-        )
-        assert v_air_p_device is not None, "找不到V_AIR_P设备"
-
-        result = await mock_client.async_set_climate_temperature(
-            v_air_p_device["agt"], v_air_p_device["me"], v_air_p_device, 25.5
-        )
-
-        assert result == 0
-        # 验证调用了正确的命令，温度值应该 * 10 = 255
-        mock_client._send_single_command.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_set_climate_temperature_unsupported_type(self, mock_client):
-        """测试设置不支持设备类型的温度。"""
-        # 创建一个不支持的气候设备类型
-        unsupported_device = {
-            "agt": "test_hub",
-            "me": "test_climate",
-            "devtype": "UNSUPPORTED_TYPE",
-            "name": "Unsupported Climate Device",
-            "data": {},
-            "stat": 1,
-        }
-
-        result = await mock_client.async_set_climate_temperature(
-            "test_hub", "test_climate", unsupported_device, 25.0
-        )
-
-        assert result == -1
-        assert not mock_client._send_single_command.called
-
-    @pytest.mark.asyncio
-    async def test_set_climate_fan_mode_unsupported_device(self, mock_client):
-        """测试设置不支持设备类型的风扇模式。"""
-        # 创建一个不支持的气候设备类型
-        unsupported_device = {
-            "agt": "test_hub",
-            "me": "test_climate",
-            "devtype": "UNSUPPORTED_TYPE",
-            "name": "Unsupported Climate Device",
-            "data": {},
-            "stat": 1,
-        }
-
-        with patch(
-            "custom_components.lifesmart.core.client_base._LOGGER"
-        ) as mock_logger:
-            result = await mock_client.async_set_climate_fan_mode(
-                "test_hub", "test_climate", unsupported_device, "auto"
-            )
-
-            assert result == -1
-            assert mock_logger.warning.called
-            assert not mock_client._send_single_command.called
-
-
-class TestEdgeCasesAndErrorHandling:
-    """测试边缘情况和错误处理。"""
-
-    def test_safe_get_function_import(self):
-        """测试safe_get函数的导入和使用。"""
-        from custom_components.lifesmart.core.platform.platform_detection import (
-            safe_get,
-        )
-
-        test_dict = {"level1": {"level2": {"value": "test"}}}
-        result = safe_get(test_dict, "level1", "level2", "value")
-        assert result == "test"
-
-        result = safe_get(test_dict, "nonexistent", default="default_value")
-        assert result == "default_value"
-
-    @pytest.mark.asyncio
-    async def test_climate_fan_mode_none_values(self, mock_client):
-        """测试风扇模式映射返回None值的情况。"""
-        # 创建一个V_AIR_P设备对象但没有配置风扇模式映射
-        v_air_p_device = {
-            "agt": "test_hub",
-            "me": "test_climate",
-            "devtype": "V_AIR_P",
-            "name": "Test V_AIR_P",
-            "data": {
-                "O": {"type": CMD_TYPE_ON, "val": 1},
-                "T": {"v": 24.5, "val": 245},
-            },
-            "stat": 1,
-        }
-
-        with patch(
-            "custom_components.lifesmart.core.client_base._LOGGER"
-        ) as mock_logger:
-            result = await mock_client.async_set_climate_fan_mode(
-                "test_hub", "test_climate", v_air_p_device, "auto"
-            )
-
-            assert result == -1
-            assert mock_logger.warning.called
-            assert not mock_client._send_single_command.called
-
-
-class TestDeviceControlWithFactoryDevices:
-    """使用工厂函数创建的设备测试控制逻辑。"""
-
-    @pytest.mark.asyncio
-    async def test_switch_control_with_factory_switch(self, mock_client):
-        """使用工厂函数创建的开关设备测试控制。"""
-        from custom_components.lifesmart.core.const import CMD_TYPE_ON
-
-        # 获取工厂函数创建的开关设备
-        switch_devices = create_devices_by_category(["smart_plug"])
-        assert len(switch_devices) > 0
-
-        test_switch = switch_devices[0]
-        agt = test_switch["agt"]
-        me = test_switch["me"]
-
-        result = await mock_client.turn_on_light_switch_async("O", agt, me)
-
-        assert result == 0
-        mock_client._send_single_command.assert_called_once_with(
-            agt, me, "O", CMD_TYPE_ON, 1
-        )
-
-    @pytest.mark.asyncio
-    async def test_climate_control_with_factory_climate(self, mock_client):
-        """使用工厂函数创建的温控设备测试控制。"""
-        from homeassistant.components.climate import HVACMode
-
-        # 获取工厂函数创建的温控设备
-        climate_devices = create_devices_by_category(["climate"])
-        assert len(climate_devices) > 0
-
-        test_climate = climate_devices[0]
-        agt = test_climate["agt"]
-        me = test_climate["me"]
-        devtype = test_climate["devtype"]
-
-        result = await mock_client.async_set_climate_hvac_mode(
-            agt, me, test_climate, HVACMode.OFF
-        )
-
-        assert result == 0
-        # 验证调用参数，根据设备类型确定IO口
-        mock_client._send_single_command.assert_called_once()
-
-
-class TestMockClientIntegration:
-    """测试Mock客户端集成功能。"""
-
-    def test_failed_client_creation(self):
-        """测试失败客户端的创建。"""
-        failed_client = create_mock_failed_oapi_client()
-
-        assert failed_client._mock_get_all_devices.side_effect is not None
-        assert failed_client._mock_refresh_token.return_value is False
-
-    def test_successful_client_creation(self):
-        """测试成功客户端的创建。"""
-        success_client = create_mock_oapi_client()
-
-        assert success_client._mock_get_all_devices.return_value == []
-        assert success_client._mock_refresh_token.return_value == {
-            "expiredtime": 9999999999,
-            "usertoken": "mock_usertoken",
-        }

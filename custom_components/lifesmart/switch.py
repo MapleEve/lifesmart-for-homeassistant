@@ -264,12 +264,21 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
         io_config = switch_config.get(self._sub_key, {})
 
         if not io_config:
-            # 如果没有IO配置，使用默认的 type_bit_0_switch 处理器
-            switch_processor_config = {"processor_type": "type_bit_0_switch"}
-            return process_io_data(switch_processor_config, data)
+            # 严格遵循三层架构：没有映射配置时抛出明确错误
+            raise HomeAssistantError(
+                f"No switch configuration found for device {self._raw_device.get('me', 'unknown')} "
+                f"IO port {self._sub_key}. All switch entities must be properly configured "
+                f"in the mapping engine to ensure architectural consistency."
+            )
 
-        # 使用新的逻辑处理器系统和配置的处理器
-        processor_type = io_config.get("processor_type", "type_bit_0_switch")
+        # 使用映射配置的处理器
+        processor_type = io_config.get("processor_type")
+        if not processor_type:
+            raise HomeAssistantError(
+                f"Missing processor_type in switch configuration for device "
+                f"{self._raw_device.get('me', 'unknown')} IO port {self._sub_key}"
+            )
+
         processor_config = {"processor_type": processor_type}
         return process_io_data(processor_config, data)
 

@@ -44,6 +44,42 @@ MOCK_CLOUD_CREDENTIALS = {
 }
 
 # ============================================================================
+# === conftest.py 测试基础设施常量 ===
+# ============================================================================
+
+# 配置流程标识符
+CONFIG_FLOW_IDENTIFIERS = {
+    "cloud": "cloud",
+    "cloud_token": "cloud_token",
+    "local": "local",
+    "password": "password",
+}
+
+# 区域标识符
+REGION_IDENTIFIERS = {
+    "china_region": "cn2",
+}
+
+# 测试环境配置
+TEST_ENVIRONMENT_CONFIG = {
+    "service": "test_service",
+    "admin_role": "admin",
+    "test_user": "test_user",
+}
+
+# 测试配置条目常量
+TEST_CONFIG_ENTRY = {
+    "mock_entry_id": "mock_entry_id_12345",
+    "mock_title": "LifeSmart Mock",
+}
+
+# 测试排除配置
+TEST_EXCLUSION_CONFIG = {
+    "excluded_device": "excluded_device",
+    "excluded_hub": "excluded_hub",
+}
+
+# ============================================================================
 # === 测试Hub ID常量 ===
 # ============================================================================
 
@@ -168,4 +204,238 @@ TEST_COVERAGE_TARGETS = {
     "factories": 95,  # 工厂函数覆盖率目标
     "helpers": 90,  # helper函数覆盖率目标
     "integration": 85,  # 集成测试覆盖率目标
+}
+
+
+# ============================================================================
+# === 协议和TCP客户端测试常量 (Phase 2.3 Batch 3) ===
+# ============================================================================
+
+# 协议测试相关常量
+PROTOCOL_TEST_VALUES = {
+    # 测试网络参数
+    "test_agt": "test_agt",
+    "test_node": "test_node",
+    "localhost": "localhost",
+    "test_port": 9999,
+    # 测试设备标识符
+    "test_device_001": "dev_001",
+    "test_device_1": "device_1",
+    "test_device_2": "device_2",
+    # 协议测试标识符
+    "worker_data_prefix": "worker_{worker_id}_data",
+    "ai_ir_prefix": "AI_IR_ir_device",
+    # 时间戳测试值
+    "test_timestamp": 1634567890,
+    # 红外设备测试值
+    "ir_device_id": "ir_device",
+    "ir_dev_id": "ir_dev",
+    "scene_123": "scene123",
+}
+
+# TCP客户端测试相关常量
+TCP_CLIENT_TEST_VALUES = {
+    # 连接参数
+    "test_host_local": "localhost",
+    "test_host_ip": "192.168.1.100",
+    "test_port_8080": 8080,
+    "test_port_8888": 8888,
+    "test_port_1234": 1234,
+    # 认证参数
+    "test_admin_user": "admin",
+    "test_admin_pass": "password",
+    "test_generic_user": "user",
+    "test_generic_pass": "pass",
+    "test_user_name": "test_user",
+    "test_user_pass": "test_pass",
+    # 温度测试值
+    "test_temp_celsius": 23.5,
+    "test_temp_decimal": 235,
+    "test_temp_25c": 25.0,
+    "test_temp_250": 250,
+    # 网络超时值
+    "timeout_1s": 1.0,
+    "timeout_100ms": 0.1,
+    "timeout_200ms": 0.2,
+    # 设备控制测试值
+    "test_brightness_80": 80,
+    "test_rgb_white": 16777215,  # RGB白色值
+    "test_fan_delay": 15,  # 风扇模式延迟值
+}
+
+# 协议和网络错误码常量 (保留业务验证值)
+PROTOCOL_ERROR_CODES = {
+    # 这些是协议标准值，不应该常量化
+    "LOGIN_ERROR_CODE": -2001,  # 协议标准登录失败错误码
+}
+
+# 测试场景和定时器常量
+TEST_SCENARIOS = {
+    # 场景控制测试
+    "door_open_trigger": "door_open_trigger",
+    "test_ai_device": "test_ai_device",
+    "config_device": "config_device",
+    "timer_device": "timer_device",
+    "icon_device": "icon_device",
+    # 配置和命令
+    "network_settings": "network_settings",
+    "network_config": "192.168.1.100:8080",
+    "weekday_morning": "0 8 * * 1-5",  # 工作日早上8点
+    "light_bulb_icon": "light_bulb",
+    "trigger_commands": "L1=ON;L2=OFF;DELAY=1000;L3=ON",
+    "timer_commands": "L1=ON;BRI=100",
+}
+
+
+# ============================================================================
+# === 业务逻辑测试常量 (Phase 2.4 Batch 4) ===
+# ============================================================================
+
+# Hub业务逻辑测试相关常量
+HUB_BUSINESS_LOGIC_TEST_VALUES = {
+    # Hub和设备标识符常量
+    "test_hub_primary": "test_hub",
+    "test_device_primary": "test_device",
+    "hub_identifier_1": "hub1",
+    "hub_identifier_2": "hub2",
+    "device_identifier_1": "dev1",
+    "device_identifier_2": "dev2",
+    "test_device_type": "test_type",
+    
+    # OAPI认证测试常量
+    "test_appkey_oapi": "test_appkey",
+    "test_apptoken_oapi": "test_apptoken",
+    "test_userid_oapi": "test_userid",
+    "test_usertoken_oapi": "test_usertoken",
+    "new_token_refresh": "new_token",
+    "token_expiry_time": 9999999999,
+    
+    # 本地网络配置常量
+    "local_test_ip": "192.168.1.100",
+    "local_test_port": 8888,
+    "local_admin_user": "admin",
+    "local_admin_pass": "admin",
+    
+    # WebSocket测试常量
+    "test_websocket_url": "wss://test.com/ws",
+    "test_websocket_local": "ws://localhost/test",
+    
+    # 设备数据测试常量
+    "test_device_name": "Test Device",
+    "scene_device_prefix": "scene",
+    "ai_device_identifier": "ai_device",
+    "ai_hub_identifier": "ai_hub",
+    "filtered_device_id": "filtered_device",
+    "filtered_hub_id": "filtered_hub",
+    
+    # 测试配置条目ID
+    "test_entry_oapi_id": "test_entry_oapi",
+    "test_entry_local_id": "test_entry_local",
+    "test_reauth_id": "test_reauth",
+    "test_unique_id": "test_entry",
+}
+
+# 客户端基础测试常量
+CLIENT_BASE_TEST_VALUES = {
+    # 客户端命令测试标识符
+    "command_agt_1": "agt1",
+    "command_device_1": "dev1",
+    "command_io_l1": "L1",
+    "command_type_generic": "type",
+    
+    # 场景控制测试常量
+    "scene_identifier_1": "scene1",
+    "scene_hub_default": "0000",
+    "scene_device_default": "LS",
+    
+    # IO口标识符常量
+    "io_port_p1": "P1",
+    "io_port_open": "OP",
+    "io_port_close": "CL", 
+    "io_port_stop": "ST",
+    "io_port_position": "PE",
+    
+    # 客户端测试数值参数（保留为业务验证值）
+    # 注意：以下数值是业务逻辑验证值，不应修改
+    # "command_value_on": 1,
+    # "command_value_off": 0,
+    # "hvac_mode_value": 2,
+    # "fan_speed_value": 3,
+    # "temperature_decimal": 245,
+    # "brightness_value": 128,
+    # "position_value": 75,
+}
+
+# Hub业务逻辑测试扩展常量
+HUB_BUSINESS_LOGIC_EXTENDED = {
+    # 排除配置测试常量
+    "exclude_devices_list": "dev1,dev2",
+    "exclude_hubs_list": "hub2", 
+    "exclude_device_1": "dev1",
+    "exclude_device_2": "dev2",
+    "exclude_hub_2": "hub2",
+    
+    # 本地测试账号常量
+    "local_test_user": "test_user",
+    "local_test_password": "test_pass",
+    
+    # 设备类型测试常量
+    "device_type_switch": "SL_SW",
+    "device_type_scene": "SL_SCENE",
+    
+    # AI事件测试常量
+    "ai_include_devices": "ai_device",
+    "ai_include_hubs": "ai_hub",
+    "ai_filtered_device": "filtered_device",
+    "ai_filtered_hub": "filtered_hub",
+    
+    # 测试数据标识符
+    "test_data_generic": "test",
+    "test_data_value": "data",
+    "test_invalid_key": "invalid",
+    "test_invalid_value": "data",
+}
+
+
+    # 网络配置常量
+    "test_ip": "192.168.1.100",
+    "test_port": 3000,
+    "alt_port": 8888,
+    "local_port": 8080,
+    "test_username": "admin",
+    "test_password": "admin_password",
+    # 认证令牌常量
+    "new_token": "newly_fetched_token",
+    "existing_token": "existing_token",
+    "test_token": "test_token",
+    "original_token": "original_token",
+    "invalid_token": "invalid_token",
+    "any_token": "any_token",
+    "new_password": "new_password",
+    "mock_password": "mock_password",
+    "wrong_password": "wrong_password",
+    "wrong_new_password": "wrong_new_password",
+    "test_password_auth": "test_password",
+    # 测试条目ID常量
+    "cloud_entry_id": "test_entry_cloud",
+    "reauth_entry_id": "test_reauth",
+    "options_entry_id": "test_options",
+    "auth_token_entry_id": "test_auth_token",
+    "auth_password_entry_id": "test_auth_password",
+    "unique_test_id": "test_unique_id",
+    "mock_entry_id_12345": "mock_entry_id_12345",
+    "non_existent_entry_id": "non_existent_entry_id",
+    # 连接类型标识符
+    "cloud_connection": "cloud_push",
+    "local_connection": "local_push",
+    # 认证方法标识符
+    "token_auth_method": "token",
+    "password_auth_method": "password",
+    # 用户和服务标识符
+    "test_user_source": "user",
+    "normalized_user_id": "normalized_user_id",
+    "original_user_id": "original_user_id",
+    "test_device_id": "test_device",
+    # 标题格式常量
+    "local_hub_title_format": "Local Hub ({})",  # 用于格式化本地Hub标题
 }

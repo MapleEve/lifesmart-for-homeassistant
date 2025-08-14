@@ -319,7 +319,11 @@ class TestNonPositionalCover:
             COVER_DOMAIN, start_service, {ATTR_ENTITY_ID: self.ENTITY_ID}, blocking=True
         )
         # 2. 模拟设备上报正在移动的状态，以更新内部的 `_last_known_is_opening` 标志
-        moving_data = {"OP": {"type": CMD_TYPE_OFF}, "CL": {"type": CMD_TYPE_OFF}, "ST": {"type": CMD_TYPE_OFF}}
+        moving_data = {
+            "OP": {"type": CMD_TYPE_OFF},
+            "CL": {"type": CMD_TYPE_OFF},
+            "ST": {"type": CMD_TYPE_OFF},
+        }
         if start_service == SERVICE_OPEN_COVER:
             moving_data["OP"]["type"] = 129
         else:
@@ -334,7 +338,11 @@ class TestNonPositionalCover:
             COVER_DOMAIN, stop_service, {ATTR_ENTITY_ID: self.ENTITY_ID}, blocking=True
         )
         # 4. 模拟设备上报已停止的状态
-        stopped_data = {"OP": {"type": CMD_TYPE_OFF}, "CL": {"type": CMD_TYPE_OFF}, "ST": {"type": CMD_TYPE_OFF}}
+        stopped_data = {
+            "OP": {"type": CMD_TYPE_OFF},
+            "CL": {"type": CMD_TYPE_OFF},
+            "ST": {"type": CMD_TYPE_OFF},
+        }
         async_dispatcher_send(
             hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{unique_id}", stopped_data
         )

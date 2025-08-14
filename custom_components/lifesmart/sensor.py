@@ -787,16 +787,12 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         if io_config:
             return process_io_data(io_config, self._sub_data)
 
-        # 如果没有映射配置，使用io_processors统一处理
-        from .core.data.processors.io_processors import process_io_value
-
-        # 使用现有的direct_value处理器，它已经实现了v/val后备逻辑
-        default_config = {"processor_type": "direct_value"}
-        result = process_io_value(default_config, self._sub_data)
-        if result is not None:
-            return float(result)
-
-        return None
+        # 严格遵循三层架构：没有映射配置时抛出明确错误
+        raise HomeAssistantError(
+            f"No sensor configuration found for device {self._raw_device.get('me', 'unknown')} "
+            f"IO port {self._sub_key}. All sensor entities must be properly configured "
+            f"in the mapping engine to ensure architectural consistency."
+        )
 
     @callback
     def _convert_raw_value(self, raw_value: Any) -> float | int | None:

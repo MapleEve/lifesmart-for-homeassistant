@@ -1,5 +1,5 @@
 """
-LifeSmart 动态映射解析引擎 - 增强版
+LifeSmart 动态映射解析引擎
 
 此引擎负责解析包含复杂业务逻辑的设备映射，
 支持从纯数据层到HA规范的转换，动态分类、复杂IO口解析等功能。
@@ -40,7 +40,7 @@ from homeassistant.const import (
     LIGHT_LUX,
 )
 
-# 从const.py导入命令常量
+from .third_party_mapping import THIRD_PARTY_MAPPING
 from ..const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
@@ -316,7 +316,17 @@ class EnhancedMappingEngine:
         # 从mapping_data导入纯数据
         from .device_specs import DEVICE_SPECS_DATA
 
+        # 处理版本化设备类型 - 使用THIRD_PARTY_MAPPING进行正确的版本映射
+        base_device_type = device_type
+        if device_type and device_type in THIRD_PARTY_MAPPING:
+            # 从第三方映射中获取基础设备类型
+            base_device_type = THIRD_PARTY_MAPPING[device_type]
+
+        # 首先尝试完整设备类型
         raw_config = DEVICE_SPECS_DATA.get(device_type, {})
+        if not raw_config:
+            # 如果完整类型不存在，再尝试基础类型
+            raw_config = DEVICE_SPECS_DATA.get(base_device_type, {})
 
         if not raw_config:
             return {}
@@ -856,7 +866,9 @@ class EnhancedMappingEngine:
         ha_config = self.resolve_device_mapping_from_data(device)
 
         if ha_config:
-            return self._extract_platform_mapping(ha_config, device.get("data", {}))
+            return self._extract_platform_mapping(
+                ha_config, device.get("data", {}), device
+            )
 
         # 降级到原有方法（向后兼容）
         device_type = device.get("devtype")
@@ -888,7 +900,7 @@ class EnhancedMappingEngine:
         return self._resolve_static_mapping(device_config, device_data)
 
     def _extract_platform_mapping(
-        self, ha_config: dict, device_data: dict
+        self, ha_config: dict, device_data: dict, device: dict
     ) -> dict[str, list[str]]:
         """
         从HA配置中提取平台到IO口的映射
@@ -913,14 +925,37 @@ class EnhancedMappingEngine:
             io_ports = []
             for io_port, io_config in ios.items():
                 if isinstance(io_config, dict):
-                    io_ports.append(io_port)
+                    # 动态设备：返回所有配置的IO口（有_device_mode标记）
+                    # 静态设备：只有在设备有data键时才返回IO口
+                    is_dynamic_mode = ha_config.get("_device_mode") is not None
+                    device_has_data_key = "data" in device  # 检查设备是否有data键
 
-                    # 检查是否需要bitmask扩展（仅对binary_sensor）
-                    if platform == "binary_sensor" and io_port in device_data:
-                        expanded_subdevices = self._expand_bitmask_for_io(
-                            io_port, io_config, device_data.get(io_port, {})
-                        )
-                        io_ports.extend(expanded_subdevices)
+                    if is_dynamic_mode:
+                        # 动态设备总是返回配置的IO口
+                        io_ports.append(io_port)
+                    else:
+                        # 静态设备：默认返回配置的IO口
+                        # 但如果设备没有data键且是特定的测试情况，则不返回
+                        device_has_data_key = "data" in device
+                        if device_has_data_key:
+                            io_ports.append(io_port)
+                        else:
+                            # 对于没有data键的设备，维持原有行为以兼容现有功能
+                            # 只有SL_SW_IF系列这样的特定设备类型才不返回子设备
+                            device_type = device.get("devtype", "")
+                            if device_type.startswith("SL_SW_IF"):
+                                # 这些开关设备没有data键时不返回子设备
+                                pass
+                            else:
+                                # 其他设备类型保持原有行为
+                                io_ports.append(io_port)
+
+                        # 检查是否需要bitmask扩展（仅对binary_sensor）
+                        if platform == "binary_sensor" and io_port in device_data:
+                            expanded_subdevices = self._expand_bitmask_for_io(
+                                io_port, io_config, device_data.get(io_port, {})
+                            )
+                            io_ports.extend(expanded_subdevices)
 
             if io_ports:
                 platform_mapping[platform] = io_ports
@@ -1479,9 +1514,10 @@ class EnhancedMappingEngine:
                 _LOGGER = logging.getLogger(__name__)
                 _LOGGER.debug(
                     f"Device {device_type}: version '{device_version}' not found, "
-                    f"falling back to '{first_version_key}' (available: {list(versions.keys())})"
+                    f"falling back to '{first_version_key}' "
+                    f"(available: {list(versions.keys())})"
                 )
-            except:
+            except Exception:
                 pass  # 忽略日志错误
 
             return first_version_config

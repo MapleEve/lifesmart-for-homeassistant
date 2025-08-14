@@ -18,7 +18,7 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from homeassistant.components.climate import HVACMode, FAN_LOW, FAN_MEDIUM, FAN_HIGH
+from homeassistant.components.climate import HVACMode, FAN_LOW
 
 from custom_components.lifesmart.core.client.local_tcp_client import LifeSmartTCPClient
 from custom_components.lifesmart.core.client.protocol import (
@@ -36,9 +36,15 @@ from custom_components.lifesmart.core.const import (
     CMD_TYPE_SET_CONFIG,
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_TEMP_FCU,
-    CMD_TYPE_SET_RAW_ON,
+    DATA_TYPE_SENSOR,
 )
 from custom_components.lifesmart.core.data.conversion import normalize_device_names
+from custom_components.lifesmart.tests.utils.constants import (
+    PROTOCOL_TEST_VALUES,
+    TCP_CLIENT_TEST_VALUES,
+    PROTOCOL_ERROR_CODES,
+    TEST_SCENARIOS,
+)
 
 
 # ==================== 测试数据和Fixtures ====================
@@ -69,14 +75,27 @@ def mock_connection():
 @pytest.fixture
 def test_client():
     """提供标准的测试客户端实例。"""
-    return LifeSmartTCPClient("localhost", 9999, "test_user", "test_pass")
+    return LifeSmartTCPClient(
+        TCP_CLIENT_TEST_VALUES["test_host_local"],
+        TCP_CLIENT_TEST_VALUES["test_port_8888"],
+        TCP_CLIENT_TEST_VALUES["test_generic_user"],
+        TCP_CLIENT_TEST_VALUES["test_generic_pass"],
+    )
 
 
 @pytest.fixture
 def mocked_client():
     """提供带有模拟网络发送的客户端实例。"""
-    client = LifeSmartTCPClient("host", 1234, "user", "pass")
-    client._factory = LifeSmartPacketFactory("test_agt", "test_node")
+    client = LifeSmartTCPClient(
+        TCP_CLIENT_TEST_VALUES["test_host_ip"],
+        TCP_CLIENT_TEST_VALUES["test_port_1234"],
+        TCP_CLIENT_TEST_VALUES["test_generic_user"],
+        TCP_CLIENT_TEST_VALUES["test_generic_pass"],
+    )
+    client._factory = LifeSmartPacketFactory(
+        PROTOCOL_TEST_VALUES["test_agt"],
+        PROTOCOL_TEST_VALUES["test_node"],
+    )
     client._send_packet = AsyncMock(return_value=0)
     return client
 
@@ -94,13 +113,18 @@ def sample_packets(protocol):
                         0,
                         0,
                         0,
-                        {"base": [0, "test_node"], "agt": [0, "test_agt"]},
+                        {
+                            "base": [0, PROTOCOL_TEST_VALUES["test_node"]],
+                            "agt": [0, PROTOCOL_TEST_VALUES["test_agt"]],
+                        },
                     ],
                     "act": "Login",
                 },
             ]
         ),
-        "login_failure": protocol.encode([{}, {"err": -2001, "act": "Login"}]),
+        "login_failure": protocol.encode(
+            [{}, {"err": PROTOCOL_ERROR_CODES["LOGIN_ERROR_CODE"], "act": "Login"}]
+        ),
         "device_list": protocol.encode(
             [
                 {},
@@ -109,7 +133,7 @@ def sample_packets(protocol):
                         0,
                         {
                             "eps": {
-                                "device_1": {
+                                PROTOCOL_TEST_VALUES["test_device_1"]: {
                                     "cls": "SL_SW_IF3",
                                     "name": "三路开关",
                                     "_chd": {
@@ -134,7 +158,7 @@ def sample_packets(protocol):
                                         }
                                     },
                                 },
-                                "device_2": {
+                                PROTOCOL_TEST_VALUES["test_device_2"]: {
                                     "cls": "SL_NATURE",
                                     "name": "自然风空调",
                                     "_chd": {
@@ -148,12 +172,14 @@ def sample_packets(protocol):
                                                 "P7": {
                                                     "name": "模式",
                                                     "val": 0,
-                                                    "type": CMD_TYPE_UNKNOWN_131,
+                                                    "type": CMD_TYPE_SET_CONFIG,
                                                 },
                                                 "tT": {
                                                     "name": "温度",
-                                                    "val": 250,
-                                                    "type": CMD_TYPE_UNKNOWN_133,
+                                                    "val": TCP_CLIENT_TEST_VALUES[
+                                                        "test_temp_250"
+                                                    ],
+                                                    "type": CMD_TYPE_SET_TEMP_FCU,
                                                 },
                                             }
                                         }
@@ -170,12 +196,16 @@ def sample_packets(protocol):
                 {},
                 {
                     "_schg": {
-                        "test_agt/ep/device_1/m/L1": {"chg": {"val": 0, "type": CMD_TYPE_ON}}
+                        f"{PROTOCOL_TEST_VALUES['test_agt']}/ep/{PROTOCOL_TEST_VALUES['test_device_1']}/m/L1": {
+                            "chg": {"val": 0, "type": CMD_TYPE_ON}
+                        }
                     }
                 },
             ]
         ),
-        "device_deleted": protocol.encode([{}, {"_sdel": {"key": "device_1"}}]),
+        "device_deleted": protocol.encode(
+            [{}, {"_sdel": {"key": PROTOCOL_TEST_VALUES["test_device_1"]}}]
+        ),
         "heartbeat_response": protocol.encode(
             [{}, {"act": "GetConfig", "ret": [0, {}]}]
         ),
@@ -190,12 +220,25 @@ class TestClientInitialization:
 
     def test_client_basic_initialization(self):
         """测试客户端的基本初始化。"""
-        client = LifeSmartTCPClient("192.168.1.100", 8080, "admin", "password")
+        client = LifeSmartTCPClient(
+            TCP_CLIENT_TEST_VALUES["test_host_ip"],
+            TCP_CLIENT_TEST_VALUES["test_port_8080"],
+            TCP_CLIENT_TEST_VALUES["test_admin_user"],
+            TCP_CLIENT_TEST_VALUES["test_admin_pass"],
+        )
 
-        assert client.host == "192.168.1.100", "主机地址应该正确设置"
-        assert client.port == 8080, "端口应该正确设置"
-        assert client.username == "admin", "用户名应该正确设置"
-        assert client.password == "password", "密码应该正确设置"
+        assert (
+            client.host == TCP_CLIENT_TEST_VALUES["test_host_ip"]
+        ), "主机地址应该正确设置"
+        assert (
+            client.port == TCP_CLIENT_TEST_VALUES["test_port_8080"]
+        ), "端口应该正确设置"
+        assert (
+            client.username == TCP_CLIENT_TEST_VALUES["test_admin_user"]
+        ), "用户名应该正确设置"
+        assert (
+            client.password == TCP_CLIENT_TEST_VALUES["test_admin_pass"]
+        ), "密码应该正确设置"
         assert client.disconnected is False, "初始状态应该为未断开"
         assert client.reader is None, "初始时reader应该为None"
         assert client.writer is None, "初始时writer应该为None"
@@ -204,7 +247,11 @@ class TestClientInitialization:
     def test_client_initialization_with_config_agt(self):
         """测试带有配置AGT的客户端初始化。"""
         client = LifeSmartTCPClient(
-            "host", 1234, "user", "pass", config_agt="custom_agt"
+            TCP_CLIENT_TEST_VALUES["test_host_ip"],
+            TCP_CLIENT_TEST_VALUES["test_port_1234"],
+            TCP_CLIENT_TEST_VALUES["test_generic_user"],
+            TCP_CLIENT_TEST_VALUES["test_generic_pass"],
+            config_agt="custom_agt",
         )
 
         assert client.config_agt == "custom_agt", "配置AGT应该正确设置"
@@ -250,7 +297,12 @@ class TestNetworkConnectionManagement:
     ):
         """测试成功的连接和登录流程。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartTCPClient("localhost", 9999, "user", "pass")
+        client = LifeSmartTCPClient(
+            TCP_CLIENT_TEST_VALUES["test_host_local"],
+            TCP_CLIENT_TEST_VALUES["test_port_8888"],
+            TCP_CLIENT_TEST_VALUES["test_generic_user"],
+            TCP_CLIENT_TEST_VALUES["test_generic_pass"],
+        )
         callback = AsyncMock()
 
         # 启动连接任务
@@ -262,8 +314,10 @@ class TestNetworkConnectionManagement:
 
         # 验证连接状态
         assert client.is_connected, "登录成功后应该处于连接状态"
-        assert client.node == "test_node", "节点名称应该正确设置"
-        assert client.node_agt == "test_agt", "节点AGT应该正确设置"
+        assert client.node == PROTOCOL_TEST_VALUES["test_node"], "节点名称应该正确设置"
+        assert (
+            client.node_agt == PROTOCOL_TEST_VALUES["test_agt"]
+        ), "节点AGT应该正确设置"
 
         # 清理
         client.disconnect()
@@ -278,10 +332,18 @@ class TestNetworkConnectionManagement:
         reader, writer, mock_open = mock_connection
         mock_open.side_effect = ConnectionRefusedError("连接被拒绝")
 
-        client = LifeSmartTCPClient("invalid.host", 1234, "user", "pass")
+        client = LifeSmartTCPClient(
+            "invalid.host",
+            TCP_CLIENT_TEST_VALUES["test_port_1234"],
+            TCP_CLIENT_TEST_VALUES["test_generic_user"],
+            TCP_CLIENT_TEST_VALUES["test_generic_pass"],
+        )
 
         with pytest.raises(asyncio.TimeoutError):
-            await asyncio.wait_for(client.async_connect(None), timeout=0.1)
+            await asyncio.wait_for(
+                client.async_connect(None),
+                timeout=TCP_CLIENT_TEST_VALUES["timeout_100ms"],
+            )
 
     @pytest.mark.asyncio
     async def test_login_failure_handling(
@@ -289,7 +351,12 @@ class TestNetworkConnectionManagement:
     ):
         """测试登录失败的处理。"""
         reader, writer, mock_open = mock_connection
-        client = LifeSmartTCPClient("host", 1234, "user", "pass")
+        client = LifeSmartTCPClient(
+            TCP_CLIENT_TEST_VALUES["test_host_ip"],
+            TCP_CLIENT_TEST_VALUES["test_port_1234"],
+            TCP_CLIENT_TEST_VALUES["test_generic_user"],
+            TCP_CLIENT_TEST_VALUES["test_generic_pass"],
+        )
 
         # 模拟登录失败
         reader.feed_data(sample_packets["login_failure"])
@@ -488,11 +555,11 @@ class TestDeviceManagementAndDataProcessing:
 
         # 验证设备加载
         assert len(devices) == 2, "应该加载2个设备"
-        assert "device_1" in client.devices, "设备1应该存在"
-        assert "device_2" in client.devices, "设备2应该存在"
+        assert PROTOCOL_TEST_VALUES["test_device_1"] in client.devices, "设备1应该存在"
+        assert PROTOCOL_TEST_VALUES["test_device_2"] in client.devices, "设备2应该存在"
 
         # 验证设备名称规范化
-        device_1 = client.devices["device_1"]
+        device_1 = client.devices[PROTOCOL_TEST_VALUES["test_device_1"]]
         assert (
             device_1["data"]["L1"]["name"] == "三路开关 按钮 1"
         ), "设备名称应该正确规范化"
@@ -555,9 +622,9 @@ class TestDeviceManagementAndDataProcessing:
         assert "msg" in call_args, "应该包含msg字段"
 
         msg = call_args["msg"]
-        assert msg["me"] == "device_1", "设备ID应该正确"
+        assert msg["me"] == PROTOCOL_TEST_VALUES["test_device_1"], "设备ID应该正确"
         assert msg["idx"] == "L1", "子设备索引应该正确"
-        assert msg["agt"] == "test_agt", "AGT应该正确"
+        assert msg["agt"] == PROTOCOL_TEST_VALUES["test_agt"], "AGT应该正确"
 
         # 清理
         client.disconnect()
@@ -870,9 +937,15 @@ class TestDeviceControlMethods:
                 "devtype": device_type,
                 "name": f"Test {device_type}",
                 "data": {
-                    "P2": {"type": CMD_TYPE_OFF, "val": 50} if device_type == "SL_DOOYA" else {},
+                    "P2": (
+                        {"type": CMD_TYPE_OFF, "val": 50}
+                        if device_type == "SL_DOOYA"
+                        else {}
+                    ),
                     "P3": (
-                        {"type": CMD_TYPE_OFF, "val": 50} if device_type == "SL_ETDOOR" else {}
+                        {"type": CMD_TYPE_OFF, "val": 50}
+                        if device_type == "SL_ETDOOR"
+                        else {}
                     ),
                 },
                 "stat": 1,
@@ -909,10 +982,13 @@ class TestDeviceControlMethods:
                 "O": {"type": CMD_TYPE_OFF, "val": 0},  # V_AIR_P的开关端口
                 "P1": {"type": CMD_TYPE_ON, "val": 0},  # 通用开关端口
                 "P5": {
-                    "type": 1,
+                    "type": DATA_TYPE_SENSOR,
                     "val": 3,
                 },  # SL_NATURE climate模式判断 (P5&0xFF in [3,6])
-                "P7": {"type": CMD_TYPE_UNKNOWN_206, "val": 0},  # SL_NATURE模式控制端口
+                "P7": {
+                    "type": 0xCE,
+                    "val": 0,
+                },  # SL_NATURE模式控制端口 (原CMD_TYPE_UNKNOWN_206)
             },
             "stat": 1,
         }
@@ -934,7 +1010,16 @@ class TestDeviceControlMethods:
     @pytest.mark.parametrize(
         "device_type, temperature, expected_call",
         [
-            ("V_AIR_P", 23.5, ("dev1", "tT", CMD_TYPE_SET_TEMP_DECIMAL, 235)),
+            (
+                "V_AIR_P",
+                TCP_CLIENT_TEST_VALUES["test_temp_celsius"],
+                (
+                    "dev1",
+                    "tT",
+                    CMD_TYPE_SET_TEMP_DECIMAL,
+                    TCP_CLIENT_TEST_VALUES["test_temp_decimal"],
+                ),
+            ),
         ],
         ids=["DecimalTemp"],
     )
@@ -981,7 +1066,10 @@ class TestDeviceControlMethods:
             "name": f"Test {device_type}",
             "data": {
                 "P1": {"type": CMD_TYPE_ON, "val": 0},  # 通用端口
-                "F": {"type": CMD_TYPE_UNKNOWN_206, "val": 0},  # V_AIR_P的风扇控制端口
+                "F": {
+                    "type": 0xCE,
+                    "val": 0,
+                },  # V_AIR_P的风扇控制端口 (原CMD_TYPE_UNKNOWN_206)
             },
             "stat": 1,
         }
@@ -1006,7 +1094,9 @@ class TestSceneAndIRControl:
     async def test_scene_control(self, mocked_client):
         """测试场景控制功能。"""
         # 现在场景控制不再使用包构建，而是直接返回成功状态
-        result = await mocked_client._async_set_scene("agt", "scene123")
+        result = await mocked_client._async_set_scene(
+            PROTOCOL_TEST_VALUES["test_agt"], TEST_SCENARIOS["scene_123"]
+        )
 
         # 验证返回成功状态
         assert result == 0
@@ -1019,9 +1109,13 @@ class TestSceneAndIRControl:
         with patch.object(
             mocked_client._factory, "build_ir_control_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.ir_control_async("ir_device", ir_options)
+            await mocked_client.ir_control_async(
+                PROTOCOL_TEST_VALUES["ir_device_id"], ir_options
+            )
 
-            mock_build.assert_called_once_with("ir_device", ir_options)
+            mock_build.assert_called_once_with(
+                PROTOCOL_TEST_VALUES["ir_device_id"], ir_options
+            )
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -1101,8 +1195,8 @@ class TestAdvancedFeatures:
     @pytest.mark.asyncio
     async def test_trigger_management(self, mocked_client):
         """测试触发器管理功能。"""
-        trigger_name = "door_open_trigger"
-        command_list = "L1=ON;L2=OFF;DELAY=1000;L3=ON"
+        trigger_name = TEST_SCENARIOS["door_open_trigger"]
+        command_list = TEST_SCENARIOS["trigger_commands"]
 
         # 测试添加触发器
         with patch.object(
@@ -1219,7 +1313,10 @@ class TestErrorHandlingAndEdgeCases:
                 "stat": 1,
             }
             result = await mocked_client.async_set_climate_temperature(
-                "agt", "dev1", unsupported_device, 25.0
+                PROTOCOL_TEST_VALUES["test_agt"],
+                "dev1",
+                unsupported_device,
+                TCP_CLIENT_TEST_VALUES["test_temp_25c"],
             )
 
             assert result == -1, "不支持的设备应该返回-1"
@@ -1350,7 +1447,7 @@ class TestPerformanceAndConcurrency:
                     {},
                     {
                         "_schg": {
-                            f"test_agt/ep/device_1/m/L{(i % 3) + 1}": {
+                            f"{PROTOCOL_TEST_VALUES['test_agt']}/ep/{PROTOCOL_TEST_VALUES['test_device_1']}/m/L{(i % 3) + 1}": {
                                 "chg": {"val": i % 2}
                             }
                         }

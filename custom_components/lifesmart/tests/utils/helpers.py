@@ -12,7 +12,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
-from custom_components.lifesmart.core.const import DEVICE_ID_KEY
+from custom_components.lifesmart.core.const import (
+    DEVICE_ID_KEY,
+    CMD_TYPE_ON,
+    CMD_TYPE_OFF,
+)
 from .constants import (
     TEST_HUB_IDS,
     SPECIALIZED_TEST_DEVICE_IDS,
@@ -662,7 +666,10 @@ def _get_mock_device_data(device_type: str) -> dict:
     # 基础数据映射，用于平台检测
     mock_data_map = {
         # 开关类设备
-        "SL_SW_ND1": {"P1": {"type": CMD_TYPE_OFF, "val": 0}, "P2": {"type": 0, "val": 3800}},
+        "SL_SW_ND1": {
+            "P1": {"type": CMD_TYPE_OFF, "val": 0},
+            "P2": {"type": 0, "val": 3800},
+        },
         "SL_SW_ND2": {
             "P1": {"type": CMD_TYPE_OFF, "val": 0},
             "P2": {"type": CMD_TYPE_OFF, "val": 0},

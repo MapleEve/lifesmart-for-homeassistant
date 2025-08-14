@@ -169,6 +169,7 @@ from .core.const import (
     CMD_TYPE_SET_RAW_OFF,
     CMD_TYPE_SET_RAW_ON,
     CMD_TYPE_SET_VAL,
+    DATA_TYPE_BASE,
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
@@ -236,7 +237,7 @@ def _parse_color_value(value: int, has_white: bool) -> tuple:
     """
     # 使用RGBW处理器
     processor_config = {"processor_type": "rgbw_color"}
-    raw_data = {"val": value, "type": 0}
+    raw_data = {"val": value, "type": DATA_TYPE_BASE}
 
     color_data = process_io_value(processor_config, raw_data)
     if color_data and isinstance(color_data, dict):
@@ -888,7 +889,7 @@ class LifeSmartBaseLight(LifeSmartEntity, LightEntity, OptimisticUpdateMixin):
                 # IO级更新
                 {"type": CMD_TYPE_ON, "val": 255, "v": 1}
                 # 设备级更新
-                {"P1": {"type": CMD_TYPE_ON, "val": 255}, "P2": {"type": 1, "val": 0}}
+                {"P1": {"type": CMD_TYPE_ON, "val": 255}, "P2": {"type": DATA_TYPE_STATE_ON, "val": 0}}
 
         技术细节:
         ├── @callback装饰器: 确保在HA主线程中同步执行
@@ -1667,20 +1668,14 @@ class LifeSmartBrightnessLight(LifeSmartBaseLight):
         if brightness is not None:
             self._attr_brightness = brightness
         else:
-            # 如果没有亮度信息，使用io_processors统一处理而不是直接访问
-            from .core.data.processors.io_processors import process_io_value
-
-            default_config = {"processor_type": "direct_value"}
-            try:
-                val = process_io_value(default_config, self._sub_data)
-                if val is not None:
-                    self._attr_brightness = val
-            except Exception as e:
-                _LOGGER.warning(
-                    "Failed to process brightness with io_processors for %s: %s",
-                    self.unique_id,
-                    e,
-                )
+            # 严格遵循三层架构：亮度信息应该通过映射配置提供
+            _LOGGER.warning(
+                "No brightness configuration found for device %s IO port %s. "
+                "Light brightness should be properly configured in the mapping engine.",
+                self._raw_device.get("me", "unknown"),
+                self._sub_key,
+            )
+            self._attr_brightness = None
 
     def _get_state_attributes(self) -> list[str]:
         """返回需要在乐观更新中保存和恢复的属性列表。"""
@@ -1847,7 +1842,7 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
         if (val := safe_get(sub_data, "val")) is not None:
             # 使用RGBW处理器判断动态模式
             processor_config = {"processor_type": "rgbw_color"}
-            raw_data = {"val": val, "type": 0}
+            raw_data = {"val": val, "type": DATA_TYPE_BASE}
             color_data = process_io_value(processor_config, raw_data)
 
             if color_data and isinstance(color_data, dict):
@@ -1996,7 +1991,7 @@ class LifeSmartQuantumLight(LifeSmartBaseLight):
         if (color_val := safe_get(p2_data, "val")) is not None:
             # 使用RGBW处理器判断动态模式
             processor_config = {"processor_type": "rgbw_color"}
-            raw_data = {"val": color_val, "type": 0}
+            raw_data = {"val": color_val, "type": DATA_TYPE_BASE}
             color_data = process_io_value(processor_config, raw_data)
 
             if color_data and isinstance(color_data, dict):

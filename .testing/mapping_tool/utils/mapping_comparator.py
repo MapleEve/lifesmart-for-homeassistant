@@ -2,56 +2,74 @@
 """
 映射对比器 - 独立AI分析结果 vs 项目mapping配置
 提供真正独立的对比基准，发现有意义的差异
+
+安全修复版本 - 移除了动态模块加载风险
 """
 
 import json
-import os
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Any
 
-# 添加项目路径以导入设备配置
-project_root = (
-    Path(__file__).parent.parent.parent.parent / "custom_components/lifesmart"
-)
-sys.path.insert(0, str(project_root))
 
-# 尝试多种方式导入项目配置
+# === 安全的项目配置导入机制 ===
+# 使用标准导入机制，避免动态路径修改
+
 PROJECT_DATA_AVAILABLE = False
 DEVICE_SPECS_DATA = {}
 
-try:
-    # 方式1: 直接导入
-    from core.config.device_specs import DEVICE_SPECS_DATA
+# 定义项目根路径（安全的绝对路径计算）
+CURRENT_DIR = Path(__file__).parent.resolve()
+PROJECT_ROOT = CURRENT_DIR.parent.parent.parent / "custom_components/lifesmart"
 
-    PROJECT_DATA_AVAILABLE = True
-except ImportError:
+# 验证项目路径安全性
+if not PROJECT_ROOT.exists() or not PROJECT_ROOT.is_dir():
+    print(f"⚠️ 警告：项目路径不存在或不安全: {PROJECT_ROOT}")
+    PROJECT_ROOT = None
+else:
+    # 确保路径在预期的项目范围内
     try:
-        # 方式2: 通过mapping.py导入
-        from core.config.mapping import DEVICE_MAPPING
+        PROJECT_ROOT = PROJECT_ROOT.resolve()
+        # 基本路径安全检查
+        if "lifesmart" not in str(PROJECT_ROOT):
+            print("⚠️ 警告：项目路径不在预期范围内")
+            PROJECT_ROOT = None
+    except (OSError, ValueError) as e:
+        print(f"⚠️ 警告：路径解析失败: {e}")
+        PROJECT_ROOT = None
 
-        DEVICE_SPECS_DATA = DEVICE_MAPPING
+# 安全的模块导入
+if PROJECT_ROOT:
+    try:
+        # 使用相对于工具位置的安全导入
+        import sys
+
+        # 仅在验证安全后才添加路径
+        safe_path = str(PROJECT_ROOT)
+        if safe_path not in sys.path:
+            sys.path.insert(0, safe_path)
+
+        # 单一明确的导入尝试
+        from core.config.device_specs import _RAW_DEVICE_DATA as DEVICE_SPECS_DATA
+
         PROJECT_DATA_AVAILABLE = True
-    except ImportError:
-        try:
-            # 方式3: 直接读取文件
-            import importlib.util
+        print(f"✅ 成功导入设备数据：{len(DEVICE_SPECS_DATA)} 个设备")
 
-            spec = importlib.util.spec_from_file_location(
-                "device_specs", str(project_root / "core/config/device_specs.py")
-            )
-            if spec and spec.loader:
-                device_specs_module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(device_specs_module)
-                if hasattr(device_specs_module, "DEVICE_SPECS_DATA"):
-                    DEVICE_SPECS_DATA = device_specs_module.DEVICE_SPECS_DATA
-                    PROJECT_DATA_AVAILABLE = True
-                elif hasattr(device_specs_module, "_RAW_DEVICE_DATA"):
-                    DEVICE_SPECS_DATA = device_specs_module._RAW_DEVICE_DATA
-                    PROJECT_DATA_AVAILABLE = True
-        except Exception as e:
-            print(f"导入项目配置时出错: {e}")
+    except ImportError as e:
+        print(f"❌ 无法导入设备数据: {e}")
+        print("请确保在正确的项目环境中运行此工具")
+        DEVICE_SPECS_DATA = {}
+        PROJECT_DATA_AVAILABLE = False
+    except Exception as e:
+        print(f"❌ 导入过程中发生意外错误: {e}")
+        DEVICE_SPECS_DATA = {}
+        PROJECT_DATA_AVAILABLE = False
+    finally:
+        # 清理sys.path，移除临时添加的路径
+        if PROJECT_ROOT and str(PROJECT_ROOT) in sys.path:
+            sys.path.remove(str(PROJECT_ROOT))
+else:
+    print("❌ 无法确定安全的项目路径")
 
 
 @dataclass
@@ -356,13 +374,32 @@ class MappingComparator:
 
 
 def main():
-    """主函数"""
+    """主函数 - 安全版本"""
     comparator = MappingComparator()
 
-    # AI分析结果文件路径
-    ai_analysis_file = "/Volumes/LocalRAW/lifesmart-HACS-for-hass/.testing/mapping_tool/independent_ai_analysis.json"
+    # 安全的文件路径处理
+    tool_dir = Path(__file__).parent.parent.resolve()
+    ai_analysis_file = tool_dir / "independent_ai_analysis.json"
+    output_file = tool_dir / "mapping_comparison_report.json"
 
-    if not os.path.exists(ai_analysis_file):
+    # 验证输入文件安全性
+    try:
+        ai_analysis_file = ai_analysis_file.resolve()
+        output_file = output_file.resolve()
+
+        # 确保文件在预期的工具目录内
+        if not str(ai_analysis_file).startswith(str(tool_dir)):
+            print("❌ 安全错误：输入文件路径不安全")
+            return
+        if not str(output_file).startswith(str(tool_dir)):
+            print("❌ 安全错误：输出文件路径不安全")
+            return
+
+    except (OSError, ValueError) as e:
+        print(f"❌ 路径验证失败: {e}")
+        return
+
+    if not ai_analysis_file.exists():
         print("❌ 未找到独立AI分析结果文件")
         print("请先运行独立文档分析器生成AI分析结果")
         return
@@ -373,7 +410,7 @@ def main():
         print(f"📋 项目设备数量: {len(DEVICE_SPECS_DATA)}")
 
     # 执行对比分析
-    comparison_report = comparator.compare_analysis_with_project(ai_analysis_file)
+    comparison_report = comparator.compare_analysis_with_project(str(ai_analysis_file))
 
     if "error" in comparison_report:
         print(f"❌ 对比分析失败: {comparison_report['error']}")
@@ -404,12 +441,13 @@ def main():
     for rec in comparison_report["recommendations"]:
         print(f"  {rec}")
 
-    # 保存详细对比报告
-    output_file = "/Volumes/LocalRAW/lifesmart-HACS-for-hass/.testing/mapping_tool/mapping_comparison_report.json"
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(comparison_report, f, ensure_ascii=False, indent=2)
-
-    print(f"\n💾 详细对比报告已保存: {output_file}")
+    # 安全地保存详细对比报告
+    try:
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(comparison_report, f, ensure_ascii=False, indent=2)
+        print(f"\n💾 详细对比报告已保存: {output_file}")
+    except (OSError, IOError) as e:
+        print(f"⚠️ 警告：无法保存报告文件: {e}")
 
 
 if __name__ == "__main__":

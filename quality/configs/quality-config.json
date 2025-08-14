@@ -1,0 +1,55 @@
+{
+  "code_style": {
+    "enabled": true,
+    "tools": [
+      "black",
+      "isort"
+    ],
+    "black_config": "--line-length=88 --target-version=py311",
+    "isort_config": "--profile=black"
+  },
+  "type_safety": {
+    "enabled": true,
+    "tools": [
+      "mypy"
+    ],
+    "mypy_config": "--ignore-missing-imports --python-version=3.11"
+  },
+  "security_scan": {
+    "enabled": true,
+    "tools": [
+      "bandit"
+    ],
+    "severity_threshold": "medium"
+  },
+  "linting": {
+    "enabled": true,
+    "tools": [
+      "ruff"
+    ],
+    "ruff_config": "--select=E,W,F,B,C,N"
+  },
+  "hardcode_detection": {
+    "enabled": true,
+    "patterns": [
+      "SL_",
+      "OE_",
+      "DE_",
+      "SPOT_"
+    ]
+  },
+  "test_coverage": {
+    "enabled": true,
+    "minimum_coverage": 85.0
+  },
+  "exclude_patterns": [
+    "__pycache__",
+    ".git",
+    "venv",
+    ".venv",
+    "build",
+    "dist",
+    ".pytest_cache",
+    "tmp/"
+  ]
+}
