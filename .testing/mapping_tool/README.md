@@ -5,6 +5,71 @@
 LifeSmart设备映射分析工具是一个专业的AI驱动设备分析系统，用于验证和优化LifeSmart智能家居设备在Home
 Assistant中的平台映射配置。工具集成了先进的NLP技术和文档解析能力，能够自动识别设备平台不匹配问题并提供智能修复建议。
 
+## 📦 部署模式
+
+工具支持四种部署模式，满足不同环境和需求：
+
+| 模式         | 大小     | 适用场景      | NLP功能 | 启动时间   |
+|------------|--------|-----------|-------|--------|
+| **BASIC**  | ~10MB  | 资源受限、快速验证 | ❌     | < 1秒   |
+| **FULL**   | ~850MB | 生产环境、AI分析 | ✅     | 5-10秒  |
+| **DEV**    | ~950MB | 开发环境、测试   | ✅     | 10-15秒 |
+| **COMPAT** | 变动     | 现有环境迁移    | ⚠️    | 3-8秒   |
+
+### 🚀 快速开始
+
+#### 基础模式 (推荐新用户)
+
+```bash
+# 1. 验证Python环境
+python --version  # 需要 >= 3.8
+
+# 2. 直接运行，无需安装额外依赖
+cd /path/to/.testing/mapping_tool
+python RUN_THIS_TOOL.py
+
+# 3. 工具将自动检测并启用简化模式
+```
+
+#### 完整模式 (推荐生产环境)
+
+```bash
+# 1. 安装NLP依赖
+pip install -r requirements-full.txt
+
+# 2. 下载预训练模型
+./post-install.sh
+
+# 3. 运行完整功能
+python RUN_THIS_TOOL.py
+```
+
+#### 开发模式
+
+```bash
+# 1. 安装开发依赖
+pip install -r requirements-dev.txt
+
+# 2. 配置开发环境
+./setup-dev-env.sh
+
+# 3. 开始开发
+./dev-tools.sh test  # 运行测试
+```
+
+#### 兼容模式 (现有部署升级)
+
+```bash
+# 1. 备份现有环境
+pip freeze > backup-requirements.txt
+
+# 2. 安装兼容版本
+pip install -r requirements-compat.txt
+
+# 3. 验证功能
+python validate-dependencies.py
+```
+
 ## ✨ 核心功能
 
 ### 🧠 AI智能分析引擎

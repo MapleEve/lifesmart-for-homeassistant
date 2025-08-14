@@ -12,19 +12,10 @@ from datetime import datetime
 from typing import Dict, Set, List, Any
 
 # Import configuration data
-sys.path.insert(
-    0, os.path.join(os.path.dirname(__file__), "../custom_components/lifesmart")
-)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-# Load device specs data directly
-device_specs_path = os.path.join(
-    os.path.dirname(__file__),
-    "../custom_components/lifesmart/core/config/device_specs.py",
-)
-spec = {}
-with open(device_specs_path, "r", encoding="utf-8") as f:
-    exec(f.read(), spec)
-DEVICE_SPECS_DATA = spec["DEVICE_SPECS_DATA"]
+# Load device specs data safely using direct import
+from custom_components.lifesmart.core.config.device_specs import DEVICE_SPECS_DATA
 
 # Constants
 LSCAM_PREFIX = "LSCAM:"
