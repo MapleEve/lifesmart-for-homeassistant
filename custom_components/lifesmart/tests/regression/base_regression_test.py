@@ -21,7 +21,9 @@ from typing import Dict, List, Any, Optional
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from custom_components.lifesmart.core.config.mapping_engine import EnhancedMappingEngine
+from custom_components.lifesmart.core.resolver.device_resolver import (
+    get_device_resolver,
+)
 from custom_components.lifesmart.core.platform.platform_detection import (
     get_device_platform_mapping,
 )
@@ -85,7 +87,7 @@ class MappingEngineWrapper:
             enable_dual_validation: 是否启用双引擎验证
         """
         self.enable_dual_validation = enable_dual_validation
-        self.mapping_engine = EnhancedMappingEngine()
+        self.device_resolver = get_device_resolver()
         self.logger = logging.getLogger(__name__)
 
     def get_platform_mapping(self, device_data: Dict[str, Any]) -> Dict[str, Any]:

@@ -107,7 +107,7 @@ class NLPAnalysisConfig:
     enable_context_analysis: bool = True
     enable_version_device_processing: bool = True
     confidence_threshold: float = 0.15  # 🔧 优化：适度提升阈值过滤低质量匹配
-    debug_mode: bool = True  # 🔧 启用调试模式以诊断SL_OE_DE解析问题
+    debug_mode: bool = False  # 🔧 生产环境默认关闭debug，避免输出污染
     enhanced_parsing: bool = True  # 🔧 新增：启用增强解析模式
     aggressive_matching: bool = True  # 🔧 新增：启用积极匹配模式
 
@@ -1538,8 +1538,9 @@ class DocumentBasedComparisonAnalyzer:
             "docs",
             "LifeSmart 智慧设备规格属性说明.md",
         )
-        print(f"🔍 [DEBUG] 文档路径计算: {docs_path}")
-        print(f"🔍 [DEBUG] 文档存在检查: {os.path.exists(docs_path)}")
+        if hasattr(self, "config") and self.config.debug_mode:
+            print(f"🔍 [DEBUG] 文档路径计算: {docs_path}")
+            print(f"🔍 [DEBUG] 文档存在检查: {os.path.exists(docs_path)}")
         return docs_path
 
     def _is_valid_device_name(self, name: str) -> bool:
@@ -1644,7 +1645,8 @@ class DocumentBasedComparisonAnalyzer:
             print(f"❌ 读取官方文档失败: {e}")
             return {}
 
-        print(f"🔍 [DEBUG] 文档总长度: {len(content)} 字符")
+        if self.config.debug_mode:
+            print(f"🔍 [DEBUG] 文档总长度: {len(content)} 字符")
 
         device_ios = {}
         lines = content.split("\n")
@@ -1652,7 +1654,8 @@ class DocumentBasedComparisonAnalyzer:
         table_lines_found = 0
         target_device_found = False
 
-        print(f"🔍 [DEBUG] 文档总行数: {len(lines)}")
+        if self.config.debug_mode:
+            print(f"🔍 [DEBUG] 文档总行数: {len(lines)}")
 
         # 简单的表格解析
         for line_no, line in enumerate(lines, 1):
@@ -1673,20 +1676,22 @@ class DocumentBasedComparisonAnalyzer:
 
             # 解析表格行
             if line.startswith("|") and "|" in line[1:-1]:
-                (
-                    print(f"🔍 [DEBUG] 表格行 {line_no}: {line[:100]}...")
-                    if len(line) > 100
-                    else print(f"🔍 [DEBUG] 表格行 {line_no}: {line}")
-                )
+                if self.config.debug_mode:
+                    if len(line) > 100:
+                        print(f"🔍 [DEBUG] 表格行 {line_no}: {line[:100]}...")
+                    else:
+                        print(f"🔍 [DEBUG] 表格行 {line_no}: {line}")
 
                 # 跳过分隔符行（包含----）
                 if "----" in line:
-                    print(f"🔍 [DEBUG] 跳过分隔符行 {line_no}")
+                    if self.config.debug_mode:
+                        print(f"🔍 [DEBUG] 跳过分隔符行 {line_no}")
                     continue
 
                 table_lines_found += 1
                 columns = [col.strip() for col in line.split("|")[1:-1]]
-                print(f"🔍 [DEBUG] 列数: {len(columns)}, 列内容: {columns}")
+                if self.config.debug_mode:
+                    print(f"🔍 [DEBUG] 列数: {len(columns)}, 列内容: {columns}")
 
                 # 跳过表头行 - 改进识别逻辑
                 if len(columns) >= 4 and (
@@ -1697,7 +1702,8 @@ class DocumentBasedComparisonAnalyzer:
                     or "IO口" in columns[1]
                     or "Port" in columns[1].lower()
                 ):
-                    print(f"🔍 [DEBUG] 跳过表头行 {line_no}: {columns[0][:20]}...")
+                    if self.config.debug_mode:
+                        print(f"🔍 [DEBUG] 跳过表头行 {line_no}: {columns[0][:20]}...")
                     continue
 
                 if len(columns) >= 5:
@@ -1707,23 +1713,27 @@ class DocumentBasedComparisonAnalyzer:
                     description = columns[3]
                     permissions = columns[4]
 
-                    print(
-                        f"🔍 [DEBUG] 设备列: '{device_col}', IO端口: '{io_port}', IO名称: '{io_name}'"
-                    )
+                    if self.config.debug_mode:
+                        print(
+                            f"🔍 [DEBUG] 设备列: '{device_col}', IO端口: '{io_port}', IO名称: '{io_name}'"
+                        )
 
                     # 提取设备名称 - 支持多行设备名和复合设备名
                     if device_col:
-                        print(f"🔍 [DEBUG] 原始设备列内容: {repr(device_col)}")
+                        if self.config.debug_mode:
+                            print(f"🔍 [DEBUG] 原始设备列内容: {repr(device_col)}")
 
                         # 处理HTML换行标签和多个设备名 - 增强版
                         device_names_str = device_col.replace("<br/>", ",").replace(
                             "<br>", ","
                         )
-                        print(f"🔍 [DEBUG] HTML处理后: {repr(device_names_str)}")
+                        if self.config.debug_mode:
+                            print(f"🔍 [DEBUG] HTML处理后: {repr(device_names_str)}")
 
                         # 使用更强的分割符支持
                         device_candidates = re.split(r"[,，\n]", device_names_str)
-                        print(f"🔍 [DEBUG] 分割候选: {device_candidates}")
+                        if self.config.debug_mode:
+                            print(f"🔍 [DEBUG] 分割候选: {device_candidates}")
 
                         extracted_devices = []
 
@@ -1732,7 +1742,10 @@ class DocumentBasedComparisonAnalyzer:
                             if not device_candidate:
                                 continue
 
-                            print(f"🔍 [DEBUG] 处理候选设备: {repr(device_candidate)}")
+                            if self.config.debug_mode:
+                                print(
+                                    f"🔍 [DEBUG] 处理候选设备: {repr(device_candidate)}"
+                                )
 
                             # 🔧 增强设备名称提取，支持多种格式 - 修复SL_LI_RGBW识别
                             device_matches = re.findall(
@@ -1757,44 +1770,53 @@ class DocumentBasedComparisonAnalyzer:
                                         print(
                                             f"🔧 [BACKUP] 备用匹配成功: {backup_matches}"
                                         )
-                            print(f"🔍 [DEBUG] Regex匹配结果: {device_matches}")
+                            if self.config.debug_mode:
+                                print(f"🔍 [DEBUG] Regex匹配结果: {device_matches}")
 
                             # 🔧 优化匹配结果处理，包含多个分组
                             for match in device_matches:
                                 device_name = match[0] or match[1] or match[2]
-                                print(f"🔍 [DEBUG] 匹配的设备名: {repr(device_name)}")
+                                if self.config.debug_mode:
+                                    print(
+                                        f"🔍 [DEBUG] 匹配的设备名: {repr(device_name)}"
+                                    )
 
                                 # 🔧 改进设备名称有效性验证
                                 if self._is_valid_device_name_enhanced(device_name):
                                     extracted_devices.append(
                                         device_name.strip().upper()
                                     )
-                                    print(f"🔍 [DEBUG] 已添加设备: {device_name}")
+                                    if self.config.debug_mode:
+                                        print(f"🔍 [DEBUG] 已添加设备: {device_name}")
                                 elif self.config.debug_mode:
                                     print(f"🔍 [DEBUG] 跳过无效设备名: {device_name}")
 
                         # 去重并保持顺序
                         extracted_devices = list(dict.fromkeys(extracted_devices))
-                        print(f"🔍 [DEBUG] 最终提取设备列表: {extracted_devices}")
+                        if self.config.debug_mode:
+                            print(f"🔍 [DEBUG] 最终提取设备列表: {extracted_devices}")
 
                         if extracted_devices:
                             current_devices = extracted_devices
                             for device_name in current_devices:
                                 if device_name not in device_ios:
                                     device_ios[device_name] = []
-                            print(f"📝 行{line_no}: 提取设备 {current_devices}")
+                            if self.config.debug_mode:
+                                print(f"📝 行{line_no}: 提取设备 {current_devices}")
 
                             # 专门追踪SL_OE_DE
                             if "SL_OE_DE" in current_devices:
-                                print(
-                                    f"🎯 [DEBUG] SL_OE_DE已添加到current_devices! 行号: {line_no}"
-                                )
+                                if self.config.debug_mode:
+                                    print(
+                                        f"🎯 [DEBUG] SL_OE_DE已添加到current_devices! 行号: {line_no}"
+                                    )
 
                     # 添加IO口信息到所有当前设备
                     if current_devices and io_port and io_name:
                         # 去除IO端口的反引号
                         clean_io_port = io_port.replace("`", "")
-                        print(f"🔍 [DEBUG] 清理后的IO端口: '{clean_io_port}'")
+                        if self.config.debug_mode:
+                            print(f"🔍 [DEBUG] 清理后的IO端口: '{clean_io_port}'")
 
                         for device_name in current_devices:
                             io_info = {
@@ -1805,33 +1827,39 @@ class DocumentBasedComparisonAnalyzer:
                             }
                             device_ios[device_name].append(io_info)
 
-                            # 专门追踪SL_OE_DE的IO添加
-                            if device_name == "SL_OE_DE":
+                            if device_name == "SL_OE_DE" and self.config.debug_mode:
                                 print(f"🎯 [DEBUG] 为SL_OE_DE添加IO: {io_info}")
                                 print(
                                     f"🎯 [DEBUG] SL_OE_DE当前IO总数: {len(device_ios[device_name])}"
                                 )
 
-                        print(
-                            f"📝 行{line_no}: 添加IO {clean_io_port}({io_name}) 到 {len(current_devices)} 个设备"
-                        )
+                        if self.config.debug_mode:
+                            print(
+                                f"📝 行{line_no}: 添加IO {clean_io_port}({io_name}) 到 {len(current_devices)} 个设备"
+                            )
                 elif len(columns) >= 1:
-                    print(f"🔍 [DEBUG] 列数不足5 (当前{len(columns)})，跳过该行")
+                    if self.config.debug_mode:
+                        print(f"🔍 [DEBUG] 列数不足5 (当前{len(columns)})，跳过该行")
                 else:
-                    print(f"🔍 [DEBUG] 空表格行，跳过")
+                    if self.config.debug_mode:
+                        print(f"🔍 [DEBUG] 空表格行，跳过")
 
-        print(f"📝 总计处理表格行: {table_lines_found}")
-        print(f"🎯 [DEBUG] SL_OE_DE在文档中发现: {target_device_found}")
+        if self.config.debug_mode:
+            print(f"📝 总计处理表格行: {table_lines_found}")
+            print(f"🎯 [DEBUG] SL_OE_DE在文档中发现: {target_device_found}")
 
-        # 检查最终结果
-        if "SL_OE_DE" in device_ios:
-            print(f"🎯 [DEBUG] SL_OE_DE成功解析! IO数量: {len(device_ios['SL_OE_DE'])}")
-            print(f"🎯 [DEBUG] SL_OE_DE的IO详情: {device_ios['SL_OE_DE']}")
-        else:
-            print(f"❌ [DEBUG] SL_OE_DE未在最终结果中找到!")
-            print(
-                f"🔍 [DEBUG] 最终解析的设备列表: {list(device_ios.keys())[:10]}..."
-            )  # 只显示前10个
+        if self.config.debug_mode:
+            # 检查最终结果
+            if "SL_OE_DE" in device_ios:
+                print(
+                    f"🎯 [DEBUG] SL_OE_DE成功解析! IO数量: {len(device_ios['SL_OE_DE'])}"
+                )
+                print(f"🎯 [DEBUG] SL_OE_DE的IO详情: {device_ios['SL_OE_DE']}")
+            else:
+                print(f"❌ [DEBUG] SL_OE_DE未在最终结果中找到!")
+                print(
+                    f"🔍 [DEBUG] 最终解析的设备列表: {list(device_ios.keys())[:10]}..."
+                )  # 只显示前10个
 
         return device_ios
 
@@ -1842,42 +1870,45 @@ class DocumentBasedComparisonAnalyzer:
         platform_suggestions = set()
         ios_analysis = []
 
-        # 🔧 调试输出 - 帮助诊断SL_LI_RGBW等设备
-        if (
-            "SL_OE_DE" in device_name
-            or "LI_RGBW" in device_name
-            or "CT_RGBW" in device_name
-        ):
-            print(f"\n🔍 [AI_DEBUG] 分析设备 {device_name}:")
-            print(f"   IO数据: {ios_data}")
+        if self.config.debug_mode:
+            # 🔧 调试输出 - 帮助诊断SL_LI_RGBW等设备
+            if (
+                "SL_OE_DE" in device_name
+                or "LI_RGBW" in device_name
+                or "CT_RGBW" in device_name
+            ):
+                print(f"\n🔍 [AI_DEBUG] 分析设备 {device_name}:")
+                print(f"   IO数据: {ios_data}")
 
         for io_data in ios_data:
             io_name = io_data.get("name", "")
             io_description = io_data.get("description", "")
             rw_permission = io_data.get("rw", "R")
 
-            # 🔧 调试输出 - IO级别的详细信息
-            if (
-                "SL_OE_DE" in device_name
-                or "LI_RGBW" in device_name
-                or "CT_RGBW" in device_name
-            ):
-                print(
-                    f"     分析IO: {io_name}, 描述: {io_description}, 权限: {rw_permission}"
-                )
+            if self.config.debug_mode:
+                # 🔧 调试输出 - IO级别的详细信息
+                if (
+                    "SL_OE_DE" in device_name
+                    or "LI_RGBW" in device_name
+                    or "CT_RGBW" in device_name
+                ):
+                    print(
+                        f"     分析IO: {io_name}, 描述: {io_description}, 权限: {rw_permission}"
+                    )
 
             # NLP规则分析，传递设备名称
             suggested_platforms = self._classify_io_platform(
                 io_name, io_description, rw_permission, device_name
             )
 
-            # 🔧 调试输出 - 分类结果
-            if (
-                "SL_OE_DE" in device_name
-                or "LI_RGBW" in device_name
-                or "CT_RGBW" in device_name
-            ):
-                print(f"     分类结果: {suggested_platforms}")
+            if self.config.debug_mode:
+                # 🔧 调试输出 - 分类结果
+                if (
+                    "SL_OE_DE" in device_name
+                    or "LI_RGBW" in device_name
+                    or "CT_RGBW" in device_name
+                ):
+                    print(f"     分类结果: {suggested_platforms}")
 
             if suggested_platforms:
                 platform_suggestions.update(

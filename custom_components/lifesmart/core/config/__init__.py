@@ -10,10 +10,8 @@ LifeSmart Configuration Layer - 配置映射层
 
 from .device_specs import DEVICE_SPECS_DATA
 from .mapping import DEVICE_MAPPING
-from .mapping_engine import mapping_engine
 
 __all__ = [
     "DEVICE_SPECS_DATA",
-    "mapping_engine",
     "DEVICE_MAPPING",
 ]

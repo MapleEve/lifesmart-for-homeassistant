@@ -17,6 +17,9 @@ from typing import Dict, Any, Optional
 from .base_strategy import BaseDeviceStrategy
 from .ha_constant_strategy import HAConstantStrategy
 
+# 导入业务逻辑处理器
+from ..data.processors.logic_processors import get_processor_registry
+
 
 class DynamicDeviceStrategy(BaseDeviceStrategy):
     """
@@ -42,6 +45,9 @@ class DynamicDeviceStrategy(BaseDeviceStrategy):
             self.device_classifier = device_classifier
         except ImportError:
             self.device_classifier = None
+
+        # 集成业务逻辑处理器
+        self.logic_registry = get_processor_registry()
 
     def can_handle(
         self, device_type: str, device: Dict[str, Any], raw_config: Dict[str, Any]
@@ -365,7 +371,8 @@ class DynamicDeviceStrategy(BaseDeviceStrategy):
         """
         处理单个IO口配置，应用业务逻辑处理器
 
-        从原始mapping_engine._process_io_config_with_logic方法简化提取
+        完整版本：从原始mapping_engine._process_io_config_with_logic方法完整提取
+        包含逻辑处理器集成和示例值处理
 
         Args:
             io_config: IO口原始配置
@@ -375,6 +382,7 @@ class DynamicDeviceStrategy(BaseDeviceStrategy):
         Returns:
             处理后的IO口配置
         """
+        # 防护检查：如果io_config不是字典，返回简化配置
         if not isinstance(io_config, dict):
             return {
                 "description": str(io_config) if io_config else "Unknown",
@@ -385,18 +393,34 @@ class DynamicDeviceStrategy(BaseDeviceStrategy):
                 "_can_process_value": False,
             }
 
-        # 使用HA常量转换策略
+        # 先进行基本的HA常量转换
         processed_config = self.ha_constant_strategy.convert_data_to_ha_mapping(
             io_config
         )
 
-        # 添加逻辑处理器信息（简化版本）
-        processed_config["_logic_processor"] = processed_config.get(
-            "processor_type", "none"
-        )
-        processed_config["_can_process_value"] = (
-            processed_config.get("processor_type") is not None
-        )
+        # 查找合适的逻辑处理器
+        processor = None
+        processor_type = processed_config.get("processor_type")
+        if processor_type and self.logic_registry:
+            processor = self.logic_registry.get_processor(processor_type)
+
+        if processor:
+            # 应用业务逻辑处理器的元数据
+            processed_config["_logic_processor"] = processor.get_processor_type()
+            processed_config["_can_process_value"] = True
+
+            # 如果有实际数据，也处理一下作为示例
+            if io_data:
+                try:
+                    processed_value = processor.process_value(
+                        io_data.get("val"), io_data.get("type", 0)
+                    )
+                    processed_config["_example_processed_value"] = processed_value
+                except Exception as e:
+                    processed_config["_processing_error"] = str(e)
+        else:
+            processed_config["_logic_processor"] = "none"
+            processed_config["_can_process_value"] = False
 
         return processed_config
 

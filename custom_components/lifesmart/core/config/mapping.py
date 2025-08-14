@@ -24,19 +24,8 @@ from .third_party_mapping import (
 )
 
 
-# 尝试导入映射引擎
-try:
-    from .mapping_engine import mapping_engine
-
-    # 生成向后兼容的DEVICE_MAPPING
-    DEVICE_MAPPING = {}
-    for device_type, raw_config in DEVICE_SPECS_DATA.items():
-        DEVICE_MAPPING[device_type] = mapping_engine.convert_data_to_ha_mapping(
-            raw_config
-        )
-except ImportError:
-    # 降级方案 - 直接使用原始数据
-    DEVICE_MAPPING = DEVICE_SPECS_DATA
+# 使用原始数据作为DEVICE_MAPPING（mapping_engine已被移除）
+DEVICE_MAPPING = DEVICE_SPECS_DATA
 
 # 导入其他设备分类常量 (从原devices/__init__.py迁移)
 DYNAMIC_CLASSIFICATION_DEVICES = [

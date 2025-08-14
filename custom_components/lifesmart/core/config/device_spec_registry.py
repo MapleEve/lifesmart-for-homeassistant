@@ -15,6 +15,19 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 
+# 导入特殊设备处理器
+try:
+    from .special_device_handler import (
+        SpecialDeviceHandler,
+        SpecialDeviceType,
+        create_special_device_handler,
+    )
+except ImportError:
+    # 如果无法导入，使用空实现作为回退
+    SpecialDeviceHandler = None
+    SpecialDeviceType = None
+    create_special_device_handler = None
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +60,21 @@ class DeviceSpecValidator:
 
     # 必需字段
     REQUIRED_FIELDS = {"name"}
+
+    def __init__(self):
+        """初始化验证器，包含特殊设备处理器"""
+        # 初始化特殊设备处理器
+        if SpecialDeviceHandler is not None:
+            try:
+                self.special_handler = create_special_device_handler()
+                self._has_special_handler = True
+            except Exception as e:
+                _LOGGER.warning(f"Failed to create special device handler: {e}")
+                self.special_handler = None
+                self._has_special_handler = False
+        else:
+            self.special_handler = None
+            self._has_special_handler = False
 
     # 有效的平台类型
     VALID_PLATFORMS = {
@@ -91,10 +119,97 @@ class DeviceSpecValidator:
         errors = []
         warnings = []
 
-        # 检查必需字段
+        # 检查必需字段 - 使用特殊设备处理器进行智能验证
         for field in self.REQUIRED_FIELDS:
             if field not in spec:
-                errors.append(f"Missing required field: {field}")
+                # 使用特殊设备处理器检查是否为特殊设备类型
+                if self._has_special_handler and self.special_handler:
+                    try:
+                        # 使用特殊设备处理器进行设备分类
+                        device_info = self.special_handler.classify_device(
+                            device_type, spec
+                        )
+
+                        # 检查特殊设备类型（使用枚举成员直接对比，更安全）
+                        if device_info.special_type == SpecialDeviceType.VERSIONED:
+                            # 版本化设备
+                            metadata = device_info.metadata
+                            if metadata.get("resolved_name"):
+                                # 版本化设备有有效的名称解析
+                                continue
+                            else:
+                                errors.append(
+                                    f"Versioned device '{device_type}' missing valid name in version modes"
+                                )
+                                continue
+
+                        elif device_info.special_type == SpecialDeviceType.DYNAMIC:
+                            # 动态分类设备可能没有统一的name，尝试解析
+                            metadata = device_info.metadata
+                            resolved_name = metadata.get("resolved_name")
+                            if resolved_name:
+                                warnings.append(
+                                    f"Dynamic device '{device_type}' using resolved name: {resolved_name}"
+                                )
+                            else:
+                                warnings.append(
+                                    f"Dynamic device '{device_type}' has no unified name field - this is acceptable"
+                                )
+                            continue
+
+                        elif device_info.special_type == SpecialDeviceType.CAM:
+                            # CAM分类设备
+                            metadata = device_info.metadata
+                            resolved_name = metadata.get("resolved_name")
+                            if resolved_name:
+                                warnings.append(
+                                    f"CAM device '{device_type}' using resolved name: {resolved_name}"
+                                )
+                            else:
+                                warnings.append(
+                                    f"CAM device '{device_type}' may have complex naming structure"
+                                )
+                            continue
+
+                        elif device_info.special_type == SpecialDeviceType.DYN_COLOR:
+                            # DYN Color处理设备
+                            metadata = device_info.metadata
+                            resolved_name = metadata.get("resolved_name")
+                            if resolved_name:
+                                warnings.append(
+                                    f"DYN Color device '{device_type}' using resolved name: {resolved_name}"
+                                )
+                            else:
+                                warnings.append(
+                                    f"DYN Color device '{device_type}' may have complex color naming"
+                                )
+                            continue
+
+                    except Exception as e:
+                        _LOGGER.warning(
+                            f"Special device handler failed for {device_type}: {e}"
+                        )
+                        # 回退到基础验证逻辑
+
+                # 回退到基础验证逻辑（兼容没有特殊处理器的情况）
+                if field == "name" and "versioned" in spec and "version_modes" in spec:
+                    # 基础版本化设备检查
+                    has_name_in_versions = any(
+                        "name" in version_config
+                        for version_config in spec["version_modes"].values()
+                        if isinstance(version_config, dict)
+                    )
+                    if not has_name_in_versions:
+                        errors.append(
+                            f"Versioned device missing 'name' in version_modes"
+                        )
+                elif field == "name" and "dynamic" in spec:
+                    # 基础动态分类设备检查
+                    warnings.append(
+                        f"Dynamic device '{device_type}' has no unified name field"
+                    )
+                else:
+                    errors.append(f"Missing required field: {field}")
 
         # 验证基本结构
         if not isinstance(spec, dict):
@@ -179,7 +294,7 @@ class DeviceSpecRegistry:
         self._loaded: bool = False
         self._cache: Dict[str, Any] = {}
         self._validation_level = validation_level
-        self._validator = DeviceSpecValidator()
+        self._validator = DeviceSpecValidator()  # 现在包含特殊设备处理器
 
         # Phase 1.2: 分散映射存储
         self._scattered_mappings: Dict[str, Any] = {}

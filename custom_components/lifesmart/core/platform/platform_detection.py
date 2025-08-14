@@ -17,7 +17,7 @@ LifeSmart 平台检测工具模块。
 
 from typing import Any
 
-from ..config.mapping_engine import mapping_engine
+from ..resolver import get_device_resolver
 
 
 def safe_get(data: dict | list, *path, default: Any = None) -> Any:
@@ -82,7 +82,9 @@ def get_device_platform_mapping(device: dict) -> dict[str, list[str]]:
         device = {**device, "devtype": device_type}
 
     # 使用新的mapping引擎解析设备映射
-    mapping_result = mapping_engine.resolve_device_mapping(device)
+    resolver = get_device_resolver()
+    device_config = resolver.resolve_device_config(device)
+    mapping_result = device_config.platforms if device_config else {}
 
     # 处理映射结果，合并 switch 和 switch_extra 到 switch 平台
     if mapping_result:
@@ -426,12 +428,12 @@ def is_momentary_button_device(device_type: str, sub_key: str) -> bool:
         是否为瞬时按钮设备
     """
     # 使用mapping引擎获取设备配置
-    device_config = mapping_engine.resolve_device_mapping_from_data(
-        {"devtype": device_type, "data": {}}
+    resolver = get_device_resolver()
+    binary_sensor_config = resolver.get_platform_config(
+        {"devtype": device_type, "data": {}}, "binary_sensor"
     )
 
     # 检查binary_sensor平台的IO配置
-    binary_sensor_config = device_config.get("binary_sensor", {})
     io_config = binary_sensor_config.get(sub_key, {})
 
     # 根据IO配置判断是否为瞬时按钮
@@ -459,12 +461,12 @@ def get_binary_sensor_io_config(device: dict, sub_key: str) -> dict:
 
     # 原始逻辑：从映射引擎获取配置
     device_type = get_device_effective_type(device)
-    device_config = mapping_engine.resolve_device_mapping_from_data(
-        {"devtype": device_type, "data": device.get("data", {})}
+    resolver = get_device_resolver()
+    binary_sensor_config = resolver.get_platform_config(
+        {"devtype": device_type, "data": device.get("data", {})}, "binary_sensor"
     )
 
     # 获取binary_sensor平台的IO配置
-    binary_sensor_config = device_config.get("binary_sensor", {})
     return binary_sensor_config.get(sub_key, {})
 
 

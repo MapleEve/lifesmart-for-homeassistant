@@ -266,43 +266,44 @@ class TestMappingEngineIntegration:
 
     def test_mapping_engine_with_registry(self):
         """测试MappingEngine使用Registry"""
-        from custom_components.lifesmart.core.config.mapping_engine import (
-            EnhancedMappingEngine,
+        from custom_components.lifesmart.core.resolver.device_resolver import (
+            DeviceResolver,
         )
 
         # 创建自定义Registry
         registry = DeviceSpecRegistry()
 
-        # 创建使用Registry的MappingEngine
-        engine = EnhancedMappingEngine(registry)
+        # 创建使用Registry的DeviceResolver
+        resolver = DeviceResolver(registry)
 
         # 验证集成
-        assert engine.device_registry is registry
+        assert resolver.device_registry is registry
 
         # 测试设备映射解析
         test_device = {"devtype": "SL_OL", "data": {"O": {"val": 1, "type": 1}}}
 
-        mapping = engine.resolve_device_mapping_from_data(test_device)
-        assert mapping is not None
-        assert isinstance(mapping, dict)
+        result = resolver.resolve_device_config(test_device)
+        assert result is not None
+        assert result.success
 
-    def test_mapping_engine_default_registry(self):
-        """测试MappingEngine使用默认Registry"""
-        from custom_components.lifesmart.core.config.mapping_engine import (
-            EnhancedMappingEngine,
+    def test_device_resolver_default_registry(self):
+        """测试DeviceResolver使用默认Registry"""
+        from custom_components.lifesmart.core.resolver.device_resolver import (
+            get_device_resolver,
         )
 
         # 不传入Registry，应该使用默认的
-        engine = EnhancedMappingEngine()
+        resolver = get_device_resolver()
 
-        assert engine.device_registry is not None
-        assert isinstance(engine.device_registry, DeviceSpecRegistry)
+        assert resolver.device_registry is not None
+        assert isinstance(resolver.device_registry, DeviceSpecRegistry)
 
         # 测试功能正常
         test_device = {"devtype": "SL_OL", "data": {"O": {"val": 1, "type": 1}}}
 
-        mapping = engine.resolve_device_mapping_from_data(test_device)
-        assert mapping is not None
+        result = resolver.resolve_device_config(test_device)
+        assert result is not None
+        assert result.success
 
 
 class TestValidationLevels:

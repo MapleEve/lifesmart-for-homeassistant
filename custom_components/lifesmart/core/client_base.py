@@ -147,7 +147,7 @@ from homeassistant.components.climate import HVACMode
 
 from .config.device_specs import NON_POSITIONAL_COVER_CONFIG
 from .config.device_specs import REVERSE_LIFESMART_HVAC_MODE_MAP
-from .config.mapping_engine import mapping_engine
+from .resolver import get_device_resolver
 from .const import (
     # --- 命令类型常量 ---
     CMD_TYPE_ON,
@@ -1375,8 +1375,8 @@ class LifeSmartClientBase(ABC):
         device_type = get_device_effective_type(device)
 
         # 获取设备映射配置
-        device_mapping = mapping_engine.resolve_device_mapping_from_data(device)
-        cover_config = device_mapping.get("cover", {})
+        resolver = get_device_resolver()
+        cover_config = resolver.get_platform_config(device, "cover")
 
         # 查找合适的IO口进行操作
         for io_port, io_config in cover_config.items():
@@ -1426,8 +1426,8 @@ class LifeSmartClientBase(ABC):
         device_type = get_device_effective_type(device)
 
         # 获取设备映射配置
-        device_mapping = mapping_engine.resolve_device_mapping_from_data(device)
-        cover_config = device_mapping.get("cover", {})
+        resolver = get_device_resolver()
+        cover_config = resolver.get_platform_config(device, "cover")
 
         # 查找合适的IO口进行操作
         for io_port, io_config in cover_config.items():
@@ -1479,8 +1479,8 @@ class LifeSmartClientBase(ABC):
         device_type = get_device_effective_type(device)
 
         # 获取设备映射配置
-        device_mapping = mapping_engine.resolve_device_mapping_from_data(device)
-        cover_config = device_mapping.get("cover", {})
+        resolver = get_device_resolver()
+        cover_config = resolver.get_platform_config(device, "cover")
 
         # 查找位置控制IO口
         for io_port, io_config in cover_config.items():
@@ -1661,8 +1661,8 @@ class LifeSmartClientBase(ABC):
         device_type = get_device_effective_type(device)
 
         # 获取设备映射配置
-        device_mapping = mapping_engine.resolve_device_mapping_from_data(device)
-        climate_config = device_mapping.get("climate", {})
+        resolver = get_device_resolver()
+        climate_config = resolver.get_platform_config(device, "climate")
 
         if hvac_mode == HVACMode.OFF:
             # 查找开关IO口
@@ -1802,8 +1802,8 @@ class LifeSmartClientBase(ABC):
         device_type = get_device_effective_type(device)
 
         # 获取设备映射配置
-        device_mapping = mapping_engine.resolve_device_mapping_from_data(device)
-        climate_config = device_mapping.get("climate", {})
+        resolver = get_device_resolver()
+        climate_config = resolver.get_platform_config(device, "climate")
 
         # 查找温度设置IO口
         for io_port, io_config in climate_config.items():
@@ -1871,8 +1871,8 @@ class LifeSmartClientBase(ABC):
         device_type = get_device_effective_type(device)
 
         # 获取设备映射配置
-        device_mapping = mapping_engine.resolve_device_mapping_from_data(device)
-        climate_config = device_mapping.get("climate", {})
+        resolver = get_device_resolver()
+        climate_config = resolver.get_platform_config(device, "climate")
 
         # 查找风扇模式控制IO口
         for io_port, io_config in climate_config.items():

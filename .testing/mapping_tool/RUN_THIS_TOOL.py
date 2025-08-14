@@ -564,7 +564,7 @@ class SmartIOAllocationAnalyzer:
 
             # 创建实时NLP分析器 - 强制使用真实分析器
             try:
-                from .utils.pure_ai_analyzer import (
+                from utils.pure_ai_analyzer import (
                     DocumentBasedComparisonAnalyzer as RealAnalyzer,
                 )
 
