@@ -459,7 +459,27 @@ class IOPlatformClassifier:
         "SL_LI_RGBW": {"light": 0.98},  # 🔧 修复：RGBW灯光设备直接映射
         "SL_CT_RGBW": {"light": 0.98},  # 🔧 新增：RGBW灯带设备直接映射
         "SL_CT_": {"light": 0.98},  # 🔧 新增：灯带系列设备
-        "SL_OE_": {"switch": 0.95, "sensor": 0.9},  # 🔧 新增：计量插座系列
+        "SL_OE_": {
+            "switch": 0.95,
+            "sensor": 0.9,
+        },  # 🔧 修复1: 计量插座系列（德标/三眼/白光）- 开关+传感器
+        "SL_ETDOOR": {
+            "light": 0.95,
+            "cover": 0.9,
+        },  # 🔧 修复2: 车库门设备 - 灯光控制+车库门状态控制
+        # 🔧 新增: 精确设备映射，解决SL_OE_DE等设备识别问题
+        "SL_OE_DE": {
+            "switch": 0.98,
+            "sensor": 0.95,
+        },  # 🔧 修复3: SL_OE_DE德标计量插座 - 精确映射
+        "SL_OE_3C": {
+            "switch": 0.98,
+            "sensor": 0.95,
+        },  # 🔧 修复4: SL_OE_3C三眼计量插座 - 精确映射
+        "SL_OE_W": {
+            "switch": 0.98,
+            "sensor": 0.95,
+        },  # 🔧 修复5: SL_OE_W白光计量插座 - 精确映射
         # ✅ 添加缺失的设备类型优先级 - 修复版本设备支持
         "SL_SW_NS": {"switch": 0.95, "light": 0.9},  # 新时代开关系列基础类型
         "SL_SW_NS2": {"switch": 0.95, "light": 0.9},  # 新时代开关V2直接映射
@@ -490,6 +510,10 @@ class IOPlatformClassifier:
                 "P8",
                 "P9",
                 "O",
+                # 🔧 修复1: 添加计量插座关键词支持
+                "用电量",
+                "功率",
+                "功率门限",
                 "Ctrl1",
                 "Ctrl2",
                 "Ctrl3",
@@ -499,6 +523,11 @@ class IOPlatformClassifier:
                 "Status1",
                 "Status2",
                 "Status3",
+                # 🔧 修复6: 增强SL_OE_系列设备关键词识别
+                "P1",  # SL_OE_设备的主开关端口
+                "控制",
+                "开关控制",
+                "负载控制",
             ],
             "io_names": ["开关", "控制"],
             "descriptions": ["打开", "关闭", "type&1==1", "type&1==0"],
@@ -530,6 +559,19 @@ class IOPlatformClassifier:
                 "WA",
                 "EE",
                 "EP",
+                # 🔧 修复1: 添加电表相关传感器关键词
+                "用电量",
+                "功率",
+                "IEEE754",
+                "浮点数",
+                "kwh",
+                "门限",
+                # 🔧 修复7: 增强SL_OE_系列设备传感器关键词
+                "累计用电量",
+                "实时功率",
+                "功率门限",
+                "电量监测",
+                "负载功率",
             ],
             "io_names": [
                 "当前温度",
@@ -646,9 +688,49 @@ class IOPlatformClassifier:
                 "CL",
                 "ST",
                 "DOOYA",
+                # 🔧 修复2: 增强车库门相关关键词匹配
+                "车库门",
+                "车库门状态",
+                "车库门控制",
+                "灯光控制",
+                "控制正在运行",
+                "开合",
+                "百分比",
+                "打开",
+                "关闭",
+                # 🔧 修复2: 增强车库门控制关键词
+                "灯光控制",
+                "控制正在运行",
+                "开合",
+                "停止",
+                # 🔧 修复8: 增强SL_ETDOOR设备关键词识别
+                "车库门开合控制",
+                "车库门开合百分比",
+                "车库门开合指令",
             ],
-            "io_names": ["打开窗帘", "关闭窗帘", "停止", "窗帘状态", "窗帘控制"],
-            "descriptions": ["打开窗帘", "关闭窗帘", "停止", "窗帘", "百分比"],
+            "io_names": [
+                "打开窗帘",
+                "关闭窗帘",
+                "停止",
+                "窗帘状态",
+                "窗帘控制",
+                "车库门状态",
+                "车库门控制",
+            ],
+            "descriptions": [
+                "打开窗帘",
+                "关闭窗帘",
+                "停止",
+                "窗帘",
+                "百分比",
+                "车库门",
+                "控制",
+                # 🔧 修复2: 车库门设备特定描述关键词
+                "灯光控制",
+                "控制正在运行",
+                "开合",
+                "停止",
+            ],
             "rw_required": "RW",
             "confidence_base": 0.95,
         },
@@ -1852,6 +1934,9 @@ class DocumentBasedComparisonAnalyzer:
         """NLP规则分类IO口到平台"""
         results = []
 
+        # 🔧 修复1: 清理权限格式化问题
+        rw_permission = rw_permission.strip().replace("`", "")
+
         # 🔧 调试输出
         if "SL_OE_DE" in device_name:
             print(f"      [IO_CLASSIFY] 分类IO {io_name} (设备: {device_name})")
@@ -1894,17 +1979,39 @@ class DocumentBasedComparisonAnalyzer:
 
             return False
 
-        # 开关平台规则
+        # 开关平台规则 - 🔧 修复1: 增强SL_OE_和SL_ETDOOR设备支持
         if any(
             keyword in io_name.upper() or keyword in io_description
             for keyword in ["L1", "L2", "L3", "P1", "P2", "P3", "O", "开关", "控制"]
         ):
             if rw_permission in ["RW", "W"] and not should_exclude_platform("switch"):
+                # 🔧 修复1: SL_OE_设备的P1端口特殊处理
+                if device_name.startswith("SL_OE_") and io_name == "P1":
+                    confidence = 0.98  # 🔧 提升SL_OE_设备P1端口开关置信度
+                    reasoning = f"计量插座开关控制IO口: {io_name} (SL_OE系列), RW权限"
+                # 🔧 修复2: SL_ETDOOR设备的P1端口特殊处理（灯光控制）
+                elif device_name == "SL_ETDOOR" and io_name == "P1":
+                    # SL_ETDOOR的P1是灯光控制，应该归为light而非switch
+                    if "SL_ETDOOR" in device_name:
+                        print(
+                            f"      [IO_CLASSIFY] SL_ETDOOR的P1灯光控制，跳过switch平台"
+                        )
+                    return results  # 跳过switch分类，让light分类处理
+                # 🔧 修复9: 增强SL_OE_系列设备的开关识别
+                elif device_name.startswith("SL_OE_") and (
+                    "控制" in io_description or "开关" in io_description
+                ):
+                    confidence = 0.98  # 高置信度开关控制
+                    reasoning = f"SL_OE_系列开关控制IO口: {io_name}, 设备类型匹配"
+                else:
+                    confidence = 0.9
+                    reasoning = f"开关控制IO口: {io_name}, RW权限"
+
                 result = {
                     "name": io_name,
                     "platform": "switch",
-                    "confidence": 0.9,
-                    "reasoning": f"开关控制IO口: {io_name}, RW权限",
+                    "confidence": confidence,
+                    "reasoning": reasoning,
                 }
                 results.append(result)
                 if "SL_OE_DE" in device_name:
@@ -1926,7 +2033,7 @@ class DocumentBasedComparisonAnalyzer:
                 if "SL_OE_DE" in device_name:
                     print(f"      [IO_CLASSIFY] 添加sensor结果: {result}")
 
-        # 电表相关IO口特别处理 (针对SL_OE_系列)
+        # 🔧 修复1: 电表相关IO口特别处理 (针对SL_OE_系列) - 增强版
         if any(
             keyword in io_description
             for keyword in [
@@ -1937,14 +2044,24 @@ class DocumentBasedComparisonAnalyzer:
                 "浮点数",
                 "kwh",
                 "w",
+                "门限",
+                "累计",
+                "负载",
+                "累计用电量",
+                "实时功率",
+                "功率门限",
+                "电量监测",
+                "负载功率",
             ]
-        ):
+        ) or (device_name.startswith("SL_OE_") and io_name in ["P2", "P3", "P4"]):
             if rw_permission in ["R", "RW"] and not should_exclude_platform("sensor"):
+                # 🔧 针对SL_OE_设备的特定IO口提升置信度
+                confidence = 0.95 if device_name.startswith("SL_OE_") else 0.9
                 result = {
                     "name": io_name,
                     "platform": "sensor",
-                    "confidence": 0.9,
-                    "reasoning": f"电表类传感器: {io_name}, 用电量/功率监测",
+                    "confidence": confidence,
+                    "reasoning": f"电表类传感器: {io_name}, 用电量/功率监测(SL_OE系列)",
                 }
                 results.append(result)
                 if "SL_OE_DE" in device_name:
@@ -1966,15 +2083,36 @@ class DocumentBasedComparisonAnalyzer:
                 if "SL_OE_DE" in device_name:
                     print(f"      [IO_CLASSIFY] 添加binary_sensor结果: {result}")
 
-        # 灯光平台规则 - 支持bright/dark等开关指示灯，优化RGBW匹配
-        if any(
+        # 灯光平台规则 - 🔧 修复2: 支持SL_ETDOOR灯光控制和bright/dark等开关指示灯，优化RGBW匹配
+        light_keywords_found = any(
             keyword in io_name.upper() or keyword in io_description.upper()
             for keyword in ["RGB", "RGBW", "DYN", "BRIGHT", "DARK", "颜色", "亮度"]
-        ):
-            # 专门调试SL_OE_DE
+        )
+        # 🔧 修复2: 特殊处理SL_ETDOOR的P1灯光控制
+        is_etdoor_light_control = (
+            device_name == "SL_ETDOOR"
+            and io_name == "P1"
+            and ("灯光控制" in io_description or "灯光" in io_description)
+        )
+
+        if light_keywords_found or is_etdoor_light_control:
+            # 🔧 修复10: 增强SL_OE_设备特定支持，但不应该被分类为light
             if "SL_OE_DE" in device_name:
                 print(
                     f"      [IO_CLASSIFY] 检测到灯光关键词，但SL_OE_DE是电表设备，跳过"
+                )
+            # 🔧 修复2: SL_ETDOOR设备的P1灯光控制
+            elif is_etdoor_light_control:
+                print(
+                    f"      🔧 SL_ETDOOR设备P1灯光控制: {io_name} (设备: {device_name})"
+                )
+                results.append(
+                    {
+                        "name": io_name,
+                        "platform": "light",
+                        "confidence": 0.98,  # 🔧 提升置信度
+                        "reasoning": f"车库门灯光控制: {io_name}, 权限={rw_permission}",
+                    }
                 )
             # 对于RGBW设备，始终添加light平台，不管权限如何
             elif ("RGBW" in device_name or "RGB" in device_name) and any(
@@ -2009,18 +2147,40 @@ class DocumentBasedComparisonAnalyzer:
                     }
                 )
 
-        # 窗帘平台规则
-        if any(
+        # 窗帘/车库门平台规则 - 🔧 修复2: 增强SL_ETDOOR车库门控制支持
+        cover_keywords_found = any(
             keyword in io_name.upper() or keyword in io_description
             for keyword in ["OP", "CL", "ST", "窗帘", "DOOYA"]
-        ):
+        )
+        # 🔧 修复2: 特殊处理SL_ETDOOR的P2和P3车库门控制
+        is_etdoor_cover_control = (
+            device_name == "SL_ETDOOR"
+            and io_name in ["P2", "P3"]
+            and any(
+                kw in io_description
+                for kw in ["车库门状态", "车库门控制", "百分比", "开合"]
+            )
+        )
+
+        if cover_keywords_found or is_etdoor_cover_control:
             if not should_exclude_platform("cover"):
+                # 🔧 修复2: SL_ETDOOR设备的车库门控制
+                if is_etdoor_cover_control:
+                    confidence = 0.98  # 🔧 车库门设备高置信度
+                    reasoning = f"车库门控制IO口: {io_name} (SL_ETDOOR设备)"
+                    print(
+                        f"      🔧 SL_ETDOOR车库门控制: {io_name} (设备: {device_name})"
+                    )
+                else:
+                    confidence = 0.95
+                    reasoning = f"窗帘控制IO口: {io_name}"
+
                 results.append(
                     {
                         "name": io_name,
                         "platform": "cover",
-                        "confidence": 0.95,
-                        "reasoning": f"窗帘控制IO口: {io_name}",
+                        "confidence": confidence,
+                        "reasoning": reasoning,
                     }
                 )
 
