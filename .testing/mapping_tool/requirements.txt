@@ -1,0 +1,21 @@
+# Requirements Base Mode (~10MB)
+# 基础模式 - 只包含核心依赖，AI分析器使用简化模式
+
+# Core performance monitoring
+psutil>=5.9.0
+
+# Python built-in modules are included by default:
+# - asyncio, json, re, os, sys (built-in)
+# - concurrent.futures (built-in since Python 3.2)
+# - dataclasses (built-in since Python 3.7)
+# - typing (built-in since Python 3.5)
+# - weakref, functools (built-in)
+# - pathlib (built-in since Python 3.4)
+
+# Note: This base mode supports:
+# - Core mapping tool functionality
+# - Memory Agent1 with full performance monitoring
+# - Document parsing without NLP enhancements
+# - Basic regex-based analysis
+# - File I/O operations
+# - Graceful fallback when NLP libraries are missing
