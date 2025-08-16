@@ -36,6 +36,31 @@ from .device_resolver import (
     validate_device_support,
 )
 
+# Phase 3: 静态兼容解析器
+from .static_compatible_resolver import (
+    StaticCompatibleResolver,
+    get_static_compatible_resolver,
+    resolve_device_config_static,
+    get_platform_config_static,
+    validate_device_support_static,
+)
+
+# 静态解析器作为默认选择 (Phase 3)
+# 可以通过环境变量LIFESMART_USE_DYNAMIC_RESOLVER=1切换回动态解析器
+import os
+
+USE_STATIC_RESOLVER = os.getenv("LIFESMART_USE_DYNAMIC_RESOLVER", "0") != "1"
+
+if USE_STATIC_RESOLVER:
+    # 使用静态解析器作为默认实现
+    get_device_resolver = get_static_compatible_resolver
+    resolve_device_config = resolve_device_config_static
+    get_platform_config = get_platform_config_static
+    validate_device_support = validate_device_support_static
+
+    # 将StaticCompatibleResolver作为DeviceResolver的别名
+    DeviceResolver = StaticCompatibleResolver
+
 __all__ = [
     # 类型系统
     "DeviceConfig",
@@ -48,11 +73,19 @@ __all__ = [
     "MappingData",
     "PlatformName",
     "IOKey",
-    # 核心接口
+    # 核心接口 (自动选择动态或静态实现)
     "DeviceResolver",
     "get_device_resolver",
-    # 便捷函数
+    # 便捷函数 (自动选择动态或静态实现)
     "resolve_device_config",
     "get_platform_config",
     "validate_device_support",
+    # 静态解析器专用接口 (Phase 3)
+    "StaticCompatibleResolver",
+    "get_static_compatible_resolver",
+    "resolve_device_config_static",
+    "get_platform_config_static",
+    "validate_device_support_static",
+    # 配置开关
+    "USE_STATIC_RESOLVER",
 ]

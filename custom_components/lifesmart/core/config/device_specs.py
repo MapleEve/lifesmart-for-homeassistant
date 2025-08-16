@@ -5443,111 +5443,160 @@ _RAW_DEVICE_DATA = {
     # 2.3.1 窗帘控制开关
     "SL_SW_WIN": {
         "name": "窗帘控制开关",
-        "cover": {
-            "OP": {
-                "description": "打开窗帘",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开窗帘",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行打开窗帘",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_WIN",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        
+        # 基础平台配置
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "OP": {
+                        "description": "打开窗帘",
+                        "data_type": "cover_control",
+                        "conversion": "type_bit_0",
+                        "rw": "RW",
+                        "detailed_description": "`type&1==1`表示打开窗帘",
+                        "commands": {
+                            "open": {"type": "CMD_TYPE_ON", "val": 1, "description": "执行打开窗帘"}
+                        }
                     },
-                },
-            },
-            "ST": {
-                "description": "停止 (stop)",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示停止当前动作",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行停止窗帘",
+                    "CL": {
+                        "description": "关闭窗帘",
+                        "data_type": "cover_control",
+                        "conversion": "type_bit_0",
+                        "rw": "RW",
+                        "detailed_description": "`type&1==1`表示关闭窗帘",
+                        "commands": {
+                            "close": {"type": "CMD_TYPE_ON", "val": 1, "description": "执行关闭窗帘"}
+                        }
                     },
-                },
+                    "ST": {
+                        "description": "停止",
+                        "data_type": "cover_control",
+                        "conversion": "type_bit_0",
+                        "rw": "RW",
+                        "detailed_description": "`type&1==1`表示停止当前动作",
+                        "commands": {
+                            "stop": {"type": "CMD_TYPE_ON", "val": 1, "description": "执行停止窗帘"}
+                        }
+                    }
+                }
             },
-            "CL": {
-                "description": "关闭窗帘 (close)",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示关闭窗帘",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行关闭窗帘",
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "关闭状态时指示灯亮度",
+                        "data_type": "brightness_light",
+                        "conversion": "val_direct",
+                        "rw": "RW",
+                        "range": "0~1023",
+                        "detailed_description": (
+                            "`type&1==1`表示打开；`type&1==0`表示关闭；"
+                            "`val`表示指示灯亮度值，取值范围：0~1023"
+                        ),
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_ON", "val": 1, "description": "开灯"},
+                            "off": {"type": "CMD_TYPE_OFF", "val": 0, "description": "关灯"},
+                            "set_brightness_on": {"type": "CMD_TYPE_SET_RAW_ON", "description": "开灯设置亮度"},
+                            "set_brightness_off": {"type": "CMD_TYPE_SET_RAW_OFF", "description": "关灯设置亮度"}
+                        }
                     },
-                },
-            },
+                    "bright": {
+                        "description": "开启状态时指示灯亮度",
+                        "data_type": "brightness_light",
+                        "conversion": "val_direct",
+                        "rw": "RW",
+                        "range": "0~1023",
+                        "detailed_description": "`val`表示指示灯亮度值，取值范围：0~1023",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_ON", "val": 1, "description": "开灯"},
+                            "off": {"type": "CMD_TYPE_OFF", "val": 0, "description": "关灯"},
+                            "set_brightness_on": {"type": "CMD_TYPE_SET_RAW_ON", "description": "开灯设置亮度"},
+                            "set_brightness_off": {"type": "CMD_TYPE_SET_RAW_OFF", "description": "关灯设置亮度"}
+                        }
+                    }
+                }
+            }
         },
-        "light": {
-            "dark": {
-                "description": "关闭状态时指示灯亮度",
-                "rw": "RW",
-                "data_type": "brightness_light",
-                "conversion": "val_direct",
-                "range": "0~1023",
-                "detailed_description": (
-                    "`type&1==1`表示打开；`type&1==0`表示关闭；"
-                    "`val`表示指示灯亮度值，取值范围：0~1023"
-                ),
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "开灯",
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关灯",
-                    },
-                    "set_brightness_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯设置亮度",
-                    },
-                    "set_brightness_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯设置亮度",
-                    },
-                },
+        
+        # 核心：cover_config嵌入配置 - 明确位置反馈能力
+        "cover_config": {
+            "device_class": "curtain",
+            "position_feedback": false,  # 明确表达：无位置反馈能力
+            "control_type": "optimistic",  # 乐观控制模式
+            "capabilities": ["open", "close", "stop"],
+            
+            # 控制行为配置
+            "travel_time": 30,  # 预估运行时间（秒）
+            "assume_closed_on_start": false,  # 启动时不假设状态
+            
+            # IO端口映射
+            "io_mapping": {
+                "open_io": "OP",    # 打开命令IO端口
+                "close_io": "CL",   # 关闭命令IO端口
+                "stop_io": "ST"     # 停止命令IO端口
             },
-            "bright": {
-                "description": "开启状态时指示灯亮度",
-                "rw": "RW",
-                "data_type": "brightness_light",
-                "conversion": "val_direct",
-                "range": "0~1023",
-                "detailed_description": "`val`表示指示灯亮度值，取值范围：0~1023",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "开灯",
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关灯",
-                    },
-                    "set_brightness_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯设置亮度",
-                    },
-                    "set_brightness_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯设置亮度",
-                    },
+            
+            # 命令配置
+            "commands": {
+                "open": {
+                    "io_port": "OP",
+                    "command_type": "CMD_TYPE_ON",
+                    "value": 1,
+                    "description": "发送打开窗帘命令"
                 },
-            },
+                "close": {
+                    "io_port": "CL",
+                    "command_type": "CMD_TYPE_ON", 
+                    "value": 1,
+                    "description": "发送关闭窗帘命令"
+                },
+                "stop": {
+                    "io_port": "ST",
+                    "command_type": "CMD_TYPE_ON",
+                    "value": 1,
+                    "description": "发送停止窗帘命令"
+                }
+            }
         },
+        
+        # 设备能力标识
+        "capabilities": [
+            "cover_control",         # 窗帘控制能力
+            "basic_positioning",     # 基础定位（开/关/停）
+            "no_position_feedback",  # 明确标识：无位置反馈
+            "indicator_light"        # 指示灯功能
+        ],
+        
+        # Home Assistant实体配置
+        "entity_config": {
+            "unique_id_template": "lifesmart_{device_id}_cover",
+            "name_template": "{device_name} 窗帘",
+            "icon": "mdi:curtains",
+            "device_class": "curtain"
+        },
+        
+        # 翻译键支持
+        "translation_keys": {
+            "cover_open": "打开窗帘",
+            "cover_close": "关闭窗帘",
+            "cover_stop": "停止窗帘",
+            "cover_state_opening": "正在打开",
+            "cover_state_closing": "正在关闭",
+            "cover_state_stopped": "已停止",
+            "indicator_light_dark": "关闭状态指示灯",
+            "indicator_light_bright": "开启状态指示灯"
+        },
+        
+        # 设备特定行为配置
+        "behavior_config": {
+            "state_tracking": "optimistic",  # 乐观状态跟踪
+            "command_delay": 0.5,            # 命令间延迟（秒）
+            "state_timeout": 30,             # 状态超时（秒）
+            "auto_assume_state": false       # 不自动假设状态
+        }
     },
     "SL_CN_IF": {
         "name": "流光窗帘控制器",
@@ -8490,97 +8539,149 @@ _RAW_DEVICE_DATA = {
     # 2.9.1 智控器空调面板 (Central AIR Board)
     "V_AIR_P": {
         "name": "智控器空调面板",
-        "climate": {
-            "O": {
-                "description": "开关",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`,`val` 值忽略表示打开；"
-                    "`type&1==0`,`val` 值忽略表示关闭；"
-                ),
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "打开空调",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "V_AIR_P",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        
+        # 基础平台配置
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "O": {
+                        "description": "开关",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "rw": "RW",
+                        "detailed_description": (
+                            "`type&1==1`,`val` 值忽略表示打开；"
+                            "`type&1==0`,`val` 值忽略表示关闭；"
+                        ),
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_ON", "val": 1, "description": "打开空调"},
+                            "off": {"type": "CMD_TYPE_OFF", "val": 0, "description": "关闭空调"}
+                        }
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关闭空调",
+                    "MODE": {
+                        "description": "模式",
+                        "data_type": "hvac_mode",
+                        "conversion": "val_direct",
+                        "rw": "RW",
+                        "detailed_description": (
+                            "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; "
+                            "3:Cool 制冷; 4:Heat 制热; 5:Dry除湿"
+                        ),
+                        "commands": {
+                            "set_mode": {"type": "CMD_TYPE_SET_CONFIG", "description": "设置模式，val=模式值"}
+                        }
                     },
-                },
-            },
-            "MODE": {
-                "description": "模式",
-                "rw": "RW",
-                "data_type": "hvac_mode",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; "
-                    "3:Cool 制冷; 4:Heat 制热; 5:Dry除湿"
-                ),
-                "commands": {
-                    "set_mode": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置模式，val=模式值",
+                    "F": {
+                        "description": "风速",
+                        "data_type": "fan_speed",
+                        "conversion": "val_direct",
+                        "rw": "RW",
+                        "detailed_description": (
+                            "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; "
+                            "`val>=65`:高档"
+                        ),
+                        "commands": {
+                            "set_fan_speed": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
+                                "fan_modes": {"low": 15, "medium": 45, "high": 75}
+                            }
+                        }
                     },
-                },
-            },
-            "F": {
-                "description": "风速",
-                "rw": "RW",
-                "data_type": "fan_speed",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; "
-                    "`val>=65`:高档"
-                ),
-                "commands": {
-                    "set_fan_speed": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
-                        "fan_modes": {
-                            "low": 15,
-                            "medium": 45,
-                            "high": 75,
-                        },
+                    "tT": {
+                        "description": "目标温度",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "rw": "RW",
+                        "detailed_description": (
+                            "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10"
+                        ),
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": "CMD_TYPE_SET_TEMP_DECIMAL",
+                                "description": "设置目标温度，val=目标温度值*10"
+                            }
+                        }
                     },
-                },
-            },
-            "tT": {
-                "description": "目标温度",
-                "rw": "RW",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "detailed_description": (
-                    "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10"
-                ),
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "commands": {
-                    "set_temperature": {
-                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
-                        "description": "设置目标温度，val=目标温度值*10",
-                    },
-                },
-            },
-            "T": {
-                "description": "当前温度",
-                "rw": "R",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "detailed_description": (
-                    "`type==0x08`,`v` 值表示实际温度值，"
-                    "`val` 值表示原始温度值，它是温度值*10"
-                ),
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
+                    "T": {
+                        "description": "当前温度",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "rw": "R",
+                        "detailed_description": (
+                            "`type==0x08`,`v` 值表示实际温度值，"
+                            "`val` 值表示原始温度值，它是温度值*10"
+                        ),
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement"
+                    }
+                }
+            }
         },
+        
+        # 核心：climate_config嵌入配置 - 解决HVAC映射冲突
+        "climate_config": {
+            "template": "standard_hvac",
+            "hvac_modes": {
+                "io_field": "MODE",
+                "modes": {
+                    1: "auto",      # Auto自动
+                    2: "fan_only",  # Fan 吹风
+                    3: "cool",      # Cool 制冷
+                    4: "heat",      # Heat 制热
+                    5: "dry"        # Dry除湿
+                }
+            },
+            "temperature": {
+                "target_io": "tT",
+                "current_io": "T",
+                "range": [16, 30],
+                "precision": 0.1,
+                "conversion": {"source": "v"}
+            },
+            "fan_modes": {
+                "io_field": "F",
+                "modes": {
+                    15: "low",      # 低档
+                    45: "medium",   # 中档
+                    75: "high"      # 高档
+                }
+            },
+            "power_control": {
+                "io_field": "O",
+                "on_command": {"type": "CMD_TYPE_ON"},
+                "off_command": {"type": "CMD_TYPE_OFF"}
+            },
+            "capabilities": [
+                "heating", "cooling", "fan_control", 
+                "dehumidifying", "target_temperature", "auto_mode"
+            ]
+        },
+        
+        # 设备能力标识
+        "capabilities": [
+            "climate_control", "temperature_monitoring", 
+            "hvac_mode_control", "fan_speed_control"
+        ],
+        
+        # HA翻译支持
+        "translation_keys": {
+            "hvac_mode_auto": "自动",
+            "hvac_mode_fan_only": "吹风",
+            "hvac_mode_cool": "制冷",
+            "hvac_mode_heat": "制热",
+            "hvac_mode_dry": "除湿",
+            "fan_mode_low": "低档",
+            "fan_mode_medium": "中档",
+            "fan_mode_high": "高档"
+        }
     },
     "SL_TR_ACIPM": {
         "name": "新风系统",
@@ -10375,8 +10476,16 @@ _RAW_DEVICE_DATA = {
         },
     },
     "cam": {
-        "camera": True,
         "name": "摄像头",
+        "camera": {
+            "stream": {
+                "description": "视频流",
+                "rw": "R",
+                "data_type": "camera_stream",
+                "conversion": "camera_url",
+                "detailed_description": "摄像头视频流地址",
+            }
+        },
         "dev_rt_variants": {
             "LSCAM:LSCAMV1": {
                 "name": "FRAME摄像头",
@@ -10742,129 +10851,285 @@ _RAW_DEVICE_DATA = {
     # 2.14.4 星玉温控面板 (Nature Thermostat)
     "SL_FCU": {
         "name": "星玉温控面板",
-        "climate": {
-            "P1": {
-                "description": "开关",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "val_direct",
-                "detailed_description": "开关状态：0关 1开",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "打开",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_FCU",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        
+        # 基础平台配置
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "开关",
+                        "data_type": "binary_switch",
+                        "conversion": "val_direct",
+                        "rw": "RW",
+                        "detailed_description": "开关状态：0关 1开",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_ON", "val": 1, "description": "打开"},
+                            "off": {"type": "CMD_TYPE_OFF", "val": 0, "description": "关闭"}
+                        }
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关闭",
+                    "P7": {
+                        "description": "MODE模式",
+                        "data_type": "hvac_mode",
+                        "conversion": "val_direct",
+                        "rw": "RW",
+                        "detailed_description": (
+                            "运行模式：1制热、2制冷、3通风、4除湿、5加湿、"
+                            "6应急通风、7应急加热、8应急制冷、16自动"
+                        ),
+                        "commands": {
+                            "set_config": {"type": "CMD_TYPE_SET_CONFIG", "description": "设置模式"}
+                        }
                     },
-                },
+                    "P8": {
+                        "description": "tT目标温度",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "rw": "RW",
+                        "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": "CMD_TYPE_SET_TEMP_DECIMAL",
+                                "description": "设置目标温度，val=温度*10"
+                            }
+                        }
+                    },
+                    "P9": {
+                        "description": "tF目标风速", 
+                        "data_type": "fan_speed",
+                        "conversion": "val_direct",
+                        "rw": "RW",
+                        "detailed_description": (
+                            "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 30<=val<65：Medium中档 "
+                            "65<=val<100：High高档 101：Auto自动 注意：P6 CFG配置不同，支持的tF也会不同"
+                        ),
+                        "commands": {
+                            "set_config": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "description": "设置风速",
+                                "fan_modes": {"low": 15, "medium": 45, "high": 75, "auto": 101}
+                            }
+                        }
+                    }
+                }
             },
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "T当前温度",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "rw": "R",
+                        "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C"
+                    },
+                    "P10": {
+                        "description": "F当前风速",
+                        "data_type": "fan_speed",
+                        "conversion": "val_direct",
+                        "rw": "R",
+                        "detailed_description": (
+                            "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 "
+                            "30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动"
+                        )
+                    }
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "阀门状态",
+                        "data_type": "valve_status",
+                        "conversion": "val_direct",
+                        "rw": "R",
+                        "detailed_description": "阀门1状态(盘管的冷阀或者盘管的冷热阀)",
+                        "device_class": "opening"
+                    },
+                    "P3": {
+                        "description": "阀门状态",
+                        "data_type": "valve_status", 
+                        "conversion": "val_direct",
+                        "rw": "R",
+                        "detailed_description": "阀门2状态（盘管的热阀或者地暖阀)",
+                        "device_class": "opening"
+                    }
+                }
+            }
+        },
+        
+        # 核心：P6 bitmask_config嵌入配置 - 解决功能缺失
+        "bitmask_config": {
             "P6": {
-                "description": "CFG配置",
-                "rw": "RW",
-                "data_type": "config_bitmask",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "配置功能：bit0：热回水开关，bit1：地暖开关，bit2：制热开关，"
-                    "bit3：制冷开关，bit4：通风开关，bit5：除湿开关，bit6：加湿开关，"
-                    "bit7：应急通风开关，bit8：应急加热开关，bit9：应急制冷开关"
-                ),
-            },
-            "P7": {
-                "description": "MODE模式",
-                "rw": "RW",
-                "data_type": "hvac_mode",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "运行模式：1制热、2制冷、3通风、4除湿、5加湿、"
-                    "6应急通风、7应急加热、8应急制冷、16自动"
-                ),
-                "commands": {
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置模式",
+                "type": "multi_bit_switch",
+                "virtual_device_template": "SL_FCU_P6_{name}",
+                "bit_definitions": {
+                    0: {
+                        "name": "hot_water",
+                        "platform": "switch",
+                        "description": "热回水开关",
+                        "translation_key": "hot_water_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 0, "bit_value": 1, "description": "开启热回水"},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 0, "bit_value": 0, "description": "关闭热回水"}
+                        }
                     },
-                },
-            },
-            "P8": {
-                "description": "tT目标温度",
-                "rw": "RW",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
-                "unit_of_measurement": "°C",
-                "commands": {
-                    "set_temperature": {
-                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
-                        "description": "设置目标温度，val=温度*10",
+                    1: {
+                        "name": "floor_heating",
+                        "platform": "switch",
+                        "description": "地暖开关",
+                        "translation_key": "floor_heating_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 1, "bit_value": 1},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 1, "bit_value": 0}
+                        }
                     },
-                },
-            },
-            "P9": {
-                "description": "tF目标风速",
-                "rw": "RW",
-                "data_type": "fan_speed",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 30<=val<65：Medium中档 "
-                    "65<=val<100：High高档 101：Auto自动 注意：P6 CFG配置不同，支持的tF也会不同"
-                ),
-                "commands": {
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置风速",
-                        "fan_modes": {
-                            "low": 15,
-                            "medium": 45,
-                            "high": 75,
-                            "auto": 101,
-                        },
+                    2: {
+                        "name": "heating",
+                        "platform": "switch",
+                        "description": "制热开关",
+                        "translation_key": "heating_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 2, "bit_value": 1},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 2, "bit_value": 0}
+                        }
                     },
-                },
-            },
+                    3: {
+                        "name": "cooling",
+                        "platform": "switch",
+                        "description": "制冷开关", 
+                        "translation_key": "cooling_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 3, "bit_value": 1},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 3, "bit_value": 0}
+                        }
+                    },
+                    4: {
+                        "name": "ventilation",
+                        "platform": "switch",
+                        "description": "通风开关",
+                        "translation_key": "ventilation_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 4, "bit_value": 1},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 4, "bit_value": 0}
+                        }
+                    },
+                    5: {
+                        "name": "dehumidify",
+                        "platform": "switch",
+                        "description": "除湿开关",
+                        "translation_key": "dehumidify_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 5, "bit_value": 1},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 5, "bit_value": 0}
+                        }
+                    },
+                    6: {
+                        "name": "humidify",
+                        "platform": "switch",
+                        "description": "加湿开关",
+                        "translation_key": "humidify_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 6, "bit_value": 1},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 6, "bit_value": 0}
+                        }
+                    },
+                    7: {
+                        "name": "emergency_ventilation",
+                        "platform": "switch",
+                        "description": "应急通风开关",
+                        "translation_key": "emergency_ventilation_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 7, "bit_value": 1},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 7, "bit_value": 0}
+                        }
+                    },
+                    8: {
+                        "name": "emergency_heating",
+                        "platform": "switch",
+                        "description": "应急加热开关",
+                        "translation_key": "emergency_heating_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 8, "bit_value": 1},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 8, "bit_value": 0}
+                        }
+                    },
+                    9: {
+                        "name": "emergency_cooling",
+                        "platform": "switch",
+                        "description": "应急制冷开关",
+                        "translation_key": "emergency_cooling_switch",
+                        "commands": {
+                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 9, "bit_value": 1},
+                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 9, "bit_value": 0}
+                        }
+                    }
+                }
+            }
         },
-        "sensor": {
-            "P4": {
-                "description": "T当前温度",
-                "rw": "R",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
+        
+        # 核心：climate_config嵌入配置 - 解决HVAC映射冲突
+        "climate_config": {
+            "template": "advanced_hvac",
+            "hvac_modes": {
+                "io_field": "P7",
+                "modes": {
+                    1: "heat",      # 制热
+                    2: "cool",      # 制冷
+                    3: "fan_only",  # 通风 
+                    4: "dry",       # 除湿
+                    5: "dry",       # 加湿 (HA中合并到dry模式)
+                    6: "fan_only",  # 应急通风 (合并到fan_only)
+                    7: "heat",      # 应急加热 (合并到heat)
+                    8: "cool",      # 应急制冷 (合并到cool)
+                    16: "auto"      # 自动
+                }
             },
-            "P10": {
-                "description": "F当前风速",
-                "rw": "R",
-                "data_type": "fan_speed",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 "
-                    "30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动"
-                ),
+            "temperature": {
+                "target_io": "P8",
+                "current_io": "P4",
+                "range": [5, 35],
+                "precision": 0.1,
+                "conversion": {"source": "v"}
             },
+            "fan_modes": {
+                "io_field": "P9",
+                "modes": {
+                    15: "low",      # 低档
+                    45: "medium",   # 中档
+                    75: "high",     # 高档
+                    101: "auto"     # 自动
+                }
+            },
+            "capabilities": [
+                "heating", "cooling", "fan_control", 
+                "dehumidifying", "target_temperature"
+            ]
         },
-        "binary_sensor": {
-            "P2": {
-                "description": "阀门状态",
-                "rw": "R",
-                "data_type": "valve_status",
-                "conversion": "val_direct",
-                "detailed_description": "阀门1状态(盘管的冷阀或者盘管的冷热阀)",
-                "device_class": "opening",
-            },
-            "P3": {
-                "description": "阀门状态",
-                "rw": "R",
-                "data_type": "valve_status",
-                "conversion": "val_direct",
-                "detailed_description": "阀门2状态（盘管的热阀或者地暖阀)",
-                "device_class": "opening",
-            },
-        },
+        
+        # 设备能力标识
+        "capabilities": [
+            "climate_control", "bitmask_switch_control",
+            "temperature_monitoring", "valve_monitoring"
+        ],
+        
+        # HA翻译支持
+        "translation_keys": {
+            "hot_water_switch": "热回水开关",
+            "floor_heating_switch": "地暖开关",
+            "heating_switch": "制热开关",
+            "cooling_switch": "制冷开关",
+            "ventilation_switch": "通风开关",
+            "dehumidify_switch": "除湿开关",
+            "humidify_switch": "加湿开关",
+            "emergency_ventilation_switch": "应急通风开关",
+            "emergency_heating_switch": "应急加热开关",
+            "emergency_cooling_switch": "应急制冷开关"
+        }
     },
     # ================= 缺失设备补充 (Missing Devices) =================
     "SL_SC_GD": {
