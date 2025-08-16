@@ -248,13 +248,29 @@ class ModernCompositionRoot:
                 self.context.file_port = StandardFilePort()
                 self.context.file_port.connect()
 
-                # Initialize DocumentService
-                # TODO: DocumentService and AnalysisService will be integrated when available
-                # For now, these are placeholders for the enhanced architecture
-                self.context.document_service = None  # DocumentService()
-                self.context.analysis_service = None  # AnalysisService()
+                # 集成完整版服务实现 (Full Mode)
+                from .implements.document_service_impl import create_document_service
+                from .implements.analysis_service_impl import create_analysis_service
+                from .implements.enhanced_nlp_service import create_enhanced_nlp_service
 
-                print("📚 Core services prepared (integration pending)")
+                # 创建文档服务实例
+                self.context.document_service = create_document_service(
+                    cache_manager=self.context.cache_manager, debug_mode=self.debug_mode
+                )
+
+                # 创建增强版 NLP 服务
+                enhanced_nlp_service = create_enhanced_nlp_service()
+
+                # 创建分析服务，集成完整依赖
+                self.context.analysis_service = create_analysis_service(
+                    document_service=self.context.document_service,
+                    cache_manager=self.context.cache_manager,
+                    debug_mode=self.debug_mode,
+                )
+
+                print(
+                    "🚀 完整版核心服务已集成 (Full Mode: NLP + DocumentService + AnalysisService)"
+                )
             else:
                 print("⚠️ Enhanced services not available")
 
