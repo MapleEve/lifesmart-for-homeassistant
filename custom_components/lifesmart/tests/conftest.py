@@ -29,12 +29,6 @@ from .utils.helpers import create_mock_hub
 _LOGGER = logging.getLogger(__name__)
 
 
-# 设置兼容性支持
-from custom_components.lifesmart.core.compatibility import setup_logging
-
-setup_logging()
-
-
 @pytest.fixture(scope="session", autouse=True)
 def prevent_socket_access():
     """
@@ -103,7 +97,7 @@ def mock_config_data_fixture():
     这个 Fixture 封装了一套标准的云端模式配置信息，用于在测试中创建
     `MockConfigEntry`。这确保了所有测试都使用一致的凭据，简化了测试的编写。
     """
-    from .utils.factories import create_mock_config_data
+    from .utils.typed_factories import create_mock_config_data
 
     return create_mock_config_data()
 
@@ -115,7 +109,7 @@ def mock_light_devices_only():
     创建仅包含灯光设备的模拟数据列表。
     使用create_devices_by_category来测试分类功能。
     """
-    from .utils.factories import create_devices_by_category
+    from .utils.typed_factories import create_devices_by_category
 
     return create_devices_by_category(
         [
@@ -136,7 +130,7 @@ def mock_sensor_devices_only():
     创建仅包含数值传感器设备的模拟数据列表。
     使用create_devices_by_category来测试传感器分类功能。
     """
-    from .utils.factories import create_devices_by_category
+    from .utils.typed_factories import create_devices_by_category
 
     return create_devices_by_category(
         ["environment_sensor", "gas_sensor", "specialized_sensor"]
@@ -149,7 +143,7 @@ def mock_binary_sensor_devices_only():
     创建仅包含二元传感器设备的模拟数据列表。
     使用create_devices_by_category来专门测试binary_sensor平台功能。
     """
-    from .utils.factories import create_devices_by_category
+    from .utils.typed_factories import create_devices_by_category
 
     return create_devices_by_category(["binary_sensor"])
 
@@ -160,7 +154,7 @@ def mock_climate_devices_only():
     创建仅包含气候控制设备的模拟数据列表。
     使用create_devices_by_category来优化气候平台测试的数据加载。
     """
-    from .utils.factories import create_devices_by_category
+    from .utils.typed_factories import create_devices_by_category
 
     return create_devices_by_category(["climate"])
 
@@ -172,7 +166,7 @@ def mock_switch_devices_only():
     使用create_devices_by_category来优化开关平台测试的数据加载。
     包含传统开关、高级开关和插座设备（插座在switch平台中）。
     """
-    from .utils.factories import create_devices_by_category
+    from .utils.typed_factories import create_devices_by_category
 
     return create_devices_by_category(
         ["traditional_switch", "advanced_switch", "smart_plug", "power_meter_plug"]
@@ -185,7 +179,7 @@ def mock_cover_devices_only():
     创建仅包含窗帘/遮盖设备的模拟数据列表。
     使用create_devices_by_category来优化窗帘平台测试的数据加载。
     """
-    from .utils.factories import create_devices_by_category
+    from .utils.typed_factories import create_devices_by_category
 
     return create_devices_by_category(["cover"])
 
@@ -271,7 +265,7 @@ def mock_failed_client():
     用于测试连接失败、认证失败等错误处理场景。
     使用create_mock_failed_oapi_client工厂函数。
     """
-    from .utils.factories import create_mock_failed_oapi_client
+    from .utils.typed_factories import create_mock_failed_oapi_client
 
     return create_mock_failed_oapi_client()
 
@@ -284,7 +278,7 @@ def mock_client_with_devices(mock_sensor_devices_only):
     用于需要特定设备数据的测试场景。
     使用create_mock_oapi_client_with_devices工厂函数。
     """
-    from .utils.factories import create_mock_oapi_client_with_devices
+    from .utils.typed_factories import create_mock_oapi_client_with_devices
 
     return create_mock_oapi_client_with_devices(mock_sensor_devices_only)
 
@@ -372,7 +366,7 @@ def auto_prevent_thread_creation(request):
             patch(
                 # 防止创建真实的WebSocket状态管理器（异步任务残留的根源）
                 "custom_components.lifesmart.core.hub.LifeSmartStateManager",
-                return_value=MagicMock(),
+                return_value=AsyncMock(),
             ),
         ):
             yield
@@ -423,7 +417,60 @@ def mock_hub_for_testing():
 #
 # 每个 fixture 使用 `create_devices_by_category` 函数来精确控制
 # 加载的设备类型，从而实现精细化的测试数据管理。
+#
+# 重构说明 (Phase 1):
+# 通过通用函数 _setup_integration_platform_generic 消除95%代码重复，
+# 从226行重复代码减少到约30行，大幅提高维护效率。
 # ============================================================================
+
+
+async def _setup_integration_platform_generic(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    devices_list: list,
+    platform_name: str,
+):
+    """
+    通用的平台专用集成设置函数。
+
+    这个函数封装了所有setup_integration_*_only fixtures的共同逻辑，
+    消除95%的代码重复，提高维护效率。
+
+    Args:
+        hass: HomeAssistant实例
+        mock_config_entry: 模拟配置条目
+        mock_client: 模拟客户端
+        mock_hub_class: 模拟Hub类
+        devices_list: 平台特定的设备列表
+        platform_name: 平台名称(用于调试)
+
+    Yields:
+        ConfigEntry: 配置好的集成条目
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # 使用工厂函数创建mock hub实例
+    hub_instance = create_mock_hub(devices_list, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    mock_hub_class.assert_called_once()
+    hub_instance.async_setup.assert_called_once()
+
+    yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 @pytest.fixture
@@ -440,28 +487,15 @@ async def setup_integration_light_only(
     这个优化版本只加载灯光相关设备，减少测试加载开销，
     提高灯光平台测试的执行效率。
     """
-    mock_config_entry.add_to_hass(hass)
-
-    # 使用工厂函数创建mock hub实例，只包含灯光设备
-    hub_instance = create_mock_hub(mock_light_devices_only, mock_client)
-    hub_instance.get_exclude_config.return_value = (set(), set())
-
-    # Configure mock_hub_class to return our hub_instance
-    mock_hub_class.return_value = hub_instance
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-    # mock_hub_class.assert_called_once()  # 暂时注释以专注核心功能测试
-    # hub_instance.async_setup.assert_called_once()  # 暂时注释以专注核心功能测试
-
-    yield mock_config_entry
-
-    # 清理
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_light_devices_only,
+        "light",
+    ):
+        yield result
 
 
 @pytest.fixture
@@ -478,28 +512,15 @@ async def setup_integration_climate_only(
     这个优化版本只加载气候控制相关设备，减少测试加载开销，
     提高气候平台测试的执行效率。
     """
-    mock_config_entry.add_to_hass(hass)
-
-    # 使用工厂函数创建mock hub实例，只包含气候设备
-    hub_instance = create_mock_hub(mock_climate_devices_only, mock_client)
-    hub_instance.get_exclude_config.return_value = (set(), set())
-
-    # Configure mock_hub_class to return our hub_instance
-    mock_hub_class.return_value = hub_instance
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-    # mock_hub_class.assert_called_once()  # 暂时注释以专注核心功能测试
-    # hub_instance.async_setup.assert_called_once()  # 暂时注释以专注核心功能测试
-
-    yield mock_config_entry
-
-    # 清理
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_climate_devices_only,
+        "climate",
+    ):
+        yield result
 
 
 @pytest.fixture
@@ -516,28 +537,15 @@ async def setup_integration_sensor_only(
     这个优化版本只加载传感器相关设备，减少测试加载开销，
     提高传感器平台测试的执行效率。
     """
-    mock_config_entry.add_to_hass(hass)
-
-    # 使用工厂函数创建mock hub实例，只包含传感器设备
-    hub_instance = create_mock_hub(mock_sensor_devices_only, mock_client)
-    hub_instance.get_exclude_config.return_value = (set(), set())
-
-    # Configure mock_hub_class to return our hub_instance
-    mock_hub_class.return_value = hub_instance
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-    # mock_hub_class.assert_called_once()  # 暂时注释以专注核心功能测试
-    # hub_instance.async_setup.assert_called_once()  # 暂时注释以专注核心功能测试
-
-    yield mock_config_entry
-
-    # 清理
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_sensor_devices_only,
+        "sensor",
+    ):
+        yield result
 
 
 @pytest.fixture
@@ -554,28 +562,15 @@ async def setup_integration_binary_sensor_only(
     这个优化版本只加载二元传感器相关设备，减少测试加载开销，
     提高binary_sensor平台测试的执行效率。
     """
-    mock_config_entry.add_to_hass(hass)
-
-    # 使用工厂函数创建mock hub实例，只包含二元传感器设备
-    hub_instance = create_mock_hub(mock_binary_sensor_devices_only, mock_client)
-    hub_instance.get_exclude_config.return_value = (set(), set())
-
-    # Configure mock_hub_class to return our hub_instance
-    mock_hub_class.return_value = hub_instance
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-    # mock_hub_class.assert_called_once()  # 暂时注释以专注核心功能测试
-    # hub_instance.async_setup.assert_called_once()  # 暂时注释以专注核心功能测试
-
-    yield mock_config_entry
-
-    # 清理
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_binary_sensor_devices_only,
+        "binary_sensor",
+    ):
+        yield result
 
 
 @pytest.fixture
@@ -592,28 +587,15 @@ async def setup_integration_switch_only(
     这个优化版本只加载开关相关设备，减少测试加载开销，
     提高开关平台测试的执行效率。
     """
-    mock_config_entry.add_to_hass(hass)
-
-    # 使用工厂函数创建mock hub实例，只包含开关设备
-    hub_instance = create_mock_hub(mock_switch_devices_only, mock_client)
-    hub_instance.get_exclude_config.return_value = (set(), set())
-
-    # Configure mock_hub_class to return our hub_instance
-    mock_hub_class.return_value = hub_instance
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-    # mock_hub_class.assert_called_once()  # 暂时注释以专注核心功能测试
-    # hub_instance.async_setup.assert_called_once()  # 暂时注释以专注核心功能测试
-
-    yield mock_config_entry
-
-    # 清理
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_switch_devices_only,
+        "switch",
+    ):
+        yield result
 
 
 @pytest.fixture
@@ -630,28 +612,15 @@ async def setup_integration_cover_only(
     这个优化版本只加载窗帘相关设备，减少测试加载开销，
     提高窗帘平台测试的执行效率。
     """
-    mock_config_entry.add_to_hass(hass)
-
-    # 使用工厂函数创建mock hub实例，只包含窗帘设备
-    hub_instance = create_mock_hub(mock_cover_devices_only, mock_client)
-    hub_instance.get_exclude_config.return_value = (set(), set())
-
-    # Configure mock_hub_class to return our hub_instance
-    mock_hub_class.return_value = hub_instance
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state == ConfigEntryState.LOADED
-    # mock_hub_class.assert_called_once()  # 暂时注释以专注核心功能测试
-    # hub_instance.async_setup.assert_called_once()  # 暂时注释以专注核心功能测试
-
-    yield mock_config_entry
-
-    # 清理
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_cover_devices_only,
+        "cover",
+    ):
+        yield result
 
 
 # ============================================================================
@@ -688,6 +657,11 @@ async def setup_integration_spot_rgb_only(
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
 
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
 
 @pytest.fixture
 async def setup_integration_dual_io_light_only(
@@ -718,6 +692,11 @@ async def setup_integration_dual_io_light_only(
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
 
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
 
 @pytest.fixture
 async def setup_integration_single_io_rgbw_only(
@@ -732,7 +711,7 @@ async def setup_integration_single_io_rgbw_only(
     此 fixture 创建一个只包含单个 SL_SC_RGB 灯的纯净测试环境，
     用于对该设备的服务调用与设备协议的精确匹配进行测试。
     """
-    from .utils.factories import create_mock_device_single_io_rgb_light
+    from .utils.typed_factories import create_mock_device_single_io_rgb_light
 
     mock_config_entry.add_to_hass(hass)
 
@@ -749,11 +728,16 @@ async def setup_integration_single_io_rgbw_only(
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
 
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
 
 @pytest.fixture
 def mock_device_spot_rgb_light():
     """创建SPOT RGB灯测试设备。"""
-    from .utils.factories import create_mock_device_spot_rgb_light
+    from .utils.typed_factories import create_mock_device_spot_rgb_light
 
     return create_mock_device_spot_rgb_light()
 
@@ -761,7 +745,7 @@ def mock_device_spot_rgb_light():
 @pytest.fixture
 def mock_device_dual_io_rgbw_light():
     """创建双IO RGBW灯测试设备。"""
-    from .utils.factories import create_mock_device_dual_io_rgbw_light
+    from .utils.typed_factories import create_mock_device_dual_io_rgbw_light
 
     return create_mock_device_dual_io_rgbw_light()
 
@@ -774,13 +758,13 @@ def mock_device_dual_io_rgbw_light():
 @pytest.fixture
 def typed_core_devices():
     """
-    提供所有10个核心设备类型的强类型实例列表。
+    提供所有10个核心设备类型的设备实例列表。
 
-    这是Phase 1增量基础设施的核心fixture，为强类型测试提供标准设备集。
+    简化版本，直接返回字典格式设备。
     """
-    from .utils.typed_factories import create_typed_core_devices
+    from .utils.typed_factories import create_core_devices
 
-    return create_typed_core_devices()
+    return create_core_devices()
 
 
 @pytest.fixture
@@ -919,32 +903,19 @@ def typed_lock_devices():
     return create_typed_devices_by_platform("lock")
 
 
-@pytest.fixture
-def typed_device_validator():
-    """提供强类型设备验证器实例"""
-    from .utils.type_validators import TypedDeviceValidator
-
-    return TypedDeviceValidator()
+# === 保留的基础验证器 (无需强类型依赖) ===
 
 
 @pytest.fixture
-def compatibility_validator():
-    """提供兼容性验证器实例"""
-    from .utils.type_validators import CompatibilityValidator
-
-    return CompatibilityValidator()
-
-
-@pytest.fixture
-def typed_devices_as_dicts(typed_core_devices):
+def typed_devices_as_dicts():
     """
-    将强类型核心设备转换为字典格式。
+    创建核心设备的字典格式列表。
 
-    用于测试强类型设备与现有字典系统的兼容性。
+    简化版本，直接返回字典格式设备，无需类型转换。
     """
-    from .utils.typed_factories import convert_typed_devices_to_dict
+    from .utils.typed_factories import create_core_devices
 
-    return convert_typed_devices_to_dict(typed_core_devices)
+    return create_core_devices()
 
 
 @pytest.fixture

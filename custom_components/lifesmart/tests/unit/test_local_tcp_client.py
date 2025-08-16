@@ -887,7 +887,7 @@ class TestDeviceControlMethods:
     ):
         """测试窗帘控制方法。"""
         # 使用工厂函数创建真实的设备对象
-        from ..utils.factories import create_devices_by_category
+        from ..utils.typed_factories import create_devices_by_category
 
         cover_devices = create_devices_by_category(["cover"])
         test_device = next(
@@ -922,7 +922,7 @@ class TestDeviceControlMethods:
     ):
         """测试窗帘位置控制。"""
         # 使用工厂函数创建正确的设备对象
-        from ..utils.factories import create_devices_by_category
+        from ..utils.typed_factories import create_devices_by_category
 
         cover_devices = create_devices_by_category(["cover"])
         test_device = next(

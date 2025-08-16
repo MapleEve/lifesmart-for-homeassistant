@@ -36,7 +36,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.core.const import *
-from ..utils.factories import create_devices_by_category
+from ..utils.typed_factories import create_devices_by_category
 from ..utils.helpers import (
     find_test_device,
     get_entity_unique_id,
@@ -62,7 +62,7 @@ class TestCoverSetup:
         都被成功加载为 Home Assistant 中的 cover 实体。
         """
         # 使用自动化验证替代硬编码数量检查
-        from ..utils.factories import create_mock_lifesmart_devices
+        from ..utils.typed_factories import create_mock_lifesmart_devices
 
         devices_list = create_mock_lifesmart_devices()
         assert_platform_entity_count_matches_devices(hass, COVER_DOMAIN, devices_list)

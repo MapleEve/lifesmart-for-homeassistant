@@ -603,7 +603,7 @@ def _calculate_sensor_entity_count_from_actual_devices(devices_by_type):
         get_sensor_subdevices,
         expand_wildcard_ios,
     )
-    from custom_components.lifesmart.tests.utils.factories import (
+    from custom_components.lifesmart.tests.utils.typed_factories import (
         create_environment_sensor_devices,
         create_gas_sensor_devices,
         create_specialized_sensor_devices,

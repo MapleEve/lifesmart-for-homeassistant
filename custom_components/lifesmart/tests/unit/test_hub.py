@@ -51,7 +51,7 @@ from ..utils.constants import (
     HUB_BUSINESS_LOGIC_TEST_VALUES,
     HUB_BUSINESS_LOGIC_EXTENDED,
 )
-from ..utils.factories import create_mock_oapi_client
+from ..utils.typed_factories import create_mock_oapi_client
 
 
 @pytest.fixture

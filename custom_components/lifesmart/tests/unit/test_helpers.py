@@ -39,7 +39,7 @@ from custom_components.lifesmart.core.platform.platform_detection import (
     is_sensor_subdevice,
     safe_get,
 )
-from ..utils.factories import (
+from ..utils.typed_factories import (
     create_devices_by_category,
 )
 from ..utils.helpers import find_test_device, find_test_device_by_type

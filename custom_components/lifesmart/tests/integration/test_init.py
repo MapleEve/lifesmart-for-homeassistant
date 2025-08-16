@@ -41,7 +41,7 @@ from custom_components.lifesmart.core.exceptions import (
     LifeSmartAPIError,
     LifeSmartAuthError,
 )
-from ..utils.factories import (
+from ..utils.typed_factories import (
     create_devices_by_category,
     create_mock_failed_oapi_client,
     create_mock_config_data_with_validation,
@@ -541,7 +541,7 @@ class TestErrorHandlingAndRecovery:
         mock_hub_for_testing,
     ):
         """测试客户端连接失败场景 - 使用create_mock_failed_oapi_client函数。"""
-        from custom_components.lifesmart.tests.utils.factories import (
+        from custom_components.lifesmart.tests.utils.typed_factories import (
             create_mock_failed_oapi_client,
         )
 
@@ -597,7 +597,7 @@ class TestErrorHandlingAndRecovery:
         caplog,
     ):
         """测试认证失败后的恢复机制。"""
-        from custom_components.lifesmart.tests.utils.factories import (
+        from custom_components.lifesmart.tests.utils.typed_factories import (
             create_mock_failed_oapi_client,
             create_mock_oapi_client,
         )
@@ -649,7 +649,7 @@ class TestErrorHandlingAndRecovery:
         caplog,
     ):
         """测试设备检索失败的处理机制。"""
-        from custom_components.lifesmart.tests.utils.factories import (
+        from custom_components.lifesmart.tests.utils.typed_factories import (
             create_mock_failed_oapi_client,
         )
 

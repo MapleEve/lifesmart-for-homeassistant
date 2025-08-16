@@ -847,7 +847,7 @@ class TestClimateControlHelpers:
     ):
         """测试HVAC模式控制方法。"""
         # 使用工厂函数获取正确的设备数据
-        from ..utils.factories import create_devices_by_category
+        from ..utils.typed_factories import create_devices_by_category
         from ..utils.helpers import find_test_device_by_type
 
         if device_type == "SL_CP_AIR":

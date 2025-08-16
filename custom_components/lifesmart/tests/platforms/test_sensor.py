@@ -41,8 +41,8 @@ from ..utils.constants import (
     SPECIALIZED_TEST_DEVICE_IDS,
     TEST_HUB_IDS,
 )
-from ..utils.factories import create_devices_by_category
-from ..utils.factories import (
+from ..utils.typed_factories import create_devices_by_category
+from ..utils.typed_factories import (
     create_environment_sensor_devices,
     create_gas_sensor_devices,
     create_specialized_sensor_devices,

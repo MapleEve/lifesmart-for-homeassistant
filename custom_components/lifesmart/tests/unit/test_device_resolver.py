@@ -9,6 +9,7 @@ DeviceResolver 单元测试 - Phase 2 核心组件
 
 基于 @MapleEve 的 Phase 2.5 重构设计
 """
+
 import time
 from unittest.mock import MagicMock, patch
 
@@ -30,7 +31,7 @@ from custom_components.lifesmart.core.config.device_spec_registry import (
 )
 
 # 从强类型工厂导入测试数据
-from ...utils.typed_factories import (
+from ..utils.typed_factories import (
     create_typed_smart_plug,
     create_typed_thermostat_panel,
     create_typed_power_meter_plug,
@@ -150,7 +151,9 @@ class TestDeviceResolverCore:
         assert stats["hits"] == 1
         assert stats["misses"] == 1
 
-    def test_resolve_device_config_cache_disabled(self, resolver_no_cache: DeviceResolver):
+    def test_resolve_device_config_cache_disabled(
+        self, resolver_no_cache: DeviceResolver
+    ):
         """
         测试缓存禁用时的行为。
         Hypothesis: 当缓存禁用时，每次调用都应执行完整解析流程。
@@ -178,7 +181,7 @@ class TestDeviceResolverCore:
             (None, "Invalid device data: must be non-empty dict"),
             ({}, "Invalid device data: must be non-empty dict"),
             ({}, "Invalid device data: must be non-empty dict"),
-            ({\"me\": \"some_id\"}, \"Missing device type for device some_id\"),
+            ({"me": "some_id"}, "Missing device type for device some_id"),
         ],
     )
     def test_resolve_device_config_invalid_input(
@@ -269,19 +272,19 @@ class TestDeviceResolverCore:
         assert result.success is False
         assert "Device configuration not found" in result.error_message
 
-    def test_resolve_device_config_conversion_exception(
-        self, resolver: DeviceResolver
-    ):
+    def test_resolve_device_config_conversion_exception(self, resolver: DeviceResolver):
         """
         测试类型转换时发生异常的处理。
         Hypothesis: 如果 _convert_to_device_config 抛出异常，应被捕获并返回错误结果。
         """
         # Arrange
         device_data = create_typed_smart_plug().to_dict()
-        
+
         # Mock _convert_to_device_config 抛出异常
         with patch.object(
-            resolver, "_convert_to_device_config", side_effect=ValueError("Conversion failed")
+            resolver,
+            "_convert_to_device_config",
+            side_effect=ValueError("Conversion failed"),
         ):
             # Act
             result = resolver.resolve_device_config(device_data)
@@ -311,7 +314,7 @@ class TestDeviceResolverCore:
 
         # Assert
         assert result.success is True
-        assert result.resolution_time_ms == 50.0
+        assert abs(result.resolution_time_ms - 50.0) < 0.01  # 允许浮点误差
 
 
 class TestDeviceResolverPlatformMethods:
@@ -328,14 +331,23 @@ class TestDeviceResolverPlatformMethods:
             device_type="SL_NATURE",
             name="Test Thermo",
             platforms={
-                "climate": PlatformConfig(platform_type="climate", supported=True),
-                "sensor": PlatformConfig(platform_type="sensor", supported=True),
+                "climate": PlatformConfig(
+                    platform_type="climate",
+                    supported=True,
+                    ios={"P1": IOConfig(description="Test Climate IO")},
+                ),
+                "sensor": PlatformConfig(
+                    platform_type="sensor",
+                    supported=True,
+                    ios={"P2": IOConfig(description="Test Sensor IO")},
+                ),
             },
         )
-        
+
         with patch.object(
-            resolver, "resolve_device_config",
-            return_value=ResolutionResult.success_result(device_config)
+            resolver,
+            "resolve_device_config",
+            return_value=ResolutionResult.success_result(device_config),
         ):
             # Act
             climate_config = resolver.get_platform_config(device_data, "climate")
@@ -359,10 +371,11 @@ class TestDeviceResolverPlatformMethods:
                 "climate": PlatformConfig(platform_type="climate", supported=True),
             },
         )
-        
+
         with patch.object(
-            resolver, "resolve_device_config",
-            return_value=ResolutionResult.success_result(device_config)
+            resolver,
+            "resolve_device_config",
+            return_value=ResolutionResult.success_result(device_config),
         ):
             # Act
             light_config = resolver.get_platform_config(device_data, "light")
@@ -379,10 +392,11 @@ class TestDeviceResolverPlatformMethods:
         """
         # Arrange
         device_data = create_typed_smart_plug().to_dict()
-        
+
         with patch.object(
-            resolver, "resolve_device_config",
-            return_value=ResolutionResult.error_result("Resolution failed")
+            resolver,
+            "resolve_device_config",
+            return_value=ResolutionResult.error_result("Resolution failed"),
         ):
             # Act & Assert
             with pytest.raises(HomeAssistantError, match="Resolution failed"):
@@ -395,9 +409,15 @@ class TestDeviceResolverPlatformMethods:
         """
         # Arrange
         device_data = create_typed_smart_plug().to_dict()
-        platform_config = PlatformConfig(platform_type="switch", supported=True)
-        
-        with patch.object(resolver, "get_platform_config", return_value=platform_config):
+        platform_config = PlatformConfig(
+            platform_type="switch",
+            supported=True,
+            ios={"P1": IOConfig(description="Test Switch IO")},
+        )
+
+        with patch.object(
+            resolver, "get_platform_config", return_value=platform_config
+        ):
             # Act
             is_supported = resolver.validate_device_support(device_data, "switch")
 
@@ -412,8 +432,10 @@ class TestDeviceResolverPlatformMethods:
         # Arrange
         device_data = create_typed_smart_plug().to_dict()
         platform_config = PlatformConfig(platform_type="switch", supported=False)
-        
-        with patch.object(resolver, "get_platform_config", return_value=platform_config):
+
+        with patch.object(
+            resolver, "get_platform_config", return_value=platform_config
+        ):
             # Act
             is_supported = resolver.validate_device_support(device_data, "switch")
 
@@ -427,7 +449,7 @@ class TestDeviceResolverPlatformMethods:
         """
         # Arrange
         device_data = create_typed_smart_plug().to_dict()
-        
+
         with patch.object(resolver, "get_platform_config", return_value=None):
             # Act
             is_supported = resolver.validate_device_support(device_data, "light")
@@ -442,10 +464,11 @@ class TestDeviceResolverPlatformMethods:
         """
         # Arrange
         device_data = create_typed_smart_plug().to_dict()
-        
+
         with patch.object(
-            resolver, "get_platform_config", 
-            side_effect=HomeAssistantError("Test error")
+            resolver,
+            "get_platform_config",
+            side_effect=HomeAssistantError("Test error"),
         ):
             # Act
             is_supported = resolver.validate_device_support(device_data, "switch")
@@ -462,12 +485,12 @@ class TestDeviceResolverPlatformMethods:
         device_data = create_typed_smart_plug().to_dict()
         io_config = IOConfig(description="Test IO")
         platform_config = PlatformConfig(
-            platform_type="switch", 
-            supported=True,
-            ios={"O": io_config}
+            platform_type="switch", supported=True, ios={"O": io_config}
         )
-        
-        with patch.object(resolver, "get_platform_config", return_value=platform_config):
+
+        with patch.object(
+            resolver, "get_platform_config", return_value=platform_config
+        ):
             # Act
             result_io = resolver.get_io_config(device_data, "switch", "O")
 
@@ -481,13 +504,11 @@ class TestDeviceResolverPlatformMethods:
         """
         # Arrange
         device_data = create_typed_smart_plug().to_dict()
-        platform_config = PlatformConfig(
-            platform_type="switch", 
-            supported=True,
-            ios={}
-        )
-        
-        with patch.object(resolver, "get_platform_config", return_value=platform_config):
+        platform_config = PlatformConfig(platform_type="switch", supported=True, ios={})
+
+        with patch.object(
+            resolver, "get_platform_config", return_value=platform_config
+        ):
             # Act
             result_io = resolver.get_io_config(device_data, "switch", "P1")
 
@@ -501,7 +522,7 @@ class TestDeviceResolverPlatformMethods:
         """
         # Arrange
         device_data = create_typed_smart_plug().to_dict()
-        
+
         with patch.object(resolver, "get_platform_config", return_value=None):
             # Act
             result_io = resolver.get_io_config(device_data, "light", "P1")
@@ -520,15 +541,24 @@ class TestDeviceResolverPlatformMethods:
             device_type="SL_OE_3C",
             name="Power Meter",
             platforms={
-                "switch": PlatformConfig(platform_type="switch", supported=True),
-                "sensor": PlatformConfig(platform_type="sensor", supported=True),
+                "switch": PlatformConfig(
+                    platform_type="switch",
+                    supported=True,
+                    ios={"P1": IOConfig(description="Test Switch IO")},
+                ),
+                "sensor": PlatformConfig(
+                    platform_type="sensor",
+                    supported=True,
+                    ios={"P2": IOConfig(description="Test Sensor IO")},
+                ),
             },
         )
         device_config.__post_init__()  # 触发supported_platforms计算
-        
+
         with patch.object(
-            resolver, "resolve_device_config",
-            return_value=ResolutionResult.success_result(device_config)
+            resolver,
+            "resolve_device_config",
+            return_value=ResolutionResult.success_result(device_config),
         ):
             # Act
             platforms = resolver.get_supported_platforms(device_data)
@@ -543,10 +573,11 @@ class TestDeviceResolverPlatformMethods:
         """
         # Arrange
         device_data = create_typed_smart_plug().to_dict()
-        
+
         with patch.object(
-            resolver, "resolve_device_config",
-            return_value=ResolutionResult.error_result("Resolve failed")
+            resolver,
+            "resolve_device_config",
+            return_value=ResolutionResult.error_result("Resolve failed"),
         ):
             # Act
             platforms = resolver.get_supported_platforms(device_data)
@@ -587,14 +618,14 @@ class TestDeviceResolverCacheManagement:
         resolver.resolve_device_config(device1)  # miss
         resolver.resolve_device_config(device1)  # hit
         resolver.resolve_device_config(device2)  # miss
-        
+
         stats = resolver.get_cache_stats()
 
         # Assert
         assert stats["hits"] == 1
         assert stats["misses"] == 2
         assert stats["errors"] == 0
-        assert stats["hit_rate"] == 1/3  # 1 hit out of 3 total
+        assert stats["hit_rate"] == 1 / 3  # 1 hit out of 3 total
         assert stats["cache_size"] == 2
         assert stats["total_requests"] == 3
 
@@ -667,7 +698,7 @@ class TestDeviceResolverPrivateMethods:
         raw_mapping = {
             "switch": {
                 "P1": {"description": "Switch 1", "cmd_type": "on"},
-                "P2": {"description": "Switch 2", "cmd_type": "off"}
+                "P2": {"description": "Switch 2", "cmd_type": "off"},
             }
         }
 
@@ -690,7 +721,7 @@ class TestDeviceResolverPrivateMethods:
         # Arrange
         platform_data = {
             "P1": {"description": "Test IO", "cmd_type": "toggle"},
-            "P2": {"description": "Another IO", "device_class": "switch"}
+            "P2": {"description": "Another IO", "device_class": "switch"},
         }
 
         # Act
@@ -725,7 +756,7 @@ class TestDeviceResolverPrivateMethods:
             "description": "Test IO",
             "cmd_type": "on",
             "idx": 1,
-            "device_class": "switch"
+            "device_class": "switch",
         }
 
         # Act

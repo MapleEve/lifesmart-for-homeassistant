@@ -22,7 +22,7 @@ from custom_components.lifesmart.core.const import (
 from ..utils.constants import (
     CLIENT_BASE_TEST_VALUES,
 )
-from ..utils.factories import (
+from ..utils.typed_factories import (
     create_devices_by_category,
 )
 

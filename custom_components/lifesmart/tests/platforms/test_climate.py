@@ -62,10 +62,10 @@ from ..utils.helpers import (
 from ..utils.constants import (
     FRIENDLY_DEVICE_NAMES,
 )
-from ..utils.factories import (
+from ..utils.typed_factories import (
     create_mock_device_climate_fancoil,
 )
-from ..utils.factories import create_devices_by_category
+from ..utils.typed_factories import create_devices_by_category
 from ..utils.constants import MOCK_CLOUD_CREDENTIALS
 
 
@@ -203,7 +203,7 @@ class TestClimateSetup:
         定义的温控设备都被成功加载为 Home Assistant 中的 climate 实体。
         """
         # 使用专用函数获取气候平台设备类型并验证实体计数
-        from ..utils.factories import create_devices_by_category
+        from ..utils.typed_factories import create_devices_by_category
 
         climate_device_types = get_platform_device_types_for_testing("climate")
         devices_list = create_devices_by_category(climate_device_types)
@@ -270,7 +270,7 @@ class TestClimateSetup:
             hass.states.get("climate.nature_panel_thermo") is not None
         ), "超能面板温控实体初始应存在"
         # 使用工厂函数获取测试设备
-        from ..utils.factories import create_mock_lifesmart_devices
+        from ..utils.typed_factories import create_mock_lifesmart_devices
 
         devices_list = create_mock_lifesmart_devices()
         assert_platform_entity_count_matches_devices(hass, CLIMATE_DOMAIN, devices_list)

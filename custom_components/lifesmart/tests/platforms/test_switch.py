@@ -14,6 +14,7 @@ LifeSmart 开关平台测试套件。
 """
 
 from unittest.mock import AsyncMock, MagicMock
+from typing import Optional
 
 import pytest
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
@@ -25,11 +26,20 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.core.const import *
 from custom_components.lifesmart.switch import async_setup_entry
+
+# Phase 3: DeviceResolver 现代化导入
+from custom_components.lifesmart.core.resolver.device_resolver import (
+    DeviceResolver,
+    get_device_resolver,
+    get_platform_config,
+    validate_device_support,
+)
+from custom_components.lifesmart.core.resolver.types import DeviceData
 from ..utils.constants import (
     FRIENDLY_DEVICE_NAMES,
 )
-from ..utils.factories import create_devices_by_category
-from ..utils.factories import (
+from ..utils.typed_factories import create_devices_by_category
+from ..utils.typed_factories import (
     create_traditional_switch_devices,
     create_advanced_switch_devices,
     create_smart_plug_devices,
@@ -65,6 +75,9 @@ class TestSwitchSetup:
         - 9个九路控制器 (sw_p9)
         总计19个开关实体。
         """
+        # Phase 3: 使用DeviceResolver现代化API验证设备支持
+        resolver = get_device_resolver()
+
         # 使用专用开关工厂函数创建设备
         traditional_switches = create_traditional_switch_devices()
         advanced_switches = create_advanced_switch_devices()
@@ -80,6 +93,12 @@ class TestSwitchSetup:
         for device in devices_list:
             validate_device_data(device)
 
+        # Phase 3: 使用DeviceResolver验证设备switch平台支持
+        switch_supported_devices = []
+        for device in devices_list:
+            if validate_device_support(device, "switch"):
+                switch_supported_devices.append(device)
+
         # 使用FRIENDLY_DEVICE_NAMES验证关键设备
         switch_friendly_names = [
             name
@@ -88,13 +107,21 @@ class TestSwitchSetup:
         ]
 
         for friendly_name in switch_friendly_names[:3]:  # 验证前3个
-            device = find_device_by_friendly_name(devices_list, friendly_name)
+            device = find_device_by_friendly_name(
+                switch_supported_devices, friendly_name
+            )
             if device:
                 assert device is not None, f"{friendly_name}设备应该存在"
+                # Phase 3: 验证设备确实支持switch平台
+                assert validate_device_support(
+                    device, "switch"
+                ), f"{friendly_name}设备应该支持switch平台"
 
         # 验证平台实体数量
-        verify_platform_entity_count(hass, SWITCH_DOMAIN, devices_list)
-        assert_platform_entity_count_matches_devices(hass, SWITCH_DOMAIN, devices_list)
+        verify_platform_entity_count(hass, SWITCH_DOMAIN, switch_supported_devices)
+        assert_platform_entity_count_matches_devices(
+            hass, SWITCH_DOMAIN, switch_supported_devices
+        )
 
         assert hass.states.get("switch.9_way_controller_p4") is not None
 
@@ -125,11 +152,20 @@ class TestSwitchSetup:
             entry_id="exclusion_test_entry",
         )
 
-        # 2. 准备 hass.data，因为 async_setup_entry 会从中读取数据
-        # 使用工厂函数创建设备和mock hub
-        mock_lifesmart_devices = create_devices_by_category(
-            ["traditional_switch", "advanced_switch", "smart_plug"]
-        )
+        # Phase 3: 使用DeviceResolver现代化API创建和验证设备
+        resolver = get_device_resolver()
+
+        # 创建所有类型的开关设备进行测试
+        traditional_switches = create_traditional_switch_devices()
+        advanced_switches = create_advanced_switch_devices()
+        smart_plugs = create_smart_plug_devices()
+
+        # 合并设备并使用DeviceResolver验证支持
+        all_devices = traditional_switches + advanced_switches + smart_plugs
+        mock_lifesmart_devices = []
+        for device in all_devices:
+            if validate_device_support(device, "switch"):
+                mock_lifesmart_devices.append(device)
         mock_hub = create_mock_hub(mock_lifesmart_devices, mock_client)
         mock_hub.get_exclude_config.return_value = (
             {"sw_ol", "sw_p9"},  # exclude_devices
@@ -177,15 +213,24 @@ class TestStandardSwitch:
         - 控制命令正确传递
         - 状态更新机制正常
         """
-        # 使用工厂函数查找三路开关设备
-        devices = create_devices_by_category(["traditional_switch"])
+        # Phase 3: 使用DeviceResolver现代化API查找和验证三路开关设备
+        resolver = get_device_resolver()
+        devices = create_traditional_switch_devices()
+
+        # 使用DeviceResolver查找支持switch平台的SL_SW_IF3设备
         switch_device = None
         for device in devices:
-            if device.get("devtype") == "SL_SW_IF3":
+            if device.get("devtype") == "SL_SW_IF3" and validate_device_support(
+                device, "switch"
+            ):
                 switch_device = device
                 break
 
         assert switch_device is not None, "应该找到三路开关测试设备"
+
+        # Phase 3: 验证DeviceResolver可以解析设备配置
+        platform_config = get_platform_config(switch_device, "switch")
+        assert platform_config is not None, "DeviceResolver应该能解析switch平台配置"
 
         # 构建实体ID（基于设备实际数据）
         entity_id = f"switch.{switch_device['name'].lower().replace(' ', '_')}_l1"
@@ -242,15 +287,24 @@ class TestSmartOutlet:
         - 设备类型为插座
         - 控制命令正确传递
         """
-        # 使用工厂函数查找智能插座设备
-        devices = create_devices_by_category(["smart_plug"])
+        # Phase 3: 使用DeviceResolver现代化API查找和验证智能插座设备
+        resolver = get_device_resolver()
+        devices = create_smart_plug_devices()
+
+        # 使用DeviceResolver查找支持switch平台的SL_OL设备
         outlet_device = None
         for device in devices:
-            if device.get("devtype") == "SL_OL":
+            if device.get("devtype") == "SL_OL" and validate_device_support(
+                device, "switch"
+            ):
                 outlet_device = device
                 break
 
         assert outlet_device is not None, "应该找到智能插座测试设备"
+
+        # Phase 3: 验证DeviceResolver可以解析设备配置
+        platform_config = get_platform_config(outlet_device, "switch")
+        assert platform_config is not None, "DeviceResolver应该能解析switch平台配置"
 
         # 构建实体ID（基于设备实际数据）
         entity_id = f"switch.{outlet_device['name'].lower().replace(' ', '_')}_o"
@@ -313,15 +367,24 @@ class TestGenericControllerAsSwitch:
         - P4通道初始状态为开启
         - 关闭服务调用正确传递参数
         """
-        # 使用工厂函数查找通用控制器设备
+        # Phase 3: 使用DeviceResolver现代化API查找和验证通用控制器设备
+        resolver = get_device_resolver()
         devices = create_devices_by_category(["generic_p_switch_mode"])
+
+        # 使用DeviceResolver查找支持switch平台的SL_P设备
         controller_device = None
         for device in devices:
-            if device.get("devtype") == "SL_P":
+            if device.get("devtype") == "SL_P" and validate_device_support(
+                device, "switch"
+            ):
                 controller_device = device
                 break
 
         assert controller_device is not None, "应该找到通用控制器测试设备"
+
+        # Phase 3: 验证DeviceResolver可以解析设备配置
+        platform_config = get_platform_config(controller_device, "switch")
+        assert platform_config is not None, "DeviceResolver应该能解析switch平台配置"
 
         # 构建实体ID（基于设备实际数据）
         entity_id_suffix = sub_key.lower()
@@ -377,15 +440,24 @@ class TestNineWayController:
         - P9通道初始状态为开启
         - 关闭服务调用正确传递到对应通道
         """
-        # 使用工厂函数查找九路控制器设备
+        # Phase 3: 使用DeviceResolver现代化API查找和验证九路控制器设备
+        resolver = get_device_resolver()
         devices = create_devices_by_category(["sw_p9"])
+
+        # 使用DeviceResolver查找支持switch平台的SL_P_SW设备
         controller_device = None
         for device in devices:
-            if device.get("devtype") == "SL_P_SW":
+            if device.get("devtype") == "SL_P_SW" and validate_device_support(
+                device, "switch"
+            ):
                 controller_device = device
                 break
 
         assert controller_device is not None, "应该找到九路控制器测试设备"
+
+        # Phase 3: 验证DeviceResolver可以解析设备配置
+        platform_config = get_platform_config(controller_device, "switch")
+        assert platform_config is not None, "DeviceResolver应该能解析switch平台配置"
 
         # 构建实体ID（基于设备实际数据）
         entity_id_suffix = sub_key.lower()

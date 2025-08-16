@@ -23,7 +23,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.core.const import *
 from custom_components.lifesmart.core.helpers import generate_unique_id
-from ..utils.factories import create_devices_by_category
+from ..utils.typed_factories import create_devices_by_category
 from ..utils.helpers import (
     find_test_device,
     get_hub_id,

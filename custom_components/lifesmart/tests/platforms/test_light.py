@@ -11,6 +11,7 @@
 """
 
 from unittest.mock import MagicMock, patch
+from typing import Optional
 
 import pytest
 from homeassistant.components.light import (
@@ -41,7 +42,13 @@ from custom_components.lifesmart.light import (
 )
 from ..utils.constants import (
     TEST_HUB_IDS,
+    FRIENDLY_DEVICE_NAMES,
 )
+
+# Phase 3 DeviceResolver imports
+from custom_components.lifesmart.core.resolver.device_resolver import DeviceResolver
+from custom_components.lifesmart.core.resolver.types import DeviceData
+from ..utils.typed_factories import create_devices_by_category
 from ..utils.helpers import (
     get_entity_unique_id,
     find_device_by_friendly_name,
@@ -153,7 +160,7 @@ class TestLifeSmartBrightnessLight:
     def device(self):
         """提供当前测试类的设备字典。"""
         # 使用调光灯工厂函数，因为白光智能灯泡在那里定义
-        from ..utils.factories import create_dimmer_light_devices
+        from ..utils.typed_factories import create_dimmer_light_devices
 
         devices = create_dimmer_light_devices()
         device = find_device_by_friendly_name(devices, self.FRIENDLY_NAME)
@@ -321,7 +328,7 @@ class TestLifeSmartDimmerLight:
     def device(self):
         """提供当前测试类的设备字典。"""
         # 使用专用色温灯工厂函数和友好名称查找
-        from ..utils.factories import create_dimmer_light_devices
+        from ..utils.typed_factories import create_dimmer_light_devices
 
         devices = create_dimmer_light_devices()
         device = find_device_by_friendly_name(devices, self.FRIENDLY_NAME)
@@ -510,7 +517,7 @@ class TestLifeSmartQuantumLight:
     def device(self):
         """提供当前测试类的设备字典。"""
         # 使用专用量子灯工厂函数和友好名称查找
-        from ..utils.factories import create_quantum_light_devices
+        from ..utils.typed_factories import create_quantum_light_devices
 
         devices = create_quantum_light_devices()
         device = find_device_by_friendly_name(devices, self.FRIENDLY_NAME)
@@ -710,7 +717,7 @@ class TestLifeSmartSingleIORGBWLight:
     def device(self):
         """提供当前测试类的设备字典。"""
         # 使用专用RGBW灯工厂函数和友好名称查找
-        from ..utils.factories import create_rgbw_light_devices
+        from ..utils.typed_factories import create_rgbw_light_devices
 
         devices = create_rgbw_light_devices()
         device = find_device_by_friendly_name(devices, self.FRIENDLY_NAME)
