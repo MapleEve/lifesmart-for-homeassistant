@@ -94,3 +94,4 @@ Thumbs.db
 /.claude/
 /htmlcov/
 /CLAUDE.md
+.serena/**
