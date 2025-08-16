@@ -388,6 +388,9 @@ class DeviceResolver:
 
         platform_config.ios = ios
 
+        # 手动触发__post_init__重新计算统计信息
+        platform_config.__post_init__()
+
         return platform_config
 
     def _convert_to_io_config(self, io_data: Dict[str, Any]) -> Optional[IOConfig]:

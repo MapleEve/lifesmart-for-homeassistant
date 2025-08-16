@@ -199,6 +199,15 @@ class ResolutionResult:
         """创建错误结果"""
         return cls(success=False, error_message=error_message)
 
+    @classmethod
+    def warning_result(
+        cls, device_config: DeviceConfig, warning_message: str
+    ) -> "ResolutionResult":
+        """创建警告结果"""
+        result = cls(success=True, device_config=device_config)
+        result.add_warning(warning_message)
+        return result
+
     def add_warning(self, warning: str):
         """添加警告信息"""
         self.warnings.append(warning)

@@ -15,7 +15,15 @@
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.lock import LockDeviceClass
+
+# 兼容性导入 - LockDeviceClass在某些HA版本中不可用
+try:
+    from homeassistant.components.lock import LockDeviceClass
+except ImportError:
+    # 如果无法导入，定义一个备用常量
+    class LockDeviceClass:
+        LOCK = "lock"
+
 
 # ALM bitmask配置
 # 基于原有ALM_BIT_CONFIG，提供完整的10个bit定义

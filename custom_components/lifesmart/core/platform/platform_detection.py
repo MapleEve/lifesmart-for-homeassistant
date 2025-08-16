@@ -83,7 +83,10 @@ def get_device_platform_mapping(device: dict) -> dict[str, list[str]]:
 
     # 使用新的mapping引擎解析设备映射
     resolver = get_device_resolver()
-    device_config = resolver.resolve_device_config(device)
+    resolution_result = resolver.resolve_device_config(device)
+
+    # 从ResolutionResult中提取DeviceConfig
+    device_config = resolution_result.device_config if resolution_result else None
     mapping_result = device_config.platforms if device_config else {}
 
     # 处理映射结果，合并 switch 和 switch_extra 到 switch 平台
