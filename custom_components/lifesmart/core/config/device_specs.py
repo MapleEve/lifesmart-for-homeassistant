@@ -11,69 +11,16 @@ LifeSmart 设备规格纯数据层 - (125 个设备)
 
 from typing import Dict, Any
 
-try:
-    from custom_components.lifesmart.core.const import (
-        CMD_TYPE_ON,
-        CMD_TYPE_OFF,
-        CMD_TYPE_SET_VAL,
-        CMD_TYPE_PLUG,
-        CMD_TYPE_LIGHT,
-        CMD_TYPE_SWITCH,
-        CMD_TYPE_COVER,
-        CMD_TYPE_SENSOR,
-        CMD_TYPE_CLIMATE,
-        CMD_TYPE_FAN,
-        CMD_TYPE_LOCK,
-        CMD_TYPE_BUTTON,
-        CMD_TYPE_SET_TEMP_DECIMAL,
-        CMD_TYPE_PRESS,
-        CMD_TYPE_SET_CONFIG,
-        CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
-        CMD_TYPE_SET_RAW_OFF,
-        CMD_TYPE_SET_RAW_ON,
-    )
-except ImportError:
-    # 回退定义，如果无法导入const模块
-    CMD_TYPE_ON = 1
-    CMD_TYPE_OFF = 0
-    CMD_TYPE_SET_VAL = 2
-    CMD_TYPE_PLUG = "PLUG"
-    CMD_TYPE_LIGHT = "LIGHT"
-    CMD_TYPE_SWITCH = "SWITCH"
-    CMD_TYPE_COVER = "COVER"
-    CMD_TYPE_SENSOR = "SENSOR"
-    CMD_TYPE_CLIMATE = "CLIMATE"
-    CMD_TYPE_FAN = "FAN"
-    CMD_TYPE_LOCK = "LOCK"
-    CMD_TYPE_BUTTON = "BUTTON"
-    CMD_TYPE_SET_TEMP_DECIMAL = 0x88
-    CMD_TYPE_PRESS = 0x89
-    CMD_TYPE_SET_CONFIG = 0xCE
-    CMD_TYPE_SET_INDICATOR_BRIGHTNESS = 223
-    CMD_TYPE_SET_RAW_OFF = 0xFE
-    CMD_TYPE_SET_RAW_ON = 0xFF
-
-try:
-    from homeassistant.components.climate.const import (
-        HVACMode,
-        FAN_AUTO,
-        FAN_HIGH,
-        FAN_LOW,
-        FAN_MEDIUM,
-    )
-except ImportError:
-    # 回退定义，如果无法导入HA模块
-    class HVACMode:
-        AUTO = "auto"
-        COOL = "cool"
-        HEAT = "heat"
-        FAN_ONLY = "fan_only"
-        OFF = "off"
-
-    FAN_AUTO = "auto"
-    FAN_HIGH = "high"
-    FAN_LOW = "low"
-    FAN_MEDIUM = "medium"
+from custom_components.lifesmart.core.const import (
+    CMD_TYPE_ON,
+    CMD_TYPE_OFF,
+    CMD_TYPE_SET_VAL,
+    CMD_TYPE_SET_TEMP_DECIMAL,
+    CMD_TYPE_SET_CONFIG,
+    CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
+    CMD_TYPE_SET_RAW_OFF,
+    CMD_TYPE_SET_RAW_ON,
+)
 
 # 总设备数量
 TOTAL_DEVICES = 125
@@ -90,24 +37,17 @@ _RAW_DEVICE_DATA = {
         "name": "智慧插座",
         "switch": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -117,24 +57,17 @@ _RAW_DEVICE_DATA = {
         "name": "智慧插座",
         "switch": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -144,24 +77,17 @@ _RAW_DEVICE_DATA = {
         "name": "德标插座",
         "switch": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -171,24 +97,17 @@ _RAW_DEVICE_DATA = {
         "name": "英标插座",
         "switch": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -198,24 +117,17 @@ _RAW_DEVICE_DATA = {
         "name": "美标插座",
         "switch": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -225,24 +137,17 @@ _RAW_DEVICE_DATA = {
         "name": "Wi-Fi插座",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -253,48 +158,34 @@ _RAW_DEVICE_DATA = {
         "name": "计量插座",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P2": {
-                "description": "用电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "energy",
                 "conversion": "ieee754_float",
-                "detailed_description": (
-                    "为累计用电量，`val` 值为 `IEEE754` 浮点数的32位整数表示，"
-                    "`v` 值为浮点数，单位为度(kwh)"
-                ),
                 "device_class": "energy",
                 "unit_of_measurement": "kWh",
                 "state_class": "total_increasing",
             },
             "P3": {
-                "description": "功率",
-                "rw": "R",
+                "description": "power",
                 "data_type": "power",
                 "conversion": "ieee754_float",
-                "detailed_description": "为当前负载功率，`v` 值为浮点数，单位为w",
                 "device_class": "power",
                 "unit_of_measurement": "W",
                 "state_class": "measurement",
@@ -302,31 +193,23 @@ _RAW_DEVICE_DATA = {
         },
         "switch_extra": {
             "P4": {
-                "description": "功率门限",
-                "rw": "RW",
+                "description": "power_threshold",
                 "data_type": "power_threshold",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "功率门限，用电保护，值为整数，超出门限则会断电，单位为w"
-                ),
                 "commands": {
                     "enable": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "使能",
                     },
                     "disable": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "不使能",
                     },
                     "set_threshold_enable": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "使能并且设置门限",
                     },
                     "set_threshold_disable": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "不使能并且设置门限",
                     },
                 },
             },
@@ -336,48 +219,34 @@ _RAW_DEVICE_DATA = {
         "name": "计量插座德标",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P2": {
-                "description": "用电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "energy",
                 "conversion": "ieee754_float",
-                "detailed_description": (
-                    "为累计用电量，`val` 值为 `IEEE754` 浮点数的32位整数表示，"
-                    "`v` 值为浮点数，单位为度(kwh)"
-                ),
                 "device_class": "energy",
                 "unit_of_measurement": "kWh",
                 "state_class": "total_increasing",
             },
             "P3": {
-                "description": "功率",
-                "rw": "R",
+                "description": "power",
                 "data_type": "power",
                 "conversion": "ieee754_float",
-                "detailed_description": "为当前负载功率，`v` 值为浮点数，单位为w",
                 "device_class": "power",
                 "unit_of_measurement": "W",
                 "state_class": "measurement",
@@ -385,31 +254,23 @@ _RAW_DEVICE_DATA = {
         },
         "switch_extra": {
             "P4": {
-                "description": "功率门限",
-                "rw": "RW",
+                "description": "power_threshold",
                 "data_type": "power_threshold",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "功率门限，用电保护，值为整数，超出门限则会断电，单位为w"
-                ),
                 "commands": {
                     "enable": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "使能",
                     },
                     "disable": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "不使能",
                     },
                     "set_threshold_enable": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "使能并且设置门限",
                     },
                     "set_threshold_disable": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "不使能并且设置门限",
                     },
                 },
             },
@@ -419,48 +280,34 @@ _RAW_DEVICE_DATA = {
         "name": "入墙插座",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P2": {
-                "description": "用电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "energy",
                 "conversion": "ieee754_float",
-                "detailed_description": (
-                    "为累计用电量，`val` 值为 `IEEE754` 浮点数的32位整数表示，"
-                    "`v` 值为浮点数，单位为度(kwh)"
-                ),
                 "device_class": "energy",
                 "unit_of_measurement": "kWh",
                 "state_class": "total_increasing",
             },
             "P3": {
-                "description": "功率",
-                "rw": "R",
+                "description": "power",
                 "data_type": "power",
                 "conversion": "ieee754_float",
-                "detailed_description": "为当前负载功率，`v` 值为浮点数，单位为w",
                 "device_class": "power",
                 "unit_of_measurement": "W",
                 "state_class": "measurement",
@@ -468,31 +315,23 @@ _RAW_DEVICE_DATA = {
         },
         "switch_extra": {
             "P4": {
-                "description": "功率门限",
-                "rw": "RW",
+                "description": "power_threshold",
                 "data_type": "power_threshold",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "功率门限，用电保护，值为整数，超出门限则会断电，单位为w"
-                ),
                 "commands": {
                     "enable": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "使能",
                     },
                     "disable": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "不使能",
                     },
                     "set_threshold_enable": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "使能并且设置门限",
                     },
                     "set_threshold_disable": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "不使能并且设置门限",
                     },
                 },
             },
@@ -504,86 +343,61 @@ _RAW_DEVICE_DATA = {
         "name": "随心开关一位",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark": {
-                "description": "关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_off",
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，取值范围：0~1023"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_brightness_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯设置亮度",
                     },
                 },
             },
             "bright": {
-                "description": "开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_on",
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，取值范围：0~1023"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_brightness_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯设置亮度",
                     },
                     "set_brightness_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯设置亮度",
                     },
                 },
             },
@@ -593,180 +407,118 @@ _RAW_DEVICE_DATA = {
         "name": "流光开关二键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -776,268 +528,175 @@ _RAW_DEVICE_DATA = {
         "name": "流光开关三键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark3": {
-                "description": "第三路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright3": {
-                "description": "第三路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -1048,132 +707,93 @@ _RAW_DEVICE_DATA = {
         "name": "单火触摸开关",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark": {
-                "description": "关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_off",
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
                 "range": "0-1023",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，取值范围：0~1023"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_brightness_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置亮度值",
                     },
                 },
             },
             "bright": {
-                "description": "开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_on",
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
                 "range": "0-1023",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，取值范围：0~1023"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_brightness_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置亮度值",
                     },
                 },
             },
@@ -1183,132 +803,93 @@ _RAW_DEVICE_DATA = {
         "name": "触摸开关/极星开关(零火版)",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark": {
-                "description": "关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_off",
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
                 "range": "0-1023",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，取值范围：0~1023"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_brightness_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置亮度值",
                     },
                 },
             },
             "bright": {
-                "description": "开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_on",
                 "data_type": "indicator_light",
                 "conversion": "val_direct",
                 "range": "0-1023",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，取值范围：0~1023"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_brightness_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置亮度值",
                     },
                     "set_brightness_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置亮度值",
                     },
                 },
             },
@@ -1318,268 +899,175 @@ _RAW_DEVICE_DATA = {
         "name": "流光开关三键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark3": {
-                "description": "第三路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright3": {
-                "description": "第三路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -1589,268 +1077,175 @@ _RAW_DEVICE_DATA = {
         "name": "单火流光开关三键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark3": {
-                "description": "第三路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright3": {
-                "description": "第三路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -1860,268 +1255,175 @@ _RAW_DEVICE_DATA = {
         "name": "橙朴开关三键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark3": {
-                "description": "第三路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright3": {
-                "description": "第三路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -2131,180 +1433,118 @@ _RAW_DEVICE_DATA = {
         "name": "零火流光开关二键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -2314,180 +1554,118 @@ _RAW_DEVICE_DATA = {
         "name": "单火流光开关二键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -2497,180 +1675,118 @@ _RAW_DEVICE_DATA = {
         "name": "橙朴开关二键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -2680,180 +1796,118 @@ _RAW_DEVICE_DATA = {
         "name": "塞纳开关二键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -2863,92 +1917,61 @@ _RAW_DEVICE_DATA = {
         "name": "零火流光开关单键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark": {
-                "description": "关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright": {
-                "description": "开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -2958,92 +1981,61 @@ _RAW_DEVICE_DATA = {
         "name": "单火流光开关单键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark": {
-                "description": "关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright": {
-                "description": "开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -3053,92 +2045,61 @@ _RAW_DEVICE_DATA = {
         "name": "橙朴开关单键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark": {
-                "description": "关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright": {
-                "description": "开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -3148,92 +2109,61 @@ _RAW_DEVICE_DATA = {
         "name": "塞纳开关单键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark": {
-                "description": "关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright": {
-                "description": "开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -3243,92 +2173,61 @@ _RAW_DEVICE_DATA = {
         "name": "智慧插座开关版",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark": {
-                "description": "关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright": {
-                "description": "开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -3339,35 +2238,26 @@ _RAW_DEVICE_DATA = {
         "name": "恒星开关一键",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P2": {
-                "description": "当前环境温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始温度值，它是温度值*10，`v` 值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -3378,57 +2268,41 @@ _RAW_DEVICE_DATA = {
         "name": "恒星开关二键",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P3": {
-                "description": "当前环境温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始温度值，它是温度值*10，`v` 值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -3439,79 +2313,56 @@ _RAW_DEVICE_DATA = {
         "name": "恒星开关三键",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P3": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P4": {
-                "description": "当前环境温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始温度值，它是温度值*10，`v` 值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -3522,38 +2373,26 @@ _RAW_DEVICE_DATA = {
         "name": "恒星/辰星开关伴侣一键",
         "switch": {
             "P1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P2": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -3564,60 +2403,41 @@ _RAW_DEVICE_DATA = {
         "name": "恒星/辰星开关伴侣二键",
         "switch": {
             "P1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P3": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -3628,82 +2448,56 @@ _RAW_DEVICE_DATA = {
         "name": "恒星/辰星开关伴侣三键",
         "switch": {
             "P1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P4": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -3715,21 +2509,17 @@ _RAW_DEVICE_DATA = {
         "name": "单路开关控制器",
         "switch": {
             "P2": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "-",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -3739,33 +2529,23 @@ _RAW_DEVICE_DATA = {
         "name": "PWM调光开关控制器",
         "light": {
             "P1": {
-                "description": "可调亮度灯光",
-                "rw": "RW",
+                "description": "dimmable_light",
                 "data_type": "brightness_light",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1==1 表示处于打开状态；"
-                    "type&1==0 表示处于关闭状态；"
-                    "val 值为亮度值，可调范围：[0-255]，值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_brightness_on": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "打开并且设置亮度，val=亮度值[0,255]",
                     },
                     "set_brightness_off": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "关闭并设置亮度，val=亮度值[0,255]",
                     },
                 },
             },
@@ -3775,200 +2555,137 @@ _RAW_DEVICE_DATA = {
         "name": "九路开关控制器",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P3": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P4": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P5": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P6": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P7": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P8": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P9": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -3979,53 +2696,40 @@ _RAW_DEVICE_DATA = {
         "name": "高级环境传感器",
         "sensor": {
             "T": {
-                "description": "当前环境温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "val_div_10",
-                "detailed_description": "`val` 值表示原始温度值，它是温度值*10值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "H": {
-                "description": "当前环境湿度",
-                "rw": "R",
+                "description": "humidity",
                 "data_type": "humidity",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
                 "device_class": "humidity",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
             "CO2": {
-                "description": "CO2浓度",
-                "rw": "R",
+                "description": "co2_concentration",
                 "data_type": "aqi",
                 "conversion": "v_field",
-                "detailed_description": "`val` 和 `v` 值表示CO2浓度(单位：ppm)",
                 "device_class": "aqi",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
             },
             "TVOC": {
-                "description": "TVOC浓度",
-                "rw": "R",
+                "description": "tvoc_concentration",
                 "data_type": "aqi",
                 "conversion": "val_div_100",
-                "detailed_description": "`val` 值表示原始TVOC值，需要除以100得到实际值(单位：mg/m³)",
                 "unit_of_measurement": "mg/m³",
                 "state_class": "measurement",
             },
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -4037,24 +2741,17 @@ _RAW_DEVICE_DATA = {
         "name": "随心开关",
         "button": {
             "B": {
-                "description": "按键状态",
-                "rw": "R",
+                "description": "button",
                 "data_type": "button_state",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 的值定义如下：- 0：未按下按键 - 1：按下按键",
                 "device_class": "identify",
             },
         },
         "sensor": {
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值 `v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -4069,113 +2766,80 @@ _RAW_DEVICE_DATA = {
                 "name": "动态调光开关",
                 "light": {
                     "P1": {
-                        "description": "开关",
-                        "rw": "RW",
+                        "description": "switch",
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": (
-                            "`type&1==1`表示处于打开状态；"
-                            "`type&1==0`表示处于关闭状态；"
-                            "`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
-                        ),
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开",
                             },
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                                "description": "关闭",
                             },
                             "set_brightness_on": {
                                 "type": CMD_TYPE_SET_VAL,
-                                "description": "打开并且设置亮度，val=亮度值[0,255]",
                             },
                             "set_brightness_off": {
                                 "type": CMD_TYPE_SET_CONFIG,
-                                "description": "关闭并设置亮度，val=亮度值[0,255]",
                             },
                         },
                     },
                     "P2": {
-                        "description": "指示灯",
-                        "rw": "RW",
+                        "description": "indicator",
                         "data_type": "indicator_light",
                         "conversion": "val_direct",
-                        "detailed_description": (
-                            "`type&1==1`表示处于打开状态；"
-                            "`type&1==0`表示处于关闭状态；"
-                            "`val` 值为亮度值，它有灯光处于打开状态下的指示灯亮度和"
-                            "灯光处于关闭状态下的指示灯亮度。`bit8-bit15`：用于指示"
-                            "灯光处于打开状态下的指示灯亮度 `bit0-bit7`：用于指示"
-                            "灯光处于关闭状态下的指示灯亮度 每8个bit可调范围：[0,255], "
-                            "值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮。"
-                        ),
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开",
                             },
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                                "description": "关闭",
                             },
                             "set_brightness": {
                                 "type": CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
-                                "description": "设置亮度，val=亮度值[0,65535]",
                             },
                         },
                     },
                 },
                 "binary_sensor": {
                     "P3": {
-                        "description": "移动检测",
-                        "rw": "R",
+                        "description": "motion",
                         "data_type": "motion_status",
                         "conversion": "val_direct",
-                        "detailed_description": "`val` 值定义如下：0：没有检测到移动 1：有检测到移动",
                         "device_class": "motion",
                     },
                 },
                 "sensor": {
                     "P4": {
-                        "description": "环境光照",
-                        "rw": "R",
+                        "description": "illuminance",
                         "data_type": "illuminance",
                         "conversion": "val_direct",
-                        "detailed_description": "`val` 值表示原始光照值(单位：lux)",
                         "device_class": "illuminance",
                         "unit_of_measurement": "lx",
                         "state_class": "measurement",
                     },
                     "P5": {
-                        "description": "调光设置",
-                        "rw": "RW",
+                        "description": "dimming_control",
                         "data_type": "dimming_config",
                         "conversion": "val_direct",
-                        "detailed_description": "当前调光设置值",
                         "commands": {
                             "set_config": {
                                 "type": CMD_TYPE_SET_CONFIG,
-                                "description": "设置调光参数配置",
                             },
                         },
                     },
                     "P6": {
-                        "description": "动态设置",
-                        "rw": "RW",
+                        "description": "dynamic_control",
                         "data_type": "dynamic_config",
                         "conversion": "val_direct",
-                        "detailed_description": "当前动态设置值",
                         "commands": {
                             "set_config": {
                                 "type": CMD_TYPE_SET_CONFIG,
-                                "description": "设置动态参数配置",
                             },
                         },
                     },
@@ -4185,62 +2849,43 @@ _RAW_DEVICE_DATA = {
                 "name": "星玉调光开关(可控硅)",
                 "light": {
                     "P1": {
-                        "description": "开关",
-                        "rw": "RW",
+                        "description": "switch",
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": (
-                            "`type&1==1`表示处于打开状态；"
-                            "`type&1==0`表示处于关闭状态；"
-                            "`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
-                        ),
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开",
                             },
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                                "description": "关闭",
                             },
                             "set_brightness_on": {
                                 "type": CMD_TYPE_SET_VAL,
-                                "description": "打开并且设置亮度，val=亮度值[0,255]",
                             },
                             "set_brightness_off": {
                                 "type": CMD_TYPE_SET_CONFIG,
-                                "description": "关闭并设置亮度，val=亮度值[0,255]",
                             },
                         },
                     },
                     "P2": {
-                        "description": "指示灯亮度",
-                        "rw": "RW",
+                        "description": "indicator_brightness",
                         "data_type": "indicator_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": (
-                            "`type&1==1`表示处于打开状态；"
-                            "`type&1==0`表示处于关闭状态；"
-                            "`val` 值为亮度值，可调范围：[0,255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
-                        ),
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开",
                             },
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                                "description": "关闭",
                             },
                             "set_brightness": {
                                 "type": CMD_TYPE_SET_VAL,
-                                "description": "设置亮度，val=亮度值[0,255]",
                             },
                         },
                     },
@@ -4255,44 +2900,32 @@ _RAW_DEVICE_DATA = {
                 "name": "智能灯泡(冷暖白)",
                 "light": {
                     "P1": {
-                        "description": "亮度控制",
-                        "rw": "RW",
+                        "description": "brightness",
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": (
-                            "`type&1==1`表示处于打开状态；"
-                            "`type&1==0`表示处于关闭状态；"
-                            "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
-                        ),
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开",
                             },
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                                "description": "关闭",
                             },
                             "set_brightness": {
                                 "type": CMD_TYPE_SET_VAL,
-                                "description": "设置亮度，val=亮度值[0-255]",
                             },
                         },
                     },
                     "P2": {
-                        "description": "色温控制",
-                        "rw": "RW",
+                        "description": "color_temp",
                         "data_type": "color_temperature",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
                         "commands": {
                             "set_color_temp": {
                                 "type": CMD_TYPE_SET_VAL,
-                                "description": "设置色温，val=色温值[0-255]",
                             },
                         },
                     },
@@ -4302,44 +2935,32 @@ _RAW_DEVICE_DATA = {
                 "name": "调光调色智控器(0-10V)",
                 "light": {
                     "P1": {
-                        "description": "亮度控制",
-                        "rw": "RW",
+                        "description": "brightness",
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": (
-                            "`type&1==1`表示处于打开状态；"
-                            "`type&1==0`表示处于关闭状态；"
-                            "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
-                        ),
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开",
                             },
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                                "description": "关闭",
                             },
                             "set_brightness": {
                                 "type": CMD_TYPE_SET_VAL,
-                                "description": "设置亮度，val=亮度值[0-255]",
                             },
                         },
                     },
                     "P2": {
-                        "description": "色温控制",
-                        "rw": "RW",
+                        "description": "color_temp",
                         "data_type": "color_temperature",
                         "conversion": "val_direct",
                         "range": "0-255",
-                        "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
                         "commands": {
                             "set_color_temp": {
                                 "type": CMD_TYPE_SET_VAL,
-                                "description": "设置色温，val=色温值[0-255]",
                             },
                         },
                     },
@@ -4352,24 +2973,17 @@ _RAW_DEVICE_DATA = {
         "name": "奇点开关模块一键",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1==1,表示打开(忽略`val` 值)；"
-                    "type&1==0,表示关闭(忽略`val` 值)；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -4379,46 +2993,32 @@ _RAW_DEVICE_DATA = {
         "name": "奇点开关模块二键",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1==1,表示打开(忽略`val` 值)；"
-                    "type&1==0,表示关闭(忽略`val` 值)；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1==1,表示打开(忽略`val` 值)；"
-                    "type&1==0,表示关闭(忽略`val` 值)；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -4428,68 +3028,47 @@ _RAW_DEVICE_DATA = {
         "name": "奇点开关模块三键",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1==1,表示打开(忽略`val` 值)；"
-                    "type&1==0,表示关闭(忽略`val` 值)；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1==1,表示打开(忽略`val` 值)；"
-                    "type&1==0,表示关闭(忽略`val` 值)；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P3": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1==1,表示打开(忽略`val` 值)；"
-                    "type&1==0,表示关闭(忽略`val` 值)；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -4500,29 +3079,17 @@ _RAW_DEVICE_DATA = {
         "name": "随心按键",
         "button": {
             "P1": {
-                "description": "按键状态",
-                "rw": "R",
+                "description": "button",
                 "data_type": "button_events",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type` 的值定义如下: `type&1==1`，表示有按键事件产生；"
-                    "`type&1==0`,表示按键事件消失；"
-                    "`val` 值指明按键事件类型，只有在 `type&1==1` 才有效，"
-                    "`val` 的值定义如下：1：单击事件 2：双击事件 255：长按事件"
-                ),
                 "device_class": "identify",
             },
         },
         "sensor": {
             "P2": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery_level",
                 "conversion": "voltage_to_percentage",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0，100]，它是根据 `val` 电压值换算的。"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -4534,92 +3101,61 @@ _RAW_DEVICE_DATA = {
         "name": "星玉开关一键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark": {
-                "description": "关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright": {
-                "description": "开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -4629,180 +3165,118 @@ _RAW_DEVICE_DATA = {
         "name": "星玉开关二键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -4812,268 +3286,175 @@ _RAW_DEVICE_DATA = {
         "name": "星玉开关三键",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "light": {
             "dark1": {
-                "description": "第一路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark2": {
-                "description": "第二路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "dark3": {
-                "description": "第三路关状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_off",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright1": {
-                "description": "第一路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright2": {
-                "description": "第二路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "bright3": {
-                "description": "第三路开状态时指示灯亮度",
-                "rw": "RW",
+                "description": "indicator_brightness_3_on",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -5084,24 +3465,17 @@ _RAW_DEVICE_DATA = {
         "name": "极星开关(120零火版)一键",
         "switch": {
             "P1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -5111,46 +3485,32 @@ _RAW_DEVICE_DATA = {
         "name": "极星开关(120零火版)二键",
         "switch": {
             "P1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -5160,68 +3520,47 @@ _RAW_DEVICE_DATA = {
         "name": "极星开关(120零火版)三键",
         "switch": {
             "P1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -5232,42 +3571,30 @@ _RAW_DEVICE_DATA = {
         "name": "星玉调光开关",
         "light": {
             "P1": {
-                "description": "亮度控制",
-                "rw": "RW",
+                "description": "brightness",
                 "data_type": "brightness",
                 "conversion": "val_to_brightness",
-                "detailed_description": (
-                    "`type&1==1`表示打开(忽略`val` 值);"
-                    "`type&1==0`表示关闭(忽略`val` 值);"
-                    "val指示灯光的亮度值范围[0，255]，255亮度最大。"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_brightness": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置亮度，val=亮度值[0,255]",
                     },
                 },
             },
             "P2": {
-                "description": "色温控制",
-                "rw": "RW",
+                "description": "color_temp",
                 "data_type": "color_temp",
                 "conversion": "val_to_color_temp",
-                "detailed_description": "`val` 值为色温值，取值范围[0，255]，0表示暖光，255表示冷光",
                 "commands": {
                     "set_color_temp": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置色温，val=色温值[0,255]",
                     },
                 },
             },
@@ -5278,162 +3605,104 @@ _RAW_DEVICE_DATA = {
         "name": "星玉情景面板",
         "switch": {
             "P1": {
-                "description": "情景开关1",
-                "rw": "RW",
+                "description": "scene_switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P2": {
-                "description": "情景开关2",
-                "rw": "RW",
+                "description": "scene_switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P3": {
-                "description": "情景开关3",
-                "rw": "RW",
+                "description": "scene_switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P4": {
-                "description": "情景开关4",
-                "rw": "RW",
+                "description": "scene_switch_4",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P5": {
-                "description": "情景开关5",
-                "rw": "RW",
+                "description": "scene_switch_5",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "P6": {
-                "description": "情景开关6",
-                "rw": "RW",
+                "description": "scene_switch_6",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P7": {
-                "description": "开关控制器配置",
-                "rw": "RW",
+                "description": "turn_on_controller_config",
                 "data_type": "scene_config",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值为面板上六个按键的功能配置参数。"
-                    "`bit0-bit3`:设置P1;`bit4-bit7`:设置P2;`bit8-bit11`：设置P3;"
-                    "`bit12-bit15`: 设置P4;`bit16-bit19`:设置P5;`bit20-bit23`：设置P6;"
-                    "如上划分每4个bit分别代表对应面板上的按钮设置，"
-                    "我们按照每4个bit的值来看功能的定义设置，以P1的设置为例："
-                    "值为0时：表示自复位开关，默认5s自动关;"
-                    "值为1、2、3时：分别对应面板物理设备上的继电器L1，"
-                    "那么该P1的开关操作就是操作的继电器L1的开关；"
-                    "值为4~14时：表示自复位开关自定义延迟关的时间，"
-                    "若x表示满足当前区间的值，那么延迟关时间的计算公式为："
-                    "(5+(X-3)*15) 单位为秒S。值为15时：表示通用开关，不会自动关。"
-                    "当P1~P6设置为绑定继电器时，当前为普通开关控制器。"
-                ),
                 "commands": {
                     "config": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "下发配置，val=bit0~bit23按对应Px配置值后合并的一个数值",
                     },
                 },
             },
@@ -5447,137 +3716,142 @@ _RAW_DEVICE_DATA = {
         "manufacturer": "lifesmart",
         "model": "SL_SW_WIN",
         "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
-        
         # 基础平台配置
         "platforms": {
             "cover": {
                 "io_configs": {
                     "OP": {
-                        "description": "打开窗帘",
+                        "description": "open_curtain",
                         "data_type": "cover_control",
                         "conversion": "type_bit_0",
-                        "rw": "RW",
-                        "detailed_description": "`type&1==1`表示打开窗帘",
                         "commands": {
-                            "open": {"type": "CMD_TYPE_ON", "val": 1, "description": "执行打开窗帘"}
-                        }
+                            "open": {
+                                "type": "CMD_TYPE_ON",
+                                "val": 1,
+                            }
+                        },
                     },
                     "CL": {
-                        "description": "关闭窗帘",
+                        "description": "close_curtain",
                         "data_type": "cover_control",
                         "conversion": "type_bit_0",
-                        "rw": "RW",
-                        "detailed_description": "`type&1==1`表示关闭窗帘",
                         "commands": {
-                            "close": {"type": "CMD_TYPE_ON", "val": 1, "description": "执行关闭窗帘"}
-                        }
+                            "close": {
+                                "type": "CMD_TYPE_ON",
+                                "val": 1,
+                            }
+                        },
                     },
                     "ST": {
-                        "description": "停止",
+                        "description": "stop",
                         "data_type": "cover_control",
                         "conversion": "type_bit_0",
-                        "rw": "RW",
-                        "detailed_description": "`type&1==1`表示停止当前动作",
                         "commands": {
-                            "stop": {"type": "CMD_TYPE_ON", "val": 1, "description": "执行停止窗帘"}
-                        }
-                    }
+                            "stop": {
+                                "type": "CMD_TYPE_ON",
+                                "val": 1,
+                            }
+                        },
+                    },
                 }
             },
             "light": {
                 "io_configs": {
                     "dark": {
-                        "description": "关闭状态时指示灯亮度",
+                        "description": "turn_off_indicator_brightness",
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
-                        "rw": "RW",
                         "range": "0~1023",
-                        "detailed_description": (
-                            "`type&1==1`表示打开；`type&1==0`表示关闭；"
-                            "`val`表示指示灯亮度值，取值范围：0~1023"
-                        ),
                         "commands": {
-                            "on": {"type": "CMD_TYPE_ON", "val": 1, "description": "开灯"},
-                            "off": {"type": "CMD_TYPE_OFF", "val": 0, "description": "关灯"},
-                            "set_brightness_on": {"type": "CMD_TYPE_SET_RAW_ON", "description": "开灯设置亮度"},
-                            "set_brightness_off": {"type": "CMD_TYPE_SET_RAW_OFF", "description": "关灯设置亮度"}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_ON",
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_OFF",
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": "CMD_TYPE_SET_RAW_ON",
+                            },
+                            "set_brightness_off": {
+                                "type": "CMD_TYPE_SET_RAW_OFF",
+                            },
+                        },
                     },
                     "bright": {
-                        "description": "开启状态时指示灯亮度",
+                        "description": "turn_on_indicator_brightness",
                         "data_type": "brightness_light",
                         "conversion": "val_direct",
-                        "rw": "RW",
                         "range": "0~1023",
-                        "detailed_description": "`val`表示指示灯亮度值，取值范围：0~1023",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_ON", "val": 1, "description": "开灯"},
-                            "off": {"type": "CMD_TYPE_OFF", "val": 0, "description": "关灯"},
-                            "set_brightness_on": {"type": "CMD_TYPE_SET_RAW_ON", "description": "开灯设置亮度"},
-                            "set_brightness_off": {"type": "CMD_TYPE_SET_RAW_OFF", "description": "关灯设置亮度"}
-                        }
-                    }
+                            "on": {
+                                "type": "CMD_TYPE_ON",
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_OFF",
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": "CMD_TYPE_SET_RAW_ON",
+                            },
+                            "set_brightness_off": {
+                                "type": "CMD_TYPE_SET_RAW_OFF",
+                            },
+                        },
+                    },
                 }
-            }
+            },
         },
-        
         # 核心：cover_config嵌入配置 - 明确位置反馈能力
         "cover_config": {
             "device_class": "curtain",
-            "position_feedback": false,  # 明确表达：无位置反馈能力
+            "position_feedback": False,  # 明确表达：无位置反馈能力
             "control_type": "optimistic",  # 乐观控制模式
             "capabilities": ["open", "close", "stop"],
-            
             # 控制行为配置
             "travel_time": 30,  # 预估运行时间（秒）
-            "assume_closed_on_start": false,  # 启动时不假设状态
-            
+            "assume_closed_on_start": False,  # 启动时不假设状态
             # IO端口映射
             "io_mapping": {
-                "open_io": "OP",    # 打开命令IO端口
-                "close_io": "CL",   # 关闭命令IO端口
-                "stop_io": "ST"     # 停止命令IO端口
+                "open_io": "OP",  # 打开命令IO端口
+                "close_io": "CL",  # 关闭命令IO端口
+                "stop_io": "ST",  # 停止命令IO端口
             },
-            
             # 命令配置
             "commands": {
                 "open": {
                     "io_port": "OP",
                     "command_type": "CMD_TYPE_ON",
                     "value": 1,
-                    "description": "发送打开窗帘命令"
                 },
                 "close": {
                     "io_port": "CL",
-                    "command_type": "CMD_TYPE_ON", 
+                    "command_type": "CMD_TYPE_ON",
                     "value": 1,
-                    "description": "发送关闭窗帘命令"
                 },
                 "stop": {
                     "io_port": "ST",
                     "command_type": "CMD_TYPE_ON",
                     "value": 1,
-                    "description": "发送停止窗帘命令"
-                }
-            }
+                },
+            },
         },
-        
         # 设备能力标识
         "capabilities": [
-            "cover_control",         # 窗帘控制能力
-            "basic_positioning",     # 基础定位（开/关/停）
+            "cover_control",  # 窗帘控制能力
+            "basic_positioning",  # 基础定位（开/关/停）
             "no_position_feedback",  # 明确标识：无位置反馈
-            "indicator_light"        # 指示灯功能
+            "indicator_light",  # 指示灯功能
         ],
-        
         # Home Assistant实体配置
         "entity_config": {
             "unique_id_template": "lifesmart_{device_id}_cover",
             "name_template": "{device_name} 窗帘",
             "icon": "mdi:curtains",
-            "device_class": "curtain"
+            "device_class": "curtain",
         },
-        
         # 翻译键支持
         "translation_keys": {
             "cover_open": "打开窗帘",
@@ -5587,209 +3861,186 @@ _RAW_DEVICE_DATA = {
             "cover_state_closing": "正在关闭",
             "cover_state_stopped": "已停止",
             "indicator_light_dark": "关闭状态指示灯",
-            "indicator_light_bright": "开启状态指示灯"
+            "indicator_light_bright": "开启状态指示灯",
         },
-        
         # 设备特定行为配置
         "behavior_config": {
             "state_tracking": "optimistic",  # 乐观状态跟踪
-            "command_delay": 0.5,            # 命令间延迟（秒）
-            "state_timeout": 30,             # 状态超时（秒）
-            "auto_assume_state": false       # 不自动假设状态
-        }
+            "command_delay": 0.5,  # 命令间延迟（秒）
+            "state_timeout": 30,  # 状态超时（秒）
+            "auto_assume_state": False,  # 不自动假设状态
+        },
     },
     "SL_CN_IF": {
         "name": "流光窗帘控制器",
-        "cover": {
-            "P1": {
-                "description": "打开窗帘",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开窗帘",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行打开窗帘",
-                    },
-                },
-            },
-            "P2": {
-                "description": "停止 (stop)",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示停止当前动作",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行停止窗帘",
-                    },
-                },
-            },
-            "P3": {
-                "description": "关闭窗帘 (close)",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示关闭窗帘",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行关闭窗帘",
-                    },
-                },
-            },
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_CN_IF",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+        "cover_features": {
+            "position_feedback": False,  # 无位置反馈
+            "optimistic_mode": True,  # 乐观判断状态
+            "control_mapping": {"open": "P1", "close": "P2", "stop": "P3"},
         },
-        "light": {
-            "P4": {
-                "description": "打开面板指示灯的颜色值",
-                "rw": "RW",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "开灯",
+        # 基础平台配置
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P1": {
+                        "description": "open_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关灯",
+                    "P2": {
+                        "description": "close_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
                     },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    "P3": {
+                        "description": "stop",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
                     },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
-                    },
-                },
+                }
             },
-            "P5": {
-                "description": "停止(stop)时指示灯的颜色值",
-                "rw": "RW",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "开灯",
+            "light": {
+                "io_configs": {
+                    "P4": {
+                        "description": "open_panel_indicator_color",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关灯",
+                    "P5": {
+                        "description": "stop_indicator_color",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
+                    "P6": {
+                        "description": "close_panel_indicator_color",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
-                    },
-                },
-            },
-            "P6": {
-                "description": "关闭面板指示灯的颜色值",
-                "rw": "RW",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "开灯",
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关灯",
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
-                    },
-                },
+                }
             },
         },
     },
     "SL_CN_FE": {
         "name": "塞纳三键窗帘",
-        "cover": {
-            "P1": {
-                "description": "打开窗帘",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开窗帘",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行打开窗帘",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_CN_FE",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+        "cover_features": {
+            "position_feedback": False,  # 无位置反馈
+            "optimistic_mode": True,  # 乐观判断状态
+            "control_mapping": {"open": "P1", "close": "P3", "stop": "P2"},
+        },
+        # 基础平台配置
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P1": {
+                        "description": "open_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
                     },
-                },
-            },
-            "P2": {
-                "description": "停止 (stop)",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示停止当前动作",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行停止窗帘",
+                    "P2": {
+                        "description": "stop",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
                     },
-                },
-            },
-            "P3": {
-                "description": "关闭窗帘 (close)",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示关闭窗帘",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行关闭窗帘",
+                    "P3": {
+                        "description": "close_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
                     },
-                },
+                }
             },
         },
     },
@@ -5798,43 +4049,29 @@ _RAW_DEVICE_DATA = {
         "name": "DOOYA窗帘电机",
         "cover": {
             "P1": {
-                "description": "窗帘状态",
-                "rw": "R",
+                "description": "curtain",
                 "data_type": "position_status",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示控制正在运行；"
-                    "`type&1==0`表示没有运行；"
-                    "当正在运行的时候即(`type&1==1`):,`val%0x80==0x80`表示正在开，否则表示正在关；"
-                    "`val%0x7F`的值表示窗帘打开的百分比([0,100]);"
-                    "若`val%0x7F`大于100则表示获取不到位置信息，"
-                    "只有执行全开或全关之后才能重新获取位置信息。"
-                ),
             },
             "P2": {
-                "description": "窗帘控制",
-                "rw": "W",
+                "description": "curtain",
                 "data_type": "position_control",
                 "conversion": "val_direct",
                 "commands": {
                     "open": {
                         "type": CMD_TYPE_SET_VAL,
                         "val": 100,
-                        "description": "完全打开",
                     },
                     "close": {
                         "type": CMD_TYPE_SET_VAL,
                         "val": 0,
-                        "description": "完全关闭",
                     },
                     "stop": {
                         "type": CMD_TYPE_SET_CONFIG,
                         "val": 128,
-                        "description": "停止窗帘",
                     },
                     "set_position": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "开到百分比，val=percent，percent取值:[0,100]",
                     },
                 },
             },
@@ -5842,62 +4079,65 @@ _RAW_DEVICE_DATA = {
     },
     "SL_P_V2": {
         "name": "智界窗帘电机智控器",
-        "cover": {
-            "P2": {
-                "description": "打开窗帘",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开窗帘",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行打开窗帘",
-                    },
-                },
-            },
-            "P4": {
-                "description": "停止 (stop)",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示停止当前动作",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行停止窗帘",
-                    },
-                },
-            },
-            "P3": {
-                "description": "关闭窗帘 (close)",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示关闭窗帘",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "执行关闭窗帘",
-                    },
-                },
-            },
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_V2",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+        "cover_features": {
+            "position_feedback": False,  # 无位置反馈
+            "optimistic_mode": True,  # 乐观判断状态
+            "control_mapping": {"open": "P2", "close": "P3", "stop": "P4"},
         },
-        "sensor": {
-            "P8": {
-                "description": "电压(V)",
-                "rw": "R",
-                "data_type": "voltage",
-                "conversion": "friendly_val",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0，100]，它是根据val电压值换算的。"
-                ),
-                "device_class": "voltage",
-                "state_class": "measurement",
+        # 基础平台配置
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P2": {
+                        "description": "open_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "close_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "stop",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P8": {
+                        "description": "electric",
+                        "data_type": "voltage",
+                        "conversion": "friendly_val",
+                        "device_class": "voltage",
+                        "state_class": "measurement",
+                    },
+                }
             },
         },
     },
@@ -5907,66 +4147,44 @@ _RAW_DEVICE_DATA = {
         "name": "RGBW灯带",
         "light": {
             "RGBW": {
-                "description": "RGBW颜色值",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "DYN": {
-                "description": "动态颜色值",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "dynamic_effect",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开动态；"
-                    "`type&1==0`表示关闭动态；"
-                    "`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义"
-                ),
                 "commands": {
                     "enable": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "使能",
                     },
                     "disable": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_effect_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "使能并设置动态值，val=动态值",
                     },
                     "set_effect_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关闭并设置动态值，val=动态值",
                     },
                 },
             },
@@ -5976,66 +4194,44 @@ _RAW_DEVICE_DATA = {
         "name": "RGBW灯泡",
         "light": {
             "RGBW": {
-                "description": "RGBW颜色值",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "DYN": {
-                "description": "动态颜色值",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "dynamic_effect",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开动态；"
-                    "`type&1==0`表示关闭动态；"
-                    "`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义"
-                ),
                 "commands": {
                     "enable": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "使能",
                     },
                     "disable": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_effect_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "使能并设置动态值，val=动态值",
                     },
                     "set_effect_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关闭并设置动态值，val=动态值",
                     },
                 },
             },
@@ -6045,38 +4241,24 @@ _RAW_DEVICE_DATA = {
         "name": "RGB灯带无白光",
         "light": {
             "RGB": {
-                "description": "RGB颜色值",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "rgb_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    "`type&1==0`表示关闭；"
-                    "`val` 值为颜色值，大小4个字节，定义如下："
-                    "`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, "
-                    "`bit16`~`bit23`:Red, `bit24`~`bit31`:White, "
-                    "(当White>0时，表示动态模式)"
-                    "具体动态值请参考：附录3.2动态颜色(DYN)定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -6087,51 +4269,32 @@ _RAW_DEVICE_DATA = {
         "name": "量子灯",
         "light": {
             "P1": {
-                "description": "亮度控制",
-                "rw": "RW",
+                "description": "brightness",
                 "data_type": "brightness_light",
                 "conversion": "val_direct",
                 "range": "0-100",
-                "detailed_description": (
-                    "`type&1==1`表示打开(忽略`val` 值)；"
-                    "`type&1==0`表示关闭(忽略`val` 值)；"
-                    "`val`指示灯光的亮度值范围[0,100]，100亮度最大"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_brightness": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置亮度，val=亮度值[0-100]",
                     },
                 },
             },
             "P2": {
-                "description": "颜色控制",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "quantum_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": (
-                    "`val` 值为颜色值，大小4个字节，定义如下："
-                    "`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, "
-                    "`bit16`~`bit23`:Red, `bit24~bit31`:White, "
-                    "(当White>0时，表示动态模式)"
-                    "具体动态值请参考：附录3.2动态颜色(DYN)定义, "
-                    "附录3.3量子灯特殊(DYN)定义"
-                ),
                 "commands": {
                     "set_color": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "设置颜色或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -6142,51 +4305,38 @@ _RAW_DEVICE_DATA = {
         "name": "门廊壁灯",
         "light": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "brightness_light",
                 "conversion": "val_direct",
                 "range": "0-255",
-                "detailed_description": (
-                    "`type&1==1`表示处于打开状态；"
-                    "`type&1==0`表示处于关闭状态；"
-                    "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_brightness": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置亮度，val=亮度值[0-255]",
                     },
                 },
             },
         },
         "binary_sensor": {
             "P2": {
-                "description": "移动检测",
-                "rw": "R",
+                "description": "motion",
                 "data_type": "motion_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：没有检测到移动，1：有检测到移动",
                 "device_class": "motion",
             },
         },
         "sensor": {
             "P3": {
-                "description": "当前环境光照",
-                "rw": "R",
+                "description": "illuminance",
                 "data_type": "illuminance",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始光照值，`v` 值表示实际值(单位：lux)",
                 "device_class": "illuminance",
                 "unit_of_measurement": "lux",
                 "state_class": "measurement",
@@ -6198,75 +4348,49 @@ _RAW_DEVICE_DATA = {
         "name": "花园地灯",
         "light": {
             "P1": {
-                "description": "开关/颜色设置",
-                "rw": "RW",
+                "description": "turn_on_switch",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    "`type&1==0`表示关闭；"
-                    "`val` 值为颜色值，大小4个字节，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green "
-                    "- `bit16~bit23`: Red - `bit24~bit31`: White/DYN。"
-                    "例如：红色：`0x00FF0000`, 白色：`0xFF000000`。"
-                    "`bit24~bit31`即可以设置白光又可以设置动态。"
-                    "当其值在[0~100]表示设置的是白光，0表示不显示白光，"
-                    "100表示白光最亮；"
-                    "当其值大于等于128表示设置为动态模式，具体动态值请参考：附录3.2 动态颜色(DYN)定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
         },
         "sensor": {
             "P2": {
-                "description": "当前环境光照",
-                "rw": "R",
+                "description": "illuminance",
                 "data_type": "illuminance",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始光照值，`v` 值表示实际值(单位：lux)",
                 "device_class": "illuminance",
                 "unit_of_measurement": "lux",
                 "state_class": "measurement",
             },
             "P3": {
-                "description": "充电指示",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "charging_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：没有充电, 1：正在充电，`val`表示原始电压值",
                 "device_class": "battery",
                 "unit_of_measurement": "V",
                 "state_class": "measurement",
             },
             "P4": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6278,66 +4402,44 @@ _RAW_DEVICE_DATA = {
         "name": "超级碗RGB灯",
         "light": {
             "RGBW": {
-                "description": "RGBW颜色值",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "rgbw_light",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1` 表示打开；`type&1==0` 表示关闭；"
-                    "`val` 表示指示灯亮度值，定义如下："
-                    "- `bit0~bit7`: Blue - `bit8~bit15`: Green - `bit16~bit23`: Red - "
-                    "`bit24~bit31`: White（当 White>0 时，表示动态模式）"
-                    "具体动态值请参考：附录3.1动态颜色（`DYN`）定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
             "DYN": {
-                "description": "动态颜色值",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "dynamic_effect",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开动态；"
-                    "`type&1==0`表示关闭动态；"
-                    "`val`表示动态颜色值，具体动态值请参考：附录3.2 动态颜色（DYN）定义"
-                ),
                 "commands": {
                     "enable": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "使能",
                     },
                     "disable": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_effect_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "使能并设置动态值，val=动态值",
                     },
                     "set_effect_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关闭并设置动态值，val=动态值",
                     },
                 },
             },
@@ -6347,38 +4449,24 @@ _RAW_DEVICE_DATA = {
         "name": "超级碗RGB灯(OD)",
         "light": {
             "RGB": {
-                "description": "RGB颜色值",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "rgb_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    "`type&1==0`表示关闭；"
-                    "`val` 值为颜色值，大小4个字节，定义如下："
-                    "`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, "
-                    "`bit16`~`bit23`:Red, `bit24`~`bit31`:White, "
-                    "(当White>0时，表示动态模式)"
-                    "具体动态值请参考：附录3.2动态颜色(DYN)定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -6388,38 +4476,24 @@ _RAW_DEVICE_DATA = {
         "name": "超级碗RGB灯",
         "light": {
             "RGB": {
-                "description": "RGB颜色值",
-                "rw": "RW",
+                "description": "color",
                 "data_type": "rgb_light",
                 "conversion": "val_direct",
                 "range": "0x00000000-0xFFFFFFFF",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    "`type&1==0`表示关闭；"
-                    "`val` 值为颜色值，大小4个字节，定义如下："
-                    "`bit0`~`bit7`:Blue, `bit8`~`bit15`:Green, "
-                    "`bit16`~`bit23`:Red, `bit24`~`bit31`:White, "
-                    "(当White>0时，表示动态模式)"
-                    "具体动态值请参考：附录3.2动态颜色(DYN)定义"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                     "set_color_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "开灯并设置颜色或动态值，val=颜色或动态值",
                     },
                     "set_color_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "关灯并设置颜色值或动态值，val=颜色或动态值",
                     },
                 },
             },
@@ -6429,64 +4503,43 @@ _RAW_DEVICE_DATA = {
         "name": "红外吸顶灯",
         "light": {
             "P1": {
-                "description": "亮度控制",
-                "rw": "RW",
+                "description": "brightness",
                 "data_type": "brightness_light",
                 "conversion": "val_direct",
                 "range": "0-255",
-                "detailed_description": (
-                    "`type&1==1`表示处于打开状态；"
-                    "`type&1==0`表示处于关闭状态；"
-                    "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_brightness": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置亮度，val=亮度值[0-255]",
                     },
                 },
             },
             "P2": {
-                "description": "色温控制",
-                "rw": "RW",
+                "description": "color_temp",
                 "data_type": "color_temperature",
                 "conversion": "val_direct",
                 "range": "0-255",
-                "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
                 "commands": {
                     "set_color_temp": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置色温，val=色温值[0-255]",
                     },
                 },
             },
             "P3": {
-                "description": "夜灯亮度控制",
-                "rw": "RW",
+                "description": "brightness",
                 "data_type": "nightlight_brightness",
                 "conversion": "val_direct",
                 "range": "0,63,127,195,255",
-                "detailed_description": (
-                    "`val` 值为夜灯亮度，共有5档，亮度从低到高分别如下："
-                    "0、63、127、195、255。0表示夜灯处于关闭状态，"
-                    "255表示夜灯处于最亮状态。注意：若亮度值为其它值则根据如下规则判断亮度档位："
-                    "0：关闭档，>=196：最亮档，>=128并且<=195：次亮档，"
-                    ">=64并且<=127：第三亮档，>0并且<=63：第四亮档"
-                ),
                 "commands": {
                     "set_brightness": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置亮度，val=亮度值[0、63、127、195、255]",
                     },
                 },
             },
@@ -6496,64 +4549,43 @@ _RAW_DEVICE_DATA = {
         "name": "红外模块",
         "light": {
             "P1": {
-                "description": "亮度控制",
-                "rw": "RW",
+                "description": "brightness",
                 "data_type": "brightness_light",
                 "conversion": "val_direct",
                 "range": "0-255",
-                "detailed_description": (
-                    "`type&1==1`表示处于打开状态；"
-                    "`type&1==0`表示处于关闭状态；"
-                    "`val` 值为亮度值，可调范围：[0-255], 值越大表示光越亮，0处于最暗，光完全熄灭，255处于最亮"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_brightness": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置亮度，val=亮度值[0-255]",
                     },
                 },
             },
             "P2": {
-                "description": "色温控制",
-                "rw": "RW",
+                "description": "color_temp",
                 "data_type": "color_temperature",
                 "conversion": "val_direct",
                 "range": "0-255",
-                "detailed_description": "`val` 值为色温值，取值范围[0-255]，0表示暖光，255表示冷光",
                 "commands": {
                     "set_color_temp": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置色温，val=色温值[0-255]",
                     },
                 },
             },
             "P3": {
-                "description": "夜灯亮度控制",
-                "rw": "RW",
+                "description": "brightness",
                 "data_type": "nightlight_brightness",
                 "conversion": "val_direct",
                 "range": "0,63,127,195,255",
-                "detailed_description": (
-                    "`val` 值为夜灯亮度，共有5档，亮度从低到高分别如下："
-                    "0、63、127、195、255。0表示夜灯处于关闭状态，"
-                    "255表示夜灯处于最亮状态。注意：若亮度值为其它值则根据如下规则判断亮度档位："
-                    "0：关闭档，>=196：最亮档，>=128并且<=195：次亮档，"
-                    ">=64并且<=127：第三亮档，>0并且<=63：第四亮档"
-                ),
                 "commands": {
                     "set_brightness": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置亮度，val=亮度值[0、63、127、195、255]",
                     },
                 },
             },
@@ -6563,24 +4595,17 @@ _RAW_DEVICE_DATA = {
         "name": "语音小Q",
         "switch": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -6592,24 +4617,17 @@ _RAW_DEVICE_DATA = {
         "name": "门禁感应器",
         "binary_sensor": {
             "G": {
-                "description": "当前状态",
-                "rw": "R",
+                "description": "current_state",
                 "data_type": "door_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：打开，1：关闭",
                 "device_class": "door",
             },
         },
         "sensor": {
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6620,46 +4638,29 @@ _RAW_DEVICE_DATA = {
         "name": "门禁感应器（带按键震动）",
         "binary_sensor": {
             "G": {
-                "description": "当前状态",
-                "rw": "R",
+                "description": "current_state",
                 "data_type": "door_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示处于打开状态(忽略`val` 值)；"
-                    "`type&1==0`表示处于吸合状态(忽略`val` 值)"
-                ),
                 "device_class": "door",
             },
             "B": {
-                "description": "按键状态",
-                "rw": "R",
+                "description": "button",
                 "data_type": "button_status",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
-                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
-                ),
                 "device_class": "moving",
             },
             "AXS": {
-                "description": "震动状态",
-                "rw": "R",
+                "description": "vibration_status",
                 "data_type": "vibration_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：无震动，非0：震动",
                 "device_class": "vibration",
             },
         },
         "sensor": {
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6670,38 +4671,23 @@ _RAW_DEVICE_DATA = {
         "name": "门禁感应器（增强版）",
         "binary_sensor": {
             "P1": {
-                "description": "当前状态",
-                "rw": "R",
+                "description": "current_state",
                 "data_type": "door_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示处于打开状态(忽略`val` 值)；"
-                    "`type&1==0`表示处于吸合状态(忽略`val` 值)"
-                ),
                 "device_class": "door",
             },
             "AXS": {
-                "description": "震动状态",
-                "rw": "R",
+                "description": "vibration_status",
                 "data_type": "vibration_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示处于震动状态；`type&1==0`表示无震动状态；"
-                    "`val` 值表示震动强度"
-                ),
                 "device_class": "vibration",
             },
         },
         "sensor": {
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6712,24 +4698,17 @@ _RAW_DEVICE_DATA = {
         "name": "动态感应器",
         "binary_sensor": {
             "M": {
-                "description": "移动检测",
-                "rw": "R",
+                "description": "motion",
                 "data_type": "motion_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：没有检测到移动，1：有检测到移动",
                 "device_class": "motion",
             },
         },
         "sensor": {
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6740,24 +4719,17 @@ _RAW_DEVICE_DATA = {
         "name": "动态感应器",
         "binary_sensor": {
             "M": {
-                "description": "移动检测",
-                "rw": "R",
+                "description": "motion",
                 "data_type": "motion_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：没有检测到移动，1：有检测到移动",
                 "device_class": "motion",
             },
         },
         "sensor": {
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6768,34 +4740,25 @@ _RAW_DEVICE_DATA = {
         "name": "动态感应器（带USB供电）",
         "binary_sensor": {
             "P1": {
-                "description": "移动检测",
-                "rw": "R",
+                "description": "motion",
                 "data_type": "motion_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：没有检测到移动，1：有检测到移动",
                 "device_class": "motion",
             },
         },
         "sensor": {
             "P3": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
             "P4": {
-                "description": "USB供电电压",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "voltage",
                 "conversion": "val_direct",
-                "detailed_description": "`val`表示原始电压值，若`val` 值大于430则表明供电在工作，否则表明未供电工作",
                 "device_class": "voltage",
                 "unit_of_measurement": "V",
                 "state_class": "measurement",
@@ -6806,34 +4769,25 @@ _RAW_DEVICE_DATA = {
         "name": "动态感应器PRO",
         "binary_sensor": {
             "P1": {
-                "description": "移动检测",
-                "rw": "R",
+                "description": "motion",
                 "data_type": "motion_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：没有检测到移动，1：有检测到移动",
                 "device_class": "motion",
             },
         },
         "sensor": {
             "P2": {
-                "description": "当前环境光照",
-                "rw": "R",
+                "description": "illuminance",
                 "data_type": "illuminance",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始光照值，`v` 值表示实际值(单位：lux)",
                 "device_class": "illuminance",
                 "unit_of_measurement": "lx",
                 "state_class": "measurement",
             },
             "P3": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6844,44 +4798,33 @@ _RAW_DEVICE_DATA = {
         "name": "环境感应器（温湿度光照）",
         "sensor": {
             "T": {
-                "description": "当前环境温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "val_div_10",
-                "detailed_description": "`val` 值表示原始温度值，它是温度值*10值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "H": {
-                "description": "当前环境湿度",
-                "rw": "R",
+                "description": "humidity",
                 "data_type": "humidity",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
                 "device_class": "humidity",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
             "Z": {
-                "description": "当前环境光照",
-                "rw": "R",
+                "description": "illuminance",
                 "data_type": "illuminance",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始光照值，`v` 值表示实际值(单位：lux)",
                 "device_class": "illuminance",
                 "unit_of_measurement": "lx",
                 "state_class": "measurement",
             },
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6892,44 +4835,33 @@ _RAW_DEVICE_DATA = {
         "name": "环境感应器（温湿度光照）",
         "sensor": {
             "T": {
-                "description": "当前环境温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "val_div_10",
-                "detailed_description": "`val` 值表示原始温度值，它是温度值*10值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "H": {
-                "description": "当前环境湿度",
-                "rw": "R",
+                "description": "humidity",
                 "data_type": "humidity",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
                 "device_class": "humidity",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
             "Z": {
-                "description": "当前环境光照",
-                "rw": "R",
+                "description": "illuminance",
                 "data_type": "illuminance",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始光照值，`v` 值表示实际值(单位：lux)",
                 "device_class": "illuminance",
                 "unit_of_measurement": "lx",
                 "state_class": "measurement",
             },
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6940,34 +4872,25 @@ _RAW_DEVICE_DATA = {
         "name": "水浸传感器",
         "binary_sensor": {
             "WA": {
-                "description": "水浸检测",
-                "rw": "R",
+                "description": "water_leak_detection",
                 "data_type": "water_leak",
                 "conversion": "val_greater_than_zero",
-                "detailed_description": "`val` 值大于0表示检测到水；val=0表示未检测到水",
                 "device_class": "moisture",
             },
         },
         "sensor": {
             "WA": {
-                "description": "导电率",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "conductivity",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：未检测到水；值越大表示水越多，导电率越高",
                 "device_class": "moisture",
                 "unit_of_measurement": "µS/cm",
                 "state_class": "measurement",
             },
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据`val`电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -6978,11 +4901,9 @@ _RAW_DEVICE_DATA = {
         "name": "甲醛感应器",
         "sensor": {
             "P1": {
-                "description": "甲醛浓度",
-                "rw": "R",
+                "description": "formaldehyde_concentration",
                 "data_type": "甲醛_concentration",
                 "conversion": "v_field",
-                "detailed_description": "`type&1==1`表示甲醛浓度值超过告警门限；`val` 值表示甲醛浓度值",
                 "device_class": "volatile_organic_compounds",
                 "unit_of_measurement": "µg/m³",
                 "state_class": "measurement",
@@ -6990,34 +4911,27 @@ _RAW_DEVICE_DATA = {
         },
         "switch": {
             "P2": {
-                "description": "甲醛浓度告警门限",
-                "rw": "RW",
+                "description": "concentration",
                 "data_type": "threshold_setting",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值越大则灵敏度越低，门限越高",
                 "commands": {
                     "set_sensitivity": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置报警器灵敏度",
                     },
                 },
             },
             "P3": {
-                "description": "警报音",
-                "rw": "RW",
+                "description": "alarm_sound",
                 "data_type": "alarm_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`指示报警音正在响，反之则没有报警音",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "手工触发报警音",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "手动消除报警音",
                     },
                 },
             },
@@ -7027,11 +4941,9 @@ _RAW_DEVICE_DATA = {
         "name": "燃气感应器",
         "sensor": {
             "P1": {
-                "description": "燃气浓度",
-                "rw": "R",
+                "description": "concentration",
                 "data_type": "燃气_concentration",
                 "conversion": "val_direct",
-                "detailed_description": "`type&1==1`表示燃气浓度值超过告警门限；`val` 值表示燃气浓度值",
                 "device_class": "gas",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
@@ -7039,34 +4951,27 @@ _RAW_DEVICE_DATA = {
         },
         "switch": {
             "P2": {
-                "description": "燃气浓度告警门限",
-                "rw": "RW",
+                "description": "concentration",
                 "data_type": "threshold_setting",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值越大则灵敏度越低，门限越高",
                 "commands": {
                     "set_sensitivity": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置报警器灵敏度",
                     },
                 },
             },
             "P3": {
-                "description": "警报音",
-                "rw": "RW",
+                "description": "alarm_sound",
                 "data_type": "alarm_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`指示报警音正在响，反之则没有报警音",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "手工触发报警音",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "手动消除报警音",
                     },
                 },
             },
@@ -7076,71 +4981,49 @@ _RAW_DEVICE_DATA = {
         "name": "TVOC+CO2环境感应器",
         "sensor": {
             "P1": {
-                "description": "当前环境温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始温度值，它是温度值*10，`v` 值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "P2": {
-                "description": "当前环境湿度",
-                "rw": "R",
+                "description": "humidity",
                 "data_type": "humidity",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
                 "device_class": "humidity",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
             "P3": {
-                "description": "当前CO2浓度值",
-                "rw": "R",
+                "description": "concentration",
                 "data_type": "co2_concentration",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示co2浓度值，`v` 值表示实际值(单位：ppm)，参考："
-                    "`val`<=500：优，`val`<=700：良，`val`<=1000：中，`val`>1000：差"
-                ),
                 "device_class": "carbon_dioxide",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
             },
             "P4": {
-                "description": "当前TVOC浓度值",
-                "rw": "R",
+                "description": "concentration",
                 "data_type": "tvoc_concentration",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示tvoc原始浓度值，它是TVOC浓度值*1000，实际浓度值=原始浓度值/1000，"
-                    "`v` 值表示实际值(单位：mg/m3)，参考：`val`<0.34：优，`val`<0.68：良，"
-                    "`val`<=1.02：中，`val`>1.02：差"
-                ),
                 "device_class": "volatile_organic_compounds",
                 "unit_of_measurement": "mg/m³",
                 "state_class": "measurement",
             },
             "P5": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
             "P6": {
-                "description": "USB供电电压",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "voltage",
                 "conversion": "val_direct",
-                "detailed_description": "`val`表示原始电压值，若`val` 值大于430则表明供电在工作，否则表明未供电工作",
                 "device_class": "voltage",
                 "unit_of_measurement": "V",
                 "state_class": "measurement",
@@ -7151,11 +5034,9 @@ _RAW_DEVICE_DATA = {
         "name": "ELIQ电量计量器",
         "sensor": {
             "EPA": {
-                "description": "平均功率",
-                "rw": "R",
+                "description": "power",
                 "data_type": "power",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值表示平均功率",
                 "device_class": "power",
                 "unit_of_measurement": "W",
                 "state_class": "measurement",
@@ -7166,25 +5047,17 @@ _RAW_DEVICE_DATA = {
         "name": "烟雾感应器",
         "binary_sensor": {
             "P1": {
-                "description": "当前是否有烟雾告警",
-                "rw": "R",
+                "description": "sl_p_a",
                 "data_type": "smoke_alarm",
                 "conversion": "val_direct",
-                "detailed_description": "`val`等于0表示没有烟雾告警，等于1表示有烟雾告警",
                 "device_class": "smoke",
             },
         },
         "sensor": {
             "P2": {
-                "description": "电压",
-                "rw": "R",
+                "description": "voltage",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "如果使用9V的电池，则实际电压值=(`val`/100)*3，注意：其值可能会超过9V，"
-                    "例如9.58V；如果外接12V供电，则该值无效。`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -7195,57 +5068,41 @@ _RAW_DEVICE_DATA = {
         "name": "CO2环境感应器",
         "sensor": {
             "P1": {
-                "description": "当前环境温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始温度值，它是温度值*10，`v` 值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "P2": {
-                "description": "当前环境湿度",
-                "rw": "R",
+                "description": "humidity",
                 "data_type": "humidity",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
                 "device_class": "humidity",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
             "P3": {
-                "description": "当前CO2浓度值",
-                "rw": "R",
+                "description": "concentration",
                 "data_type": "co2_concentration",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示co2浓度值，`v` 值表示实际值(单位：ppm)，参考："
-                    "`val`<=500：优，`val`<=700：良，`val`<=1000：中，`val`>1000：差"
-                ),
                 "device_class": "carbon_dioxide",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
             },
             "P4": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
             "P5": {
-                "description": "USB供电电压",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "voltage",
                 "conversion": "val_direct",
-                "detailed_description": "`val`表示原始电压值，若`val` 值大于430则表明供电在工作，否则表明未供电工作",
                 "device_class": "voltage",
                 "unit_of_measurement": "V",
                 "state_class": "measurement",
@@ -7256,29 +5113,20 @@ _RAW_DEVICE_DATA = {
         "name": "雷达人体存在感应器",
         "binary_sensor": {
             "P1": {
-                "description": "移动检测(Motion)",
-                "rw": "R",
+                "description": "detection",
                 "data_type": "motion_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0：没有检测到移动，非0：有检测到移动",
                 "device_class": "motion",
             },
         },
         "switch": {
             "P2": {
-                "description": "移动检测参数设置",
-                "rw": "RW",
+                "description": "detection",
                 "data_type": "radar_config",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "包含动态锁定时间与灵敏度设置。其中：`bit0-bit7`：动态锁定时间，取值范围为：1-255，"
-                    "具体锁定时间为：配置值*4，单位为秒，例如`bit0-bit7`配置值为16，则表示动态锁定时间为64秒。"
-                    "`bit8-bit25`：灵敏度，灵敏度默认值为4，范围1-255，值越小则越灵敏"
-                ),
                 "commands": {
                     "set_config": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置感应器动态锁定时间与灵敏度",
                     },
                 },
             },
@@ -7288,57 +5136,37 @@ _RAW_DEVICE_DATA = {
         "name": "云防门窗感应器",
         "binary_sensor": {
             "A": {
-                "description": "当前状态",
-                "rw": "R",
+                "description": "current_state",
                 "data_type": "door_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示处于打开状态(忽略`val` 值)；"
-                    "`type&1==0`表示处于吸合状态(忽略`val` 值)"
-                ),
                 "device_class": "door",
             },
             "TR": {
-                "description": "防拆状态",
-                "rw": "R",
+                "description": "tamper",
                 "data_type": "tamper_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`则表示触发防拆警报；`type&1==0`则表示状态正常",
                 "device_class": "tamper",
             },
             "A2": {
-                "description": "外部感应器状态",
-                "rw": "R",
+                "description": "sensor",
                 "data_type": "door_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示处于打开状态(忽略`val` 值)；"
-                    "`type&1==0`表示处于吸合状态(忽略`val` 值)；"
-                    "需要接外部感应器，如果没有接则type值为1"
-                ),
                 "device_class": "door",
             },
         },
         "sensor": {
             "T": {
-                "description": "当前环境温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始温度值，它是实际温度值*10，`v` 值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，"
-                    "它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -7349,45 +5177,31 @@ _RAW_DEVICE_DATA = {
         "name": "云防动态感应器",
         "binary_sensor": {
             "M": {
-                "description": "当前状态",
-                "rw": "R",
+                "description": "current_state",
                 "data_type": "motion_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示侦测到人体移动(忽略`val` 值)；"
-                    "`type&1==0`表示没有侦测到人体移动(忽略`val` 值)"
-                ),
                 "device_class": "motion",
             },
             "TR": {
-                "description": "防拆状态",
-                "rw": "R",
+                "description": "tamper",
                 "data_type": "tamper_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`则表示触发防拆警报；`type&1==0`则表示状态正常",
                 "device_class": "tamper",
             },
         },
         "sensor": {
             "T": {
-                "description": "温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始温度值，它是实际温度值*10，`v` 值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，"
-                    "它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -7398,45 +5212,31 @@ _RAW_DEVICE_DATA = {
         "name": "云防室内警铃",
         "binary_sensor": {
             "SR": {
-                "description": "当前状态",
-                "rw": "R",
+                "description": "current_state",
                 "data_type": "siren_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示警铃播放(忽略`val` 值)；"
-                    "`type&1==0`表示正常(忽略`val` 值)"
-                ),
                 "device_class": "sound",
             },
             "TR": {
-                "description": "防拆状态",
-                "rw": "R",
+                "description": "tamper",
                 "data_type": "tamper_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`则表示触发防拆警报；`type&1==0`则表示状态正常",
                 "device_class": "tamper",
             },
         },
         "sensor": {
             "T": {
-                "description": "温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始温度值，它是实际温度值*10，`v` 值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，"
-                    "它是根据val电压值换算的。注意：`type&1==1`表示低电报警状态"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -7444,32 +5244,23 @@ _RAW_DEVICE_DATA = {
         },
         "switch": {
             "P1": {
-                "description": "报警设置",
-                "rw": "RW",
+                "description": "setting",
                 "data_type": "alarm_config",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`val`为32bit值，描述如下(16进制)：`0xAABBCCDD`：`AABB`表示警报持续时长，单位为0.1秒；"
-                    "`CC`是声音强度(136-255)，255最强，136最弱；`DD`表示音频序号：0：无，1：信息，2：告警"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "播放",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "停止",
                     },
                     "set_config_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "设置值并播放",
                     },
                     "set_config_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "设置值并停止",
                     },
                 },
             },
@@ -7479,60 +5270,35 @@ _RAW_DEVICE_DATA = {
         "name": "云防遥控器",
         "binary_sensor": {
             "eB1": {
-                "description": "按键1状态(为布防图标)",
-                "rw": "R",
+                "description": "status",
                 "data_type": "button_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
-                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
-                ),
                 "device_class": "moving",
             },
             "eB2": {
-                "description": "按键2状态(为撤防图标)",
-                "rw": "R",
+                "description": "status",
                 "data_type": "button_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
-                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
-                ),
                 "device_class": "moving",
             },
             "eB3": {
-                "description": "按键3状态(为警告图标)",
-                "rw": "R",
+                "description": "status",
                 "data_type": "button_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
-                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
-                ),
                 "device_class": "moving",
             },
             "eB4": {
-                "description": "按键4状态(为在家图标)",
-                "rw": "R",
+                "description": "status",
                 "data_type": "button_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示按键处于按下状态(忽略`val` 值)；"
-                    "`type&1==0`表示按键处于松开状态(忽略`val` 值)"
-                ),
                 "device_class": "moving",
             },
         },
         "sensor": {
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，值范围[0,100]，"
-                    "它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -7543,25 +5309,17 @@ _RAW_DEVICE_DATA = {
         "name": "噪音感应器",
         "sensor": {
             "P1": {
-                "description": "噪音值",
-                "rw": "R",
+                "description": "sl_sc_cn",
                 "data_type": "noise_level",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示噪音值大于告警门限；"
-                    "`type&1==0`表示噪音值没有超过告警门限；"
-                    "`val`表示当前噪音值，单位为分贝"
-                ),
                 "device_class": "sound_pressure",
                 "unit_of_measurement": "dB",
                 "state_class": "measurement",
             },
             "P4": {
-                "description": "噪音校正值",
-                "rw": "RW",
+                "description": "sl_sc_cn",
                 "data_type": "noise_calibration",
                 "conversion": "val_direct",
-                "detailed_description": "取值范围为[-128~127]，如果噪音采样有误差，可以配置噪音校正值校正",
                 "device_class": "sound_pressure",
                 "unit_of_measurement": "dB",
                 "state_class": "measurement",
@@ -7569,53 +5327,33 @@ _RAW_DEVICE_DATA = {
         },
         "switch": {
             "P2": {
-                "description": "告警门限设置",
-                "rw": "RW",
+                "description": "setting",
                 "data_type": "threshold_config",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`val`为32bit值(十六进制)：`0xAABBCCDD`：`DD`表示告警门限值，数值单位为分贝，取值范围[0,255]；"
-                    "`CC`表示采样值1，取值范围[0,255]；`BB`表示采样值2，取值范围[0,255]；"
-                    "`CCBB`共同作用形成越限率"
-                ),
                 "commands": {
                     "set_threshold": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "修改门限值",
                     },
                 },
             },
             "P3": {
-                "description": "报警设置",
-                "rw": "RW",
+                "description": "setting",
                 "data_type": "alarm_config",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示处于报警状态；"
-                    "`type&1==0`表示处于正常状态；"
-                    "`val`为32bit值，描述如下(16进制)：`0xAABBCCDD`：`AABB`表示警报持续时长，"
-                    "单位为0.1秒，等于65535则表示一直持续；"
-                    "`CC`是声音强度，0表示没有声音，其它值表示有声音；"
-                    "`DD`表示音频模式：0：无声音，1：指示音，2：告警音，0x7F：测试音，0x80-0xFF：自定义模式"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "播放",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "停止",
                     },
                     "set_config_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "设置值并播放",
                     },
                     "set_config_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "设置值并停止",
                     },
                 },
             },
@@ -7626,83 +5364,66 @@ _RAW_DEVICE_DATA = {
         "name": "空气净化器",
         "switch": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit0",
-                "detailed_description": "`type&1==1`表示打开,`val` 值忽略；`type&1==0`表示关闭；",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "RM": {
-                "description": "运行模式",
-                "rw": "RW",
+                "description": "mode",
                 "data_type": "run_mode",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值定义如下：0:auto 1~3:风量1~3 4：风量最大 5:睡眠模式",
                 "commands": {
                     "set_mode": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置运行模式",
                     },
                 },
             },
         },
         "sensor": {
             "T": {
-                "description": "温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "°C",
                 "device_class": "temperature",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示原始温度值，它是温度值*10，`v` 值表示实际值(单位：℃)",
             },
             "H": {
-                "description": "湿度",
-                "rw": "R",
+                "description": "humidity",
                 "data_type": "humidity",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "%",
                 "device_class": "humidity",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示原始湿度值，它是湿度值*10，`v` 值表示实际值(单位：%)",
             },
             "PM": {
                 "description": "PM2.5",
-                "rw": "R",
                 "data_type": "pm25",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "µg/m³",
                 "device_class": "pm25",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示PM2.5值，`v` 值表示实际值(单位：ug/m³)",
             },
             "FL": {
-                "description": "滤芯寿命",
-                "rw": "R",
+                "description": "fl",
                 "data_type": "filter_life",
                 "conversion": "val_direct",
                 "unit_of_measurement": "h",
-                "detailed_description": "`val` 值表示滤芯寿命，范围：0~4800(单位：h)",
             },
             "UV": {
-                "description": "紫外线指数",
-                "rw": "R",
+                "description": "fl",
                 "data_type": "uv_index",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值表示紫外线指数",
             },
         },
     },
@@ -7710,828 +5431,1802 @@ _RAW_DEVICE_DATA = {
     # 2.8.1 智能门锁系列 (Smart Door Lock Series)
     "SL_LK_LS": {
         "name": "思锁智能门锁",
-        "binary_sensor": {
-            "EVTLO": {
-                "description": "门锁状态",
-                "rw": "R",
-                "data_type": "door_lock",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0` 表示关闭",
-                "device_class": "lock",
-            },
-            "ALM": {
-                "description": "告警状态",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_greater_than_zero",
-                "detailed_description": "任何告警位为1时表示有告警",
-                "device_class": "problem",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_LS",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
         },
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "platforms": {
+            "lock": {
+                "io_configs": {
+                    "EVTLO": {
+                        "description": "door_lock_status",
+                        "data_type": "door_lock",
+                        "conversion": "type_bit_0",
+                        "device_class": "lock",
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
+            "binary_sensor": {
+                "io_configs": {
+                    "ALM": {
+                        "description": "status",
+                        "data_type": "alarm_status",
+                        "conversion": "val_greater_than_zero",
+                        "device_class": "problem",
+                    },
+                },
             },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTOP": {
-                "description": "操作记录",
-                "rw": "R",
-                "data_type": "operation_record",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
-                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
-                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
-                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
-                    "01表示普通用户，00表示已经删除了"
-                ),
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
     "SL_LK_GTM": {
         "name": "盖特曼智能门锁",
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_GTM",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
-            },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTOP": {
-                "description": "操作记录",
-                "rw": "R",
-                "data_type": "operation_record",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
-                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
-                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
-                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
-                    "01表示普通用户，00表示已经删除了"
-                ),
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
     "SL_LK_AG": {
         "name": "Aqara智能门锁",
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_AG",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
-            },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTOP": {
-                "description": "操作记录",
-                "rw": "R",
-                "data_type": "operation_record",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
-                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
-                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
-                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
-                    "01表示普通用户，00表示已经删除了"
-                ),
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
     "SL_LK_SG": {
         "name": "思哥智能门锁",
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_SG",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
-            },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTOP": {
-                "description": "操作记录",
-                "rw": "R",
-                "data_type": "operation_record",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
-                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
-                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
-                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
-                    "01表示普通用户，00表示已经删除了"
-                ),
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
     "SL_LK_YL": {
         "name": "Yale智能门锁",
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_YL",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
-            },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTOP": {
-                "description": "操作记录",
-                "rw": "R",
-                "data_type": "operation_record",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
-                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
-                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
-                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
-                    "01表示普通用户，00表示已经删除了"
-                ),
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
     "SL_LK_SWIFTE": {
         "name": "SWIFTE智能门锁",
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_SWIFTE",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
-            },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTOP": {
-                "description": "操作记录",
-                "rw": "R",
-                "data_type": "operation_record",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
-                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
-                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
-                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
-                    "01表示普通用户，00表示已经删除了"
-                ),
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
     "OD_JIUWANLI_LOCK1": {
         "name": "久万里智能门锁",
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "OD_JIUWANLI_LOCK1",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
-            },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTOP": {
-                "description": "操作记录",
-                "rw": "R",
-                "data_type": "operation_record",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
-                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
-                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
-                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
-                    "01表示普通用户，00表示已经删除了"
-                ),
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
     "SL_P_BDLK": {
         "name": "百度智能门锁",
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_BDLK",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
-            },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTOP": {
-                "description": "操作记录",
-                "rw": "R",
-                "data_type": "operation_record",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type`可以获知长度，方法是： (`type=0x40+(8-1)*2` or "
-                    "`type=0x40+(16-1)*2` or `type=0x40+(32-1)*2`) "
-                    "`val`的通用的编码次序是：[1Byte的记录类型][2Byte的用户id]"
-                    "[1Byte的用户flag] 用户标志flag：`bit01=11`表示管理员，"
-                    "01表示普通用户，00表示已经删除了"
-                ),
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
     # 2.8.2 C100/C200门锁系列 (C100/C200 Door Lock Series)
     "SL_LK_TY": {
         "name": "C200门锁",
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_TY",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
-            },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTBEL": {
-                "description": "门铃消息",
-                "rw": "R",
-                "data_type": "doorbell_message",
-                "conversion": "val_direct",
-                "detailed_description": "门铃消息状态，与EVTLO共享，`type&1=1`表示有门铃消息",
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTBEL": {
+                        "description": "evtbel",
+                        "data_type": "doorbell_message",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
     "SL_LK_DJ": {
         "name": "C100门锁",
-        "sensor": {
-            "BAT": {
-                "description": "电量",
-                "rw": "R",
-                "data_type": "battery",
-                "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_DJ",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "错误报警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "劫持报警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "防撬报警",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "机械钥匙报警",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "低电压报警",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "异动告警",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "门铃",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "火警",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "入侵告警",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "恢复出厂告警",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "门锁开关状态",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "开锁用户编号",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "开锁方式",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "是否为双开模式",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
             },
-            "ALM": {
-                "description": "告警信息",
-                "rw": "R",
-                "data_type": "alarm_status",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
-            },
-            "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
-                "data_type": "lock_event",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
-            },
-            "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
-                "data_type": "recent_unlock",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
-            },
-            "EVTBEL": {
-                "description": "门铃消息",
-                "rw": "R",
-                "data_type": "doorbell_message",
-                "conversion": "val_direct",
-                "detailed_description": "门铃消息状态，与EVTLO共享，`type&1=1`表示有门铃消息",
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "val_direct",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "val_direct",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "val_direct",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "val_direct",
+                    },
+                    "EVTBEL": {
+                        "description": "evtbel",
+                        "data_type": "doorbell_message",
+                        "conversion": "val_direct",
+                    },
+                },
             },
         },
     },
@@ -8543,134 +7238,114 @@ _RAW_DEVICE_DATA = {
         "manufacturer": "lifesmart",
         "model": "V_AIR_P",
         "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
-        
         # 基础平台配置
         "platforms": {
             "climate": {
                 "io_configs": {
                     "O": {
-                        "description": "开关",
+                        "description": "switch",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
-                        "rw": "RW",
-                        "detailed_description": (
-                            "`type&1==1`,`val` 值忽略表示打开；"
-                            "`type&1==0`,`val` 值忽略表示关闭；"
-                        ),
                         "commands": {
-                            "on": {"type": "CMD_TYPE_ON", "val": 1, "description": "打开空调"},
-                            "off": {"type": "CMD_TYPE_OFF", "val": 0, "description": "关闭空调"}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_ON",
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_OFF",
+                                "val": 0,
+                            },
+                        },
                     },
                     "MODE": {
-                        "description": "模式",
+                        "description": "mode",
                         "data_type": "hvac_mode",
                         "conversion": "val_direct",
-                        "rw": "RW",
-                        "detailed_description": (
-                            "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; "
-                            "3:Cool 制冷; 4:Heat 制热; 5:Dry除湿"
-                        ),
                         "commands": {
-                            "set_mode": {"type": "CMD_TYPE_SET_CONFIG", "description": "设置模式，val=模式值"}
-                        }
+                            "set_mode": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                            }
+                        },
                     },
                     "F": {
-                        "description": "风速",
+                        "description": "fan_speed",
                         "data_type": "fan_speed",
                         "conversion": "val_direct",
-                        "rw": "RW",
-                        "detailed_description": (
-                            "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; "
-                            "`val>=65`:高档"
-                        ),
                         "commands": {
                             "set_fan_speed": {
                                 "type": "CMD_TYPE_SET_CONFIG",
-                                "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
-                                "fan_modes": {"low": 15, "medium": 45, "high": 75}
+                                "fan_modes": {"low": 15, "medium": 45, "high": 75},
                             }
-                        }
+                        },
                     },
                     "tT": {
-                        "description": "目标温度",
+                        "description": "target_temperature",
                         "data_type": "temperature",
                         "conversion": "v_field",
-                        "rw": "RW",
-                        "detailed_description": (
-                            "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10"
-                        ),
                         "device_class": "temperature",
                         "unit_of_measurement": "°C",
                         "commands": {
                             "set_temperature": {
                                 "type": "CMD_TYPE_SET_TEMP_DECIMAL",
-                                "description": "设置目标温度，val=目标温度值*10"
                             }
-                        }
+                        },
                     },
                     "T": {
-                        "description": "当前温度",
+                        "description": "temperature",
                         "data_type": "temperature",
                         "conversion": "v_field",
-                        "rw": "R",
-                        "detailed_description": (
-                            "`type==0x08`,`v` 值表示实际温度值，"
-                            "`val` 值表示原始温度值，它是温度值*10"
-                        ),
                         "device_class": "temperature",
                         "unit_of_measurement": "°C",
-                        "state_class": "measurement"
-                    }
+                        "state_class": "measurement",
+                    },
                 }
             }
         },
-        
         # 核心：climate_config嵌入配置 - 解决HVAC映射冲突
         "climate_config": {
             "template": "standard_hvac",
             "hvac_modes": {
                 "io_field": "MODE",
                 "modes": {
-                    1: "auto",      # Auto自动
+                    1: "auto",  # Auto自动
                     2: "fan_only",  # Fan 吹风
-                    3: "cool",      # Cool 制冷
-                    4: "heat",      # Heat 制热
-                    5: "dry"        # Dry除湿
-                }
+                    3: "cool",  # Cool 制冷
+                    4: "heat",  # Heat 制热
+                    5: "dry",  # Dry除湿
+                },
             },
             "temperature": {
                 "target_io": "tT",
                 "current_io": "T",
                 "range": [16, 30],
                 "precision": 0.1,
-                "conversion": {"source": "v"}
+                "conversion": {"source": "v"},
             },
             "fan_modes": {
                 "io_field": "F",
-                "modes": {
-                    15: "low",      # 低档
-                    45: "medium",   # 中档
-                    75: "high"      # 高档
-                }
+                "modes": {15: "low", 45: "medium", 75: "high"},  # 低档  # 中档  # 高档
             },
             "power_control": {
                 "io_field": "O",
                 "on_command": {"type": "CMD_TYPE_ON"},
-                "off_command": {"type": "CMD_TYPE_OFF"}
+                "off_command": {"type": "CMD_TYPE_OFF"},
             },
             "capabilities": [
-                "heating", "cooling", "fan_control", 
-                "dehumidifying", "target_temperature", "auto_mode"
-            ]
+                "heating",
+                "cooling",
+                "fan_control",
+                "dehumidifying",
+                "target_temperature",
+                "auto_mode",
+            ],
         },
-        
         # 设备能力标识
         "capabilities": [
-            "climate_control", "temperature_monitoring", 
-            "hvac_mode_control", "fan_speed_control"
+            "climate_control",
+            "temperature_monitoring",
+            "hvac_mode_control",
+            "fan_speed_control",
         ],
-        
         # HA翻译支持
         "translation_keys": {
             "hvac_mode_auto": "自动",
@@ -8680,105 +7355,105 @@ _RAW_DEVICE_DATA = {
             "hvac_mode_dry": "除湿",
             "fan_mode_low": "低档",
             "fan_mode_medium": "中档",
-            "fan_mode_high": "高档"
-        }
+            "fan_mode_high": "高档",
+        },
     },
     "SL_TR_ACIPM": {
         "name": "新风系统",
-        "climate": {
-            "P1": {
-                "description": "系统配置",
-                "rw": "RW",
-                "data_type": "hvac_mode",
-                "conversion": "val_direct",
-                "detailed_description": "1:自动; 2:手动; 3:定时",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "打开",
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关闭",
-                    },
-                    "set_mode": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置模式，val=模式值",
-                    },
-                },
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_TR_ACIPM",
+        "_generation": 2,
+        "climate_features": {
+            "hvac_modes": {
+                1: "auto",  # 自动模式
+                2: "fan_only",  # 仅送风模式
+                3: "cool",  # 制冷模式
+                4: "heat",  # 制热模式
             },
-            "P2": {
-                "description": "风速",
-                "rw": "RW",
-                "data_type": "fan_speed",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "`val`值定义如下: 0:关闭; 1:1档; 2:2档; 3:3档 注意：只有在模式处于手动模式下"
-                    "该参数设置才有效"
-                ),
-                "commands": {
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置风速",
-                        "fan_modes": {
-                            "low": 1,
-                            "medium": 2,
-                            "high": 3,
-                        },
-                    },
-                },
-            },
-            "P3": {
-                "description": "设置VOC",
-                "rw": "RW",
-                "data_type": "voc_concentration",
-                "conversion": "val_div_10",
-                "detailed_description": "`val`值减小10倍为真实值，`v`值表示实际值(单位：ppm)",
-                "device_class": "volatile_organic_compounds",
-                "unit_of_measurement": "ppm",
-                "commands": {
-                    "set_voc": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置VOC值，需要将真实值扩大10倍",
-                    },
-                },
+            "fan_speeds": {
+                1: "low",  # 低速档
+                2: "medium",  # 中速档
+                3: "high",  # 高速档
             },
         },
-        "sensor": {
-            "P4": {
-                "description": "VOC",
-                "rw": "R",
-                "data_type": "voc_concentration",
-                "conversion": "val_div_10",
-                "detailed_description": (
-                    "`val`值表示原始VOC值，且`val`值减小10倍为真实值，"
-                    "`v`值表示实际值(单位：ppm)"
-                ),
-                "device_class": "volatile_organic_compounds",
-                "unit_of_measurement": "ppm",
-                "state_class": "measurement",
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "sl_tr_acipm",
+                        "data_type": "hvac_mode",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_mode": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "fan_modes": {
+                                    "low": 1,
+                                    "medium": 2,
+                                    "high": 3,
+                                },
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "set_VOC",
+                        "data_type": "voc_concentration",
+                        "conversion": "val_div_10",
+                        "device_class": "volatile_organic_compounds",
+                        "unit_of_measurement": "ppm",
+                        "commands": {
+                            "set_voc": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
             },
-            "P5": {
-                "description": "PM2.5",
-                "rw": "R",
-                "data_type": "pm25",
-                "conversion": "v_field",
-                "detailed_description": "`val`值表示原始PM2.5值，`v`为实际值(单位：μg/m³)",
-                "device_class": "pm25",
-                "unit_of_measurement": "μg/m³",
-                "state_class": "measurement",
-            },
-            "P6": {
-                "description": "当前温度",
-                "rw": "R",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "detailed_description": "`val`值除以10为真实温度值，`v`值表示实际值(单位：℃)",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "VOC",
+                        "data_type": "voc_concentration",
+                        "conversion": "val_div_10",
+                        "device_class": "volatile_organic_compounds",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "P5": {
+                        "description": "PM2.5",
+                        "data_type": "pm25",
+                        "conversion": "v_field",
+                        "device_class": "pm25",
+                        "unit_of_measurement": "μg/m³",
+                        "state_class": "measurement",
+                    },
+                    "P6": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
             },
         },
     },
@@ -8786,71 +7461,57 @@ _RAW_DEVICE_DATA = {
         "name": "地暖温控器",
         "climate": {
             "P1": {
-                "description": "系统配置",
-                "rw": "RW",
+                "description": "sl_cp_dn",
                 "data_type": "hvac_mode",
                 "conversion": "val_direct",
-                "detailed_description": "该IO的type和val字段说明，详见文档表2-17-1",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_config": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置配置，需要保留其他位",
                     },
                 },
             },
             "P3": {
-                "description": "目标温度",
-                "rw": "RW",
+                "description": "target_temperature",
                 "data_type": "temperature",
                 "conversion": "val_div_10",
-                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10倍，`v`值表示实际值",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置目标温度",
                     },
                 },
             },
         },
         "binary_sensor": {
             "P2": {
-                "description": "继电器开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                 "device_class": "opening",
             },
         },
         "sensor": {
             "P4": {
-                "description": "室内温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "val_div_10",
-                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10倍，精度为0.1，`v`值表示实际值",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "P5": {
-                "description": "底版温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "val_div_10",
-                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10，精度为0.1，`v`值表示实际值",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -8859,73 +7520,84 @@ _RAW_DEVICE_DATA = {
     },
     "SL_CP_AIR": {
         "name": "风机盘管",
-        "climate": {
-            "P1": {
-                "description": "系统配置",
-                "rw": "RW",
-                "data_type": "hvac_mode",
-                "conversion": "val_direct",
-                "detailed_description": "该IO的type和val字段说明，详见文档表2-18-1",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "打开",
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关闭",
-                    },
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置配置，需要保留其他位",
-                    },
-                },
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_CP_AIR",
+        "_generation": 2,
+        "climate_features": {
+            "hvac_modes": {
+                0: "cool",  # 制冷模式
+                1: "heat",  # 制热模式
+                2: "fan_only",  # 仅送风模式
             },
-            "P4": {
-                "description": "目标温度",
-                "rw": "RW",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10倍，精度为0.5，`v`值表示实际值",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "commands": {
-                    "set_temperature": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置目标温度",
-                    },
-                },
+            "fan_speeds": {
+                0: "auto",  # 自动风速
+                1: "low",  # 低速档
+                2: "medium",  # 中速档
+                3: "high",  # 高速档
             },
         },
-        "binary_sensor": {
-            "P2": {
-                "description": "阀门状态",
-                "rw": "R",
-                "data_type": "valve_status",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type`值定义如下: 0x80:阀门关; 0x81:阀门开",
-                "device_class": "opening",
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "sl_cp_air",
+                        "data_type": "hvac_mode",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
             },
-        },
-        "sensor": {
-            "P3": {
-                "description": "风速状态",
-                "rw": "R",
-                "data_type": "fan_speed",
-                "conversion": "val_direct",
-                "detailed_description": "`val`值定义如下: 0:自动; 1:低速; 2:中速; 3:高速",
+            "binary_sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "valve",
+                        "data_type": "valve_status",
+                        "conversion": "type_bit_0",
+                        "device_class": "opening",
+                    },
+                }
             },
-            "P5": {
-                "description": "室内温度",
-                "rw": "R",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10，精度为0.1，`v`值表示实际值",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "val_direct",
+                    },
+                    "P5": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
             },
         },
     },
@@ -8933,85 +7605,58 @@ _RAW_DEVICE_DATA = {
         "name": "空调控制面板",
         "climate": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`,`val`值忽略表示打开；"
-                    "`type&1==0`，`val`值忽略表示关闭"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开空调",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭空调",
                     },
                 },
             },
             "P2": {
-                "description": "模式",
-                "rw": "RW",
+                "description": "mode",
                 "data_type": "hvac_mode",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type==0xCE`，`val`值表示模式，定义如下：1:Auto自动；2:Fan吹风；"
-                    "3:Cool制冷；4:Heat制热；5:Dry除湿"
-                ),
                 "commands": {
                     "set_config": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置模式",
                     },
                 },
             },
             "P3": {
-                "description": "目标温度",
-                "rw": "RW",
+                "description": "target_temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`type==0x88`,`v`值表示实际温度值，"
-                    "`val`值表示原始温度值，它是温度值*10"
-                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
                         "type": CMD_TYPE_SET_TEMP_DECIMAL,
-                        "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
             },
             "P4": {
-                "description": "风速",
-                "rw": "RW",
+                "description": "fan_speed",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": "`val<30`:低档；`val<65`:中档；`val>=65`:高档",
                 "commands": {
                     "set_fan_speed": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置风速，低档val=15；中档val=45；高档val=75",
                     },
                 },
             },
         },
         "sensor": {
             "P6": {
-                "description": "当前温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`type==0x08`,`v`值表示实际温度值，"
-                    "`val`值表示原始温度值，它是温度值*10"
-                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -9022,77 +7667,54 @@ _RAW_DEVICE_DATA = {
         "name": "温控阀门",
         "climate": {
             "P1": {
-                "description": "开关及系统配置",
-                "rw": "RW",
+                "description": "turn_on_switch",
                 "data_type": "hvac_mode",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`,`val`值忽略表示打开；"
-                    "该IO的type和val字段说明，详见文档表2-19-1"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                     "set_config": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置配置，需要保留其他位",
                     },
                 },
             },
             "P3": {
-                "description": "目标温度",
-                "rw": "RW",
+                "description": "target_temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`v`值表示实际温度值，`val`值表示原始温度值，它是温度值*10",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
                         "type": CMD_TYPE_SET_TEMP_DECIMAL,
-                        "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
             },
         },
         "sensor": {
             "P4": {
-                "description": "当前温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`v`值表示实际温度值，`val`值表示原始温度值，它是温度值*10",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "P5": {
-                "description": "告警",
-                "rw": "R",
+                "description": "alarm",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`val`表示告警信息，可参考：bit0:高温保护；bit1:低温保护；bit2:int_sensor；"
-                    "bit3:ext_sensor；bit4:低电量；bit5:设备掉线"
-                ),
             },
             "P6": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -9100,11 +7722,9 @@ _RAW_DEVICE_DATA = {
         },
         "binary_sensor": {
             "P5": {
-                "description": "告警状态",
-                "rw": "R",
+                "description": "status",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": "基于P5传感器值的二进制告警状态，有告警时为True",
                 "device_class": "problem",
             },
         },
@@ -9113,89 +7733,64 @@ _RAW_DEVICE_DATA = {
         "name": "星玉地暖",
         "climate": {
             "P1": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`，`val`值忽略表示打开；"
-                    "`type&1==0`，`val`值忽略表示关闭"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开地暖",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭地暖",
                     },
                 },
             },
             "P2": {
-                "description": "模式",
-                "rw": "RW",
+                "description": "mode",
                 "data_type": "config_bitmask",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`val`值定义如下：温度限制0-5位：17+val(17~80)；回差6-9位：使用温度(v+1)*0.5作为回差参数；"
-                    "控温模式10-11位：0/1:in；2:out；3:all"
-                ),
                 "commands": {
                     "set_config": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置模式配置",
                     },
                 },
             },
             "P8": {
-                "description": "目标温度",
-                "rw": "RW",
+                "description": "target_temperature",
                 "data_type": "temperature",
                 "conversion": "val_div_10",
-                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10倍，精度为0.5，`v`值表示实际值",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置目标温度",
                     },
                 },
             },
         },
         "binary_sensor": {
             "P3": {
-                "description": "阀门状态",
-                "rw": "R",
+                "description": "valve",
                 "data_type": "valve_status",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type值定义如下：0x80:阀门关；0x81:阀门开；"
-                    "`val`值类型为浮点数值，表示的是电量统计"
-                ),
                 "device_class": "opening",
             },
         },
         "sensor": {
             "P4": {
-                "description": "室内温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "val_div_10",
-                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10倍，精度为0.1，`v`值表示实际值",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "P9": {
-                "description": "底版温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "val_div_10",
-                "detailed_description": "`val`值表示原始温度值，真实温度值为原始值除以10，精度为0.1，`v`值表示实际值",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -9206,385 +7801,549 @@ _RAW_DEVICE_DATA = {
     # 2.10.1 通用控制器 (General Controller)
     "SL_P": {
         "name": "通用控制器",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_P",
+        "_generation": 2,
         "dynamic": True,
-        "control_modes": {
-            "free_mode": {
-                "condition": "(P1>>24)&0xe == 0",
-                "binary_sensor": {
-                    "P5": {
-                        "description": "Status1状态输入",
-                        "rw": "R",
-                        "data_type": "status_input",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
-                        "device_class": "moving",
-                    },
-                    "P6": {
-                        "description": "Status2状态输入",
-                        "rw": "R",
-                        "data_type": "status_input",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
-                        "device_class": "moving",
-                    },
-                    "P7": {
-                        "description": "Status3状态输入",
-                        "rw": "R",
-                        "data_type": "status_input",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
-                        "device_class": "moving",
+        "cover_features": {
+            "position_feedback": False,
+            "optimistic_mode": True,
+            # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+            "control_mapping": {"open": "P2", "close": "P3", "stop": "P4"},
+            "control_modes": {
+                "free_mode": {
+                    "condition": "(P1>>24)&0xe == 0",
+                    "binary_sensor": {
+                        "P5": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                        "P6": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                        "P7": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
                     },
                 },
-            },
-            "cover_mode": {
-                "condition": "(P1>>24)&0xe in [2,4]",
-                "cover": {
-                    "P2": {
-                        "description": "打开窗帘",
-                        "rw": "RW",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开窗帘",
-                        "commands": {
-                            "open": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                                "description": "打开窗帘",
+                "cover_mode": {
+                    "condition": "(P1>>24)&0xe in [2,4]",
+                    "cover": {
+                        "P2": {
+                            "description": "open_curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "open": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
                             },
                         },
-                    },
-                    "P3": {
-                        "description": "关闭窗帘",
-                        "rw": "RW",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示关闭窗帘",
-                        "commands": {
-                            "close": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                                "description": "关闭窗帘",
+                        "P3": {
+                            "description": "close_curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "close": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
                             },
                         },
-                    },
-                    "P4": {
-                        "description": "停止窗帘",
-                        "rw": "RW",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示停止窗帘",
-                        "commands": {
-                            "stop": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                                "description": "停止窗帘",
+                        "P4": {
+                            "description": "curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "stop": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
                             },
                         },
                     },
                 },
-            },
-            "switch_mode": {
-                "condition": "(P1>>24)&0xe in [8,10]",
-                "switch": {
-                    "P2": {
-                        "description": "Ctrl1第一路开关",
-                        "rw": "RW",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                                "description": "打开",
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                                "description": "关闭",
+                "switch_mode": {
+                    "condition": "(P1>>24)&0xe in [8,10]",
+                    "switch": {
+                        "P2": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
                             },
                         },
-                    },
-                    "P3": {
-                        "description": "Ctrl2第二路开关",
-                        "rw": "RW",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                                "description": "打开",
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                                "description": "关闭",
+                        "P3": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
                             },
                         },
-                    },
-                    "P4": {
-                        "description": "Ctrl3第三路开关",
-                        "rw": "RW",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                                "description": "打开",
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                                "description": "关闭",
+                        "P4": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
                             },
                         },
                     },
                 },
             },
         },
-        "sensor": {
-            "P1": {
-                "description": "控制参数",
-                "rw": "RW",
-                "data_type": "control_config",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "32位控制参数：31bit软件配置标志，24-27bit工作模式，"
-                    "16-18bit延时使能，0-15bit延时秒数"
-                ),
-                "commands": {
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置控制参数，需要保留未修改的bit位",
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P2": {
+                        "description": "open_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
                     },
-                },
+                    "P3": {
+                        "description": "close_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "close": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "stop": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                }
+            },
+            "switch": {
+                "io_configs": {
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P5": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                    "P6": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                    "P7": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "control",
+                        "data_type": "control_config",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
             },
         },
     },
     # 2.10.2 通用控制器HA (HA Interface Adapter)
     "SL_JEMA": {
         "name": "通用控制器HA",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_JEMA",
+        "_generation": 2,
         "dynamic": True,
-        "control_modes": {
-            "free_mode": {
-                "condition": "(P1>>24)&0xe == 0",
-                "binary_sensor": {
-                    "P5": {
-                        "description": "Status1状态输入",
-                        "rw": "R",
-                        "data_type": "status_input",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
-                        "device_class": "moving",
+        "cover_features": {
+            "position_feedback": False,
+            "optimistic_mode": True,
+            # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+            "control_mapping": {"open": "P2", "close": "P3", "stop": "P4"},
+            "control_modes": {
+                "free_mode": {
+                    "condition": "(P1>>24)&0xe == 0",
+                    "binary_sensor": {
+                        "P5": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                        "P6": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                        "P7": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
                     },
-                    "P6": {
-                        "description": "Status2状态输入",
-                        "rw": "R",
-                        "data_type": "status_input",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
-                        "device_class": "moving",
+                },
+                "cover_mode": {
+                    "condition": "(P1>>24)&0xe in [2,4]",
+                    "cover": {
+                        "P2": {
+                            "description": "curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "open": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                            },
+                        },
+                        "P3": {
+                            "description": "curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "close": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                            },
+                        },
+                        "P4": {
+                            "description": "curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "stop": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                            },
+                        },
                     },
-                    "P7": {
-                        "description": "Status3状态输入",
-                        "rw": "R",
-                        "data_type": "status_input",
-                        "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示有状态触发，仅自由模式有效",
-                        "device_class": "moving",
+                },
+                "switch_mode": {
+                    "condition": "(P1>>24)&0xe in [8,10]",
+                    "switch": {
+                        "P2": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
+                            },
+                        },
+                        "P3": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
+                            },
+                        },
+                        "P4": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
+                            },
+                        },
                     },
                 },
             },
-            "cover_mode": {
-                "condition": "(P1>>24)&0xe in [2,4]",
-                "cover": {
+        },
+        "platforms": {
+            "cover": {
+                "io_configs": {
                     "P2": {
-                        "description": "Ctrl1打开窗帘",
-                        "rw": "RW",
+                        "description": "curtain",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "open": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开窗帘",
                             },
                         },
                     },
                     "P3": {
-                        "description": "Ctrl2关闭窗帘",
-                        "rw": "RW",
+                        "description": "curtain",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "close": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "关闭窗帘",
                             },
                         },
                     },
                     "P4": {
-                        "description": "Ctrl3停止窗帘",
-                        "rw": "RW",
+                        "description": "curtain",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "stop": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "停止窗帘",
                             },
                         },
                     },
-                },
+                }
             },
-            "switch_mode": {
-                "condition": "(P1>>24)&0xe in [8,10]",
-                "switch": {
+            "switch": {
+                "io_configs": {
                     "P2": {
-                        "description": "Ctrl1第一路开关",
-                        "rw": "RW",
+                        "description": "switch",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开",
                             },
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                                "description": "关闭",
                             },
                         },
                     },
                     "P3": {
-                        "description": "Ctrl2第二路开关",
-                        "rw": "RW",
+                        "description": "switch",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开",
                             },
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                                "description": "关闭",
                             },
                         },
                     },
                     "P4": {
-                        "description": "Ctrl3第三路开关",
-                        "rw": "RW",
+                        "description": "switch",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
-                        "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
-                                "description": "打开",
                             },
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                                "description": "关闭",
                             },
                         },
                     },
-                },
+                    "P8": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P9": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P10": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
             },
-        },
-        "switch": {
-            "P8": {
-                "description": "HA1独立开关",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "打开",
+            "binary_sensor": {
+                "io_configs": {
+                    "P5": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关闭",
+                    "P6": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
                     },
-                },
+                    "P7": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                }
             },
-            "P9": {
-                "description": "HA2独立开关",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "打开",
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "control",
+                        "data_type": "control_config",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关闭",
-                    },
-                },
-            },
-            "P10": {
-                "description": "HA3独立开关",
-                "rw": "RW",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示打开；`type&1==0`表示关闭",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                        "description": "打开",
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                        "description": "关闭",
-                    },
-                },
-            },
-        },
-        "sensor": {
-            "P1": {
-                "description": "控制参数",
-                "rw": "RW",
-                "data_type": "control_config",
-                "conversion": "val_direct",
-                "detailed_description": (
-                    "32位控制参数：31bit恒为1(软件可配置)，24-27bit工作模式，"
-                    "16-18bit延时使能，0-15bit延时秒数"
-                ),
-                "commands": {
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置控制参数，需要保留未修改的bit位",
-                    },
-                },
+                }
             },
         },
     },
@@ -9593,31 +8352,20 @@ _RAW_DEVICE_DATA = {
         "name": "DLT电量计量器",
         "sensor": {
             "EE": {
-                "description": "用电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "energy_consumption",
                 "conversion": "ieee754_or_friendly",
                 "unit_of_measurement": "kWh",
                 "device_class": "energy",
                 "state_class": "total_increasing",
-                "detailed_description": (
-                    "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，"
-                    "`v` 值为浮点数，单位为度(kwh)。注意：`v` 值可以直接使用，"
-                    "若不存在`v` 值，则需要手动转换。其值类型为IEEE 754浮点数的32位整数布局。"
-                ),
             },
             "EP": {
-                "description": "功率",
-                "rw": "R",
+                "description": "power",
                 "data_type": "power",
                 "conversion": "ieee754_or_friendly",
                 "unit_of_measurement": "W",
                 "device_class": "power",
                 "state_class": "measurement",
-                "detailed_description": (
-                    "为当前负载功率，`v` 值为浮点数，单位为w。注意：`v` 值可以直接使用，若不存在`v` 值，"
-                    "则需要手动转换。其值类型为IEEE 754浮点数的32位整数布局。"
-                ),
             },
         },
     },
@@ -9625,68 +8373,27 @@ _RAW_DEVICE_DATA = {
         "name": "X100人脸识别可视门锁",
         "sensor": {
             "BAT": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "val_direct",
-                "detailed_description": "`Val`表示电量值",
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
             "ALM": {
-                "description": "告警信息",
-                "rw": "R",
+                "description": "alarm",
                 "data_type": "alarm_status",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值定义如下: `bit0`：1为错误报警（输入错误密码或指纹或卡片超过10次就报警) "
-                    "`bit1`：1为劫持报警（输入防劫持密码或防劫持指纹开锁就报警) "
-                    "`bit2`：1为防撬报警 (锁被撬开) `bit3`：1为机械钥匙报警（使用机械钥匙开 "
-                    "`bit4`：1为低电压报警（电池电量不足) `bit5`：1为异动告警 "
-                    "`bit6`：1为门铃 `bit7`：1为火警 `bit8`：1为入侵告警 `bit11`：1为恢复出厂告警"
-                ),
             },
             "EVTLO": {
-                "description": "实时开锁",
-                "rw": "R",
+                "description": "real_time_unlock",
                 "data_type": "lock_event",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0` 表示关闭；"
-                    " `val` 值定义如下: `bit0~11`表示用户编号; 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁(12v开锁信号开锁)；"
-                    " 7：APP开启；"
-                    " 8：蓝牙开锁；"
-                    " 9：手动开锁；"
-                    " 15：出错) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式：(同上定义) (注：因有可能存在两种方式同时开启门锁"
-                    " 的情况，单开时`bit0~15`为开锁信息，其 他位为0；"
-                    "双开时`bit0~15`和`bit16~31` 分别为相应的开锁信息) "
-                    "`val`的长度有8/24/32bit三种类型"
-                ),
             },
             "HISLK": {
-                "description": "最近一次开锁信息",
-                "rw": "R",
+                "description": "last_unlock_info",
                 "data_type": "recent_unlock",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示打开；"
-                    " `type&1==0`表示关闭；"
-                    " `val` 值定义如下： `bit0~11`表示用户编号；"
-                    " `bit12~15`表示开锁方式：( 0：未定义；"
-                    " 1：密码；"
-                    " 2：指纹；"
-                    " 3:`NFC`; 4：机械钥匙；"
-                    " 5：远程开锁；"
-                    " 7：APP开启) `bit16~27`表示用户编号；"
-                    " `bit28~31`表示开锁方式: （同上定义）"
-                ),
             },
         },
     },
@@ -9694,68 +8401,47 @@ _RAW_DEVICE_DATA = {
         "name": "极速开关组",
         "switch": {
             "L1": {
-                "description": "第一路开关控制口",
-                "rw": "RW",
+                "description": "switch_1",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L2": {
-                "description": "第二路开关控制口",
-                "rw": "RW",
+                "description": "switch_2",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L3": {
-                "description": "第三路开关控制口",
-                "rw": "RW",
+                "description": "switch_3",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -9765,24 +8451,17 @@ _RAW_DEVICE_DATA = {
         "name": "极速虚拟设备",
         "switch": {
             "P1": {
-                "description": "虚拟开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
@@ -9792,56 +8471,37 @@ _RAW_DEVICE_DATA = {
         "name": "新风控制器(深圳建设新风)",
         "climate": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`,`val` 值忽略表示打开；"
-                    "`type&1==0`,`val` 值忽略表示关闭；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开空调",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭空调",
                     },
                 },
             },
             "MODE": {
-                "description": "模式",
-                "rw": "RW",
+                "description": "mode",
                 "data_type": "hvac_mode",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; "
-                    "3:Cool 制冷; 4:Heat 制热; 5:Dry除湿"
-                ),
                 "commands": {
                     "set_mode": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置模式，val=模式值",
                     },
                 },
             },
             "F": {
-                "description": "风速",
-                "rw": "RW",
+                "description": "fan_speed",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; "
-                    "`val>=65`:高档"
-                ),
                 "commands": {
                     "set_fan_speed": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
                         "fan_modes": {
                             "low": 15,
                             "medium": 45,
@@ -9851,31 +8511,21 @@ _RAW_DEVICE_DATA = {
                 },
             },
             "tT": {
-                "description": "目标温度",
-                "rw": "RW",
+                "description": "target_temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10"
-                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
                         "type": CMD_TYPE_SET_TEMP_DECIMAL,
-                        "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
             },
             "T": {
-                "description": "当前温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`type==0x08`,`v` 值表示实际温度值，"
-                    "`val` 值表示原始温度值，它是温度值*10"
-                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -9886,56 +8536,37 @@ _RAW_DEVICE_DATA = {
         "name": "YORK温控器T8600",
         "climate": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`,`val` 值忽略表示打开；"
-                    "`type&1==0`,`val` 值忽略表示关闭；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开空调",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭空调",
                     },
                 },
             },
             "MODE": {
-                "description": "模式",
-                "rw": "RW",
+                "description": "mode",
                 "data_type": "hvac_mode",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type==0xCE`,`val` 值表示模式，定义如下：1:Auto自动; 2:Fan 吹风; "
-                    "3:Cool 制冷; 4:Heat 制热; 5:Dry除湿"
-                ),
                 "commands": {
                     "set_mode": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置模式，val=模式值",
                     },
                 },
             },
             "F": {
-                "description": "风速",
-                "rw": "RW",
+                "description": "fan_speed",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type==0xCE`,`val` 值表示风速，定义如下：`val<30`:低档; `val<65`:中档; "
-                    "`val>=65`:高档"
-                ),
                 "commands": {
                     "set_fan_speed": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置风速，低档val=15; 中档val=45; 高档val=75",
                         "fan_modes": {
                             "low": 15,
                             "medium": 45,
@@ -9945,31 +8576,21 @@ _RAW_DEVICE_DATA = {
                 },
             },
             "tT": {
-                "description": "目标温度",
-                "rw": "RW",
+                "description": "target_temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`type==0x88`,`v` 值表示实际温度值，`val` 值表示原始温度值，它是温度值*10"
-                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "commands": {
                     "set_temperature": {
                         "type": CMD_TYPE_SET_TEMP_DECIMAL,
-                        "description": "设置目标温度，val=目标温度值*10",
                     },
                 },
             },
             "T": {
-                "description": "当前温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`type==0x08`,`v` 值表示实际温度值，"
-                    "`val` 值表示原始温度值，它是温度值*10"
-                ),
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -9980,68 +8601,46 @@ _RAW_DEVICE_DATA = {
         "name": "艾弗纳KV11新风控制器",
         "switch": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1` 表示打开(忽略 `val` 值)；"
-                    "`type&1==0` 表示关闭(忽略 `val` 值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "MODE": {
-                "description": "工作模式",
-                "rw": "RW",
+                "description": "mode",
                 "data_type": "mode_config",
                 "conversion": "val_direct",
-                "detailed_description": "`val` 值为模式位掩码，0-1位和2-3位分别控制不同功能",
                 "commands": {
                     "set_mode": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "设置工作模式",
                     },
                 },
             },
         },
         "sensor": {
             "F1": {
-                "description": "送风风速",
-                "rw": "R",
+                "description": "fan_speed",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值表示风速，0:停止, val<30:低档, "
-                    "val<65:中档, val>=65:高档"
-                ),
             },
             "F2": {
-                "description": "排风风速",
-                "rw": "R",
+                "description": "fan_speed",
                 "data_type": "fan_speed",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`val` 值表示风速，0:停止, val<30:低档, "
-                    "val<65:中档, val>=65:高档"
-                ),
             },
             "T": {
-                "description": "环境温度",
-                "rw": "R",
+                "description": "ambient_temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值除以10为真实温度值，`v` 值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
@@ -10052,14 +8651,9 @@ _RAW_DEVICE_DATA = {
         "name": "工业传感器",
         "sensor": {
             "P1": {
-                "description": "传感器数值",
-                "rw": "R",
+                "description": "v_ind_s",
                 "data_type": "generic_value",
                 "conversion": "ieee754_or_friendly",
-                "detailed_description": (
-                    "为当前接入设备的值，`val` 值为IEEE754浮点数的32位整数表示，"
-                    "`v` 值为浮点数，单位为具体接入设备当前的单位"
-                ),
             },
         },
     },
@@ -10068,302 +8662,227 @@ _RAW_DEVICE_DATA = {
         "wildcard_support": True,
         "switch": {
             "O": {
-                "description": "开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1=1，`val` 值忽略表示打开；"
-                    "type&1=0，`val` 值忽略表示关闭；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
             "L*": {
-                "description": "多路开关",
-                "rw": "RW",
+                "description": "switch",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1=1,`val` 值忽略表示打开；type&1=0，`val` 值忽略表示关闭；"
-                    "(Lx，x为1时，即L1表示第一位开关的IO控制口，"
-                    "多位开关时x可取值为3，L3则表示第三位开关的IO控制口）"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "sensor": {
             "P1": {
-                "description": "当前接入设备的值",
-                "rw": "R",
+                "description": "v_ind_s",
                 "data_type": "generic_value",
                 "conversion": "ieee754_or_friendly",
-                "detailed_description": (
-                    "为当前接入设备的值，`val` 值为为IEEE754浮点数的32位整数表示，"
-                    "`v` 值为浮点数，单位为具体接入设备当前的单位。如：接入设备为压力传感器，"
-                    "那么val为当前接入设备的压力值，单位以接入设备的单位设定为准。"
-                ),
             },
             "EE": {
-                "description": "用电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "energy_consumption",
                 "conversion": "ieee754_or_friendly",
                 "unit_of_measurement": "kWh",
                 "device_class": "energy",
                 "state_class": "total_increasing",
-                "detailed_description": (
-                    "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，"
-                    "`v` 值为浮点数，单位为度(kwh)。"
-                ),
             },
             "EE*": {
-                "description": "多路用电量",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "energy_consumption",
                 "conversion": "ieee754_or_friendly",
                 "unit_of_measurement": "kWh",
                 "device_class": "energy",
                 "state_class": "total_increasing",
-                "detailed_description": (
-                    "为累计用电量，`val` 值为为IEEE754浮点数的32位整数表示，"
-                    "`v` 值为浮点数，单位为度(kwh)。(EEx，x取值为数字)"
-                ),
             },
             "EP": {
-                "description": "功率",
-                "rw": "R",
+                "description": "power",
                 "data_type": "power",
                 "conversion": "ieee754_or_friendly",
                 "unit_of_measurement": "W",
                 "device_class": "power",
                 "state_class": "measurement",
-                "detailed_description": "为当前负载功率，`v` 值为浮点数，单位为w。",
             },
             "EPF": {
-                "description": "功率因数",
-                "rw": "R",
+                "description": "power_factor",
                 "data_type": "power_factor",
                 "conversion": "friendly_value",
                 "device_class": "power_factor",
                 "state_class": "measurement",
-                "detailed_description": "功率因数，单位无。",
             },
             "EPF*": {
-                "description": "多路功率因数",
-                "rw": "R",
+                "description": "power",
                 "data_type": "power_factor",
                 "conversion": "friendly_value",
                 "device_class": "power_factor",
                 "state_class": "measurement",
-                "detailed_description": "功率因数，单位无。(EPFx，x取值为数字)",
             },
             "EF": {
-                "description": "交流电频率",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "frequency",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "Hz",
                 "device_class": "frequency",
                 "state_class": "measurement",
-                "detailed_description": "交流电频率，单位为HZ。",
             },
             "EF*": {
-                "description": "多路交流电频率",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "frequency",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "Hz",
                 "device_class": "frequency",
                 "state_class": "measurement",
-                "detailed_description": "交流电频率，单位为HZ。(EFx，x取值为数字)",
             },
             "EI": {
-                "description": "电流",
-                "rw": "R",
+                "description": "current",
                 "data_type": "current",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "A",
                 "device_class": "current",
                 "state_class": "measurement",
-                "detailed_description": "电流，单位为A。",
             },
             "EI*": {
-                "description": "多路电流",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "current",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "A",
                 "device_class": "current",
                 "state_class": "measurement",
-                "detailed_description": "电流，单位为A。(EIx，x取值为数字)",
             },
             "EV": {
-                "description": "电压",
-                "rw": "R",
+                "description": "voltage",
                 "data_type": "voltage",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "V",
                 "device_class": "voltage",
                 "state_class": "measurement",
-                "detailed_description": "电压，单位为V。",
             },
             "EV*": {
-                "description": "多路电压",
-                "rw": "R",
+                "description": "electric",
                 "data_type": "voltage",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "V",
                 "device_class": "voltage",
                 "state_class": "measurement",
-                "detailed_description": "电压，单位为V。(EVx，x取值为数字)",
             },
             "T": {
-                "description": "温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "°C",
                 "device_class": "temperature",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示原始温度值，`v` 值为实际值(单位：℃)。",
             },
             "H": {
-                "description": "湿度",
-                "rw": "R",
+                "description": "humidity",
                 "data_type": "humidity",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "%",
                 "device_class": "humidity",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示原始湿度值，`v` 值为实际值(单位：%)。",
             },
             "PM": {
                 "description": "PM2.5",
-                "rw": "R",
                 "data_type": "pm25",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "µg/m³",
                 "device_class": "pm25",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示PM2.5值，`v` 值为实际值(单位：ug/m³)。",
             },
             "PMx": {
                 "description": "PM10",
-                "rw": "R",
                 "data_type": "pm10",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "µg/m³",
                 "device_class": "pm10",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示PM10值，`v` 值为实际值(单位：ug/m³)。",
             },
             "COPPM": {
-                "description": "一氧化碳",
-                "rw": "R",
+                "description": "coppm",
                 "data_type": "co_concentration",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "ppm",
                 "device_class": "carbon_monoxide",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示co浓度值，`v` 值为实际值(单位：ppm)。",
             },
             "CO2PPM": {
-                "description": "二氧化碳",
-                "rw": "R",
+                "description": "coppm",
                 "data_type": "co2_concentration",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "ppm",
                 "device_class": "carbon_dioxide",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示co2浓度值，`v` 值为实际值(单位：ppm)。",
             },
             "CH20PPM": {
-                "description": "甲醛",
-                "rw": "R",
+                "description": "coppm",
                 "data_type": "formaldehyde_concentration",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "ppm",
                 "device_class": "volatile_organic_compounds",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示甲醛原始浓度值，`v` 值为实际值(单位：ppm)。",
             },
             "O2VOL": {
-                "description": "氧气",
-                "rw": "R",
+                "description": "coppm",
                 "data_type": "oxygen_concentration",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "vol%",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示氧气原始浓度值，`v` 值为实际值(单位：vol%)。",
             },
             "NH3PPM": {
-                "description": "氨气",
-                "rw": "R",
+                "description": "coppm",
                 "data_type": "ammonia_concentration",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示氨气原始浓度值，`v` 值为实际值(单位：ppm)。",
             },
             "H2SPPM": {
-                "description": "硫化氢",
-                "rw": "R",
+                "description": "coppm",
                 "data_type": "h2s_concentration",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示硫化氢原始浓度值，`v` 值为实际值(单位：ppm)。",
             },
             "TVOC": {
                 "description": "TVOC",
-                "rw": "R",
                 "data_type": "tvoc_concentration",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "mg/m³",
                 "device_class": "volatile_organic_compounds",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示TVOC原始浓度值，`v` 值为实际值(单位：mg/m³)。",
             },
             "PHM": {
-                "description": "噪音",
-                "rw": "R",
+                "description": "co2ppm",
                 "data_type": "noise_level",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "dB",
                 "device_class": "sound_pressure",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示噪音原始值，`v` 值为实际值(单位：dB)。",
             },
             "SMOKE": {
-                "description": "烟雾",
-                "rw": "R",
+                "description": "ch20ppm",
                 "data_type": "smoke_concentration",
                 "conversion": "friendly_value",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
-                "detailed_description": "`val` 值表示烟雾原始浓度值，`v` 值为实际值(单位：ppm)。",
             },
         },
     },
@@ -10374,55 +8893,42 @@ _RAW_DEVICE_DATA = {
         "name": "红外夜灯",
         "light": {
             "P1": {
-                "description": "夜灯控制",
-                "rw": "RW",
+                "description": "control",
                 "data_type": "infrared_light",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`表示开启红外夜灯；`type&1==0`表示关闭红外夜灯",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开启夜灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭夜灯",
                     },
                 },
             },
         },
         "binary_sensor": {
             "P2": {
-                "description": "人体感应",
-                "rw": "R",
+                "description": "motion",
                 "data_type": "motion_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val`值定义如下：0：没有检测到移动，1：有检测到移动",
                 "device_class": "motion",
             },
         },
         "sensor": {
             "P3": {
-                "description": "环境光照",
-                "rw": "R",
+                "description": "illuminance",
                 "data_type": "illuminance",
                 "conversion": "v_field",
-                "detailed_description": "`val` 值表示原始光照值，`v` 值表示实际值(单位：lux)",
                 "device_class": "illuminance",
                 "unit_of_measurement": "lx",
                 "state_class": "measurement",
             },
             "P4": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val` 值表示原始电压值，`v` 值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据 `val` 电压值换算的"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -10433,42 +8939,31 @@ _RAW_DEVICE_DATA = {
         "name": "云防键盘",
         "binary_sensor": {
             "KY": {
-                "description": "按键状态",
-                "rw": "R",
+                "description": "button",
                 "data_type": "keypad_status",
                 "conversion": "val_direct",
-                "detailed_description": "`val`值表示按键编号，0表示无按键按下，其他值表示对应按键编号",
                 "device_class": "moving",
             },
             "TR": {
-                "description": "防拆状态",
-                "rw": "R",
+                "description": "tamper",
                 "data_type": "tamper_status",
                 "conversion": "type_bit_0",
-                "detailed_description": "`type&1==1`则表示触发防拆警报；`type&1==0`则表示状态正常",
                 "device_class": "tamper",
             },
         },
         "sensor": {
             "T": {
-                "description": "温度",
-                "rw": "R",
+                "description": "temperature",
                 "data_type": "temperature",
                 "conversion": "v_field",
-                "detailed_description": "`val`值表示原始温度值，它是实际温度值*10，`v`值表示实际值(单位：℃)",
                 "device_class": "temperature",
                 "unit_of_measurement": "°C",
                 "state_class": "measurement",
             },
             "V": {
-                "description": "电量",
-                "rw": "R",
+                "description": "energy",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val`值表示原始电压值，`v`值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据`val`电压值换算的。注意：`type&1==1`表示低电报警状态"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -10479,11 +8974,9 @@ _RAW_DEVICE_DATA = {
         "name": "摄像头",
         "camera": {
             "stream": {
-                "description": "视频流",
-                "rw": "R",
+                "description": "camera_stream",
                 "data_type": "camera_stream",
                 "conversion": "camera_url",
-                "detailed_description": "摄像头视频流地址",
             }
         },
         "dev_rt_variants": {
@@ -10516,39 +9009,26 @@ _RAW_DEVICE_DATA = {
         },
         "binary_sensor": {
             "M": {
-                "description": "移动检测",
-                "rw": "R",
+                "description": "motion",
                 "data_type": "motion_detection",
                 "conversion": "val_direct",
-                "detailed_description": "`val`值定义如下：0：没有检测到移动，1：有检测到移动",
                 "device_class": "motion",
             },
         },
         "sensor": {
             "V": {
-                "description": "电压",
-                "rw": "R",
+                "description": "voltage",
                 "data_type": "battery",
                 "conversion": "v_field",
-                "detailed_description": (
-                    "`val`表示原始电压值，`v`值将表示当前剩余电量百分比，"
-                    "值范围[0,100]，它是根据val电压值换算的。注意：当前只有FRAME设备有该属性"
-                ),
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
                 "availability_condition": "dev_rt == 'LSCAM:LSCAMV1'",
             },
             "CFST": {
-                "description": "摄像头状态",
-                "rw": "R",
+                "description": "status",
                 "data_type": "camera_status",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`val`值定义如下（按位表示值）：第0位：表示是否有外接电源，1表示有外接电源，0表示没有；"
-                    "第1位：是否为旋转云台，1表示摄像头在旋转云台上，0表示没有；"
-                    "第2位：表示是否正在旋转，1表示正在旋转。注意：当前只有FRAME设备有该属性"
-                ),
                 "availability_condition": "dev_rt == 'LSCAM:LSCAMV1'",
             },
         },
@@ -10558,66 +9038,46 @@ _RAW_DEVICE_DATA = {
         "name": "车库门控制器",
         "light": {
             "P1": {
-                "description": "灯光控制",
-                "rw": "RW",
+                "description": "control",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "`type&1==1`表示打开(忽略`val`值)；"
-                    "`type&1==0`表示关闭(忽略`val`值)"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭",
                     },
                 },
             },
         },
         "cover": {
             "P2": {
-                "description": "车库门状态",
-                "rw": "R",
+                "description": "status",
                 "data_type": "garage_door_status",
                 "conversion": "val_direct",
-                "detailed_description": (
-                    "`type&1==1`表示控制正在运行；"
-                    "`type&1==0`表示没有运行；"
-                    "当正在运行的时候即(`type&1==1`):`val&0x80==0x80`表示正在开，否则表示正在关；"
-                    "`val&0x7F`的值表示车库门打开的百分比"
-                ),
             },
             "P3": {
-                "description": "车库门控制",
-                "rw": "W",
+                "description": "control",
                 "data_type": "garage_door_control",
                 "conversion": "val_direct",
-                "detailed_description": "百分比取值范围：[0,100]",
                 "commands": {
                     "open": {
                         "type": CMD_TYPE_SET_VAL,
                         "val": 100,
-                        "description": "完全打开",
                     },
                     "close": {
                         "type": CMD_TYPE_SET_VAL,
                         "val": 0,
-                        "description": "完全关闭",
                     },
                     "stop": {
                         "type": CMD_TYPE_SET_CONFIG,
                         "val": 128,
-                        "description": "停止车库门开合",
                     },
                     "set_position": {
                         "type": CMD_TYPE_SET_VAL,
-                        "description": "开到百分比，val=percent，percent取值:[0,100]",
                     },
                 },
             },
@@ -10629,63 +9089,41 @@ _RAW_DEVICE_DATA = {
         "name": "智能报警器(CoSS版)",
         "switch": {
             "P1": {
-                "description": "播放控制",
-                "rw": "RW",
+                "description": "control",
                 "data_type": "alarm_playback",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1==1,表示正在播放(忽略`val` 值)；"
-                    "type&1==0,表示没有播放(忽略`val` 值)；"
-                    "val为32bit值，描述如下(16进制)：0xAABBCCDD "
-                    "AABB表示时间或者循环次数(最高位1表示次数，否则为时间，时间单位为秒)；"
-                    "CC是音量(只有16级，使用高4位，若CC值等于0将采用P2 IO定义的音量值，否则将使用CC值做为音量值)；"
-                    "DD表示音频序号；"
-                ),
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "播放",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "停止",
                     },
                     "set_config_on": {
                         "type": CMD_TYPE_SET_RAW_ON,
-                        "description": "设置值并播放，val=需要设置的值",
                     },
                     "set_config_off": {
                         "type": CMD_TYPE_SET_RAW_OFF,
-                        "description": "设置值并停止，val=需要设置的值",
                     },
                 },
             },
             "P2": {
-                "description": "音量控制",
-                "rw": "RW",
+                "description": "control",
                 "data_type": "volume_control",
                 "conversion": "type_bit_0",
-                "detailed_description": (
-                    "type&1==1表示处于正常模式；"
-                    "type&1==0表示处于静音模式；"
-                    "`val` 值表示音量值，只有16级，使用高4位。即有效位为：0x000000F0"
-                ),
                 "commands": {
                     "unmute": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "取消静音",
                     },
                     "mute": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "设置静音",
                     },
                     "set_volume": {
                         "type": CMD_TYPE_SET_CONFIG,
-                        "description": "设置音量，val=音量值",
                     },
                 },
             },
@@ -10705,108 +9143,72 @@ _RAW_DEVICE_DATA = {
             "condition": "P5&0xFF in [3,6]",
             "climate": {
                 "P1": {
-                    "description": "开关",
-                    "rw": "RW",
+                    "description": "switch",
                     "data_type": "binary_switch",
                     "conversion": "type_bit_0",
-                    "detailed_description": (
-                        "type&1==1,表示打开(忽略`val` 值)；"
-                        "type&1==0,表示关闭(忽略`val` 值)；"
-                    ),
                     "commands": {
                         "on": {
                             "type": CMD_TYPE_ON,
                             "val": 1,
-                            "description": "打开",
                         },
                         "off": {
                             "type": CMD_TYPE_OFF,
                             "val": 0,
-                            "description": "关闭",
                         },
                     },
                 },
                 "P4": {
-                    "description": "T当前温度",
-                    "rw": "R",
+                    "description": "temperature",
                     "data_type": "temperature",
                     "conversion": "v_field",
-                    "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
                     "device_class": "temperature",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                 },
                 "P5": {
-                    "description": "设备种类",
-                    "rw": "R",
+                    "description": "switch",
                     "data_type": "device_type",
                     "conversion": "val_direct",
-                    "detailed_description": (
-                        "val&0xFF指示设备种类。1：开关面板 2：POE面板 3：温控面板 6：温控面板 "
-                        "注意：值必须是3或者6才是温控面板，否则是其它类型的设备。"
-                    ),
                 },
                 "P6": {
-                    "description": "CFG配置",
-                    "rw": "RW",
+                    "description": "switch",
                     "data_type": "config_bitmask",
                     "conversion": "val_direct",
-                    "detailed_description": (
-                        "(val>>6)&0x7 指示设备类型 0：新风模式 1：风机盘管（单阀）模式 "
-                        "2：水地暖模式 3：风机盘管+水地暖模式 4: 风机盘管（双阀）模式 5：水地暖+新风模式"
-                    ),
                     "commands": {
                         "set_config": {
                             "type": CMD_TYPE_SET_RAW_ON,
-                            "description": "设置配置，需要保留其它位",
                         },
                     },
                 },
                 "P7": {
-                    "description": "MODE模式",
-                    "rw": "RW",
+                    "description": "mode",
                     "data_type": "hvac_mode",
                     "conversion": "val_direct",
-                    "detailed_description": (
-                        "3：Cool制冷 4：Heat 制热 7：DN地暖 8：DN_Heat 地暖+空调 "
-                        "注意：P6 CFG配置不同，支持的MODE也会不同"
-                    ),
                     "commands": {
                         "set_config": {
                             "type": CMD_TYPE_SET_CONFIG,
-                            "description": "设置模式",
                         },
                     },
                 },
                 "P8": {
-                    "description": "tT目标温度",
-                    "rw": "RW",
+                    "description": "target_temperature",
                     "data_type": "temperature",
                     "conversion": "v_field",
-                    "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
                     "device_class": "temperature",
                     "unit_of_measurement": "°C",
                     "commands": {
                         "set_temperature": {
                             "type": CMD_TYPE_SET_TEMP_DECIMAL,
-                            "description": "设置目标温度，val=温度*10",
                         },
                     },
                 },
                 "P9": {
-                    "description": "tF目标风速",
-                    "rw": "RW",
+                    "description": "target_fan_speed",
                     "data_type": "fan_speed",
                     "conversion": "val_direct",
-                    "detailed_description": (
-                        "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 "
-                        "30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动 "
-                        "注意：P6 CFG配置不同，支持的tF也会不同"
-                    ),
                     "commands": {
                         "set_config": {
                             "type": CMD_TYPE_SET_CONFIG,
-                            "description": "设置风速",
                             "fan_modes": {
                                 "low": 25,
                                 "medium": 50,
@@ -10817,31 +9219,22 @@ _RAW_DEVICE_DATA = {
                     },
                 },
                 "P10": {
-                    "description": "F当前风速",
-                    "rw": "R",
+                    "description": "fan_speed",
                     "data_type": "fan_speed",
                     "conversion": "val_direct",
-                    "detailed_description": (
-                        "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 "
-                        "30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动"
-                    ),
                 },
             },
             "binary_sensor": {
                 "P2": {
-                    "description": "阀门状态",
-                    "rw": "R",
+                    "description": "valve",
                     "data_type": "valve_status",
                     "conversion": "val_direct",
-                    "detailed_description": "阀门1状态(盘管的冷阀或者盘管的冷热阀)",
                     "device_class": "opening",
                 },
                 "P3": {
-                    "description": "阀门状态",
-                    "rw": "R",
+                    "description": "valve",
                     "data_type": "valve_status",
                     "conversion": "val_direct",
-                    "detailed_description": "阀门2状态（盘管的热阀或者地暖阀)",
                     "device_class": "opening",
                 },
             },
@@ -10855,113 +9248,97 @@ _RAW_DEVICE_DATA = {
         "manufacturer": "lifesmart",
         "model": "SL_FCU",
         "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
-        
         # 基础平台配置
         "platforms": {
             "climate": {
                 "io_configs": {
                     "P1": {
-                        "description": "开关",
+                        "description": "switch",
                         "data_type": "binary_switch",
                         "conversion": "val_direct",
-                        "rw": "RW",
-                        "detailed_description": "开关状态：0关 1开",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_ON", "val": 1, "description": "打开"},
-                            "off": {"type": "CMD_TYPE_OFF", "val": 0, "description": "关闭"}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_ON",
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_OFF",
+                                "val": 0,
+                            },
+                        },
                     },
                     "P7": {
-                        "description": "MODE模式",
+                        "description": "mode",
                         "data_type": "hvac_mode",
                         "conversion": "val_direct",
-                        "rw": "RW",
-                        "detailed_description": (
-                            "运行模式：1制热、2制冷、3通风、4除湿、5加湿、"
-                            "6应急通风、7应急加热、8应急制冷、16自动"
-                        ),
                         "commands": {
-                            "set_config": {"type": "CMD_TYPE_SET_CONFIG", "description": "设置模式"}
-                        }
+                            "set_config": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                            }
+                        },
                     },
                     "P8": {
-                        "description": "tT目标温度",
+                        "description": "target_temperature",
                         "data_type": "temperature",
                         "conversion": "v_field",
-                        "rw": "RW",
-                        "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
                         "unit_of_measurement": "°C",
                         "commands": {
                             "set_temperature": {
                                 "type": "CMD_TYPE_SET_TEMP_DECIMAL",
-                                "description": "设置目标温度，val=温度*10"
                             }
-                        }
+                        },
                     },
                     "P9": {
-                        "description": "tF目标风速", 
+                        "description": "target_fan_speed",
                         "data_type": "fan_speed",
                         "conversion": "val_direct",
-                        "rw": "RW",
-                        "detailed_description": (
-                            "`val` 值表示风速，定义如下：0：Stop停止 0<val<30：Low低档 30<=val<65：Medium中档 "
-                            "65<=val<100：High高档 101：Auto自动 注意：P6 CFG配置不同，支持的tF也会不同"
-                        ),
                         "commands": {
                             "set_config": {
                                 "type": "CMD_TYPE_SET_CONFIG",
-                                "description": "设置风速",
-                                "fan_modes": {"low": 15, "medium": 45, "high": 75, "auto": 101}
+                                "fan_modes": {
+                                    "low": 15,
+                                    "medium": 45,
+                                    "high": 75,
+                                    "auto": 101,
+                                },
                             }
-                        }
-                    }
+                        },
+                    },
                 }
             },
             "sensor": {
                 "io_configs": {
                     "P4": {
-                        "description": "T当前温度",
+                        "description": "temperature",
                         "data_type": "temperature",
                         "conversion": "v_field",
-                        "rw": "R",
-                        "detailed_description": "`v` 值表示温度值 `val` 值表示原始温度值，它是温度值*10",
                         "device_class": "temperature",
-                        "unit_of_measurement": "°C"
+                        "unit_of_measurement": "°C",
                     },
                     "P10": {
-                        "description": "F当前风速",
+                        "description": "fan_speed",
                         "data_type": "fan_speed",
                         "conversion": "val_direct",
-                        "rw": "R",
-                        "detailed_description": (
-                            "`val` 值表示风速，定义如下：0：stop停止 0<val<30：Low低档 "
-                            "30<=val<65：Medium中档 65<=val<100：High高档 101：Auto自动"
-                        )
-                    }
+                    },
                 }
             },
             "binary_sensor": {
                 "io_configs": {
                     "P2": {
-                        "description": "阀门状态",
+                        "description": "valve",
                         "data_type": "valve_status",
                         "conversion": "val_direct",
-                        "rw": "R",
-                        "detailed_description": "阀门1状态(盘管的冷阀或者盘管的冷热阀)",
-                        "device_class": "opening"
+                        "device_class": "opening",
                     },
                     "P3": {
-                        "description": "阀门状态",
-                        "data_type": "valve_status", 
+                        "description": "valve",
+                        "data_type": "valve_status",
                         "conversion": "val_direct",
-                        "rw": "R",
-                        "detailed_description": "阀门2状态（盘管的热阀或者地暖阀)",
-                        "device_class": "opening"
-                    }
+                        "device_class": "opening",
+                    },
                 }
-            }
+            },
         },
-        
         # 核心：P6 bitmask_config嵌入配置 - 解决功能缺失
         "bitmask_config": {
             "P6": {
@@ -10971,152 +9348,234 @@ _RAW_DEVICE_DATA = {
                     0: {
                         "name": "hot_water",
                         "platform": "switch",
-                        "description": "热回水开关",
+                        "description": "hot_water_switch",
                         "translation_key": "hot_water_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 0, "bit_value": 1, "description": "开启热回水"},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 0, "bit_value": 0, "description": "关闭热回水"}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 0,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 0,
+                                "bit_value": 0,
+                            },
+                        },
                     },
                     1: {
                         "name": "floor_heating",
                         "platform": "switch",
-                        "description": "地暖开关",
+                        "description": "floor_heating_switch",
                         "translation_key": "floor_heating_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 1, "bit_value": 1},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 1, "bit_value": 0}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 1,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 1,
+                                "bit_value": 0,
+                            },
+                        },
                     },
                     2: {
                         "name": "heating",
                         "platform": "switch",
-                        "description": "制热开关",
+                        "description": "heating_switch",
                         "translation_key": "heating_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 2, "bit_value": 1},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 2, "bit_value": 0}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 2,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 2,
+                                "bit_value": 0,
+                            },
+                        },
                     },
                     3: {
                         "name": "cooling",
                         "platform": "switch",
-                        "description": "制冷开关", 
+                        "description": "cooling_switch",
                         "translation_key": "cooling_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 3, "bit_value": 1},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 3, "bit_value": 0}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 3,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 3,
+                                "bit_value": 0,
+                            },
+                        },
                     },
                     4: {
                         "name": "ventilation",
                         "platform": "switch",
-                        "description": "通风开关",
+                        "description": "switch",
                         "translation_key": "ventilation_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 4, "bit_value": 1},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 4, "bit_value": 0}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 4,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 4,
+                                "bit_value": 0,
+                            },
+                        },
                     },
                     5: {
                         "name": "dehumidify",
                         "platform": "switch",
-                        "description": "除湿开关",
+                        "description": "switch",
                         "translation_key": "dehumidify_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 5, "bit_value": 1},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 5, "bit_value": 0}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 5,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 5,
+                                "bit_value": 0,
+                            },
+                        },
                     },
                     6: {
                         "name": "humidify",
                         "platform": "switch",
-                        "description": "加湿开关",
+                        "description": "switch",
                         "translation_key": "humidify_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 6, "bit_value": 1},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 6, "bit_value": 0}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 6,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 6,
+                                "bit_value": 0,
+                            },
+                        },
                     },
                     7: {
                         "name": "emergency_ventilation",
                         "platform": "switch",
-                        "description": "应急通风开关",
+                        "description": "switch",
                         "translation_key": "emergency_ventilation_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 7, "bit_value": 1},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 7, "bit_value": 0}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 7,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 7,
+                                "bit_value": 0,
+                            },
+                        },
                     },
                     8: {
                         "name": "emergency_heating",
                         "platform": "switch",
-                        "description": "应急加热开关",
+                        "description": "switch",
                         "translation_key": "emergency_heating_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 8, "bit_value": 1},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 8, "bit_value": 0}
-                        }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 8,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 8,
+                                "bit_value": 0,
+                            },
+                        },
                     },
                     9: {
                         "name": "emergency_cooling",
                         "platform": "switch",
-                        "description": "应急制冷开关",
+                        "description": "switch",
                         "translation_key": "emergency_cooling_switch",
                         "commands": {
-                            "on": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 9, "bit_value": 1},
-                            "off": {"type": "CMD_TYPE_SET_CONFIG", "bit_position": 9, "bit_value": 0}
-                        }
-                    }
-                }
+                            "on": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 9,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "bit_position": 9,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                },
             }
         },
-        
         # 核心：climate_config嵌入配置 - 解决HVAC映射冲突
         "climate_config": {
             "template": "advanced_hvac",
             "hvac_modes": {
                 "io_field": "P7",
                 "modes": {
-                    1: "heat",      # 制热
-                    2: "cool",      # 制冷
-                    3: "fan_only",  # 通风 
-                    4: "dry",       # 除湿
-                    5: "dry",       # 加湿 (HA中合并到dry模式)
+                    1: "heat",  # 制热
+                    2: "cool",  # 制冷
+                    3: "fan_only",  # 通风
+                    4: "dry",  # 除湿
+                    5: "dry",  # 加湿 (HA中合并到dry模式)
                     6: "fan_only",  # 应急通风 (合并到fan_only)
-                    7: "heat",      # 应急加热 (合并到heat)
-                    8: "cool",      # 应急制冷 (合并到cool)
-                    16: "auto"      # 自动
-                }
+                    7: "heat",  # 应急加热 (合并到heat)
+                    8: "cool",  # 应急制冷 (合并到cool)
+                    16: "auto",  # 自动
+                },
             },
             "temperature": {
                 "target_io": "P8",
                 "current_io": "P4",
                 "range": [5, 35],
                 "precision": 0.1,
-                "conversion": {"source": "v"}
+                "conversion": {"source": "v"},
             },
             "fan_modes": {
                 "io_field": "P9",
                 "modes": {
-                    15: "low",      # 低档
-                    45: "medium",   # 中档
-                    75: "high",     # 高档
-                    101: "auto"     # 自动
-                }
+                    15: "low",  # 低档
+                    45: "medium",  # 中档
+                    75: "high",  # 高档
+                    101: "auto",  # 自动
+                },
             },
             "capabilities": [
-                "heating", "cooling", "fan_control", 
-                "dehumidifying", "target_temperature"
-            ]
+                "heating",
+                "cooling",
+                "fan_control",
+                "dehumidifying",
+                "target_temperature",
+            ],
         },
-        
         # 设备能力标识
         "capabilities": [
-            "climate_control", "bitmask_switch_control",
-            "temperature_monitoring", "valve_monitoring"
+            "climate_control",
+            "bitmask_switch_control",
+            "temperature_monitoring",
+            "valve_monitoring",
         ],
-        
         # HA翻译支持
         "translation_keys": {
             "hot_water_switch": "热回水开关",
@@ -11128,62 +9587,52 @@ _RAW_DEVICE_DATA = {
             "humidify_switch": "加湿开关",
             "emergency_ventilation_switch": "应急通风开关",
             "emergency_heating_switch": "应急加热开关",
-            "emergency_cooling_switch": "应急制冷开关"
-        }
+            "emergency_cooling_switch": "应急制冷开关",
+        },
     },
     # ================= 缺失设备补充 (Missing Devices) =================
     "SL_SC_GD": {
         "name": "车库门控制器",
         "cover": {
             "P1": {
-                "description": "车库门控制",
-                "rw": "RW",
+                "description": "control",
                 "data_type": "cover_control",
                 "conversion": "val_direct",
-                "detailed_description": "车库门开关控制",
                 "device_class": "garage",
                 "commands": {
                     "open": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "打开车库门",
                     },
                     "close": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关闭车库门",
                     },
                 },
             },
         },
         "light": {
             "HS": {
-                "description": "车库门灯光",
-                "rw": "RW",
+                "description": "hs",
                 "data_type": "binary_switch",
                 "conversion": "type_bit_0",
-                "detailed_description": "车库门照明灯控制",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
                         "val": 1,
-                        "description": "开灯",
                     },
                     "off": {
                         "type": CMD_TYPE_OFF,
                         "val": 0,
-                        "description": "关灯",
                     },
                 },
             },
         },
         "binary_sensor": {
             "G": {
-                "description": "车库门状态传感器",
-                "rw": "R",
+                "description": "status",
                 "data_type": "binary_sensor",
                 "conversion": "type_bit_0",
-                "detailed_description": "车库门开关状态检测",
                 "device_class": "garage_door",
             },
         },
@@ -11208,11 +9657,9 @@ _RAW_DEVICE_DATA["VIRTUAL_TEST"] = {
     "name": "虚拟测试设备",
     "sensor": {
         "TEST": {
-            "description": "测试传感器数据",
-            "rw": "R",
+            "description": "hs",
             "data_type": "generic",
             "conversion": "val_field",
-            "detailed_description": "用于测试的虚拟传感器数据",
             "state_class": "measurement",
         },
     },
@@ -11224,81 +9671,16 @@ def get_device_count() -> int:
     return len(_RAW_DEVICE_DATA)
 
 
-# 无位置窗帘配置映射 (用于告诉设备平台哪些没有位置只能乐观判断开合运动状态)
-NON_POSITIONAL_COVER_CONFIG = {
-    "SL_SW_WIN": {"open": "OP", "close": "CL", "stop": "ST"},
-    "SL_P_V2": {"open": "P2", "close": "P3", "stop": "P4"},
-    "SL_CN_IF": {"open": "P1", "close": "P2", "stop": "P3"},
-    "SL_CN_FE": {"open": "P1", "close": "P2", "stop": "P3"},
-    # 通用控制器
-    "SL_P": {"open": "P2", "close": "P3", "stop": "P4"},
-    "SL_JEMA": {"open": "P2", "close": "P3", "stop": "P4"},
-}
-
-# ================= HVAC 和风扇映射配置 =================
-# 由 @MapleEve 创建和维护 - 从hvac_mappings.py迁移而来
-# 这些映射定义了LifeSmart设备与Home Assistant HVAC模式的对应关系
-
-# 核心温控器HVAC模式映射 - F系列设备
-LIFESMART_F_HVAC_MODE_MAP = {
-    1: HVACMode.AUTO,  # 自动模式
-    2: HVACMode.FAN_ONLY,  # 仅送风模式
-    3: HVACMode.COOL,  # 制冷模式
-    4: HVACMode.HEAT,  # 制热模式
-}
-REVERSE_F_HVAC_MODE_MAP = {v: k for k, v in LIFESMART_F_HVAC_MODE_MAP.items()}
-
-# 扩展HVAC模式映射 - 支持更多设备类型
-LIFESMART_HVAC_MODE_MAP = {
-    1: HVACMode.AUTO,  # 自动模式
-    2: HVACMode.FAN_ONLY,  # 仅送风模式
-    3: HVACMode.COOL,  # 制冷模式
-    4: HVACMode.HEAT,  # 制热模式
-    5: HVACMode.DRY,  # 除湿模式
-    7: HVACMode.HEAT,  # 地暖模式
-    8: HVACMode.HEAT_COOL,  # 地暖+空调复合模式
-}
-REVERSE_LIFESMART_HVAC_MODE_MAP = {
-    HVACMode.AUTO: 1,  # 自动模式
-    HVACMode.FAN_ONLY: 2,  # 仅送风
-    HVACMode.COOL: 3,  # 制冷
-    HVACMode.HEAT: 4,  # 制热(标准模式)
-    HVACMode.DRY: 5,  # 除湿
-    HVACMode.HEAT_COOL: 8,  # 制热制冷复合模式
-}
-
-# 风机盘管模式映射 - CP_AIR系列设备专用
-LIFESMART_CP_AIR_HVAC_MODE_MAP = {
-    0: HVACMode.COOL,  # 制冷模式
-    1: HVACMode.HEAT,  # 制热模式
-    2: HVACMode.FAN_ONLY,  # 仅送风模式
-}
-REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {
-    v: k for k, v in LIFESMART_CP_AIR_HVAC_MODE_MAP.items()
-}
-
-# 风速映射配置
-LIFESMART_ACIPM_FAN_MAP = {
-    FAN_LOW: 1,  # 低速档
-    FAN_MEDIUM: 2,  # 中速档
-    FAN_HIGH: 3,  # 高速档
-}
-
-LIFESMART_CP_AIR_FAN_MAP = {
-    FAN_AUTO: 0,  # 自动风速
-    FAN_LOW: 1,  # 低速档
-    FAN_MEDIUM: 2,  # 中速档
-    FAN_HIGH: 3,  # 高速档
-}
-REVERSE_LIFESMART_CP_AIR_FAN_MAP = {v: k for k, v in LIFESMART_CP_AIR_FAN_MAP.items()}
-
-LIFESMART_TF_FAN_MAP = {
-    FAN_AUTO: 101,  # 自动模式 - 智能风速调节
-    FAN_LOW: 15,  # 低速档 - 15%风速
-    FAN_MEDIUM: 45,  # 中速档 - 45%风速
-    FAN_HIGH: 75,  # 高速档 - 75%风速
-}
+# [MIGRATION COMPLETED 2025-08-17]
+# All external mappings have been integrated directly into device configurations
+# following DEVICE_CENTRIC_CONFIG architecture. External mappings removed to
+# eliminate redundancy and achieve "全部集成进入最大的设备字典，而不在外面"
+#
+# Integrated mappings:
+# - NON_POSITIONAL_COVER_CONFIG → 5 cover devices (SL_P_V2, SL_CN_IF, SL_CN_FE, SL_P, SL_JEMA)
+# - HVAC mode mappings → 2 climate devices (SL_TR_ACIPM, SL_CP_AIR)
+# - Fan speed mappings → 2 devices (SL_TR_ACIPM, SL_CP_AIR)
+# - Bitmask configurations → 10 lock devices (all ALM and EVTLO configs)
 
 # 导出设备数据和配置供外部使用
 DEVICE_SPECS_DATA = _RAW_DEVICE_DATA
-DEVICE_DATA = _RAW_DEVICE_DATA  # 保持向后兼容

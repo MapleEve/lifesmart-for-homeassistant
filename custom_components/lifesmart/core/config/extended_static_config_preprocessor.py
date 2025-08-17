@@ -38,6 +38,10 @@ class DeviceCentricConfigProcessor:
         Returns:
             是否为新格式
         """
+        # 安全检查：确保device_config不为None且为字典类型
+        if not device_config or not isinstance(device_config, dict):
+            return False
+
         new_format_indicators = [
             "category",
             "climate_config",
@@ -478,6 +482,7 @@ VERSIONED_DEVICE_CONFIG = {
     },
 }
 
+
 class ExtendedStaticConfigPreprocessor:
     """
     扩展的静态配置预处理器 - 支持双格式（Legacy + DEVICE_CENTRIC_CONFIG）
@@ -506,7 +511,7 @@ class ExtendedStaticConfigPreprocessor:
 
         # 格式处理器
         self.device_centric_processor = DeviceCentricConfigProcessor()
-        
+
         # Legacy处理所需的常量引用
         self._SPECIAL_DEVICE_FEATURES = SPECIAL_DEVICE_FEATURES
         self._COVER_POSITIONING_MAP = COVER_POSITIONING_MAP
@@ -594,6 +599,14 @@ class ExtendedStaticConfigPreprocessor:
         Returns:
             处理后的静态配置
         """
+        # 安全检查：确保raw_config不为None
+        if not raw_config or not isinstance(raw_config, dict):
+            return {
+                "name": device_type,
+                "_features": {"is_dynamic": False, "generation": 1},
+                "platforms": {},
+            }
+
         static_config = {
             "name": raw_config.get("name", device_type),
             "_features": self._extract_legacy_features(device_type, raw_config),
@@ -690,7 +703,7 @@ class ExtendedStaticConfigPreprocessor:
             if base_config.get("_features", {}).get("is_versioned"):
                 # 获取版本配置
                 version_configs = self._VERSIONED_DEVICE_CONFIG.get(device_type, {})
-                
+
                 for version, version_specific in version_configs.items():
                     versioned_device_type = f"{device_type}_{version}"
                     versioned_config = self._create_version_config(
@@ -705,13 +718,13 @@ class ExtendedStaticConfigPreprocessor:
             # 应用特殊设备特性
             if device_type in self._SPECIAL_DEVICE_FEATURES:
                 special_features = self._SPECIAL_DEVICE_FEATURES[device_type]
-                
+
                 # 合并特殊特性到_features中
                 if "_features" not in config:
                     config["_features"] = {}
-                
+
                 config["_features"].update(special_features)
-                
+
                 # 标记为特殊设备
                 config["_features"]["is_special"] = True
 
@@ -719,7 +732,7 @@ class ExtendedStaticConfigPreprocessor:
         """生成虚拟子设备配置"""
         for device_type, config in list(self.static_configs.items()):
             virtual_type = config.get("_features", {}).get("virtual_subdevice_type")
-            
+
             if virtual_type == "bitmask":
                 # 生成bitmask虚拟子设备
                 self._generate_bitmask_subdevices(device_type, config)
@@ -757,7 +770,7 @@ class ExtendedStaticConfigPreprocessor:
             _LOGGER.info("所有配置验证通过")
 
     # ==================== Legacy处理方法（从StaticConfigPreprocessor迁移） ====================
-    
+
     def _detect_positioning_capability(self, device_type: str) -> bool:
         """检测设备定位能力"""
         return self._COVER_POSITIONING_MAP.get(device_type, False)
@@ -778,7 +791,11 @@ class ExtendedStaticConfigPreprocessor:
     def _get_cover_type(self, device_type: str) -> Optional[str]:
         """获取窗帘类型"""
         if device_type in self._COVER_POSITIONING_MAP:
-            return "positional" if self._COVER_POSITIONING_MAP[device_type] else "non_positional"
+            return (
+                "positional"
+                if self._COVER_POSITIONING_MAP[device_type]
+                else "non_positional"
+            )
         return None
 
     def _get_light_type(self, device_type: str) -> Optional[str]:
@@ -797,17 +814,19 @@ class ExtendedStaticConfigPreprocessor:
                         return "bitmask"
         return None
 
-    def _extract_static_condition(self, mode_name: str, mode_config: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_static_condition(
+        self, mode_name: str, mode_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """转换动态条件为静态条件"""
         condition_str = mode_config.get("condition", "")
-        
+
         # 解析条件字符串，转换为静态结构
         static_condition = {
             "type": "expression",
             "expression": condition_str,
             "evaluation_method": "bitwise_and" if "&" in condition_str else "equality",
         }
-        
+
         # 提取字段名和值
         if "P5" in condition_str:
             static_condition["field"] = "P5"
@@ -820,24 +839,32 @@ class ExtendedStaticConfigPreprocessor:
                 values_str = condition_str.split(" in ")[-1].strip()
                 if values_str.startswith("[") and values_str.endswith("]"):
                     values_str = values_str[1:-1]
-                    static_condition["values"] = [int(v.strip()) for v in values_str.split(",")]
-        
+                    static_condition["values"] = [
+                        int(v.strip()) for v in values_str.split(",")
+                    ]
+
         return static_condition
 
     def _process_mode_platforms(self, mode_config: Dict[str, Any]) -> Dict[str, Any]:
         """处理模式平台配置"""
         platforms = {}
-        
+
         # 支持的平台类型
         platform_types = [
-            "switch", "sensor", "binary_sensor", "light", 
-            "cover", "climate", "camera", "fan"
+            "switch",
+            "sensor",
+            "binary_sensor",
+            "light",
+            "cover",
+            "climate",
+            "camera",
+            "fan",
         ]
-        
+
         for platform_type in platform_types:
             if platform_type in mode_config:
                 platforms[platform_type] = mode_config[platform_type]
-        
+
         # 处理特殊的io字段
         if "io" in mode_config:
             # 将io字段转换为switch平台
@@ -848,7 +875,7 @@ class ExtendedStaticConfigPreprocessor:
                     "rw": "RW",
                     "data_type": "binary_switch",
                 }
-        
+
         if "sensor_io" in mode_config:
             # 将sensor_io字段转换为sensor平台
             platforms["sensor"] = {}
@@ -858,28 +885,31 @@ class ExtendedStaticConfigPreprocessor:
                     "rw": "R",
                     "data_type": "sensor",
                 }
-        
+
         return platforms
 
-    def _create_version_config(self, base_config: Dict[str, Any], version_specific: Dict[str, Any]) -> Dict[str, Any]:
+    def _create_version_config(
+        self, base_config: Dict[str, Any], version_specific: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """创建版本化配置"""
         import copy
+
         versioned_config = copy.deepcopy(base_config)
-        
+
         # 合并版本特定特性
         if "_features" not in versioned_config:
             versioned_config["_features"] = {}
-        
+
         versioned_config["_features"].update(version_specific)
         versioned_config["_features"]["is_versioned_instance"] = True
-        
+
         return versioned_config
 
     def _generate_bitmask_subdevices(self, device_type: str, config: Dict[str, Any]):
         """生成bitmask虚拟子设备"""
         # 检查platforms中的bitmask相关IO
         platforms = config.get("platforms", {})
-        
+
         for platform_name, platform_config in platforms.items():
             if isinstance(platform_config, dict):
                 for io_key, io_config in platform_config.items():
@@ -890,12 +920,14 @@ class ExtendedStaticConfigPreprocessor:
                         # 生成EVTLO bitmask子设备
                         self._create_evtlo_subdevices(device_type, io_key, io_config)
 
-    def _create_alm_subdevices(self, device_type: str, io_key: str, io_config: Dict[str, Any]):
+    def _create_alm_subdevices(
+        self, device_type: str, io_key: str, io_config: Dict[str, Any]
+    ):
         """创建ALM bitmask子设备"""
         # ALM位掩码定义（门锁报警位）
         alm_bits = {
             "bit0": "错误报警",
-            "bit1": "劫持报警", 
+            "bit1": "劫持报警",
             "bit2": "防撬报警",
             "bit3": "低电报警",
             "bit4": "上锁报警",
@@ -903,9 +935,9 @@ class ExtendedStaticConfigPreprocessor:
             "bit6": "超时报警",
             "bit7": "异常报警",
             "bit8": "门磁报警",
-            "bit9": "保留位"
+            "bit9": "保留位",
         }
-        
+
         for bit_name, bit_desc in alm_bits.items():
             subdevice_type = f"{device_type}_{io_key}_{bit_name}"
             subdevice_config = {
@@ -926,13 +958,15 @@ class ExtendedStaticConfigPreprocessor:
                             "device_class": "problem",
                         }
                     }
-                }
+                },
             }
-            
+
             self.static_configs[subdevice_type] = subdevice_config
             self.preprocessing_stats["virtual_subdevices"] += 1
 
-    def _create_evtlo_subdevices(self, device_type: str, io_key: str, io_config: Dict[str, Any]):
+    def _create_evtlo_subdevices(
+        self, device_type: str, io_key: str, io_config: Dict[str, Any]
+    ):
         """创建EVTLO事件子设备"""
         # EVTLO多平台虚拟设备
         subdevice_type = f"{device_type}_{io_key}_event"
@@ -948,7 +982,7 @@ class ExtendedStaticConfigPreprocessor:
                 "sensor": {
                     io_key: {
                         "description": "门锁事件数据",
-                        "rw": "R", 
+                        "rw": "R",
                         "data_type": "event",
                         "device_class": "timestamp",
                     }
@@ -960,10 +994,10 @@ class ExtendedStaticConfigPreprocessor:
                         "data_type": "binary",
                         "device_class": "lock",
                     }
-                }
-            }
+                },
+            },
         }
-        
+
         self.static_configs[subdevice_type] = subdevice_config
         self.preprocessing_stats["virtual_subdevices"] += 1
 
