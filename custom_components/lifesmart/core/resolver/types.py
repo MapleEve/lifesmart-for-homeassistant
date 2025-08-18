@@ -120,6 +120,7 @@ class DeviceConfig:
     name: str
     category: Optional[str] = None
     manufacturer: Optional[str] = None
+    model: Optional[str] = None
 
     # 平台配置映射
     platforms: Dict[str, PlatformConfig] = field(default_factory=dict)

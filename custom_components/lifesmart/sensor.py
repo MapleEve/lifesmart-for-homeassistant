@@ -102,7 +102,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core.const import (
     # 核心常量
     DOMAIN,
-    MANUFACTURER,
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
@@ -110,6 +109,8 @@ from .core.const import (
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
 )
+
+# device_info功能已合并到LifeSmartEntity基类中
 from .core.data.processors import process_io_data
 from .core.entity import LifeSmartEntity
 from .core.error_handling import (
@@ -121,6 +122,7 @@ from .core.error_handling import (
 from .core.helpers import (
     generate_unique_id,
 )
+
 from .core.platform.platform_detection import (
     safe_get,
     expand_wildcard_ios,
@@ -130,7 +132,9 @@ from .core.platform.platform_detection import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
+def _get_enhanced_io_config(
+    device: dict, sub_key: str, hass: HomeAssistant = None
+) -> dict | None:
     """
     使用映射引擎获取IO口的增强配置信息。
 
@@ -176,9 +180,11 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
     if sub_key in platform_config.ios:
         io_config = platform_config.ios[sub_key]
         if io_config.is_valid():
-            # 转换为原格式
+            # 使用原始描述，让 HA 原生翻译系统处理
+            description = io_config.description
+
             return {
-                "description": io_config.description,
+                "description": description,
                 "cmd_type": io_config.cmd_type,
                 "idx": io_config.idx,
                 "device_class": io_config.device_class,
@@ -244,6 +250,7 @@ async def async_setup_entry(
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
+    # 翻译将由 Home Assistant 原生系统处理
     sensors = []
     for device in hub.get_devices():
         if (
@@ -602,7 +609,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             相应的device_class配置以获得更好的用户体验。
         """
         # 完全依赖映射获取设备类别
-        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key, self.hass)
         if io_config and "device_class" in io_config:
             return io_config["device_class"]
 
@@ -672,7 +679,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             正确理解和使用传感器数据。没有单位的传感器通常用于状态指示或计数功能。
         """
         # 完全依赖映射获取单位
-        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key, self.hass)
         if io_config and "unit_of_measurement" in io_config:
             return io_config["unit_of_measurement"]
 
@@ -730,7 +737,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             建议根据传感器的实际用途和数据特性选择合适的状态类别，
             以获得最佳的数据分析和统计效果。
         """
-        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key, self.hass)
         return io_config.get("state_class") if io_config else None
 
     @handle_data_processing()
@@ -790,7 +797,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             数据更新。这是正常行为，特别是对于刚刚上线或数据暂时不可用的设备。
         """
         # 优先使用映射配置的转换逻辑
-        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key, self.hass)
         if io_config:
             return process_io_data(io_config, self._sub_data)
 
@@ -876,7 +883,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             return None
 
         # 完全依赖映射的转换逻辑，工具函数内部已处理IEEE754转换
-        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key, self.hass)
         if io_config:
             enhanced_value = process_io_data(io_config, self._sub_data)
             if enhanced_value is not None:
@@ -954,7 +961,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             设备监控信息。如果某个动态属性处理失败，不会影响其他属性的显示。
         """
         # 从DEVICE_MAPPING获取IO配置
-        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key, self.hass)
         if not io_config:
             return None
 
@@ -1015,17 +1022,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
         return base_attrs
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """返回设备信息以链接实体到单个设备。"""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.agt, self.me)},
-            name=self._device_name,
-            manufacturer=MANUFACTURER,
-            model=self.devtype,
-            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(DOMAIN, self.agt),
-        )
+    # device_info属性已合并到LifeSmartEntity基类中，自动继承
 
     async def async_added_to_hass(self) -> None:
         """
@@ -1079,7 +1076,9 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
                 return
 
             # 使用新的业务逻辑处理器进行映射驱动的数值转换
-            io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+            io_config = _get_enhanced_io_config(
+                self._raw_device, self._sub_key, self.hass
+            )
             if io_config:
                 new_value = process_io_data(io_config, io_data)
             else:

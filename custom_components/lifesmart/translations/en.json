@@ -1,389 +1,111 @@
 {
+  "title": "LifeSmart Smart Home",
   "config": {
-    "flow_title": "LifeSmart: {name}",
     "step": {
       "user": {
-        "title": "LifeSmart Integration Setup",
-        "description": "Choose the connection method for your LifeSmart Hub.",
+        "description": "Please enter LifeSmart server information",
         "data": {
-          "type": "Connection Method"
-        }
-      },
-      "local": {
-        "title": "Local Hub Setup",
-        "description": "Enter your LifeSmart Hub's local credentials.",
-        "data": {
-          "host": "IP Address",
-          "port": "Port (Default 8888)",
-          "username": "Local Username (Default admin)",
-          "password": "Local Password (Default admin)"
-        }
-      },
-      "cloud": {
-        "title": "Cloud Setup (Step 1 of 2)",
-        "description": "Enter your LifeSmart platform credentials and choose an authentication method.",
-        "data": {
-          "appkey": "Web App Key",
-          "apptoken": "Web App Token",
-          "userid": "Mobile App User ID",
-          "region": "Server Region",
-          "auth_method": "Authentication Method"
-        }
-      },
-      "cloud_token": {
-        "title": "Cloud Setup (Step 2 of 2)",
-        "description": "Please enter your User Token.",
-        "data": {
-          "usertoken": "User Token"
-        }
-      },
-      "cloud_password": {
-        "title": "Cloud Setup (Step 2 of 2)",
-        "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
-        "data": {
-          "userpassword": "Mobile App User Password"
-        }
-      }
-    },
-    "abort": {
-      "already_in_progress": "Configuration is already in progress.",
-      "reauth_successful": "Re-authentication successful. Please reload the integration.",
-      "already_configured": "This device is already configured.",
-      "reauth_entry_not_found": "Re-authentication failed, config entry not found",
-      "local_no_auth_params": "Local TCP mode does not support authentication parameter modification",
-      "unknown_error": "An unknown error occurred. Please check the logs."
-    },
-    "error": {
-      "cannot_connect": "Failed to connect. Please check your network and IP address.",
-      "invalid_auth": "Authentication failed. Please check your credentials.",
-      "unknown": "An unknown error occurred. Please check the logs.",
-      "invalid_response": "The API returned an invalid response. Please check your credentials and network.",
-      "invalid_region": "Invalid server region setting. Please select a valid region.",
-      "invalid_auth_method": "Invalid authentication method. Please choose token or password."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "LifeSmart Integration Options",
-        "description": "Select which settings you want to edit for Hub.",
-        "menu_options": {
-          "main_params": "General Settings",
-          "auth_params": "Authentication Settings"
-        }
-      },
-      "main_params": {
-        "title": "General Settings",
-        "description": "Configure exclusion lists for devices and hubs.",
-        "data": {
-          "exclude": "List of devices to be excluded (comma-separated)",
-          "exclude_agt": "List of hubs to be excluded (comma-separated)",
-          "ai_include_agt": "List of hubs to be included in Scenes (comma-separated)",
-          "ai_include_me": "List of devices to be included in Scenes (comma-separated)"
-        }
-      },
-      "auth_params": {
-        "title": "Authentication Settings",
-        "description": "You can update your authentication method or credentials here. This will trigger a reload of the integration.",
-        "data": {
-          "auth_method": "Authentication Method"
-        }
-      },
-      "auth_token": {
-        "title": "Hub Setup",
-        "description": "Please enter your User Token.",
-        "data": {
-          "usertoken": "User Token"
-        }
-      },
-      "auth_password": {
-        "title": "Hub Setup",
-        "description": "Please enter your account password. The password will be stored securely within Home Assistant to refresh the token.",
-        "data": {
-          "userpassword": "Mobile App User Password"
+          "host": "Host",
+          "port": "Port",
+          "username": "Username",
+          "password": "Password"
         }
       }
     }
   },
-  "services": {
-    "send_ir_keys": {
-      "name": "Send IR Keys",
-      "description": "Sends IR keys to a remote device.",
-      "fields": {
-        "me": {
-          "name": "Device ID",
-          "description": "The 'me' identifier of the device containing the IR blaster."
-        },
-        "agt": {
-          "name": "Hub ID",
-          "description": "The 'agt' identifier of the hub."
-        },
-        "ai": {
-          "name": "Remote ID",
-          "description": "The 'ai' identifier of the virtual remote."
-        },
-        "category": {
-          "name": "Category",
-          "description": "The category of the target device (e.g., 'tv')."
-        },
-        "brand": {
-          "name": "Brand",
-          "description": "The brand of the target device."
-        },
-        "keys": {
-          "name": "Keys",
-          "description": "The command key to be sent (e.g., 'power')."
-        }
-      }
+  "entity": {
+    "io": {
+      "switch": "Switch",
+      "power": "Power",
+      "temperature": "Temperature",
+      "humidity": "Humidity",
+      "motion": "Motion",
+      "door_lock_status": "Door Lock Status",
+      "alarm": "Alarm",
+      "brightness": "Brightness",
+      "color": "Color",
+      "color_temp": "Color Temp",
+      "fan_speed": "Fan Speed",
+      "mode": "Mode",
+      "status": "Status",
+      "current_state": "Current State",
+      "target_temperature": "Target Temperature",
+      "current": "Current",
+      "voltage": "Voltage",
+      "energy": "Energy",
+      "indicator": "Indicator",
+      "sensor": "Sensor",
+      "valve": "Valve",
+      "tamper": "Tamper",
+      "button": "Button",
+      "vibration_status": "Vibration Status",
+      "water_leak_detection": "Water Leak Detection",
+      "concentration": "Concentration",
+      "illuminance": "Illuminance",
+      "ambient_temperature": "Ambient Temperature",
+      "低电压报警": "低电压报警",
+      "门铃": "门铃",
+      "门锁开关状态": "门锁开关状态",
+      "入侵告警": "入侵告警",
+      "机械钥匙报警": "机械钥匙报警",
+      "恢复出厂告警": "恢复出厂告警",
+      "防撬报警": "防撬报警",
+      "劫持报警": "劫持报警",
+      "异动告警": "异动告警",
+      "火警": "火警",
+      "开锁用户编号": "开锁用户编号",
+      "是否为双开模式": "是否为双开模式",
+      "开锁方式": "开锁方式",
+      "错误报警": "错误报警",
+      "error_alarm": "Error Alarm",
+      "hijack_alarm": "Hijack Alarm",
+      "tamper_alarm": "Tamper Alarm",
+      "mechanical_key_alarm": "Mechanical Key Alarm",
+      "low_voltage_alarm": "Low Voltage Alarm",
+      "motion_alarm": "Motion Alarm",
+      "doorbell": "Doorbell",
+      "fire_alarm": "Fire Alarm",
+      "intrusion_alarm": "Intrusion Alarm",
+      "factory_reset_alarm": "Factory Reset Alarm",
+      "door_lock_switch_status": "Door Lock Switch Status",
+      "unlock_user_id": "Unlock User Id",
+      "unlock_method": "Unlock Method",
+      "double_open_mode": "Double Open Mode"
     },
-    "send_ackeys": {
-      "name": "Send A/C Keys",
-      "description": "Sends IR keys to an A/C device.",
-      "fields": {
-        "me": {
-          "name": "Device ID",
-          "description": "The 'me' identifier of the device containing the IR blaster."
-        },
-        "agt": {
-          "name": "Hub ID",
-          "description": "The 'agt' identifier of the hub."
-        },
-        "ai": {
-          "name": "Remote ID",
-          "description": "The 'ai' identifier of the virtual remote."
-        },
-        "category": {
-          "name": "Category",
-          "description": "The category of the target device ('ac')."
-        },
-        "brand": {
-          "name": "Brand",
-          "description": "The brand of the target A/C."
-        },
-        "keys": {
-          "name": "Keys",
-          "description": "The command key to be sent."
-        },
-        "power": {
-          "name": "Power",
-          "description": "Power state (1 for on, 0 for off)."
-        },
-        "mode": {
-          "name": "Mode",
-          "description": "Operating mode (e.g., cool, heat)."
-        },
-        "temp": {
-          "name": "Temperature",
-          "description": "The temperature to set."
-        },
-        "wind": {
-          "name": "Wind Level",
-          "description": "The fan speed level."
-        },
-        "swing": {
-          "name": "Swing Mode",
-          "description": "The swing/louver mode."
-        }
-      }
+    "command": {
+      "turn_on": "Turn On",
+      "turn_off": "Turn Off",
+      "light_on": "Light On",
+      "light_off": "Light Off",
+      "open": "Open",
+      "close": "Close",
+      "stop": "Stop",
+      "play": "Play"
     },
-    "trigger_scene": {
-      "name": "Trigger Scene",
-      "description": "Activates a LifeSmart scene.",
-      "fields": {
-        "agt": {
-          "name": "Hub ID",
-          "description": "The 'agt' identifier of the hub where the scene is defined."
-        },
-        "id": {
-          "name": "Scene ID",
-          "description": "The identifier of the scene to trigger."
-        }
-      }
+    "state": {
+      "on": "On",
+      "off": "Off",
+      "open": "Open",
+      "closed": "Closed",
+      "stopped": "Stopped"
     },
-    "press_switch": {
-      "name": "Press Switch",
-      "description": "Performs a momentary press on a switch entity (turns on, then off after a duration).",
-      "fields": {
-        "entity_id": {
-          "name": "Entity ID",
-          "description": "The entity_id of the switch entity to press."
-        },
-        "duration": {
-          "name": "Duration",
-          "description": "Duration of the press in milliseconds. Defaults to 1000ms (1 second)."
-        }
-      }
-    }
-  },
-  "selector": {
-    "connection_type": {
-      "options": {
-        "local_push": "Local LAN",
-        "cloud_push": "Internet Cloud"
-      }
+    "device": {
+      "pm25": "Pm25",
+      "pm10": "Pm10",
+      "tvoc": "Tvoc",
+      "voc": "Voc",
+      "co2_concentration": "Co2 Concentration",
+      "formaldehyde_concentration": "Formaldehyde Concentration",
+      "scene_switch_1": "Scene Switch 1",
+      "scene_switch_2": "Scene Switch 2",
+      "scene_switch_3": "Scene Switch 3",
+      "scene_switch_4": "Scene Switch 4",
+      "scene_switch_5": "Scene Switch 5",
+      "scene_switch_6": "Scene Switch 6",
+      "last_unlock_info": "Last Unlock Info",
+      "real_time_unlock": "Real Time Unlock",
+      "operation_record": "Operation Record"
     },
-    "auth_method": {
-      "options": {
-        "token": "User Token",
-        "password": "App User Password"
-      }
-    },
-    "region": {
-      "options": {
-        "cn0": "China VIP (cn0)",
-        "cn1": "China Backup (cn1)",
-        "cn2": "China Main (cn2)",
-        "us": "North America (US/NA)",
-        "eur": "Europe (EUROPE)",
-        "jp": "Japan (JAPAN)",
-        "apz": "Asia Pacific (APAC)",
-        "AUTO": "Global Auto"
-      }
-    },
-    "unlock_method": {
-      "options": {
-        "0": "None",
-        "1": "Password",
-        "2": "Fingerprint",
-        "3": "NFC",
-        "4": "Keys",
-        "5": "Remote",
-        "6": "12V Signal",
-        "7": "App",
-        "8": "Bluetooth",
-        "9": "Manual",
-        "15": "Error"
-      }
-    }
-  },
-  "error": {
-    "api": {
-      "10001": {
-        "description": "Invalid request format",
-        "advice": "Please verify the JSON data structure and field types conform to the API documentation."
-      },
-      "10002": {
-        "description": "AppKey does not exist",
-        "advice": "Please check that your AppKey is correctly filled in the integration configuration."
-      },
-      "10003": {
-        "description": "HTTP GET request not supported",
-        "advice": "This is a development error, this interface should use POST method."
-      },
-      "10004": {
-        "description": "Invalid signature",
-        "advice": "Please check if the signature algorithm, timestamp or credentials are correct."
-      },
-      "10005": {
-        "description": "User not authorized",
-        "advice": "Please check if the user token (UserToken) is correct, or check authorization on LifeSmart platform."
-      },
-      "10006": {
-        "description": "User authorization expired",
-        "advice": "User token (UserToken) has expired, please re-authenticate in options to get a new token."
-      },
-      "10007": {
-        "description": "Illegal access",
-        "advice": "Your IP address may not be in the whitelist, please check LifeSmart platform security settings."
-      },
-      "10008": {
-        "description": "Internal error",
-        "advice": "LifeSmart server internal unknown error occurred, please retry later or contact technical support."
-      },
-      "10009": {
-        "description": "Failed to set property",
-        "advice": "Check if device is online and supports this property setting, or view logs for detailed information."
-      },
-      "10010": {
-        "description": "Illegal method",
-        "advice": "The called API method name does not exist or has been deprecated."
-      },
-      "10011": {
-        "description": "Operation timeout",
-        "advice": "Network connection is unstable or LifeSmart server response timeout, please check your network connection."
-      },
-      "10012": {
-        "description": "Username already exists",
-        "advice": "This username has been registered, please change username."
-      },
-      "10013": {
-        "description": "Device not ready",
-        "advice": "Device may currently be offline or busy, please ensure device is online then retry."
-      },
-      "10014": {
-        "description": "Device already registered by another account",
-        "advice": "Please first unbind this device from original account, then try adding."
-      },
-      "10015": {
-        "description": "Insufficient permissions",
-        "advice": "Current account permissions are insufficient to perform this operation, please contact administrator to elevate permissions."
-      },
-      "10016": {
-        "description": "Device does not support this operation",
-        "advice": "The operation you attempted is not supported by this device model, please consult device documentation."
-      },
-      "10017": {
-        "description": "Invalid data",
-        "advice": "Parameter values or formats submitted to device are incorrect, please check."
-      },
-      "10018": {
-        "description": "GPS location illegal access denied",
-        "advice": "Please check application's geographic location permissions or related scene geofence settings."
-      },
-      "10019": {
-        "description": "Requested object does not exist",
-        "advice": "Device ID, scene ID etc. in request do not exist, please check configuration or if device has been deleted."
-      },
-      "10020": {
-        "description": "Device already exists in account",
-        "advice": "This device is already under your account, no need to add repeatedly."
-      },
-      "10022": {
-        "description": "Request address needs redirection",
-        "advice": "API server address may have changed, please try updating integration."
-      }
-    },
-    "category": {
-      "config_issues": "Configuration Issue",
-      "user_authorization": "User Authorization",
-      "security_policy": "Security Policy",
-      "permission_management": "Permission Management",
-      "server_error": "Server Error",
-      "network_issues": "Network Issue",
-      "device_operation": "Device Operation",
-      "device_management": "Device Management",
-      "data_validation": "Data Validation",
-      "method_call": "Method Call",
-      "resource_location": "Resource Location",
-      "default": "Unknown Category"
-    },
-    "recommendation": {
-      "config_issues": "Please check your LifeSmart integration configuration in Home Assistant.",
-      "user_authorization": "Please re-authenticate in \"Options\" or check your account authorization on LifeSmart platform.",
-      "security_policy": "Please check your security settings on LifeSmart developer platform, such as IP whitelist.",
-      "permission_management": "Please contact your LifeSmart account administrator to adjust permissions.",
-      "server_error": "This is usually a temporary LifeSmart server issue, please retry later or contact their technical support.",
-      "network_issues": "Please check your home network connection and internet connectivity.",
-      "device_operation": "Please check if device is online, firmware is up to date, and operation is supported by the device.",
-      "device_management": "Please manage your devices through the official LifeSmart App.",
-      "data_validation": "This is a potential integration bug, please report this issue to the developer.",
-      "method_call": "This is a potential integration bug, please report this issue to the developer.",
-      "resource_location": "Please check if the device/scene IDs referenced in related automations or scripts are correct.",
-      "default": "An unknown error occurred, please check Home Assistant logs for detailed information, or contact the integration developer."
-    },
-    "range": {
-      "api_auth": {
-        "description": "API request or authentication error"
-      },
-      "device_operation": {
-        "description": "Device operation or status error"
-      },
-      "server_internal": {
-        "description": "Server internal error"
-      },
-      "unknown": {
-        "description": "Unknown business error"
-      }
-    }
+    "config": {}
   }
 }

@@ -7,15 +7,23 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Dict
 
 from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import utcnow
 
 from .client_base import LifeSmartClientBase
-from .const import DEVICE_ID_KEY, DEVICE_NAME_KEY, DEVICE_TYPE_KEY, HUB_ID_KEY
+from .const import (
+    DEVICE_ID_KEY,
+    DEVICE_NAME_KEY,
+    DEVICE_TYPE_KEY,
+    HUB_ID_KEY,
+    DEVICE_VERSION_KEY,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -371,3 +379,63 @@ class LifeSmartEntity(Entity):
             )
         else:
             _LOGGER.debug("实体 %s 资源清理成功完成", self.entity_id)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """
+        返回设备信息 - 合并自device_info.py的get_generation2_device_info功能
+
+        使用Generation Gates系统进行智能fallback，而非硬性错误。
+        对Generation 2设备使用enhanced info，对Legacy设备使用基础info。
+
+        Returns:
+            DeviceInfo: Home Assistant标准设备信息对象
+        """
+        # 检查是否支持enhanced device info
+        try:
+            from .compatibility import check_feature_gate
+
+            if check_feature_gate(self._raw_device, "enhanced_device_info"):
+                # Generation 2设备：使用DeviceResolver获取增强信息
+                from .resolver import get_device_resolver
+
+                resolver = get_device_resolver()
+                result = resolver.resolve_device_config(self._raw_device)
+
+                if result.success and result.device_config:
+                    device_config = result.device_config
+
+                    # 验证Generation 2必需字段
+                    if device_config.manufacturer and device_config.model:
+                        return DeviceInfo(
+                            identifiers={(DOMAIN, self._agt, self._me)},
+                            name=self._device_name,
+                            manufacturer=device_config.manufacturer,  # ✅ 来自Generation 2规格
+                            model=device_config.model,  # ✅ 来自Generation 2规格
+                            sw_version=self._raw_device.get(
+                                DEVICE_VERSION_KEY, "unknown"
+                            ),
+                            via_device=(DOMAIN, self._agt),
+                        )
+                    else:
+                        _LOGGER.warning(
+                            f"Device {self._me} missing manufacturer/model in Generation 2 specs, "
+                            f"falling back to legacy mode"
+                        )
+        except ImportError:
+            _LOGGER.debug("Generation gates not available, using legacy device info")
+        except Exception as e:
+            _LOGGER.debug(f"Failed to get enhanced device info for {self._me}: {e}")
+
+        # Legacy设备或Generation 2字段不完整时的fallback
+        _LOGGER.debug(f"Using legacy device info for device {self._me}")
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._agt, self._me)},
+            name=self._device_name,
+            manufacturer=MANUFACTURER,  # ✅ Legacy常量fallback
+            model=self._raw_device.get(
+                DEVICE_TYPE_KEY, "Unknown Device"
+            ),  # ✅ devtype fallback
+            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
+            via_device=(DOMAIN, self._agt),
+        )

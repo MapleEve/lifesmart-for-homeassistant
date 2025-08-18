@@ -27,7 +27,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core.const import (
     DOMAIN,
-    MANUFACTURER,
     HUB_ID_KEY,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
@@ -48,6 +47,8 @@ from .core.helpers import (
 from .core.platform.platform_detection import (
     get_device_platform_mapping,
 )
+
+# device_info功能已合并到LifeSmartEntity基类中
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,31 +272,7 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
         return process_io_data(processor_config, data)
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """返回设备信息以将实体链接到对应的物理设备。
-
-        生成标准的Home Assistant设备信息字典，用于在设备注册表中
-        创建或更新设备条目，并建立实体与设备的关联关系。
-
-        Returns:
-            DeviceInfo: 包含设备标识、名称、制造商等信息的设备信息对象
-
-        设备信息包含:
-        - identifiers: 设备唯一标识符（域名、网关ID、设备ID）
-        - name: 设备显示名称
-        - manufacturer: 制造商名称（LifeSmart）
-        - model: 设备型号
-        - sw_version: 软件版本信息
-        - via_device: 通过网关设备连接的标识
-        """
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.agt, self.me)},
-            name=self._device_name,
-            manufacturer=MANUFACTURER,
-            model=self.devtype,
-            sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
-            via_device=(DOMAIN, self.agt),
-        )
+    # device_info属性已合并到LifeSmartEntity基类中，自动继承
 
     async def async_added_to_hass(self) -> None:
         """实体添加到Home Assistant时注册回调函数。

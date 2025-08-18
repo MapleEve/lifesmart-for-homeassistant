@@ -334,10 +334,24 @@ class DeviceResolver:
         device_type = device.get("devtype", "unknown")
         device_name = device.get("name", f"Device {device.get('me', 'Unknown')}")
 
+        # 获取Generation 2元数据从设备规格
+        device_spec = self._spec_registry.get_device_spec(device_type)
+        manufacturer = None
+        model = None
+        category = None
+
+        if device_spec:
+            manufacturer = device_spec.get("manufacturer", "LifeSmart")
+            model = device_spec.get("model", device_type)
+            category = device_spec.get("category")
+
         # 创建DeviceConfig基础结构
         device_config = DeviceConfig(
             device_type=device_type,
             name=device_name,
+            manufacturer=manufacturer,
+            model=model,
+            category=category,
             raw_device=device,
             source_mapping=raw_mapping,
         )

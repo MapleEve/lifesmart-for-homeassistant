@@ -279,3 +279,35 @@ def get_platform_constants():
         result["VALVE"] = None
 
     return result
+
+
+def check_feature_gate(raw_device: dict, feature_name: str) -> bool:
+    """
+    简化版本的特性门控检查
+
+    检查设备是否支持Generation 2+特性。基于device_specs.py中的_generation字段，
+    如果_generation >= 2，则启用enhanced特性，否则使用legacy行为。
+
+    Args:
+        raw_device: 原始设备数据
+        feature_name: 特性名称（暂时忽略，所有特性都基于generation检查）
+
+    Returns:
+        bool: 是否支持该特性
+    """
+    try:
+        from .resolver import get_device_resolver
+
+        resolver = get_device_resolver()
+        result = resolver.resolve_device_config(raw_device)
+
+        if result.success and result.raw_device_spec:
+            generation = result.raw_device_spec.get("_generation", 1)
+            return generation >= 2
+
+        # 默认为legacy设备
+        return False
+
+    except Exception:
+        # 任何错误都fallback到legacy行为
+        return False

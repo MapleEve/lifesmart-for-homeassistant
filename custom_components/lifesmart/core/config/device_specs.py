@@ -5867,7 +5867,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5875,7 +5875,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5883,7 +5883,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5891,7 +5891,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5899,7 +5899,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5907,7 +5907,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5915,7 +5915,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5923,7 +5923,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5931,7 +5931,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5939,7 +5939,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -5951,7 +5951,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -5959,7 +5959,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -5967,7 +5967,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -5987,7 +5987,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
@@ -6065,7 +6065,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6073,7 +6073,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6081,7 +6081,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6089,7 +6089,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6097,7 +6097,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6105,7 +6105,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6113,7 +6113,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6121,7 +6121,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6129,7 +6129,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6137,7 +6137,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6149,7 +6149,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -6157,7 +6157,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -6165,7 +6165,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -6185,7 +6185,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
@@ -6243,7 +6243,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6251,7 +6251,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6259,7 +6259,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6267,7 +6267,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6275,7 +6275,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6283,7 +6283,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6291,7 +6291,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6299,7 +6299,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6307,7 +6307,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6315,7 +6315,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6327,7 +6327,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -6335,7 +6335,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -6343,7 +6343,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -6363,7 +6363,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
@@ -6421,7 +6421,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6429,7 +6429,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6437,7 +6437,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6445,7 +6445,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6453,7 +6453,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6461,7 +6461,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6469,7 +6469,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6477,7 +6477,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6485,7 +6485,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6493,7 +6493,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6505,7 +6505,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -6513,7 +6513,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -6521,7 +6521,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -6541,7 +6541,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
@@ -6599,7 +6599,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6607,7 +6607,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6615,7 +6615,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6623,7 +6623,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6631,7 +6631,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6639,7 +6639,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6647,7 +6647,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6655,7 +6655,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6663,7 +6663,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6671,7 +6671,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6683,7 +6683,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -6691,7 +6691,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -6699,7 +6699,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -6719,7 +6719,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
@@ -6777,7 +6777,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6785,7 +6785,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6793,7 +6793,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6801,7 +6801,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6809,7 +6809,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6817,7 +6817,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6825,7 +6825,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6833,7 +6833,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6841,7 +6841,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6849,7 +6849,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6861,7 +6861,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -6869,7 +6869,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -6877,7 +6877,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -6897,7 +6897,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
@@ -6955,7 +6955,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6963,7 +6963,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6971,7 +6971,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6979,7 +6979,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6987,7 +6987,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -6995,7 +6995,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7003,7 +7003,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7011,7 +7011,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7019,7 +7019,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7027,7 +7027,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7039,7 +7039,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -7047,7 +7047,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -7055,7 +7055,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -7075,7 +7075,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
@@ -7133,7 +7133,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7141,7 +7141,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7149,7 +7149,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7157,7 +7157,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7165,7 +7165,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7173,7 +7173,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7181,7 +7181,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7189,7 +7189,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7197,7 +7197,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7205,7 +7205,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7217,7 +7217,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -7225,7 +7225,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -7233,7 +7233,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -7253,7 +7253,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
@@ -7312,7 +7312,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7320,7 +7320,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7328,7 +7328,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7336,7 +7336,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7344,7 +7344,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7352,7 +7352,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7360,7 +7360,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7368,7 +7368,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7376,7 +7376,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7384,7 +7384,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7396,7 +7396,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -7404,7 +7404,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -7412,7 +7412,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -7432,7 +7432,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
@@ -7490,7 +7490,7 @@ _RAW_DEVICE_DATA = {
                     "bit_definitions": {
                         0: {
                             "name": "error_alarm",
-                            "description": "错误报警",
+                            "description": "error_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7498,7 +7498,7 @@ _RAW_DEVICE_DATA = {
                         },
                         1: {
                             "name": "hijack_alarm",
-                            "description": "劫持报警",
+                            "description": "hijack_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7506,7 +7506,7 @@ _RAW_DEVICE_DATA = {
                         },
                         2: {
                             "name": "tamper_alarm",
-                            "description": "防撬报警",
+                            "description": "tamper_alarm",
                             "device_class": "tamper",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7514,7 +7514,7 @@ _RAW_DEVICE_DATA = {
                         },
                         3: {
                             "name": "key_alarm",
-                            "description": "机械钥匙报警",
+                            "description": "mechanical_key_alarm",
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7522,7 +7522,7 @@ _RAW_DEVICE_DATA = {
                         },
                         4: {
                             "name": "low_battery",
-                            "description": "低电压报警",
+                            "description": "low_voltage_alarm",
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7530,7 +7530,7 @@ _RAW_DEVICE_DATA = {
                         },
                         5: {
                             "name": "motion_alarm",
-                            "description": "异动告警",
+                            "description": "motion_alarm",
                             "device_class": "motion",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7538,7 +7538,7 @@ _RAW_DEVICE_DATA = {
                         },
                         6: {
                             "name": "doorbell",
-                            "description": "门铃",
+                            "description": "doorbell",
                             "device_class": "sound",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7546,7 +7546,7 @@ _RAW_DEVICE_DATA = {
                         },
                         7: {
                             "name": "fire_alarm",
-                            "description": "火警",
+                            "description": "fire_alarm",
                             "device_class": "smoke",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7554,7 +7554,7 @@ _RAW_DEVICE_DATA = {
                         },
                         8: {
                             "name": "intrusion_alarm",
-                            "description": "入侵告警",
+                            "description": "intrusion_alarm",
                             "device_class": "safety",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7562,7 +7562,7 @@ _RAW_DEVICE_DATA = {
                         },
                         11: {
                             "name": "factory_reset",
-                            "description": "恢复出厂告警",
+                            "description": "factory_reset_alarm",
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
@@ -7574,7 +7574,7 @@ _RAW_DEVICE_DATA = {
                     "data_definitions": {
                         "lock_status": {
                             "name": "门锁状态",
-                            "description": "门锁开关状态",
+                            "description": "door_lock_switch_status",
                             "platform": "lock",
                             "extraction_logic": "type_bit_0",
                             "extraction_params": {},
@@ -7582,7 +7582,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "user_id": {
                             "name": "用户编号",
-                            "description": "开锁用户编号",
+                            "description": "unlock_user_id",
                             "platform": "sensor",
                             "extraction_logic": "bit_range",
                             "extraction_params": {"start_bit": 0, "end_bit": 11},
@@ -7590,7 +7590,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "unlock_method": {
                             "name": "开锁方式",
-                            "description": "开锁方式",
+                            "description": "unlock_method",
                             "platform": "sensor",
                             "extraction_logic": "bit_range_mapped",
                             "extraction_params": {
@@ -7610,7 +7610,7 @@ _RAW_DEVICE_DATA = {
                         },
                         "dual_unlock": {
                             "name": "双开模式",
-                            "description": "是否为双开模式",
+                            "description": "double_open_mode",
                             "platform": "binary_sensor",
                             "device_class": "lock",
                             "extraction_logic": "dual_unlock_detection",
