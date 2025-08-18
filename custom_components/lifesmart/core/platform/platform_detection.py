@@ -778,8 +778,8 @@ def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
         return True
 
     # 特殊处理已知设备类型的边界情况
-    if device_type == "SL_SC_GD" and normalized_sub_key == "P1":
-        return False  # 车库门不创建传感器子设备
+    if device_type == "SL_ETDOOR" and normalized_sub_key == "P1":
+        return False  # 车库门P1(灯光控制)不创建传感器子设备
 
     # 对于明确无效的设备类型，返回False
     if device_type == "INVALID_TYPE":

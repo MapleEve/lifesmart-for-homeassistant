@@ -39,10 +39,10 @@ from custom_components.lifesmart.core.platform.platform_detection import (
     is_sensor_subdevice,
     safe_get,
 )
+from ..utils.helpers import find_test_device, find_test_device_by_type
 from ..utils.typed_factories import (
     create_devices_by_category,
 )
-from ..utils.helpers import find_test_device, find_test_device_by_type
 
 
 class TestSafeGet:
@@ -774,7 +774,7 @@ class TestSubdeviceLogicParametrized:
             ("SL_SC_CN", "P1", True),  # 噪音传感器
             ("ELIQ_EM", "EPA", True),  # ELIQ电量计量器
             ("SL_CP_DN", "P5", True),  # 地暖温控器附加传感器
-            ("SL_SC_GD", "P1", False),  # 车库门不创建传感器子设备
+            ("SL_ETDOOR", "P1", False),  # 车库门P1(灯光控制)不创建传感器子设备
             ("SL_SC_THL", "INVALID", False),  # 无效子设备
             ("INVALID_TYPE", "T", False),  # 无效设备类型
         ],
@@ -796,7 +796,7 @@ class TestSubdeviceLogicParametrized:
             ("SL_SW_IF3", "P2", True),  # 灯光开关P2
             ("SL_SW_IF3", "P5", False),  # P5不是灯光子设备
             ("SL_SW_IF3", "P8", False),  # P8不是灯光子设备
-            ("SL_SC_GD", "HS", True),  # 车库门HS是灯光
+            ("SL_ETDOOR", "P1", True),  # 车库门P1是灯光控制
             ("INVALID_TYPE", "L1", True),  # 默认情况下，符合模式的会返回True
             ("SL_SW_IF3", "INVALID_KEY", False),  # 不符合模式的返回False
         ],

@@ -35,19 +35,27 @@ _RAW_DEVICE_DATA = {
     # 2.1.1 传统插座系列 (Traditional Outlet Series)
     "SL_OL": {
         "name": "智慧插座",
-        "switch": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -55,19 +63,27 @@ _RAW_DEVICE_DATA = {
     },
     "SL_OL_3C": {
         "name": "智慧插座",
-        "switch": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL_3C",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -75,19 +91,27 @@ _RAW_DEVICE_DATA = {
     },
     "SL_OL_DE": {
         "name": "德标插座",
-        "switch": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL_DE",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -95,19 +119,27 @@ _RAW_DEVICE_DATA = {
     },
     "SL_OL_UK": {
         "name": "英标插座",
-        "switch": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL_UK",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -115,19 +147,27 @@ _RAW_DEVICE_DATA = {
     },
     "SL_OL_UL": {
         "name": "美标插座",
-        "switch": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL_UL",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -135,19 +175,27 @@ _RAW_DEVICE_DATA = {
     },
     "OD_WE_OT1": {
         "name": "Wi-Fi插座",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "OD_WE_OT1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -156,60 +204,72 @@ _RAW_DEVICE_DATA = {
     # 2.1.2 计量插座系列 (Energy Monitoring Outlet Series)
     "SL_OE_3C": {
         "name": "计量插座",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OE_3C",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-        },
-        "sensor": {
-            "P2": {
-                "description": "energy",
-                "data_type": "energy",
-                "conversion": "ieee754_float",
-                "device_class": "energy",
-                "unit_of_measurement": "kWh",
-                "state_class": "total_increasing",
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "energy",
+                        "data_type": "energy",
+                        "conversion": "ieee754_float",
+                        "device_class": "energy",
+                        "unit_of_measurement": "kWh",
+                        "state_class": "total_increasing",
+                    },
+                    "P3": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_float",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "state_class": "measurement",
+                    },
+                },
             },
-            "P3": {
-                "description": "power",
-                "data_type": "power",
-                "conversion": "ieee754_float",
-                "device_class": "power",
-                "unit_of_measurement": "W",
-                "state_class": "measurement",
-            },
-        },
-        "switch_extra": {
-            "P4": {
-                "description": "power_threshold",
-                "data_type": "power_threshold",
-                "conversion": "val_direct",
-                "commands": {
-                    "enable": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "disable": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_threshold_enable": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                    "set_threshold_disable": {
-                        "type": CMD_TYPE_SET_CONFIG,
+            "switch_extra": {
+                "io_configs": {
+                    "P4": {
+                        "description": "power_threshold",
+                        "data_type": "power_threshold",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "enable": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "disable": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_threshold_enable": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                            "set_threshold_disable": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
                 },
             },
@@ -217,60 +277,72 @@ _RAW_DEVICE_DATA = {
     },
     "SL_OE_DE": {
         "name": "计量插座德标",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OE_DE",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-        },
-        "sensor": {
-            "P2": {
-                "description": "energy",
-                "data_type": "energy",
-                "conversion": "ieee754_float",
-                "device_class": "energy",
-                "unit_of_measurement": "kWh",
-                "state_class": "total_increasing",
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "energy",
+                        "data_type": "energy",
+                        "conversion": "ieee754_float",
+                        "device_class": "energy",
+                        "unit_of_measurement": "kWh",
+                        "state_class": "total_increasing",
+                    },
+                    "P3": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_float",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "state_class": "measurement",
+                    },
+                },
             },
-            "P3": {
-                "description": "power",
-                "data_type": "power",
-                "conversion": "ieee754_float",
-                "device_class": "power",
-                "unit_of_measurement": "W",
-                "state_class": "measurement",
-            },
-        },
-        "switch_extra": {
-            "P4": {
-                "description": "power_threshold",
-                "data_type": "power_threshold",
-                "conversion": "val_direct",
-                "commands": {
-                    "enable": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "disable": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_threshold_enable": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                    "set_threshold_disable": {
-                        "type": CMD_TYPE_SET_CONFIG,
+            "switch_extra": {
+                "io_configs": {
+                    "P4": {
+                        "description": "power_threshold",
+                        "data_type": "power_threshold",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "enable": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "disable": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_threshold_enable": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                            "set_threshold_disable": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
                 },
             },
@@ -278,60 +350,72 @@ _RAW_DEVICE_DATA = {
     },
     "SL_OE_W": {
         "name": "入墙插座",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OE_W",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-        },
-        "sensor": {
-            "P2": {
-                "description": "energy",
-                "data_type": "energy",
-                "conversion": "ieee754_float",
-                "device_class": "energy",
-                "unit_of_measurement": "kWh",
-                "state_class": "total_increasing",
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "energy",
+                        "data_type": "energy",
+                        "conversion": "ieee754_float",
+                        "device_class": "energy",
+                        "unit_of_measurement": "kWh",
+                        "state_class": "total_increasing",
+                    },
+                    "P3": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_float",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "state_class": "measurement",
+                    },
+                },
             },
-            "P3": {
-                "description": "power",
-                "data_type": "power",
-                "conversion": "ieee754_float",
-                "device_class": "power",
-                "unit_of_measurement": "W",
-                "state_class": "measurement",
-            },
-        },
-        "switch_extra": {
-            "P4": {
-                "description": "power_threshold",
-                "data_type": "power_threshold",
-                "conversion": "val_direct",
-                "commands": {
-                    "enable": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "disable": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_threshold_enable": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                    "set_threshold_disable": {
-                        "type": CMD_TYPE_SET_CONFIG,
+            "switch_extra": {
+                "io_configs": {
+                    "P4": {
+                        "description": "power_threshold",
+                        "data_type": "power_threshold",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "enable": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "disable": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_threshold_enable": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                            "set_threshold_disable": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
                 },
             },
@@ -341,63 +425,73 @@ _RAW_DEVICE_DATA = {
     # 2.2.1 随心开关系列 (Freestyle Switch Series)
     "SL_SW_RC1": {
         "name": "随心开关一位",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark": {
-                "description": "indicator_brightness_off",
-                "data_type": "indicator_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_brightness_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_brightness_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_RC1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "bright": {
-                "description": "indicator_brightness_on",
-                "data_type": "indicator_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "indicator_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_brightness_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_brightness_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_brightness_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "indicator_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_brightness_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -405,120 +499,130 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_RC2": {
         "name": "流光开关二键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_RC2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "L2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark1": {
-                "description": "indicator_brightness_1_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "dark2": {
-                "description": "indicator_brightness_2_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright1": {
-                "description": "indicator_brightness_1_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright2": {
-                "description": "indicator_brightness_2_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -526,177 +630,187 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_RC3": {
         "name": "流光开关三键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_RC3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "L2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "L3": {
-                "description": "switch_3",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark1": {
-                "description": "indicator_brightness_1_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "dark2": {
-                "description": "indicator_brightness_2_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
+                    "dark3": {
+                        "description": "indicator_brightness_3_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                },
-            },
-            "dark3": {
-                "description": "indicator_brightness_3_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright1": {
-                "description": "indicator_brightness_1_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright2": {
-                "description": "indicator_brightness_2_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright3": {
-                "description": "indicator_brightness_3_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright3": {
+                        "description": "indicator_brightness_3_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -801,95 +915,105 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_RC": {
         "name": "触摸开关/极星开关(零火版)",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_RC",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "L2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "L3": {
-                "description": "switch_3",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark": {
-                "description": "indicator_brightness_off",
-                "data_type": "indicator_light",
-                "conversion": "val_direct",
-                "range": "0-1023",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_brightness_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_brightness_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "bright": {
-                "description": "indicator_brightness_on",
-                "data_type": "indicator_light",
-                "conversion": "val_direct",
-                "range": "0-1023",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "indicator_light",
+                        "conversion": "val_direct",
+                        "range": "0-1023",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_brightness_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_brightness_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_brightness_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "indicator_light",
+                        "conversion": "val_direct",
+                        "range": "0-1023",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_brightness_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -897,177 +1021,187 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_IF3": {
         "name": "流光开关三键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_IF3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "L2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "L3": {
-                "description": "switch_3",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark1": {
-                "description": "indicator_brightness_1_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "dark2": {
-                "description": "indicator_brightness_2_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
+                    "dark3": {
+                        "description": "indicator_brightness_3_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                },
-            },
-            "dark3": {
-                "description": "indicator_brightness_3_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright1": {
-                "description": "indicator_brightness_1_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright2": {
-                "description": "indicator_brightness_2_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright3": {
-                "description": "indicator_brightness_3_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright3": {
+                        "description": "indicator_brightness_3_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -1431,120 +1565,130 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_IF2": {
         "name": "零火流光开关二键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_IF2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "L2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark1": {
-                "description": "indicator_brightness_1_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "dark2": {
-                "description": "indicator_brightness_2_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright1": {
-                "description": "indicator_brightness_1_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright2": {
-                "description": "indicator_brightness_2_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -1915,63 +2059,73 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_IF1": {
         "name": "零火流光开关单键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark": {
-                "description": "indicator_brightness_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_IF1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "bright": {
-                "description": "indicator_brightness_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -2043,63 +2197,73 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_CP1": {
         "name": "橙朴开关单键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark": {
-                "description": "indicator_brightness_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_CP1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "bright": {
-                "description": "indicator_brightness_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -2236,290 +2400,358 @@ _RAW_DEVICE_DATA = {
     # 2.2.2 恒星/辰星/极星开关系列 (Star Series Switch)
     "SL_SW_ND1": {
         "name": "恒星开关一键",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_ND1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-        },
-        "sensor": {
-            "P2": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SW_ND2": {
         "name": "恒星开关二键",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_ND2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "P2": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
                     },
                 },
-            },
-        },
-        "sensor": {
-            "P3": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
             },
         },
     },
     "SL_SW_ND3": {
         "name": "恒星开关三键",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_ND3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "P2": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
                     },
                 },
-            },
-            "P3": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "sensor": {
-            "P4": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
             },
         },
     },
     "SL_MC_ND1": {
         "name": "恒星/辰星开关伴侣一键",
-        "switch": {
-            "P1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_MC_ND1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-        },
-        "sensor": {
-            "P2": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_MC_ND2": {
         "name": "恒星/辰星开关伴侣二键",
-        "switch": {
-            "P1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_MC_ND2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "P2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
                     },
                 },
-            },
-        },
-        "sensor": {
-            "P3": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
             },
         },
     },
     "SL_MC_ND3": {
         "name": "恒星/辰星开关伴侣三键",
-        "switch": {
-            "P1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_MC_ND3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "P2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
                     },
                 },
-            },
-            "P3": {
-                "description": "switch_3",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "sensor": {
-            "P4": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
             },
         },
     },
     # 2.2.3 开关控制器系列 (Switch Controller Series)
     "SL_S": {
         "name": "单路开关控制器",
-        "switch": {
-            "P2": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_S",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -2527,25 +2759,33 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SPWM": {
         "name": "PWM调光开关控制器",
-        "light": {
-            "P1": {
-                "description": "dimmable_light",
-                "data_type": "brightness_light",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_brightness_on": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                    "set_brightness_off": {
-                        "type": CMD_TYPE_SET_CONFIG,
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SPWM",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "dimmable_light",
+                        "data_type": "brightness_light",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                            "set_brightness_off": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
                 },
             },
@@ -2553,139 +2793,147 @@ _RAW_DEVICE_DATA = {
     },
     "SL_P_SW": {
         "name": "九路开关控制器",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_SW",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "P2": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "P3": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P4": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "P3": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "P5": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P6": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "P4": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "P7": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P8": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "P5": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P6": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P7": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P8": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P9": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P9": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -2694,67 +2942,85 @@ _RAW_DEVICE_DATA = {
     # 2.2.3.5 环境传感器 B1 系列 (Environmental Sensor B1 Series)
     "SL_SC_B1": {
         "name": "高级环境传感器",
-        "sensor": {
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "H": {
-                "description": "humidity",
-                "data_type": "humidity",
-                "conversion": "v_field",
-                "device_class": "humidity",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-            "CO2": {
-                "description": "co2_concentration",
-                "data_type": "aqi",
-                "conversion": "v_field",
-                "device_class": "aqi",
-                "unit_of_measurement": "ppm",
-                "state_class": "measurement",
-            },
-            "TVOC": {
-                "description": "tvoc_concentration",
-                "data_type": "aqi",
-                "conversion": "val_div_100",
-                "unit_of_measurement": "mg/m³",
-                "state_class": "measurement",
-            },
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_B1",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "v_field",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "CO2": {
+                        "description": "co2_concentration",
+                        "data_type": "aqi",
+                        "conversion": "v_field",
+                        "device_class": "aqi",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "TVOC": {
+                        "description": "tvoc_concentration",
+                        "data_type": "aqi",
+                        "conversion": "val_div_100",
+                        "unit_of_measurement": "mg/m³",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     # 2.2.4 随心开关按钮系列 (Button Switch Series)
     "SL_SC_BB": {
         "name": "随心开关",
-        "button": {
-            "B": {
-                "description": "button",
-                "data_type": "button_state",
-                "conversion": "val_direct",
-                "device_class": "identify",
+        "category": "button",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BB",
+        "_generation": 2,
+        "platforms": {
+            "button": {
+                "io_configs": {
+                    "B": {
+                        "description": "button",
+                        "data_type": "button_state",
+                        "conversion": "val_direct",
+                        "device_class": "identify",
+                    },
+                },
             },
-        },
-        "sensor": {
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
@@ -2971,19 +3237,27 @@ _RAW_DEVICE_DATA = {
     # 2.2.6 奇点开关模块系列 (Singularity Switch Module Series)
     "SL_SW_MJ1": {
         "name": "奇点开关模块一键",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_MJ1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -2991,34 +3265,42 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_MJ2": {
         "name": "奇点开关模块二键",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_MJ2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P2": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -3026,49 +3308,57 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_MJ3": {
         "name": "奇点开关模块三键",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_MJ3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "P2": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P3": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P3": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -3077,85 +3367,105 @@ _RAW_DEVICE_DATA = {
     # 2.2.7 随心按键 (CUBE Clicker2)
     "SL_SC_BB_V2": {
         "name": "随心按键",
-        "button": {
-            "P1": {
-                "description": "button",
-                "data_type": "button_events",
-                "conversion": "val_direct",
-                "device_class": "identify",
+        "category": "button",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BB_V2",
+        "_generation": 2,
+        "platforms": {
+            "button": {
+                "io_configs": {
+                    "P1": {
+                        "description": "button",
+                        "data_type": "button_events",
+                        "conversion": "val_direct",
+                        "device_class": "identify",
+                    },
+                },
             },
-        },
-        "sensor": {
-            "P2": {
-                "description": "energy",
-                "data_type": "battery_level",
-                "conversion": "voltage_to_percentage",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "energy",
+                        "data_type": "battery_level",
+                        "conversion": "voltage_to_percentage",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     # 2.2.8 星玉开关系列 (Nature Switch Series)
     "SL_SW_NS1": {
         "name": "星玉开关一键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark": {
-                "description": "indicator_brightness_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_NS1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "bright": {
-                "description": "indicator_brightness_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -3463,19 +3773,27 @@ _RAW_DEVICE_DATA = {
     # 2.2.11 极星开关(120零火版) (BS Series)
     "SL_SW_BS1": {
         "name": "极星开关(120零火版)一键",
-        "switch": {
-            "P1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_BS1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -3483,34 +3801,42 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_BS2": {
         "name": "极星开关(120零火版)二键",
-        "switch": {
-            "P1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_BS2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -3518,49 +3844,57 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_BS3": {
         "name": "极星开关(120零火版)三键",
-        "switch": {
-            "P1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_BS3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "P2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P3": {
-                "description": "switch_3",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -3569,32 +3903,40 @@ _RAW_DEVICE_DATA = {
     # 2.2.12 星玉调光开关（可控硅）Dimming Light Switch
     "SL_SW_WW": {
         "name": "星玉调光开关",
-        "light": {
-            "P1": {
-                "description": "brightness",
-                "data_type": "brightness",
-                "conversion": "val_to_brightness",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_WW",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "brightness",
+                        "data_type": "brightness",
+                        "conversion": "val_to_brightness",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_brightness": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                },
-            },
-            "P2": {
-                "description": "color_temp",
-                "data_type": "color_temp",
-                "conversion": "val_to_color_temp",
-                "commands": {
-                    "set_color_temp": {
-                        "type": CMD_TYPE_SET_VAL,
+                    "P2": {
+                        "description": "color_temp",
+                        "data_type": "color_temp",
+                        "conversion": "val_to_color_temp",
+                        "commands": {
+                            "set_color_temp": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
                     },
                 },
             },
@@ -4593,19 +4935,27 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SC_CV": {
         "name": "语音小Q",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CV",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
@@ -4615,55 +4965,75 @@ _RAW_DEVICE_DATA = {
     # 2.6.1 门禁感应器（Guard Sensor)
     "SL_SC_G": {
         "name": "门禁感应器",
-        "binary_sensor": {
-            "G": {
-                "description": "current_state",
-                "data_type": "door_status",
-                "conversion": "val_direct",
-                "device_class": "door",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_G",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "G": {
+                        "description": "current_state",
+                        "data_type": "door_status",
+                        "conversion": "val_direct",
+                        "device_class": "door",
+                    },
+                },
             },
-        },
-        "sensor": {
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SC_BG": {
         "name": "门禁感应器（带按键震动）",
-        "binary_sensor": {
-            "G": {
-                "description": "current_state",
-                "data_type": "door_status",
-                "conversion": "type_bit_0",
-                "device_class": "door",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BG",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "G": {
+                        "description": "current_state",
+                        "data_type": "door_status",
+                        "conversion": "type_bit_0",
+                        "device_class": "door",
+                    },
+                    "B": {
+                        "description": "button",
+                        "data_type": "button_status",
+                        "conversion": "val_direct",
+                        "device_class": "moving",
+                    },
+                    "AXS": {
+                        "description": "vibration_status",
+                        "data_type": "vibration_status",
+                        "conversion": "val_direct",
+                        "device_class": "vibration",
+                    },
+                },
             },
-            "B": {
-                "description": "button",
-                "data_type": "button_status",
-                "conversion": "val_direct",
-                "device_class": "moving",
-            },
-            "AXS": {
-                "description": "vibration_status",
-                "data_type": "vibration_status",
-                "conversion": "val_direct",
-                "device_class": "vibration",
-            },
-        },
-        "sensor": {
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
@@ -4696,72 +5066,102 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SC_MHW": {
         "name": "动态感应器",
-        "binary_sensor": {
-            "M": {
-                "description": "motion",
-                "data_type": "motion_status",
-                "conversion": "val_direct",
-                "device_class": "motion",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_MHW",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "M": {
+                        "description": "motion",
+                        "data_type": "motion_status",
+                        "conversion": "val_direct",
+                        "device_class": "motion",
+                    },
+                },
             },
-        },
-        "sensor": {
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SC_BM": {
         "name": "动态感应器",
-        "binary_sensor": {
-            "M": {
-                "description": "motion",
-                "data_type": "motion_status",
-                "conversion": "val_direct",
-                "device_class": "motion",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BM",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "M": {
+                        "description": "motion",
+                        "data_type": "motion_status",
+                        "conversion": "val_direct",
+                        "device_class": "motion",
+                    },
+                },
             },
-        },
-        "sensor": {
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SC_CM": {
         "name": "动态感应器（带USB供电）",
-        "binary_sensor": {
-            "P1": {
-                "description": "motion",
-                "data_type": "motion_status",
-                "conversion": "val_direct",
-                "device_class": "motion",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CM",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "motion",
+                        "data_type": "motion_status",
+                        "conversion": "val_direct",
+                        "device_class": "motion",
+                    },
+                },
             },
-        },
-        "sensor": {
-            "P3": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-            "P4": {
-                "description": "electric",
-                "data_type": "voltage",
-                "conversion": "val_direct",
-                "device_class": "voltage",
-                "unit_of_measurement": "V",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "electric",
+                        "data_type": "voltage",
+                        "conversion": "val_direct",
+                        "device_class": "voltage",
+                        "unit_of_measurement": "V",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
@@ -4796,104 +5196,130 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SC_THL": {
         "name": "环境感应器（温湿度光照）",
-        "sensor": {
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "H": {
-                "description": "humidity",
-                "data_type": "humidity",
-                "conversion": "v_field",
-                "device_class": "humidity",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-            "Z": {
-                "description": "illuminance",
-                "data_type": "illuminance",
-                "conversion": "v_field",
-                "device_class": "illuminance",
-                "unit_of_measurement": "lx",
-                "state_class": "measurement",
-            },
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_THL",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "v_field",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "Z": {
+                        "description": "illuminance",
+                        "data_type": "illuminance",
+                        "conversion": "v_field",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SC_BE": {
         "name": "环境感应器（温湿度光照）",
-        "sensor": {
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "H": {
-                "description": "humidity",
-                "data_type": "humidity",
-                "conversion": "v_field",
-                "device_class": "humidity",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-            "Z": {
-                "description": "illuminance",
-                "data_type": "illuminance",
-                "conversion": "v_field",
-                "device_class": "illuminance",
-                "unit_of_measurement": "lx",
-                "state_class": "measurement",
-            },
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BE",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "v_field",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "Z": {
+                        "description": "illuminance",
+                        "data_type": "illuminance",
+                        "conversion": "v_field",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SC_WA": {
         "name": "水浸传感器",
-        "binary_sensor": {
-            "WA": {
-                "description": "water_leak_detection",
-                "data_type": "water_leak",
-                "conversion": "val_greater_than_zero",
-                "device_class": "moisture",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_WA",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "WA": {
+                        "description": "water_leak_detection",
+                        "data_type": "water_leak",
+                        "conversion": "val_greater_than_zero",
+                        "device_class": "moisture",
+                    },
+                },
             },
-        },
-        "sensor": {
-            "WA": {
-                "description": "electric",
-                "data_type": "conductivity",
-                "conversion": "val_direct",
-                "device_class": "moisture",
-                "unit_of_measurement": "µS/cm",
-                "state_class": "measurement",
-            },
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "WA": {
+                        "description": "electric",
+                        "data_type": "conductivity",
+                        "conversion": "val_direct",
+                        "device_class": "moisture",
+                        "unit_of_measurement": "µS/cm",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
@@ -9588,53 +10014,6 @@ _RAW_DEVICE_DATA = {
             "emergency_ventilation_switch": "应急通风开关",
             "emergency_heating_switch": "应急加热开关",
             "emergency_cooling_switch": "应急制冷开关",
-        },
-    },
-    # ================= 缺失设备补充 (Missing Devices) =================
-    "SL_SC_GD": {
-        "name": "车库门控制器",
-        "cover": {
-            "P1": {
-                "description": "control",
-                "data_type": "cover_control",
-                "conversion": "val_direct",
-                "device_class": "garage",
-                "commands": {
-                    "open": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "close": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "HS": {
-                "description": "hs",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "binary_sensor": {
-            "G": {
-                "description": "status",
-                "data_type": "binary_sensor",
-                "conversion": "type_bit_0",
-                "device_class": "garage_door",
-            },
         },
     },
 }
