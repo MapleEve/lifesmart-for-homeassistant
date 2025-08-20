@@ -106,7 +106,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -139,14 +138,16 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
     """
     使用映射引擎获取cover IO口的配置信息。
 
+    **ENHANCED FOR GENERATION 2**: 现在支持读取cover_features特性配置
+
     Args:
         device: 设备字典
         sub_key: IO口键名
 
     Returns:
-        IO口的配置信息字典，如果不存在则返回None
+        IO口的配置信息字典，包含Generation 2特性配置，如果不存在则返回None
     """
-    # Phase 2: 使用DeviceResolver统一接口 - 简化8行为3行
+    # Phase 2: 使用DeviceResolver统一接口
     from .core.resolver import get_device_resolver
 
     resolver = get_device_resolver()
@@ -157,15 +158,35 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
 
     # 检查IO配置是否存在
     io_config = platform_config.ios.get(sub_key)
-    if io_config and io_config.description:
-        return {
-            "description": io_config.description,
-            "data_type": io_config.data_type,
-            "rw": io_config.rw,
-            "device_class": getattr(io_config, "device_class", None),
-        }
+    if not io_config or not io_config.description:
+        return None
 
-    return None
+    # 构建增强配置字典，包含基础IO配置
+    enhanced_config = {
+        "description": io_config.description,
+        "data_type": getattr(io_config, "data_type", None),
+        "rw": getattr(io_config, "rw", None),
+        "device_class": getattr(io_config, "device_class", None),
+    }
+
+    # **GENERATION 2 ENHANCEMENT**: 读取并添加cover_features配置
+    device_config = resolver.resolve_device_config(device)
+    if device_config and device_config.source_mapping:
+        raw_mapping = device_config.source_mapping
+        generation = raw_mapping.get("_generation")
+
+        # 如果是Generation 2设备，添加cover_features
+        if generation == 2:
+            cover_features = raw_mapping.get("cover_features", {})
+            if cover_features:
+                enhanced_config["cover_features"] = cover_features
+                _LOGGER.debug(
+                    "Added Generation 2 cover_features for device %s: %s",
+                    device.get("me", "unknown"),
+                    cover_features,
+                )
+
+    return enhanced_config
 
 
 async def async_setup_entry(
@@ -525,14 +546,55 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
     ) -> None:
         """初始化定位覆盖物。"""
         super().__init__(raw_device, client, entry_id, sub_device_key)
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.STOP
-            | CoverEntityFeature.SET_POSITION
-        )
+
+        # **GENERATION 2 ENHANCEMENT**: 使用cover_features配置支持的特性
+        self._configure_features()
         self._attr_device_class = self._determine_device_class()
-        self._attr_device_class = self._determine_device_class()
+
+    def _configure_features(self) -> None:
+        """
+        根据cover_features配置支持的特性。
+        Generation 2设备使用动态特性配置，Generation 1设备使用默认配置。
+        """
+        # 获取增强IO配置，可能包含cover_features
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        cover_features = io_config.get("cover_features", {}) if io_config else {}
+
+        if cover_features:
+            # Generation 2: 基于cover_features动态配置
+            features = (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+            )
+
+            # 检查是否支持位置控制
+            if cover_features.get("position_feedback", True):  # 默认支持位置反馈
+                features |= CoverEntityFeature.SET_POSITION
+
+            # 检查是否支持倾斜控制
+            if cover_features.get("tilt_control", False):
+                features |= CoverEntityFeature.SET_TILT_POSITION
+                features |= CoverEntityFeature.OPEN_TILT
+                features |= CoverEntityFeature.CLOSE_TILT
+                features |= CoverEntityFeature.STOP_TILT
+
+            self._attr_supported_features = features
+
+            _LOGGER.debug(
+                "Configured Generation 2 features for %s: position_feedback=%s, tilt_control=%s",
+                self._attr_name,
+                cover_features.get("position_feedback", True),
+                cover_features.get("tilt_control", False),
+            )
+        else:
+            # Generation 1: 使用默认配置（向后兼容）
+            self._attr_supported_features = (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+                | CoverEntityFeature.SET_POSITION
+            )
 
     @callback
     def _determine_device_class(self) -> CoverDeviceClass:
@@ -551,6 +613,7 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
     def _initialize_state(self) -> None:
         """
         使用新的业务逻辑处理器解析设备状态。
+        **ENHANCED FOR GENERATION 2**: 现在支持使用cover_features配置。
         """
         status_data = safe_get(
             self._raw_device, DEVICE_DATA_KEY, self._sub_key, default={}
@@ -634,15 +697,66 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
         self._last_known_is_opening = False
 
         super().__init__(raw_device, client, entry_id, sub_device_key)
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
-        self._attr_device_class = CoverDeviceClass.CURTAIN
+
+        # **GENERATION 2 ENHANCEMENT**: 使用cover_features配置特性
+        self._configure_features()
+        self._attr_device_class = self._determine_device_class_non_positional()
+
+    def _configure_features(self) -> None:
+        """
+        根据cover_features配置支持的特性。
+        非定位覆盖物主要配置乐观模式和控制映射。
+        """
+        # 获取增强IO配置，可能包含cover_features
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        cover_features = io_config.get("cover_features", {}) if io_config else {}
+
+        if cover_features:
+            # Generation 2: 基于cover_features动态配置
+            features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+
+            # 检查是否支持停止功能
+            control_mapping = cover_features.get("control_mapping", {})
+            if "stop" in control_mapping:
+                features |= CoverEntityFeature.STOP
+
+            self._attr_supported_features = features
+
+            # 存储cover_features供状态处理使用
+            self._cover_features = cover_features
+
+            _LOGGER.debug(
+                "Configured Generation 2 non-positional features for %s: optimistic=%s, stop_support=%s",
+                self._attr_name,
+                cover_features.get("optimistic_mode", True),
+                "stop" in control_mapping,
+            )
+        else:
+            # Generation 1: 使用默认配置（向后兼容）
+            self._attr_supported_features = (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+            )
+            self._cover_features = {}
+
+    def _determine_device_class_non_positional(self) -> CoverDeviceClass:
+        """确定非定位覆盖物的设备类别。"""
+        io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
+        if io_config:
+            # 检查是否为车库门类型
+            description = io_config.get("description", "").lower()
+            if "garage" in description or "车库" in description:
+                return CoverDeviceClass.GARAGE
+
+        # 默认为窗帘
+        return CoverDeviceClass.CURTAIN
 
     @callback
     def _initialize_state(self) -> None:
         """
         使用新的业务逻辑处理器解析设备状态。
+        **ENHANCED FOR GENERATION 2**: 现在支持使用cover_features配置。
         """
         self._attr_current_cover_position = None
 
@@ -657,9 +771,25 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
         if not data:
             return
 
-        # 从IO配置中获取开关控制点的映射
-        open_io = io_config.get("open_io", "P2")  # 默认开启IO口
-        close_io = io_config.get("close_io", "P3")  # 默认关闭IO口
+        # **GENERATION 2 ENHANCEMENT**: 使用cover_features中的control_mapping
+        cover_features = getattr(self, "_cover_features", {})
+        control_mapping = cover_features.get("control_mapping", {})
+
+        if control_mapping:
+            # Generation 2: 使用动态控制映射
+            open_io = control_mapping.get("open", "P1")
+            close_io = control_mapping.get("close", "P2")
+
+            _LOGGER.debug(
+                "Using Generation 2 control mapping for %s: open=%s, close=%s",
+                self._attr_name,
+                open_io,
+                close_io,
+            )
+        else:
+            # Generation 1: 使用默认映射（向后兼容）
+            open_io = "P2"  # 默认开启IO口
+            close_io = "P3"  # 默认关闭IO口
 
         # 使用业务逻辑处理器处理开启状态
         open_data = data.get(open_io, {})

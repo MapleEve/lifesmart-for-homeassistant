@@ -424,7 +424,7 @@ _RAW_DEVICE_DATA = {
     # ================= 2.2 开关系列 (Switch Series) =================
     # 2.2.1 随心开关系列 (Freestyle Switch Series)
     "SL_SW_RC1": {
-        "name": "随心开关一位",
+        "name": "白玉/墨玉流光开关一键",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_RC1",
@@ -453,7 +453,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark": {
                         "description": "indicator_brightness_off",
-                        "data_type": "indicator_light",
+                        "data_type": "rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -464,17 +464,17 @@ _RAW_DEVICE_DATA = {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
-                            "set_brightness_on": {
+                            "set_color_on": {
                                 "type": CMD_TYPE_SET_RAW_ON,
                             },
-                            "set_brightness_off": {
+                            "set_color_off": {
                                 "type": CMD_TYPE_SET_RAW_OFF,
                             },
                         },
                     },
                     "bright": {
                         "description": "indicator_brightness_on",
-                        "data_type": "indicator_light",
+                        "data_type": "rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -485,10 +485,10 @@ _RAW_DEVICE_DATA = {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
-                            "set_brightness_on": {
+                            "set_color_on": {
                                 "type": CMD_TYPE_SET_RAW_ON,
                             },
-                            "set_brightness_off": {
+                            "set_color_off": {
                                 "type": CMD_TYPE_SET_RAW_OFF,
                             },
                         },
@@ -2427,11 +2427,11 @@ _RAW_DEVICE_DATA = {
             "sensor": {
                 "io_configs": {
                     "P2": {
-                        "description": "temperature",
-                        "data_type": "temperature",
+                        "description": "battery",
+                        "data_type": "battery",
                         "conversion": "v_field",
-                        "device_class": "temperature",
-                        "unit_of_measurement": "°C",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
                         "state_class": "measurement",
                     },
                 },
@@ -2482,11 +2482,11 @@ _RAW_DEVICE_DATA = {
             "sensor": {
                 "io_configs": {
                     "P3": {
-                        "description": "temperature",
-                        "data_type": "temperature",
+                        "description": "battery",
+                        "data_type": "battery",
                         "conversion": "v_field",
-                        "device_class": "temperature",
-                        "unit_of_measurement": "°C",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
                         "state_class": "measurement",
                     },
                 },
@@ -2552,11 +2552,11 @@ _RAW_DEVICE_DATA = {
             "sensor": {
                 "io_configs": {
                     "P4": {
-                        "description": "temperature",
-                        "data_type": "temperature",
+                        "description": "battery",
+                        "data_type": "battery",
                         "conversion": "v_field",
-                        "device_class": "temperature",
-                        "unit_of_measurement": "°C",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
                         "state_class": "measurement",
                     },
                 },
@@ -9699,7 +9699,7 @@ _RAW_DEVICE_DATA = {
                         "conversion": "val_direct",
                         "commands": {
                             "set_config": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_VAL",
                             }
                         },
                     },
@@ -9710,7 +9710,7 @@ _RAW_DEVICE_DATA = {
                         "unit_of_measurement": "°C",
                         "commands": {
                             "set_temperature": {
-                                "type": "CMD_TYPE_SET_TEMP_DECIMAL",
+                                "type": "CMD_TYPE_SET_TEMP_FCU",
                             }
                         },
                     },
@@ -9778,12 +9778,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "hot_water_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 0,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 0,
                                 "bit_value": 0,
                             },
@@ -9796,12 +9796,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "floor_heating_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 1,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 1,
                                 "bit_value": 0,
                             },
@@ -9814,12 +9814,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "heating_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 2,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 2,
                                 "bit_value": 0,
                             },
@@ -9832,12 +9832,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "cooling_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 3,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 3,
                                 "bit_value": 0,
                             },
@@ -9850,12 +9850,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "ventilation_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 4,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 4,
                                 "bit_value": 0,
                             },
@@ -9868,12 +9868,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "dehumidify_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 5,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 5,
                                 "bit_value": 0,
                             },
@@ -9886,12 +9886,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "humidify_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 6,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 6,
                                 "bit_value": 0,
                             },
@@ -9904,12 +9904,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "emergency_ventilation_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 7,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 7,
                                 "bit_value": 0,
                             },
@@ -9922,12 +9922,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "emergency_heating_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 8,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 8,
                                 "bit_value": 0,
                             },
@@ -9940,12 +9940,12 @@ _RAW_DEVICE_DATA = {
                         "translation_key": "emergency_cooling_switch",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 9,
                                 "bit_value": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": "CMD_TYPE_SET_CFG_FCU",
                                 "bit_position": 9,
                                 "bit_value": 0,
                             },

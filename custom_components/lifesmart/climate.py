@@ -501,13 +501,148 @@ class LifeSmartClimate(LifeSmartBaseClimate):
     def _initialize_features(self) -> None:
         """
         根据设备类型动态初始化支持的特性。
+        **ENHANCED FOR GENERATION 2**: 优先使用climate_features配置。
 
         使用 getattr 查找名为 `_init_{devtype}` 的方法。如果找不到，
         则调用 `_init_default` 作为后备。这使得添加新设备类型变得容易，
         只需增加一个新的 `_init_*` 方法即可。
         """
+        # **GENERATION 2 ENHANCEMENT**: 尝试使用climate_features配置特性
+        if self._try_init_from_climate_features():
+            return
+
+        # Generation 1: 使用传统的动态分派方法（向后兼容）
         init_method = getattr(self, f"_init_{self.devtype.lower()}", self._init_default)
         init_method()
+
+    def _try_init_from_climate_features(self) -> bool:
+        """
+        尝试使用Generation 2的设备内配置初始化特性。
+        支持 climate_features 和 climate_config 两种配置格式。
+
+        Returns:
+            bool: 如果成功使用Generation 2配置则返回True，否则返回False
+        """
+        # 获取设备配置
+        from .core.resolver import get_device_resolver
+
+        resolver = get_device_resolver()
+        device_config = resolver.resolve_device_config(self._raw_device)
+
+        if not device_config or not device_config.source_mapping:
+            return False
+
+        raw_mapping = device_config.source_mapping
+        generation = raw_mapping.get("_generation")
+
+        if generation != 2:
+            return False
+
+        # 支持多种Generation 2配置格式
+        climate_features = raw_mapping.get("climate_features", {})
+        climate_config = raw_mapping.get("climate_config", {})
+
+        if not climate_features and not climate_config:
+            return False
+
+        # 优先使用 climate_config，回退到 climate_features
+        config_source = climate_config if climate_config else climate_features
+
+        # 使用统一配置源配置HVAC模式
+        hvac_modes = [HVACMode.OFF]  # 总是包含OFF模式
+
+        # 从配置源获取HVAC模式映射（支持多种格式）
+        hvac_mapping = {}
+        if "hvac_modes" in config_source:
+            hvac_config = config_source["hvac_modes"]
+            if isinstance(hvac_config, dict):
+                # climate_features格式：直接的模式映射
+                if all(isinstance(v, str) for v in hvac_config.values()):
+                    hvac_mapping = hvac_config
+                # climate_config格式：包含modes子键
+                elif "modes" in hvac_config:
+                    hvac_mapping = hvac_config["modes"]
+
+        for mode_val, mode_name in hvac_mapping.items():
+            if mode_name == "auto":
+                hvac_modes.append(HVACMode.AUTO)
+            elif mode_name == "cool":
+                hvac_modes.append(HVACMode.COOL)
+            elif mode_name == "heat":
+                hvac_modes.append(HVACMode.HEAT)
+            elif mode_name == "dry":
+                hvac_modes.append(HVACMode.DRY)
+            elif mode_name == "fan_only":
+                hvac_modes.append(HVACMode.FAN_ONLY)
+            elif mode_name == "heat_cool":
+                hvac_modes.append(HVACMode.HEAT_COOL)
+
+        self._attr_hvac_modes = hvac_modes
+
+        # 配置支持的特性
+        features = (
+            get_climate_entity_features().TARGET_TEMPERATURE
+            | get_climate_entity_features().TURN_ON
+            | get_climate_entity_features().TURN_OFF
+        )
+
+        # 检查风扇模式支持（支持多种格式）
+        fan_mapping = {}
+        if "fan_speeds" in config_source:
+            fan_mapping = config_source["fan_speeds"]
+        elif "fan_modes" in config_source:
+            fan_config = config_source["fan_modes"]
+            if isinstance(fan_config, dict):
+                # climate_config格式：包含modes子键
+                if "modes" in fan_config:
+                    fan_mapping = fan_config["modes"]
+                # climate_features格式：直接的模式映射
+                else:
+                    fan_mapping = fan_config
+
+        if fan_mapping:
+            features |= get_climate_entity_features().FAN_MODE
+
+            # 构建风扇模式列表
+            fan_modes = []
+            for speed_val, speed_name in fan_mapping.items():
+                if speed_name == "low":
+                    fan_modes.append(FAN_LOW)
+                elif speed_name == "medium":
+                    fan_modes.append(FAN_MEDIUM)
+                elif speed_name == "high":
+                    fan_modes.append(FAN_HIGH)
+                elif speed_name == "auto":
+                    fan_modes.append("auto")
+
+            self._attr_fan_modes = fan_modes
+
+        self._attr_supported_features = features
+
+        # 设置温度范围（支持多种格式）
+        temp_range = {}
+        if "temperature_range" in config_source:
+            temp_range = config_source["temperature_range"]
+        elif "temperature" in config_source and isinstance(
+            config_source["temperature"], dict
+        ):
+            temp_config = config_source["temperature"]
+            if "range" in temp_config:
+                temp_range_list = temp_config["range"]
+                if isinstance(temp_range_list, list) and len(temp_range_list) >= 2:
+                    temp_range = {"min": temp_range_list[0], "max": temp_range_list[1]}
+
+        self._attr_min_temp = temp_range.get("min", 5)
+        self._attr_max_temp = temp_range.get("max", 40)
+
+        _LOGGER.debug(
+            "Initialized Generation 2 climate features for %s: hvac_modes=%s, fan_modes=%s",
+            self._attr_name,
+            [mode.value for mode in hvac_modes],
+            getattr(self, "_attr_fan_modes", []),
+        )
+
+        return True
 
     @callback
     def _update_state(self, data: dict) -> None:

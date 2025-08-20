@@ -149,16 +149,31 @@ IO_TYPE_PRECISION_BITS = 0x06
 
 # ================= 命令类型常量 (Command Type Constants) =================
 # LifeSmart设备的标准控制命令码，用于向设备发送操作指令
+#
+# ⚠️ 重要说明：命令码复用机制
+# LifeSmart官方协议中，同一个命令码可能在不同设备类型中具有不同的语义。
+# 这是正常的协议设计，开发者应根据设备类型选择正确的常量名称。
 
 CMD_TYPE_ON = 0x81  # 通用开启命令
 CMD_TYPE_OFF = 0x80  # 通用关闭命令
-CMD_TYPE_PRESS = 0x89  # 点动命令
+
+# 0x89 命令码的两种不同用途 (官方协议复用)
+CMD_TYPE_PRESS = 0x89  # 点动命令 - 用于开关类设备
+# 设置打开持续时长后自动关闭，val为持续时长(单位100ms)
+# 适用设备: SL_P_SW等开关设备
+# 参考文档: LifeSmart智慧设备规格属性说明.md 第125-139行
+
+CMD_TYPE_SET_TEMP_FCU = 0x89  # FCU温控器设置目标温度 - 用于温控设备
+# val为目标温度值*10 (如25°C则val=250)
+# 适用设备: SL_FCU温控器设备的P8口
+# 参考文档: LifeSmart智慧设备规格属性说明.md 第955行
+
 CMD_TYPE_SET_VAL = 0xCF  # 设置数值/启用功能 (如亮度、窗帘位置、功率门限启用)
 CMD_TYPE_SET_CONFIG = 0xCE  # 设置配置/禁用功能 (如空调模式、风速、功率门限禁用)
 CMD_TYPE_SET_TEMP_DECIMAL = 0x88  # 设置温度 (值为实际温度*10)
+CMD_TYPE_SET_CFG_FCU = 0xEF  # FCU温控器专用配置设置 - 用于SL_FCU设备P6口
 CMD_TYPE_SET_RAW_ON = 0xFF  # 开灯亮度/配置设置开始(颜色、动态、配置值等)
 CMD_TYPE_SET_RAW_OFF = 0xFE  # 关灯亮度设置/配置设置停止（颜色、动态、配置值等）
-CMD_TYPE_SET_TEMP_FCU = 0x89  # FCU温控器设置温度的特殊命令码
 
 # 语义化命令码 (已清理所有UNKNOWN标记)
 CMD_TYPE_SET_INDICATOR_BRIGHTNESS = 0xDF  # SL_SW_DM1 指示灯亮度控制
