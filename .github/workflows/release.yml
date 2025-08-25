@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        
+        uses: actions/checkout@v5
+
       - name: Validate version consistency
         run: |
           MANIFEST_VERSION=$(grep '"version"' custom_components/lifesmart/manifest.json | cut -d'"' -f4)
@@ -22,12 +22,12 @@ jobs:
             exit 1
           fi
           echo "✅ Version consistency validated"
-          
+
       - name: Run HACS validation
         uses: hacs/action@main
         with:
           category: integration
-          
+
       - name: Run HassFest validation
         uses: home-assistant/actions/hassfest@master
 
@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Create optimized release package
         run: |
@@ -71,7 +71,7 @@ jobs:
           zip -r lifesmart.zip custom_components/lifesmart
           
           echo "✅ Release package created successfully"
-          
+
       - name: Generate release notes
         run: |
           echo "## 📋 版本更新说明" > RELEASE_NOTES.md
@@ -95,7 +95,7 @@ jobs:
           asset_name: lifesmart.zip
           tag: ${{ github.ref }}
           overwrite: true
-          
+
       - name: Upload release notes
         uses: svenstaro/upload-release-action@v2
         with:
