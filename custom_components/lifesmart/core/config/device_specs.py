@@ -1988,120 +1988,130 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_FE2": {
         "name": "塞纳开关二键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_FE2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "L2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark1": {
-                "description": "indicator_brightness_1_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "dark2": {
-                "description": "indicator_brightness_2_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright1": {
-                "description": "indicator_brightness_1_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright2": {
-                "description": "indicator_brightness_2_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
