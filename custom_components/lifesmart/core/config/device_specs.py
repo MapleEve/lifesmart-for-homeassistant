@@ -3576,7 +3576,7 @@ _RAW_DEVICE_DATA = {
                         "conversion": "type_bit_0",
                         "commands": {
                             "open": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             }
                         },
@@ -3587,7 +3587,7 @@ _RAW_DEVICE_DATA = {
                         "conversion": "type_bit_0",
                         "commands": {
                             "close": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             }
                         },
@@ -3598,7 +3598,7 @@ _RAW_DEVICE_DATA = {
                         "conversion": "type_bit_0",
                         "commands": {
                             "stop": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             }
                         },
@@ -3614,18 +3614,18 @@ _RAW_DEVICE_DATA = {
                         "range": "0~1023",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_OFF",
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
                             "set_brightness_on": {
-                                "type": "CMD_TYPE_SET_RAW_ON",
+                                "type": CMD_TYPE_SET_RAW_ON,
                             },
                             "set_brightness_off": {
-                                "type": "CMD_TYPE_SET_RAW_OFF",
+                                "type": CMD_TYPE_SET_RAW_OFF,
                             },
                         },
                     },
@@ -3636,18 +3636,18 @@ _RAW_DEVICE_DATA = {
                         "range": "0~1023",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_OFF",
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
                             "set_brightness_on": {
-                                "type": "CMD_TYPE_SET_RAW_ON",
+                                "type": CMD_TYPE_SET_RAW_ON,
                             },
                             "set_brightness_off": {
-                                "type": "CMD_TYPE_SET_RAW_OFF",
+                                "type": CMD_TYPE_SET_RAW_OFF,
                             },
                         },
                     },
@@ -3673,17 +3673,17 @@ _RAW_DEVICE_DATA = {
             "commands": {
                 "open": {
                     "io_port": "OP",
-                    "command_type": "CMD_TYPE_ON",
+                    "command_type": CMD_TYPE_ON,
                     "value": 1,
                 },
                 "close": {
                     "io_port": "CL",
-                    "command_type": "CMD_TYPE_ON",
+                    "command_type": CMD_TYPE_ON,
                     "value": 1,
                 },
                 "stop": {
                     "io_port": "ST",
-                    "command_type": "CMD_TYPE_ON",
+                    "command_type": CMD_TYPE_ON,
                     "value": 1,
                 },
             },
