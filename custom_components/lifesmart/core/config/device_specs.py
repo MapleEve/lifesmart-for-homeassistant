@@ -3034,8 +3034,16 @@ _RAW_DEVICE_DATA = {
                     "TVOC": {
                         "description": "tvoc_concentration",
                         "data_type": "aqi",
-                        "conversion": "val_div_100",
+                        "conversion": "val_div_1000",
                         "unit_of_measurement": "mg/m³",
+                        "state_class": "measurement",
+                    },
+                    "USB": {
+                        "description": "usb_power_voltage",
+                        "data_type": "voltage",
+                        "conversion": "v_field",
+                        "unit_of_measurement": "V",
+                        "device_class": "voltage",
                         "state_class": "measurement",
                     },
                     "V": {
