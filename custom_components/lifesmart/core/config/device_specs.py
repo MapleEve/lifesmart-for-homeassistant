@@ -9000,48 +9000,58 @@ _RAW_DEVICE_DATA = {
     # ================= 2.12 车库门控制 (Garage Door Control) =================
     "SL_ETDOOR": {
         "name": "车库门控制器",
-        "light": {
-            "P1": {
-                "description": "control",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+        "category": "garage_control",
+        "manufacturer": "LifeSmart",
+        "model": "SL_ETDOOR",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "control",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-        },
-        "cover": {
-            "P2": {
-                "description": "status",
-                "data_type": "garage_door_status",
-                "conversion": "val_direct",
-            },
-            "P3": {
-                "description": "control",
-                "data_type": "garage_door_control",
-                "conversion": "val_direct",
-                "commands": {
-                    "open": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 100,
+            "cover": {
+                "io_configs": {
+                    "P2": {
+                        "description": "status",
+                        "data_type": "garage_door_status",
+                        "conversion": "val_direct",
                     },
-                    "close": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 0,
-                    },
-                    "stop": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "val": 128,
-                    },
-                    "set_position": {
-                        "type": CMD_TYPE_SET_VAL,
+                    "P3": {
+                        "description": "control",
+                        "data_type": "garage_door_control",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 100,
+                            },
+                            "close": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 0,
+                            },
+                            "stop": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "val": 128,
+                            },
+                            "set_position": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
                     },
                 },
             },
