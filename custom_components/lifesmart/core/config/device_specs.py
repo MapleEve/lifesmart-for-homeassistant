@@ -3728,7 +3728,7 @@ _RAW_DEVICE_DATA = {
         "cover_features": {
             "position_feedback": False,  # 无位置反馈
             "optimistic_mode": True,  # 乐观判断状态
-            "control_mapping": {"open": "P1", "close": "P2", "stop": "P3"},
+            "control_mapping": {"open": "P1", "close": "P3", "stop": "P2"},
         },
         # 基础平台配置
         "platforms": {
@@ -3746,7 +3746,7 @@ _RAW_DEVICE_DATA = {
                         },
                     },
                     "P2": {
-                        "description": "close_curtain",
+                        "description": "stop",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
@@ -3757,7 +3757,7 @@ _RAW_DEVICE_DATA = {
                         },
                     },
                     "P3": {
-                        "description": "stop",
+                        "description": "close_curtain",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
