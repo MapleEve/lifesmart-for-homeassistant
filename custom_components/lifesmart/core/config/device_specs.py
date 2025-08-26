@@ -2521,171 +2521,6 @@ _RAW_DEVICE_DATA = {
                         },
                     },
                     "P2": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-            "sensor": {
-                "io_configs": {
-                    "P3": {
-                        "description": "battery",
-                        "data_type": "battery",
-                        "conversion": "v_field",
-                        "device_class": "battery",
-                        "unit_of_measurement": "%",
-                        "state_class": "measurement",
-                    },
-                },
-            },
-        },
-    },
-    "SL_SW_ND3": {
-        "name": "恒星开关三键",
-        "category": "switch",
-        "manufacturer": "lifesmart",
-        "model": "SL_SW_ND3",
-        "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "P1": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P2": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P3": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-            "sensor": {
-                "io_configs": {
-                    "P4": {
-                        "description": "battery",
-                        "data_type": "battery",
-                        "conversion": "v_field",
-                        "device_class": "battery",
-                        "unit_of_measurement": "%",
-                        "state_class": "measurement",
-                    },
-                },
-            },
-        },
-    },
-    "SL_MC_ND1": {
-        "name": "恒星/辰星开关伴侣一键",
-        "category": "switch",
-        "manufacturer": "lifesmart",
-        "model": "SL_MC_ND1",
-        "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "P1": {
-                        "description": "switch_1",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-            "sensor": {
-                "io_configs": {
-                    "P2": {
-                        "description": "energy",
-                        "data_type": "battery",
-                        "conversion": "v_field",
-                        "device_class": "battery",
-                        "unit_of_measurement": "%",
-                        "state_class": "measurement",
-                    },
-                },
-            },
-        },
-    },
-    "SL_MC_ND2": {
-        "name": "恒星/辰星开关伴侣二键",
-        "category": "switch",
-        "manufacturer": "lifesmart",
-        "model": "SL_MC_ND2",
-        "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "P1": {
-                        "description": "switch_1",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P2": {
                         "description": "switch_2",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
@@ -2697,527 +2532,6 @@ _RAW_DEVICE_DATA = {
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-            "sensor": {
-                "io_configs": {
-                    "P3": {
-                        "description": "energy",
-                        "data_type": "battery",
-                        "conversion": "v_field",
-                        "device_class": "battery",
-                        "unit_of_measurement": "%",
-                        "state_class": "measurement",
-                    },
-                },
-            },
-        },
-    },
-    "SL_MC_ND3": {
-        "name": "恒星/辰星开关伴侣三键",
-        "category": "switch",
-        "manufacturer": "lifesmart",
-        "model": "SL_MC_ND3",
-        "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "P1": {
-                        "description": "switch_1",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P2": {
-                        "description": "switch_2",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P3": {
-                        "description": "switch_3",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-            "sensor": {
-                "io_configs": {
-                    "P4": {
-                        "description": "energy",
-                        "data_type": "battery",
-                        "conversion": "v_field",
-                        "device_class": "battery",
-                        "unit_of_measurement": "%",
-                        "state_class": "measurement",
-                    },
-                },
-            },
-        },
-    },
-    # 2.2.3 开关控制器系列 (Switch Controller Series)
-    "SL_S": {
-        "name": "单路开关控制器",
-        "category": "switch",
-        "manufacturer": "lifesmart",
-        "model": "SL_S",
-        "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "P2": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    },
-    "SL_SPWM": {
-        "name": "PWM调光开关控制器",
-        "category": "light",
-        "manufacturer": "lifesmart",
-        "model": "SL_SPWM",
-        "_generation": 2,
-        "platforms": {
-            "light": {
-                "io_configs": {
-                    "P1": {
-                        "description": "dimmable_light",
-                        "data_type": "brightness_light",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness_on": {
-                                "type": CMD_TYPE_SET_VAL,
-                            },
-                            "set_brightness_off": {
-                                "type": CMD_TYPE_SET_CONFIG,
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    },
-    "SL_P_SW": {
-        "name": "九路开关控制器",
-        "category": "switch",
-        "manufacturer": "lifesmart",
-        "model": "SL_P_SW",
-        "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "P1": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P2": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P3": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P4": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P5": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P6": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P7": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P8": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "P9": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    },
-    # 2.2.3.5 环境传感器 B1 系列 (Environmental Sensor B1 Series)
-    "SL_SC_B1": {
-        "name": "高级环境传感器",
-        "category": "sensor",
-        "manufacturer": "lifesmart",
-        "model": "SL_SC_B1",
-        "_generation": 2,
-        "platforms": {
-            "sensor": {
-                "io_configs": {
-                    "T": {
-                        "description": "temperature",
-                        "data_type": "temperature",
-                        "conversion": "val_div_10",
-                        "device_class": "temperature",
-                        "unit_of_measurement": "°C",
-                        "state_class": "measurement",
-                    },
-                    "H": {
-                        "description": "humidity",
-                        "data_type": "humidity",
-                        "conversion": "v_field",
-                        "device_class": "humidity",
-                        "unit_of_measurement": "%",
-                        "state_class": "measurement",
-                    },
-                    "CO2": {
-                        "description": "co2_concentration",
-                        "data_type": "aqi",
-                        "conversion": "v_field",
-                        "device_class": "aqi",
-                        "unit_of_measurement": "ppm",
-                        "state_class": "measurement",
-                    },
-                    "TVOC": {
-                        "description": "tvoc_concentration",
-                        "data_type": "aqi",
-                        "conversion": "val_div_1000",
-                        "unit_of_measurement": "mg/m³",
-                        "state_class": "measurement",
-                    },
-                    "USB": {
-                        "description": "usb_power_voltage",
-                        "data_type": "voltage",
-                        "conversion": "v_field",
-                        "unit_of_measurement": "V",
-                        "device_class": "voltage",
-                        "state_class": "measurement",
-                    },
-                    "V": {
-                        "description": "energy",
-                        "data_type": "battery",
-                        "conversion": "v_field",
-                        "device_class": "battery",
-                        "unit_of_measurement": "%",
-                        "state_class": "measurement",
-                    },
-                },
-            },
-        },
-    },
-    # 2.2.4 随心开关按钮系列 (Button Switch Series)
-    "SL_SC_BB": {
-        "name": "随心开关",
-        "category": "button",
-        "manufacturer": "lifesmart",
-        "model": "SL_SC_BB",
-        "_generation": 2,
-        "platforms": {
-            "button": {
-                "io_configs": {
-                    "B": {
-                        "description": "button",
-                        "data_type": "button_state",
-                        "conversion": "val_direct",
-                        "device_class": "identify",
-                    },
-                },
-            },
-            "sensor": {
-                "io_configs": {
-                    "V": {
-                        "description": "energy",
-                        "data_type": "battery",
-                        "conversion": "v_field",
-                        "device_class": "battery",
-                        "unit_of_measurement": "%",
-                        "state_class": "measurement",
-                    },
-                },
-            },
-        },
-    },
-    # 2.2.5 调光开关系列 (Dimmer Switch Series)
-    "SL_SW_DM1": {
-        "versioned": True,
-        "version_modes": {
-            "V1": {
-                "name": "动态调光开关",
-                "light": {
-                    "P1": {
-                        "description": "switch",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness_on": {
-                                "type": CMD_TYPE_SET_VAL,
-                            },
-                            "set_brightness_off": {
-                                "type": CMD_TYPE_SET_CONFIG,
-                            },
-                        },
-                    },
-                    "P2": {
-                        "description": "indicator",
-                        "data_type": "rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness": {
-                                "type": CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
-                            },
-                        },
-                    },
-                },
-                "binary_sensor": {
-                    "P3": {
-                        "description": "motion",
-                        "data_type": "motion_status",
-                        "conversion": "val_direct",
-                        "device_class": "motion",
-                    },
-                },
-                "sensor": {
-                    "P4": {
-                        "description": "illuminance",
-                        "data_type": "illuminance",
-                        "conversion": "val_direct",
-                        "device_class": "illuminance",
-                        "unit_of_measurement": "lx",
-                        "state_class": "measurement",
-                    },
-                    "P5": {
-                        "description": "dimming_control",
-                        "data_type": "dimming_config",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "set_config": {
-                                "type": CMD_TYPE_SET_CONFIG,
-                            },
-                        },
-                    },
-                    "P6": {
-                        "description": "dynamic_control",
-                        "data_type": "dynamic_config",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "set_config": {
-                                "type": CMD_TYPE_SET_CONFIG,
-                            },
-                        },
-                    },
-                },
-            },
-            "V2": {
-                "name": "星玉调光开关(可控硅)",
-                "light": {
-                    "P1": {
-                        "description": "switch",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness_on": {
-                                "type": CMD_TYPE_SET_VAL,
-                            },
-                            "set_brightness_off": {
-                                "type": CMD_TYPE_SET_CONFIG,
-                            },
-                        },
-                    },
-                    "P2": {
-                        "description": "indicator_brightness",
-                        "data_type": "rgbw_light",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness": {
-                                "type": CMD_TYPE_SET_VAL,
                             },
                         },
                     },
@@ -4111,6 +3425,156 @@ _RAW_DEVICE_DATA = {
                 "commands": {
                     "config": {
                         "type": CMD_TYPE_SET_RAW_ON,
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.5 调光开关系列 (Dimmer Switch Series)
+    "SL_SW_DM1": {
+        "name": "调光开关单键",
+        "category": "switch", 
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_DM1",
+        "_generation": 2,
+        "versioned": True,
+        "version_modes": {
+            "V1": {
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "switch",
+                                "data_type": "brightness_light",
+                                "conversion": "val_direct",
+                                "range": "0-255",
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness_on": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                    "set_brightness_off": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                    },
+                                },
+                            },
+                            "P2": {
+                                "description": "indicator",
+                                "data_type": "rgbw_light",
+                                "conversion": "type_bit_0",  # Fixed from val_direct to proper bitmask
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "binary_sensor": {
+                        "io_configs": {
+                            "P3": {
+                                "description": "motion",
+                                "data_type": "motion_status",
+                                "conversion": "val_direct",
+                                "device_class": "motion",
+                            },
+                        },
+                    },
+                    "sensor": {
+                        "io_configs": {
+                            "P4": {
+                                "description": "illuminance",
+                                "data_type": "illuminance",
+                                "conversion": "val_direct",
+                                "device_class": "illuminance",
+                                "unit_of_measurement": "lx",
+                                "state_class": "measurement",
+                            },
+                            "P5": {
+                                "description": "dimming_control",
+                                "data_type": "dimming_config",
+                                "conversion": "val_direct",
+                                "commands": {
+                                    "set_config": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                    },
+                                },
+                            },
+                            "P6": {
+                                "description": "dynamic_control",
+                                "data_type": "dynamic_config",
+                                "conversion": "val_direct",
+                                "commands": {
+                                    "set_config": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            "V2": {
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "switch",
+                                "data_type": "brightness_light",
+                                "conversion": "val_direct",
+                                "range": "0-255",
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness_on": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                    "set_brightness_off": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                    },
+                                },
+                            },
+                            "P2": {
+                                "description": "indicator_brightness",
+                                "data_type": "rgbw_light",
+                                "conversion": "val_direct",
+                                "range": "0-255",
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                },
+                            },
+                        },
                     },
                 },
             },
