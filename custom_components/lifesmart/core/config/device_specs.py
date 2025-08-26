@@ -1078,7 +1078,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "rgbw_light",
-                        "conversion": "val_direct",
+                        "color_processor": "rgbw_color",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1099,7 +1099,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "rgbw_light",
-                        "conversion": "val_direct",
+                        "color_processor": "rgbw_color",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1120,7 +1120,7 @@ _RAW_DEVICE_DATA = {
                     "dark3": {
                         "description": "indicator_brightness_3_off",
                         "data_type": "rgbw_light",
-                        "conversion": "val_direct",
+                        "color_processor": "rgbw_color",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1141,7 +1141,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "rgbw_light",
-                        "conversion": "val_direct",
+                        "color_processor": "rgbw_color",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1162,7 +1162,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "rgbw_light",
-                        "conversion": "val_direct",
+                        "color_processor": "rgbw_color",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1183,7 +1183,7 @@ _RAW_DEVICE_DATA = {
                     "bright3": {
                         "description": "indicator_brightness_3_on",
                         "data_type": "rgbw_light",
-                        "conversion": "val_direct",
+                        "color_processor": "rgbw_color",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
