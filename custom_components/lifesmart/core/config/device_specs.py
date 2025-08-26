@@ -2181,63 +2181,73 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SF_IF1": {
         "name": "单火流光开关单键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "light": {
-            "dark": {
-                "description": "indicator_brightness_off",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SF_IF1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "bright": {
-                "description": "indicator_brightness_on",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
@@ -2540,15 +2550,18 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_LI_WW": {
-        "versioned": True,
-        "version_modes": {
-            "V1": {
-                "name": "智能灯泡(冷暖白)",
-                "light": {
+        "name": "智能灯泡(冷暖白)",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_WW",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
                     "P1": {
-                        "description": "brightness",
+                        "description": "brightness_control",
                         "data_type": "brightness_light",
-                        "conversion": "val_direct",
+                        "conversion": "type_bit_0",
                         "range": "0-255",
                         "commands": {
                             "on": {
@@ -2565,42 +2578,7 @@ _RAW_DEVICE_DATA = {
                         },
                     },
                     "P2": {
-                        "description": "color_temp",
-                        "data_type": "color_temperature",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "set_color_temp": {
-                                "type": CMD_TYPE_SET_VAL,
-                            },
-                        },
-                    },
-                },
-            },
-            "V2": {
-                "name": "调光调色智控器(0-10V)",
-                "light": {
-                    "P1": {
-                        "description": "brightness",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness": {
-                                "type": CMD_TYPE_SET_VAL,
-                            },
-                        },
-                    },
-                    "P2": {
-                        "description": "color_temp",
+                        "description": "color_temp_control",
                         "data_type": "color_temperature",
                         "conversion": "val_direct",
                         "range": "0-255",
@@ -3433,7 +3411,7 @@ _RAW_DEVICE_DATA = {
     # 2.2.5 调光开关系列 (Dimmer Switch Series)
     "SL_SW_DM1": {
         "name": "调光开关单键",
-        "category": "switch", 
+        "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_DM1",
         "_generation": 2,
@@ -4060,47 +4038,55 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_LI_RGBW": {
-        "name": "RGBW灯泡",
-        "light": {
-            "RGBW": {
-                "description": "color",
-                "data_type": "rgbw_light",
-                "conversion": "val_direct",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "name": "胶囊灯泡",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_RGBW",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGBW": {
+                        "description": "rgbw_color_control",
+                        "data_type": "rgbw_light",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "DYN": {
-                "description": "color",
-                "data_type": "dynamic_effect",
-                "conversion": "val_direct",
-                "commands": {
-                    "enable": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "disable": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_effect_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_effect_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "DYN": {
+                        "description": "dynamic_effect_control",
+                        "data_type": "dynamic_effect",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_effect_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_effect_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
                 },
             },
