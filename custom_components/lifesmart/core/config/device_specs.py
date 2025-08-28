@@ -24,11 +24,6 @@ from custom_components.lifesmart.core.const import (
     CMD_TYPE_SET_TEMP_FCU,  # FCU温控器设置目标温度 - 用于温控设备
 )
 
-# 常量定义 - 避免重复字符串
-MECHANICAL_KEY_ALARM = "机械钥匙报警"
-LOW_BATTERY_ALARM = "低电量报警"
-FACTORY_RESET_ALARM = "恢复出厂告警"
-
 # 总设备数量
 TOTAL_DEVICES = 125
 
@@ -39,194 +34,6 @@ TOTAL_DEVICES = 125
 
 _RAW_DEVICE_DATA = {
     # ================= 2.1 插座系列 (Outlet Series) =================
-    "SL_SW_IF3": {
-        "name": "流光开关三键",
-        "category": "switch",
-        "manufacturer": "lifesmart",
-        "model": "SL_SW_IF3",
-        "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "L1": {
-                        "description": "switch_1",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "L2": {
-                        "description": "switch_2",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "L3": {
-                        "description": "switch_3",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-            "light": {
-                "io_configs": {
-                    "dark1": {
-                        "description": "indicator_brightness_1_off",
-                        "data_type": "rgbw_light",
-                        "color_processor": "rgbw_color",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "dark2": {
-                        "description": "indicator_brightness_2_off",
-                        "data_type": "rgbw_light",
-                        "color_processor": "rgbw_color",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "dark3": {
-                        "description": "indicator_brightness_3_off",
-                        "data_type": "rgbw_light",
-                        "color_processor": "rgbw_color",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "bright1": {
-                        "description": "indicator_brightness_1_on",
-                        "data_type": "rgbw_light",
-                        "color_processor": "rgbw_color",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "bright2": {
-                        "description": "indicator_brightness_2_on",
-                        "data_type": "rgbw_light",
-                        "color_processor": "rgbw_color",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "bright3": {
-                        "description": "indicator_brightness_3_on",
-                        "data_type": "rgbw_light",
-                        "color_processor": "rgbw_color",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    },
     # 2.1.1 传统插座系列 (Traditional Outlet Series)
     "SL_OL": {
         "name": "智慧插座",
@@ -3875,6 +3682,7 @@ _RAW_DEVICE_DATA = {
         "category": "cover",
         "manufacturer": "lifesmart",
         "model": "SL_SW_WIN",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
         # 基础平台配置
         "platforms": {
             "cover": {
@@ -4032,6 +3840,7 @@ _RAW_DEVICE_DATA = {
         "category": "cover",
         "manufacturer": "lifesmart",
         "model": "SL_CN_IF",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
         # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
         "cover_features": {
             "position_feedback": False,  # 无位置反馈
@@ -4151,6 +3960,7 @@ _RAW_DEVICE_DATA = {
         "category": "cover",
         "manufacturer": "lifesmart",
         "model": "SL_CN_FE",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
         # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
         "cover_features": {
             "position_feedback": False,  # 无位置反馈
@@ -4235,6 +4045,7 @@ _RAW_DEVICE_DATA = {
         "category": "cover",
         "manufacturer": "lifesmart",
         "model": "SL_P_V2",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
         # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
         "cover_features": {
             "position_feedback": False,  # 无位置反馈
@@ -5533,7 +5344,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": MECHANICAL_KEY_ALARM,
+                            "friendly_name": "机械钥匙报警",
                         },
                         4: {
                             "name": "low_battery",
@@ -5541,7 +5352,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": LOW_BATTERY_ALARM,
+                            "friendly_name": "低电量报警",
                         },
                         5: {
                             "name": "motion_alarm",
@@ -5581,7 +5392,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": FACTORY_RESET_ALARM,
+                            "friendly_name": "恢复出厂告警",
                         },
                     },
                 },
@@ -5711,7 +5522,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": MECHANICAL_KEY_ALARM,
+                            "friendly_name": "机械钥匙报警",
                         },
                         4: {
                             "name": "low_battery",
@@ -5719,7 +5530,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": LOW_BATTERY_ALARM,
+                            "friendly_name": "低电量报警",
                         },
                         5: {
                             "name": "motion_alarm",
@@ -5759,7 +5570,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": FACTORY_RESET_ALARM,
+                            "friendly_name": "恢复出厂告警",
                         },
                     },
                 },
@@ -5889,7 +5700,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": MECHANICAL_KEY_ALARM,
+                            "friendly_name": "机械钥匙报警",
                         },
                         4: {
                             "name": "low_battery",
@@ -5897,7 +5708,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": LOW_BATTERY_ALARM,
+                            "friendly_name": "低电量报警",
                         },
                         5: {
                             "name": "motion_alarm",
@@ -5937,7 +5748,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": FACTORY_RESET_ALARM,
+                            "friendly_name": "恢复出厂告警",
                         },
                     },
                 },
@@ -6087,7 +5898,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": MECHANICAL_KEY_ALARM,
+                            "friendly_name": "机械钥匙报警",
                         },
                         4: {
                             "name": "low_battery",
@@ -6095,7 +5906,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": LOW_BATTERY_ALARM,
+                            "friendly_name": "低电量报警",
                         },
                         5: {
                             "name": "motion_alarm",
@@ -6135,7 +5946,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": FACTORY_RESET_ALARM,
+                            "friendly_name": "恢复出厂告警",
                         },
                     },
                 },
@@ -6265,7 +6076,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": MECHANICAL_KEY_ALARM,
+                            "friendly_name": "机械钥匙报警",
                         },
                         4: {
                             "name": "low_battery",
@@ -6273,7 +6084,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": LOW_BATTERY_ALARM,
+                            "friendly_name": "低电量报警",
                         },
                         5: {
                             "name": "motion_alarm",
@@ -6313,7 +6124,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": FACTORY_RESET_ALARM,
+                            "friendly_name": "恢复出厂告警",
                         },
                     },
                 },
@@ -6443,7 +6254,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": MECHANICAL_KEY_ALARM,
+                            "friendly_name": "机械钥匙报警",
                         },
                         4: {
                             "name": "low_battery",
@@ -6451,7 +6262,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": LOW_BATTERY_ALARM,
+                            "friendly_name": "低电量报警",
                         },
                         5: {
                             "name": "motion_alarm",
@@ -6491,7 +6302,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": FACTORY_RESET_ALARM,
+                            "friendly_name": "恢复出厂告警",
                         },
                     },
                 },
@@ -6621,7 +6432,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": MECHANICAL_KEY_ALARM,
+                            "friendly_name": "机械钥匙报警",
                         },
                         4: {
                             "name": "low_battery",
@@ -6629,7 +6440,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": LOW_BATTERY_ALARM,
+                            "friendly_name": "低电量报警",
                         },
                         5: {
                             "name": "motion_alarm",
@@ -6669,7 +6480,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": FACTORY_RESET_ALARM,
+                            "friendly_name": "恢复出厂告警",
                         },
                     },
                 },
@@ -7866,6 +7677,7 @@ _RAW_DEVICE_DATA = {
         "category": "climate",
         "manufacturer": "lifesmart",
         "model": "SL_FCU",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
         # 基础平台配置
         "platforms": {
             "climate": {
@@ -8311,7 +8123,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": MECHANICAL_KEY_ALARM,
+                            "friendly_name": "机械钥匙报警",
                         },
                         4: {
                             "name": "low_battery",
@@ -8319,7 +8131,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": LOW_BATTERY_ALARM,
+                            "friendly_name": "低电量报警",
                         },
                         5: {
                             "name": "motion_alarm",
@@ -8359,7 +8171,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": FACTORY_RESET_ALARM,
+                            "friendly_name": "恢复出厂告警",
                         },
                     },
                 },
@@ -8489,7 +8301,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "lock",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": MECHANICAL_KEY_ALARM,
+                            "friendly_name": "机械钥匙报警",
                         },
                         4: {
                             "name": "low_battery",
@@ -8497,7 +8309,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "battery",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": LOW_BATTERY_ALARM,
+                            "friendly_name": "低电量报警",
                         },
                         5: {
                             "name": "motion_alarm",
@@ -8537,7 +8349,7 @@ _RAW_DEVICE_DATA = {
                             "device_class": "problem",
                             "platform": "binary_sensor",
                             "extraction_logic": "bit_extract",
-                            "friendly_name": FACTORY_RESET_ALARM,
+                            "friendly_name": "恢复出厂告警",
                         },
                     },
                 },
