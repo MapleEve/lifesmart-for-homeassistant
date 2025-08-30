@@ -322,7 +322,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_OE_W": {
-        "name": "计量插座",
+        "name": "入墙插座",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_OE_W",
@@ -467,6 +467,10 @@ _RAW_DEVICE_DATA = {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
+                            "set_brightness": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                                "val": "brightness_value",
+                            },
                         },
                     },
                     "bright": {
@@ -482,6 +486,10 @@ _RAW_DEVICE_DATA = {
                             "off": {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
+                            },
+                            "set_brightness": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                                "val": "brightness_value",
                             },
                         },
                     },
