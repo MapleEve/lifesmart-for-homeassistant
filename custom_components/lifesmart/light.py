@@ -152,7 +152,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -314,6 +313,7 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
             # 转换为原格式
             return {
                 "description": io_config.description,
+                "data_type": io_config.data_type,
                 "cmd_type": io_config.cmd_type,
                 "idx": io_config.idx,
                 "device_class": io_config.device_class,
@@ -483,26 +483,27 @@ def _create_light_entity_from_mapping(
         - 策略模式: 每种实体类型实现不同的控制策略
         - 模板模式: 所有实体继承统一的基类模板
     """
-    entity_type = io_config.get("entity_type", "basic")
+    # 统一处理逻辑：从data_type映射到对应的灯光实体类
+    data_type = io_config.get("data_type", "")
 
-    # 根据实体类型创建相应的灯光实体类
-    if entity_type == "dimmer":
-        return LifeSmartDimmerLight(device, client, entry_id)
-    elif entity_type == "quantum":
-        return LifeSmartQuantumLight(device, client, entry_id)
-    elif entity_type == "dual_rgbw":
-        return LifeSmartDualIORGBWLight(device, client, entry_id, "RGBW", "DYN")
-    elif entity_type == "spot_rgbw":
-        return LifeSmartSPOTRGBWLight(device, client, entry_id)
-    elif entity_type == "spot_rgb":
-        return LifeSmartSPOTRGBLight(device, client, entry_id)
-    elif entity_type == "single_io_rgbw":
-        return LifeSmartSingleIORGBWLight(device, client, entry_id, sub_key)
-    elif entity_type == "cover_light":
-        return LifeSmartCoverLight(device, client, entry_id, sub_key)
-    elif entity_type == "brightness":
+    # 数据类型到实体类的统一映射
+    if data_type == "brightness_light":
         return LifeSmartBrightnessLight(device, client, entry_id, sub_key)
-    else:  # entity_type == "basic"
+    elif data_type == "dimmer_light":
+        return LifeSmartDimmerLight(device, client, entry_id)
+    elif data_type == "quantum_light":
+        return LifeSmartQuantumLight(device, client, entry_id)
+    elif data_type == "dual_rgbw_light":
+        return LifeSmartDualIORGBWLight(device, client, entry_id, "RGBW", "DYN")
+    elif data_type == "spot_rgbw_light":
+        return LifeSmartSPOTRGBWLight(device, client, entry_id)
+    elif data_type == "spot_rgb_light":
+        return LifeSmartSPOTRGBLight(device, client, entry_id)
+    elif data_type == "single_io_rgbw_light":
+        return LifeSmartSingleIORGBWLight(device, client, entry_id, sub_key)
+    elif data_type == "cover_light":
+        return LifeSmartCoverLight(device, client, entry_id, sub_key)
+    else:  # 默认基础灯光
         return LifeSmartLight(device, client, entry_id, sub_key)
 
 
