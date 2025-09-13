@@ -259,6 +259,14 @@ _RAW_DEVICE_DATA = {
                         "min": 0,
                         "max": 3500,
                         "commands": {
+                            "enable": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "disable": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
                             "enable_and_set": {
                                 "type": CMD_TYPE_SET_VAL,
                             },
@@ -317,7 +325,7 @@ _RAW_DEVICE_DATA = {
                     },
                 },
             },
-            "switch_extra": {
+            "number": {
                 "io_configs": {
                     "P4": {
                         "description": "power_threshold",
@@ -332,10 +340,10 @@ _RAW_DEVICE_DATA = {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
-                            "set_threshold_enable": {
+                            "enable_and_set": {
                                 "type": CMD_TYPE_SET_VAL,
                             },
-                            "set_threshold_disable": {
+                            "disable_and_set": {
                                 "type": CMD_TYPE_SET_CONFIG,
                             },
                         },
@@ -390,7 +398,7 @@ _RAW_DEVICE_DATA = {
                     },
                 },
             },
-            "switch_extra": {
+            "number": {
                 "io_configs": {
                     "P4": {
                         "description": "power_threshold",
@@ -405,10 +413,10 @@ _RAW_DEVICE_DATA = {
                                 "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
-                            "set_threshold_enable": {
+                            "enable_and_set": {
                                 "type": CMD_TYPE_SET_VAL,
                             },
-                            "set_threshold_disable": {
+                            "disable_and_set": {
                                 "type": CMD_TYPE_SET_CONFIG,
                             },
                         },
@@ -494,7 +502,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SW_RC2": {
-        "name": "流光开关二键",
+        "name": "白玉/墨玉流光开关二键",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_RC2",
