@@ -248,25 +248,21 @@ _RAW_DEVICE_DATA = {
                     },
                 },
             },
-            "switch_extra": {
+            "number": {
                 "io_configs": {
                     "P4": {
                         "description": "power_threshold",
-                        "data_type": "power_threshold",
+                        "data_type": "power",
                         "conversion": "val_direct",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "min": 0,
+                        "max": 3500,
                         "commands": {
-                            "enable": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "disable": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_threshold_enable": {
+                            "enable_and_set": {
                                 "type": CMD_TYPE_SET_VAL,
                             },
-                            "set_threshold_disable": {
+                            "disable_and_set": {
                                 "type": CMD_TYPE_SET_CONFIG,
                             },
                         },
