@@ -10,8 +10,8 @@ DeviceResolver类型定义 - Phase 2核心数据结构
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Union
 from enum import Enum
+from typing import Dict, List, Optional, Any
 
 
 class SupportLevel(Enum):
@@ -38,6 +38,7 @@ class IOConfig:
 
     # 基础信息
     description: str
+    data_type: Optional[str] = None
     cmd_type: Optional[str] = None
     idx: Optional[int] = None
 

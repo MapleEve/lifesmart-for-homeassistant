@@ -220,45 +220,11 @@ def get_cover_subdevices(device: dict) -> list[str]:
 def get_light_subdevices(device: dict) -> list[str]:
     """获取设备的light子设备列表。
 
-    为特定类型的灯光设备添加特殊标记：
-    - 调光灯设备：添加 _DIMMER 标记
-    - 量子灯设备：添加 _QUANTUM 标记
-    - RGB/RGBW灯：使用实际IO口名称作为标记
+    统一处理所有灯光设备，从平台映射中获取子设备列表。
     """
     # 获取基础平台映射
     platforms = get_device_platform_mapping(device)
-    base_subdevices = platforms.get("light", [])
-
-    device_type = device.get("devtype", "")
-
-    # 如果没有基础子设备，检查是否需要添加特殊标记
-    if not base_subdevices:
-        # 调光灯设备标记 - 即使没有映射也添加特殊标记
-        if device_type in ["SL_LI_WW_V1", "SL_LI_WW_V2", "SL_LI_WW"]:
-            return ["_DIMMER"]
-
-        # 量子灯设备标记 - 即使没有映射也添加特殊标记
-        elif device_type == "OD_WE_QUAN":
-            return ["_QUANTUM"]
-
-        return base_subdevices
-
-    # 检查是否需要添加特殊标记
-    special_markers = []
-
-    # 调光灯设备标记
-    if device_type in ["SL_LI_WW_V1", "SL_LI_WW_V2", "SL_LI_WW"]:
-        special_markers.append("_DIMMER")
-
-    # 量子灯设备标记
-    elif device_type == "OD_WE_QUAN":
-        special_markers.append("_QUANTUM")
-
-    # 合并基础子设备和特殊标记
-    result = base_subdevices.copy()
-    result.extend(special_markers)
-
-    return result
+    return platforms.get("light", [])
 
 
 def get_sensor_subdevices(device: dict) -> list[str]:

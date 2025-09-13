@@ -14,35 +14,30 @@
 
 import logging
 import time
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .static_device_resolver import (
+    StaticDeviceResolver,
+    ResolutionResult as StaticResolutionResult,
+    ResolutionStatus,
+    DeviceConfigFacade,
+)
 from .types import (
     DeviceConfig,
     PlatformConfig,
     IOConfig,
     ResolutionResult,
-    SupportLevel,
-    ValidationStatus,
     DeviceData,
     PlatformName,
     IOKey,
 )
-
-from .static_device_resolver import (
-    StaticDeviceResolver,
-    DeviceConfig as StaticDeviceConfig,
-    ResolutionResult as StaticResolutionResult,
-    ResolutionStatus,
-    DeviceConfigFacade,
-)
-
+from ..config.device_specs import _RAW_DEVICE_DATA
 from ..config.extended_static_config_preprocessor import (
     ExtendedStaticConfigPreprocessor,
 )
 from ..config.static_config_validator import StaticConfigValidator
-from ..config.device_specs import _RAW_DEVICE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -393,6 +388,7 @@ class StaticCompatibleResolver:
 
         return IOConfig(
             description=io_data["description"],
+            data_type=io_data.get("data_type"),
             cmd_type=io_data.get("cmd_type"),
             idx=io_data.get("idx"),
             device_class=io_data.get("device_class"),
