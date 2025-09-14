@@ -546,7 +546,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -567,7 +567,28 @@ _RAW_DEVICE_DATA = {
                     },
                     "dark2": {
                         "description": "indicator_brightness_2_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark3": {
+                        "description": "indicator_brightness_3_off",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -588,7 +609,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright1": {
                         "description": "indicator_brightness_1_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -609,7 +630,28 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright2": {
                         "description": "indicator_brightness_2_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "val_direct",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright3": {
+                        "description": "indicator_brightness_3_on",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -692,7 +734,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -713,7 +755,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "dark2": {
                         "description": "indicator_brightness_2_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -734,7 +776,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "dark3": {
                         "description": "indicator_brightness_3_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -755,7 +797,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright1": {
                         "description": "indicator_brightness_1_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -776,7 +818,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright2": {
                         "description": "indicator_brightness_2_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
@@ -797,7 +839,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright3": {
                         "description": "indicator_brightness_3_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "val_direct",
                         "commands": {
                             "on": {
