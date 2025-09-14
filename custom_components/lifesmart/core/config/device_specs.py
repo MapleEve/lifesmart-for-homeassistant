@@ -457,8 +457,9 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark": {
                         "description": "indicator_brightness_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "brightness_light",
                         "conversion": "val_direct",
+                        "range": [0, 1023],
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -478,369 +479,9 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright": {
                         "description": "indicator_brightness_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "brightness_light",
                         "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    },
-    "SL_SW_RC2": {
-        "name": "白玉/墨玉流光开关二键",
-        "category": "switch",
-        "manufacturer": "lifesmart",
-        "model": "SL_SW_RC2",
-        "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "L1": {
-                        "description": "switch_1",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "L2": {
-                        "description": "switch_2",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-            "light": {
-                "io_configs": {
-                    "dark1": {
-                        "description": "indicator_brightness_1_off",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "dark2": {
-                        "description": "indicator_brightness_2_off",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "dark3": {
-                        "description": "indicator_brightness_3_off",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "bright1": {
-                        "description": "indicator_brightness_1_on",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "bright2": {
-                        "description": "indicator_brightness_2_on",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "bright3": {
-                        "description": "indicator_brightness_3_on",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    },
-    "SL_SW_RC3": {
-        "name": "白玉/墨玉流光开关三键",
-        "category": "switch",
-        "manufacturer": "lifesmart",
-        "model": "SL_SW_RC3",
-        "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "L1": {
-                        "description": "switch_1",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "L2": {
-                        "description": "switch_2",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                    "L3": {
-                        "description": "switch_3",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-            "light": {
-                "io_configs": {
-                    "dark1": {
-                        "description": "indicator_brightness_1_off",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "dark2": {
-                        "description": "indicator_brightness_2_off",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "dark3": {
-                        "description": "indicator_brightness_3_off",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "bright1": {
-                        "description": "indicator_brightness_1_on",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "bright2": {
-                        "description": "indicator_brightness_2_on",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_color_on": {
-                                "type": CMD_TYPE_SET_RAW_ON,
-                            },
-                            "set_color_off": {
-                                "type": CMD_TYPE_SET_RAW_OFF,
-                            },
-                        },
-                    },
-                    "bright3": {
-                        "description": "indicator_brightness_3_on",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "range": [0, 1023],
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -864,7 +505,7 @@ _RAW_DEVICE_DATA = {
     },
     # 2.2.1 传统开关系列补充 (Traditional Switch Series Supplement)
     "SL_SF_RC": {
-        "name": "单火触摸开关",
+        "name": "单火触摸开关/入墙开关",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SF_RC",
@@ -923,9 +564,9 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark": {
                         "description": "indicator_brightness_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "brightness_light",
                         "conversion": "val_direct",
-                        "range": "0-1023",
+                        "range": [0, 1023],
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -945,9 +586,9 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright": {
                         "description": "indicator_brightness_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "brightness_light",
                         "conversion": "val_direct",
-                        "range": "0-1023",
+                        "range": [0, 1023],
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -970,7 +611,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SW_RC": {
-        "name": "触摸开关/极星开关(零火版)",
+        "name": "触摸开关，极星开关(零火版)",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_RC",
@@ -1029,9 +670,9 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark": {
                         "description": "indicator_brightness_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "brightness_light",
                         "conversion": "val_direct",
-                        "range": "0-1023",
+                        "range": [0, 1023],
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1051,9 +692,9 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright": {
                         "description": "indicator_brightness_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "brightness_light",
                         "conversion": "val_direct",
-                        "range": "0-1023",
+                        "range": [0, 1023],
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
