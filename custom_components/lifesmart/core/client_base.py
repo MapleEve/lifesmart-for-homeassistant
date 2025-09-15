@@ -145,9 +145,6 @@ from typing import Any
 
 from homeassistant.components.climate import HVACMode
 
-from .config.device_specs import NON_POSITIONAL_COVER_CONFIG
-from .config.device_specs import REVERSE_LIFESMART_HVAC_MODE_MAP
-from .resolver import get_device_resolver
 from .const import (
     # --- 命令类型常量 ---
     CMD_TYPE_ON,
@@ -162,6 +159,7 @@ from .platform.platform_detection import (
     is_cover,
     get_device_effective_type,
 )
+from .resolver import get_device_resolver
 
 _LOGGER = logging.getLogger(__name__)
 
