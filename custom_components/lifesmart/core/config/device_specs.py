@@ -2111,10 +2111,10 @@ _RAW_DEVICE_DATA = {
                     },
                 }
             },
-        }
+        },
     },
     "SL_SW_IF1": {
-        "name": "零火流光开关单键",
+        "name": "流光开关一键",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_IF1",
