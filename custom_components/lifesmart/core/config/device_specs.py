@@ -2410,7 +2410,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_OL_W": {
-        "name": "智慧插座开关版",
+        "name": "入墙插座",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_OL_W",
