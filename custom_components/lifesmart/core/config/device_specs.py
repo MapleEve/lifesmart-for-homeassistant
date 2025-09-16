@@ -14,6 +14,7 @@ from typing import Dict, Any
 from custom_components.lifesmart.core.const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
+    CMD_TYPE_PRESS,
     CMD_TYPE_SET_VAL,
     CMD_TYPE_SET_TEMP_DECIMAL,
     CMD_TYPE_SET_CONFIG,
@@ -3023,6 +3024,91 @@ _RAW_DEVICE_DATA = {
                     },
                 },
             },
+            "button": {
+                "io_configs": {
+                    "P1": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P5": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P6": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P7": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P8": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P9": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                },
+            },
         },
     },
     # 2.2.3.5 环境传感器 B1 系列 (Environmental Sensor B1 Series)
@@ -3053,16 +3139,17 @@ _RAW_DEVICE_DATA = {
                     },
                     "CO2": {
                         "description": "co2_concentration",
-                        "data_type": "aqi",
+                        "data_type": "co2_concentration",
                         "conversion": "v_field",
-                        "device_class": "aqi",
+                        "device_class": "carbon_dioxide",
                         "unit_of_measurement": "ppm",
                         "state_class": "measurement",
                     },
                     "TVOC": {
                         "description": "tvoc_concentration",
-                        "data_type": "aqi",
-                        "conversion": "val_div_100",
+                        "data_type": "tvoc_concentration",
+                        "conversion": "val_div_1000",
+                        "device_class": "volatile_organic_compounds",
                         "unit_of_measurement": "mg/m³",
                         "state_class": "measurement",
                     },

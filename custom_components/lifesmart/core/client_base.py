@@ -1351,16 +1351,6 @@ class LifeSmartClientBase(ABC):
                         agt, me, io_port, CMD_TYPE_ON, 1
                     )
 
-        # 回退到NON_POSITIONAL_COVER_CONFIG
-        if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = safe_get(NON_POSITIONAL_COVER_CONFIG, device_type, "open")
-            if cmd_idx is None:
-                _LOGGER.warning("设备类型 %s 缺少 'open' 配置", device_type)
-                return -1
-            return await self._async_send_single_command(
-                agt, me, cmd_idx, CMD_TYPE_ON, 1
-            )
-
         _LOGGER.warning("设备类型 %s 的 'open_cover' 操作未被支持。", device_type)
         return -1
 
