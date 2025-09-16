@@ -2525,7 +2525,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SW_ND2": {
-        "name": "恒星开关二键",
+        "name": "恒星/辰星开关二键",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_ND2",
@@ -2580,7 +2580,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SW_ND3": {
-        "name": "恒星开关三键",
+        "name": "恒星/辰星开关三键",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_ND3",
