@@ -2485,7 +2485,7 @@ _RAW_DEVICE_DATA = {
     },
     # 2.2.2 恒星/辰星/极星开关系列 (Star Series Switch)
     "SL_SW_ND1": {
-        "name": "恒星开关一键",
+        "name": "恒星/辰星开关一键",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_ND1",
