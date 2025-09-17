@@ -3186,7 +3186,7 @@ _RAW_DEVICE_DATA = {
             "sensor": {
                 "io_configs": {
                     "V": {
-                        "description": "energy",
+                        "description": "battery",
                         "data_type": "battery",
                         "conversion": "v_field",
                         "device_class": "battery",
@@ -3199,86 +3199,110 @@ _RAW_DEVICE_DATA = {
     },
     # 2.2.5 调光开关系列 (Dimmer Switch Series)
     "SL_SW_DM1": {
+        "name": "动态调光开关",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_DM1",
+        "_generation": 2,
         "versioned": True,
         "version_modes": {
             "V1": {
                 "name": "动态调光开关",
-                "light": {
-                    "P1": {
-                        "description": "switch",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness_on": {
-                                "type": CMD_TYPE_SET_VAL,
-                            },
-                            "set_brightness_off": {
-                                "type": CMD_TYPE_SET_CONFIG,
-                            },
-                        },
-                    },
-                    "P2": {
-                        "description": "indicator",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness": {
-                                "type": CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
+                "manufacturer": "lifesmart",
+                "model": "SL_SW_DM1_V1",
+                "_generation": 2,
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "switch",
+                                "data_type": "brightness_light",
+                                "conversion": "val_direct",
+                                "range": [0, 255],
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness_on": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                    "set_brightness_off": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                    },
+                                },
                             },
                         },
                     },
-                },
-                "binary_sensor": {
-                    "P3": {
-                        "description": "motion",
-                        "data_type": "motion_status",
-                        "conversion": "val_direct",
-                        "device_class": "motion",
-                    },
-                },
-                "sensor": {
-                    "P4": {
-                        "description": "illuminance",
-                        "data_type": "illuminance",
-                        "conversion": "val_direct",
-                        "device_class": "illuminance",
-                        "unit_of_measurement": "lx",
-                        "state_class": "measurement",
-                    },
-                    "P5": {
-                        "description": "dimming_control",
-                        "data_type": "dimming_config",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "set_config": {
-                                "type": CMD_TYPE_SET_CONFIG,
+                    "binary_sensor": {
+                        "io_configs": {
+                            "P3": {
+                                "description": "motion",
+                                "data_type": "motion_status",
+                                "conversion": "val_direct",
+                                "device_class": "motion",
                             },
                         },
                     },
-                    "P6": {
-                        "description": "dynamic_control",
-                        "data_type": "dynamic_config",
-                        "conversion": "val_direct",
-                        "commands": {
-                            "set_config": {
-                                "type": CMD_TYPE_SET_CONFIG,
+                    "sensor": {
+                        "io_configs": {
+                            "P4": {
+                                "description": "illuminance",
+                                "data_type": "illuminance",
+                                "conversion": "val_direct",
+                                "device_class": "illuminance",
+                                "unit_of_measurement": "lx",
+                                "state_class": "measurement",
+                            },
+                        },
+                    },
+                    "number": {
+                        "io_configs": {
+                            "P2": {
+                                "description": "indicator_brightness",
+                                "data_type": "indicator_brightness",
+                                "conversion": "val_direct",
+                                "min_value": 0,
+                                "max_value": 65535,
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
+                                    },
+                                },
+                            },
+                            "P5": {
+                                "description": "dimming_control",
+                                "data_type": "dimming_config",
+                                "conversion": "val_direct",
+                                "commands": {
+                                    "set_config": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                        "nonvolatile": 1,
+                                    },
+                                },
+                            },
+                            "P6": {
+                                "description": "dynamic_control",
+                                "data_type": "dynamic_config",
+                                "conversion": "val_direct",
+                                "commands": {
+                                    "set_config": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                        "nonvolatile": 1,
+                                    },
+                                },
                             },
                         },
                     },
@@ -3286,45 +3310,57 @@ _RAW_DEVICE_DATA = {
             },
             "V2": {
                 "name": "星玉调光开关(可控硅)",
-                "light": {
-                    "P1": {
-                        "description": "switch",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness_on": {
-                                "type": CMD_TYPE_SET_VAL,
-                            },
-                            "set_brightness_off": {
-                                "type": CMD_TYPE_SET_CONFIG,
+                "manufacturer": "lifesmart",
+                "model": "SL_SW_DM1_V2",
+                "_generation": 2,
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "switch",
+                                "data_type": "brightness_light",
+                                "conversion": "val_direct",
+                                "range": [0, 255],
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness_on": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                    "set_brightness_off": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                    },
+                                },
                             },
                         },
                     },
-                    "P2": {
-                        "description": "indicator_brightness",
-                        "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness": {
-                                "type": CMD_TYPE_SET_VAL,
+                    "number": {
+                        "io_configs": {
+                            "P2": {
+                                "description": "indicator_brightness",
+                                "data_type": "indicator_brightness",
+                                "conversion": "val_direct",
+                                "min_value": 0,
+                                "max_value": 65535,
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
+                                    },
+                                },
                             },
                         },
                     },
@@ -3333,73 +3369,92 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_LI_WW": {
+        "name": "白光智能灯泡",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_WW",
+        "_generation": 2,
         "versioned": True,
         "version_modes": {
             "V1": {
                 "name": "智能灯泡(冷暖白)",
-                "light": {
-                    "P1": {
-                        "description": "brightness",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
+                "manufacturer": "lifesmart",
+                "model": "SL_LI_WW_V1",
+                "_generation": 2,
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "brightness",
+                                "data_type": "dimmer_light",
+                                "conversion": "val_direct",
+                                "range": [0, 255],
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                },
                             },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness": {
-                                "type": CMD_TYPE_SET_VAL,
-                            },
-                        },
-                    },
-                    "P2": {
-                        "description": "color_temp",
-                        "data_type": "color_temperature",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "set_color_temp": {
-                                "type": CMD_TYPE_SET_VAL,
+                            "P2": {
+                                "description": "color_temp",
+                                "data_type": "color_temperature",
+                                "conversion": "val_direct",
+                                "range": [0, 255],
+                                "commands": {
+                                    "set_color_temp": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                },
                             },
                         },
                     },
                 },
             },
             "V2": {
-                "name": "调光调色智控器(0-10V)",
-                "light": {
-                    "P1": {
-                        "description": "brightness",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
+                "name": "调光调色智控器(O-10V)",
+                "manufacturer": "lifesmart",
+                "model": "SL_LI_WW_V2",
+                "_generation": 2,
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "brightness",
+                                "data_type": "dimmer_light",
+                                "conversion": "val_direct",
+                                "range": [0, 255],
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                },
                             },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                            "set_brightness": {
-                                "type": CMD_TYPE_SET_VAL,
-                            },
-                        },
-                    },
-                    "P2": {
-                        "description": "color_temp",
-                        "data_type": "color_temperature",
-                        "conversion": "val_direct",
-                        "range": "0-255",
-                        "commands": {
-                            "set_color_temp": {
-                                "type": CMD_TYPE_SET_VAL,
+                            "P2": {
+                                "description": "color_temp",
+                                "data_type": "color_temperature",
+                                "conversion": "val_direct",
+                                "range": [0, 255],
+                                "commands": {
+                                    "set_color_temp": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                },
                             },
                         },
                     },
