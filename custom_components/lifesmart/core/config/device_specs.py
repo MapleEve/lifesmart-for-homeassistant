@@ -4020,7 +4020,7 @@ _RAW_DEVICE_DATA = {
     },
     # 2.2.11 极星开关(120零火版) (BS Series)
     "SL_SW_BS1": {
-        "name": "极星开关(120零火版)一键",
+        "name": "极星开关（120零火版）一键",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_BS1",
@@ -4048,7 +4048,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SW_BS2": {
-        "name": "极星开关(120零火版)二键",
+        "name": "极星开关（120零火版）二键",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_BS2",
@@ -4150,7 +4150,7 @@ _RAW_DEVICE_DATA = {
     },
     # 2.2.12 星玉调光开关（可控硅）Dimming Light Switch
     "SL_SW_WW": {
-        "name": "星玉调光开关",
+        "name": "星玉调光开关（可控硅）",
         "category": "light",
         "manufacturer": "lifesmart",
         "model": "SL_SW_WW",
