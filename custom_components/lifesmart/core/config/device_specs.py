@@ -2845,7 +2845,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SPWM": {
-        "name": "PWM调光开关控制器",
+        "name": "开关智控器",
         "category": "light",
         "manufacturer": "lifesmart",
         "model": "SL_SPWM",
@@ -3386,7 +3386,7 @@ _RAW_DEVICE_DATA = {
                         "io_configs": {
                             "P1": {
                                 "description": "brightness",
-                                "data_type": "dimmer_light",
+                                "data_type": "brightness_light",
                                 "conversion": "val_direct",
                                 "range": [0, 255],
                                 "commands": {
@@ -3405,7 +3405,7 @@ _RAW_DEVICE_DATA = {
                             },
                             "P2": {
                                 "description": "color_temp",
-                                "data_type": "color_temperature",
+                                "data_type": "color_temp",
                                 "conversion": "val_direct",
                                 "range": [0, 255],
                                 "commands": {
@@ -3428,7 +3428,7 @@ _RAW_DEVICE_DATA = {
                         "io_configs": {
                             "P1": {
                                 "description": "brightness",
-                                "data_type": "dimmer_light",
+                                "data_type": "brightness_light",
                                 "conversion": "val_direct",
                                 "range": [0, 255],
                                 "commands": {
@@ -3447,7 +3447,7 @@ _RAW_DEVICE_DATA = {
                             },
                             "P2": {
                                 "description": "color_temp",
-                                "data_type": "color_temperature",
+                                "data_type": "color_temp",
                                 "conversion": "val_direct",
                                 "range": [0, 255],
                                 "commands": {
@@ -3604,7 +3604,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "P1": {
                         "description": "button",
-                        "data_type": "button_events",
+                        "data_type": "generic_value",
                         "conversion": "val_direct",
                         "device_class": "identify",
                     },
@@ -3831,7 +3831,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SW_NS3": {
-        "name": "星玉开关三键",
+        "name": "视界触摸开关三键/星玉开关",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_NS3",
