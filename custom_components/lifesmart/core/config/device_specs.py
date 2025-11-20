@@ -254,7 +254,7 @@ _RAW_DEVICE_DATA = {
                     "P4": {
                         "description": "power_threshold",
                         "data_type": "power",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "power",
                         "unit_of_measurement": "W",
                         "min": 0,
@@ -331,7 +331,7 @@ _RAW_DEVICE_DATA = {
                     "P4": {
                         "description": "power_threshold",
                         "data_type": "power_threshold",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "enable": {
                                 "type": CMD_TYPE_ON,
@@ -404,7 +404,7 @@ _RAW_DEVICE_DATA = {
                     "P4": {
                         "description": "power_threshold",
                         "data_type": "power_threshold",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "enable": {
                                 "type": CMD_TYPE_ON,
@@ -458,8 +458,8 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark": {
                         "description": "indicator_brightness_off",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "range": [0, 1023],
                         "commands": {
                             "on": {
@@ -480,8 +480,8 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright": {
                         "description": "indicator_brightness_on",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "range": [0, 1023],
                         "commands": {
                             "on": {
@@ -550,7 +550,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -571,7 +571,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -592,7 +592,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -613,7 +613,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -696,7 +696,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -717,7 +717,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -738,7 +738,7 @@ _RAW_DEVICE_DATA = {
                     "dark3": {
                         "description": "indicator_brightness_3_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -759,7 +759,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -780,7 +780,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -801,7 +801,7 @@ _RAW_DEVICE_DATA = {
                     "bright3": {
                         "description": "indicator_brightness_3_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -884,8 +884,8 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark": {
                         "description": "indicator_brightness_off",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "range": [0, 1023],
                         "commands": {
                             "on": {
@@ -906,8 +906,8 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright": {
                         "description": "indicator_brightness_on",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "range": [0, 1023],
                         "commands": {
                             "on": {
@@ -990,8 +990,8 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark": {
                         "description": "indicator_brightness_off",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "range": [0, 1023],
                         "commands": {
                             "on": {
@@ -1012,8 +1012,8 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright": {
                         "description": "indicator_brightness_on",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "range": [0, 1023],
                         "commands": {
                             "on": {
@@ -1097,7 +1097,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1118,7 +1118,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1139,7 +1139,7 @@ _RAW_DEVICE_DATA = {
                     "dark3": {
                         "description": "indicator_brightness_3_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1160,7 +1160,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1181,7 +1181,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1202,7 +1202,7 @@ _RAW_DEVICE_DATA = {
                     "bright3": {
                         "description": "indicator_brightness_3_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1285,7 +1285,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1306,7 +1306,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1327,7 +1327,7 @@ _RAW_DEVICE_DATA = {
                     "dark3": {
                         "description": "indicator_brightness_3_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1348,7 +1348,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1369,7 +1369,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1390,7 +1390,7 @@ _RAW_DEVICE_DATA = {
                     "bright3": {
                         "description": "indicator_brightness_3_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1473,7 +1473,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1494,7 +1494,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1515,7 +1515,7 @@ _RAW_DEVICE_DATA = {
                     "dark3": {
                         "description": "indicator_brightness_3_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1536,7 +1536,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1557,7 +1557,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1578,7 +1578,7 @@ _RAW_DEVICE_DATA = {
                     "bright3": {
                         "description": "indicator_brightness_3_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1646,7 +1646,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1667,7 +1667,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1688,7 +1688,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1709,7 +1709,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1777,7 +1777,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1798,7 +1798,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1819,7 +1819,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1840,7 +1840,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -1900,7 +1900,7 @@ _RAW_DEVICE_DATA = {
             "dark1": {
                 "description": "indicator_brightness_1_off",
                 "data_type": "rgbw_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -1921,7 +1921,7 @@ _RAW_DEVICE_DATA = {
             "dark2": {
                 "description": "indicator_brightness_2_off",
                 "data_type": "rgbw_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -1942,7 +1942,7 @@ _RAW_DEVICE_DATA = {
             "bright1": {
                 "description": "indicator_brightness_1_on",
                 "data_type": "rgbw_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -1963,7 +1963,7 @@ _RAW_DEVICE_DATA = {
             "bright2": {
                 "description": "indicator_brightness_2_on",
                 "data_type": "rgbw_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -2029,7 +2029,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2050,7 +2050,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2071,7 +2071,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2092,7 +2092,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2145,7 +2145,7 @@ _RAW_DEVICE_DATA = {
                     "dark": {
                         "description": "indicator_brightness_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2166,7 +2166,7 @@ _RAW_DEVICE_DATA = {
                     "bright": {
                         "description": "indicator_brightness_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2219,7 +2219,7 @@ _RAW_DEVICE_DATA = {
                     "dark": {
                         "description": "indicator_brightness_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2240,7 +2240,7 @@ _RAW_DEVICE_DATA = {
                     "bright": {
                         "description": "indicator_brightness_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2293,7 +2293,7 @@ _RAW_DEVICE_DATA = {
                     "dark": {
                         "description": "indicator_brightness_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2314,7 +2314,7 @@ _RAW_DEVICE_DATA = {
                     "bright": {
                         "description": "indicator_brightness_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2367,7 +2367,7 @@ _RAW_DEVICE_DATA = {
                     "dark": {
                         "description": "indicator_brightness_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2388,7 +2388,7 @@ _RAW_DEVICE_DATA = {
                     "bright": {
                         "description": "indicator_brightness_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2441,7 +2441,7 @@ _RAW_DEVICE_DATA = {
                     "dark": {
                         "description": "indicator_brightness_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2462,7 +2462,7 @@ _RAW_DEVICE_DATA = {
                     "bright": {
                         "description": "indicator_brightness_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -2855,7 +2855,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "P1": {
                         "description": "dimmable_light",
-                        "data_type": "brightness_light",
+                        "data_type": "generic",
                         "conversion": "type_bit_0",
                         "commands": {
                             "on": {
@@ -3178,7 +3178,7 @@ _RAW_DEVICE_DATA = {
                     "B": {
                         "description": "button",
                         "data_type": "button_state",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "identify",
                     },
                 },
@@ -3216,8 +3216,8 @@ _RAW_DEVICE_DATA = {
                         "io_configs": {
                             "P1": {
                                 "description": "switch",
-                                "data_type": "brightness_light",
-                                "conversion": "val_direct",
+                                "data_type": "generic",
+                                "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
                                     "on": {
@@ -3243,7 +3243,7 @@ _RAW_DEVICE_DATA = {
                             "P3": {
                                 "description": "motion",
                                 "data_type": "motion_status",
-                                "conversion": "val_direct",
+                                "conversion": "direct_value",
                                 "device_class": "motion",
                             },
                         },
@@ -3253,7 +3253,7 @@ _RAW_DEVICE_DATA = {
                             "P4": {
                                 "description": "illuminance",
                                 "data_type": "illuminance",
-                                "conversion": "val_direct",
+                                "conversion": "direct_value",
                                 "device_class": "illuminance",
                                 "unit_of_measurement": "lx",
                                 "state_class": "measurement",
@@ -3265,7 +3265,7 @@ _RAW_DEVICE_DATA = {
                             "P2": {
                                 "description": "indicator_brightness",
                                 "data_type": "indicator_brightness",
-                                "conversion": "val_direct",
+                                "conversion": "direct_value",
                                 "min_value": 0,
                                 "max_value": 65535,
                                 "commands": {
@@ -3285,7 +3285,7 @@ _RAW_DEVICE_DATA = {
                             "P5": {
                                 "description": "dimming_control",
                                 "data_type": "dimming_config",
-                                "conversion": "val_direct",
+                                "conversion": "direct_value",
                                 "commands": {
                                     "set_config": {
                                         "type": CMD_TYPE_SET_CONFIG,
@@ -3296,7 +3296,7 @@ _RAW_DEVICE_DATA = {
                             "P6": {
                                 "description": "dynamic_control",
                                 "data_type": "dynamic_config",
-                                "conversion": "val_direct",
+                                "conversion": "direct_value",
                                 "commands": {
                                     "set_config": {
                                         "type": CMD_TYPE_SET_CONFIG,
@@ -3318,8 +3318,8 @@ _RAW_DEVICE_DATA = {
                         "io_configs": {
                             "P1": {
                                 "description": "switch",
-                                "data_type": "brightness_light",
-                                "conversion": "val_direct",
+                                "data_type": "generic",
+                                "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
                                     "on": {
@@ -3345,7 +3345,7 @@ _RAW_DEVICE_DATA = {
                             "P2": {
                                 "description": "indicator_brightness",
                                 "data_type": "indicator_brightness",
-                                "conversion": "val_direct",
+                                "conversion": "direct_value",
                                 "min_value": 0,
                                 "max_value": 65535,
                                 "commands": {
@@ -3386,8 +3386,8 @@ _RAW_DEVICE_DATA = {
                         "io_configs": {
                             "P1": {
                                 "description": "brightness",
-                                "data_type": "brightness_light",
-                                "conversion": "val_direct",
+                                "data_type": "generic",
+                                "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
                                     "on": {
@@ -3405,8 +3405,8 @@ _RAW_DEVICE_DATA = {
                             },
                             "P2": {
                                 "description": "color_temp",
-                                "data_type": "color_temp",
-                                "conversion": "val_direct",
+                                "data_type": "generic",
+                                "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
                                     "set_color_temp": {
@@ -3428,8 +3428,8 @@ _RAW_DEVICE_DATA = {
                         "io_configs": {
                             "P1": {
                                 "description": "brightness",
-                                "data_type": "brightness_light",
-                                "conversion": "val_direct",
+                                "data_type": "generic",
+                                "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
                                     "on": {
@@ -3447,8 +3447,8 @@ _RAW_DEVICE_DATA = {
                             },
                             "P2": {
                                 "description": "color_temp",
-                                "data_type": "color_temp",
-                                "conversion": "val_direct",
+                                "data_type": "generic",
+                                "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
                                     "set_color_temp": {
@@ -3605,7 +3605,7 @@ _RAW_DEVICE_DATA = {
                     "P1": {
                         "description": "button",
                         "data_type": "generic_value",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "identify",
                     },
                 },
@@ -3615,7 +3615,7 @@ _RAW_DEVICE_DATA = {
                     "P2": {
                         "description": "battery",
                         "data_type": "battery_level",
-                        "conversion": "voltage_to_percentage",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -3656,7 +3656,7 @@ _RAW_DEVICE_DATA = {
                     "dark": {
                         "description": "indicator_brightness_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3677,7 +3677,7 @@ _RAW_DEVICE_DATA = {
                     "bright": {
                         "description": "indicator_brightness_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3745,7 +3745,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3766,7 +3766,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3787,7 +3787,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3808,7 +3808,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3891,7 +3891,7 @@ _RAW_DEVICE_DATA = {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3912,7 +3912,7 @@ _RAW_DEVICE_DATA = {
                     "dark2": {
                         "description": "indicator_brightness_2_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3933,7 +3933,7 @@ _RAW_DEVICE_DATA = {
                     "dark3": {
                         "description": "indicator_brightness_3_off",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3954,7 +3954,7 @@ _RAW_DEVICE_DATA = {
                     "bright1": {
                         "description": "indicator_brightness_1_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3975,7 +3975,7 @@ _RAW_DEVICE_DATA = {
                     "bright2": {
                         "description": "indicator_brightness_2_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -3996,7 +3996,7 @@ _RAW_DEVICE_DATA = {
                     "bright3": {
                         "description": "indicator_brightness_3_on",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -4160,8 +4160,8 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "P1": {
                         "description": "brightness",
-                        "data_type": "brightness",
-                        "conversion": "val_to_brightness",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -4178,8 +4178,8 @@ _RAW_DEVICE_DATA = {
                     },
                     "P2": {
                         "description": "color_temp",
-                        "data_type": "color_temp",
-                        "conversion": "val_to_color_temp",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "commands": {
                             "set_color_temp": {
                                 "type": CMD_TYPE_SET_VAL,
@@ -4192,107 +4192,117 @@ _RAW_DEVICE_DATA = {
     },
     # 2.2.14 星玉情景面板（Nature Switch Scene Panel)
     "SL_SW_NS6": {
+        "_generation": 2,
+        "manufacturer": "lifesmart",
         "name": "星玉情景面板",
-        "switch": {
-            "P1": {
-                "description": "scene_switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "model": "SL_SW_NS6",
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "scene_switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "scene_switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "scene_switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "scene_switch_4",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P5": {
+                        "description": "scene_switch_5",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P6": {
+                        "description": "scene_switch_6",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
-            "P2": {
-                "description": "scene_switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P3": {
-                "description": "scene_switch_3",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P4": {
-                "description": "scene_switch_4",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P5": {
-                "description": "scene_switch_5",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "P6": {
-                "description": "scene_switch_6",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-        },
-        "sensor": {
-            "P7": {
-                "description": "turn_on_controller_config",
-                "data_type": "scene_config",
-                "conversion": "val_direct",
-                "commands": {
-                    "config": {
-                        "type": CMD_TYPE_SET_RAW_ON,
+            "number": {
+                "io_configs": {
+                    "P7": {
+                        "description": "controller_config",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_value": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                        },
                     },
                 },
             },
@@ -4349,8 +4359,8 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark": {
                         "description": "turn_off_indicator_brightness",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "range": "0~1023",
                         "commands": {
                             "on": {
@@ -4371,8 +4381,8 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright": {
                         "description": "turn_on_indicator_brightness",
-                        "data_type": "brightness_light",
-                        "conversion": "val_direct",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
                         "range": "0~1023",
                         "commands": {
                             "on": {
@@ -4514,7 +4524,7 @@ _RAW_DEVICE_DATA = {
                     "P4": {
                         "description": "open_panel_indicator_color",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -4535,7 +4545,7 @@ _RAW_DEVICE_DATA = {
                     "P5": {
                         "description": "stop_indicator_color",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -4556,7 +4566,7 @@ _RAW_DEVICE_DATA = {
                     "P6": {
                         "description": "close_panel_indicator_color",
                         "data_type": "single_io_rgbw_light",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -4638,12 +4648,12 @@ _RAW_DEVICE_DATA = {
             "P1": {
                 "description": "curtain",
                 "data_type": "position_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
             },
             "P2": {
                 "description": "curtain",
                 "data_type": "position_control",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "open": {
                         "type": CMD_TYPE_SET_VAL,
@@ -4736,7 +4746,7 @@ _RAW_DEVICE_DATA = {
             "RGBW": {
                 "description": "color",
                 "data_type": "rgbw_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -4757,7 +4767,7 @@ _RAW_DEVICE_DATA = {
             "DYN": {
                 "description": "color",
                 "data_type": "dynamic_effect",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "enable": {
                         "type": CMD_TYPE_ON,
@@ -4783,7 +4793,7 @@ _RAW_DEVICE_DATA = {
             "RGBW": {
                 "description": "color",
                 "data_type": "rgbw_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -4804,7 +4814,7 @@ _RAW_DEVICE_DATA = {
             "DYN": {
                 "description": "color",
                 "data_type": "dynamic_effect",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "enable": {
                         "type": CMD_TYPE_ON,
@@ -4830,7 +4840,7 @@ _RAW_DEVICE_DATA = {
             "RGB": {
                 "description": "color",
                 "data_type": "rgb_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "range": "0x00000000-0xFFFFFFFF",
                 "commands": {
                     "on": {
@@ -4857,8 +4867,8 @@ _RAW_DEVICE_DATA = {
         "light": {
             "P1": {
                 "description": "brightness",
-                "data_type": "brightness_light",
-                "conversion": "val_direct",
+                "data_type": "generic",
+                "conversion": "direct_value",
                 "range": "0-100",
                 "commands": {
                     "on": {
@@ -4877,7 +4887,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "color",
                 "data_type": "quantum_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "range": "0x00000000-0xFFFFFFFF",
                 "commands": {
                     "set_color": {
@@ -4893,8 +4903,8 @@ _RAW_DEVICE_DATA = {
         "light": {
             "P1": {
                 "description": "switch",
-                "data_type": "brightness_light",
-                "conversion": "val_direct",
+                "data_type": "generic",
+                "conversion": "direct_value",
                 "range": "0-255",
                 "commands": {
                     "on": {
@@ -4915,7 +4925,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "motion",
                 "data_type": "motion_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "motion",
             },
         },
@@ -4937,7 +4947,7 @@ _RAW_DEVICE_DATA = {
             "P1": {
                 "description": "turn_on_switch",
                 "data_type": "rgbw_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "range": "0x00000000-0xFFFFFFFF",
                 "commands": {
                     "on": {
@@ -4969,7 +4979,7 @@ _RAW_DEVICE_DATA = {
             "P3": {
                 "description": "electric",
                 "data_type": "charging_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "battery",
                 "unit_of_measurement": "V",
                 "state_class": "measurement",
@@ -4991,7 +5001,7 @@ _RAW_DEVICE_DATA = {
             "RGBW": {
                 "description": "color",
                 "data_type": "rgbw_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -5012,7 +5022,7 @@ _RAW_DEVICE_DATA = {
             "DYN": {
                 "description": "color",
                 "data_type": "dynamic_effect",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "enable": {
                         "type": CMD_TYPE_ON,
@@ -5038,7 +5048,7 @@ _RAW_DEVICE_DATA = {
             "RGB": {
                 "description": "color",
                 "data_type": "rgb_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "range": "0x00000000-0xFFFFFFFF",
                 "commands": {
                     "on": {
@@ -5065,7 +5075,7 @@ _RAW_DEVICE_DATA = {
             "RGB": {
                 "description": "color",
                 "data_type": "rgb_light",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "range": "0x00000000-0xFFFFFFFF",
                 "commands": {
                     "on": {
@@ -5091,8 +5101,8 @@ _RAW_DEVICE_DATA = {
         "light": {
             "P1": {
                 "description": "brightness",
-                "data_type": "brightness_light",
-                "conversion": "val_direct",
+                "data_type": "generic",
+                "conversion": "direct_value",
                 "range": "0-255",
                 "commands": {
                     "on": {
@@ -5111,7 +5121,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "color_temp",
                 "data_type": "color_temperature",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "range": "0-255",
                 "commands": {
                     "set_color_temp": {
@@ -5122,7 +5132,7 @@ _RAW_DEVICE_DATA = {
             "P3": {
                 "description": "brightness",
                 "data_type": "nightlight_brightness",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "range": "0,63,127,195,255",
                 "commands": {
                     "set_brightness": {
@@ -5137,8 +5147,8 @@ _RAW_DEVICE_DATA = {
         "light": {
             "P1": {
                 "description": "brightness",
-                "data_type": "brightness_light",
-                "conversion": "val_direct",
+                "data_type": "generic",
+                "conversion": "direct_value",
                 "range": "0-255",
                 "commands": {
                     "on": {
@@ -5157,7 +5167,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "color_temp",
                 "data_type": "color_temperature",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "range": "0-255",
                 "commands": {
                     "set_color_temp": {
@@ -5168,7 +5178,7 @@ _RAW_DEVICE_DATA = {
             "P3": {
                 "description": "brightness",
                 "data_type": "nightlight_brightness",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "range": "0,63,127,195,255",
                 "commands": {
                     "set_brightness": {
@@ -5220,7 +5230,7 @@ _RAW_DEVICE_DATA = {
                     "G": {
                         "description": "current_state",
                         "data_type": "door_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "door",
                     },
                 },
@@ -5257,13 +5267,13 @@ _RAW_DEVICE_DATA = {
                     "B": {
                         "description": "button",
                         "data_type": "button_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "moving",
                     },
                     "AXS": {
                         "description": "vibration_status",
                         "data_type": "vibration_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "vibration",
                     },
                 },
@@ -5321,7 +5331,7 @@ _RAW_DEVICE_DATA = {
                     "M": {
                         "description": "motion",
                         "data_type": "motion_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "motion",
                     },
                 },
@@ -5352,7 +5362,7 @@ _RAW_DEVICE_DATA = {
                     "M": {
                         "description": "motion",
                         "data_type": "motion_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "motion",
                     },
                 },
@@ -5383,7 +5393,7 @@ _RAW_DEVICE_DATA = {
                     "P1": {
                         "description": "motion",
                         "data_type": "motion_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "motion",
                     },
                 },
@@ -5401,7 +5411,7 @@ _RAW_DEVICE_DATA = {
                     "P4": {
                         "description": "electric",
                         "data_type": "voltage",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "voltage",
                         "unit_of_measurement": "V",
                         "state_class": "measurement",
@@ -5416,7 +5426,7 @@ _RAW_DEVICE_DATA = {
             "P1": {
                 "description": "motion",
                 "data_type": "motion_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "motion",
             },
         },
@@ -5551,7 +5561,7 @@ _RAW_DEVICE_DATA = {
                     "WA": {
                         "description": "electric",
                         "data_type": "conductivity",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "moisture",
                         "unit_of_measurement": "µS/cm",
                         "state_class": "measurement",
@@ -5584,7 +5594,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "concentration",
                 "data_type": "threshold_setting",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_sensitivity": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -5614,7 +5624,7 @@ _RAW_DEVICE_DATA = {
             "P1": {
                 "description": "concentration",
                 "data_type": "燃气_concentration",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "gas",
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
@@ -5624,7 +5634,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "concentration",
                 "data_type": "threshold_setting",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_sensitivity": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -5694,7 +5704,7 @@ _RAW_DEVICE_DATA = {
             "P6": {
                 "description": "electric",
                 "data_type": "voltage",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "voltage",
                 "unit_of_measurement": "V",
                 "state_class": "measurement",
@@ -5707,7 +5717,7 @@ _RAW_DEVICE_DATA = {
             "EPA": {
                 "description": "power",
                 "data_type": "power",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "power",
                 "unit_of_measurement": "W",
                 "state_class": "measurement",
@@ -5720,7 +5730,7 @@ _RAW_DEVICE_DATA = {
             "P1": {
                 "description": "sl_p_a",
                 "data_type": "smoke_alarm",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "smoke",
             },
         },
@@ -5773,7 +5783,7 @@ _RAW_DEVICE_DATA = {
             "P5": {
                 "description": "electric",
                 "data_type": "voltage",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "voltage",
                 "unit_of_measurement": "V",
                 "state_class": "measurement",
@@ -5786,7 +5796,7 @@ _RAW_DEVICE_DATA = {
             "P1": {
                 "description": "detection",
                 "data_type": "motion_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "motion",
             },
         },
@@ -5794,7 +5804,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "detection",
                 "data_type": "radar_config",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_config": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -5917,7 +5927,7 @@ _RAW_DEVICE_DATA = {
             "P1": {
                 "description": "setting",
                 "data_type": "alarm_config",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -5982,7 +5992,7 @@ _RAW_DEVICE_DATA = {
             "P1": {
                 "description": "sl_sc_cn",
                 "data_type": "noise_level",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "sound_pressure",
                 "unit_of_measurement": "dB",
                 "state_class": "measurement",
@@ -5990,7 +6000,7 @@ _RAW_DEVICE_DATA = {
             "P4": {
                 "description": "sl_sc_cn",
                 "data_type": "noise_calibration",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "sound_pressure",
                 "unit_of_measurement": "dB",
                 "state_class": "measurement",
@@ -6000,7 +6010,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "setting",
                 "data_type": "threshold_config",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_threshold": {
                         "type": CMD_TYPE_SET_RAW_ON,
@@ -6010,7 +6020,7 @@ _RAW_DEVICE_DATA = {
             "P3": {
                 "description": "setting",
                 "data_type": "alarm_config",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -6052,7 +6062,7 @@ _RAW_DEVICE_DATA = {
             "RM": {
                 "description": "mode",
                 "data_type": "run_mode",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_mode": {
                         "type": CMD_TYPE_SET_VAL,
@@ -6088,13 +6098,13 @@ _RAW_DEVICE_DATA = {
             "FL": {
                 "description": "fl",
                 "data_type": "filter_life",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "unit_of_measurement": "h",
             },
             "UV": {
                 "description": "fl",
                 "data_type": "uv_index",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
             },
         },
     },
@@ -6269,7 +6279,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -6277,22 +6287,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTOP": {
                         "description": "operation_record",
                         "data_type": "operation_record",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -6447,7 +6457,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -6455,22 +6465,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTOP": {
                         "description": "operation_record",
                         "data_type": "operation_record",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -6625,7 +6635,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -6633,22 +6643,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTOP": {
                         "description": "operation_record",
                         "data_type": "operation_record",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -6803,7 +6813,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -6811,22 +6821,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTOP": {
                         "description": "operation_record",
                         "data_type": "operation_record",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -6981,7 +6991,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -6989,22 +6999,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTOP": {
                         "description": "operation_record",
                         "data_type": "operation_record",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -7159,7 +7169,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -7167,22 +7177,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTOP": {
                         "description": "operation_record",
                         "data_type": "operation_record",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -7337,7 +7347,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -7345,22 +7355,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTOP": {
                         "description": "operation_record",
                         "data_type": "operation_record",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -7515,7 +7525,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -7523,22 +7533,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTOP": {
                         "description": "operation_record",
                         "data_type": "operation_record",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -7694,7 +7704,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -7702,22 +7712,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTBEL": {
                         "description": "evtbel",
                         "data_type": "doorbell_message",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -7872,7 +7882,7 @@ _RAW_DEVICE_DATA = {
                     "BAT": {
                         "description": "energy",
                         "data_type": "battery",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "battery",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -7880,22 +7890,22 @@ _RAW_DEVICE_DATA = {
                     "ALM": {
                         "description": "alarm",
                         "data_type": "alarm_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTLO": {
                         "description": "real_time_unlock",
                         "data_type": "lock_event",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "HISLK": {
                         "description": "last_unlock_info",
                         "data_type": "recent_unlock",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "EVTBEL": {
                         "description": "evtbel",
                         "data_type": "doorbell_message",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 },
             },
@@ -7931,7 +7941,7 @@ _RAW_DEVICE_DATA = {
                     "MODE": {
                         "description": "mode",
                         "data_type": "hvac_mode",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "set_mode": {
                                 "type": "CMD_TYPE_SET_CONFIG",
@@ -7941,7 +7951,7 @@ _RAW_DEVICE_DATA = {
                     "F": {
                         "description": "fan_speed",
                         "data_type": "fan_speed",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "set_fan_speed": {
                                 "type": "CMD_TYPE_SET_CONFIG",
@@ -8054,7 +8064,7 @@ _RAW_DEVICE_DATA = {
                     "P1": {
                         "description": "sl_tr_acipm",
                         "data_type": "hvac_mode",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -8072,7 +8082,7 @@ _RAW_DEVICE_DATA = {
                     "P2": {
                         "description": "fan_speed",
                         "data_type": "fan_speed",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "set_config": {
                                 "type": CMD_TYPE_SET_CONFIG,
@@ -8134,7 +8144,7 @@ _RAW_DEVICE_DATA = {
             "P1": {
                 "description": "sl_cp_dn",
                 "data_type": "hvac_mode",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "on": {
                         "type": CMD_TYPE_ON,
@@ -8214,7 +8224,7 @@ _RAW_DEVICE_DATA = {
                     "P1": {
                         "description": "sl_cp_air",
                         "data_type": "hvac_mode",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": CMD_TYPE_ON,
@@ -8258,7 +8268,7 @@ _RAW_DEVICE_DATA = {
                     "P3": {
                         "description": "fan_speed",
                         "data_type": "fan_speed",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                     "P5": {
                         "description": "temperature",
@@ -8293,7 +8303,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "mode",
                 "data_type": "hvac_mode",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_config": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -8315,7 +8325,7 @@ _RAW_DEVICE_DATA = {
             "P4": {
                 "description": "fan_speed",
                 "data_type": "fan_speed",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_fan_speed": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -8380,7 +8390,7 @@ _RAW_DEVICE_DATA = {
             "P5": {
                 "description": "alarm",
                 "data_type": "alarm_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
             },
             "P6": {
                 "description": "energy",
@@ -8395,7 +8405,7 @@ _RAW_DEVICE_DATA = {
             "P5": {
                 "description": "status",
                 "data_type": "alarm_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "problem",
             },
         },
@@ -8421,7 +8431,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "mode",
                 "data_type": "config_bitmask",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_config": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -8710,7 +8720,7 @@ _RAW_DEVICE_DATA = {
                     "P1": {
                         "description": "control",
                         "data_type": "control_config",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "set_config": {
                                 "type": CMD_TYPE_SET_CONFIG,
@@ -9007,7 +9017,7 @@ _RAW_DEVICE_DATA = {
                     "P1": {
                         "description": "control",
                         "data_type": "control_config",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "set_config": {
                                 "type": CMD_TYPE_SET_CONFIG,
@@ -9046,7 +9056,7 @@ _RAW_DEVICE_DATA = {
             "BAT": {
                 "description": "energy",
                 "data_type": "battery",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
@@ -9054,17 +9064,17 @@ _RAW_DEVICE_DATA = {
             "ALM": {
                 "description": "alarm",
                 "data_type": "alarm_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
             },
             "EVTLO": {
                 "description": "real_time_unlock",
                 "data_type": "lock_event",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
             },
             "HISLK": {
                 "description": "last_unlock_info",
                 "data_type": "recent_unlock",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
             },
         },
     },
@@ -9159,7 +9169,7 @@ _RAW_DEVICE_DATA = {
             "MODE": {
                 "description": "mode",
                 "data_type": "hvac_mode",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_mode": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -9169,7 +9179,7 @@ _RAW_DEVICE_DATA = {
             "F": {
                 "description": "fan_speed",
                 "data_type": "fan_speed",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_fan_speed": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -9224,7 +9234,7 @@ _RAW_DEVICE_DATA = {
             "MODE": {
                 "description": "mode",
                 "data_type": "hvac_mode",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_mode": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -9234,7 +9244,7 @@ _RAW_DEVICE_DATA = {
             "F": {
                 "description": "fan_speed",
                 "data_type": "fan_speed",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_fan_speed": {
                         "type": CMD_TYPE_SET_CONFIG,
@@ -9289,7 +9299,7 @@ _RAW_DEVICE_DATA = {
             "MODE": {
                 "description": "mode",
                 "data_type": "mode_config",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "set_mode": {
                         "type": CMD_TYPE_SET_VAL,
@@ -9301,12 +9311,12 @@ _RAW_DEVICE_DATA = {
             "F1": {
                 "description": "fan_speed",
                 "data_type": "fan_speed",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
             },
             "F2": {
                 "description": "fan_speed",
                 "data_type": "fan_speed",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
             },
             "T": {
                 "description": "ambient_temperature",
@@ -9583,7 +9593,7 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "motion",
                 "data_type": "motion_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "motion",
             },
         },
@@ -9612,7 +9622,7 @@ _RAW_DEVICE_DATA = {
             "KY": {
                 "description": "button",
                 "data_type": "keypad_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "moving",
             },
             "TR": {
@@ -9682,7 +9692,7 @@ _RAW_DEVICE_DATA = {
             "M": {
                 "description": "motion",
                 "data_type": "motion_detection",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "device_class": "motion",
             },
         },
@@ -9699,7 +9709,7 @@ _RAW_DEVICE_DATA = {
             "CFST": {
                 "description": "status",
                 "data_type": "camera_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "availability_condition": "dev_rt == 'LSCAM:LSCAMV1'",
             },
         },
@@ -9728,12 +9738,12 @@ _RAW_DEVICE_DATA = {
             "P2": {
                 "description": "status",
                 "data_type": "garage_door_status",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
             },
             "P3": {
                 "description": "control",
                 "data_type": "garage_door_control",
-                "conversion": "val_direct",
+                "conversion": "direct_value",
                 "commands": {
                     "open": {
                         "type": CMD_TYPE_SET_VAL,
@@ -9839,12 +9849,12 @@ _RAW_DEVICE_DATA = {
                 "P5": {
                     "description": "switch",
                     "data_type": "device_type",
-                    "conversion": "val_direct",
+                    "conversion": "direct_value",
                 },
                 "P6": {
                     "description": "switch",
                     "data_type": "config_bitmask",
-                    "conversion": "val_direct",
+                    "conversion": "direct_value",
                     "commands": {
                         "set_config": {
                             "type": CMD_TYPE_SET_RAW_ON,
@@ -9854,7 +9864,7 @@ _RAW_DEVICE_DATA = {
                 "P7": {
                     "description": "mode",
                     "data_type": "hvac_mode",
-                    "conversion": "val_direct",
+                    "conversion": "direct_value",
                     "commands": {
                         "set_config": {
                             "type": CMD_TYPE_SET_CONFIG,
@@ -9876,7 +9886,7 @@ _RAW_DEVICE_DATA = {
                 "P9": {
                     "description": "target_fan_speed",
                     "data_type": "fan_speed",
-                    "conversion": "val_direct",
+                    "conversion": "direct_value",
                     "commands": {
                         "set_config": {
                             "type": CMD_TYPE_SET_CONFIG,
@@ -9892,20 +9902,20 @@ _RAW_DEVICE_DATA = {
                 "P10": {
                     "description": "fan_speed",
                     "data_type": "fan_speed",
-                    "conversion": "val_direct",
+                    "conversion": "direct_value",
                 },
             },
             "binary_sensor": {
                 "P2": {
                     "description": "valve",
                     "data_type": "valve_status",
-                    "conversion": "val_direct",
+                    "conversion": "direct_value",
                     "device_class": "opening",
                 },
                 "P3": {
                     "description": "valve",
                     "data_type": "valve_status",
-                    "conversion": "val_direct",
+                    "conversion": "direct_value",
                     "device_class": "opening",
                 },
             },
@@ -9926,7 +9936,7 @@ _RAW_DEVICE_DATA = {
                     "P1": {
                         "description": "switch",
                         "data_type": "binary_switch",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "on": {
                                 "type": "CMD_TYPE_ON",
@@ -9941,7 +9951,7 @@ _RAW_DEVICE_DATA = {
                     "P7": {
                         "description": "mode",
                         "data_type": "hvac_mode",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "set_config": {
                                 "type": "CMD_TYPE_SET_VAL",
@@ -9962,7 +9972,7 @@ _RAW_DEVICE_DATA = {
                     "P9": {
                         "description": "target_fan_speed",
                         "data_type": "fan_speed",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "commands": {
                             "set_config": {
                                 "type": "CMD_TYPE_SET_CONFIG",
@@ -9989,7 +9999,7 @@ _RAW_DEVICE_DATA = {
                     "P10": {
                         "description": "fan_speed",
                         "data_type": "fan_speed",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                     },
                 }
             },
@@ -9998,13 +10008,13 @@ _RAW_DEVICE_DATA = {
                     "P2": {
                         "description": "valve",
                         "data_type": "valve_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "opening",
                     },
                     "P3": {
                         "description": "valve",
                         "data_type": "valve_status",
-                        "conversion": "val_direct",
+                        "conversion": "direct_value",
                         "device_class": "opening",
                     },
                 }
