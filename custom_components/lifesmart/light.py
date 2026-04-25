@@ -1777,7 +1777,15 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
             color_data = process_io_value(processor_config, raw_data)
 
             if color_data and isinstance(color_data, dict):
-                is_dynamic = color_data.get("is_dynamic", False)
+                # SL_SC_RGB uses the 2.4.1 RGB protocol where White >= 128
+                # indicates dynamic mode. The SPOT RGB devices that share this
+                # entity class use the 2.5 protocol where White > 0 is dynamic.
+                white_byte = color_data.get("white", 0)
+                is_dynamic = (
+                    white_byte >= 128
+                    if self.devtype == "SL_SC_RGB"
+                    else color_data.get("is_dynamic", False)
+                )
                 if is_dynamic:
                     self._attr_effect = next(
                         (k for k, v in DYN_EFFECT_MAP.items() if v == val), None
@@ -2021,6 +2029,24 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
         super().__init__(raw_device, client, entry_id, io_key)
         self._attr_supported_features = LightEntityFeature.EFFECT
 
+    def _encode_rgbw_value(self, rgbw_color: tuple[int, int, int, int]) -> int:
+        """Encode HA RGBW color to the device RGBW integer value."""
+        r, g, b, w = rgbw_color
+        # SL_LI_UG1 documents White/DYN byte 0-100 as white brightness and
+        # >=128 as dynamic mode. HA uses 0-255 for RGBW white intensity.
+        if self.devtype == "SL_LI_UG1":
+            w = round(w / 255 * 100)
+        return (w << 24) | (r << 16) | (g << 8) | b
+
+    def _default_garden_light_value(self) -> int:
+        """Return a doc-valid SL_LI_UG1 color value for plain on/off commands."""
+        if self._attr_effect in DYN_EFFECT_MAP:
+            return DYN_EFFECT_MAP[self._attr_effect]
+        if self._attr_rgbw_color:
+            return self._encode_rgbw_value(self._attr_rgbw_color)
+        # Official doc defines White 100 as the brightest white value.
+        return 100 << 24
+
     @callback
     def _initialize_state(self) -> None:
         """初始化单IO RGBW灯状态 - 使用新的逻辑处理器系统。"""
@@ -2087,8 +2113,7 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
             # 亮度乐观更新为全亮。
             self._attr_brightness = 255
 
-            r, g, b, w = self._attr_rgbw_color
-            color_val = (w << 24) | (r << 16) | (g << 8) | b
+            color_val = self._encode_rgbw_value(self._attr_rgbw_color)
             cmd_type, cmd_val = CMD_TYPE_SET_RAW_ON, color_val
 
         # 如果只调节亮度，这通常意味着用户想要白光
@@ -2097,15 +2122,19 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
             brightness = kwargs[ATTR_BRIGHTNESS]
             self._attr_brightness = brightness
 
-            # 将亮度转换为白光值 (W通道)
-            # 注意：协议中没有明确定义如何用亮度设置白光，
-            # 这里我们假设将亮度值编码到W通道，RGB为0。
-            w = brightness
+            # 将亮度转换为白光值 (W通道)。SL_LI_UG1官方白光范围是0-100；
+            # 其它共享单IO RGBW设备保留既有0-255编码行为。
+            w = round(brightness / 255 * 100) if self.devtype == "SL_LI_UG1" else brightness
             r, g, b = 0, 0, 0
-            self._attr_rgbw_color = (r, g, b, w)
+            self._attr_rgbw_color = (r, g, b, brightness)
 
             color_val = (w << 24) | (r << 16) | (g << 8) | b
             cmd_type, cmd_val = CMD_TYPE_SET_RAW_ON, color_val
+
+        elif self.devtype == "SL_LI_UG1":
+            # Official SL_LI_UG1 P1 command table only defines setting color or
+            # dynamic value with type=0xff/0xfe; it does not define bare 0x81.
+            cmd_type, cmd_val = CMD_TYPE_SET_RAW_ON, self._default_garden_light_value()
 
         self.async_write_ha_state()
 
@@ -2143,10 +2172,19 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
         try:
             # 使用当前的颜色值来关闭灯光，这样可以保留颜色设置
             if self._attr_rgbw_color:
-                r, g, b, w = self._attr_rgbw_color
-                color_val = (w << 24) | (r << 16) | (g << 8) | b
+                color_val = self._encode_rgbw_value(self._attr_rgbw_color)
                 await self._client.async_send_single_command(
                     self.agt, self.me, self._sub_key, CMD_TYPE_SET_RAW_OFF, color_val
+                )
+            elif self.devtype == "SL_LI_UG1":
+                # Official SL_LI_UG1 P1 command table only defines off while
+                # setting color/dynamic value with type=0xfe; no bare 0x80.
+                await self._client.async_send_single_command(
+                    self.agt,
+                    self.me,
+                    self._sub_key,
+                    CMD_TYPE_SET_RAW_OFF,
+                    self._default_garden_light_value(),
                 )
             else:
                 # 如果没有颜色值，使用标准关闭命令

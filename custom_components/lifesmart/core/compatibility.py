@@ -301,8 +301,21 @@ def check_feature_gate(raw_device: dict, feature_name: str) -> bool:
         resolver = get_device_resolver()
         result = resolver.resolve_device_config(raw_device)
 
-        if result.success and result.raw_device_spec:
-            generation = result.raw_device_spec.get("_generation", 1)
+        if result.success and result.device_config:
+            generation = 1
+            source_mapping = result.device_config.source_mapping or {}
+            if isinstance(source_mapping, dict):
+                generation = source_mapping.get("_generation", generation)
+
+            if generation == 1:
+                static_configs = getattr(resolver, "_static_configs", {}) or {}
+                device_type = result.device_config.device_type or raw_device.get("devtype")
+                generation = (
+                    static_configs.get(device_type, {})
+                    .get("_features", {})
+                    .get("generation", generation)
+                )
+
             return generation >= 2
 
         # 默认为legacy设备

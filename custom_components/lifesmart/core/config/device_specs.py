@@ -1864,122 +1864,132 @@ _RAW_DEVICE_DATA = {
     },
     "SL_SW_CP2": {
         "name": "橙朴开关二键",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_CP2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
+                }
             },
-            "L2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                },
-            },
-        },
-        "light": {
-            "dark1": {
-                "description": "indicator_brightness_1_off",
-                "data_type": "rgbw_light",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "dark2": {
-                "description": "indicator_brightness_2_off",
-                "data_type": "rgbw_light",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright1": {
-                "description": "indicator_brightness_1_on",
-                "data_type": "rgbw_light",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "bright2": {
-                "description": "indicator_brightness_2_on",
-                "data_type": "rgbw_light",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
+                }
             },
         },
     },
@@ -4311,11 +4321,16 @@ _RAW_DEVICE_DATA = {
     # ================= 2.3 窗帘控制系列 (Curtain Controller) =================
     # 2.3.1 窗帘控制开关
     "SL_SW_WIN": {
-        "name": "窗帘控制开关",
+        "name": "窗帘控制器",
         "category": "cover",
         "manufacturer": "lifesmart",
         "model": "SL_SW_WIN",
         "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        "cover_features": {
+            "position_feedback": False,
+            "optimistic_mode": True,
+            "control_mapping": {"open": "OP", "close": "CL", "stop": "ST"},
+        },
         # 基础平台配置
         "platforms": {
             "cover": {
@@ -4326,7 +4341,7 @@ _RAW_DEVICE_DATA = {
                         "conversion": "type_bit_0",
                         "commands": {
                             "open": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             }
                         },
@@ -4337,7 +4352,7 @@ _RAW_DEVICE_DATA = {
                         "conversion": "type_bit_0",
                         "commands": {
                             "close": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             }
                         },
@@ -4348,7 +4363,7 @@ _RAW_DEVICE_DATA = {
                         "conversion": "type_bit_0",
                         "commands": {
                             "stop": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             }
                         },
@@ -4361,21 +4376,21 @@ _RAW_DEVICE_DATA = {
                         "description": "turn_off_indicator_brightness",
                         "data_type": "generic",
                         "conversion": "direct_value",
-                        "range": "0~1023",
+                        "range": [0, 1023],
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_OFF",
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
                             "set_brightness_on": {
-                                "type": "CMD_TYPE_SET_RAW_ON",
+                                "type": CMD_TYPE_SET_RAW_ON,
                             },
                             "set_brightness_off": {
-                                "type": "CMD_TYPE_SET_RAW_OFF",
+                                "type": CMD_TYPE_SET_RAW_OFF,
                             },
                         },
                     },
@@ -4383,21 +4398,21 @@ _RAW_DEVICE_DATA = {
                         "description": "turn_on_indicator_brightness",
                         "data_type": "generic",
                         "conversion": "direct_value",
-                        "range": "0~1023",
+                        "range": [0, 1023],
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_OFF",
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
                             "set_brightness_on": {
-                                "type": "CMD_TYPE_SET_RAW_ON",
+                                "type": CMD_TYPE_SET_RAW_ON,
                             },
                             "set_brightness_off": {
-                                "type": "CMD_TYPE_SET_RAW_OFF",
+                                "type": CMD_TYPE_SET_RAW_OFF,
                             },
                         },
                     },
@@ -4423,17 +4438,17 @@ _RAW_DEVICE_DATA = {
             "commands": {
                 "open": {
                     "io_port": "OP",
-                    "command_type": "CMD_TYPE_ON",
+                    "command_type": CMD_TYPE_ON,
                     "value": 1,
                 },
                 "close": {
                     "io_port": "CL",
-                    "command_type": "CMD_TYPE_ON",
+                    "command_type": CMD_TYPE_ON,
                     "value": 1,
                 },
                 "stop": {
                     "io_port": "ST",
-                    "command_type": "CMD_TYPE_ON",
+                    "command_type": CMD_TYPE_ON,
                     "value": 1,
                 },
             },
@@ -4444,29 +4459,6 @@ _RAW_DEVICE_DATA = {
             "basic_positioning",  # 基础定位（开/关/停）
             "no_position_feedback",  # 明确标识：无位置反馈
         ],
-        # Home Assistant实体配置
-        "entity_config": {
-            "unique_id_template": "lifesmart_{device_id}_cover",
-            "name_template": "{device_name} 窗帘",
-            "icon": "mdi:curtains",
-            "device_class": "curtain",
-        },
-        # 翻译键支持
-        "translation_keys": {
-            "cover_open": "打开窗帘",
-            "cover_close": "关闭窗帘",
-            "cover_stop": "停止窗帘",
-            "cover_state_opening": "正在打开",
-            "cover_state_closing": "正在关闭",
-            "cover_state_stopped": "已停止",
-        },
-        # 设备特定行为配置
-        "behavior_config": {
-            "state_tracking": "optimistic",  # 乐观状态跟踪
-            "command_delay": 0.5,  # 命令间延迟（秒）
-            "state_timeout": 30,  # 状态超时（秒）
-            "auto_assume_state": False,  # 不自动假设状态
-        },
     },
     "SL_CN_IF": {
         "name": "流光窗帘控制器",
@@ -4478,7 +4470,7 @@ _RAW_DEVICE_DATA = {
         "cover_features": {
             "position_feedback": False,  # 无位置反馈
             "optimistic_mode": True,  # 乐观判断状态
-            "control_mapping": {"open": "P1", "close": "P2", "stop": "P3"},
+            "control_mapping": {"open": "P1", "close": "P3", "stop": "P2"},
         },
         # 基础平台配置
         "platforms": {
@@ -4496,22 +4488,22 @@ _RAW_DEVICE_DATA = {
                         },
                     },
                     "P2": {
-                        "description": "close_curtain",
+                        "description": "stop",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
-                            "on": {
+                            "stop": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
                         },
                     },
                     "P3": {
-                        "description": "stop",
+                        "description": "close_curtain",
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
-                            "on": {
+                            "close": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
@@ -4589,7 +4581,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_CN_FE": {
-        "name": "塞纳三键窗帘",
+        "name": "格致/塞纳三键窗帘",
         "category": "cover",
         "manufacturer": "lifesmart",
         "model": "SL_CN_FE",
@@ -4609,7 +4601,7 @@ _RAW_DEVICE_DATA = {
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
-                            "on": {
+                            "open": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
@@ -4620,7 +4612,7 @@ _RAW_DEVICE_DATA = {
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
-                            "on": {
+                            "stop": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
@@ -4631,7 +4623,7 @@ _RAW_DEVICE_DATA = {
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
-                            "on": {
+                            "close": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
@@ -4643,35 +4635,53 @@ _RAW_DEVICE_DATA = {
     },
     # 2.3.2 DOOYA窗帘电机
     "SL_DOOYA": {
-        "name": "DOOYA窗帘电机",
-        "cover": {
-            "P1": {
-                "description": "curtain",
-                "data_type": "position_status",
-                "conversion": "direct_value",
-            },
-            "P2": {
-                "description": "curtain",
-                "data_type": "position_control",
-                "conversion": "direct_value",
-                "commands": {
-                    "open": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 100,
+        "name": "窗帘电机",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_DOOYA",
+        "_generation": 2,
+        "cover_features": {
+            "position_feedback": True,
+        },
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P1": {
+                        "description": "curtain_status",
+                        "data_type": "position_status",
+                        "conversion": "direct_value",
                     },
-                    "close": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 0,
+                    "P2": {
+                        "description": "position_control",
+                        "data_type": "position_control",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 100,
+                            },
+                            "close": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 0,
+                            },
+                            "stop": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "val": 128,
+                            },
+                            "set_position": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
                     },
-                    "stop": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "val": 128,
-                    },
-                    "set_position": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                },
-            },
+                }
+            }
+        },
+        "cover_config": {
+            "device_class": "curtain",
+            "position_feedback": True,
+            "control_type": "position_control",
+            "capabilities": ["open", "close", "stop", "set_position"],
+            "io_mapping": {"status_io": "P1", "control_io": "P2"},
         },
     },
     "SL_P_V2": {
@@ -4695,7 +4705,7 @@ _RAW_DEVICE_DATA = {
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
-                            "on": {
+                            "open": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
@@ -4706,7 +4716,7 @@ _RAW_DEVICE_DATA = {
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
-                            "on": {
+                            "close": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
@@ -4717,7 +4727,7 @@ _RAW_DEVICE_DATA = {
                         "data_type": "binary_switch",
                         "conversion": "type_bit_0",
                         "commands": {
-                            "on": {
+                            "stop": {
                                 "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
@@ -4741,356 +4751,307 @@ _RAW_DEVICE_DATA = {
     # ================= 2.4 灯光系列 (Light Series) =================
     # 2.4.1 灯光系列 (RGBW/RGB Light Series)
     "SL_CT_RGBW": {
-        "name": "RGBW灯带",
-        "light": {
-            "RGBW": {
-                "description": "color",
-                "data_type": "rgbw_light",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "name": "幻彩灯带",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_CT_RGBW",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGBW": {
+                        "description": "rgbw",
+                        "data_type": "dual_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "DYN": {
-                "description": "color",
-                "data_type": "dynamic_effect",
-                "conversion": "direct_value",
-                "commands": {
-                    "enable": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "disable": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_effect_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_effect_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "DYN": {
+                        "description": "dynamic_effect",
+                        "data_type": "dynamic_effect",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "set_effect_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_effect_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
                 },
             },
         },
     },
     "SL_LI_RGBW": {
-        "name": "RGBW灯泡",
-        "light": {
-            "RGBW": {
-                "description": "color",
-                "data_type": "rgbw_light",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "name": "胶囊灯泡",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_RGBW",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGBW": {
+                        "description": "rgbw",
+                        "data_type": "dual_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "DYN": {
-                "description": "color",
-                "data_type": "dynamic_effect",
-                "conversion": "direct_value",
-                "commands": {
-                    "enable": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "disable": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_effect_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_effect_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "DYN": {
+                        "description": "dynamic_effect",
+                        "data_type": "dynamic_effect",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "set_effect_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_effect_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
                 },
             },
         },
     },
     "SL_SC_RGB": {
-        "name": "RGB灯带无白光",
-        "light": {
-            "RGB": {
-                "description": "color",
-                "data_type": "rgb_light",
-                "conversion": "direct_value",
-                "range": "0x00000000-0xFFFFFFFF",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+        "name": "幻彩灯带（不带白光)",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_RGB",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGB": {
+                        "description": "rgb",
+                        "data_type": "spot_rgb_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
                 },
             },
         },
     },
-    # 2.4.2 量子灯 (Quantum Light)
     "OD_WE_QUAN": {
         "name": "量子灯",
-        "light": {
-            "P1": {
-                "description": "brightness",
-                "data_type": "generic",
-                "conversion": "direct_value",
-                "range": "0-100",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "OD_WE_QUAN",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "power_state",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 100],
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_brightness": {"type": CMD_TYPE_SET_VAL},
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_brightness": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                },
-            },
-            "P2": {
-                "description": "color",
-                "data_type": "quantum_light",
-                "conversion": "direct_value",
-                "range": "0x00000000-0xFFFFFFFF",
-                "commands": {
-                    "set_color": {
-                        "type": CMD_TYPE_SET_RAW_ON,
+                    "P2": {
+                        "description": "quantum_scene",
+                        "data_type": "quantum_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_scene": {"type": CMD_TYPE_SET_RAW_ON},
+                        },
                     },
                 },
             },
         },
     },
-    # 2.4.4 门廊壁灯 (Porch Wall Lamp)
     "SL_LI_GD1": {
-        "name": "门廊壁灯",
-        "light": {
-            "P1": {
-                "description": "switch",
-                "data_type": "generic",
-                "conversion": "direct_value",
-                "range": "0-255",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "name": "调光壁灯",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_GD1",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "brightness",
+                        "data_type": "brightness_light",
+                        "conversion": "direct_value",
+                        "range": [0, 255],
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_brightness": {"type": CMD_TYPE_SET_VAL},
+                            "set_brightness_off": {"type": CMD_TYPE_SET_CONFIG},
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                },
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "motion",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "device_class": "motion",
                     },
-                    "set_brightness": {
-                        "type": CMD_TYPE_SET_VAL,
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "illuminance",
+                        "data_type": "illuminance",
+                        "conversion": "direct_value",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
                     },
                 },
             },
         },
-        "binary_sensor": {
-            "P2": {
-                "description": "motion",
-                "data_type": "motion_status",
-                "conversion": "direct_value",
-                "device_class": "motion",
-            },
-        },
-        "sensor": {
-            "P3": {
-                "description": "illuminance",
-                "data_type": "illuminance",
-                "conversion": "v_field",
-                "device_class": "illuminance",
-                "unit_of_measurement": "lux",
-                "state_class": "measurement",
-            },
-        },
     },
-    # 2.4.5 花园地灯 (Garden Landscape Light)
     "SL_LI_UG1": {
         "name": "花园地灯",
-        "light": {
-            "P1": {
-                "description": "turn_on_switch",
-                "data_type": "rgbw_light",
-                "conversion": "direct_value",
-                "range": "0x00000000-0xFFFFFFFF",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_UG1",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "rgbw",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
                 },
             },
-        },
-        "sensor": {
-            "P2": {
-                "description": "illuminance",
-                "data_type": "illuminance",
-                "conversion": "v_field",
-                "device_class": "illuminance",
-                "unit_of_measurement": "lux",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "illuminance",
+                        "data_type": "illuminance",
+                        "conversion": "direct_value",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "battery",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
-            "P3": {
-                "description": "electric",
-                "data_type": "charging_status",
-                "conversion": "direct_value",
-                "device_class": "battery",
-                "unit_of_measurement": "V",
-                "state_class": "measurement",
-            },
-            "P4": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "binary_sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "charging_status",
+                        "data_type": "charging_status",
+                        "conversion": "direct_value",
+                    },
+                },
             },
         },
     },
-    # 2.5 超级碗 (SPOT Series)
     "MSL_IRCTL": {
-        "name": "超级碗RGB灯",
-        "light": {
-            "RGBW": {
-                "description": "color",
-                "data_type": "rgbw_light",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "name": "超级碗（基础版，蓝牙版）",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "MSL_IRCTL",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGBW": {
+                        "description": "rgbw",
+                        "data_type": "spot_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "DYN": {
-                "description": "color",
-                "data_type": "dynamic_effect",
-                "conversion": "direct_value",
-                "commands": {
-                    "enable": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "disable": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_effect_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_effect_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "DYN": {
+                        "description": "dynamic_effect",
+                        "data_type": "dynamic_effect",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "set_effect_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_effect_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
                 },
             },
         },
     },
     "OD_WE_IRCTL": {
-        "name": "超级碗RGB灯(OD)",
-        "light": {
-            "RGB": {
-                "description": "color",
-                "data_type": "rgb_light",
-                "conversion": "direct_value",
-                "range": "0x00000000-0xFFFFFFFF",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+        "name": "超级碗 （闪联版)",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "OD_WE_IRCTL",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGB": {
+                        "description": "rgb",
+                        "data_type": "spot_rgb_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
                 },
             },
         },
     },
     "SL_SPOT": {
-        "name": "超级碗RGB灯",
-        "light": {
-            "RGB": {
-                "description": "color",
-                "data_type": "rgb_light",
-                "conversion": "direct_value",
-                "range": "0x00000000-0xFFFFFFFF",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_color_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_color_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+        "name": "超级碗(CoSS版)",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SPOT",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGB": {
+                        "description": "rgb",
+                        "data_type": "spot_rgb_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
                 },
             },
@@ -5098,45 +5059,48 @@ _RAW_DEVICE_DATA = {
     },
     "SL_LI_IR": {
         "name": "红外吸顶灯",
-        "light": {
-            "P1": {
-                "description": "brightness",
-                "data_type": "generic",
-                "conversion": "direct_value",
-                "range": "0-255",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_IR",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "brightness",
+                        "data_type": "dimmer_light",
+                        "conversion": "direct_value",
+                        "range": [0, 255],
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_brightness": {"type": CMD_TYPE_SET_VAL},
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_brightness": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                },
-            },
-            "P2": {
-                "description": "color_temp",
-                "data_type": "color_temperature",
-                "conversion": "direct_value",
-                "range": "0-255",
-                "commands": {
-                    "set_color_temp": {
-                        "type": CMD_TYPE_SET_VAL,
+                    "P2": {
+                        "description": "color_temp",
+                        "data_type": "color_temperature",
+                        "conversion": "direct_value",
+                        "range": [0, 255],
+                        "commands": {
+                            "set_color_temp": {"type": CMD_TYPE_SET_VAL},
+                        },
                     },
                 },
             },
-            "P3": {
-                "description": "brightness",
-                "data_type": "nightlight_brightness",
-                "conversion": "direct_value",
-                "range": "0,63,127,195,255",
-                "commands": {
-                    "set_brightness": {
-                        "type": CMD_TYPE_SET_VAL,
+            "number": {
+                "io_configs": {
+                    "P3": {
+                        "description": "nightlight_brightness",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "min_value": 0,
+                        "max_value": 255,
+                        "step": 1,
+                        "mode": "slider",
+                        "commands": {
+                            "set_brightness": {"type": CMD_TYPE_SET_VAL},
+                        },
                     },
                 },
             },

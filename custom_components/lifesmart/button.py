@@ -46,6 +46,7 @@ from .core.const import (
 from .core.entity import LifeSmartEntity
 from .core.helpers import generate_unique_id
 from .core.platform.platform_detection import get_button_subdevices, safe_get
+from .core.compatibility import get_button_device_class
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,6 +136,7 @@ async def async_setup_entry(
                     entry_id=config_entry.entry_id,
                     sub_device_key=btn_key,
                     sub_device_data=btn_data,
+                    button_config=io_config,
                 )
                 buttons.append(button)
                 _LOGGER.debug(
@@ -168,6 +170,7 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
         entry_id: str,
         sub_device_key: str,
         sub_device_data: dict[str, Any],
+        button_config: dict[str, Any] | None = None,
     ) -> None:
         """
         初始化按钮设备。
@@ -182,6 +185,7 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
         super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._btn_config = sub_device_data
+        self._button_config = button_config or {}
         self._entry_id = entry_id
 
         # Generate button name and ID
@@ -195,16 +199,19 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
 
         self._attr_device_class = ButtonDeviceClass.GENERIC
 
-        # Get device class from configuration
-        if "device_class" in sub_device_data:
-            try:
-                self._attr_device_class = ButtonDeviceClass(
-                    sub_device_data["device_class"]
-                )
-            except ValueError:
-                _LOGGER.warning(
-                    "Invalid button device class: %s", sub_device_data["device_class"]
-                )
+        # Get device class from resolved IO configuration first, then runtime data
+        raw_device_class = self._button_config.get("device_class") or sub_device_data.get(
+            "device_class"
+        )
+        if raw_device_class:
+            compat_identify_class = get_button_device_class()
+            if raw_device_class == "identify" and compat_identify_class is not None:
+                self._attr_device_class = compat_identify_class
+            else:
+                try:
+                    self._attr_device_class = ButtonDeviceClass(raw_device_class)
+                except ValueError:
+                    _LOGGER.warning("Invalid button device class: %s", raw_device_class)
 
     @callback
     def _generate_button_name(self) -> str | None:

@@ -576,9 +576,9 @@ SPECIAL_DEVICE_FEATURES = {
         "temp_sensor_ios": ["P2", "P3"],
     },
     "SL_DOOYA": {
-        "cover_type": "non_positional",
-        "cover_operations": ["open", "close", "stop"],
-        "control_ios": {"open": "P1", "close": "P2", "stop": "P3"},
+        "cover_type": "positional",
+        "cover_operations": ["open", "close", "stop", "set_position"],
+        "control_ios": {"status": "P1", "control": "P2"},
     },
     "OD_WE_QUAN": {
         "light_type": "quantum",

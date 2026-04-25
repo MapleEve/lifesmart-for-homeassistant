@@ -193,26 +193,42 @@ def get_climate_subdevices(device: dict) -> list[str]:
     return platforms.get("climate", [])
 
 
+def _get_cover_control_mapping(device: dict) -> dict[str, str]:
+    """从当前设备配置解析 cover 控制映射。"""
+    resolver = get_device_resolver()
+    resolution_result = resolver.resolve_device_config(device)
+    device_config = resolution_result.device_config if resolution_result else None
+    raw_mapping = device_config.source_mapping if device_config else None
+    if not isinstance(raw_mapping, dict):
+        return {}
+
+    cover_features = raw_mapping.get("cover_features", {})
+    control_mapping = cover_features.get("control_mapping", {})
+    if isinstance(control_mapping, dict):
+        return {
+            action: io_key
+            for action, io_key in control_mapping.items()
+            if isinstance(action, str) and isinstance(io_key, str)
+        }
+
+    return {}
+
+
+
 def get_cover_subdevices(device: dict) -> list[str]:
     """获取设备的cover子设备列表。
 
-    对于非位置型窗帘设备，只返回开启操作的子设备。
+    对于无位置反馈的窗帘设备，只返回主控制实体对应的开启控制口。
     """
     platforms = get_device_platform_mapping(device)
     cover_subdevices = platforms.get("cover", [])
 
-    # 检查是否为非位置型窗帘设备
-    device_type = device.get("devtype", "")
-    from ..config.device_specs import NON_POSITIONAL_COVER_CONFIG
-
-    if device_type in NON_POSITIONAL_COVER_CONFIG:
-        # 对于非位置型窗帘，只返回开启操作的子设备
-        config = NON_POSITIONAL_COVER_CONFIG[device_type]
-        open_io = config.get("open")
+    control_mapping = _get_cover_control_mapping(device)
+    if control_mapping:
+        open_io = control_mapping.get("open")
         if open_io and open_io in cover_subdevices:
             return [open_io]
-        else:
-            return []
+        return []
 
     return cover_subdevices
 
@@ -221,10 +237,49 @@ def get_light_subdevices(device: dict) -> list[str]:
     """获取设备的light子设备列表。
 
     统一处理所有灯光设备，从平台映射中获取子设备列表。
+    对于由多个IO共同组成单个灯实体的设备，仅返回主实体IO，
+    同时保留不属于辅助控制口的独立灯光IO。
     """
-    # 获取基础平台映射
     platforms = get_device_platform_mapping(device)
-    return platforms.get("light", [])
+    light_subdevices = platforms.get("light", [])
+
+    if not light_subdevices:
+        return []
+
+    resolver = get_device_resolver()
+    platform_config = resolver.get_platform_config(device, "light")
+    if not platform_config or not getattr(platform_config, "ios", None):
+        return light_subdevices
+
+    composite_data_types = {
+        "dual_rgbw_light",
+        "spot_rgbw_light",
+        "spot_rgb_light",
+        "quantum_light",
+        "dimmer_light",
+    }
+    helper_only_data_types = {
+        "dynamic_effect",
+        "generic",
+        "color_temperature",
+    }
+
+    composite_keys = [
+        io_key
+        for io_key, io_config in platform_config.ios.items()
+        if getattr(io_config, "data_type", None) in composite_data_types
+        and io_key in light_subdevices
+    ]
+    if not composite_keys:
+        return light_subdevices
+
+    filtered_keys = [
+        io_key
+        for io_key, io_config in platform_config.ios.items()
+        if io_key in light_subdevices
+        and getattr(io_config, "data_type", None) not in helper_only_data_types
+    ]
+    return filtered_keys or composite_keys
 
 
 def get_sensor_subdevices(device: dict) -> list[str]:
@@ -639,14 +694,9 @@ def is_cover_subdevice(device_type: str, sub_key: str) -> bool:
     # 处理大小写转换
     normalized_sub_key = sub_key.upper() if sub_key.lower() == "o" else sub_key
 
-    # 首先检查NON_POSITIONAL_COVER_CONFIG中的窗帘设备
-    from ..config.device_specs import NON_POSITIONAL_COVER_CONFIG
-
-    if device_type in NON_POSITIONAL_COVER_CONFIG:
-        config = NON_POSITIONAL_COVER_CONFIG[device_type]
-        all_cover_ios = [config.get("open"), config.get("close"), config.get("stop")]
-        if normalized_sub_key in all_cover_ios:
-            return True
+    control_mapping = _get_cover_control_mapping({"devtype": device_type, "data": {}})
+    if normalized_sub_key in control_mapping.values():
+        return True
 
     mock_device = {"devtype": device_type, "data": {normalized_sub_key: {"val": 1}}}
     subdevices = get_cover_subdevices(mock_device)

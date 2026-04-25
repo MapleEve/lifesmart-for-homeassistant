@@ -50,6 +50,7 @@ from .core.data.processors import process_io_data
 from .core.entity import LifeSmartEntity
 from .core.helpers import generate_unique_id
 from .core.platform.platform_detection import get_device_platform_mapping
+from .core.resolver import get_device_resolver
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,16 +83,34 @@ async def async_setup_entry(
         if "number" not in platform_mapping:
             continue
 
-        number_config = platform_mapping.get("number", {})
+        number_subdevices = platform_mapping.get("number", [])
+        if not number_subdevices:
+            continue
+
+        resolver = get_device_resolver()
+        resolution_result = resolver.resolve_device_config(device)
+        if not resolution_result.success or not resolution_result.device_config:
+            _LOGGER.warning(
+                "Skipping number setup for %s: %s",
+                device.get(DEVICE_NAME_KEY),
+                resolution_result.error_message,
+            )
+            continue
+
+        number_mapping = resolution_result.device_config.source_mapping.get("number", {})
 
         # 为每个支持的数值控制器创建实体
-        for number_key, number_cfg in number_config.items():
-            if isinstance(number_cfg, dict) and number_cfg.get("enabled", True):
+        for number_key in number_subdevices:
+            number_cfg = number_mapping.get(number_key)
+            if not isinstance(number_cfg, dict):
+                continue
+
+            if number_cfg.get("enabled", True):
                 number = LifeSmartNumber(
                     device,
                     number_key,
                     number_cfg,
-                    hub,
+                    hub.get_client(),
                 )
                 numbers.append(number)
                 _LOGGER.debug(
@@ -115,17 +134,34 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
         device: dict,
         sub_key: str,
         number_config: dict,
-        hub,
+        client,
     ) -> None:
         """
         初始化数值实体。
         """
-        super().__init__(device, sub_key, hub)
+        super().__init__(device, client)
+        self._device = device
+        self._sub_key = sub_key
         self._number_config = number_config
 
+        self._attr_unique_id = generate_unique_id(
+            self.devtype,
+            self.agt,
+            self.me,
+            sub_key,
+        )
+        number_name = self._number_config.get("name") or self._number_config.get(
+            "description", sub_key
+        )
+        self._attr_name = f"{self._device_name} {number_name}"
+
         # 从配置获取数值范围和步长
-        self._attr_native_min_value = number_config.get("min_value", NUMBER_MIN_VALUE)
-        self._attr_native_max_value = number_config.get("max_value", NUMBER_MAX_VALUE)
+        self._attr_native_min_value = number_config.get(
+            "min_value", number_config.get("min", NUMBER_MIN_VALUE)
+        )
+        self._attr_native_max_value = number_config.get(
+            "max_value", number_config.get("max", NUMBER_MAX_VALUE)
+        )
         self._attr_native_step = number_config.get("step", NUMBER_STEP)
 
         # 设置数值模式
@@ -157,12 +193,7 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
         Returns:
             基于设备和子设备信息的唯一标识符
         """
-        return generate_unique_id(
-            self._device.get(DEVICE_TYPE_KEY, ""),
-            self._device.get(HUB_ID_KEY, ""),
-            self._device.get(DEVICE_ID_KEY, ""),
-            self._sub_key,
-        )
+        return self._attr_unique_id
 
     @property
     def name(self) -> str:
@@ -172,9 +203,7 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
         Returns:
             组合设备名称和数值控制器名称的字符串
         """
-        device_name = self._device.get(DEVICE_NAME_KEY, "Unknown Device")
-        number_name = self._number_config.get("name", self._sub_key)
-        return f"{device_name} {number_name}"
+        return self._attr_name
 
     @property
     def available(self) -> bool:
@@ -276,9 +305,9 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
         """
         向数值控制器发送命令。
         """
-        await self._hub.async_send_command(
-            self._device[HUB_ID_KEY],
-            self._device[DEVICE_ID_KEY],
+        await self._client.async_send_command(
+            self.agt,
+            self.me,
             self._sub_key,
             cmd_type,
             value,
@@ -296,7 +325,7 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
             return
 
         # 处理IO数据
-        processed_value = process_io_data(io_data, self._number_config)
+        processed_value = process_io_data(self._number_config, io_data)
 
         # 转换为HA值
         self._attr_native_value = self._convert_from_device_value(processed_value)

@@ -260,11 +260,18 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
                 f"in the mapping engine to ensure architectural consistency."
             )
 
-        # 使用映射配置的处理器
+        # 使用映射配置的处理器；兼容仅提供conversion的Gen2开关配置
         processor_type = io_config.get("processor_type")
         if not processor_type:
+            conversion = io_config.get("conversion")
+            if conversion == "type_bit_0":
+                processor_type = "type_bit_0_switch"
+            elif conversion:
+                processor_type = conversion
+
+        if not processor_type:
             raise HomeAssistantError(
-                f"Missing processor_type in switch configuration for device "
+                f"Missing processor_type/conversion in switch configuration for device "
                 f"{self._raw_device.get('me', 'unknown')} IO port {self._sub_key}"
             )
 

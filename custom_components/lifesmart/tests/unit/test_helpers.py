@@ -741,9 +741,9 @@ class TestSubdeviceLogicParametrized:
                 "SL_CN_IF",
                 "P1",
                 True,
-            ),  # 窗帘开关（但NON_POSITIONAL_COVER_CONFIG中key是OP对应P1）
-            ("SL_CN_IF", "P2", True),  # 窗帘开关（close对应P2）
-            ("SL_CN_IF", "P3", True),  # 窗帘开关（stop对应P3）
+            ),  # 窗帘开关（open对应P1）
+            ("SL_CN_IF", "P2", True),  # 窗帘开关（stop对应P2）
+            ("SL_CN_IF", "P3", True),  # 窗帘开关（close对应P3）
             ("SL_DOOYA", "INVALID", False),  # 无效子设备
             ("INVALID_TYPE", "P1", False),  # 无效设备类型
         ],
