@@ -96,6 +96,7 @@ def is_versioned_device_type(device: dict, expected_version: str = None) -> bool
     """
     device_type = device.get(DEVICE_TYPE_KEY, "")
     full_cls = device.get(DEVICE_FULLCLS_KEY, "")
+    normalized_full_cls = str(full_cls).upper()
 
     # 直接使用恢复的第三方映射数据
     if not is_versioned_device(device_type):
@@ -103,11 +104,11 @@ def is_versioned_device_type(device: dict, expected_version: str = None) -> bool
 
     # 如果没有指定期望版本，只要是版本化设备就返回True
     if not expected_version:
-        return "_V" in full_cls
+        return "_V" in normalized_full_cls
 
     # 检查是否匹配期望的版本
     expected_full_type = f"{device_type}_{expected_version}"
-    return expected_full_type in full_cls
+    return expected_full_type.upper() in normalized_full_cls
 
 
 def get_device_version(device: dict) -> str:
@@ -122,6 +123,7 @@ def get_device_version(device: dict) -> str:
     """
     device_type = device.get(DEVICE_TYPE_KEY, "")
     full_cls = device.get(DEVICE_FULLCLS_KEY, "")
+    normalized_full_cls = str(full_cls).upper()
 
     # 直接使用恢复的第三方映射数据
     if not is_versioned_device(device_type):
@@ -129,7 +131,7 @@ def get_device_version(device: dict) -> str:
 
     # 从fullCls中提取版本信息
     for version in ["V1", "V2", "V3"]:
-        if f"{device_type}_{version}" in full_cls:
+        if f"{device_type}_{version}".upper() in normalized_full_cls:
             return version
 
     return ""

@@ -1863,7 +1863,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SW_CP2": {
-        "name": "橙朴开关二键",
+        "name": "橙朴流光开关二键",
         "category": "switch",
         "manufacturer": "lifesmart",
         "model": "SL_SW_CP2",
@@ -1907,7 +1907,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "dark1": {
                         "description": "indicator_brightness_1_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "direct_value",
                         "commands": {
                             "on": {
@@ -1928,7 +1928,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "dark2": {
                         "description": "indicator_brightness_2_off",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "direct_value",
                         "commands": {
                             "on": {
@@ -1949,7 +1949,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright1": {
                         "description": "indicator_brightness_1_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "direct_value",
                         "commands": {
                             "on": {
@@ -1970,7 +1970,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "bright2": {
                         "description": "indicator_brightness_2_on",
-                        "data_type": "rgbw_light",
+                        "data_type": "single_io_rgbw_light",
                         "conversion": "direct_value",
                         "commands": {
                             "on": {
@@ -4905,6 +4905,7 @@ _RAW_DEVICE_DATA = {
                         "description": "motion",
                         "data_type": "motion_status",
                         "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
                         "device_class": "motion",
                     },
                 },
@@ -5108,82 +5109,29 @@ _RAW_DEVICE_DATA = {
     },
     "SL_P_IR": {
         "name": "红外模块",
-        "light": {
-            "P1": {
-                "description": "brightness",
-                "data_type": "generic",
-                "conversion": "direct_value",
-                "range": "0-255",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_brightness": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                },
-            },
-            "P2": {
-                "description": "color_temp",
-                "data_type": "color_temperature",
-                "conversion": "direct_value",
-                "range": "0-255",
-                "commands": {
-                    "set_color_temp": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                },
-            },
-            "P3": {
-                "description": "brightness",
-                "data_type": "nightlight_brightness",
-                "conversion": "direct_value",
-                "range": "0,63,127,195,255",
-                "commands": {
-                    "set_brightness": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                },
-            },
-        },
+        "official_name": "红外模块",
+        "category": "remote",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_IR",
+        "_generation": 2,
+        # 官方文档2.5注意：红外模块/超级碗(Mini版)没有灯光控制，不需要关注IO属性；红外功能不映射HA灯光实体。
+        "platforms": {},
     },
     "SL_SC_CV": {
         "name": "语音小Q",
-        "category": "switch",
+        "official_name": "语音小Q",
+        "category": "voice_assistant",
         "manufacturer": "lifesmart",
         "model": "SL_SC_CV",
         "_generation": 2,
-        "platforms": {
-            "switch": {
-                "io_configs": {
-                    "P1": {
-                        "description": "switch",
-                        "data_type": "binary_switch",
-                        "conversion": "type_bit_0",
-                        "commands": {
-                            "on": {
-                                "type": CMD_TYPE_ON,
-                                "val": 1,
-                            },
-                            "off": {
-                                "type": CMD_TYPE_OFF,
-                                "val": 0,
-                            },
-                        },
-                    },
-                },
-            },
-        },
+        # 官方文档仅在附录索引列出设备名称，未给出可映射到HA平台的IO属性表；不得保留旧的未溯源P1 switch。
+        "platforms": {},
     },
     # ================= 2.6 感应器系列 (Sensor Series) =================
     # 2.6.1 门禁感应器（Guard Sensor)
     "SL_SC_G": {
         "name": "门禁感应器",
+        "official_name": "门禁感应器",
         "category": "sensor",
         "manufacturer": "lifesmart",
         "model": "SL_SC_G",
@@ -5193,8 +5141,10 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "G": {
                         "description": "current_state",
-                        "data_type": "door_status",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
                         "conversion": "direct_value",
+                        "processor_type": "door_window_sensor",
                         "device_class": "door",
                     },
                 },
@@ -5203,6 +5153,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "V": {
                         "description": "energy",
+                        "rw": "R",
                         "data_type": "battery",
                         "conversion": "v_field",
                         "device_class": "battery",
@@ -5214,7 +5165,8 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SC_BG": {
-        "name": "门禁感应器（带按键震动）",
+        "name": "多功能(CUBE)门禁感应器",
+        "official_name": "多功能(CUBE)门禁感应器",
         "category": "sensor",
         "manufacturer": "lifesmart",
         "model": "SL_SC_BG",
@@ -5224,20 +5176,26 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "G": {
                         "description": "current_state",
-                        "data_type": "door_status",
-                        "conversion": "type_bit_0",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
+                        "conversion": "direct_value",
+                        "processor_type": "door_window_sensor",
                         "device_class": "door",
                     },
                     "B": {
                         "description": "button",
-                        "data_type": "button_status",
+                        "rw": "R",
+                        "data_type": "button",
                         "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
                         "device_class": "moving",
                     },
                     "AXS": {
                         "description": "vibration_status",
-                        "data_type": "vibration_status",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
                         "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
                         "device_class": "vibration",
                     },
                 },
@@ -5246,6 +5204,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "V": {
                         "description": "energy",
+                        "rw": "R",
                         "data_type": "battery",
                         "conversion": "v_field",
                         "device_class": "battery",
@@ -5257,34 +5216,51 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SC_GS": {
-        "name": "门禁感应器（增强版）",
-        "binary_sensor": {
-            "P1": {
-                "description": "current_state",
-                "data_type": "door_status",
-                "conversion": "type_bit_0",
-                "device_class": "door",
+        "name": "门窗感应器",
+        "official_name": "门窗感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_GS",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "current_state",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "door",
+                    },
+                    "AXS": {
+                        "description": "vibration_status",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "vibration",
+                    },
+                },
             },
-            "AXS": {
-                "description": "vibration_status",
-                "data_type": "vibration_status",
-                "conversion": "type_bit_0",
-                "device_class": "vibration",
-            },
-        },
-        "sensor": {
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SC_MHW": {
         "name": "动态感应器",
+        "official_name": "动态感应器",
         "category": "sensor",
         "manufacturer": "lifesmart",
         "model": "SL_SC_MHW",
@@ -5294,8 +5270,10 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "M": {
                         "description": "motion",
+                        "rw": "R",
                         "data_type": "motion_status",
                         "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
                         "device_class": "motion",
                     },
                 },
@@ -5304,6 +5282,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "V": {
                         "description": "energy",
+                        "rw": "R",
                         "data_type": "battery",
                         "conversion": "v_field",
                         "device_class": "battery",
@@ -5315,7 +5294,8 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SC_BM": {
-        "name": "动态感应器",
+        "name": "多功能 (CUBE)动态感应器",
+        "official_name": "多功能 (CUBE)动态感应器",
         "category": "sensor",
         "manufacturer": "lifesmart",
         "model": "SL_SC_BM",
@@ -5325,8 +5305,10 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "M": {
                         "description": "motion",
+                        "rw": "R",
                         "data_type": "motion_status",
                         "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
                         "device_class": "motion",
                     },
                 },
@@ -5335,6 +5317,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "V": {
                         "description": "energy",
+                        "rw": "R",
                         "data_type": "battery",
                         "conversion": "v_field",
                         "device_class": "battery",
@@ -5346,7 +5329,8 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SC_CM": {
-        "name": "动态感应器（带USB供电）",
+        "name": "动态感应器 (7号电池版)",
+        "official_name": "动态感应器 (7号电池版)",
         "category": "sensor",
         "manufacturer": "lifesmart",
         "model": "SL_SC_CM",
@@ -5356,8 +5340,10 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "P1": {
                         "description": "motion",
+                        "rw": "R",
                         "data_type": "motion_status",
                         "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
                         "device_class": "motion",
                     },
                 },
@@ -5366,6 +5352,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "P3": {
                         "description": "energy",
+                        "rw": "R",
                         "data_type": "battery",
                         "conversion": "v_field",
                         "device_class": "battery",
@@ -5374,6 +5361,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "P4": {
                         "description": "electric",
+                        "rw": "R",
                         "data_type": "voltage",
                         "conversion": "direct_value",
                         "device_class": "voltage",
@@ -5386,35 +5374,51 @@ _RAW_DEVICE_DATA = {
     },
     "SL_BP_MZ": {
         "name": "动态感应器PRO",
-        "binary_sensor": {
-            "P1": {
-                "description": "motion",
-                "data_type": "motion_status",
-                "conversion": "direct_value",
-                "device_class": "motion",
+        "official_name": "动态感应器PRO",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_BP_MZ",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "motion",
+                        "rw": "R",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "motion",
+                    },
+                },
             },
-        },
-        "sensor": {
-            "P2": {
-                "description": "illuminance",
-                "data_type": "illuminance",
-                "conversion": "v_field",
-                "device_class": "illuminance",
-                "unit_of_measurement": "lx",
-                "state_class": "measurement",
-            },
-            "P3": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "illuminance",
+                        "rw": "R",
+                        "data_type": "illuminance",
+                        "conversion": "v_field",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "P3": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SC_THL": {
-        "name": "环境感应器（温湿度光照）",
+        "name": "环境感应器",
+        "official_name": "环境感应器",
         "category": "sensor",
         "manufacturer": "lifesmart",
         "model": "SL_SC_THL",
@@ -5424,6 +5428,7 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "T": {
                         "description": "temperature",
+                        "rw": "R",
                         "data_type": "temperature",
                         "conversion": "val_div_10",
                         "device_class": "temperature",
@@ -5432,6 +5437,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "H": {
                         "description": "humidity",
+                        "rw": "R",
                         "data_type": "humidity",
                         "conversion": "v_field",
                         "device_class": "humidity",
@@ -5440,6 +5446,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "Z": {
                         "description": "illuminance",
+                        "rw": "R",
                         "data_type": "illuminance",
                         "conversion": "v_field",
                         "device_class": "illuminance",
@@ -5448,6 +5455,7 @@ _RAW_DEVICE_DATA = {
                     },
                     "V": {
                         "description": "energy",
+                        "rw": "R",
                         "data_type": "battery",
                         "conversion": "v_field",
                         "device_class": "battery",
@@ -5459,7 +5467,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SC_BE": {
-        "name": "环境感应器（温湿度光照）",
+        "name": "多功能 (CUBE)环境感应器",
         "category": "sensor",
         "manufacturer": "lifesmart",
         "model": "SL_SC_BE",
@@ -5504,7 +5512,7 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SC_WA": {
-        "name": "水浸传感器",
+        "name": "水浸感应器",
         "category": "sensor",
         "manufacturer": "lifesmart",
         "model": "SL_SC_WA",
@@ -5514,8 +5522,9 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "WA": {
                         "description": "water_leak_detection",
-                        "data_type": "water_leak",
+                        "data_type": "binary_sensor",
                         "conversion": "val_greater_than_zero",
+                        "processor_type": "water_leak_sensor",
                         "device_class": "moisture",
                     },
                 },
@@ -5524,9 +5533,8 @@ _RAW_DEVICE_DATA = {
                 "io_configs": {
                     "WA": {
                         "description": "electric",
-                        "data_type": "conductivity",
+                        "data_type": "generic_value",
                         "conversion": "direct_value",
-                        "device_class": "moisture",
                         "unit_of_measurement": "µS/cm",
                         "state_class": "measurement",
                     },
@@ -5543,369 +5551,492 @@ _RAW_DEVICE_DATA = {
         },
     },
     "SL_SC_CH": {
-        "name": "甲醛感应器",
-        "sensor": {
-            "P1": {
-                "description": "formaldehyde_concentration",
-                "data_type": "甲醛_concentration",
-                "conversion": "v_field",
-                "device_class": "volatile_organic_compounds",
-                "unit_of_measurement": "µg/m³",
-                "state_class": "measurement",
-            },
-        },
-        "switch": {
-            "P2": {
-                "description": "concentration",
-                "data_type": "threshold_setting",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_sensitivity": {
-                        "type": CMD_TYPE_SET_CONFIG,
+        "name": "气体感应器(甲醛)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CH",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "formaldehyde_concentration",
+                        "data_type": "formaldehyde_concentration",
+                        "conversion": "v_field",
+                        "device_class": "volatile_organic_compounds",
+                        "unit_of_measurement": "µg/m³",
+                        "state_class": "measurement",
                     },
                 },
             },
-            "P3": {
-                "description": "alarm_sound",
-                "data_type": "alarm_status",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "number": {
+                "io_configs": {
+                    "P2": {
+                        "description": "formaldehyde_threshold",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "min_value": 80,
+                        "max_value": 5000,
+                        "step": 1,
+                        "mode": "box",
+                        "unit_of_measurement": "µg/m³",
+                        "commands": {
+                            "set_sensitivity": {
+                                "type": 0x8D,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                },
+            },
+            "switch": {
+                "io_configs": {
+                    "P3": {
+                        "description": "alarm_sound",
+                        "data_type": "alarm_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
         },
     },
     "SL_SC_CP": {
-        "name": "燃气感应器",
-        "sensor": {
-            "P1": {
-                "description": "concentration",
-                "data_type": "燃气_concentration",
-                "conversion": "direct_value",
-                "device_class": "gas",
-                "unit_of_measurement": "ppm",
-                "state_class": "measurement",
-            },
-        },
-        "switch": {
-            "P2": {
-                "description": "concentration",
-                "data_type": "threshold_setting",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_sensitivity": {
-                        "type": CMD_TYPE_SET_CONFIG,
+        "name": "气体感应器(燃气)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CP",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "gas_concentration",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "state_class": "measurement",
                     },
                 },
             },
-            "P3": {
-                "description": "alarm_sound",
-                "data_type": "alarm_status",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "number": {
+                "io_configs": {
+                    "P2": {
+                        "description": "gas_threshold",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "min_value": 90,
+                        "max_value": 150,
+                        "step": 1,
+                        "mode": "box",
+                        "commands": {
+                            "set_sensitivity": {
+                                "type": 0xDF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                },
+            },
+            "switch": {
+                "io_configs": {
+                    "P3": {
+                        "description": "alarm_sound",
+                        "data_type": "alarm_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
                 },
             },
         },
     },
     "SL_SC_CQ": {
-        "name": "TVOC+CO2环境感应器",
-        "sensor": {
-            "P1": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "P2": {
-                "description": "humidity",
-                "data_type": "humidity",
-                "conversion": "v_field",
-                "device_class": "humidity",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-            "P3": {
-                "description": "concentration",
-                "data_type": "co2_concentration",
-                "conversion": "v_field",
-                "device_class": "carbon_dioxide",
-                "unit_of_measurement": "ppm",
-                "state_class": "measurement",
-            },
-            "P4": {
-                "description": "concentration",
-                "data_type": "tvoc_concentration",
-                "conversion": "v_field",
-                "device_class": "volatile_organic_compounds",
-                "unit_of_measurement": "mg/m³",
-                "state_class": "measurement",
-            },
-            "P5": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-            "P6": {
-                "description": "electric",
-                "data_type": "voltage",
-                "conversion": "direct_value",
-                "device_class": "voltage",
-                "unit_of_measurement": "V",
-                "state_class": "measurement",
+        "name": "环境感应器(CO2+TVOC)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CQ",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "P2": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "v_field",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P3": {
+                        "description": "co2_concentration",
+                        "data_type": "co2_concentration",
+                        "conversion": "v_field",
+                        "device_class": "carbon_dioxide",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "tvoc_concentration",
+                        "data_type": "tvoc_concentration",
+                        "conversion": "v_field",
+                        "device_class": "volatile_organic_compounds",
+                        "unit_of_measurement": "mg/m³",
+                        "state_class": "measurement",
+                    },
+                    "P5": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P6": {
+                        "description": "usb_voltage",
+                        "data_type": "voltage",
+                        "conversion": "direct_value",
+                        "device_class": "voltage",
+                        "unit_of_measurement": "V",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "ELIQ_EM": {
         "name": "ELIQ电量计量器",
-        "sensor": {
-            "EPA": {
-                "description": "power",
-                "data_type": "power",
-                "conversion": "direct_value",
-                "device_class": "power",
-                "unit_of_measurement": "W",
-                "state_class": "measurement",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "ELIQ_EM",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "EPA": {
+                        "description": "average_power",
+                        "data_type": "power",
+                        "conversion": "direct_value",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_P_A": {
         "name": "烟雾感应器",
-        "binary_sensor": {
-            "P1": {
-                "description": "sl_p_a",
-                "data_type": "smoke_alarm",
-                "conversion": "direct_value",
-                "device_class": "smoke",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_A",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "smoke_alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "smoke",
+                    },
+                },
             },
-        },
-        "sensor": {
-            "P2": {
-                "description": "voltage",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "voltage",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SC_CA": {
-        "name": "CO2环境感应器",
-        "sensor": {
-            "P1": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "P2": {
-                "description": "humidity",
-                "data_type": "humidity",
-                "conversion": "v_field",
-                "device_class": "humidity",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-            "P3": {
-                "description": "concentration",
-                "data_type": "co2_concentration",
-                "conversion": "v_field",
-                "device_class": "carbon_dioxide",
-                "unit_of_measurement": "ppm",
-                "state_class": "measurement",
-            },
-            "P4": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-            "P5": {
-                "description": "electric",
-                "data_type": "voltage",
-                "conversion": "direct_value",
-                "device_class": "voltage",
-                "unit_of_measurement": "V",
-                "state_class": "measurement",
+        "name": "环境感应器(CO2)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CA",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "P2": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "v_field",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P3": {
+                        "description": "co2_concentration",
+                        "data_type": "co2_concentration",
+                        "conversion": "v_field",
+                        "device_class": "carbon_dioxide",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P5": {
+                        "description": "usb_voltage",
+                        "data_type": "voltage",
+                        "conversion": "direct_value",
+                        "device_class": "voltage",
+                        "unit_of_measurement": "V",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_P_RM": {
-        "name": "雷达人体存在感应器",
-        "binary_sensor": {
-            "P1": {
-                "description": "detection",
-                "data_type": "motion_status",
-                "conversion": "direct_value",
-                "device_class": "motion",
+        "name": "人体存在感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_RM",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "motion_detection",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "motion",
+                    },
+                },
             },
-        },
-        "switch": {
-            "P2": {
-                "description": "detection",
-                "data_type": "radar_config",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
+            "number": {
+                "io_configs": {
+                    "P2": {
+                        "description": "motion_parameter_config",
+                        "data_type": "config_bitmask",
+                        "conversion": "direct_value",
+                        "min_value": 0,
+                        "max_value": 67108863,
+                        "step": 1,
+                        "mode": "box",
+                        "commands": {
+                            "set_config": {
+                                "type": 0xDF,
+                            },
+                        },
                     },
                 },
             },
         },
     },
     "SL_DF_GG": {
-        "name": "云防门窗感应器",
-        "binary_sensor": {
-            "A": {
-                "description": "current_state",
-                "data_type": "door_status",
-                "conversion": "type_bit_0",
-                "device_class": "door",
+        "name": "云防门窗感应器（DEFED window/Door)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_GG",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "A": {
+                        "description": "current_state",
+                        "data_type": "binary_sensor",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "door",
+                    },
+                    "A2": {
+                        "description": "external_sensor_state",
+                        "data_type": "binary_sensor",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "door",
+                    },
+                    "TR": {
+                        "description": "tamper",
+                        "data_type": "tamper_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "tamper",
+                    },
+                },
             },
-            "TR": {
-                "description": "tamper",
-                "data_type": "tamper_status",
-                "conversion": "type_bit_0",
-                "device_class": "tamper",
-            },
-            "A2": {
-                "description": "sensor",
-                "data_type": "door_status",
-                "conversion": "type_bit_0",
-                "device_class": "door",
-            },
-        },
-        "sensor": {
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_DF_MM": {
         "name": "云防动态感应器",
-        "binary_sensor": {
-            "M": {
-                "description": "current_state",
-                "data_type": "motion_status",
-                "conversion": "type_bit_0",
-                "device_class": "motion",
+        "official_name": "云防动态感应器（DEFED Motion)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_MM",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "M": {
+                        "description": "motion",
+                        "data_type": "motion_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "motion",
+                    },
+                    "TR": {
+                        "description": "tamper",
+                        "data_type": "tamper_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "tamper",
+                    },
+                },
             },
-            "TR": {
-                "description": "tamper",
-                "data_type": "tamper_status",
-                "conversion": "type_bit_0",
-                "device_class": "tamper",
-            },
-        },
-        "sensor": {
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_DF_SR": {
         "name": "云防室内警铃",
-        "binary_sensor": {
-            "SR": {
-                "description": "current_state",
-                "data_type": "siren_status",
-                "conversion": "type_bit_0",
-                "device_class": "sound",
-            },
-            "TR": {
-                "description": "tamper",
-                "data_type": "tamper_status",
-                "conversion": "type_bit_0",
-                "device_class": "tamper",
-            },
-        },
-        "sensor": {
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-        },
-        "switch": {
-            "P1": {
-                "description": "setting",
-                "data_type": "alarm_config",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "official_name": "云防室内警铃(DEFED Indoor Siren)",
+        "category": "siren",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_SR",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "SR": {
+                        "description": "siren_playing",
+                        "data_type": "alarm_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "sound",
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "TR": {
+                        "description": "tamper",
+                        "data_type": "tamper_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "tamper",
                     },
-                    "set_config_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
                     },
-                    "set_config_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "alarm_setting",
+                        "data_type": "alarm_playback",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_config_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_config_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
                 },
             },
@@ -5913,92 +6044,116 @@ _RAW_DEVICE_DATA = {
     },
     "SL_DF_BB": {
         "name": "云防遥控器",
-        "binary_sensor": {
-            "eB1": {
-                "description": "status",
-                "data_type": "button_status",
-                "conversion": "type_bit_0",
-                "device_class": "moving",
+        "official_name": "云防遥控器（DEFED Key Fob)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_BB",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "eB1": {
+                        "description": "arm_button",
+                        "data_type": "button_state",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                    },
+                    "eB2": {
+                        "description": "disarm_button",
+                        "data_type": "button_state",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                    },
+                    "eB3": {
+                        "description": "warning_button",
+                        "data_type": "button_state",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                    },
+                    "eB4": {
+                        "description": "home_button",
+                        "data_type": "button_state",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                    },
+                },
             },
-            "eB2": {
-                "description": "status",
-                "data_type": "button_status",
-                "conversion": "type_bit_0",
-                "device_class": "moving",
-            },
-            "eB3": {
-                "description": "status",
-                "data_type": "button_status",
-                "conversion": "type_bit_0",
-                "device_class": "moving",
-            },
-            "eB4": {
-                "description": "status",
-                "data_type": "button_status",
-                "conversion": "type_bit_0",
-                "device_class": "moving",
-            },
-        },
-        "sensor": {
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
             },
         },
     },
     "SL_SC_CN": {
         "name": "噪音感应器",
-        "sensor": {
-            "P1": {
-                "description": "sl_sc_cn",
-                "data_type": "noise_level",
-                "conversion": "direct_value",
-                "device_class": "sound_pressure",
-                "unit_of_measurement": "dB",
-                "state_class": "measurement",
-            },
-            "P4": {
-                "description": "sl_sc_cn",
-                "data_type": "noise_calibration",
-                "conversion": "direct_value",
-                "device_class": "sound_pressure",
-                "unit_of_measurement": "dB",
-                "state_class": "measurement",
-            },
-        },
-        "switch": {
-            "P2": {
-                "description": "setting",
-                "data_type": "threshold_config",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_threshold": {
-                        "type": CMD_TYPE_SET_RAW_ON,
+        "official_name": "噪音感应器（Noise Sensor)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CN",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "noise_level",
+                        "data_type": "noise_level",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "device_class": "sound_pressure",
+                        "unit_of_measurement": "dB",
+                        "state_class": "measurement",
                     },
                 },
             },
-            "P3": {
-                "description": "setting",
-                "data_type": "alarm_config",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+            "number": {
+                "io_configs": {
+                    "P2": {
+                        "description": "noise_threshold_setting",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "min": 0,
+                        "max": 4294967295,
+                        "step": 1,
+                        "mode": "box",
+                        "commands": {"set_value": {"type": CMD_TYPE_SET_RAW_ON}},
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P4": {
+                        "description": "noise_calibration",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "min": -128,
+                        "max": 127,
+                        "step": 1,
+                        "mode": "box",
+                        "unit_of_measurement": "dB",
+                        "commands": {"set_value": {"type": CMD_TYPE_SET_VAL}},
                     },
-                    "set_config_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_config_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
+                },
+            },
+            "switch": {
+                "io_configs": {
+                    "P3": {
+                        "description": "alarm_setting",
+                        "data_type": "alarm_playback",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_config_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_config_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
                     },
                 },
             },
@@ -6007,68 +6162,85 @@ _RAW_DEVICE_DATA = {
     # ================= 2.7 空气净化器 (Air Purifier) =================
     "OD_MFRESH_M8088": {
         "name": "空气净化器",
-        "switch": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "RM": {
-                "description": "mode",
-                "data_type": "run_mode",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_mode": {
-                        "type": CMD_TYPE_SET_VAL,
+        "official_name": "空气净化器",
+        "category": "fan",
+        "manufacturer": "lifesmart",
+        "model": "OD_MFRESH_M8088",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                        },
                     },
                 },
             },
-        },
-        "sensor": {
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "°C",
-                "device_class": "temperature",
-                "state_class": "measurement",
+            "number": {
+                "io_configs": {
+                    "RM": {
+                        "description": "run_mode",
+                        "data_type": "mode_config",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "min": 0,
+                        "max": 5,
+                        "step": 1,
+                        "mode": "box",
+                        "commands": {"set_value": {"type": CMD_TYPE_SET_VAL}},
+                    },
+                },
             },
-            "H": {
-                "description": "humidity",
-                "data_type": "humidity",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "%",
-                "device_class": "humidity",
-                "state_class": "measurement",
-            },
-            "PM": {
-                "description": "PM2.5",
-                "data_type": "pm25",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "µg/m³",
-                "device_class": "pm25",
-                "state_class": "measurement",
-            },
-            "FL": {
-                "description": "fl",
-                "data_type": "filter_life",
-                "conversion": "direct_value",
-                "unit_of_measurement": "h",
-            },
-            "UV": {
-                "description": "fl",
-                "data_type": "uv_index",
-                "conversion": "direct_value",
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "unit_of_measurement": "°C",
+                        "device_class": "temperature",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "unit_of_measurement": "%",
+                        "device_class": "humidity",
+                        "state_class": "measurement",
+                    },
+                    "PM": {
+                        "description": "PM2.5",
+                        "data_type": "pm25",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "unit_of_measurement": "µg/m³",
+                        "device_class": "pm25",
+                        "state_class": "measurement",
+                    },
+                    "FL": {
+                        "description": "filter_life",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "unit_of_measurement": "h",
+                        "state_class": "measurement",
+                    },
+                    "UV": {
+                        "description": "uv_index",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                    },
+                },
             },
         },
     },
@@ -6076,6 +6248,7 @@ _RAW_DEVICE_DATA = {
     # 2.8.1 智能门锁系列 (Smart Door Lock Series)
     "SL_LK_LS": {
         "name": "思锁智能门锁",
+        "official_name": "思锁智能门锁",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "SL_LK_LS",
@@ -6274,6 +6447,7 @@ _RAW_DEVICE_DATA = {
     },
     "SL_LK_GTM": {
         "name": "盖特曼智能门锁",
+        "official_name": "盖特曼智能门锁",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "SL_LK_GTM",
@@ -6452,6 +6626,7 @@ _RAW_DEVICE_DATA = {
     },
     "SL_LK_AG": {
         "name": "Aqara智能门锁",
+        "official_name": "Aqara智能门锁",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "SL_LK_AG",
@@ -6630,6 +6805,7 @@ _RAW_DEVICE_DATA = {
     },
     "SL_LK_SG": {
         "name": "思哥智能门锁",
+        "official_name": "思哥智能门锁",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "SL_LK_SG",
@@ -6808,6 +6984,7 @@ _RAW_DEVICE_DATA = {
     },
     "SL_LK_YL": {
         "name": "Yale智能门锁",
+        "official_name": "Yale智能门锁",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "SL_LK_YL",
@@ -6986,6 +7163,7 @@ _RAW_DEVICE_DATA = {
     },
     "SL_LK_SWIFTE": {
         "name": "SWIFTE智能门锁",
+        "official_name": "SWIFTE门锁模块",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "SL_LK_SWIFTE",
@@ -7164,6 +7342,7 @@ _RAW_DEVICE_DATA = {
     },
     "OD_JIUWANLI_LOCK1": {
         "name": "久万里智能门锁",
+        "official_name": "九万里门锁",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "OD_JIUWANLI_LOCK1",
@@ -7342,6 +7521,7 @@ _RAW_DEVICE_DATA = {
     },
     "SL_P_BDLK": {
         "name": "百度智能门锁",
+        "official_name": "必达门锁模块",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "SL_P_BDLK",
@@ -7521,6 +7701,7 @@ _RAW_DEVICE_DATA = {
     # 2.8.2 C100/C200门锁系列 (C100/C200 Door Lock Series)
     "SL_LK_TY": {
         "name": "C200门锁",
+        "official_name": "C200门锁",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "SL_LK_TY",
@@ -7699,6 +7880,7 @@ _RAW_DEVICE_DATA = {
     },
     "SL_LK_DJ": {
         "name": "C100门锁",
+        "official_name": "智能门锁C210",
         "category": "lock",
         "manufacturer": "lifesmart",
         "model": "SL_LK_DJ",
@@ -7893,11 +8075,11 @@ _RAW_DEVICE_DATA = {
                         "conversion": "type_bit_0",
                         "commands": {
                             "on": {
-                                "type": "CMD_TYPE_ON",
+                                "type": CMD_TYPE_ON,
                                 "val": 1,
                             },
                             "off": {
-                                "type": "CMD_TYPE_OFF",
+                                "type": CMD_TYPE_OFF,
                                 "val": 0,
                             },
                         },
@@ -7908,7 +8090,7 @@ _RAW_DEVICE_DATA = {
                         "conversion": "direct_value",
                         "commands": {
                             "set_mode": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": CMD_TYPE_SET_CONFIG,
                             }
                         },
                     },
@@ -7918,7 +8100,7 @@ _RAW_DEVICE_DATA = {
                         "conversion": "direct_value",
                         "commands": {
                             "set_fan_speed": {
-                                "type": "CMD_TYPE_SET_CONFIG",
+                                "type": CMD_TYPE_SET_CONFIG,
                                 "fan_modes": {"low": 15, "medium": 45, "high": 75},
                             }
                         },
@@ -7931,7 +8113,7 @@ _RAW_DEVICE_DATA = {
                         "unit_of_measurement": "°C",
                         "commands": {
                             "set_temperature": {
-                                "type": "CMD_TYPE_SET_TEMP_DECIMAL",
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
                             }
                         },
                     },
@@ -7972,8 +8154,8 @@ _RAW_DEVICE_DATA = {
             },
             "power_control": {
                 "io_field": "O",
-                "on_command": {"type": "CMD_TYPE_ON"},
-                "off_command": {"type": "CMD_TYPE_OFF"},
+                "on_command": {"type": CMD_TYPE_ON},
+                "off_command": {"type": CMD_TYPE_OFF},
             },
             "capabilities": [
                 "heating",
@@ -8104,62 +8286,75 @@ _RAW_DEVICE_DATA = {
     },
     "SL_CP_DN": {
         "name": "地暖温控器",
-        "climate": {
-            "P1": {
-                "description": "sl_cp_dn",
-                "data_type": "hvac_mode",
-                "conversion": "direct_value",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "official_name": "地暖温控器",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_CP_DN",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "sl_cp_dn",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P3": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "device_class": "opening",
                     },
-                },
+                }
             },
-            "P3": {
-                "description": "target_temperature",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "commands": {
-                    "set_temperature": {
-                        "type": CMD_TYPE_SET_CONFIG,
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
                     },
-                },
-            },
-        },
-        "binary_sensor": {
-            "P2": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "device_class": "opening",
-            },
-        },
-        "sensor": {
-            "P4": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "P5": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
+                    "P5": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
             },
         },
     },
@@ -8248,197 +8443,234 @@ _RAW_DEVICE_DATA = {
     },
     "SL_UACCB": {
         "name": "空调控制面板",
-        "climate": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "official_name": "空调控制面板",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_UACCB",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "mode",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                },
+                    "P3": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_fan_speed": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
             },
-            "P2": {
-                "description": "mode",
-                "data_type": "hvac_mode",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
+            "sensor": {
+                "io_configs": {
+                    "P6": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
                     },
-                },
-            },
-            "P3": {
-                "description": "target_temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "commands": {
-                    "set_temperature": {
-                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
-                    },
-                },
-            },
-            "P4": {
-                "description": "fan_speed",
-                "data_type": "fan_speed",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_fan_speed": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                    },
-                },
-            },
-        },
-        "sensor": {
-            "P6": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
+                }
             },
         },
     },
     "SL_CP_VL": {
         "name": "温控阀门",
-        "climate": {
-            "P1": {
-                "description": "turn_on_switch",
-                "data_type": "hvac_mode",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "official_name": "温控阀门",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_CP_VL",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "turn_on_switch",
+                        "data_type": "hvac_mode",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P3": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            },
+                        },
                     },
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
                     },
-                },
-            },
-            "P3": {
-                "description": "target_temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "commands": {
-                    "set_temperature": {
-                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                    "P5": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
                     },
-                },
+                    "P6": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                }
             },
-        },
-        "sensor": {
-            "P4": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "P5": {
-                "description": "alarm",
-                "data_type": "alarm_status",
-                "conversion": "direct_value",
-            },
-            "P6": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-        },
-        "binary_sensor": {
-            "P5": {
-                "description": "status",
-                "data_type": "alarm_status",
-                "conversion": "direct_value",
-                "device_class": "problem",
+            "binary_sensor": {
+                "io_configs": {
+                    "P5": {
+                        "description": "status",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                        "device_class": "problem",
+                    },
+                }
             },
         },
     },
     "SL_DN": {
         "name": "星玉地暖",
-        "climate": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "official_name": "星玉地暖",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_DN",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "mode",
+                        "data_type": "config_bitmask",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                },
-            },
-            "P2": {
-                "description": "mode",
-                "data_type": "config_bitmask",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_config": {
-                        "type": CMD_TYPE_SET_CONFIG,
+                    "P8": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                },
+                }
             },
-            "P8": {
-                "description": "target_temperature",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "commands": {
-                    "set_temperature": {
-                        "type": CMD_TYPE_SET_CONFIG,
+            "binary_sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "valve",
+                        "data_type": "valve_status",
+                        "conversion": "type_bit_0",
+                        "device_class": "opening",
                     },
-                },
+                }
             },
-        },
-        "binary_sensor": {
-            "P3": {
-                "description": "valve",
-                "data_type": "valve_status",
-                "conversion": "type_bit_0",
-                "device_class": "opening",
-            },
-        },
-        "sensor": {
-            "P4": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "P9": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "val_div_10",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "P9": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
             },
         },
     },
@@ -8446,6 +8678,7 @@ _RAW_DEVICE_DATA = {
     # 2.10.1 通用控制器 (General Controller)
     "SL_P": {
         "name": "通用控制器",
+        "official_name": "通用控制器",
         "category": "cover",
         "manufacturer": "lifesmart",
         "model": "SL_P",
@@ -8698,6 +8931,7 @@ _RAW_DEVICE_DATA = {
     # 2.10.2 通用控制器HA (HA Interface Adapter)
     "SL_JEMA": {
         "name": "通用控制器HA",
+        "official_name": "通用控制器（HA）",
         "category": "cover",
         "manufacturer": "lifesmart",
         "model": "SL_JEMA",
@@ -8995,317 +9229,398 @@ _RAW_DEVICE_DATA = {
     # ================= 第三方设备 (Third-party Devices) =================
     "V_DLT645_P": {
         "name": "DLT电量计量器",
-        "sensor": {
-            "EE": {
-                "description": "energy",
-                "data_type": "energy_consumption",
-                "conversion": "ieee754_or_friendly",
-                "unit_of_measurement": "kWh",
-                "device_class": "energy",
-                "state_class": "total_increasing",
-            },
-            "EP": {
-                "description": "power",
-                "data_type": "power",
-                "conversion": "ieee754_or_friendly",
-                "unit_of_measurement": "W",
-                "device_class": "power",
-                "state_class": "measurement",
+        "official_name": "DLT电量计量器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "V_DLT645_P",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "EE": {
+                        "description": "energy",
+                        "data_type": "energy_consumption",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "kWh",
+                        "device_class": "energy",
+                        "state_class": "total_increasing",
+                    },
+                    "EP": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "W",
+                        "device_class": "power",
+                        "state_class": "measurement",
+                    },
+                }
             },
         },
     },
     "V_DUNJIA_P": {
         "name": "X100人脸识别可视门锁",
-        "sensor": {
-            "BAT": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "direct_value",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
-            "ALM": {
-                "description": "alarm",
-                "data_type": "alarm_status",
-                "conversion": "direct_value",
-            },
-            "EVTLO": {
-                "description": "real_time_unlock",
-                "data_type": "lock_event",
-                "conversion": "direct_value",
-            },
-            "HISLK": {
-                "description": "last_unlock_info",
-                "data_type": "recent_unlock",
-                "conversion": "direct_value",
+        "official_name": "X100人脸识别可视门锁",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "V_DUNJIA_P",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                }
             },
         },
     },
     "V_HG_L": {
         "name": "极速开关组",
-        "switch": {
-            "L1": {
-                "description": "switch_1",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "official_name": "极速开关组",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "V_HG_L",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "L2": {
-                "description": "switch_2",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "L3": {
-                "description": "switch_3",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
+                }
             },
         },
     },
     "V_HG_XX": {
         "name": "极速虚拟设备",
-        "switch": {
-            "P1": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "official_name": "极速虚拟设备",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "V_HG_XX",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
+                }
             },
         },
     },
     "V_SZJSXR_P": {
         "name": "新风控制器(深圳建设新风)",
-        "climate": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "MODE": {
-                "description": "mode",
-                "data_type": "hvac_mode",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_mode": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                    },
-                },
-            },
-            "F": {
-                "description": "fan_speed",
-                "data_type": "fan_speed",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_fan_speed": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "fan_modes": {
-                            "low": 15,
-                            "medium": 45,
-                            "high": 75,
+        "official_name": "新风",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "V_SZJSXR_P",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
                         },
                     },
-                },
-            },
-            "tT": {
-                "description": "target_temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "commands": {
-                    "set_temperature": {
-                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                    "MODE": {
+                        "description": "mode",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_mode": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                },
-            },
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
+                    "F": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_fan_speed": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "fan_modes": {
+                                    "low": 15,
+                                    "medium": 45,
+                                    "high": 75,
+                                },
+                            },
+                        },
+                    },
+                    "tT": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            },
+                        },
+                    },
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
             },
         },
     },
     "V_T8600_P": {
         "name": "YORK温控器T8600",
-        "climate": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
-            "MODE": {
-                "description": "mode",
-                "data_type": "hvac_mode",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_mode": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                    },
-                },
-            },
-            "F": {
-                "description": "fan_speed",
-                "data_type": "fan_speed",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_fan_speed": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "fan_modes": {
-                            "low": 15,
-                            "medium": 45,
-                            "high": 75,
+        "official_name": "YORK温控器T8600",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "V_T8600_P",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
                         },
                     },
-                },
-            },
-            "tT": {
-                "description": "target_temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "commands": {
-                    "set_temperature": {
-                        "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                    "MODE": {
+                        "description": "mode",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_mode": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                },
-            },
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
+                    "F": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_fan_speed": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "fan_modes": {
+                                    "low": 15,
+                                    "medium": 45,
+                                    "high": 75,
+                                },
+                            },
+                        },
+                    },
+                    "tT": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            },
+                        },
+                    },
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
             },
         },
     },
     "V_FRESH_P": {
         "name": "艾弗纳KV11新风控制器",
-        "switch": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+        "official_name": "艾弗纳KV11新风控制器",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "V_FRESH_P",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "MODE": {
+                        "description": "mode",
+                        "data_type": "mode_config",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_mode": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
                     },
-                },
+                }
             },
-            "MODE": {
-                "description": "mode",
-                "data_type": "mode_config",
-                "conversion": "direct_value",
-                "commands": {
-                    "set_mode": {
-                        "type": CMD_TYPE_SET_VAL,
+            "sensor": {
+                "io_configs": {
+                    "F1": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
                     },
-                },
-            },
-        },
-        "sensor": {
-            "F1": {
-                "description": "fan_speed",
-                "data_type": "fan_speed",
-                "conversion": "direct_value",
-            },
-            "F2": {
-                "description": "fan_speed",
-                "data_type": "fan_speed",
-                "conversion": "direct_value",
-            },
-            "T": {
-                "description": "ambient_temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
+                    "F2": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                    },
+                    "T": {
+                        "description": "ambient_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
             },
         },
     },
     "V_IND_S": {
         "name": "工业传感器",
-        "sensor": {
-            "P1": {
-                "description": "v_ind_s",
-                "data_type": "generic_value",
-                "conversion": "ieee754_or_friendly",
+        "official_name": "工业传感器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "V_IND_S",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "v_ind_s",
+                        "data_type": "generic_value",
+                        "conversion": "ieee754_or_friendly",
+                    },
+                }
             },
         },
     },
     "V_485_P": {
         "name": "485控制器",
+        "official_name": "485控制器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "V_485_P",
+        "_generation": 2,
         "wildcard_support": True,
-        "switch": {
+        "platforms": {
+            "switch": {
+                "io_configs": {
             "O": {
                 "description": "switch",
                 "data_type": "binary_switch",
@@ -9336,8 +9651,10 @@ _RAW_DEVICE_DATA = {
                     },
                 },
             },
-        },
-        "sensor": {
+                }
+            },
+            "sensor": {
+                "io_configs": {
             "P1": {
                 "description": "v_ind_s",
                 "data_type": "generic_value",
@@ -9529,6 +9846,8 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "ppm",
                 "state_class": "measurement",
             },
+                }
+            },
         },
     },
     # ================= 2.11 摄像头系列 (Camera Series) =================
@@ -9536,7 +9855,14 @@ _RAW_DEVICE_DATA = {
     # 基础设备类型: cam，通过dev_rt属性区分具体型号
     "LSSSMINIV1": {
         "name": "红外夜灯",
-        "light": {
+        "official_name": "多功能报警器",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "LSSSMINIV1",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
             "P1": {
                 "description": "control",
                 "data_type": "infrared_light",
@@ -9552,16 +9878,20 @@ _RAW_DEVICE_DATA = {
                     },
                 },
             },
-        },
-        "binary_sensor": {
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
             "P2": {
                 "description": "motion",
                 "data_type": "motion_status",
                 "conversion": "direct_value",
                 "device_class": "motion",
             },
-        },
-        "sensor": {
+                }
+            },
+            "sensor": {
+                "io_configs": {
             "P3": {
                 "description": "illuminance",
                 "data_type": "illuminance",
@@ -9578,11 +9908,20 @@ _RAW_DEVICE_DATA = {
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
             },
+                }
+            },
         },
     },
     "SL_DF_KP": {
         "name": "云防键盘",
-        "binary_sensor": {
+        "official_name": "云防KeyPad (DEFED KeyPad)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_KP",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
             "KY": {
                 "description": "button",
                 "data_type": "keypad_status",
@@ -9595,8 +9934,10 @@ _RAW_DEVICE_DATA = {
                 "conversion": "type_bit_0",
                 "device_class": "tamper",
             },
-        },
-        "sensor": {
+                }
+            },
+            "sensor": {
+                "io_configs": {
             "T": {
                 "description": "temperature",
                 "data_type": "temperature",
@@ -9612,6 +9953,8 @@ _RAW_DEVICE_DATA = {
                 "device_class": "battery",
                 "unit_of_measurement": "%",
                 "state_class": "measurement",
+            },
+                }
             },
         },
     },
@@ -9681,7 +10024,14 @@ _RAW_DEVICE_DATA = {
     # ================= 2.12 车库门控制 (Garage Door Control) =================
     "SL_ETDOOR": {
         "name": "车库门控制器",
-        "light": {
+        "official_name": "车库门",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_ETDOOR",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
             "P1": {
                 "description": "control",
                 "data_type": "binary_switch",
@@ -9697,8 +10047,10 @@ _RAW_DEVICE_DATA = {
                     },
                 },
             },
-        },
-        "cover": {
+                }
+            },
+            "cover": {
+                "io_configs": {
             "P2": {
                 "description": "status",
                 "data_type": "garage_door_status",
@@ -9726,13 +10078,22 @@ _RAW_DEVICE_DATA = {
                     },
                 },
             },
+                }
+            },
         },
     },
     # ================= 2.13 智能报警器(CoSS版) (Smart Alarm CoSS) =================
     # 基于官方文档2.12 智能报警器（CoSS版）规格
     "SL_ALM": {
         "name": "智能报警器(CoSS版)",
-        "switch": {
+        "official_name": "智能报警器(CoSS版)",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_ALM",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
             "P1": {
                 "description": "control",
                 "data_type": "alarm_playback",
@@ -9772,12 +10133,21 @@ _RAW_DEVICE_DATA = {
                     },
                 },
             },
+                }
+            },
         },
     },
     # ================= 超能面板设备 (NATURE Series Devices) =================
     # 基于官方文档2.14 超能面板系列（NATURE Series)
     # 注意：这是动态分类设备，根据P5值决定是开关版还是温控版
     "SL_NATURE": {
+        "name": "超级面板PRO",
+        "official_name": "超级面板PRO",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_NATURE",
+        "_generation": 2,
+        "platforms": {},
         "dynamic": True,
         "switch_mode": {
             "condition": "P5&0xFF==1",
@@ -9889,6 +10259,7 @@ _RAW_DEVICE_DATA = {
     # 2.14.4 星玉温控面板 (Nature Thermostat)
     "SL_FCU": {
         "name": "星玉温控面板",
+        "official_name": "星玉温控面板",
         "category": "climate",
         "manufacturer": "lifesmart",
         "model": "SL_FCU",

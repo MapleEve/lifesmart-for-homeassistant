@@ -225,14 +225,16 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
 
             # 根据配置转换值
             device_value = self._convert_to_device_value(value)
+            cmd_type = self._get_configured_command_type(CMD_TYPE_SET_VAL)
 
-            await self._send_number_command(CMD_TYPE_SET_VAL, device_value)
+            await self._send_number_command(cmd_type, device_value)
 
             _LOGGER.debug(
-                "Set number %s to %s (device value: %s) on device %s",
+                "Set number %s to %s (device value: %s, cmd_type: %s) on device %s",
                 self._sub_key,
                 value,
                 device_value,
+                cmd_type,
                 self._device.get(DEVICE_NAME_KEY),
             )
 
@@ -300,6 +302,40 @@ class LifeSmartNumber(LifeSmartEntity, NumberEntity):
                 self._sub_key,
             )
             return None
+
+    def _get_configured_command_type(self, default_cmd_type: int) -> int:
+        """Return the configured LifeSmart command type for this number entity."""
+        commands = self._number_config.get("commands") or {}
+        if not isinstance(commands, dict):
+            return default_cmd_type
+
+        set_capable_command_names = (
+            "enable_and_set",
+            "disable_and_set",
+            "set_value",
+            "set_config",
+            "set_sensitivity",
+            "set_threshold",
+            "set_brightness",
+            "set_temperature",
+            "set_position",
+            "set",
+        )
+        for command_name in set_capable_command_names:
+            command = commands.get(command_name)
+            if isinstance(command, dict) and "type" in command:
+                return command["type"]
+
+        for command_name, command in commands.items():
+            if (
+                isinstance(command_name, str)
+                and "set" in command_name.lower()
+                and isinstance(command, dict)
+                and "type" in command
+            ):
+                return command["type"]
+
+        return default_cmd_type
 
     async def _send_number_command(self, cmd_type: int, value: Any) -> None:
         """

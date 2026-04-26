@@ -141,6 +141,9 @@ class StaticDeviceResolver:
 
         # 检查是否为多模式设备
         features = config.get("_features", {})
+        if features.get("is_versioned"):
+            return self._resolve_versioned_device_static(config, device, device_type)
+
         if features.get("is_dynamic"):
             return self._resolve_dynamic_device_static(config, device_data, device_type)
 
@@ -171,8 +174,6 @@ class StaticDeviceResolver:
         """
         mode_configs = config.get("_mode_configs", {})
         features = config.get("_features", {})
-        default_mode = features.get("default_mode")
-
         # 通过静态条件匹配确定模式
         matched_mode = self._find_matching_mode(mode_configs, device_data)
 
@@ -191,43 +192,67 @@ class StaticDeviceResolver:
                 )
             )
 
-        # 尝试使用默认模式
-        if default_mode and default_mode in mode_configs:
-            self._stats["fallback_resolutions"] += 1
-            self._stats["successful_resolutions"] += 1
-
-            mode_config = mode_configs[default_mode]
-            return ResolutionResult.warning_result(
-                DeviceConfig(
-                    device_type=device_type,
-                    name=config.get("name", device_type),
-                    platforms=mode_config.get("platforms", {}),
-                    features=features,
-                    device_mode=default_mode,
-                ),
-                f"Using default mode '{default_mode}' for device {device_type}",
-            )
-
-        # 降级到基础平台配置
-        base_platforms = config.get("platforms", {})
-        if base_platforms:
-            self._stats["fallback_resolutions"] += 1
-            self._stats["successful_resolutions"] += 1
-
-            return ResolutionResult.warning_result(
-                DeviceConfig(
-                    device_type=device_type,
-                    name=config.get("name", device_type),
-                    platforms=base_platforms,
-                    features=features,
-                ),
-                f"No matching mode found for device {device_type}, using base configuration",
-            )
-
-        # 完全失败
         return ResolutionResult.error_result(
-            f"No valid configuration found for dynamic device {device_type}"
+            f"No matching strict dynamic mode for device {device_type}"
         )
+
+    def _resolve_versioned_device_static(
+        self, config: Dict[str, Any], device: Dict[str, Any], device_type: str
+    ) -> ResolutionResult:
+        """Resolve versioned devices strictly; never use default/first-version fallback."""
+        version_configs = config.get("_version_configs", {})
+        if not version_configs:
+            return ResolutionResult.error_result(
+                f"No version configurations found for versioned device {device_type}"
+            )
+
+        device_version = self._extract_version_from_device(device, device_type)
+        if not device_version:
+            return ResolutionResult.error_result(
+                f"Missing explicit version evidence for versioned device {device_type}"
+            )
+
+        selected_key = None
+        normalized_version = str(device_version).upper()
+        for version_key in version_configs:
+            if str(version_key).upper() == normalized_version:
+                selected_key = version_key
+                break
+
+        if selected_key is None:
+            return ResolutionResult.error_result(
+                f"No strict configuration found for {device_type} version {device_version}"
+            )
+
+        self._stats["successful_resolutions"] += 1
+        selected_config = version_configs[selected_key]
+        selected_features = dict(config.get("_features", {}))
+        selected_features["resolved_version"] = str(selected_key).upper()
+        return ResolutionResult.success_result(
+            DeviceConfig(
+                device_type=device_type,
+                name=selected_config.get("name", config.get("name", device_type)),
+                platforms=selected_config.get("platforms", {}),
+                features=selected_features,
+                device_mode=str(selected_key).upper(),
+            )
+        )
+
+    def _extract_version_from_device(
+        self, device: Dict[str, Any], device_type: str
+    ) -> Optional[str]:
+        """Extract explicit Vn evidence from fullCls or version, case-insensitively."""
+        normalized_device_type = str(device_type).upper()
+        full_cls = str(device.get("fullCls") or "").upper()
+        if full_cls:
+            for version in ("V1", "V2", "V3"):
+                if f"{normalized_device_type}_{version}" in full_cls:
+                    return version
+
+        version = device.get("version")
+        if version is not None and str(version).strip():
+            return str(version).strip().upper()
+        return None
 
     def _find_matching_mode(
         self, mode_configs: Dict[str, Any], device_data: Dict[str, Any]
@@ -264,7 +289,39 @@ class StaticDeviceResolver:
         if not condition:
             return False
 
+        # New preprocessed expression descriptor, e.g.
+        # {"type":"expression", "field":"P5", "value":1} for P5&0xFF==1
+        # or {"values":[3,6]} for P5&0xFF in [3,6].
+        if condition.get("type") == "expression" and condition.get("field"):
+            field = condition.get("field")
+            io_data = device_data.get(field, {})
+            actual_value = None
+            if isinstance(io_data, dict):
+                for value_key in ("type", "val", "v"):
+                    if io_data.get(value_key) is not None:
+                        actual_value = io_data.get(value_key)
+                        break
+            elif io_data is not None:
+                actual_value = io_data
+            if actual_value is None:
+                return False
+            if condition.get("evaluation_method") == "bitwise_and":
+                try:
+                    actual_value = int(actual_value)
+                    if "shift" in condition:
+                        actual_value >>= int(condition.get("shift", 0))
+                    actual_value &= int(condition.get("mask", condition.get("bitwise_and", 0xFF)))
+                except (TypeError, ValueError):
+                    return False
+            if "values" in condition:
+                return actual_value in condition.get("values", [])
+            if "value" in condition:
+                return actual_value == condition.get("value")
+            return False
+
         for field, expected_values in condition.items():
+            if field in {"type", "expression", "evaluation_method", "field", "value", "values"}:
+                continue
             # 获取设备字段的实际值
             io_data = device_data.get(field, {})
             actual_value = io_data.get("val")

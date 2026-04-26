@@ -25,6 +25,13 @@ nosetests.xml
 # Virtual environments
 /venv/
 .env
+.env.*
+!.env.example
+CLAUDE.local.md
+*.key
+*.pem
+*.p12
+*.pfx
 
 # IDE
 .idea/

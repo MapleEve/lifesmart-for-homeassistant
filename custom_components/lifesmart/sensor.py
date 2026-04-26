@@ -190,6 +190,8 @@ def _get_enhanced_io_config(
                 "device_class": io_config.device_class,
                 "state_class": io_config.state_class,
                 "unit_of_measurement": io_config.unit_of_measurement,
+                "conversion": getattr(io_config, "conversion", None),
+                "processor_type": getattr(io_config, "processor_type", None),
                 "icon": io_config.icon,
                 "entity_category": io_config.entity_category,
                 "value_template": io_config.value_template,

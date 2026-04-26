@@ -9,7 +9,9 @@ StaticConfigPreprocessor扩展 - 支持DEVICE_CENTRIC_CONFIG新格式
 - 统一输出格式确保StaticDeviceResolver兼容性
 """
 
+import ast
 import logging
+import re
 from typing import Dict, Any, List, Optional, Set
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +75,14 @@ class DeviceCentricConfigProcessor:
             "platforms": self._process_platforms_from_new_format(raw_config),
         }
 
+        if raw_config.get("versioned") or "version_modes" in raw_config:
+            static_config["_version_configs"] = self._process_version_modes_from_new_format(
+                raw_config.get("version_modes", {})
+            )
+
+        if raw_config.get("dynamic"):
+            static_config["_mode_configs"] = self._process_dynamic_modes_from_new_format(raw_config)
+
         # 处理特殊配置嵌入
         self._process_embedded_configs(device_type, raw_config, static_config)
 
@@ -93,8 +103,8 @@ class DeviceCentricConfigProcessor:
             设备特性字典
         """
         features = {
-            "is_dynamic": False,  # 新格式都是静态配置
-            "is_versioned": False,
+            "is_dynamic": bool(raw_config.get("dynamic")),
+            "is_versioned": bool(raw_config.get("versioned") or raw_config.get("version_modes")),
             "category": raw_config.get("category"),
             "generation": raw_config.get("_generation", 2),  # 新格式标识
             "manufacturer": raw_config.get("manufacturer", "lifesmart"),
@@ -182,6 +192,116 @@ class DeviceCentricConfigProcessor:
                     # 兼容格式: 直接使用platform_config
                     platforms[platform_type] = platform_config
 
+        return platforms
+
+    def _process_version_modes_from_new_format(
+        self, version_modes: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Process DEVICE_CENTRIC version_modes without base/default fallback."""
+        processed_versions = {}
+        if not isinstance(version_modes, dict):
+            return processed_versions
+
+        for version, version_config in version_modes.items():
+            if not isinstance(version_config, dict):
+                continue
+            processed_versions[version] = {
+                "name": version_config.get("name", str(version)),
+                "platforms": self._process_platforms_from_new_format(version_config),
+            }
+        return processed_versions
+
+    def _process_dynamic_modes_from_new_format(self, raw_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Process current dynamic mode records into strict static mode descriptors."""
+        mode_configs = {}
+        for mode_name in ["switch_mode", "climate_mode"]:
+            if mode_name in raw_config:
+                mode_config = raw_config[mode_name]
+                mode_configs[mode_name] = {
+                    "condition": self._extract_static_condition(mode_config),
+                    "platforms": self._process_mode_platforms(mode_config),
+                }
+        if "control_modes" in raw_config:
+            for mode_name, mode_config in raw_config["control_modes"].items():
+                mode_configs[mode_name] = {
+                    "condition": self._extract_static_condition(mode_config),
+                    "platforms": self._process_mode_platforms(mode_config),
+                }
+        cover_features = raw_config.get("cover_features")
+        if isinstance(cover_features, dict) and isinstance(cover_features.get("control_modes"), dict):
+            for mode_name, mode_config in cover_features["control_modes"].items():
+                if not isinstance(mode_config, dict):
+                    continue
+                mode_configs[mode_name] = {
+                    "condition": self._extract_static_condition(mode_config),
+                    "platforms": self._process_mode_platforms(mode_config),
+                }
+        return mode_configs
+
+    def _extract_static_condition(self, mode_config: Dict[str, Any]) -> Dict[str, Any]:
+        condition_str = mode_config.get("condition", "")
+        static_condition = {
+            "type": "expression",
+            "expression": condition_str,
+            "evaluation_method": "bitwise_and" if "&" in condition_str else "equality",
+        }
+        self._populate_expression_descriptor(static_condition, condition_str)
+        return static_condition
+
+    @staticmethod
+    def _parse_static_int(value: str) -> int:
+        return int(str(value).strip(), 0)
+
+    def _populate_expression_descriptor(
+        self, static_condition: Dict[str, Any], condition_str: str
+    ) -> None:
+        """Convert known mode expressions into strict static descriptors."""
+        normalized = re.sub(r"\s+", "", condition_str or "")
+        # Examples:
+        #   P5&0xFF==1
+        #   (P1>>24)&0xe in [2,4]
+        pattern = re.compile(
+            r"^\(?(?P<field>P\d+)(?:>>(?P<shift>\d+))?\)?&(?P<mask>0x[0-9a-fA-F]+|\d+)"
+            r"(?P<op>==|in)(?P<rhs>.+)$"
+        )
+        match = pattern.match(normalized)
+        if not match:
+            return
+
+        static_condition["field"] = match.group("field")
+        static_condition["mask"] = self._parse_static_int(match.group("mask"))
+        static_condition["bitwise_and"] = static_condition["mask"]
+        shift = match.group("shift")
+        if shift is not None:
+            static_condition["shift"] = int(shift)
+
+        rhs = match.group("rhs")
+        if match.group("op") == "==":
+            static_condition["value"] = self._parse_static_int(rhs)
+            return
+
+        try:
+            values = ast.literal_eval(rhs)
+        except (SyntaxError, ValueError):
+            return
+        if isinstance(values, (list, tuple, set)):
+            static_condition["values"] = [int(value) for value in values]
+
+    def _process_mode_platforms(self, mode_config: Dict[str, Any]) -> Dict[str, Any]:
+        platforms = {}
+        for platform_type in ["switch", "sensor", "binary_sensor", "light", "cover", "climate", "camera", "fan"]:
+            if platform_type in mode_config:
+                platforms[platform_type] = mode_config[platform_type]
+        if "io" in mode_config:
+            platforms["switch"] = {
+                io_key: {"description": f"开关控制 {io_key}", "rw": "RW", "data_type": "binary_switch"}
+                for io_key in mode_config["io"]
+            }
+        if "sensor_io" in mode_config:
+            platforms["sensor"] = {
+                io_key: {"description": f"传感器数据 {io_key}", "rw": "R", "data_type": "sensor"}
+                for io_key in mode_config["sensor_io"]
+            }
         return platforms
 
     def _process_embedded_configs(

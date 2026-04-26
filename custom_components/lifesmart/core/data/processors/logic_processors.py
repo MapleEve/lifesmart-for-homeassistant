@@ -19,6 +19,8 @@ import struct
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
+from ..conversion import get_io_friendly_val
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -441,6 +443,33 @@ def process_io_data(io_config: dict[str, Any], raw_data: dict[str, Any]) -> Any:
     if raw_data is None:
         _LOGGER.warning("Received None raw_data in process_io_data")
         return None
+
+    conversion = io_config.get("conversion")
+    if conversion == "v_field":
+        return raw_data.get("v") if raw_data.get("v") is not None else raw_data.get("val")
+    if conversion == "val_div_10":
+        raw_value = raw_data.get("val")
+        try:
+            return float(raw_value) / 10.0 if raw_value is not None else None
+        except (TypeError, ValueError):
+            return None
+    if conversion == "val_div_1000":
+        raw_value = raw_data.get("val")
+        try:
+            return float(raw_value) / 1000.0 if raw_value is not None else None
+        except (TypeError, ValueError):
+            return None
+    if conversion in {"friendly_value", "friendly_val"}:
+        raw_type = raw_data.get("type")
+        raw_value = raw_data.get("val")
+        try:
+            if raw_type is not None and raw_value is not None:
+                friendly_value = get_io_friendly_val(int(raw_type), int(raw_value))
+                if friendly_value is not None:
+                    return friendly_value
+        except (TypeError, ValueError):
+            return None
+        return raw_data.get("v") if raw_data.get("v") is not None else raw_data.get("val")
 
     # 操作1: 获取处理器类型
     processor_type = io_config.get("processor_type")

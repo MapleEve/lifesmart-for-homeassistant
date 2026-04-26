@@ -805,6 +805,14 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         self._attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
         self._attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
 
+    def _init_v_szjsxr_p(self):
+        """初始化 V_SZJSXR_P；官方附录明确其规格属性参考 V_AIR_P。"""
+        self._init_v_air_p()
+
+    def _init_v_t8600_p(self):
+        """初始化 V_T8600_P；官方附录明确其规格属性参考 V_AIR_P。"""
+        self._init_v_air_p()
+
     # --- 设备专属状态更新方法 ---
     # 每个 `_update_*` 方法负责从原始数据 `data` 中解析出实体的各个状态属性。
     def _update_default(self, data: dict):
@@ -833,6 +841,14 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             self._attr_target_temperature = target_temp
         if (fan_val := safe_get(data, "F", "val", default=0)) is not None:
             self._attr_fan_mode = get_f_fan_mode(fan_val)
+
+    def _update_v_szjsxr_p(self, data: dict):
+        """更新 V_SZJSXR_P；官方附录明确其规格属性参考 V_AIR_P。"""
+        self._update_v_air_p(data)
+
+    def _update_v_t8600_p(self, data: dict):
+        """更新 V_T8600_P；官方附录明确其规格属性参考 V_AIR_P。"""
+        self._update_v_air_p(data)
 
     def _update_sl_uaccb(self, data: dict):
         """更新 SL_UACCB 状态 - 使用新的O(1)逻辑处理器。"""

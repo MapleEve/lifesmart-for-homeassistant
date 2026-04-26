@@ -423,15 +423,16 @@ def get_device_effective_type(device: dict) -> str:
     device_type = device.get("devtype", "")
 
     # 检查是否是版本化设备
-    if device_type and "_V" in device_type:
+    if device_type and "_V" in device_type.upper():
         return device_type
 
     # 检查fullCls字段以确定版本
     full_cls = device.get("fullCls", "")
+    normalized_full_cls = str(full_cls).upper()
     if full_cls and device_type:
-        if f"{device_type}_V1" in full_cls:
+        if f"{device_type}_V1".upper() in normalized_full_cls:
             return f"{device_type}_V1"
-        elif f"{device_type}_V2" in full_cls:
+        elif f"{device_type}_V2".upper() in normalized_full_cls:
             return f"{device_type}_V2"
 
     return device_type
@@ -457,11 +458,15 @@ def is_momentary_button_device(device_type: str, sub_key: str) -> bool:
         {"devtype": device_type, "data": {}}, "binary_sensor"
     )
 
-    # 检查binary_sensor平台的IO配置
-    io_config = binary_sensor_config.get(sub_key, {})
-
     # 根据IO配置判断是否为瞬时按钮
-    return io_config.get("momentary", False)
+    if not binary_sensor_config:
+        return False
+
+    io_config = getattr(binary_sensor_config, "ios", {}).get(sub_key)
+    if not io_config or not io_config.is_valid():
+        return False
+
+    return bool(getattr(io_config, "momentary", False))
 
 
 def get_binary_sensor_io_config(device: dict, sub_key: str) -> dict:
@@ -490,8 +495,30 @@ def get_binary_sensor_io_config(device: dict, sub_key: str) -> dict:
         {"devtype": device_type, "data": device.get("data", {})}, "binary_sensor"
     )
 
-    # 获取binary_sensor平台的IO配置
-    return binary_sensor_config.get(sub_key, {})
+    # 获取binary_sensor平台的IO配置。resolver返回PlatformConfig/IOConfig，
+    # 平台层消费者需要普通dict以便交给process_io_data。
+    if not binary_sensor_config:
+        return {}
+
+    io_config = getattr(binary_sensor_config, "ios", {}).get(sub_key)
+    if not io_config or not io_config.is_valid():
+        return {}
+
+    return {
+        "description": io_config.description,
+        "data_type": io_config.data_type,
+        "cmd_type": io_config.cmd_type,
+        "idx": io_config.idx,
+        "device_class": io_config.device_class,
+        "state_class": io_config.state_class,
+        "unit_of_measurement": io_config.unit_of_measurement,
+        "conversion": getattr(io_config, "conversion", None),
+        "processor_type": getattr(io_config, "processor_type", None),
+        "icon": io_config.icon,
+        "entity_category": io_config.entity_category,
+        "value_template": io_config.value_template,
+        "state_mapping": io_config.state_mapping,
+    }
 
 
 def expand_bitmask_subdevices(

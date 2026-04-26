@@ -52,6 +52,9 @@ class IOConfig:
     entity_category: Optional[str] = None
 
     # 数据转换
+    conversion: Optional[str] = None
+    processor_type: Optional[str] = None
+    attribute_generator: Optional[str] = None
     value_template: Optional[str] = None
     state_mapping: Optional[Dict[str, Any]] = None
 

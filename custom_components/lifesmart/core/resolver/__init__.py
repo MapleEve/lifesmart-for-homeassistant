@@ -45,11 +45,11 @@ from .static_compatible_resolver import (
     validate_device_support_static,
 )
 
-# 静态解析器作为默认选择 (Phase 3)
-# 可以通过环境变量LIFESMART_USE_DYNAMIC_RESOLVER=1切换回动态解析器
-import os
-
-USE_STATIC_RESOLVER = os.getenv("LIFESMART_USE_DYNAMIC_RESOLVER", "0") != "1"
+# 静态解析器作为唯一生产选择 (no-legacy policy)
+# LIFESMART_USE_DYNAMIC_RESOLVER 曾允许切回旧动态策略解析器；该旧路径仍保留给
+# 直接单元测试导入，但不得由生产 resolver facade 通过环境变量启用，避免旧策略的
+# default/first-version fallback 或 catch-all fallback 静默通过。
+USE_STATIC_RESOLVER = True
 
 if USE_STATIC_RESOLVER:
     # 使用静态解析器作为默认实现

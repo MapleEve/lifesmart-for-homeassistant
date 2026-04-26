@@ -7,7 +7,7 @@ VersionedDeviceStrategy - 版本化设备解析策略
 从原始mapping_engine.py的1111-1177行提取，包括：
 - 版本信息提取
 - 版本配置选择
-- 智能回退机制
+- 严格版本匹配（无 default/first-version 回退）
 
 由 @MapleEve 创建，基于Phase 2.5关键重构任务
 """
@@ -105,19 +105,21 @@ class VersionedDeviceStrategy(BaseDeviceStrategy):
             版本字符串
         """
         full_cls = device.get("fullCls", "")
+        normalized_full_cls = str(full_cls).upper()
         device_type = device.get("devtype", "")
 
         if full_cls and device_type:
             # 从fullCls中提取版本信息
-            if f"{device_type}_V1" in full_cls:
+            if f"{device_type}_V1".upper() in normalized_full_cls:
                 return "V1"
-            elif f"{device_type}_V2" in full_cls:
+            elif f"{device_type}_V2".upper() in normalized_full_cls:
                 return "V2"
-            elif f"{device_type}_V3" in full_cls:
+            elif f"{device_type}_V3".upper() in normalized_full_cls:
                 return "V3"
 
-        # 尝试从version字段获取
-        return device.get("version", "default")
+        # 尝试从version字段获取；缺失时返回空串，禁止 default fallback
+        version = device.get("version")
+        return str(version).strip().upper() if version is not None and str(version).strip() else ""
 
     def _get_version_modes(self, raw_config: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -142,7 +144,8 @@ class VersionedDeviceStrategy(BaseDeviceStrategy):
         self, versions: Dict, device_version: str, device_type: str
     ) -> Dict:
         """
-        获取版本化设备配置，支持智能回退机制
+        获取版本化设备配置。no-legacy policy: 仅允许明确的版本证据精确匹配，
+        禁止 default 或第一个版本回退。
 
         从原始mapping_engine._get_versioned_config_with_fallback方法提取
 
@@ -154,18 +157,12 @@ class VersionedDeviceStrategy(BaseDeviceStrategy):
         Returns:
             选中的版本配置字典
         """
-        # 1. 优先使用精确匹配的版本
-        if str(device_version) in versions:
-            return versions[str(device_version)]
+        normalized_version = str(device_version).strip().upper()
+        if not normalized_version:
+            return {}
 
-        # 2. 尝试使用default版本
-        if "default" in versions:
-            return versions["default"]
+        for version_key, version_config in versions.items():
+            if str(version_key).upper() == normalized_version:
+                return version_config
 
-        # 3. 智能回退：选择第一个可用版本
-        if versions:
-            first_version_key = next(iter(versions.keys()))
-            return versions[first_version_key]
-
-        # 4. 最后兜底：返回空配置
         return {}

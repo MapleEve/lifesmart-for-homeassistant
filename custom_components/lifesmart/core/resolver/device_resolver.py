@@ -422,6 +422,7 @@ class DeviceResolver:
 
         return IOConfig(
             description=io_data["description"],
+            data_type=io_data.get("data_type"),
             cmd_type=io_data.get("cmd_type"),
             idx=io_data.get("idx"),
             device_class=io_data.get("device_class"),
@@ -429,6 +430,9 @@ class DeviceResolver:
             unit_of_measurement=io_data.get("unit_of_measurement"),
             icon=io_data.get("icon"),
             entity_category=io_data.get("entity_category"),
+            conversion=io_data.get("conversion"),
+            processor_type=io_data.get("processor_type"),
+            attribute_generator=io_data.get("attribute_generator"),
             value_template=io_data.get("value_template"),
             state_mapping=io_data.get("state_mapping"),
         )
