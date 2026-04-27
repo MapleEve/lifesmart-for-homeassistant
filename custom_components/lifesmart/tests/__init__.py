@@ -1,1 +1,5 @@
-# 'tests'目录是一个包
+"""
+LifeSmart 测试
+
+Author: MapleEve
+"""

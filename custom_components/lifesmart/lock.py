@@ -1,0 +1,375 @@
+"""
+LifeSmart 门锁平台支持模块
+
+由 @MapleEve 创建和维护
+
+本模块为LifeSmart平台提供智能门锁设备支持，实现了对各种
+智能门锁的完整控制和状态监控。
+
+支持的门锁功能：
+- 上锁/解锁控制
+- 开门功能 (门閻控制)
+- 门锁状态监测
+- 解锁方式记录
+- 电池电量监测
+
+技术特性：
+- 安全的门锁控制协议
+- 多种解锁方式支持
+- 实时状态同步
+- 完整的错误处理和日志记录
+"""
+
+import logging
+from dataclasses import asdict, is_dataclass
+from typing import Any
+
+from homeassistant.components.lock import LockEntity, LockEntityFeature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .core.const import (
+    # 核心常量
+    DOMAIN,
+    MANUFACTURER,
+    HUB_ID_KEY,
+    DEVICE_ID_KEY,
+    DEVICE_TYPE_KEY,
+    DEVICE_NAME_KEY,
+    DEVICE_DATA_KEY,
+    LIFESMART_SIGNAL_UPDATE_ENTITY,
+    # 门锁平台相关
+    LOCK_STATE_LOCKED,
+    LOCK_STATE_UNLOCKED,
+    UNLOCK_METHOD,
+    # 命令常量
+    CMD_TYPE_ON,
+    CMD_TYPE_OFF,
+)
+from .core.data.processors import process_io_data
+from .core.entity import LifeSmartEntity
+from .core.helpers import generate_unique_id
+from .core.platform.platform_detection import get_device_platform_mapping
+from .core.resolver.device_resolver import get_device_resolver
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def _io_config_to_dict(io_config: Any) -> dict[str, Any]:
+    """Return a process_io_data-compatible dict from resolver IO config."""
+    if isinstance(io_config, dict):
+        return io_config.copy()
+    if is_dataclass(io_config):
+        return asdict(io_config)
+    return {}
+
+
+def _get_lock_items(
+    device: dict[str, Any], platform_mapping: dict[str, list[str]]
+) -> list[tuple[str, dict[str, Any]]]:
+    """Resolve actual lock IO configs; never synthesize empty configs from lists."""
+    if "lock" not in platform_mapping:
+        return []
+
+    try:
+        platform_config = get_device_resolver().get_platform_config(device, "lock")
+    except Exception as err:  # pragma: no cover - setup should continue per-device
+        _LOGGER.warning("Failed to resolve lock config for %s: %s", device, err)
+        return []
+
+    if not platform_config:
+        return []
+
+    lock_keys = platform_mapping.get("lock", [])
+    if isinstance(lock_keys, dict):
+        lock_keys = list(lock_keys)
+
+    items: list[tuple[str, dict[str, Any]]] = []
+    for lock_key in lock_keys:
+        io_config = platform_config.ios.get(lock_key)
+        lock_cfg = _io_config_to_dict(io_config)
+        if lock_cfg:
+            items.append((lock_key, lock_cfg))
+    return items
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """
+    从配置条目设置 LifeSmart 门锁设备。
+    """
+    hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
+    exclude_devices, exclude_hubs = hub.get_exclude_config()
+
+    locks = []
+    for device in hub.get_devices():
+        if (
+            device[DEVICE_ID_KEY] in exclude_devices
+            or device[HUB_ID_KEY] in exclude_hubs
+        ):
+            continue
+
+        device_type = device.get(DEVICE_TYPE_KEY)
+        if not device_type:
+            continue
+
+        # 检查是否支持门锁平台
+        platform_mapping = get_device_platform_mapping(device)
+        if "lock" not in platform_mapping:
+            continue
+
+        lock_items = _get_lock_items(device, platform_mapping)
+
+        # 为每个支持的门锁子设备创建实体
+        for lock_key, lock_cfg in lock_items:
+            if lock_cfg.get("enabled", True):
+                lock = LifeSmartLock(
+                    device,
+                    lock_key,
+                    lock_cfg,
+                    hub,
+                )
+                locks.append(lock)
+                _LOGGER.debug(
+                    "Added lock %s for device %s",
+                    lock_key,
+                    device.get(DEVICE_NAME_KEY),
+                )
+
+    if locks:
+        async_add_entities(locks)
+        _LOGGER.info("Added %d LifeSmart locks", len(locks))
+
+
+class LifeSmartLock(LifeSmartEntity, LockEntity):
+    """
+    LifeSmart 门锁设备实现类。
+    """
+
+    def __init__(
+        self,
+        device: dict,
+        sub_key: str,
+        lock_config: dict,
+        hub,
+    ) -> None:
+        """
+        初始化门锁设备。
+        """
+        super().__init__(device, hub.get_client())
+        self._device = device
+        self._sub_key = sub_key
+        self._hub = hub
+        self._lock_config = lock_config
+        self._attr_supported_features = LockEntityFeature.OPEN
+
+        self._attr_is_locked = None
+        self._attr_is_locking = False
+        self._attr_is_unlocking = False
+        self._attr_is_jammed = False
+
+        # 额外属性
+        self._unlock_method = None
+        self._battery_level = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique id for the lock."""
+        return generate_unique_id(
+            self._device.get(DEVICE_TYPE_KEY, ""),
+            self._device.get(HUB_ID_KEY, ""),
+            self._device.get(DEVICE_ID_KEY, ""),
+            self._sub_key,
+        )
+
+    @property
+    def name(self) -> str:
+        """Return the name of the lock."""
+        device_name = self._device.get(DEVICE_NAME_KEY, "Unknown Device")
+        lock_name = self._lock_config.get("name", self._sub_key)
+        return f"{device_name} {lock_name}"
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self._device.get(DEVICE_DATA_KEY, {}))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        attributes = {}
+
+        if self._unlock_method is not None:
+            method_name = UNLOCK_METHOD.get(self._unlock_method, "Unknown")
+            attributes["unlock_method"] = method_name
+
+        if self._battery_level is not None:
+            attributes["battery_level"] = self._battery_level
+
+        return attributes
+
+    async def async_lock(self, **kwargs: Any) -> None:
+        """
+        上锁。
+        """
+        try:
+            self._attr_is_locking = True
+            self.async_write_ha_state()
+
+            await self._send_lock_command(CMD_TYPE_ON, LOCK_STATE_LOCKED)
+
+            _LOGGER.debug(
+                "Locked lock %s on device %s",
+                self._sub_key,
+                self._device.get(DEVICE_NAME_KEY),
+            )
+
+        except Exception as err:
+            _LOGGER.error(
+                "Failed to lock %s on device %s: %s",
+                self._sub_key,
+                self._device.get(DEVICE_NAME_KEY),
+                err,
+            )
+        finally:
+            self._attr_is_locking = False
+            self.async_write_ha_state()
+
+    async def async_unlock(self, **kwargs: Any) -> None:
+        """
+        解锁。
+        """
+        try:
+            self._attr_is_unlocking = True
+            self.async_write_ha_state()
+
+            await self._send_lock_command(CMD_TYPE_OFF, LOCK_STATE_UNLOCKED)
+
+            _LOGGER.debug(
+                "Unlocked lock %s on device %s",
+                self._sub_key,
+                self._device.get(DEVICE_NAME_KEY),
+            )
+
+        except Exception as err:
+            _LOGGER.error(
+                "Failed to unlock %s on device %s: %s",
+                self._sub_key,
+                self._device.get(DEVICE_NAME_KEY),
+                err,
+            )
+        finally:
+            self._attr_is_unlocking = False
+            self.async_write_ha_state()
+
+    async def async_open(self, **kwargs: Any) -> None:
+        """
+        开门（门闻解锁）。
+        """
+        if not (self.supported_features & LockEntityFeature.OPEN):
+            return
+
+        try:
+            # 发送开门命令（通常与解锁命令不同）
+            await self._send_lock_command(CMD_TYPE_OFF, 2)  # 开门状态值
+
+            _LOGGER.debug(
+                "Opened lock %s on device %s",
+                self._sub_key,
+                self._device.get(DEVICE_NAME_KEY),
+            )
+
+        except Exception as err:
+            _LOGGER.error(
+                "Failed to open %s on device %s: %s",
+                self._sub_key,
+                self._device.get(DEVICE_NAME_KEY),
+                err,
+            )
+
+    async def _send_lock_command(self, cmd_type: int, value: Any) -> None:
+        """
+        向门锁发送控制命令。
+        """
+        await self._hub.async_send_command(
+            self._device[HUB_ID_KEY],
+            self._device[DEVICE_ID_KEY],
+            self._sub_key,
+            cmd_type,
+            value,
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """
+        处理来自协调器的更新数据。
+        """
+        device_data = self._device.get(DEVICE_DATA_KEY, {})
+
+        # 检查门锁状态数据
+        lock_data = device_data.get(self._sub_key)
+        if lock_data is None:
+            return
+
+        # 处理IO数据
+        processed_value = process_io_data(self._lock_config, lock_data)
+
+        if isinstance(processed_value, dict):
+            # 复杂状态数据
+            self._attr_is_locked = processed_value.get("is_locked")
+            self._attr_is_jammed = processed_value.get("is_jammed", False)
+            self._unlock_method = processed_value.get("unlock_method")
+            self._battery_level = processed_value.get("battery_level")
+        else:
+            # 简单布尔值 - 上锁状态
+            self._attr_is_locked = bool(processed_value)
+
+        # 检查电池电量数据
+        battery_data = device_data.get("BAT")
+        if battery_data:
+            battery_processed = process_io_data({"type": "percentage"}, battery_data)
+            if isinstance(battery_processed, (int, float)):
+                self._battery_level = int(battery_processed)
+
+        # 检查解锁方式数据 (部分门锁提供)
+        unlock_data = device_data.get("UMD")
+        if unlock_data:
+            unlock_processed = process_io_data({"type": "unlock_method"}, unlock_data)
+            if isinstance(unlock_processed, int):
+                self._unlock_method = unlock_processed
+
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """
+        订阅状态更新。
+        """
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                LIFESMART_SIGNAL_UPDATE_ENTITY,
+                self._handle_coordinator_update,
+            )
+        )
+        # 初始状态更新
+        self._handle_coordinator_update()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """
+        返回设备信息。
+        """
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.get(DEVICE_ID_KEY))},
+            name=self._device.get(DEVICE_NAME_KEY),
+            manufacturer=MANUFACTURER,
+            model=self._device.get(DEVICE_TYPE_KEY),
+            via_device=(DOMAIN, self._device.get(HUB_ID_KEY)),
+        )

@@ -14,19 +14,19 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.lifesmart.const import (
+from custom_components.lifesmart.core.const import (
     DOMAIN,
     CONF_EXCLUDE_ITEMS,
     CONF_EXCLUDE_AGTS,
 )
+from .utils.constants import (
+    REGION_IDENTIFIERS,
+    TEST_CONFIG_ENTRY,
+    TEST_EXCLUSION_CONFIG,
+)
+from .utils.helpers import create_mock_hub
 
 _LOGGER = logging.getLogger(__name__)
-
-
-# 设置兼容性支持
-from custom_components.lifesmart.compatibility import setup_logging
-
-setup_logging()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -97,28 +97,106 @@ def mock_config_data_fixture():
     这个 Fixture 封装了一套标准的云端模式配置信息，用于在测试中创建
     `MockConfigEntry`。这确保了所有测试都使用一致的凭据，简化了测试的编写。
     """
-    from .test_utils import create_mock_config_data
+    from .utils.typed_factories import create_mock_config_data
 
     return create_mock_config_data()
 
 
-# --- 统一的模拟设备列表 ---
-@pytest.fixture(name="mock_lifesmart_devices")
-def mock_lifesmart_devices_fixture():
+# --- Mock Hub 和客户端配置 ---
+@pytest.fixture
+def mock_light_devices_only():
     """
-    一个全面的模拟设备列表，覆盖所有平台的测试需求。
-
-    这个 Fixture 是许多集成测试的核心。它提供了一个包含各种设备类型
-    （开关、灯、传感器、温控器等）的列表，模拟了一个真实用户的完整家庭环境。
-
-    用途:
-    - 用于 `setup_integration` Fixture，以在 Home Assistant 中创建所有这些设备对应的实体。
-    - 用于测试平台级别的功能，例如，确保 `climate` 平台在初始化时不会错误地创建 `switch` 实体。
-    - 用于测试设备排除逻辑。
+    创建仅包含灯光设备的模拟数据列表。
+    使用create_gen2_devices来测试分类功能。
     """
-    from .test_utils import create_mock_lifesmart_devices
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_mock_lifesmart_devices()
+    devices = create_gen2_devices(
+        [
+            "SL_LI_WW",
+            "SL_LI_WW",
+            "SL_CT_RGBW",
+            "SL_SC_RGB",
+            "SL_SPOT_RGB",
+            "MSL_IRCTL",
+            "OD_WE_QUAN",
+            "SL_LI_GD1",
+            "SL_LI_UG1",
+            "SL_LI_RGBW",
+        ]
+    )
+    # Keep current Gen2 devtypes/IO shapes while preserving stable fixture names
+    # used by the light focused tests.
+    devices[0]["name"] = "White Light Bulb"
+    devices[1]["name"] = "Smart Bulb Cool Warm"
+    return devices
+
+
+@pytest.fixture
+def mock_sensor_devices_only():
+    """
+    创建仅包含数值传感器设备的模拟数据列表。
+    使用create_gen2_devices来测试传感器分类功能。
+    """
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(
+        ["SL_SC_THL", "SL_SC_THL", "SL_SC_THL"]
+    )
+
+
+@pytest.fixture
+def mock_binary_sensor_devices_only():
+    """
+    创建仅包含二元传感器设备的模拟数据列表。
+    使用create_gen2_devices来专门测试binary_sensor平台功能。
+    """
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_SC_G"])
+
+
+@pytest.fixture
+def mock_climate_devices_only():
+    """
+    创建仅包含气候控制设备的模拟数据列表。
+    使用create_gen2_devices来优化气候平台测试的数据加载。
+    """
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_NATURE", "SL_CP_DN", "SL_CP_AIR"])
+
+
+@pytest.fixture
+def mock_switch_devices_only():
+    """
+    创建仅包含开关设备的模拟数据列表。
+    使用create_gen2_devices来优化开关平台测试的数据加载。
+    包含传统开关、高级开关和插座设备（插座在switch平台中）。
+    """
+    from .utils.typed_factories import create_gen2_devices, create_nature_switch_panel
+
+    return create_gen2_devices(
+        [
+            "SL_SW_IF3",
+            "SL_SW_IF3",
+            "SL_OL",
+            "SL_OE_3C",
+            "SL_P",
+            "SL_P_SW",
+        ]
+    ) + [create_nature_switch_panel()]
+
+
+@pytest.fixture
+def mock_cover_devices_only():
+    """
+    创建仅包含窗帘/遮盖设备的模拟数据列表。
+    使用create_gen2_devices来优化窗帘平台测试的数据加载。
+    """
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_DOOYA"])
 
 
 @pytest.fixture(autouse=True)
@@ -133,7 +211,7 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 
 
 @pytest.fixture
-def mock_client_class(mock_lifesmart_devices):
+def mock_client_class(mock_sensor_devices_only):
     """
     一个高级 fixture，它 patch LifeSmartOAPIClient 类并返回这个类的 Mock。
 
@@ -143,16 +221,16 @@ def mock_client_class(mock_lifesmart_devices):
     调用都会返回一个我们可以控制的新实例。
     """
     with patch(
-        "custom_components.lifesmart.core.openapi_client.LifeSmartOAPIClient",
+        "custom_components.lifesmart.core.hub.LifeSmartOpenAPIClient",
         autospec=True,
     ) as mock_class:
         # 配置默认的实例行为
         instance = mock_class.return_value
-        instance.async_get_all_devices.return_value = mock_lifesmart_devices
+        instance.async_get_all_devices.return_value = mock_sensor_devices_only
         instance.login_async.return_value = {
             "usertoken": "mock_new_usertoken",
             "userid": "mock_userid",
-            "region": "cn2",
+            "region": REGION_IDENTIFIERS["china_region"],
         }
         instance.async_refresh_token.return_value = {
             "usertoken": "mock_refreshed_usertoken",
@@ -195,6 +273,32 @@ def mock_client(mock_client_class):
 
 
 @pytest.fixture
+def mock_failed_client():
+    """
+    提供模拟失败场景的OAPI客户端mock。
+
+    用于测试连接失败、认证失败等错误处理场景。
+    使用create_mock_failed_oapi_client工厂函数。
+    """
+    from .utils.typed_factories import create_mock_failed_oapi_client
+
+    return create_mock_failed_oapi_client()
+
+
+@pytest.fixture
+def mock_client_with_devices(mock_sensor_devices_only):
+    """
+    提供带有预配置设备列表的OAPI客户端mock。
+
+    用于需要特定设备数据的测试场景。
+    使用create_mock_oapi_client_with_devices工厂函数。
+    """
+    from .utils.typed_factories import create_mock_oapi_client_with_devices
+
+    return create_mock_oapi_client_with_devices(mock_sensor_devices_only)
+
+
+@pytest.fixture
 def mock_config_entry(mock_config_data) -> MockConfigEntry:
     """
     提供一个模拟的 ConfigEntry 实例。
@@ -205,11 +309,11 @@ def mock_config_entry(mock_config_data) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data=mock_config_data,
-        entry_id="mock_entry_id_12345",
-        title="LifeSmart Mock",
+        entry_id=TEST_CONFIG_ENTRY["mock_entry_id"],
+        title=TEST_CONFIG_ENTRY["mock_title"],
         options={
-            CONF_EXCLUDE_ITEMS: "excluded_device",
-            CONF_EXCLUDE_AGTS: "excluded_hub",
+            CONF_EXCLUDE_ITEMS: TEST_EXCLUSION_CONFIG["excluded_device"],
+            CONF_EXCLUDE_AGTS: TEST_EXCLUSION_CONFIG["excluded_hub"],
         },
     )
 
@@ -222,9 +326,7 @@ def mock_hub_class():
     这允许我们验证其方法（如 `async_setup`, `async_unload`）是否在集成的生命周期中
     （设置、卸载、重载）被正确调用。
     """
-    with patch(
-        "custom_components.lifesmart.hub.LifeSmartHub", autospec=True
-    ) as mock_class:
+    with patch("custom_components.lifesmart.LifeSmartHub", autospec=True) as mock_class:
         # 获取实例的 mock，以便我们可以配置和断言它的方法
         instance = mock_class.return_value
         instance.async_setup = AsyncMock(return_value=True)
@@ -276,8 +378,8 @@ def auto_prevent_thread_creation(request):
             ),
             patch(
                 # 防止创建真实的WebSocket状态管理器（异步任务残留的根源）
-                "custom_components.lifesmart.hub.LifeSmartStateManager",
-                return_value=MagicMock(),
+                "custom_components.lifesmart.core.hub.LifeSmartStateManager",
+                return_value=AsyncMock(),
             ),
         ):
             yield
@@ -299,250 +401,245 @@ def mock_hub_for_testing():
     """
     with (
         patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_setup",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.async_setup",
             return_value=True,
         ) as mock_hub_setup,
         patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.get_devices",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.get_devices",
             return_value=[],
         ) as mock_get_devices,
         patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.get_client",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.get_client",
             return_value=MagicMock(),
         ) as mock_get_client,
         patch(
-            "custom_components.lifesmart.hub.LifeSmartHub.async_unload",
+            "custom_components.lifesmart.core.hub.LifeSmartHub.async_unload",
             return_value=True,
         ) as mock_hub_unload,
     ):
         yield mock_hub_setup, mock_get_devices, mock_get_client, mock_hub_unload
 
 
-@pytest.fixture
-async def setup_integration(
+# ============================================================================
+# === 平台专用优化设置 Fixtures ===
+#
+# 设计说明:
+# 这些 Fixtures 是对原有通用 `setup_integration` 的补充优化，专门用于
+# 平台级别的测试。通过只加载特定平台需要的设备类型，减少了测试的
+# 加载开销，提高了测试执行效率。
+#
+# 每个 fixture 使用 `create_gen2_devices` 函数来精确控制
+# 加载的设备类型，从而实现精细化的测试数据管理。
+#
+# 重构说明 (Phase 1):
+# 通过通用函数 _setup_integration_platform_generic 消除95%代码重复，
+# 从226行重复代码减少到约30行，大幅提高维护效率。
+# ============================================================================
+
+
+async def _setup_integration_platform_generic(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
     mock_hub_class: MagicMock,
-    mock_lifesmart_devices: list,
+    devices_list: list,
+    platform_name: str,
 ):
     """
-    一个统一的 fixture，用于完整地设置和加载 LifeSmart 集成及其所有平台。
+    通用的平台专用集成设置函数。
 
-    这是绝大多数集成测试的入口点。它执行了以下操作：
-    1. 将模拟的 `ConfigEntry` 添加到 Home Assistant。
-    2. Patch 掉真实的 Hub 创建过程，注入模拟数据。
-    3. 触发 `async_setup` 流程。
-    4. 验证集成是否成功加载。
-    5. 将控制权交给测试用例。
-    6. 在测试结束后，自动执行卸载流程，并验证卸载是否成功。
+    这个函数封装了所有setup_integration_*_only fixtures的共同逻辑，
+    消除95%的代码重复，提高维护效率。
+
+    Args:
+        hass: HomeAssistant实例
+        mock_config_entry: 模拟配置条目
+        mock_client: 模拟客户端
+        mock_hub_class: 模拟Hub类
+        devices_list: 平台特定的设备列表
+        platform_name: 平台名称(用于调试)
+
+    Yields:
+        ConfigEntry: 配置好的集成条目
     """
     mock_config_entry.add_to_hass(hass)
 
-    # 配置 mock hub 实例
-    hub_instance = mock_hub_class.return_value
-    hub_instance.get_devices.return_value = mock_lifesmart_devices
-    hub_instance.get_client.return_value = mock_client
-    hub_instance.get_exclude_config.return_value = (
-        {"excluded_device"},
-        {"excluded_hub"},
-    )
+    # 使用工厂函数创建mock hub实例
+    hub_instance = create_mock_hub(devices_list, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        new=mock_hub_class,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
 
-    # 验证集成已成功加载
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert mock_config_entry.state == ConfigEntryState.LOADED
-
-    # 验证 Hub 被正确设置
     mock_hub_class.assert_called_once()
     hub_instance.async_setup.assert_called_once()
 
-    # 将控制权交给测试用例
     yield mock_config_entry
 
-    # --- 测试结束后的清理 ---
-    # 卸载集成
+    # 清理
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    # 验证集成已成功卸载
     assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-# ============================================================================
-# === 为隔离测试专用的原子设备 Fixtures ===
-#
-# 设计说明:
-# 以下 Fixtures 是对您现有 `mock_lifesmart_devices` 的补充，而非替代。
-# 它们提供了独立的、可按需注入的“原材料”，专门用于对特定设备进行深度、
-# 隔离的测试，确保测试的纯净性，不受其他设备干扰。
-#
-# 这种分离的设计，使得测试的意图更加清晰，维护也更加方便。
-# ============================================================================
+@pytest.fixture
+async def setup_integration_light_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_light_devices_only: list,
+):
+    """
+    专用的 setup fixture，仅加载灯光设备进行灯光平台测试。
+
+    这个优化版本只加载灯光相关设备，减少测试加载开销，
+    提高灯光平台测试的执行效率。
+    """
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_light_devices_only,
+        "light",
+    ):
+        yield result
 
 
 @pytest.fixture
-def mock_device_climate_fancoil() -> dict:
-    """
-    提供一个标准的风机盘管设备 (SL_CP_AIR) 的模拟数据。
-
-    此设备的状态由一个位掩码 (bitmask) `P1` 控制，这是测试的重点。
-    - 初始状态: 制热模式 (Heat) + 低风速 (Low)。
-      - `val` 的第 13 位为 1: 代表制热模式 (HEAT)。
-      - `val` 的第 15 位为 1: 代表低风速 (FAN_LOW)。
-      - 计算: `(1 << 15) | (1 << 13)`
-    - 初始温度:
-      - `P4`: 目标温度 (target_temperature) 为 24.0。
-      - `P5`: 当前温度 (current_temperature) 为 26.0。
-    """
-    from .test_utils import create_mock_device_climate_fancoil
-
-    return create_mock_device_climate_fancoil()
+async def setup_integration(setup_integration_light_only):
+    """Backward-compatible light platform setup fixture alias."""
+    yield setup_integration_light_only
 
 
 @pytest.fixture
-def mock_device_climate_floor_heat() -> dict:
+async def setup_integration_climate_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_climate_devices_only: list,
+):
     """
-    提供一个标准的地暖设备 (SL_CP_DN) 的模拟数据。
+    专用的 setup fixture，仅加载气候控制设备进行气候平台测试。
 
-    - 初始状态: 自动模式 (Auto)。
-      - `P1` 的 `val` 为 `2147483648` (0x80000000)，根据协议，这代表自动模式。
-    - 初始温度:
-      - `P3`: 目标温度 (target_temperature) 为 25.0。
-      - `P4`: 当前温度 (current_temperature) 为 22.5。
+    这个优化版本只加载气候控制相关设备，减少测试加载开销，
+    提高气候平台测试的执行效率。
     """
-    return {
-        "agt": "hub_climate",
-        "me": "climate_floor_heat",
-        "devtype": "SL_CP_DN",
-        "name": "Floor Heating",
-        "data": {
-            "P1": {"type": 1, "val": 2147483648},
-            "P3": {"v": 25.0},
-            "P4": {"v": 22.5},
-        },
-    }
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_climate_devices_only,
+        "SL_NATURE",
+    ):
+        yield result
 
 
 @pytest.fixture
-def mock_device_climate_nature_fancoil() -> dict:
+async def setup_integration_sensor_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_sensor_devices_only: list,
+):
     """
-    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制"风机盘管"。
+    专用的 setup fixture，仅加载传感器设备进行传感器平台测试。
 
-    SL_NATURE 面板是一个多功能设备，其具体功能由内部数据点决定。
-    - `P5` 的 `val` 为 3: 表示此面板工作在"温控器"模式下。
-    - `P6` 的 `val` 为 `(4 << 6)`: 这是最关键的配置，定义了其控制的设备类型为
-      "风机盘管(双阀)"，这将决定实体支持的 `hvac_modes` 和 `fan_modes`。
+    这个优化版本只加载传感器相关设备，减少测试加载开销，
+    提高传感器平台测试的执行效率。
     """
-    return {
-        "agt": "hub_climate",
-        "me": "climate_nature_thermo",
-        "devtype": "SL_NATURE",
-        "name": "Nature Panel Thermo",
-        "data": {
-            "P1": {"type": 129, "val": 1},
-            "P4": {"v": 28.0},
-            "P5": {"val": 3},
-            "P6": {"val": (4 << 6)},
-            "P7": {"val": 1},
-            "P8": {"v": 26.0},
-            "P10": {"val": 15},
-        },
-    }
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_sensor_devices_only,
+        "sensor",
+    ):
+        yield result
 
 
 @pytest.fixture
-def mock_device_climate_nature_freshair() -> dict:
+async def setup_integration_binary_sensor_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_binary_sensor_devices_only: list,
+):
     """
-    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制"新风"。
+    专用的 setup fixture，仅加载二元传感器设备进行binary_sensor平台测试。
 
-    - `P6` 的 `val` 为 `(0 << 6)`: 定义了其控制的设备类型为"新风"。
+    这个优化版本只加载二元传感器相关设备，减少测试加载开销，
+    提高binary_sensor平台测试的执行效率。
     """
-    return {
-        "agt": "hub_climate",
-        "me": "climate_nature_thermo",
-        "devtype": "SL_NATURE",
-        "name": "Nature Panel Thermo",
-        "data": {
-            "P1": {"type": 129, "val": 1},
-            "P4": {"v": 28.0},
-            "P5": {"val": 3},
-            "P6": {"val": (0 << 6)},
-            "P7": {"val": 1},
-            "P8": {"v": 26.0},
-            "P10": {"val": 15},
-        },
-    }
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_binary_sensor_devices_only,
+        "SL_SC_G",
+    ):
+        yield result
 
 
 @pytest.fixture
-def mock_device_climate_nature_floorheat() -> dict:
+async def setup_integration_switch_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_switch_devices_only: list,
+):
     """
-    提供一个 SL_NATURE 面板的模拟数据，该面板被配置为控制"水地暖"。
+    专用的 setup fixture，仅加载开关设备进行开关平台测试。
 
-    - `P6` 的 `val` 为 `(2 << 6)`: 定义了其控制的设备类型为"水地暖"。
+    这个优化版本只加载开关相关设备，减少测试加载开销，
+    提高开关平台测试的执行效率。
     """
-    return {
-        "agt": "hub_climate",
-        "me": "climate_nature_thermo",
-        "devtype": "SL_NATURE",
-        "name": "Nature Panel Thermo",
-        "data": {
-            "P1": {"type": 129, "val": 1},
-            "P4": {"v": 28.0},
-            "P5": {"val": 3},
-            "P6": {"val": (2 << 6)},
-            "P7": {"val": 1},
-            "P8": {"v": 26.0},
-            "P10": {"val": 15},
-        },
-    }
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_switch_devices_only,
+        "switch",
+    ):
+        yield result
 
 
 @pytest.fixture
-def mock_device_spot_rgb_light() -> dict:
+async def setup_integration_cover_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    mock_cover_devices_only: list,
+):
     """
-    提供一个 SPOT RGB 灯 (SL_SPOT) 的模拟数据。
+    专用的 setup fixture，仅加载窗帘设备进行窗帘平台测试。
 
-    - 初始状态: 开，颜色为 (255, 128, 64)。
-      - `val` 为 `0xFF8040`。
+    这个优化版本只加载窗帘相关设备，减少测试加载开销，
+    提高窗帘平台测试的执行效率。
     """
-    from .test_utils import create_mock_device_spot_rgb_light
-
-    return create_mock_device_spot_rgb_light()
-
-
-@pytest.fixture
-def mock_device_dual_io_rgbw_light() -> dict:
-    """
-    提供一个双 IO 口 RGBW 灯 (SL_CT_RGBW) 的模拟数据。
-
-    - 初始状态: 开，但颜色和效果均未激活。
-      - `RGBW` 口为开 (`type: 129`)，但值为 0。
-      - `DYN` 口为关 (`type: 128`)。
-    """
-    from .test_utils import create_mock_device_dual_io_rgbw_light
-
-    return create_mock_device_dual_io_rgbw_light()
-
-
-@pytest.fixture
-def mock_device_single_io_rgbw_light() -> dict:
-    """
-    提供一个单 IO 口 RGB 灯 (SL_SC_RGB) 的模拟数据。
-
-    此 Fixture 用于对该特定设备类型的协议进行精确测试。
-    - 初始状态: 开，颜色为 (1, 2, 3)，亮度为 100%。
-      - `val` 为 `0x64010203` (亮度100, R=1, G=2, B=3)。
-    """
-    from .test_utils import create_mock_device_single_io_rgb_light
-
-    return create_mock_device_single_io_rgb_light()
+    async for result in _setup_integration_platform_generic(
+        hass,
+        mock_config_entry,
+        mock_client,
+        mock_hub_class,
+        mock_cover_devices_only,
+        "SL_DOOYA",
+    ):
+        yield result
 
 
 # ============================================================================
@@ -566,21 +663,23 @@ async def setup_integration_spot_rgb_only(
     """
     mock_config_entry.add_to_hass(hass)
 
-    # 配置 mock hub 实例
-    hub_instance = mock_hub_class.return_value
+    # 使用工厂函数创建mock hub实例
     devices = [mock_device_spot_rgb_light]
-    hub_instance.get_devices.return_value = devices
-    hub_instance.get_client.return_value = mock_client
-    hub_instance.get_exclude_config.return_value = (set(), set())
+    hub_instance = create_mock_hub(devices, mock_client)
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        new=mock_hub_class,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 @pytest.fixture
@@ -599,21 +698,23 @@ async def setup_integration_dual_io_light_only(
     """
     mock_config_entry.add_to_hass(hass)
 
-    # 配置 mock hub 实例
-    hub_instance = mock_hub_class.return_value
+    # 使用工厂函数创建mock hub实例
     devices = [mock_device_dual_io_rgbw_light]
-    hub_instance.get_devices.return_value = devices
-    hub_instance.get_client.return_value = mock_client
-    hub_instance.get_exclude_config.return_value = (set(), set())
+    hub_instance = create_mock_hub(devices, mock_client)
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        new=mock_hub_class,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 @pytest.fixture
@@ -622,7 +723,6 @@ async def setup_integration_single_io_rgbw_only(
     mock_config_entry: ConfigEntry,
     mock_client: AsyncMock,
     mock_hub_class: MagicMock,
-    mock_device_single_io_rgbw_light: dict,
 ):
     """
     一个专用的 setup fixture，只加载单 IO 口 RGB 灯。
@@ -630,23 +730,243 @@ async def setup_integration_single_io_rgbw_only(
     此 fixture 创建一个只包含单个 SL_SC_RGB 灯的纯净测试环境，
     用于对该设备的服务调用与设备协议的精确匹配进行测试。
     """
+    from .utils.typed_factories import create_mock_device_single_io_rgb_light
+
     mock_config_entry.add_to_hass(hass)
 
-    # 配置 mock hub 实例
-    hub_instance = mock_hub_class.return_value
-    devices = [mock_device_single_io_rgbw_light]
-    hub_instance.get_devices.return_value = devices
-    hub_instance.get_client.return_value = mock_client
-    hub_instance.get_exclude_config.return_value = (set(), set())
+    # 使用专用的单IO RGB灯工厂函数创建设备
+    devices = [create_mock_device_single_io_rgb_light()]
+    hub_instance = create_mock_hub(devices, mock_client)
 
-    with patch(
-        "custom_components.lifesmart.LifeSmartHub",
-        new=mock_hub_class,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert mock_config_entry.state == ConfigEntryState.LOADED
     yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+
+
+@pytest.fixture
+def mock_device_spot_rgb_light():
+    """创建SPOT RGB灯测试设备。"""
+    from .utils.typed_factories import create_mock_device_spot_rgb_light
+
+    return create_mock_device_spot_rgb_light()
+
+
+@pytest.fixture
+def mock_device_dual_io_rgbw_light():
+    """创建双IO RGBW灯测试设备。"""
+    from .utils.typed_factories import create_mock_device_dual_io_rgbw_light
+
+    return create_mock_device_dual_io_rgbw_light()
+
+
+# ============================================================================
+# === Gen2 device dictionary test fixtures ===
+# ============================================================================
+
+
+@pytest.fixture
+def typed_core_devices():
+    """
+    提供所有10个核心设备类型的设备实例列表。
+
+    简化版本，直接返回字典格式设备。
+    """
+    from .utils.typed_factories import create_core_devices
+
+    return create_core_devices()
+
+
+@pytest.fixture
+def typed_smart_plug():
+    """提供 Gen2 智慧插座设备字典 (SL_OL)。"""
+    from .utils.typed_factories import create_smart_plug
+
+    return create_smart_plug()
+
+
+@pytest.fixture
+def typed_power_meter_plug():
+    """提供 Gen2 计量插座设备字典 (SL_OE_3C)。"""
+    from .utils.typed_factories import create_power_meter_plug
+
+    return create_power_meter_plug()
+
+
+@pytest.fixture
+def typed_switch_if3():
+    """提供 Gen2 三联开关设备字典 (SL_SW_IF3)。"""
+    from .utils.typed_factories import create_switch_if3
+
+    return create_switch_if3()
+
+
+@pytest.fixture
+def typed_dimmer_light():
+    """提供 Gen2 调光灯泡设备字典 (SL_LI_WW)。"""
+    from .utils.typed_factories import create_dimmer_light
+
+    return create_dimmer_light()
+
+
+@pytest.fixture
+def typed_rgbw_light():
+    """提供 Gen2 RGBW灯带设备字典 (SL_CT_RGBW)。"""
+    from .utils.typed_factories import create_rgbw_light
+
+    return create_rgbw_light()
+
+
+@pytest.fixture
+def typed_environment_sensor():
+    """提供 Gen2 环境传感器设备字典 (SL_SC_THL)。"""
+    from .utils.typed_factories import create_environment_sensor
+
+    return create_environment_sensor()
+
+
+@pytest.fixture
+def typed_door_sensor():
+    """提供 Gen2 门窗传感器设备字典 (SL_SC_G)。"""
+    from .utils.typed_factories import create_door_sensor
+
+    return create_door_sensor()
+
+
+@pytest.fixture
+def typed_curtain_motor():
+    """提供 Gen2 窗帘电机设备字典 (SL_DOOYA)。"""
+    from .utils.typed_factories import create_curtain_motor
+
+    return create_curtain_motor()
+
+
+@pytest.fixture
+def typed_thermostat_panel():
+    """提供 Gen2 温控面板设备字典 (SL_NATURE)。"""
+    from .utils.typed_factories import create_thermostat_panel
+
+    return create_thermostat_panel()
+
+
+@pytest.fixture
+def typed_smart_lock():
+    """提供 Gen2 智能门锁设备字典 (SL_LK_LS)。"""
+    from .utils.typed_factories import create_smart_lock
+
+    return create_smart_lock()
+
+
+@pytest.fixture
+def typed_switch_devices():
+    """提供所有 Gen2 开关设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_OL", "SL_SW_IF3"])
+
+
+@pytest.fixture
+def typed_sensor_devices():
+    """提供所有 Gen2 传感器设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_OE_3C", "SL_SC_THL"])
+
+
+@pytest.fixture
+def typed_light_devices():
+    """提供所有 Gen2 灯光设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_LI_WW", "SL_CT_RGBW"])
+
+
+@pytest.fixture
+def typed_binary_sensor_devices():
+    """提供所有 Gen2 二进制传感器设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_SC_G"])
+
+
+@pytest.fixture
+def typed_cover_devices():
+    """提供所有 Gen2 窗帘设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_DOOYA"])
+
+
+@pytest.fixture
+def typed_climate_devices():
+    """提供所有 Gen2 气候控制设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_NATURE", "SL_CP_DN", "SL_CP_AIR"])
+
+
+@pytest.fixture
+def typed_lock_devices():
+    """提供所有 Gen2 门锁设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
+
+    return create_gen2_devices(["SL_LK_LS"])
+
+
+# === Gen2 dictionary validation fixtures ===
+
+
+@pytest.fixture
+def typed_devices_as_dicts():
+    """
+    创建核心设备的字典格式列表。
+
+    简化版本，直接返回字典格式设备，无需类型转换。
+    """
+    from .utils.typed_factories import create_core_devices
+
+    return create_core_devices()
+
+
+@pytest.fixture
+async def setup_integration_typed_devices_only(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+    mock_client: AsyncMock,
+    mock_hub_class: MagicMock,
+    typed_devices_as_dicts: list,
+):
+    """
+    专用的setup fixture，使用 Gen2 设备字典数据。
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    # 使用 Gen2 设备字典数据
+    hub_instance = create_mock_hub(typed_devices_as_dicts, mock_client)
+    hub_instance.get_exclude_config.return_value = (set(), set())
+
+    # Configure mock_hub_class to return our hub_instance
+    mock_hub_class.return_value = hub_instance
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    yield mock_config_entry
+
+    # 清理
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 # 全局标志，确保banner只显示一次
@@ -690,3 +1010,32 @@ def pytest_configure(config):
     # This hook is called after command line options have been parsed
     # and all plugins and initial conftest files been loaded
     _show_banner_once()
+
+
+# Phase 2: DeviceResolver 核心测试支持
+@pytest.fixture(autouse=True)
+def reset_global_singletons():
+    """
+    在每次测试后自动重置核心组件的全局单例。
+
+    这是确保 Phase 2 DeviceResolver 测试隔离性的关键步骤，
+    防止状态从一个测试泄漏到另一个测试中。
+    """
+    yield  # 运行测试
+
+    # 在测试结束后执行清理
+    try:
+        from custom_components.lifesmart.core.resolver import device_resolver
+
+        device_resolver._global_resolver = None
+    except ImportError:
+        # 如果模块还未导入，跳过清理
+        pass
+
+    try:
+        from custom_components.lifesmart.core.strategies import strategy_factory
+
+        strategy_factory._global_factory = None
+    except ImportError:
+        # 如果模块还未导入，跳过清理
+        pass

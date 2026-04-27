@@ -1,0 +1,39 @@
+{
+  "analysis_intervals": {
+    "code_quality": "daily",
+    "architecture_review": "weekly",
+    "tech_debt_scan": "daily",
+    "performance_analysis": "weekly"
+  },
+  "quality_thresholds": {
+    "min_quality_score": 85.0,
+    "max_tech_debt_items": 10,
+    "critical_issue_threshold": 3
+  },
+  "mcp_tools": {
+    "context_mcp": {
+      "enabled": true,
+      "priority": "high"
+    },
+    "context7": {
+      "enabled": true,
+      "priority": "medium"
+    }
+  },
+  "analysis_scope": [
+    "custom_components/lifesmart",
+    "quality/"
+  ],
+  "exclude_patterns": [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/tmp/*",
+    "*/venv/*",
+    "*/.git/*"
+  ],
+  "reporting": {
+    "save_detailed_reports": true,
+    "max_history_records": 100,
+    "trend_analysis_days": 30
+  }
+}

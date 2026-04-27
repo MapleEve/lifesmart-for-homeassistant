@@ -22,7 +22,7 @@ Installation and updates are available via HACS.
 
 ---
 
-## Features
+## Core Features
 
 - **Dual Connection Modes**: Cloud and Local modes (choose between LifeSmart API or local Hub)
 - **Comprehensive Device Support**: Switches, sensors, locks, controllers, sockets, curtain motors, lights, SPOT,
@@ -62,6 +62,21 @@ Installation and updates are available via HACS.
 
 [![Add via HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MapleEve&repository=lifesmart-for-homeassistant&category=integration)
 [![Add Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=lifesmart)
+
+---
+
+## 🆘 Troubleshooting
+
+If you encounter any issues with the integration, check our comprehensive troubleshooting guide:
+
+📖 **[Troubleshooting Guide](./troubleshooting.md)** - Solutions for common problems
+
+The guide covers:
+
+- Connection issues (cloud & local modes)
+- Device problems (unavailable, not updating)
+- Performance optimization
+- How to generate diagnostics data for issue reports
 
 ---
 
@@ -205,7 +220,7 @@ pip install pytest-asyncio pytest-cov flake8 black
 
 # Or use traditional venv setup
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 pip install black flake8 pytest
 ```

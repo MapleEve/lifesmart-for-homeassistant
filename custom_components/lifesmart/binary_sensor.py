@@ -1,13 +1,30 @@
 """
-Support for LifeSmart binary sensors by @MapleEve
-LifeSmart 二元传感器平台实现
+LifeSmart二元传感器平台集成模块 - 智能家居感应器设备支持
 
-此模块负责将 LifeSmart 的各种感应器（如门磁、动态感应器、水浸、门锁事件等）
-注册为 Home Assistant 中的二元传感器实体。
+本模块为Home Assistant提供完整的LifeSmart二元传感器设备集成支持，
+负责将各种智能感应器设备注册为标准的二元传感器实体。
 
+支持的设备类型：
+    - 门磁传感器：门窗开关状态检测
+    - PIR动态感应器：人体红外运动检测
+    - 水浸传感器：漏水和水位监测
+    - 烟雾传感器：火灾安全监测
+    - 门锁事件：智能门锁状态和操作事件
+    - 按钮开关：瞬时按键操作检测
+    - ALM复合传感器：多位状态报警设备
+
+技术特性：
+    - 配置驱动的设备分类和状态处理
+    - 支持bitmask虚拟子设备自动生成
+    - 瞬时按钮设备的智能自动复位机制
+    - 实时状态更新和全局数据同步
+    - 完整的设备信息和属性管理
+    - 异常处理和错误恢复机制
+
+作者: @MapleEve
+版本: 支持HA 2022.10+ 和 LifeSmart 云端/本地API
 """
 
-import datetime
 import logging
 from typing import Any
 
@@ -23,7 +40,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-from .const import (
+from .core.const import (
     # --- 核心常量导入 ---
     DOMAIN,
     MANUFACTURER,
@@ -32,20 +49,19 @@ from .const import (
     DEVICE_DATA_KEY,
     DEVICE_VERSION_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
-    UNLOCK_METHOD,
-    # --- 设备类型常量导入 ---
-    GENERIC_CONTROLLER_TYPES,
-    GUARD_SENSOR_TYPES,
-    MOTION_SENSOR_TYPES,
-    LOCK_TYPES,
-    WATER_SENSOR_TYPES,
-    SMOKE_SENSOR_TYPES,
-    RADAR_SENSOR_TYPES,
-    DEFED_SENSOR_TYPES,
-    CLIMATE_TYPES,
+    BINARY_SENSOR_BUTTON_RESET_DELAY,  # 新增常量
 )
-from .entity import LifeSmartEntity
-from .helpers import generate_unique_id, get_binary_sensor_subdevices, safe_get
+from .core.entity import LifeSmartEntity
+from .core.error_handling import DeviceMappingNotFoundError
+from .core.helpers import (
+    generate_unique_id,
+)
+from .core.platform.platform_detection import (
+    get_device_platform_mapping,
+    get_binary_sensor_io_config,
+    is_momentary_button_device,
+    safe_get,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +71,25 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up LifeSmart binary sensors from a config entry."""
+    """
+    从配置条目异步设置 LifeSmart 二元传感器设备。
+
+    此函数负责遍历所有设备，识别二元传感器类型设备，并为每个设备创建
+    相应的Home Assistant实体。支持设备排除配置和bitmask多设备生成。
+
+    Args:
+        hass: Home Assistant核心实例，提供数据存储和事件调度
+        config_entry: 集成配置条目，包含用户配置和运行时数据
+        async_add_entities: HA实体添加回调函数，用于注册新实体
+
+    Returns:
+        无返回值，通过async_add_entities回调添加实体
+
+    注意事项:
+        - 会自动跳过排除列表中的设备
+        - 支持bitmask虚拟子设备生成
+        - 支持瞬时按钮设备的自动复位机制
+    """
     hub = hass.data[DOMAIN][config_entry.entry_id]["hub"]
     exclude_devices, exclude_hubs = hub.get_exclude_config()
 
@@ -67,9 +101,12 @@ async def async_setup_entry(
         ):
             continue
 
-        # 使用helpers中的统一逻辑获取所有有效的二元传感器子设备
-        subdevice_keys = get_binary_sensor_subdevices(device)
-        for sub_key in subdevice_keys:
+        # 使用新的IO映射系统获取设备支持的平台
+        platform_mapping = get_device_platform_mapping(device)
+        binary_sensor_subdevices = platform_mapping.get("binary_sensor", [])
+
+        # 为每个binary_sensor子设备创建实体
+        for sub_key in binary_sensor_subdevices:
             sub_device_data = safe_get(device, DEVICE_DATA_KEY, sub_key, default={})
             binary_sensors.append(
                 LifeSmartBinarySensor(
@@ -85,7 +122,23 @@ async def async_setup_entry(
 
 
 class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
-    """LifeSmart binary sensor entity with enhanced compatibility."""
+    """
+    LifeSmart 二元传感器设备实体类。
+
+    继承自LifeSmartEntity和BinarySensorEntity，负责二元传感器的状态管理
+    和数据处理逻辑。实现了增强的稳定性和完整的设备控制功能。
+
+    主要职责:
+    - 解析和处理各种二元传感器状态
+    - 实现瞬时按钮设备的自动复位机制
+    - 支持bitmask虚拟子设备的状态管理
+    - 提供实时状态更新和设备类别识别
+
+    技术特点:
+    - 配置驱动的设备类别检测
+    - 智能的状态处理和转换
+    - 完整的错误处理和日志记录
+    """
 
     def __init__(
         self,
@@ -95,26 +148,73 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         sub_device_key: str,
         sub_device_data: dict[str, Any],
     ) -> None:
-        """Initialize the binary sensor."""
+        """
+        初始化二元传感器设备。
+
+        Args:
+            raw_device: 原始设备数据字典
+            client: LifeSmart API客户端实例
+            entry_id: 配置条目ID
+            sub_device_key: 子设备键名，用于多IO设备
+            sub_device_data: 子设备数据，包含IO口状态信息
+        """
         super().__init__(raw_device, client)
         self._sub_key = sub_device_key
         self._sub_data = sub_device_data
         self._entry_id = entry_id
 
-        self._attr_name = f"{self._name} {self._sub_key.upper()}"
-        device_name_slug = self._name.lower().replace(" ", "_")
-        sub_key_slug = self._sub_key.lower()
-        self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
+        # 为bitmask虚拟子设备生成更友好的名称
+        if self._is_bitmask_virtual_subdevice():
+            friendly_name = self._get_bitmask_friendly_name()
+            self._attr_name = f"{self._name} {friendly_name}"
+            device_name_slug = self._name.lower().replace(" ", "_")
+            sub_key_slug = sub_device_key.lower().replace("_bit", "_")
+            self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
+        else:
+            self._attr_name = f"{self._name} {self._sub_key.upper()}"
+            device_name_slug = self._name.lower().replace(" ", "_")
+            sub_key_slug = self._sub_key.lower()
+            self._attr_object_id = f"{device_name_slug}_{sub_key_slug}"
 
         self._attr_unique_id = generate_unique_id(
             self.devtype, self.agt, self.me, sub_device_key
         )
         self._update_state(self._sub_data)
 
+    def _get_bitmask_friendly_name(self) -> str:
+        """
+        获取bitmask虚拟子设备的友好名称。
+
+        Returns:
+            友好的设备名称
+        """
+        io_config = get_binary_sensor_io_config(self._raw_device, self._sub_key)
+        friendly_name = io_config.get("friendly_name")
+
+        if friendly_name:
+            return friendly_name
+
+        # Fallback: 使用默认格式
+        return self._sub_key.upper()
+
     @callback
     def _update_state(self, data: dict) -> None:
-        """解析并根据数据更新所有实体状态和属性。"""
-        self._sub_data = data
+        """
+        解析并根据数据更新所有实体状态和属性。
+
+        增强版本：支持bitmask虚拟子设备的数据处理。
+        """
+        # 对于虚拟子设备，需要特殊处理
+        if self._is_bitmask_virtual_subdevice():
+            # 虚拟子设备不直接使用传入的data，而是从原始IO口获取数据
+            source_io_port = self._sub_key.split("_bit")[0]
+            source_io_data = safe_get(
+                self._raw_device, DEVICE_DATA_KEY, source_io_port, default={}
+            )
+            self._sub_data = source_io_data  # 使用原始IO口数据
+        else:
+            self._sub_data = data
+
         device_class = self._determine_device_class()
         if device_class:
             self._attr_device_class = device_class
@@ -126,8 +226,8 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         # 然后，更新所有属性。_get_attributes 可能会用到 self._attr_is_on 的最新值
         self._attrs = self._get_attributes()
 
-        # 最后，处理瞬时按钮的特殊重置逻辑
-        if self.devtype == "SL_SC_BB_V2" and is_currently_on:
+        # 最后，处理瞬时按钮的特殊重置逻辑 - 使用映射驱动判断
+        if self._is_momentary_button_device() and is_currently_on:
             # 更新事件相关的属性
             val = data.get("val", 0)
             event_map = {1: "single_click", 2: "double_click", 255: "long_press"}
@@ -137,191 +237,123 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             # 使用 Home Assistant 的调度器在短暂延迟后将状态重置为 "off"
             @callback
             def reset_state_callback(_now):
-                """Reset state to off."""
+                """
+                将瞬时按钮状态重置为关闭。
+
+                用于模拟按钮按下后的自动复位行为。
+                """
                 self._attr_is_on = False
                 self.async_write_ha_state()
 
-            async_call_later(self.hass, 0.5, reset_state_callback)
+            async_call_later(
+                self.hass, BINARY_SENSOR_BUTTON_RESET_DELAY, reset_state_callback
+            )
 
     @callback
     def _determine_device_class(self) -> BinarySensorDeviceClass | None:
-        """Determine device class based on device type and sub-device key."""
-        device_type = self.devtype
-        sub_key = self._sub_key
+        """从DEVICE_MAPPING获取设备类别。"""
+        io_config = get_binary_sensor_io_config(self._raw_device, self._sub_key)
+        return io_config.get("device_class") if io_config else None
 
-        if device_type in CLIMATE_TYPES:
-            if sub_key == "P2":  # 地暖继电器, 风机盘管阀门
-                return (
-                    BinarySensorDeviceClass.POWER
-                    if device_type == "SL_CP_DN"
-                    else BinarySensorDeviceClass.OPENING
-                )
-            if sub_key == "P5":  # 温控阀门告警
-                return BinarySensorDeviceClass.PROBLEM
-            if sub_key in {"P2", "P3"}:  # 超能面板阀门
-                return BinarySensorDeviceClass.OPENING
-
-            return None
-
-        # 门窗感应器
-        if device_type in GUARD_SENSOR_TYPES:
-            if sub_key in {"G", "P1"}:
-                return BinarySensorDeviceClass.DOOR
-            if sub_key in {"AXS", "P2"}:
-                return BinarySensorDeviceClass.VIBRATION
-            if sub_key == "B":
-                return None  # 通用二元传感器
-
-        # 动态感应器
-        if device_type in MOTION_SENSOR_TYPES:
-            return BinarySensorDeviceClass.MOTION
-
-        # 门锁
-        if device_type in LOCK_TYPES:
-            if sub_key == "EVTLO":
-                return BinarySensorDeviceClass.LOCK
-            if sub_key == "ALM":
-                return BinarySensorDeviceClass.PROBLEM
-
-        # 通用控制器
-        if device_type in GENERIC_CONTROLLER_TYPES:
-            return BinarySensorDeviceClass.OPENING
-
-        # 水浸传感器
-        if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
-            return BinarySensorDeviceClass.MOISTURE
-
-        # 烟雾感应器
-        if device_type in SMOKE_SENSOR_TYPES and sub_key == "P1":
-            return BinarySensorDeviceClass.SMOKE
-
-        # 人体存在感应器
-        if device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
-            return BinarySensorDeviceClass.OCCUPANCY
-
-        # 云防系列设备类别
-        if device_type in DEFED_SENSOR_TYPES:
-            if device_type == "SL_DF_GG":
-                return BinarySensorDeviceClass.DOOR
-            if device_type == "SL_DF_MM":
-                return BinarySensorDeviceClass.MOTION
-            if device_type == "SL_DF_SR":
-                return BinarySensorDeviceClass.SOUND
-            # 遥控器没有标准类别，作为通用触发器
-            return None
-
-        return None
+    @callback
+    def _is_momentary_button_device(self) -> bool:
+        """从DEVICE_MAPPING判断是否为瞬时按钮设备。"""
+        return is_momentary_button_device(
+            self.devtype, self._sub_key, self._raw_device.get(DEVICE_DATA_KEY, {})
+        )
 
     @callback
     def _parse_state(self) -> bool:
-        """Parse the state based on device type and sub-device data."""
-        device_type = self.devtype
-        sub_key = self._sub_key
-        val = self._sub_data.get("val", 0)
-        type_val = self._sub_data.get("type", 0)
+        """使用新的逻辑处理器系统解析设备状态。
 
-        # 门窗感应器特殊处理
-        if device_type in GUARD_SENSOR_TYPES:
-            if device_type == "SL_SC_GS" and sub_key in {"P1", "P2"}:
-                return type_val % 2 == 1
-            if device_type == "SL_SC_BG" and sub_key == "AXS":
-                return val != 0  # 非0表示检测到震动
-            return val == 0 if sub_key == "G" else val != 0
+        增强版本：支持bitmask虚拟子设备状态解析。
+        """
+        # 检查是否为bitmask虚拟子设备
+        if self._is_bitmask_virtual_subdevice():
+            return self._parse_bitmask_bit_state()
 
-        # 云防系列设备特殊处理
-        if device_type in DEFED_SENSOR_TYPES:
-            return type_val % 2 == 1
+        # 原有逻辑
+        from .core.data.processors.io_processors import process_io_data
 
-        # 动态感应器
-        if device_type in MOTION_SENSOR_TYPES:
-            return val != 0
+        io_config = get_binary_sensor_io_config(self._raw_device, self._sub_key)
+        if not io_config:
+            # 严格要求：没有映射配置时抛出错误，不允许fallback到默认处理器
+            raise DeviceMappingNotFoundError(
+                f"设备 {self._device_id} 的二元传感器 {self._sub_key} 没有找到映射配置"
+            )
 
-        # 门锁事件
-        if device_type in LOCK_TYPES:
-            if sub_key == "EVTLO":
-                unlock_type = self._sub_data.get("type", 0)
-                unlock_user = val & 0xFFF
-                return (
-                    val != 0
-                    and unlock_type & 0x01 == 1
-                    and unlock_user != 0
-                    and val >> 12 != 15
-                )
-            if sub_key == "ALM":
-                return val > 0
+        # Use new logic processor system
+        return process_io_data(io_config, self._sub_data)
 
-        # 通用控制器
-        if device_type in GENERIC_CONTROLLER_TYPES:
-            return type_val % 2 == 1
+    @callback
+    def _is_bitmask_virtual_subdevice(self) -> bool:
+        """判断是否为bitmask虚拟子设备。"""
+        from .core.platform.platform_detection import is_bitmask_virtual_subdevice
 
-        # 水浸传感器
-        if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
-            return val != 0  # 非0表示检测到水
+        return is_bitmask_virtual_subdevice(self._sub_key)
 
-        # 烟雾感应器
-        if device_type in SMOKE_SENSOR_TYPES and sub_key == "P1":
-            return val != 0  # 非0表示检测到烟雾
+    @callback
+    def _parse_bitmask_bit_state(self) -> bool:
+        """
+        解析ALM虚拟子设备的bit状态。
 
-        # 人体存在感应器
-        if device_type in RADAR_SENSOR_TYPES and sub_key == "P1":
-            return val != 0  # 非0表示检测到人体存在
+        使用新的ALM数据处理器架构，从原始IO口数据中提取特定bit位的状态。
+        """
+        from .core.data.processors.data_processors import (
+            alm_data_processor,
+            is_alm_io_port,
+        )
 
-        # 云防门窗感应器
-        if device_type == "SL_DF_GG" and sub_key == "A":
-            return val == 0  # 云防门窗：0=开，1=关
+        # 解析虚拟键格式: {IO口}_bit{位号}
+        if "_bit" not in self._sub_key:
+            return False
 
-        if device_type in CLIMATE_TYPES:
-            if sub_key == "P5":  # 温控阀门告警 (val 是 bitmask)
-                return val > 0
-            # 其他所有温控器的附属开关/阀门都遵循 type%2==1 为开启的规则
-            return type_val % 2 == 1
+        source_io_port = self._sub_key.split("_bit")[0]
+        bit_position_str = self._sub_key.split("_bit")[1]
 
-        # 其他传感器默认处理
-        return val != 0
+        # 检查是否为ALM IO口
+        if not is_alm_io_port(source_io_port):
+            return False
+
+        try:
+            bit_position = int(bit_position_str)
+        except ValueError:
+            return False
+
+        # 获取原始IO口数据
+        source_io_data = safe_get(
+            self._raw_device, DEVICE_DATA_KEY, source_io_port, default={}
+        )
+        raw_value = source_io_data.get("val", 0)
+
+        # 使用ALM数据处理器提取bit状态
+        return alm_data_processor.extract_bit_value(raw_value, bit_position)
 
     @callback
     def _get_attributes(self) -> dict[str, Any]:
-        """Get attributes for the sensor."""
-        device_type = self.devtype
-        sub_key = self._sub_key
-        val = self._sub_data.get("val", 0)
-
-        # 门锁事件的特殊属性
-        if device_type in LOCK_TYPES and sub_key == "EVTLO":
-            return {
-                "unlocking_method": UNLOCK_METHOD.get(val >> 12, "Unknown"),
-                "unlocking_user": val & 0xFFF,
-                "device_type": device_type,
-                "unlocking_success": self._attr_is_on,
-                "last_updated": datetime.datetime.fromtimestamp(
-                    self._sub_data.get("valts", 0) / 1000
-                ).strftime("%Y-%m-%d %H:%M:%S"),
-            }
-
-        # 门锁报警的属性
-        if device_type in LOCK_TYPES and sub_key == "ALM":
-            return {"alarm_type": val}
-
-        # 水浸传感器的属性
-        if device_type in WATER_SENSOR_TYPES and sub_key == "WA":
-            return {"conductivity_level": val, "water_detected": val != 0}
-
-        # SL_SC_BB_V2 初始化事件属性
-        if device_type == "SL_SC_BB_V2":
+        """使用新的逻辑处理器系统获取传感器属性。"""
+        # 按钮开关类型初始化事件属性 - 使用映射驱动判断
+        if self._is_momentary_button_device():
             return {"last_event": None, "last_event_time": None}
 
-        # 为温控阀门的告警传感器添加详细属性
-        if device_type == "SL_CP_VL" and sub_key == "P5":
-            return {
-                "high_temp_protection": bool(val & 0b1),
-                "low_temp_protection": bool(val & 0b10),
-                "internal_sensor_fault": bool(val & 0b100),
-                "external_sensor_fault": bool(val & 0b1000),
-                "low_battery": bool(val & 0b10000),
-                "device_offline": bool(val & 0b100000),
-            }
-        # 默认返回原始数据
-        return dict(self._sub_data)
+        # 使用新的逻辑处理器获取设备特定属性
+        from .core.data.processors.io_processors import process_io_attributes
+
+        io_config = get_binary_sensor_io_config(self._raw_device, self._sub_key)
+        if io_config:
+            try:
+                return process_io_attributes(
+                    io_config,
+                    self._sub_data,
+                    self._attr_is_on,
+                )
+            except Exception:
+                pass
+
+        # 严格要求：没有映射配置时抛出错误，不允许fallback到默认行为
+        raise DeviceMappingNotFoundError(
+            f"设备 {self.devtype} 的二元传感器 {self._sub_key} 没有找到属性映射配置"
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -337,16 +369,30 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique identifier for this entity."""
+        """
+        返回此实体的唯一标识符。
+
+        Returns:
+            基于设备类型、网关ID、设备ID和子设备键的唯一标识符
+        """
         return self._attr_unique_id
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
+        """
+        返回实体的状态属性。
+
+        Returns:
+            包含设备状态信息的属性字典
+        """
         return self._attrs
 
     async def async_added_to_hass(self) -> None:
-        """Register update listeners."""
+        """
+        注册状态更新监听器。
+
+        设置实时更新和全局刷新的事件监听器。
+        """
         # 实时更新事件
         self.async_on_remove(
             async_dispatcher_connect(
@@ -365,7 +411,20 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         )
 
     async def _handle_update(self, data: dict) -> None:
-        """Handle real-time updates."""
+        """
+        处理实时状态更新事件。
+
+        当设备状态发生变化时，此方法会被调用来更新实体的状态和属性。
+        支持增量更新和错误恢复机制。
+
+        Args:
+            data: 从LifeSmart服务接收的设备状态数据字典
+
+        异常处理:
+            - 捕获所有更新异常，记录详细错误信息
+            - 确保单个设备更新失败不影响其他设备
+            - 提供故障恢复和状态同步机制
+        """
         try:
             if data is None:
                 return
@@ -377,7 +436,28 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
             _LOGGER.error("Error handling update for %s: %s", self._attr_unique_id, e)
 
     async def _handle_global_refresh(self) -> None:
-        """Handle periodic full data refresh."""
+        """
+        处理定期全量数据刷新事件。
+
+        定期从Home Assistant数据存储中获取最新的设备状态，确保实体状态
+        与实际设备状态保持同步。主要用于网络中断恢复和数据一致性保障。
+
+        执行流程:
+            1. 从hass.data获取当前配置条目的所有设备数据
+            2. 根据网关ID和设备ID定位当前设备
+            3. 提取对应子设备键的最新状态数据
+            4. 更新实体状态并写入Home Assistant
+
+        异常处理:
+            - 设备查找失败时静默忽略（设备可能已被删除）
+            - 状态更新异常时记录错误并继续执行
+            - 确保刷新过程不影响其他实体的正常运行
+
+        注意事项:
+            - 此方法通过全局信号调度器触发
+            - 所有同类型实体会同时接收刷新信号
+            - 仅在数据发生实际变化时更新HA状态
+        """
         try:
             # 从hass.data获取最新设备列表
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]

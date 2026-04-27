@@ -11,8 +11,8 @@ import logging
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 
-from .const import DEVICE_ID_KEY, HUB_ID_KEY, SUBDEVICE_INDEX_KEY, DOMAIN
 from .core.client_base import LifeSmartClientBase
+from .core.const import DEVICE_ID_KEY, HUB_ID_KEY, SUBDEVICE_INDEX_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ class LifeSmartServiceManager:
                 "category": call.data["category"],
                 "brand": call.data["brand"],
                 "key": call.data.get("key")
-                or call.data.get("keys"),  # 兼容key和keys参数
+                or call.data.get("keys"),  # 支持key和keys参数
                 "power": call.data["power"],
                 "mode": call.data["mode"],
                 "temp": call.data["temp"],

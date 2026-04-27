@@ -57,7 +57,9 @@
       "cannot_connect": "连接失败，请检查您的网络和 IP 地址",
       "invalid_auth": "认证失败，请检查您的凭据是否正确",
       "unknown": "发生未知错误，请检查日志",
-      "invalid_response": "API 返回了无效的响应，请检查您的凭据和网络"
+      "invalid_response": "API 返回了无效的响应，请检查您的凭据和网络",
+      "invalid_region": "无效的服务器区域设置，请选择有效的区域",
+      "invalid_auth_method": "无效的认证方式，请选择 token 或 password"
     }
   },
   "options": {
@@ -237,6 +239,246 @@
         "apz": "其他亚太区服务器 (APAC)",
         "AUTO": "自动选择服务器 Global"
       }
+    },
+    "unlock_method": {
+      "options": {
+        "0": "无",
+        "1": "密码",
+        "2": "指纹",
+        "3": "NFC",
+        "4": "钥匙",
+        "5": "远程",
+        "6": "12V信号",
+        "7": "应用",
+        "8": "蓝牙",
+        "9": "手动",
+        "15": "错误"
+      }
     }
+  },
+  "error": {
+    "api": {
+      "10001": {
+        "description": "请求格式错误",
+        "advice": "请校验发送的JSON数据结构及字段类型是否符合API文档。"
+      },
+      "10002": {
+        "description": "AppKey不存在",
+        "advice": "请在集成配置中检查您的AppKey是否正确填写。"
+      },
+      "10003": {
+        "description": "不支持HTTP GET请求",
+        "advice": "这是一个开发错误，该接口应使用POST方法。"
+      },
+      "10004": {
+        "description": "签名非法",
+        "advice": "请检查签名算法、时间戳或凭据是否正确。"
+      },
+      "10005": {
+        "description": "用户没有授权",
+        "advice": "请检查用户令牌(UserToken)是否正确，或到LifeSmart平台检查授权。"
+      },
+      "10006": {
+        "description": "用户授权已经过期",
+        "advice": "用户令牌(UserToken)已失效，请在选项中重新进行认证以获取新令牌。"
+      },
+      "10007": {
+        "description": "非法访问",
+        "advice": "您的IP地址可能不在白名单中，请检查LifeSmart平台的安全设置。"
+      },
+      "10008": {
+        "description": "内部错误",
+        "advice": "LifeSmart服务器内部发生未知错误，请稍后重试或联系技术支持。"
+      },
+      "10009": {
+        "description": "设置属性失败",
+        "advice": "检查设备是否在线且支持该属性设置，或查看日志获取详细信息。"
+      },
+      "10010": {
+        "description": "Method非法",
+        "advice": "调用的API方法名称不存在或已被弃用。"
+      },
+      "10011": {
+        "description": "操作超时",
+        "advice": "网络连接不稳定或LifeSmart服务器响应超时，请检查您的网络连接。"
+      },
+      "10012": {
+        "description": "用户名已存在",
+        "advice": "此用户名已被注册，请更换用户名。"
+      },
+      "10013": {
+        "description": "设备没准备好",
+        "advice": "设备当前可能离线或正忙，请确保设备在线后重试。"
+      },
+      "10014": {
+        "description": "设备已经被其他账户注册",
+        "advice": "请先从原账户中解绑该设备，然后再尝试添加。"
+      },
+      "10015": {
+        "description": "权限不够",
+        "advice": "当前账户权限不足以执行此操作，请联系管理员提升权限。"
+      },
+      "10016": {
+        "description": "设备不支持该操作",
+        "advice": "您尝试的操作不被此设备型号支持，请查阅设备文档。"
+      },
+      "10017": {
+        "description": "数据非法",
+        "advice": "提交给设备的参数值或格式不正确，请检查。"
+      },
+      "10018": {
+        "description": "GPS位置非法访问拒绝",
+        "advice": "请检查应用的地理位置权限或相关场景的地理围栏设置。"
+      },
+      "10019": {
+        "description": "请求对象不存在",
+        "advice": "请求中的设备ID、场景ID等不存在，请检查配置或设备是否已被删除。"
+      },
+      "10020": {
+        "description": "设备已经存在账户中",
+        "advice": "此设备已在您的账户下，无需重复添加。"
+      },
+      "10022": {
+        "description": "请求地址需要重定向",
+        "advice": "API服务器地址可能已变更，请尝试更新集成。"
+      }
+    },
+    "category": {
+      "config_issues": "配置问题",
+      "user_authorization": "用户授权",
+      "security_policy": "安全策略",
+      "permission_management": "权限管理",
+      "server_error": "服务端错误",
+      "network_issues": "网络问题",
+      "device_operation": "设备操作",
+      "device_management": "设备管理",
+      "data_validation": "数据校验",
+      "method_call": "方法调用",
+      "resource_location": "资源定位",
+      "default": "未知分类"
+    },
+    "recommendation": {
+      "config_issues": "请检查您在Home Assistant中的LifeSmart集成配置。",
+      "user_authorization": "请在\"选项\"中重新进行认证，或检查您在LifeSmart平台的账户授权。",
+      "security_policy": "请检查您在LifeSmart开发者平台的安全设置，如IP白名单。",
+      "permission_management": "请联系您的LifeSmart账户管理员调整权限。",
+      "server_error": "这通常是LifeSmart服务器的临时问题，请稍后重试或联系其技术支持。",
+      "network_issues": "请检查您的家庭网络连接以及到互联网的连接。",
+      "device_operation": "请检查设备是否在线、固件是否最新，以及操作是否被设备支持。",
+      "device_management": "请在LifeSmart官方App中管理您的设备。",
+      "data_validation": "这是一个潜在的集成Bug，请向开发者报告此问题。",
+      "method_call": "这是一个潜在的集成Bug，请向开发者报告此问题。",
+      "resource_location": "请检查相关自动化或脚本中引用的设备/场景ID是否正确。",
+      "default": "发生未知错误，请查看Home Assistant日志获取详细信息，或联系集成开发者。"
+    },
+    "range": {
+      "api_auth": {
+        "description": "API请求或认证错误"
+      },
+      "device_operation": {
+        "description": "设备操作或状态错误"
+      },
+      "server_internal": {
+        "description": "服务端内部错误"
+      },
+      "unknown": {
+        "description": "未知业务错误"
+      }
+    }
+  },
+  "entity": {
+    "io": {
+      "switch": "开关",
+      "power": "电量",
+      "temperature": "温度",
+      "humidity": "湿度",
+      "motion": "移动检测",
+      "door_lock_status": "门锁状态",
+      "alarm": "告警",
+      "brightness": "亮度控制",
+      "color": "颜色控制",
+      "color_temp": "色温控制",
+      "fan_speed": "风速",
+      "mode": "模式",
+      "status": "状态",
+      "current_state": "当前状态",
+      "target_temperature": "目标温度",
+      "current": "电流",
+      "voltage": "电压",
+      "energy": "用电量",
+      "indicator": "指示灯",
+      "sensor": "传感器数值",
+      "valve": "阀门状态",
+      "tamper": "防拆状态",
+      "button": "按键状态",
+      "vibration_status": "震动状态",
+      "water_leak_detection": "水浸检测",
+      "concentration": "浓度",
+      "illuminance": "环境光照",
+      "ambient_temperature": "环境温度",
+      "低电压报警": "低电压报警",
+      "门铃": "门铃",
+      "门锁开关状态": "门锁开关状态",
+      "入侵告警": "入侵告警",
+      "机械钥匙报警": "机械钥匙报警",
+      "恢复出厂告警": "恢复出厂告警",
+      "防撬报警": "防撬报警",
+      "劫持报警": "劫持报警",
+      "异动告警": "异动告警",
+      "火警": "火警",
+      "开锁用户编号": "开锁用户编号",
+      "是否为双开模式": "是否为双开模式",
+      "开锁方式": "开锁方式",
+      "错误报警": "错误报警",
+      "error_alarm": "错误报警",
+      "hijack_alarm": "劫持报警",
+      "tamper_alarm": "防撬报警",
+      "mechanical_key_alarm": "机械钥匙报警",
+      "low_voltage_alarm": "低电压报警",
+      "motion_alarm": "异动告警",
+      "doorbell": "门铃",
+      "fire_alarm": "火警",
+      "intrusion_alarm": "入侵告警",
+      "factory_reset_alarm": "恢复出厂告警",
+      "door_lock_switch_status": "门锁开关状态",
+      "unlock_user_id": "开锁用户编号",
+      "unlock_method": "开锁方式",
+      "double_open_mode": "是否为双开模式"
+    },
+    "command": {
+      "turn_on": "打开",
+      "turn_off": "关闭",
+      "light_on": "开灯",
+      "light_off": "关灯",
+      "open": "打开",
+      "close": "关闭",
+      "stop": "停止",
+      "play": "播放"
+    },
+    "state": {
+      "on": "打开",
+      "off": "关闭",
+      "open": "打开",
+      "closed": "关闭",
+      "stopped": "停止"
+    },
+    "device": {
+      "pm25": "PM2.5",
+      "pm10": "PM10",
+      "tvoc": "TVOC",
+      "voc": "VOC",
+      "co2_concentration": "CO2浓度",
+      "formaldehyde_concentration": "甲醛浓度",
+      "scene_switch_1": "情景开关1",
+      "scene_switch_2": "情景开关2",
+      "scene_switch_3": "情景开关3",
+      "scene_switch_4": "情景开关4",
+      "scene_switch_5": "情景开关5",
+      "scene_switch_6": "情景开关6",
+      "last_unlock_info": "最近一次开锁信息",
+      "real_time_unlock": "实时开锁",
+      "operation_record": "操作记录"
+    },
+    "config": {}
   }
 }

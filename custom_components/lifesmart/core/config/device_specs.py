@@ -1,0 +1,10849 @@
+"""
+LifeSmart 设备规格纯数据层 - (125 个设备)
+由 @MapleEve 初始创建和维护
+
+此文件包含所有设备的规格数据，已转换为纯Python数据结构。
+所有HA常量已清理为纯字符串格式，实现数据层的完全独立。
+
+设备按照官方文档 "LifeSmart 智慧设备规格属性说明.md" 的章节顺序排列：
+2.1 插座系列 → 2.2 开关系列 → 2.3 窗帘控制 → 2.4 灯光系列 → ... → 2.14 超能面板
+"""
+
+from typing import Dict, Any
+
+from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    HVACMode,
+)
+
+from ..const import (
+    CMD_TYPE_ON,
+    CMD_TYPE_OFF,
+    CMD_TYPE_PRESS,
+    CMD_TYPE_SET_VAL,
+    CMD_TYPE_SET_TEMP_DECIMAL,
+    CMD_TYPE_SET_CONFIG,
+    CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
+    CMD_TYPE_SET_RAW_OFF,
+    CMD_TYPE_SET_RAW_ON,
+)
+
+# 总设备数量
+TOTAL_DEVICES = 125
+
+# ================= 设备映射按官方文档顺序排列 =================
+# (Device Mapping in Official Documentation Order)
+# 🚨 严格按照官方文档 "LifeSmart 智慧设备规格属性说明.md" 的章节顺序排列
+# 🚨 2.1 插座系列 → 2.2 开关系列 → 2.3 窗帘控制 → 2.4 灯光系列 → ... → 2.14 超能面板
+
+_RAW_DEVICE_DATA = {
+    # ================= 2.1 插座系列 (Outlet Series) =================
+    # 2.1.1 传统插座系列 (Traditional Outlet Series)
+    "SL_OL": {
+        "name": "智慧插座",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_OL_3C": {
+        "name": "智慧插座",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL_3C",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_OL_DE": {
+        "name": "德标插座",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL_DE",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_OL_UK": {
+        "name": "英标插座",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL_UK",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_OL_UL": {
+        "name": "美标插座",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL_UL",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "OD_WE_OT1": {
+        "name": "Wi-Fi插座",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "OD_WE_OT1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.1.2 计量插座系列 (Energy Monitoring Outlet Series)
+    "SL_OE_3C": {
+        "name": "计量插座",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OE_3C",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "energy",
+                        "data_type": "energy",
+                        "conversion": "ieee754_float",
+                        "device_class": "energy",
+                        "unit_of_measurement": "kWh",
+                        "state_class": "total_increasing",
+                    },
+                    "P3": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_float",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "P4": {
+                        "description": "power_threshold",
+                        "data_type": "power",
+                        "conversion": "direct_value",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "min": 0,
+                        "max": 3500,
+                        "commands": {
+                            "enable": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "disable": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "enable_and_set": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                            "disable_and_set": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_OE_DE": {
+        "name": "计量插座德标",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OE_DE",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "energy",
+                        "data_type": "energy",
+                        "conversion": "ieee754_float",
+                        "device_class": "energy",
+                        "unit_of_measurement": "kWh",
+                        "state_class": "total_increasing",
+                    },
+                    "P3": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_float",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "P4": {
+                        "description": "power_threshold",
+                        "data_type": "power_threshold",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "enable": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "disable": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "enable_and_set": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                            "disable_and_set": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_OE_W": {
+        "name": "计量插座",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OE_W",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "energy",
+                        "data_type": "energy",
+                        "conversion": "ieee754_float",
+                        "device_class": "energy",
+                        "unit_of_measurement": "kWh",
+                        "state_class": "total_increasing",
+                    },
+                    "P3": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_float",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "P4": {
+                        "description": "power_threshold",
+                        "data_type": "power_threshold",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "enable": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "disable": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "enable_and_set": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                            "disable_and_set": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # ================= 2.2 开关系列 (Switch Series) =================
+    # 2.2.1 随心开关系列 (Freestyle Switch Series)
+    "SL_SW_RC1": {
+        "name": "白玉/墨玉流光开关一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_RC1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 1023],
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 1023],
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_RC2": {
+        "name": "白玉/墨玉流光开关二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_RC2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_RC3": {
+        "name": "白玉/墨玉流光开关三键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_RC3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark3": {
+                        "description": "indicator_brightness_3_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright3": {
+                        "description": "indicator_brightness_3_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.1 传统开关系列补充 (Traditional Switch Series Supplement)
+    "SL_SF_RC": {
+        "name": "单火触摸开关/入墙开关",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SF_RC",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 1023],
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 1023],
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_RC": {
+        "name": "触摸开关，极星开关(零火版)",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_RC",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 1023],
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 1023],
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_IF3": {
+        "name": "流光开关三键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_IF3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark3": {
+                        "description": "indicator_brightness_3_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright3": {
+                        "description": "indicator_brightness_3_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SF_IF3": {
+        "name": "单火流光开关三键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SF_IF3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark3": {
+                        "description": "indicator_brightness_3_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright3": {
+                        "description": "indicator_brightness_3_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_CP3": {
+        "name": "橙朴流光开关三键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_CP3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark3": {
+                        "description": "indicator_brightness_3_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright3": {
+                        "description": "indicator_brightness_3_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_IF2": {
+        "name": "流光开关二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_IF2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SF_IF2": {
+        "name": "单火流光开关二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SF_IF2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    "SL_SW_CP2": {
+        "name": "橙朴流光开关二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_CP2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    "SL_SW_FE2": {
+        "name": "塞纳/格致开关二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_FE2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    "SL_SW_IF1": {
+        "name": "流光开关一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_IF1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SF_IF1": {
+        "name": "单火流光开关一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SF_IF1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_CP1": {
+        "name": "橙朴流光开关一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_CP1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_FE1": {
+        "name": "塞纳/格致开关一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_FE1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_OL_W": {
+        "name": "入墙插座",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_OL_W",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.2 恒星/辰星/极星开关系列 (Star Series Switch)
+    "SL_SW_ND1": {
+        "name": "恒星/辰星开关一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_ND1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "battery",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_ND2": {
+        "name": "恒星/辰星开关二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_ND2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "battery",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_ND3": {
+        "name": "恒星/辰星开关三键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_ND3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "battery",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_MC_ND1": {
+        "name": "恒星/辰星开关伴侣一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_MC_ND1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_MC_ND2": {
+        "name": "恒星/辰星开关伴侣二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_MC_ND2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_MC_ND3": {
+        "name": "恒星/辰星开关伴侣三键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_MC_ND3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.3 开关控制器系列 (Switch Controller Series)
+    "SL_S": {
+        "name": "单路开关控制器",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_S",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SPWM": {
+        "name": "开关智控器",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SPWM",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "dimmable_light",
+                        "data_type": "generic",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                            "set_brightness_off": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_P_SW": {
+        "name": "九路开关控制器",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_SW",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P5": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P6": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P7": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P8": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P9": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "button": {
+                "io_configs": {
+                    "P1": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P5": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P6": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P7": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P8": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                    "P9": {
+                        "description": "button_press",
+                        "data_type": "button",
+                        "commands": {
+                            "press": {
+                                "type": CMD_TYPE_PRESS,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.3.5 环境传感器 B1 系列 (Environmental Sensor B1 Series)
+    "SL_SC_B1": {
+        "name": "高级环境传感器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_B1",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "val_div_10",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "CO2": {
+                        "description": "co2_concentration",
+                        "data_type": "co2_concentration",
+                        "conversion": "v_field",
+                        "device_class": "carbon_dioxide",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "TVOC": {
+                        "description": "tvoc_concentration",
+                        "data_type": "tvoc_concentration",
+                        "conversion": "val_div_1000",
+                        "device_class": "volatile_organic_compounds",
+                        "unit_of_measurement": "mg/m³",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.4 随心开关按钮系列 (Button Switch Series)
+    "SL_SC_BB": {
+        "name": "随心开关",
+        "category": "button",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BB",
+        "_generation": 2,
+        "platforms": {
+            "button": {
+                "io_configs": {
+                    "B": {
+                        "description": "button",
+                        "data_type": "button_state",
+                        "conversion": "direct_value",
+                        "device_class": "identify",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "battery",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_P_B": {
+        "name": "随心按键",
+        "category": "button",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_B",
+        "_generation": 2,
+        "platforms": {
+            "button": {
+                "io_configs": {
+                    "B": {
+                        "description": "button",
+                        "data_type": "button_state",
+                        "conversion": "direct_value",
+                        "device_class": "identify",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "battery",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.5 调光开关系列 (Dimmer Switch Series)
+    "SL_SW_DM1": {
+        "name": "动态调光开关",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_DM1",
+        "_generation": 2,
+        "versioned": True,
+        "version_modes": {
+            "V1": {
+                "name": "动态调光开关",
+                "manufacturer": "lifesmart",
+                "model": "SL_SW_DM1_V1",
+                "_generation": 2,
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "switch",
+                                "data_type": "generic",
+                                "conversion": "direct_value",
+                                "range": [0, 255],
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness_on": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                    "set_brightness_off": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "binary_sensor": {
+                        "io_configs": {
+                            "P3": {
+                                "description": "motion",
+                                "data_type": "motion_status",
+                                "conversion": "direct_value",
+                                "device_class": "motion",
+                            },
+                        },
+                    },
+                    "sensor": {
+                        "io_configs": {
+                            "P4": {
+                                "description": "illuminance",
+                                "data_type": "illuminance",
+                                "conversion": "direct_value",
+                                "device_class": "illuminance",
+                                "unit_of_measurement": "lx",
+                                "state_class": "measurement",
+                            },
+                        },
+                    },
+                    "number": {
+                        "io_configs": {
+                            "P2": {
+                                "description": "indicator_brightness",
+                                "data_type": "indicator_brightness",
+                                "conversion": "direct_value",
+                                "min_value": 0,
+                                "max_value": 65535,
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
+                                    },
+                                },
+                            },
+                            "P5": {
+                                "description": "dimming_control",
+                                "data_type": "dimming_config",
+                                "conversion": "direct_value",
+                                "commands": {
+                                    "set_config": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                        "nonvolatile": 1,
+                                    },
+                                },
+                            },
+                            "P6": {
+                                "description": "dynamic_control",
+                                "data_type": "dynamic_config",
+                                "conversion": "direct_value",
+                                "commands": {
+                                    "set_config": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                        "nonvolatile": 1,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            "V2": {
+                "name": "星玉调光开关(可控硅)",
+                "manufacturer": "lifesmart",
+                "model": "SL_SW_DM1_V2",
+                "_generation": 2,
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "switch",
+                                "data_type": "generic",
+                                "conversion": "direct_value",
+                                "range": [0, 255],
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness_on": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                    "set_brightness_off": {
+                                        "type": CMD_TYPE_SET_CONFIG,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    "number": {
+                        "io_configs": {
+                            "P2": {
+                                "description": "indicator_brightness",
+                                "data_type": "indicator_brightness",
+                                "conversion": "direct_value",
+                                "min_value": 0,
+                                "max_value": 65535,
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_INDICATOR_BRIGHTNESS,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_LI_WW": {
+        "name": "白光智能灯泡",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_WW",
+        "_generation": 2,
+        "versioned": True,
+        "version_modes": {
+            "V1": {
+                "name": "智能灯泡(冷暖白)",
+                "manufacturer": "lifesmart",
+                "model": "SL_LI_WW_V1",
+                "_generation": 2,
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "brightness",
+                                "data_type": "dimmer_light",
+                                "conversion": "direct_value",
+                                "range": [0, 255],
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                },
+                            },
+                            "P2": {
+                                "description": "color_temp",
+                                "data_type": "color_temperature",
+                                "conversion": "direct_value",
+                                "range": [0, 255],
+                                "commands": {
+                                    "set_color_temp": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            "V2": {
+                "name": "调光调色智控器(O-10V)",
+                "manufacturer": "lifesmart",
+                "model": "SL_LI_WW_V2",
+                "_generation": 2,
+                "platforms": {
+                    "light": {
+                        "io_configs": {
+                            "P1": {
+                                "description": "brightness",
+                                "data_type": "dimmer_light",
+                                "conversion": "direct_value",
+                                "range": [0, 255],
+                                "commands": {
+                                    "on": {
+                                        "type": CMD_TYPE_ON,
+                                        "val": 1,
+                                    },
+                                    "off": {
+                                        "type": CMD_TYPE_OFF,
+                                        "val": 0,
+                                    },
+                                    "set_brightness": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                },
+                            },
+                            "P2": {
+                                "description": "color_temp",
+                                "data_type": "color_temperature",
+                                "conversion": "direct_value",
+                                "range": [0, 255],
+                                "commands": {
+                                    "set_color_temp": {
+                                        "type": CMD_TYPE_SET_VAL,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.6 奇点开关模块系列 (Singularity Switch Module Series)
+    "SL_SW_MJ1": {
+        "name": "奇点开关模块一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_MJ1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_MJ2": {
+        "name": "奇点开关模块二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_MJ2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_MJ3": {
+        "name": "奇点开关模块三键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_MJ3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.7 随心按键 (CUBE Clicker2)
+    "SL_SC_BB_V2": {
+        "name": "随心按键",
+        "category": "button",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BB_V2",
+        "_generation": 2,
+        "platforms": {
+            "button": {
+                "io_configs": {
+                    "P1": {
+                        "description": "button",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "device_class": "identify",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "battery",
+                        "data_type": "battery_level",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.8 星玉开关系列 (Nature Switch Series)
+    "SL_SW_NS1": {
+        "name": "星玉开关一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_NS1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "indicator_brightness_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "indicator_brightness_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_NS2": {
+        "name": "星玉开关二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_NS2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_NS3": {
+        "name": "视界触摸开关三键/星玉开关",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_NS3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "light": {
+                "io_configs": {
+                    "dark1": {
+                        "description": "indicator_brightness_1_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark2": {
+                        "description": "indicator_brightness_2_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "dark3": {
+                        "description": "indicator_brightness_3_off",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright1": {
+                        "description": "indicator_brightness_1_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright2": {
+                        "description": "indicator_brightness_2_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright3": {
+                        "description": "indicator_brightness_3_on",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.11 极星开关(120零火版) (BS Series)
+    "SL_SW_BS1": {
+        "name": "极星开关（120零火版）一键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_BS1",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_BS2": {
+        "name": "极星开关（120零火版）二键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_BS2",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SW_BS3": {
+        "name": "极星开关(120零火版)三键",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_BS3",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.12 星玉调光开关（可控硅）Dimming Light Switch
+    "SL_SW_WW": {
+        "name": "星玉调光开关（可控硅）",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_WW",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "brightness",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "color_temp",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_color_temp": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # 2.2.14 星玉情景面板（Nature Switch Scene Panel)
+    "SL_SW_NS6": {
+        "_generation": 2,
+        "manufacturer": "lifesmart",
+        "name": "星玉情景面板",
+        "category": "switch",
+        "model": "SL_SW_NS6",
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "scene_switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "scene_switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "scene_switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "scene_switch_4",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P5": {
+                        "description": "scene_switch_5",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P6": {
+                        "description": "scene_switch_6",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "P7": {
+                        "description": "controller_config",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_value": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # ================= 2.3 窗帘控制系列 (Curtain Controller) =================
+    # 2.3.1 窗帘控制开关
+    "SL_SW_WIN": {
+        "name": "窗帘控制器",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_SW_WIN",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        "cover_features": {
+            "position_feedback": False,
+            "optimistic_mode": True,
+            "control_mapping": {"open": "OP", "close": "CL", "stop": "ST"},
+        },
+        # 基础平台配置
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "OP": {
+                        "description": "open_curtain",
+                        "data_type": "cover_control",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            }
+                        },
+                    },
+                    "CL": {
+                        "description": "close_curtain",
+                        "data_type": "cover_control",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "close": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            }
+                        },
+                    },
+                    "ST": {
+                        "description": "stop",
+                        "data_type": "cover_control",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "stop": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            }
+                        },
+                    },
+                }
+            },
+            "light": {
+                "io_configs": {
+                    "dark": {
+                        "description": "turn_off_indicator_brightness",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 1023],
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_brightness_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "bright": {
+                        "description": "turn_on_indicator_brightness",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 1023],
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_brightness_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_brightness_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+        # 核心：cover_config嵌入配置 - 明确位置反馈能力
+        "cover_config": {
+            "device_class": "curtain",
+            "position_feedback": False,  # 明确表达：无位置反馈能力
+            "control_type": "optimistic",  # 乐观控制模式
+            "capabilities": ["open", "close", "stop"],
+            # 控制行为配置
+            "travel_time": 30,  # 预估运行时间（秒）
+            "assume_closed_on_start": False,  # 启动时不假设状态
+            # IO端口映射
+            "io_mapping": {
+                "open_io": "OP",  # 打开命令IO端口
+                "close_io": "CL",  # 关闭命令IO端口
+                "stop_io": "ST",  # 停止命令IO端口
+            },
+            # 命令配置
+            "commands": {
+                "open": {
+                    "io_port": "OP",
+                    "command_type": CMD_TYPE_ON,
+                    "value": 1,
+                },
+                "close": {
+                    "io_port": "CL",
+                    "command_type": CMD_TYPE_ON,
+                    "value": 1,
+                },
+                "stop": {
+                    "io_port": "ST",
+                    "command_type": CMD_TYPE_ON,
+                    "value": 1,
+                },
+            },
+        },
+        # 设备能力标识
+        "capabilities": [
+            "cover_control",  # 窗帘控制能力
+            "basic_positioning",  # 基础定位（开/关/停）
+            "no_position_feedback",  # 明确标识：无位置反馈
+        ],
+    },
+    "SL_CN_IF": {
+        "name": "流光窗帘控制器",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_CN_IF",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        # 显式Gen2非定位窗帘控制配置
+        "cover_features": {
+            "position_feedback": False,  # 无位置反馈
+            "optimistic_mode": True,  # 乐观判断状态
+            "control_mapping": {"open": "P1", "close": "P3", "stop": "P2"},
+        },
+        # 基础平台配置
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P1": {
+                        "description": "open_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "stop",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "stop": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "close_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "close": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                }
+            },
+            "light": {
+                "io_configs": {
+                    "P4": {
+                        "description": "open_panel_indicator_color",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "P5": {
+                        "description": "stop_indicator_color",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "P6": {
+                        "description": "close_panel_indicator_color",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_color_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_color_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    "SL_CN_FE": {
+        "name": "格致/塞纳三键窗帘",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_CN_FE",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        # 显式Gen2非定位窗帘控制配置
+        "cover_features": {
+            "position_feedback": False,  # 无位置反馈
+            "optimistic_mode": True,  # 乐观判断状态
+            "control_mapping": {"open": "P1", "close": "P3", "stop": "P2"},
+        },
+        # 基础平台配置
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P1": {
+                        "description": "open_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "stop",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "stop": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "close_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "close": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    # 2.3.2 DOOYA窗帘电机
+    "SL_DOOYA": {
+        "name": "窗帘电机",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_DOOYA",
+        "_generation": 2,
+        "cover_features": {
+            "position_feedback": True,
+        },
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P1": {
+                        "description": "curtain_status",
+                        "data_type": "position_status",
+                        "conversion": "direct_value",
+                    },
+                    "P2": {
+                        "description": "position_control",
+                        "data_type": "position_control",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 100,
+                            },
+                            "close": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 0,
+                            },
+                            "stop": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "val": 128,
+                            },
+                            "set_position": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
+                    },
+                }
+            }
+        },
+        "cover_config": {
+            "device_class": "curtain",
+            "position_feedback": True,
+            "control_type": "position_control",
+            "capabilities": ["open", "close", "stop", "set_position"],
+            "io_mapping": {"status_io": "P1", "control_io": "P2"},
+        },
+    },
+    "SL_P_V2": {
+        "name": "智界窗帘电机智控器",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_V2",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        # 显式Gen2非定位窗帘控制配置
+        "cover_features": {
+            "position_feedback": False,  # 无位置反馈
+            "optimistic_mode": True,  # 乐观判断状态
+            "control_mapping": {"open": "P2", "close": "P3", "stop": "P4"},
+        },
+        # 基础平台配置
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P2": {
+                        "description": "open_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "close_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "close": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "stop",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "stop": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P8": {
+                        "description": "electric",
+                        "data_type": "voltage",
+                        "conversion": "friendly_val",
+                        "device_class": "voltage",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    # ================= 2.4 灯光系列 (Light Series) =================
+    # 2.4.1 灯光系列 (RGBW/RGB Light Series)
+    "SL_CT_RGBW": {
+        "name": "幻彩灯带",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_CT_RGBW",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGBW": {
+                        "description": "rgbw",
+                        "data_type": "dual_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                    "DYN": {
+                        "description": "dynamic_effect",
+                        "data_type": "dynamic_effect",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "set_effect_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_effect_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_LI_RGBW": {
+        "name": "胶囊灯泡",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_RGBW",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGBW": {
+                        "description": "rgbw",
+                        "data_type": "dual_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                    "DYN": {
+                        "description": "dynamic_effect",
+                        "data_type": "dynamic_effect",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "set_effect_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_effect_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_RGB": {
+        "name": "幻彩灯带（不带白光)",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_RGB",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGB": {
+                        "description": "rgb",
+                        "data_type": "spot_rgb_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "OD_WE_QUAN": {
+        "name": "量子灯",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "OD_WE_QUAN",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "power_state",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "range": [0, 100],
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_brightness": {"type": CMD_TYPE_SET_VAL},
+                        },
+                    },
+                    "P2": {
+                        "description": "quantum_scene",
+                        "data_type": "quantum_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_scene": {"type": CMD_TYPE_SET_RAW_ON},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_LI_GD1": {
+        "name": "调光壁灯",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_GD1",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "brightness",
+                        "data_type": "brightness_light",
+                        "conversion": "direct_value",
+                        "range": [0, 255],
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_brightness": {"type": CMD_TYPE_SET_VAL},
+                            "set_brightness_off": {"type": CMD_TYPE_SET_CONFIG},
+                        },
+                    },
+                },
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "motion",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "motion",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "illuminance",
+                        "data_type": "illuminance",
+                        "conversion": "direct_value",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_LI_UG1": {
+        "name": "花园地灯",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_UG1",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "rgbw",
+                        "data_type": "single_io_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "illuminance",
+                        "data_type": "illuminance",
+                        "conversion": "direct_value",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "battery",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "charging_status",
+                        "data_type": "charging_status",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    "MSL_IRCTL": {
+        "name": "超级碗（基础版，蓝牙版）",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "MSL_IRCTL",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGBW": {
+                        "description": "rgbw",
+                        "data_type": "spot_rgbw_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                    "DYN": {
+                        "description": "dynamic_effect",
+                        "data_type": "dynamic_effect",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "set_effect_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_effect_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "OD_WE_IRCTL": {
+        "name": "超级碗 （闪联版)",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "OD_WE_IRCTL",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGB": {
+                        "description": "rgb",
+                        "data_type": "spot_rgb_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SPOT": {
+        "name": "超级碗(CoSS版)",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_SPOT",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "RGB": {
+                        "description": "rgb",
+                        "data_type": "spot_rgb_light",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_color_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_color_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_LI_IR": {
+        "name": "红外吸顶灯",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "SL_LI_IR",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "brightness",
+                        "data_type": "dimmer_light",
+                        "conversion": "direct_value",
+                        "range": [0, 255],
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_brightness": {"type": CMD_TYPE_SET_VAL},
+                        },
+                    },
+                    "P2": {
+                        "description": "color_temp",
+                        "data_type": "color_temperature",
+                        "conversion": "direct_value",
+                        "range": [0, 255],
+                        "commands": {
+                            "set_color_temp": {"type": CMD_TYPE_SET_VAL},
+                        },
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "P3": {
+                        "description": "nightlight_brightness",
+                        "data_type": "generic",
+                        "conversion": "direct_value",
+                        "min_value": 0,
+                        "max_value": 255,
+                        "step": 1,
+                        "mode": "slider",
+                        "commands": {
+                            "set_brightness": {"type": CMD_TYPE_SET_VAL},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_P_IR": {
+        "name": "红外模块",
+        "official_name": "红外模块",
+        "category": "remote",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_IR",
+        "_generation": 2,
+        # 官方文档2.5注意：红外模块/超级碗(Mini版)没有灯光控制，不需要关注IO属性；红外功能不映射HA灯光实体。
+        "platforms": {},
+    },
+    "SL_SC_CV": {
+        "name": "语音小Q",
+        "official_name": "语音小Q",
+        "category": "voice_assistant",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CV",
+        "_generation": 2,
+        # 官方文档仅在附录索引列出设备名称，未给出可映射到HA平台的IO属性表；不得保留旧的未溯源P1 switch。
+        "platforms": {},
+    },
+    # ================= 2.6 感应器系列 (Sensor Series) =================
+    # 2.6.1 门禁感应器（Guard Sensor)
+    "SL_SC_G": {
+        "name": "门禁感应器",
+        "official_name": "门禁感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_G",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "G": {
+                        "description": "current_state",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
+                        "conversion": "direct_value",
+                        "processor_type": "door_window_sensor",
+                        "device_class": "door",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_BG": {
+        "name": "多功能(CUBE)门禁感应器",
+        "official_name": "多功能(CUBE)门禁感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BG",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "G": {
+                        "description": "current_state",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
+                        "conversion": "direct_value",
+                        "processor_type": "door_window_sensor",
+                        "device_class": "door",
+                    },
+                    "B": {
+                        "description": "button",
+                        "rw": "R",
+                        "data_type": "button",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "moving",
+                    },
+                    "AXS": {
+                        "description": "vibration_status",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "vibration",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_GS": {
+        "name": "门窗感应器",
+        "official_name": "门窗感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_GS",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "current_state",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "door",
+                    },
+                    "AXS": {
+                        "description": "vibration_status",
+                        "rw": "R",
+                        "data_type": "binary_sensor",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "vibration",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_MHW": {
+        "name": "动态感应器",
+        "official_name": "动态感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_MHW",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "M": {
+                        "description": "motion",
+                        "rw": "R",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "motion",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_BM": {
+        "name": "多功能 (CUBE)动态感应器",
+        "official_name": "多功能 (CUBE)动态感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BM",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "M": {
+                        "description": "motion",
+                        "rw": "R",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "motion",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_CM": {
+        "name": "动态感应器 (7号电池版)",
+        "official_name": "动态感应器 (7号电池版)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CM",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "motion",
+                        "rw": "R",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "motion",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "electric",
+                        "rw": "R",
+                        "data_type": "voltage",
+                        "conversion": "direct_value",
+                        "device_class": "voltage",
+                        "unit_of_measurement": "V",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_BP_MZ": {
+        "name": "动态感应器PRO",
+        "official_name": "动态感应器PRO",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_BP_MZ",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "motion",
+                        "rw": "R",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "motion",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "illuminance",
+                        "rw": "R",
+                        "data_type": "illuminance",
+                        "conversion": "v_field",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "P3": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_THL": {
+        "name": "环境感应器",
+        "official_name": "环境感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_THL",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "rw": "R",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "rw": "R",
+                        "data_type": "humidity",
+                        "conversion": "val_div_10",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "Z": {
+                        "description": "illuminance",
+                        "rw": "R",
+                        "data_type": "illuminance",
+                        "conversion": "v_field",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "rw": "R",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_BE": {
+        "name": "多功能 (CUBE)环境感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_BE",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "val_div_10",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "Z": {
+                        "description": "illuminance",
+                        "data_type": "illuminance",
+                        "conversion": "v_field",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_WA": {
+        "name": "水浸感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_WA",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "WA": {
+                        "description": "water_leak_detection",
+                        "data_type": "binary_sensor",
+                        "conversion": "val_greater_than_zero",
+                        "processor_type": "water_leak_sensor",
+                        "device_class": "moisture",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "WA": {
+                        "description": "electric",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "unit_of_measurement": "µS/cm",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_CH": {
+        "name": "气体感应器(甲醛)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CH",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "formaldehyde_concentration",
+                        "data_type": "formaldehyde_concentration",
+                        "conversion": "v_field",
+                        "device_class": "volatile_organic_compounds",
+                        "unit_of_measurement": "µg/m³",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "P2": {
+                        "description": "formaldehyde_threshold",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "min_value": 80,
+                        "max_value": 5000,
+                        "step": 1,
+                        "mode": "box",
+                        "unit_of_measurement": "µg/m³",
+                        "commands": {
+                            "set_sensitivity": {
+                                "type": 0x8D,
+                            },
+                        },
+                    },
+                },
+            },
+            "switch": {
+                "io_configs": {
+                    "P3": {
+                        "description": "alarm_sound",
+                        "data_type": "alarm_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_CP": {
+        "name": "气体感应器(燃气)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CP",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "gas_concentration",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "P2": {
+                        "description": "gas_threshold",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "min_value": 90,
+                        "max_value": 150,
+                        "step": 1,
+                        "mode": "box",
+                        "commands": {
+                            "set_sensitivity": {
+                                "type": 0xDF,
+                            },
+                        },
+                    },
+                },
+            },
+            "switch": {
+                "io_configs": {
+                    "P3": {
+                        "description": "alarm_sound",
+                        "data_type": "alarm_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_CQ": {
+        "name": "环境感应器(CO2+TVOC)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CQ",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "P2": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "v_field",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P3": {
+                        "description": "co2_concentration",
+                        "data_type": "co2_concentration",
+                        "conversion": "v_field",
+                        "device_class": "carbon_dioxide",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "tvoc_concentration",
+                        "data_type": "tvoc_concentration",
+                        "conversion": "v_field",
+                        "device_class": "volatile_organic_compounds",
+                        "unit_of_measurement": "mg/m³",
+                        "state_class": "measurement",
+                    },
+                    "P5": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P6": {
+                        "description": "usb_voltage",
+                        "data_type": "voltage",
+                        "conversion": "direct_value",
+                        "device_class": "voltage",
+                        "unit_of_measurement": "V",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "ELIQ_EM": {
+        "name": "ELIQ电量计量器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "ELIQ_EM",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "EPA": {
+                        "description": "average_power",
+                        "data_type": "power",
+                        "conversion": "direct_value",
+                        "device_class": "power",
+                        "unit_of_measurement": "W",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_P_A": {
+        "name": "烟雾感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_A",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "smoke_alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "smoke",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "voltage",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_CA": {
+        "name": "环境感应器(CO2)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CA",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "P2": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "v_field",
+                        "device_class": "humidity",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P3": {
+                        "description": "co2_concentration",
+                        "data_type": "co2_concentration",
+                        "conversion": "co2_scaled",
+                        "device_class": "carbon_dioxide",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "P5": {
+                        "description": "usb_voltage",
+                        "data_type": "voltage",
+                        "conversion": "direct_value",
+                        "device_class": "voltage",
+                        "unit_of_measurement": "V",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_P_RM": {
+        "name": "人体存在感应器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_RM",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "motion_detection",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "processor_type": "motion_sensor",
+                        "device_class": "motion",
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "P2": {
+                        "description": "motion_parameter_config",
+                        "data_type": "config_bitmask",
+                        "conversion": "direct_value",
+                        "min_value": 0,
+                        "max_value": 67108863,
+                        "step": 1,
+                        "mode": "box",
+                        "commands": {
+                            "set_config": {
+                                "type": 0xDF,
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_DF_GG": {
+        "name": "云防门窗感应器（DEFED window/Door)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_GG",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "A": {
+                        "description": "current_state",
+                        "data_type": "binary_sensor",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "door",
+                    },
+                    "A2": {
+                        "description": "external_sensor_state",
+                        "data_type": "binary_sensor",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "door",
+                    },
+                    "TR": {
+                        "description": "tamper",
+                        "data_type": "tamper_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "tamper",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_DF_MM": {
+        "name": "云防动态感应器",
+        "official_name": "云防动态感应器（DEFED Motion)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_MM",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "M": {
+                        "description": "motion",
+                        "data_type": "motion_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "motion",
+                    },
+                    "TR": {
+                        "description": "tamper",
+                        "data_type": "tamper_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "tamper",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_DF_SR": {
+        "name": "云防室内警铃",
+        "official_name": "云防室内警铃(DEFED Indoor Siren)",
+        "category": "siren",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_SR",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "SR": {
+                        "description": "siren_playing",
+                        "data_type": "alarm_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "sound",
+                    },
+                    "TR": {
+                        "description": "tamper",
+                        "data_type": "tamper_status",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "device_class": "tamper",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "alarm_setting",
+                        "data_type": "alarm_playback",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_config_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_config_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    "SL_DF_BB": {
+        "name": "云防遥控器",
+        "official_name": "云防遥控器（DEFED Key Fob)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_BB",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "eB1": {
+                        "description": "arm_button",
+                        "data_type": "button_state",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                    },
+                    "eB2": {
+                        "description": "disarm_button",
+                        "data_type": "button_state",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                    },
+                    "eB3": {
+                        "description": "warning_button",
+                        "data_type": "button_state",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                    },
+                    "eB4": {
+                        "description": "home_button",
+                        "data_type": "button_state",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_SC_CN": {
+        "name": "噪音感应器",
+        "official_name": "噪音感应器（Noise Sensor)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_SC_CN",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "noise_level",
+                        "data_type": "noise_level",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "device_class": "sound_pressure",
+                        "unit_of_measurement": "dB",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "P2": {
+                        "description": "noise_threshold_setting",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "min": 0,
+                        "max": 4294967295,
+                        "step": 1,
+                        "mode": "box",
+                        "commands": {"set_value": {"type": CMD_TYPE_SET_RAW_ON}},
+                    },
+                    "P4": {
+                        "description": "noise_calibration",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "min": -128,
+                        "max": 127,
+                        "step": 1,
+                        "mode": "box",
+                        "unit_of_measurement": "dB",
+                        "commands": {"set_value": {"type": CMD_TYPE_SET_VAL}},
+                    },
+                },
+            },
+            "switch": {
+                "io_configs": {
+                    "P3": {
+                        "description": "alarm_setting",
+                        "data_type": "alarm_playback",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                            "set_config_on": {"type": CMD_TYPE_SET_RAW_ON},
+                            "set_config_off": {"type": CMD_TYPE_SET_RAW_OFF},
+                        },
+                    },
+                },
+            },
+        },
+    },
+    # ================= 2.7 空气净化器 (Air Purifier) =================
+    "OD_MFRESH_M8088": {
+        "name": "空气净化器",
+        "official_name": "空气净化器",
+        "category": "fan",
+        "manufacturer": "lifesmart",
+        "model": "OD_MFRESH_M8088",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "processor_type": "type_bit_0_switch",
+                        "commands": {
+                            "on": {"type": CMD_TYPE_ON, "val": 1},
+                            "off": {"type": CMD_TYPE_OFF, "val": 0},
+                        },
+                    },
+                },
+            },
+            "number": {
+                "io_configs": {
+                    "RM": {
+                        "description": "run_mode",
+                        "data_type": "mode_config",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "min": 0,
+                        "max": 5,
+                        "step": 1,
+                        "mode": "box",
+                        "commands": {"set_value": {"type": CMD_TYPE_SET_VAL}},
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "unit_of_measurement": "°C",
+                        "device_class": "temperature",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "unit_of_measurement": "%",
+                        "device_class": "humidity",
+                        "state_class": "measurement",
+                    },
+                    "PM": {
+                        "description": "PM2.5",
+                        "data_type": "pm25",
+                        "conversion": "v_field",
+                        "processor_type": "direct_value",
+                        "unit_of_measurement": "µg/m³",
+                        "device_class": "pm25",
+                        "state_class": "measurement",
+                    },
+                    "FL": {
+                        "description": "filter_life",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                        "unit_of_measurement": "h",
+                        "state_class": "measurement",
+                    },
+                    "UV": {
+                        "description": "uv_index",
+                        "data_type": "generic_value",
+                        "conversion": "direct_value",
+                        "processor_type": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    # ================= 2.8 智能门锁 (Smart Door Lock) =================
+    # 2.8.1 智能门锁系列 (Smart Door Lock Series)
+    "SL_LK_LS": {
+        "name": "思锁智能门锁",
+        "official_name": "思锁智能门锁",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_LS",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "lock": {
+                "io_configs": {
+                    "EVTLO": {
+                        "description": "door_lock_status",
+                        "data_type": "door_lock",
+                        "conversion": "type_bit_0",
+                        "device_class": "lock",
+                    },
+                },
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "ALM": {
+                        "description": "status",
+                        "data_type": "alarm_status",
+                        "conversion": "val_greater_than_zero",
+                        "device_class": "problem",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    "SL_LK_GTM": {
+        "name": "盖特曼智能门锁",
+        "official_name": "盖特曼智能门锁",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_GTM",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    "SL_LK_AG": {
+        "name": "Aqara智能门锁",
+        "official_name": "Aqara智能门锁",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_AG",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    "SL_LK_SG": {
+        "name": "思哥智能门锁",
+        "official_name": "思哥智能门锁",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_SG",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    "SL_LK_YL": {
+        "name": "Yale智能门锁",
+        "official_name": "Yale智能门锁",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_YL",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    "SL_LK_SWIFTE": {
+        "name": "SWIFTE智能门锁",
+        "official_name": "SWIFTE门锁模块",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_SWIFTE",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    "OD_JIUWANLI_LOCK1": {
+        "name": "久万里智能门锁",
+        "official_name": "九万里门锁",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "OD_JIUWANLI_LOCK1",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    "SL_P_BDLK": {
+        "name": "百度智能门锁",
+        "official_name": "必达门锁模块",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_BDLK",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTOP": {
+                        "description": "operation_record",
+                        "data_type": "operation_record",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    # 2.8.2 C100/C200门锁系列 (C100/C200 Door Lock Series)
+    "SL_LK_TY": {
+        "name": "C200门锁",
+        "official_name": "C200门锁",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_TY",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTBEL": {
+                        "description": "evtbel",
+                        "data_type": "doorbell_message",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    "SL_LK_DJ": {
+        "name": "C100门锁",
+        "official_name": "智能门锁C210",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "SL_LK_DJ",
+        "_generation": 2,
+        "lock_features": {
+            "virtual_entities": {
+                "alm_bitmask": {
+                    "bit_definitions": {
+                        0: {
+                            "name": "error_alarm",
+                            "description": "error_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "错误报警",
+                        },
+                        1: {
+                            "name": "hijack_alarm",
+                            "description": "hijack_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "劫持报警",
+                        },
+                        2: {
+                            "name": "tamper_alarm",
+                            "description": "tamper_alarm",
+                            "device_class": "tamper",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "防撬报警",
+                        },
+                        3: {
+                            "name": "key_alarm",
+                            "description": "mechanical_key_alarm",
+                            "device_class": "lock",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "机械钥匙报警",
+                        },
+                        4: {
+                            "name": "low_battery",
+                            "description": "low_voltage_alarm",
+                            "device_class": "battery",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "低电量报警",
+                        },
+                        5: {
+                            "name": "motion_alarm",
+                            "description": "motion_alarm",
+                            "device_class": "motion",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "异动告警",
+                        },
+                        6: {
+                            "name": "doorbell",
+                            "description": "doorbell",
+                            "device_class": "sound",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "门铃",
+                        },
+                        7: {
+                            "name": "fire_alarm",
+                            "description": "fire_alarm",
+                            "device_class": "smoke",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "火警",
+                        },
+                        8: {
+                            "name": "intrusion_alarm",
+                            "description": "intrusion_alarm",
+                            "device_class": "safety",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "入侵告警",
+                        },
+                        11: {
+                            "name": "factory_reset",
+                            "description": "factory_reset_alarm",
+                            "device_class": "problem",
+                            "platform": "binary_sensor",
+                            "extraction_logic": "bit_extract",
+                            "friendly_name": "恢复出厂告警",
+                        },
+                    },
+                },
+                "evtlo_data": {
+                    "data_definitions": {
+                        "lock_status": {
+                            "name": "门锁状态",
+                            "description": "door_lock_switch_status",
+                            "platform": "lock",
+                            "extraction_logic": "type_bit_0",
+                            "extraction_params": {},
+                            "friendly_name": "门锁",
+                        },
+                        "user_id": {
+                            "name": "用户编号",
+                            "description": "unlock_user_id",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range",
+                            "extraction_params": {"start_bit": 0, "end_bit": 11},
+                            "friendly_name": "用户编号",
+                        },
+                        "unlock_method": {
+                            "name": "开锁方式",
+                            "description": "unlock_method",
+                            "platform": "sensor",
+                            "extraction_logic": "bit_range_mapped",
+                            "extraction_params": {
+                                "start_bit": 12,
+                                "end_bit": 15,
+                                "mapping": {
+                                    1: "密码",
+                                    2: "指纹",
+                                    3: "卡片",
+                                    4: "钥匙",
+                                    5: "手机",
+                                    6: "组合开锁",
+                                    7: "其他",
+                                },
+                            },
+                            "friendly_name": "开锁方式",
+                        },
+                        "dual_unlock": {
+                            "name": "双开模式",
+                            "description": "double_open_mode",
+                            "platform": "binary_sensor",
+                            "device_class": "lock",
+                            "extraction_logic": "dual_unlock_detection",
+                            "extraction_params": {},
+                            "friendly_name": "双开模式",
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                    "EVTBEL": {
+                        "description": "evtbel",
+                        "data_type": "doorbell_message",
+                        "conversion": "direct_value",
+                    },
+                },
+            },
+        },
+    },
+    # ================= 2.9 温控器 (Climate Controller) =================
+    # 2.9.1 智控器空调面板 (Central AIR Board)
+    "V_AIR_P": {
+        "name": "智控器空调面板",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "V_AIR_P",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        # 基础平台配置
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "MODE": {
+                        "description": "mode",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_mode": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            }
+                        },
+                    },
+                    "F": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_fan_speed": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "fan_modes": {"low": 15, "medium": 45, "high": 75},
+                            }
+                        },
+                    },
+                    "tT": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            }
+                        },
+                    },
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
+            }
+        },
+        # 核心：climate_config嵌入配置 - 解决HVAC映射冲突
+        "climate_config": {
+            "template": "standard_hvac",
+            "hvac_modes": {
+                "io_field": "MODE",
+                "modes": {
+                    1: "auto",  # Auto自动
+                    2: "fan_only",  # Fan 吹风
+                    3: "cool",  # Cool 制冷
+                    4: "heat",  # Heat 制热
+                    5: "dry",  # Dry除湿
+                },
+            },
+            "temperature": {
+                "target_io": "tT",
+                "current_io": "T",
+                "range": [16, 30],
+                "precision": 0.1,
+                "conversion": {"source": "v"},
+            },
+            "fan_modes": {
+                "io_field": "F",
+                "modes": {15: "low", 45: "medium", 75: "high"},  # 低档  # 中档  # 高档
+            },
+            "power_control": {
+                "io_field": "O",
+                "on_command": {"type": CMD_TYPE_ON},
+                "off_command": {"type": CMD_TYPE_OFF},
+            },
+            "capabilities": [
+                "heating",
+                "cooling",
+                "fan_control",
+                "dehumidifying",
+                "target_temperature",
+                "auto_mode",
+            ],
+        },
+        # 设备能力标识
+        "capabilities": [
+            "climate_control",
+            "temperature_monitoring",
+            "hvac_mode_control",
+            "fan_speed_control",
+        ],
+        # HA翻译支持
+        "translation_keys": {
+            "hvac_mode_auto": "自动",
+            "hvac_mode_fan_only": "吹风",
+            "hvac_mode_cool": "制冷",
+            "hvac_mode_heat": "制热",
+            "hvac_mode_dry": "除湿",
+            "fan_mode_low": "低档",
+            "fan_mode_medium": "中档",
+            "fan_mode_high": "高档",
+        },
+    },
+    "SL_TR_ACIPM": {
+        "name": "新风系统",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_TR_ACIPM",
+        "_generation": 2,
+        "climate_features": {
+            "hvac_modes": {
+                1: "auto",  # 自动模式
+                2: "fan_only",  # 仅送风模式
+                3: "cool",  # 制冷模式
+                4: "heat",  # 制热模式
+            },
+            "fan_speeds": {
+                1: "low",  # 低速档
+                2: "medium",  # 中速档
+                3: "high",  # 高速档
+            },
+        },
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "sl_tr_acipm",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_mode": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "fan_modes": {
+                                    "low": 1,
+                                    "medium": 2,
+                                    "high": 3,
+                                },
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "set_VOC",
+                        "data_type": "voc_concentration",
+                        "conversion": "val_div_10",
+                        "device_class": "volatile_organic_compounds",
+                        "unit_of_measurement": "ppm",
+                        "commands": {
+                            "set_voc": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "VOC",
+                        "data_type": "voc_concentration",
+                        "conversion": "val_div_10",
+                        "device_class": "volatile_organic_compounds",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "P5": {
+                        "description": "PM2.5",
+                        "data_type": "pm25",
+                        "conversion": "v_field",
+                        "device_class": "pm25",
+                        "unit_of_measurement": "μg/m³",
+                        "state_class": "measurement",
+                    },
+                    "P6": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "SL_CP_DN": {
+        "name": "地暖温控器",
+        "official_name": "地暖温控器",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_CP_DN",
+        "_generation": 2,
+        "climate_features": {
+            "hvac_modes": {
+                1: "heat",
+            },
+            "temperature_range": {
+                "min": 5,
+                "max": 40,
+            },
+        },
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "sl_cp_dn",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "device_class": "opening",
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "P5": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "SL_CP_AIR": {
+        "name": "风机盘管",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_CP_AIR",
+        "_generation": 2,
+        "climate_features": {
+            "hvac_modes": {
+                0: "cool",  # 制冷模式
+                1: "heat",  # 制热模式
+                2: "fan_only",  # 仅送风模式
+            },
+            "fan_speeds": {
+                0: "auto",  # 自动风速
+                1: "low",  # 低速档
+                2: "medium",  # 中速档
+                3: "high",  # 高速档
+            },
+        },
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "sl_cp_air",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "valve",
+                        "data_type": "valve_status",
+                        "conversion": "type_bit_0",
+                        "device_class": "opening",
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                    },
+                    "P5": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "SL_UACCB": {
+        "name": "空调控制面板",
+        "official_name": "空调控制面板",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_UACCB",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "mode",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_fan_speed": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P6": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "SL_CP_VL": {
+        "name": "温控阀门",
+        "official_name": "温控阀门",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_CP_VL",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "turn_on_switch",
+                        "data_type": "hvac_mode",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            },
+                        },
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "P5": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "P6": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P5": {
+                        "description": "status",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                        "device_class": "problem",
+                    },
+                }
+            },
+        },
+    },
+    "SL_DN": {
+        "name": "星玉地暖",
+        "official_name": "星玉地暖",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_DN",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "mode",
+                        "data_type": "config_bitmask",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "P8": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "valve",
+                        "data_type": "valve_status",
+                        "conversion": "type_bit_0",
+                        "device_class": "opening",
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "P9": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "val_div_10",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    # ================= 2.10 通用控制器系列 (General Controller Series) =================
+    # 2.10.1 通用控制器 (General Controller)
+    "SL_P": {
+        "name": "通用控制器",
+        "official_name": "通用控制器",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_P",
+        "_generation": 2,
+        "dynamic": True,
+        "cover_features": {
+            "position_feedback": False,
+            "optimistic_mode": True,
+            # 显式Gen2非定位窗帘控制配置
+            "control_mapping": {"open": "P2", "close": "P3", "stop": "P4"},
+            "control_modes": {
+                "free_mode": {
+                    "condition": "(P1>>24)&0xe == 0",
+                    "binary_sensor": {
+                        "P5": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                        "P6": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                        "P7": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                    },
+                },
+                "cover_mode": {
+                    "condition": "(P1>>24)&0xe in [2,4]",
+                    "cover": {
+                        "P2": {
+                            "description": "open_curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "open": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                            },
+                        },
+                        "P3": {
+                            "description": "close_curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "close": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                            },
+                        },
+                        "P4": {
+                            "description": "curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "stop": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                            },
+                        },
+                    },
+                },
+                "switch_mode": {
+                    "condition": "(P1>>24)&0xe in [8,10]",
+                    "switch": {
+                        "P2": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
+                            },
+                        },
+                        "P3": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
+                            },
+                        },
+                        "P4": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P2": {
+                        "description": "open_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "close_curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "close": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "stop": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                }
+            },
+            "switch": {
+                "io_configs": {
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P5": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                    "P6": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                    "P7": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "control",
+                        "data_type": "control_config",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    # 2.10.2 通用控制器HA (HA Interface Adapter)
+    "SL_JEMA": {
+        "name": "通用控制器HA",
+        "official_name": "通用控制器（HA）",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_JEMA",
+        "_generation": 2,
+        "dynamic": True,
+        "cover_features": {
+            "position_feedback": False,
+            "optimistic_mode": True,
+            # 显式Gen2非定位窗帘控制配置
+            "control_mapping": {"open": "P2", "close": "P3", "stop": "P4"},
+            "control_modes": {
+                "free_mode": {
+                    "condition": "(P1>>24)&0xe == 0",
+                    "binary_sensor": {
+                        "P5": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                        "P6": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                        "P7": {
+                            "description": "status",
+                            "data_type": "status_input",
+                            "conversion": "type_bit_0",
+                            "device_class": "moving",
+                        },
+                    },
+                },
+                "cover_mode": {
+                    "condition": "(P1>>24)&0xe in [2,4]",
+                    "cover": {
+                        "P2": {
+                            "description": "curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "open": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                            },
+                        },
+                        "P3": {
+                            "description": "curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "close": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                            },
+                        },
+                        "P4": {
+                            "description": "curtain",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "stop": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                            },
+                        },
+                    },
+                },
+                "switch_mode": {
+                    "condition": "(P1>>24)&0xe in [8,10]",
+                    "switch": {
+                        "P2": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
+                            },
+                        },
+                        "P3": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
+                            },
+                        },
+                        "P4": {
+                            "description": "switch",
+                            "data_type": "binary_switch",
+                            "conversion": "type_bit_0",
+                            "commands": {
+                                "on": {
+                                    "type": CMD_TYPE_ON,
+                                    "val": 1,
+                                },
+                                "off": {
+                                    "type": CMD_TYPE_OFF,
+                                    "val": 0,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        "platforms": {
+            "cover": {
+                "io_configs": {
+                    "P2": {
+                        "description": "curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "close": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "curtain",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "stop": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                        },
+                    },
+                }
+            },
+            "switch": {
+                "io_configs": {
+                    "P2": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P3": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P4": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P8": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P9": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P10": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P5": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                    "P6": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                    "P7": {
+                        "description": "status",
+                        "data_type": "status_input",
+                        "conversion": "type_bit_0",
+                        "device_class": "moving",
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "control",
+                        "data_type": "control_config",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_config": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    # ================= 第三方设备 (Third-party Devices) =================
+    "V_DLT645_P": {
+        "name": "DLT电量计量器",
+        "official_name": "DLT电量计量器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "V_DLT645_P",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "EE": {
+                        "description": "energy",
+                        "data_type": "energy_consumption",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "kWh",
+                        "device_class": "energy",
+                        "state_class": "total_increasing",
+                    },
+                    "EP": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "W",
+                        "device_class": "power",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "V_DUNJIA_P": {
+        "name": "X100人脸识别可视门锁",
+        "official_name": "X100人脸识别可视门锁",
+        "category": "lock",
+        "manufacturer": "lifesmart",
+        "model": "V_DUNJIA_P",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "BAT": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "direct_value",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                    "ALM": {
+                        "description": "alarm",
+                        "data_type": "alarm_status",
+                        "conversion": "direct_value",
+                    },
+                    "EVTLO": {
+                        "description": "real_time_unlock",
+                        "data_type": "lock_event",
+                        "conversion": "direct_value",
+                    },
+                    "HISLK": {
+                        "description": "last_unlock_info",
+                        "data_type": "recent_unlock",
+                        "conversion": "direct_value",
+                    },
+                }
+            },
+        },
+    },
+    "V_HG_L": {
+        "name": "极速开关组",
+        "official_name": "极速开关组",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "V_HG_L",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "L1": {
+                        "description": "switch_1",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L2": {
+                        "description": "switch_2",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L3": {
+                        "description": "switch_3",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    "V_HG_XX": {
+        "name": "极速虚拟设备",
+        "official_name": "极速虚拟设备",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "V_HG_XX",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    "V_SZJSXR_P": {
+        "name": "新风控制器(深圳建设新风)",
+        "official_name": "新风",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "V_SZJSXR_P",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "MODE": {
+                        "description": "mode",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_mode": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "F": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_fan_speed": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "fan_modes": {
+                                    "low": 15,
+                                    "medium": 45,
+                                    "high": 75,
+                                },
+                            },
+                        },
+                    },
+                    "tT": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            },
+                        },
+                    },
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "V_T8600_P": {
+        "name": "YORK温控器T8600",
+        "official_name": "YORK温控器T8600",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "V_T8600_P",
+        "_generation": 2,
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "MODE": {
+                        "description": "mode",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_mode": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                    "F": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_fan_speed": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "fan_modes": {
+                                    "low": 15,
+                                    "medium": 45,
+                                    "high": 75,
+                                },
+                            },
+                        },
+                    },
+                    "tT": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                            },
+                        },
+                    },
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "V_FRESH_P": {
+        "name": "艾弗纳KV11新风控制器",
+        "official_name": "艾弗纳KV11新风控制器",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "V_FRESH_P",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "MODE": {
+                        "description": "mode",
+                        "data_type": "mode_config",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_mode": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "F1": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                    },
+                    "F2": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                    },
+                    "T": {
+                        "description": "ambient_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "V_IND_S": {
+        "name": "工业传感器",
+        "official_name": "工业传感器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "V_IND_S",
+        "_generation": 2,
+        "platforms": {
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "v_ind_s",
+                        "data_type": "generic_value",
+                        "conversion": "ieee754_or_friendly",
+                    },
+                }
+            },
+        },
+    },
+    "V_485_P": {
+        "name": "485控制器",
+        "official_name": "485控制器",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "V_485_P",
+        "_generation": 2,
+        "wildcard_support": True,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "L*": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P1": {
+                        "description": "v_ind_s",
+                        "data_type": "generic_value",
+                        "conversion": "ieee754_or_friendly",
+                    },
+                    "EE": {
+                        "description": "energy",
+                        "data_type": "energy_consumption",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "kWh",
+                        "device_class": "energy",
+                        "state_class": "total_increasing",
+                    },
+                    "EE*": {
+                        "description": "electric",
+                        "data_type": "energy_consumption",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "kWh",
+                        "device_class": "energy",
+                        "state_class": "total_increasing",
+                    },
+                    "EP": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "W",
+                        "device_class": "power",
+                        "state_class": "measurement",
+                    },
+                    "EPF": {
+                        "description": "power_factor",
+                        "data_type": "power_factor",
+                        "conversion": "friendly_value",
+                        "device_class": "power_factor",
+                        "state_class": "measurement",
+                    },
+                    "EPF*": {
+                        "description": "power",
+                        "data_type": "power_factor",
+                        "conversion": "friendly_value",
+                        "device_class": "power_factor",
+                        "state_class": "measurement",
+                    },
+                    "EF": {
+                        "description": "electric",
+                        "data_type": "frequency",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "Hz",
+                        "device_class": "frequency",
+                        "state_class": "measurement",
+                    },
+                    "EF*": {
+                        "description": "electric",
+                        "data_type": "frequency",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "Hz",
+                        "device_class": "frequency",
+                        "state_class": "measurement",
+                    },
+                    "EI": {
+                        "description": "current",
+                        "data_type": "current",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "A",
+                        "device_class": "current",
+                        "state_class": "measurement",
+                    },
+                    "EI*": {
+                        "description": "electric",
+                        "data_type": "current",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "A",
+                        "device_class": "current",
+                        "state_class": "measurement",
+                    },
+                    "EV": {
+                        "description": "voltage",
+                        "data_type": "voltage",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "V",
+                        "device_class": "voltage",
+                        "state_class": "measurement",
+                    },
+                    "EV*": {
+                        "description": "electric",
+                        "data_type": "voltage",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "V",
+                        "device_class": "voltage",
+                        "state_class": "measurement",
+                    },
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "°C",
+                        "device_class": "temperature",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "%",
+                        "device_class": "humidity",
+                        "state_class": "measurement",
+                    },
+                    "PM": {
+                        "description": "PM2.5",
+                        "data_type": "pm25",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "µg/m³",
+                        "device_class": "pm25",
+                        "state_class": "measurement",
+                    },
+                    "PMx": {
+                        "description": "PM10",
+                        "data_type": "pm10",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "µg/m³",
+                        "device_class": "pm10",
+                        "state_class": "measurement",
+                    },
+                    "COPPM": {
+                        "description": "coppm",
+                        "data_type": "co_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "device_class": "carbon_monoxide",
+                        "state_class": "measurement",
+                    },
+                    "CO2PPM": {
+                        "description": "coppm",
+                        "data_type": "co2_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "device_class": "carbon_dioxide",
+                        "state_class": "measurement",
+                    },
+                    "CH20PPM": {
+                        "description": "coppm",
+                        "data_type": "formaldehyde_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "device_class": "volatile_organic_compounds",
+                        "state_class": "measurement",
+                    },
+                    "O2VOL": {
+                        "description": "coppm",
+                        "data_type": "oxygen_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "vol%",
+                        "state_class": "measurement",
+                    },
+                    "NH3PPM": {
+                        "description": "coppm",
+                        "data_type": "ammonia_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "H2SPPM": {
+                        "description": "coppm",
+                        "data_type": "h2s_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "TVOC": {
+                        "description": "TVOC",
+                        "data_type": "tvoc_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "mg/m³",
+                        "device_class": "volatile_organic_compounds",
+                        "state_class": "measurement",
+                    },
+                    "PHM": {
+                        "description": "co2ppm",
+                        "data_type": "noise_level",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "dB",
+                        "device_class": "sound_pressure",
+                        "state_class": "measurement",
+                    },
+                    "SMOKE": {
+                        "description": "ch20ppm",
+                        "data_type": "smoke_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    # ================= 2.11 摄像头系列 (Camera Series) =================
+    # 基于官方文档2.13摄像头系列规格
+    # 基础设备类型: cam，通过dev_rt属性区分具体型号
+    "LSSSMINIV1": {
+        "name": "红外夜灯",
+        "official_name": "多功能报警器",
+        "category": "light",
+        "manufacturer": "lifesmart",
+        "model": "LSSSMINIV1",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "control",
+                        "data_type": "infrared_light",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "motion",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "device_class": "motion",
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P3": {
+                        "description": "illuminance",
+                        "data_type": "illuminance",
+                        "conversion": "v_field",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "SL_DF_KP": {
+        "name": "云防键盘",
+        "official_name": "云防KeyPad (DEFED KeyPad)",
+        "category": "sensor",
+        "manufacturer": "lifesmart",
+        "model": "SL_DF_KP",
+        "_generation": 2,
+        "platforms": {
+            "binary_sensor": {
+                "io_configs": {
+                    "KY": {
+                        "description": "button",
+                        "data_type": "keypad_status",
+                        "conversion": "direct_value",
+                        "device_class": "moving",
+                    },
+                    "TR": {
+                        "description": "tamper",
+                        "data_type": "tamper_status",
+                        "conversion": "type_bit_0",
+                        "device_class": "tamper",
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                }
+            },
+        },
+    },
+    "cam": {
+        "name": "摄像头",
+        "camera": {
+            "stream": {
+                "description": "camera_stream",
+                "data_type": "camera_stream",
+                "conversion": "camera_url",
+            }
+        },
+        "dev_rt_variants": {
+            "LSCAM:LSCAMV1": {
+                "name": "FRAME摄像头",
+                "supported_ios": ["M", "V", "CFST"],
+            },
+            "LSCAM:LSICAMEZ1": {
+                "name": "户外摄像头",
+                "supported_ios": ["M"],
+            },
+            "LSCAM:LSICAMEZ2": {
+                "name": "户外摄像头",
+                "supported_ios": ["M"],
+            },
+            "LSCAM:LSLKCAMV1": {
+                "name": "视频门锁摄像头",
+                "supported_ios": ["M"],
+            },
+            "LSCAM:LSICAMGOS1": {
+                "name": "高清摄像头",
+                "supported_ios": ["M"],
+                "model_key_support": {
+                    "0xd2": "高清摄像头",
+                    "0xda": "云视户外摄像头",
+                    "0xdb": "云瞳室内摄像头",
+                    "0xdc": "云瞳室外摄像头",
+                },
+            },
+        },
+        "binary_sensor": {
+            "M": {
+                "description": "motion",
+                "data_type": "motion_detection",
+                "conversion": "direct_value",
+                "device_class": "motion",
+            },
+        },
+        "sensor": {
+            "V": {
+                "description": "voltage",
+                "data_type": "battery",
+                "conversion": "v_field",
+                "device_class": "battery",
+                "unit_of_measurement": "%",
+                "state_class": "measurement",
+                "availability_condition": "dev_rt == 'LSCAM:LSCAMV1'",
+            },
+            "CFST": {
+                "description": "status",
+                "data_type": "camera_status",
+                "conversion": "direct_value",
+                "availability_condition": "dev_rt == 'LSCAM:LSCAMV1'",
+            },
+        },
+    },
+    # ================= 2.12 车库门控制 (Garage Door Control) =================
+    "SL_ETDOOR": {
+        "name": "车库门控制器",
+        "official_name": "车库门",
+        "category": "cover",
+        "manufacturer": "lifesmart",
+        "model": "SL_ETDOOR",
+        "_generation": 2,
+        "platforms": {
+            "light": {
+                "io_configs": {
+                    "P1": {
+                        "description": "control",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
+                    },
+                }
+            },
+            "cover": {
+                "io_configs": {
+                    "P2": {
+                        "description": "status",
+                        "data_type": "garage_door_status",
+                        "conversion": "direct_value",
+                    },
+                    "P3": {
+                        "description": "control",
+                        "data_type": "garage_door_control",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 100,
+                            },
+                            "close": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 0,
+                            },
+                            "stop": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "val": 128,
+                            },
+                            "set_position": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    # ================= 2.13 智能报警器(CoSS版) (Smart Alarm CoSS) =================
+    # 基于官方文档2.12 智能报警器（CoSS版）规格
+    "SL_ALM": {
+        "name": "智能报警器(CoSS版)",
+        "official_name": "智能报警器(CoSS版)",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_ALM",
+        "_generation": 2,
+        "platforms": {
+            "switch": {
+                "io_configs": {
+                    "P1": {
+                        "description": "control",
+                        "data_type": "alarm_playback",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_config_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_config_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
+                    },
+                    "P2": {
+                        "description": "control",
+                        "data_type": "volume_control",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "unmute": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "mute": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_volume": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
+                    },
+                }
+            },
+        },
+    },
+    # ================= 超能面板设备 (NATURE Series Devices) =================
+    # 基于官方文档2.14 超能面板系列（NATURE Series)
+    # 注意：这是动态分类设备，根据P5值决定是开关版还是温控版
+    "SL_NATURE": {
+        "name": "超级面板PRO",
+        "official_name": "超级面板PRO",
+        "category": "switch",
+        "manufacturer": "lifesmart",
+        "model": "SL_NATURE",
+        "_generation": 2,
+        "climate_features": {
+            "hvac_modes": {
+                0: "auto",
+                3: "cool",
+                4: "heat",
+                5: "fan_only",
+            },
+            "fan_speeds": {
+                15: "low",
+                45: "medium",
+                75: "high",
+                101: "auto",
+            },
+            "temperature_range": {
+                "min": 5,
+                "max": 35,
+            },
+        },
+        "platforms": {},
+        "dynamic": True,
+        "switch_mode": {
+            "condition": "P5&0xFF==1",
+            "switch": {
+                "P1": {
+                    "description": "switch",
+                    "data_type": "binary_switch",
+                    "conversion": "type_bit_0",
+                    "commands": {
+                        "on": {
+                            "type": CMD_TYPE_ON,
+                            "val": 1,
+                        },
+                        "off": {
+                            "type": CMD_TYPE_OFF,
+                            "val": 0,
+                        },
+                    },
+                },
+                "P2": {
+                    "description": "switch",
+                    "data_type": "binary_switch",
+                    "conversion": "type_bit_0",
+                    "commands": {
+                        "on": {
+                            "type": CMD_TYPE_ON,
+                            "val": 1,
+                        },
+                        "off": {
+                            "type": CMD_TYPE_OFF,
+                            "val": 0,
+                        },
+                    },
+                },
+                "P3": {
+                    "description": "switch",
+                    "data_type": "binary_switch",
+                    "conversion": "type_bit_0",
+                    "commands": {
+                        "on": {
+                            "type": CMD_TYPE_ON,
+                            "val": 1,
+                        },
+                        "off": {
+                            "type": CMD_TYPE_OFF,
+                            "val": 0,
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "P4": {
+                    "description": "temperature",
+                    "data_type": "temperature",
+                    "conversion": "v_field",
+                    "device_class": "temperature",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                },
+                "P5": {
+                    "description": "switch",
+                    "data_type": "device_type",
+                    "conversion": "direct_value",
+                },
+            },
+        },
+        "climate_mode": {
+            "condition": "P5&0xFF in [3,6]",
+            "climate": {
+                "P1": {
+                    "description": "switch",
+                    "data_type": "binary_switch",
+                    "conversion": "type_bit_0",
+                    "commands": {
+                        "on": {
+                            "type": CMD_TYPE_ON,
+                            "val": 1,
+                        },
+                        "off": {
+                            "type": CMD_TYPE_OFF,
+                            "val": 0,
+                        },
+                    },
+                },
+                "P4": {
+                    "description": "temperature",
+                    "data_type": "temperature",
+                    "conversion": "v_field",
+                    "device_class": "temperature",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                },
+                "P5": {
+                    "description": "switch",
+                    "data_type": "device_type",
+                    "conversion": "direct_value",
+                },
+                "P6": {
+                    "description": "switch",
+                    "data_type": "config_bitmask",
+                    "conversion": "direct_value",
+                    "commands": {
+                        "set_config": {
+                            "type": CMD_TYPE_SET_RAW_ON,
+                        },
+                    },
+                },
+                "P7": {
+                    "description": "mode",
+                    "data_type": "hvac_mode",
+                    "conversion": "direct_value",
+                    "commands": {
+                        "set_config": {
+                            "type": CMD_TYPE_SET_CONFIG,
+                        },
+                    },
+                },
+                "P8": {
+                    "description": "target_temperature",
+                    "data_type": "temperature",
+                    "conversion": "v_field",
+                    "device_class": "temperature",
+                    "unit_of_measurement": "°C",
+                    "commands": {
+                        "set_temperature": {
+                            "type": CMD_TYPE_SET_TEMP_DECIMAL,
+                        },
+                    },
+                },
+                "P9": {
+                    "description": "target_fan_speed",
+                    "data_type": "fan_speed",
+                    "conversion": "direct_value",
+                    "commands": {
+                        "set_config": {
+                            "type": CMD_TYPE_SET_CONFIG,
+                            "fan_modes": {
+                                "low": 25,
+                                "medium": 50,
+                                "high": 75,
+                                "auto": 101,
+                            },
+                        },
+                    },
+                },
+                "P10": {
+                    "description": "fan_speed",
+                    "data_type": "fan_speed",
+                    "conversion": "direct_value",
+                },
+            },
+            "binary_sensor": {
+                "P2": {
+                    "description": "valve",
+                    "data_type": "valve_status",
+                    "conversion": "direct_value",
+                    "device_class": "opening",
+                },
+                "P3": {
+                    "description": "valve",
+                    "data_type": "valve_status",
+                    "conversion": "direct_value",
+                    "device_class": "opening",
+                },
+            },
+        },
+    },
+    # ================= 2.14 智能面板系列 (Smart Panel Series) =================
+    # 2.14.4 星玉温控面板 (Nature Thermostat)
+    "SL_FCU": {
+        "name": "星玉温控面板",
+        "official_name": "星玉温控面板",
+        "category": "climate",
+        "manufacturer": "lifesmart",
+        "model": "SL_FCU",
+        "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
+        # 基础平台配置
+        "platforms": {
+            "climate": {
+                "io_configs": {
+                    "P1": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_ON",
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_OFF",
+                                "val": 0,
+                            },
+                        },
+                    },
+                    "P7": {
+                        "description": "mode",
+                        "data_type": "hvac_mode",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_config": {
+                                "type": "CMD_TYPE_SET_VAL",
+                            }
+                        },
+                    },
+                    "P8": {
+                        "description": "target_temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "unit_of_measurement": "°C",
+                        "commands": {
+                            "set_temperature": {
+                                "type": "CMD_TYPE_SET_TEMP_FCU",
+                            }
+                        },
+                    },
+                    "P9": {
+                        "description": "target_fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "set_config": {
+                                "type": "CMD_TYPE_SET_CONFIG",
+                                "fan_modes": {
+                                    "low": 15,
+                                    "medium": 45,
+                                    "high": 75,
+                                    "auto": 101,
+                                },
+                            }
+                        },
+                    },
+                }
+            },
+            "sensor": {
+                "io_configs": {
+                    "P4": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                    },
+                    "P10": {
+                        "description": "fan_speed",
+                        "data_type": "fan_speed",
+                        "conversion": "direct_value",
+                    },
+                }
+            },
+            "binary_sensor": {
+                "io_configs": {
+                    "P2": {
+                        "description": "valve",
+                        "data_type": "valve_status",
+                        "conversion": "direct_value",
+                        "device_class": "opening",
+                    },
+                    "P3": {
+                        "description": "valve",
+                        "data_type": "valve_status",
+                        "conversion": "direct_value",
+                        "device_class": "opening",
+                    },
+                }
+            },
+        },
+        # 核心：P6 bitmask_config嵌入配置 - 解决功能缺失
+        "bitmask_config": {
+            "P6": {
+                "type": "multi_bit_switch",
+                "virtual_device_template": "SL_FCU_P6_{name}",
+                "bit_definitions": {
+                    0: {
+                        "name": "hot_water",
+                        "platform": "switch",
+                        "description": "hot_water_switch",
+                        "translation_key": "hot_water_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 0,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 0,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                    1: {
+                        "name": "floor_heating",
+                        "platform": "switch",
+                        "description": "floor_heating_switch",
+                        "translation_key": "floor_heating_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 1,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 1,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                    2: {
+                        "name": "heating",
+                        "platform": "switch",
+                        "description": "heating_switch",
+                        "translation_key": "heating_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 2,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 2,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                    3: {
+                        "name": "cooling",
+                        "platform": "switch",
+                        "description": "cooling_switch",
+                        "translation_key": "cooling_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 3,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 3,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                    4: {
+                        "name": "ventilation",
+                        "platform": "switch",
+                        "description": "switch",
+                        "translation_key": "ventilation_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 4,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 4,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                    5: {
+                        "name": "dehumidify",
+                        "platform": "switch",
+                        "description": "switch",
+                        "translation_key": "dehumidify_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 5,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 5,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                    6: {
+                        "name": "humidify",
+                        "platform": "switch",
+                        "description": "switch",
+                        "translation_key": "humidify_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 6,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 6,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                    7: {
+                        "name": "emergency_ventilation",
+                        "platform": "switch",
+                        "description": "switch",
+                        "translation_key": "emergency_ventilation_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 7,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 7,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                    8: {
+                        "name": "emergency_heating",
+                        "platform": "switch",
+                        "description": "switch",
+                        "translation_key": "emergency_heating_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 8,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 8,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                    9: {
+                        "name": "emergency_cooling",
+                        "platform": "switch",
+                        "description": "switch",
+                        "translation_key": "emergency_cooling_switch",
+                        "commands": {
+                            "on": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 9,
+                                "bit_value": 1,
+                            },
+                            "off": {
+                                "type": "CMD_TYPE_SET_CFG_FCU",
+                                "bit_position": 9,
+                                "bit_value": 0,
+                            },
+                        },
+                    },
+                },
+            }
+        },
+        # 核心：climate_config嵌入配置 - 解决HVAC映射冲突
+        "climate_config": {
+            "template": "advanced_hvac",
+            "hvac_modes": {
+                "io_field": "P7",
+                "modes": {
+                    1: "heat",  # 制热
+                    2: "cool",  # 制冷
+                    3: "fan_only",  # 通风
+                    4: "dry",  # 除湿
+                    5: "dry",  # 加湿 (HA中合并到dry模式)
+                    6: "fan_only",  # 应急通风 (合并到fan_only)
+                    7: "heat",  # 应急加热 (合并到heat)
+                    8: "cool",  # 应急制冷 (合并到cool)
+                    16: "auto",  # 自动
+                },
+            },
+            "temperature": {
+                "target_io": "P8",
+                "current_io": "P4",
+                "range": [5, 35],
+                "precision": 0.1,
+                "conversion": {"source": "v"},
+            },
+            "fan_modes": {
+                "io_field": "P9",
+                "modes": {
+                    15: "low",  # 低档
+                    45: "medium",  # 中档
+                    75: "high",  # 高档
+                    101: "auto",  # 自动
+                },
+            },
+            "capabilities": [
+                "heating",
+                "cooling",
+                "fan_control",
+                "dehumidifying",
+                "target_temperature",
+            ],
+        },
+        # 设备能力标识
+        "capabilities": [
+            "climate_control",
+            "bitmask_switch_control",
+            "temperature_monitoring",
+            "valve_monitoring",
+        ],
+        # HA翻译支持
+        "translation_keys": {
+            "hot_water_switch": "热回水开关",
+            "floor_heating_switch": "地暖开关",
+            "heating_switch": "制热开关",
+            "cooling_switch": "制冷开关",
+            "ventilation_switch": "通风开关",
+            "dehumidify_switch": "除湿开关",
+            "humidify_switch": "加湿开关",
+            "emergency_ventilation_switch": "应急通风开关",
+            "emergency_heating_switch": "应急加热开关",
+            "emergency_cooling_switch": "应急制冷开关",
+        },
+    },
+}
+
+
+# 导出设备数据供外部使用
+def get_device_data(device_id: str) -> Dict[str, Any]:
+    """获取指定设备的数据"""
+    return _RAW_DEVICE_DATA.get(device_id, {})
+
+
+def get_all_device_ids() -> list:
+    """获取所有设备ID列表"""
+    return list(_RAW_DEVICE_DATA.keys())
+
+
+# ================= 测试设备配置 =================
+# 仅用于测试环境的虚拟设备配置
+_RAW_DEVICE_DATA["VIRTUAL_TEST"] = {
+    "name": "虚拟测试设备",
+    "sensor": {
+        "TEST": {
+            "description": "hs",
+            "data_type": "generic",
+            "conversion": "val_field",
+            "state_class": "measurement",
+        },
+    },
+}
+
+
+def get_device_count() -> int:
+    """获取设备总数"""
+    return len(_RAW_DEVICE_DATA)
+
+
+# [GEN2 CONFIG NOTE]
+# Device-centric Generation 2 specs carry their own platform command mappings.
+# The constants below are retained only as explicit shared mapping tables for
+# tests and focused helpers that still need direct keyed access.
+#
+# Explicit non-position cover command table:
+# - NON_POSITIONAL_COVER_CONFIG → declared cover command ports
+#   (SL_SW_WIN, SL_P_V2, SL_CN_IF, SL_CN_FE, SL_P, SL_JEMA)
+# - HVAC mode mappings → 2 climate devices (SL_TR_ACIPM, SL_CP_AIR)
+# - Fan speed mappings → 2 devices (SL_TR_ACIPM, SL_CP_AIR)
+# - Bitmask configurations → 10 lock devices (all ALM and EVTLO configs)
+
+LIFESMART_F_HVAC_MODE_MAP = {
+    1: HVACMode.AUTO,
+    2: HVACMode.FAN_ONLY,
+    3: HVACMode.COOL,
+    4: HVACMode.HEAT,
+}
+REVERSE_F_HVAC_MODE_MAP = {v: k for k, v in LIFESMART_F_HVAC_MODE_MAP.items()}
+
+LIFESMART_HVAC_MODE_MAP = {
+    1: HVACMode.AUTO,
+    2: HVACMode.FAN_ONLY,
+    3: HVACMode.COOL,
+    4: HVACMode.HEAT,
+    5: HVACMode.DRY,
+    7: HVACMode.HEAT,
+    8: HVACMode.HEAT_COOL,
+}
+REVERSE_LIFESMART_HVAC_MODE_MAP = {
+    HVACMode.AUTO: 1,
+    HVACMode.FAN_ONLY: 2,
+    HVACMode.COOL: 3,
+    HVACMode.HEAT: 4,
+    HVACMode.DRY: 5,
+    HVACMode.HEAT_COOL: 8,
+}
+
+LIFESMART_CP_AIR_HVAC_MODE_MAP = {
+    0: HVACMode.COOL,
+    1: HVACMode.HEAT,
+    2: HVACMode.FAN_ONLY,
+}
+REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {
+    v: k for k, v in LIFESMART_CP_AIR_HVAC_MODE_MAP.items()
+}
+
+LIFESMART_ACIPM_FAN_MAP = {
+    FAN_LOW: 1,
+    FAN_MEDIUM: 2,
+    FAN_HIGH: 3,
+}
+
+LIFESMART_CP_AIR_FAN_MAP = {
+    FAN_AUTO: 0,
+    FAN_LOW: 1,
+    FAN_MEDIUM: 2,
+    FAN_HIGH: 3,
+}
+REVERSE_LIFESMART_CP_AIR_FAN_MAP = {
+    v: k for k, v in LIFESMART_CP_AIR_FAN_MAP.items()
+}
+
+LIFESMART_TF_FAN_MAP = {
+    FAN_AUTO: 101,
+    FAN_LOW: 15,
+    FAN_MEDIUM: 45,
+    FAN_HIGH: 75,
+}
+
+NON_POSITIONAL_COVER_CONFIG = {
+    "SL_SW_WIN": {"open": "OP", "close": "CL", "stop": "ST"},
+    "SL_P_V2": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_CN_IF": {"open": "P1", "close": "P2", "stop": "P3"},
+    "SL_CN_FE": {"open": "P1", "close": "P2", "stop": "P3"},
+    "SL_P": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_JEMA": {"open": "P2", "close": "P3", "stop": "P4"},
+}
+
+# 导出设备数据和配置供外部使用
+DEVICE_SPECS_DATA = _RAW_DEVICE_DATA
