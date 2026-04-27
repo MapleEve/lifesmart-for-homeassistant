@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_AUTO,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 from custom_components.lifesmart.core.client.openapi_client import (
     LifeSmartOpenAPIClient,
@@ -37,6 +38,7 @@ from custom_components.lifesmart.core.const import (
     CMD_TYPE_SET_VAL,
     CMD_TYPE_SET_CONFIG,
     CMD_TYPE_SET_TEMP_DECIMAL,
+    CMD_TYPE_SET_TEMP_FCU,
 )
 from custom_components.lifesmart.core.exceptions import (
     LifeSmartAPIError,
@@ -836,7 +838,7 @@ class TestClimateControlHelpers:
     @pytest.mark.parametrize(
         "device_type, hvac_mode, current_val, expected_calls_count",
         [
-            ("any_type", HVACMode.OFF, 0, 1),  # 关闭只调用一次
+            ("SL_FCU", HVACMode.OFF, 0, 1),  # 关闭只调用一次
             ("V_AIR_P", HVACMode.HEAT, 0, 2),  # 开启和设置模式
             ("SL_CP_AIR", HVACMode.COOL, 0b1010101010101010, 2),  # 位运算模式
         ],
@@ -847,19 +849,21 @@ class TestClimateControlHelpers:
     ):
         """测试HVAC模式控制方法。"""
         # 使用工厂函数获取正确的设备数据
-        from ..utils.typed_factories import create_devices_by_category
+        from ..utils.typed_factories import create_gen2_devices
         from ..utils.helpers import find_test_device_by_type
 
         if device_type == "SL_CP_AIR":
-            climate_devices = create_devices_by_category(["climate"])
+            climate_devices = create_gen2_devices(["SL_CP_AIR"])
             test_device = find_test_device_by_type(climate_devices, "SL_CP_AIR")
-            if not test_device:
-                pytest.skip(f"工厂函数中未找到{device_type}设备")
+            assert test_device is not None, (
+                f"工厂函数中必须提供{device_type} Gen2气候设备"
+            )
         elif device_type == "V_AIR_P":
-            climate_devices = create_devices_by_category(["climate"])
+            climate_devices = create_gen2_devices(["V_AIR_P"])
             test_device = find_test_device_by_type(climate_devices, "V_AIR_P")
-            if not test_device:
-                pytest.skip(f"工厂函数中未找到{device_type}设备")
+            assert test_device is not None, (
+                f"工厂函数中必须提供{device_type} Gen2气候设备"
+            )
         else:
             # 对于any_type，创建基础设备对象
             test_device = {
@@ -896,8 +900,8 @@ class TestClimateControlHelpers:
             (
                 "SL_FCU",
                 22.0,
-                ("P8", 136, 220),
-            ),  # 使用映射配置的type=0x88 (136)
+                ("P8", CMD_TYPE_SET_TEMP_FCU, 220),
+            ),  # 使用映射配置的type=0x89 (137)
             ("UNSUPPORTED", 20.0, None),
         ],
         ids=["DecimalTemp", "RawTemp", "FCUTemp", "UnsupportedDevice"],
@@ -934,14 +938,17 @@ class TestClimateControlHelpers:
             }  # 温度控制端口
 
         with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
-            await client.async_set_climate_temperature(
-                "agt", "me", test_device, temperature
-            )
-
-            if expected_conversion:
-                mock_set.assert_called_with("agt", "me", *expected_conversion)
-            else:
+            if expected_conversion is None:
+                with pytest.raises(HomeAssistantError):
+                    await client.async_set_climate_temperature(
+                        "agt", "me", test_device, temperature
+                    )
                 mock_set.assert_not_called()
+            else:
+                await client.async_set_climate_temperature(
+                    "agt", "me", test_device, temperature
+                )
+                mock_set.assert_called_with("agt", "me", *expected_conversion)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -1022,14 +1029,17 @@ class TestClimateControlHelpers:
             }  # 风扇控制端口
 
         with patch.object(client, "set_single_ep_async", return_value=0) as mock_set:
-            await client.async_set_climate_fan_mode(
-                "agt", "me", test_device, fan_mode, current_val
-            )
-
-            if expected_conversion:
-                mock_set.assert_called_with("agt", "me", *expected_conversion)
-            else:
+            if expected_conversion is None:
+                with pytest.raises(HomeAssistantError):
+                    await client.async_set_climate_fan_mode(
+                        "agt", "me", test_device, fan_mode, current_val
+                    )
                 mock_set.assert_not_called()
+            else:
+                await client.async_set_climate_fan_mode(
+                    "agt", "me", test_device, fan_mode, current_val
+                )
+                mock_set.assert_called_with("agt", "me", *expected_conversion)
 
 
 # ==================== 错误处理和边界条件测试类 ====================
@@ -1060,12 +1070,11 @@ class TestErrorHandlingAndEdgeCases:
             mock_set.reset_mock()
 
             # 测试风扇模式控制
-            result = await client.async_set_climate_fan_mode(
-                "agt", "me", unsupported_device, FAN_LOW
-            )
-            assert result == -1, "不支持的设备类型应该返回-1"
+            with pytest.raises(HomeAssistantError):
+                await client.async_set_climate_fan_mode(
+                    "agt", "me", unsupported_device, FAN_LOW
+                )
             mock_set.assert_not_called()
-            assert "不支持风扇模式" in caplog.text, "应该记录不支持风扇模式的错误信息"
 
     @pytest.mark.asyncio
     async def test_malformed_api_responses(self, mock_async_call_api, client):
@@ -1142,6 +1151,8 @@ class TestSuperBowlAPIMethods:
     @pytest.mark.asyncio
     async def test_get_ir_categories_async(self, mock_async_call_api, client):
         """测试获取红外分类 API。"""
+        assert not hasattr(client, "get_ir_gen2_keys_async")
+
         # 设置预期响应
         mock_async_call_api.return_value = {
             "code": 0,

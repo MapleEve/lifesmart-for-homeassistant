@@ -119,7 +119,11 @@ class VersionedDeviceStrategy(BaseDeviceStrategy):
 
         # 尝试从version字段获取；缺失时返回空串，禁止 default fallback
         version = device.get("version")
-        return str(version).strip().upper() if version is not None and str(version).strip() else ""
+        return (
+            str(version).strip().upper()
+            if version is not None and str(version).strip()
+            else ""
+        )
 
     def _get_version_modes(self, raw_config: Dict[str, Any]) -> Dict[str, Any]:
         """

@@ -513,7 +513,7 @@ class TestCompatibilityEdgeCases:
 
         with patch.object(_LOGGER, "info") as mock_info:
             setup_logging()
-            mock_info.assert_called_once_with("LifeSmart兼容性模块已加载")
+            mock_info.assert_called_once_with("LifeSmart版本差异处理模块已加载")
 
     def test_climate_features_compat_class_getitem(self):
         """测试兼容气候功能类的__getitem__方法"""
@@ -1025,14 +1025,14 @@ class TestCompatibilityDeepCoverage:
             setup_logging()
 
             # 验证日志被正确调用
-            mock_info.assert_called_once_with("LifeSmart兼容性模块已加载")
+            mock_info.assert_called_once_with("LifeSmart版本差异处理模块已加载")
 
     def test_compatibility_module_logger_configuration(self):
         """测试兼容性模块的日志配置"""
         from custom_components.lifesmart.core.compatibility import _LOGGER
 
         # 验证logger配置正确
-        assert _LOGGER.name == "custom_components.lifesmart.compatibility"
+        assert _LOGGER.name == "custom_components.lifesmart.core.compatibility"
         assert hasattr(_LOGGER, "info")
         assert hasattr(_LOGGER, "warning")
         assert hasattr(_LOGGER, "error")

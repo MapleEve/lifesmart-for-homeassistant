@@ -324,6 +324,13 @@ class DynamicDeviceStrategy(BaseDeviceStrategy):
         if "control_modes" in raw_config and mode_name in raw_config["control_modes"]:
             return raw_config["control_modes"][mode_name]
 
+        # 方法3: 当前Gen2 SL_P在cover_features.control_modes下声明模式。
+        cover_features = raw_config.get("cover_features")
+        if isinstance(cover_features, dict):
+            control_modes = cover_features.get("control_modes")
+            if isinstance(control_modes, dict) and mode_name in control_modes:
+                return control_modes[mode_name]
+
         return None
 
     def _extract_platform_configurations(

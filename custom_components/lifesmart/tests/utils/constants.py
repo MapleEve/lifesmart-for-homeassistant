@@ -428,3 +428,6 @@ NETWORK_CONFIG = {
     # 标题格式常量
     "local_hub_title_format": "Local Hub ({})",  # 用于格式化本地Hub标题
 }
+
+# Backwards-compatible alias used by the config-flow test module.
+CONFIG_FLOW_TEST_VALUES = NETWORK_CONFIG

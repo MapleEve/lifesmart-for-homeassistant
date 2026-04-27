@@ -537,9 +537,9 @@ class StaticConfigValidator:
         report_lines.append("=" * 60)
 
         if result.valid:
-            report_lines.append(f"✅ 验证状态: 通过")
+            report_lines.append("✅ 验证状态: 通过")
         else:
-            report_lines.append(f"❌ 验证状态: 失败")
+            report_lines.append("❌ 验证状态: 失败")
 
         report_lines.append(f"📊 设备总数: {result.total_devices}")
         report_lines.append(f"🔥 错误数量: {len(result.errors)}")

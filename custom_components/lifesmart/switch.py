@@ -209,6 +209,13 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
         if io_config and io_config.device_class:
             return io_config.device_class
 
+        result = resolver.resolve_device_config(self._raw_device)
+        device_config = result.device_config if result.success else None
+        model = (device_config.model if device_config else self.devtype) or ""
+        category = (device_config.category if device_config else None) or ""
+        if category == "switch" and model.startswith("SL_OL"):
+            return SwitchDeviceClass.OUTLET
+
         # 默认为开关
         return SwitchDeviceClass.SWITCH
 
@@ -247,23 +254,22 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
         if not result.success:
             raise HomeAssistantError(result.error_message)
 
-        # 直接从原始映射获取processor_type
-        raw_mapping = result.device_config.source_mapping
-        switch_config = raw_mapping.get("switch", {})
-        io_config = switch_config.get(self._sub_key, {})
+        io_config = resolver.get_io_config(self._raw_device, "switch", self._sub_key)
 
         if not io_config:
             # 严格遵循三层架构：没有映射配置时抛出明确错误
             raise HomeAssistantError(
-                f"No switch configuration found for device {self._raw_device.get('me', 'unknown')} "
-                f"IO port {self._sub_key}. All switch entities must be properly configured "
+                "No switch configuration found for device "
+                f"{self._raw_device.get('me', 'unknown')} "
+                f"IO port {self._sub_key}. All switch entities must be "
+                "properly configured "
                 f"in the mapping engine to ensure architectural consistency."
             )
 
         # 使用映射配置的处理器；兼容仅提供conversion的Gen2开关配置
-        processor_type = io_config.get("processor_type")
+        processor_type = io_config.processor_type
         if not processor_type:
-            conversion = io_config.get("conversion")
+            conversion = io_config.conversion
             if conversion == "type_bit_0":
                 processor_type = "type_bit_0_switch"
             elif conversion:
@@ -275,12 +281,13 @@ class LifeSmartSwitch(LifeSmartEntity, SwitchEntity):
                 f"{self._raw_device.get('me', 'unknown')} IO port {self._sub_key}"
             )
 
-        processor_config = {"processor_type": processor_type}
+        processor_config = {
+            "processor_type": processor_type,
+            "conversion": io_config.conversion,
+        }
         return process_io_data(processor_config, data)
 
-    @property
     # device_info属性已合并到LifeSmartEntity基类中，自动继承
-
     async def async_added_to_hass(self) -> None:
         """实体添加到Home Assistant时注册回调函数。
 

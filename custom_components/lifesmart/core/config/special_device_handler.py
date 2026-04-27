@@ -139,12 +139,10 @@ class VersionedDeviceResolver:
         "SL_SW_DM1": {
             "name": "动态调光开关",
             "versions": ["V1", "V2"],
-            "default_version": "V2",
         },
         "SL_LI_WW": {
             "name": "智能灯泡",
             "versions": ["V1", "V2"],
-            "default_version": "V2",
         },
     }
 
@@ -165,39 +163,49 @@ class VersionedDeviceResolver:
 
     def resolve_version_config(
         self, device_type: str, device_spec: Dict[str, Any], target_version: str = None
-    ) -> Dict[str, Any]:
-        """解析版本设备配置"""
+    ) -> Optional[Dict[str, Any]]:
+        """解析版本设备配置；必须提供明确且受支持的版本。"""
         version_modes = device_spec.get("version_modes", {})
         if not version_modes:
             return device_spec
 
-        # 确定目标版本
         if not target_version:
-            if device_type in self.VERSIONED_DEVICES:
-                target_version = self.VERSIONED_DEVICES[device_type]["default_version"]
-            else:
-                target_version = list(version_modes.keys())[0]
+            _LOGGER.warning(
+                "Versioned device %s requires explicit target_version", device_type
+            )
+            return None
+
+        selected_version = None
+        normalized_target = str(target_version).upper()
+        for version_key in version_modes:
+            if str(version_key).upper() == normalized_target:
+                selected_version = version_key
+                break
+
+        if selected_version is None:
+            _LOGGER.warning(
+                "Versioned device %s has unsupported target_version %s",
+                device_type,
+                target_version,
+            )
+            return None
 
         # 解析版本配置
-        if target_version in version_modes:
-            version_config = version_modes[target_version]
-            resolved_config = {
-                "resolved_version": target_version,
-                "available_versions": list(version_modes.keys()),
-            }
+        version_config = version_modes[selected_version]
+        resolved_config = {
+            "resolved_version": selected_version,
+            "available_versions": list(version_modes.keys()),
+        }
+        # 合并版本特定配置
+        if isinstance(version_config, dict):
+            resolved_config.update(version_config)
 
-            # 合并版本特定配置
-            if isinstance(version_config, dict):
-                resolved_config.update(version_config)
+        # 保留非版本相关的字段
+        for key, value in device_spec.items():
+            if key not in ["version_modes", "versioned"]:
+                resolved_config.setdefault(key, value)
 
-            # 保留非版本相关的字段
-            for key, value in device_spec.items():
-                if key not in ["version_modes", "versioned"]:
-                    resolved_config.setdefault(key, value)
-
-            return resolved_config
-
-        return device_spec
+        return resolved_config
 
     def get_version_metadata(
         self, device_type: str, device_spec: Dict[str, Any]
@@ -211,7 +219,6 @@ class VersionedDeviceResolver:
         return {
             "name": device_spec.get("name", device_type),
             "versions": list(version_modes.keys()),
-            "default_version": list(version_modes.keys())[0] if version_modes else None,
         }
 
 
@@ -532,9 +539,14 @@ class SpecialDeviceHandler:
                     device_type, device_spec, target_version
                 )
                 device_info.resolved_config = resolved_config
-                device_info.processing_notes.append(
-                    f"解析版本配置，当前版本: {resolved_config.get('resolved_version', 'default')}"
-                )
+                if resolved_config is None:
+                    device_info.processing_notes.append(
+                        "版本配置解析失败：缺少或不支持明确版本"
+                    )
+                else:
+                    device_info.processing_notes.append(
+                        f"解析版本配置，当前版本: {resolved_config.get('resolved_version')}"
+                    )
 
             elif special_type == SpecialDeviceType.CAM:
                 dev_rt = processing_options.get("dev_rt")

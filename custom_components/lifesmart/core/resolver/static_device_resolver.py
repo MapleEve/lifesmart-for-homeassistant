@@ -106,11 +106,11 @@ class StaticDeviceResolver:
             "cache_hits": 0,
             "cache_misses": 0,
             "mode_switches": 0,
-            "fallback_resolutions": 0,
         }
 
         _LOGGER.info(
-            f"StaticDeviceResolver initialized with {len(static_configs)} device configs"
+            f"StaticDeviceResolver initialized with {len(static_configs)} "
+            "device configs"
         )
 
     def resolve_device_config(self, device: Dict[str, Any]) -> ResolutionResult:
@@ -199,7 +199,7 @@ class StaticDeviceResolver:
     def _resolve_versioned_device_static(
         self, config: Dict[str, Any], device: Dict[str, Any], device_type: str
     ) -> ResolutionResult:
-        """Resolve versioned devices strictly; never use default/first-version fallback."""
+        """Resolve versioned devices only from explicit version evidence."""
         version_configs = config.get("_version_configs", {})
         if not version_configs:
             return ResolutionResult.error_result(
@@ -221,7 +221,8 @@ class StaticDeviceResolver:
 
         if selected_key is None:
             return ResolutionResult.error_result(
-                f"No strict configuration found for {device_type} version {device_version}"
+                f"No strict configuration found for {device_type} "
+                f"version {device_version}"
             )
 
         self._stats["successful_resolutions"] += 1
@@ -297,7 +298,7 @@ class StaticDeviceResolver:
             io_data = device_data.get(field, {})
             actual_value = None
             if isinstance(io_data, dict):
-                for value_key in ("type", "val", "v"):
+                for value_key in ("val", "v", "type"):
                     if io_data.get(value_key) is not None:
                         actual_value = io_data.get(value_key)
                         break
@@ -310,7 +311,9 @@ class StaticDeviceResolver:
                     actual_value = int(actual_value)
                     if "shift" in condition:
                         actual_value >>= int(condition.get("shift", 0))
-                    actual_value &= int(condition.get("mask", condition.get("bitwise_and", 0xFF)))
+                    actual_value &= int(
+                        condition.get("mask", condition.get("bitwise_and", 0xFF))
+                    )
                 except (TypeError, ValueError):
                     return False
             if "values" in condition:
@@ -320,7 +323,14 @@ class StaticDeviceResolver:
             return False
 
         for field, expected_values in condition.items():
-            if field in {"type", "expression", "evaluation_method", "field", "value", "values"}:
+            if field in {
+                "type",
+                "expression",
+                "evaluation_method",
+                "field",
+                "value",
+                "values",
+            }:
                 continue
             # 获取设备字段的实际值
             io_data = device_data.get(field, {})
@@ -422,7 +432,6 @@ class StaticDeviceResolver:
             "success_rate": f"{success_rate:.2%}",
             "cache_misses": self._stats["cache_misses"],
             "mode_switches": self._stats["mode_switches"],
-            "fallback_resolutions": self._stats["fallback_resolutions"],
             "average_resolution_time": "~0.1ms (O(1) static lookup)",
         }
 

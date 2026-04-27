@@ -97,7 +97,9 @@ def get_device_platform_mapping(device: dict) -> dict[str, list[str]]:
             if platform_name in ["name", "_device_mode", "_error"]:
                 continue
 
-            if isinstance(ios, dict):
+            if hasattr(ios, "ios") and isinstance(ios.ios, dict):
+                final_platforms[platform_name] = list(ios.ios.keys())
+            elif isinstance(ios, dict):
                 final_platforms[platform_name] = list(ios.keys())
             elif isinstance(ios, list):
                 final_platforms[platform_name] = ios
@@ -212,7 +214,6 @@ def _get_cover_control_mapping(device: dict) -> dict[str, str]:
         }
 
     return {}
-
 
 
 def get_cover_subdevices(device: dict) -> list[str]:
@@ -438,7 +439,9 @@ def get_device_effective_type(device: dict) -> str:
     return device_type
 
 
-def is_momentary_button_device(device_type: str, sub_key: str) -> bool:
+def is_momentary_button_device(
+    device_type: str, sub_key: str, device_data: dict | None = None
+) -> bool:
     """
     判断是否为瞬时按钮设备。
 
@@ -455,7 +458,7 @@ def is_momentary_button_device(device_type: str, sub_key: str) -> bool:
     # 使用mapping引擎获取设备配置
     resolver = get_device_resolver()
     binary_sensor_config = resolver.get_platform_config(
-        {"devtype": device_type, "data": {}}, "binary_sensor"
+        {"devtype": device_type, "data": device_data or {}}, "binary_sensor"
     )
 
     # 根据IO配置判断是否为瞬时按钮

@@ -19,7 +19,7 @@ import struct
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
-from ..conversion import get_io_friendly_val
+from ..conversion import convert_ieee754_float, get_io_friendly_val
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,8 +144,10 @@ class IEEE754FloatProcessor(DirectProcessor):
     def process_value(self, raw_value: Any, type_value: int = 0) -> float:
         """处理IEEE754浮点数转换"""
         try:
+            if isinstance(raw_value, dict):
+                raw_value = raw_value.get("val")
             return struct.unpack("!f", struct.pack("!i", int(raw_value)))[0]
-        except (ValueError, struct.error):
+        except (TypeError, ValueError, struct.error):
             return 0.0
 
     def get_processor_type(self) -> str:
@@ -446,7 +448,9 @@ def process_io_data(io_config: dict[str, Any], raw_data: dict[str, Any]) -> Any:
 
     conversion = io_config.get("conversion")
     if conversion == "v_field":
-        return raw_data.get("v") if raw_data.get("v") is not None else raw_data.get("val")
+        return (
+            raw_data.get("v") if raw_data.get("v") is not None else raw_data.get("val")
+        )
     if conversion == "val_div_10":
         raw_value = raw_data.get("val")
         try:
@@ -469,7 +473,37 @@ def process_io_data(io_config: dict[str, Any], raw_data: dict[str, Any]) -> Any:
                     return friendly_value
         except (TypeError, ValueError):
             return None
-        return raw_data.get("v") if raw_data.get("v") is not None else raw_data.get("val")
+        return (
+            raw_data.get("v") if raw_data.get("v") is not None else raw_data.get("val")
+        )
+    if conversion == "ieee754_float":
+        # IEEE754 entries are raw LifeSmart IO values. The documented decoder
+        # contract (conversion.convert_ieee754_float) consumes the integer
+        # encoded in ``val``; a human-friendly ``v`` may be present in snapshots
+        # but must not be re-decoded as an IEEE payload.
+        raw_value = raw_data.get("val")
+        try:
+            return (
+                convert_ieee754_float(int(raw_value))
+                if raw_value is not None
+                else None
+            )
+        except (TypeError, ValueError, struct.error):
+            return None
+    if conversion == "co2_scaled":
+        # Gen2 snapshots commonly include ``v`` as the final user-facing ppm.
+        # Scale only the raw ``val`` fallback used by devices that omit ``v``.
+        if raw_data.get("v") is not None:
+            try:
+                return float(raw_data.get("v"))
+            except (TypeError, ValueError):
+                return None
+        raw_value = raw_data.get("val")
+        try:
+            value = float(raw_value)
+        except (TypeError, ValueError):
+            return None
+        return value * 100 if value < 10 else value * 10
 
     # 操作1: 获取处理器类型
     processor_type = io_config.get("processor_type")

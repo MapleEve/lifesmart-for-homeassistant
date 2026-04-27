@@ -11,7 +11,7 @@ DeviceResolver 单元测试 - Phase 2 核心组件
 """
 
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from homeassistant.exceptions import HomeAssistantError
@@ -32,9 +32,9 @@ from custom_components.lifesmart.core.config.device_spec_registry import (
 
 # 从强类型工厂导入测试数据
 from ..utils.typed_factories import (
-    create_typed_smart_plug,
-    create_typed_thermostat_panel,
-    create_typed_power_meter_plug,
+    create_smart_plug,
+    create_thermostat_panel,
+    create_power_meter_plug,
 )
 
 
@@ -91,7 +91,7 @@ class TestDeviceResolverCore:
                     其中包含一个正确转换的 DeviceConfig 对象。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         mock_spec_registry.get_device_spec.return_value = {"name": "Smart Plug Spec"}
         mock_strategy_factory.resolve_device_mapping.return_value = {
             "name": "Smart Plug Mapping",
@@ -119,7 +119,12 @@ class TestDeviceResolverCore:
         assert result.resolution_time_ms is not None
 
         # 验证依赖项是否被正确调用
-        mock_spec_registry.get_device_spec.assert_called_once_with("SL_OL")
+        # 解析阶段读取一次原始规格供策略工厂使用，强类型转换阶段再读取
+        # 一次规格以填充设备元数据（manufacturer/model/category）。
+        assert mock_spec_registry.get_device_spec.call_args_list == [
+            call("SL_OL"),
+            call("SL_OL"),
+        ]
         mock_strategy_factory.resolve_device_mapping.assert_called_once()
 
     def test_resolve_device_config_cache_hit(self, resolver: DeviceResolver):
@@ -129,7 +134,7 @@ class TestDeviceResolverCore:
                     并且不应再次调用策略工厂。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         # Act
         result1 = resolver.resolve_device_config(device_data)
@@ -159,7 +164,7 @@ class TestDeviceResolverCore:
         Hypothesis: 当缓存禁用时，每次调用都应执行完整解析流程。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         # Act
         result1 = resolver_no_cache.resolve_device_config(device_data)
@@ -222,7 +227,7 @@ class TestDeviceResolverCore:
         Hypothesis: 如果 spec_registry 返回 None，应返回一个明确的错误结果。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         mock_spec_registry.get_device_spec.return_value = None
 
         # Act
@@ -241,7 +246,7 @@ class TestDeviceResolverCore:
                     应将其转换为一个失败的 ResolutionResult。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         mock_strategy_factory.resolve_device_mapping.return_value = {
             "_error": "No suitable strategy"
         }
@@ -262,7 +267,7 @@ class TestDeviceResolverCore:
         Hypothesis: 如果 strategy_factory 返回 None，应返回配置未找到的错误。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         mock_strategy_factory.resolve_device_mapping.return_value = None
 
         # Act
@@ -278,7 +283,7 @@ class TestDeviceResolverCore:
         Hypothesis: 如果 _convert_to_device_config 抛出异常，应被捕获并返回错误结果。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         # Mock _convert_to_device_config 抛出异常
         with patch.object(
@@ -304,7 +309,7 @@ class TestDeviceResolverCore:
         Hypothesis: resolve_device_config 应记录准确的解析时间。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         start_time = 1000.0
         end_time = 1000.05  # 50ms
 
@@ -326,7 +331,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 当平台存在时应返回 PlatformConfig。
         """
         # Arrange
-        device_data = create_typed_thermostat_panel().to_dict()
+        device_data = create_thermostat_panel()
         device_config = DeviceConfig(
             device_type="SL_NATURE",
             name="Test Thermo",
@@ -363,7 +368,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 不存在的平台应返回 None。
         """
         # Arrange
-        device_data = create_typed_thermostat_panel().to_dict()
+        device_data = create_thermostat_panel()
         device_config = DeviceConfig(
             device_type="SL_NATURE",
             name="Test Thermo",
@@ -391,7 +396,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 这是为了保持与现有平台文件代码的兼容性，错误应向上抛出。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         with patch.object(
             resolver,
@@ -408,7 +413,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 支持的平台应返回 True。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         platform_config = PlatformConfig(
             platform_type="switch",
             supported=True,
@@ -430,7 +435,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 不支持的平台应返回 False。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         platform_config = PlatformConfig(platform_type="switch", supported=False)
 
         with patch.object(
@@ -448,7 +453,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 不存在的平台应返回 False。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         with patch.object(resolver, "get_platform_config", return_value=None):
             # Act
@@ -463,7 +468,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 当 get_platform_config 抛出异常时，应返回 False 而不是传播异常。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         with patch.object(
             resolver,
@@ -482,7 +487,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 存在的IO配置应被正确返回。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         io_config = IOConfig(description="Test IO")
         platform_config = PlatformConfig(
             platform_type="switch", supported=True, ios={"O": io_config}
@@ -503,7 +508,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 不存在的IO应返回 None。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         platform_config = PlatformConfig(platform_type="switch", supported=True, ios={})
 
         with patch.object(
@@ -521,7 +526,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 不存在的平台应返回 None。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         with patch.object(resolver, "get_platform_config", return_value=None):
             # Act
@@ -536,7 +541,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 应返回设备支持的所有平台列表。
         """
         # Arrange
-        device_data = create_typed_power_meter_plug().to_dict()
+        device_data = create_power_meter_plug()
         device_config = DeviceConfig(
             device_type="SL_OE_3C",
             name="Power Meter",
@@ -572,7 +577,7 @@ class TestDeviceResolverPlatformMethods:
         Hypothesis: 解析失败时应返回空列表。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         with patch.object(
             resolver,
@@ -611,8 +616,8 @@ class TestDeviceResolverCacheManagement:
         Hypothesis: 缓存统计应准确反映操作历史。
         """
         # Arrange
-        device1 = create_typed_smart_plug().to_dict()
-        device2 = create_typed_thermostat_panel().to_dict()
+        device1 = create_smart_plug()
+        device2 = create_thermostat_panel()
 
         # Act
         resolver.resolve_device_config(device1)  # miss
@@ -635,7 +640,7 @@ class TestDeviceResolverCacheManagement:
         Hypothesis: clear_cache 应重置缓存和统计。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         resolver.resolve_device_config(device_data)  # 创建缓存条目
 
         # Act

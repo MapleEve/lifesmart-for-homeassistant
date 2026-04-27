@@ -138,9 +138,11 @@ class DeviceSpecValidator:
                                 # 版本化设备有有效的名称解析
                                 continue
                             else:
-                                errors.append(
-                                    f"Versioned device '{device_type}' missing valid name in version modes"
+                                message = (
+                                    f"Versioned device '{device_type}' "
+                                    "missing valid name in version modes"
                                 )
+                                errors.append(message)
                                 continue
 
                         elif device_info.special_type == SpecialDeviceType.DYNAMIC:
@@ -148,13 +150,17 @@ class DeviceSpecValidator:
                             metadata = device_info.metadata
                             resolved_name = metadata.get("resolved_name")
                             if resolved_name:
-                                warnings.append(
-                                    f"Dynamic device '{device_type}' using resolved name: {resolved_name}"
+                                message = (
+                                    f"Dynamic device '{device_type}' "
+                                    f"using resolved name: {resolved_name}"
                                 )
+                                warnings.append(message)
                             else:
-                                warnings.append(
-                                    f"Dynamic device '{device_type}' has no unified name field - this is acceptable"
+                                message = (
+                                    f"Dynamic device '{device_type}' "
+                                    "has no unified name field - this is acceptable"
                                 )
+                                warnings.append(message)
                             continue
 
                         elif device_info.special_type == SpecialDeviceType.CAM:
@@ -163,11 +169,13 @@ class DeviceSpecValidator:
                             resolved_name = metadata.get("resolved_name")
                             if resolved_name:
                                 warnings.append(
-                                    f"CAM device '{device_type}' using resolved name: {resolved_name}"
+                                    f"CAM device '{device_type}' using resolved name: "
+                                    f"{resolved_name}"
                                 )
                             else:
                                 warnings.append(
-                                    f"CAM device '{device_type}' may have complex naming structure"
+                                    f"CAM device '{device_type}' may have complex "
+                                    "naming structure"
                                 )
                             continue
 
@@ -177,12 +185,15 @@ class DeviceSpecValidator:
                             resolved_name = metadata.get("resolved_name")
                             if resolved_name:
                                 warnings.append(
-                                    f"DYN Color device '{device_type}' using resolved name: {resolved_name}"
+                                    f"DYN Color device '{device_type}' using resolved "
+                                    f"name: {resolved_name}"
                                 )
                             else:
-                                warnings.append(
-                                    f"DYN Color device '{device_type}' may have complex color naming"
+                                message = (
+                                    f"DYN Color device '{device_type}' "
+                                    "may have complex color naming"
                                 )
+                                warnings.append(message)
                             continue
 
                     except Exception as e:
@@ -201,7 +212,7 @@ class DeviceSpecValidator:
                     )
                     if not has_name_in_versions:
                         errors.append(
-                            f"Versioned device missing 'name' in version_modes"
+                            "Versioned device missing 'name' in version_modes"
                         )
                 elif field == "name" and "dynamic" in spec:
                     # 基础动态分类设备检查
@@ -343,7 +354,8 @@ class DeviceSpecRegistry:
                         self._stats["validation_errors"] += len(result.errors)
                         if self._validation_level == ValidationLevel.STRICT:
                             _LOGGER.error(
-                                f"Device {device_type} validation failed: {result.errors}"
+                                f"Device {device_type} validation failed: "
+                                f"{result.errors}"
                             )
                             continue
                         else:
@@ -395,9 +407,53 @@ class DeviceSpecRegistry:
 
     def _update_device_stats(self, device_type: str, spec: Dict[str, Any]) -> None:
         """更新设备统计信息"""
-        for key in spec:
-            if key != "name" and not key.startswith("_"):
+        platforms = spec.get("platforms")
+        if isinstance(platforms, dict):
+            for key in platforms:
                 self._stats["platforms"].add(key)
+            return
+
+        metadata_keys = {
+            "name",
+            "category",
+            "manufacturer",
+            "model",
+            "features",
+            "constraints",
+            "dynamic",
+            "versioned",
+            "version_modes",
+        }
+        for key in spec:
+            if key not in metadata_keys and not key.startswith("_"):
+                self._stats["platforms"].add(key)
+
+    def _is_strict_gen2_spec(self, device_type: str, spec: Dict[str, Any]) -> bool:
+        """Return True for strict Gen2 corpus devices used by production queries."""
+        return (
+            device_type.isupper()
+            and device_type != "VIRTUAL_TEST"
+            and isinstance(spec.get("platforms"), dict)
+        )
+
+    def _iter_gen2_io_configs(
+        self, spec: Dict[str, Any], platform: Optional[str] = None
+    ):
+        """Iterate canonical Gen2 io_configs, optionally filtered by platform."""
+        platforms = spec.get("platforms")
+        if not isinstance(platforms, dict):
+            return
+        for platform_key, platform_config in platforms.items():
+            if platform is not None and platform_key != platform:
+                continue
+            if not isinstance(platform_config, dict):
+                continue
+            io_configs = platform_config.get("io_configs", {})
+            if not isinstance(io_configs, dict):
+                continue
+            for io_key, io_config in io_configs.items():
+                if isinstance(io_config, dict):
+                    yield platform_key, io_key, io_config
 
     def get_device_spec(self, device_type: str) -> Dict[str, Any]:
         """
@@ -476,7 +532,10 @@ class DeviceSpecRegistry:
 
         result = []
         for device_type, spec in self._specs.items():
-            if platform in spec:
+            if not self._is_strict_gen2_spec(device_type, spec):
+                continue
+            platforms = spec.get("platforms", {})
+            if platform in platforms:
                 result.append(device_type)
 
         # 缓存结果
@@ -501,6 +560,8 @@ class DeviceSpecRegistry:
 
         result = []
         for device_type, spec in self._specs.items():
+            if not self._is_strict_gen2_spec(device_type, spec):
+                continue
             if self._has_capability(spec, capability):
                 result.append(device_type)
 
@@ -508,17 +569,12 @@ class DeviceSpecRegistry:
         return result
 
     def _has_capability(self, spec: Dict[str, Any], capability: str) -> bool:
-        """检查设备规格是否具有指定能力"""
-        for platform_key, platform_config in spec.items():
-            if platform_key == "name" or not isinstance(platform_config, dict):
-                continue
-
-            for io_key, io_config in platform_config.items():
-                if isinstance(io_config, dict):
-                    if io_config.get("data_type") == capability:
-                        return True
-                    if capability in io_config.get("description", "").lower():
-                        return True
+        """检查Gen2设备规格是否具有指定能力"""
+        for _platform_key, _io_key, io_config in self._iter_gen2_io_configs(spec):
+            if io_config.get("data_type") == capability:
+                return True
+            if capability in io_config.get("description", "").lower():
+                return True
 
         return False
 
@@ -541,10 +597,30 @@ class DeviceSpecRegistry:
         platforms = []
         io_count = 0
 
-        for key, value in spec.items():
-            if key != "name" and isinstance(value, dict):
-                platforms.append(key)
-                io_count += len(value)
+        spec_platforms = spec.get("platforms")
+        if isinstance(spec_platforms, dict):
+            for key, value in spec_platforms.items():
+                if isinstance(value, dict):
+                    platforms.append(key)
+                    io_configs = value.get("io_configs", {})
+                    if isinstance(io_configs, dict):
+                        io_count += len(io_configs)
+        else:
+            metadata_keys = {
+                "name",
+                "category",
+                "manufacturer",
+                "model",
+                "features",
+                "constraints",
+                "dynamic",
+                "versioned",
+                "version_modes",
+            }
+            for key, value in spec.items():
+                if key not in metadata_keys and isinstance(value, dict):
+                    platforms.append(key)
+                    io_count += len(value)
 
         return {
             "device_type": device_type,
@@ -655,7 +731,7 @@ class DeviceSpecRegistry:
             # 更新内部存储
             self._scattered_mappings.update(scattered_mappings)
 
-            # 建立别名映射（向后兼容）
+            # 建立显式常量别名映射，供注册表代理读取
             self._mapping_aliases.update(
                 {
                     "NON_POSITIONAL_COVER_CONFIG": "cover.non_positional_config",
@@ -663,7 +739,9 @@ class DeviceSpecRegistry:
                     "LIFESMART_HVAC_MODE_MAP": "hvac.general_mode_map",
                     "REVERSE_LIFESMART_HVAC_MODE_MAP": "hvac.reverse_mode_map",
                     "LIFESMART_CP_AIR_HVAC_MODE_MAP": "hvac.cp_air_mode_map",
-                    "REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP": "hvac.reverse_cp_air_mode_map",
+                    "REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP": (
+                        "hvac.reverse_cp_air_mode_map"
+                    ),
                     "LIFESMART_ACIPM_FAN_MAP": "fan.acipm_fan_map",
                     "LIFESMART_CP_AIR_FAN_MAP": "fan.cp_air_fan_map",
                     "REVERSE_LIFESMART_CP_AIR_FAN_MAP": "fan.reverse_cp_air_fan_map",
@@ -685,7 +763,7 @@ class DeviceSpecRegistry:
 
         Args:
             mapping_key: 映射键，支持点分割路径如 'hvac.general_mode_map'
-                       或向后兼容的别名如 'LIFESMART_HVAC_MODE_MAP'
+                       或常量别名如 'LIFESMART_HVAC_MODE_MAP'
 
         Returns:
             映射配置字典，如果不存在则返回空字典
@@ -759,17 +837,18 @@ class DeviceSpecRegistry:
         self._ensure_loaded()
 
         spec = self.get_device_spec(device_type)
-        if not spec or platform not in spec:
+        platforms = spec.get("platforms") if spec else None
+        if not isinstance(platforms, dict) or platform not in platforms:
             return {}
 
-        platform_config = spec[platform]
+        platform_config = platforms[platform]
         if not isinstance(platform_config, dict):
             return {}
 
+        io_configs = platform_config.get("io_configs", {})
         if io_port:
-            return platform_config.get(io_port, {})
-        else:
-            return platform_config
+            return io_configs.get(io_port, {}) if isinstance(io_configs, dict) else {}
+        return platform_config
 
     def resolve_platform(self, device_type: str, **criteria) -> List[str]:
         """
@@ -788,10 +867,14 @@ class DeviceSpecRegistry:
         if not spec:
             return []
 
+        platforms = spec.get("platforms")
+        if not isinstance(platforms, dict):
+            return []
+
         supported_platforms = []
 
-        for platform_key, platform_config in spec.items():
-            if platform_key == "name" or not isinstance(platform_config, dict):
+        for platform_key, platform_config in platforms.items():
+            if not isinstance(platform_config, dict):
                 continue
 
             # 检查是否符合条件
@@ -820,17 +903,20 @@ class DeviceSpecRegistry:
             return {}
 
         capabilities = {}
+        platforms = spec.get("platforms")
+        if not isinstance(platforms, dict):
+            return capabilities
 
         # 如果指定了平台，只返回该平台的能力
         if platform:
-            if platform in spec and isinstance(spec[platform], dict):
+            if platform in platforms and isinstance(platforms[platform], dict):
                 capabilities[platform] = self._extract_platform_capabilities(
-                    spec[platform]
+                    platforms[platform]
                 )
         else:
-            # 返回所有平台的能力
-            for platform_key, platform_config in spec.items():
-                if platform_key != "name" and isinstance(platform_config, dict):
+            # 返回所有Gen2平台的能力
+            for platform_key, platform_config in platforms.items():
+                if isinstance(platform_config, dict):
                     capabilities[platform_key] = self._extract_platform_capabilities(
                         platform_config
                     )
@@ -889,7 +975,8 @@ class DeviceSpecRegistry:
             "io_ports": [],
         }
 
-        for io_port, io_config in platform_config.items():
+        io_configs = platform_config.get("io_configs", platform_config)
+        for io_port, io_config in io_configs.items():
             if isinstance(io_config, dict):
                 summary["total_io_ports"] += 1
 
@@ -931,7 +1018,8 @@ class DeviceSpecRegistry:
         if not criteria:
             return True
 
-        for io_port, io_config in platform_config.items():
+        io_configs = platform_config.get("io_configs", platform_config)
+        for io_port, io_config in io_configs.items():
             if isinstance(io_config, dict):
                 if self._io_config_matches_criteria(io_config, criteria):
                     return True
@@ -956,15 +1044,20 @@ class DeviceSpecRegistry:
     ) -> bool:
         """检查设备是否符合条件"""
         if not criteria:
-            return True
+            return self._is_strict_gen2_spec(device_type, spec)
+
+        if not self._is_strict_gen2_spec(device_type, spec):
+            return False
+
+        platforms = spec.get("platforms", {})
 
         # 如果指定了平台，检查设备是否有该平台
         if "platform" in criteria:
             target_platform = criteria["platform"]
-            if target_platform not in spec:
+            if target_platform not in platforms:
                 return False
 
-            platform_config = spec[target_platform]
+            platform_config = platforms[target_platform]
             if not isinstance(platform_config, dict):
                 return False
 
@@ -972,9 +1065,9 @@ class DeviceSpecRegistry:
             platform_criteria = {k: v for k, v in criteria.items() if k != "platform"}
             return self._platform_matches_criteria(platform_config, platform_criteria)
         else:
-            # 在所有平台中查找符合条件的
-            for platform_key, platform_config in spec.items():
-                if platform_key != "name" and isinstance(platform_config, dict):
+            # 在所有Gen2平台中查找符合条件的
+            for platform_key, platform_config in platforms.items():
+                if isinstance(platform_config, dict):
                     if self._platform_matches_criteria(platform_config, criteria):
                         return True
             return False
@@ -985,7 +1078,8 @@ class DeviceSpecRegistry:
         """提取平台能力列表"""
         capabilities = set()
 
-        for io_port, io_config in platform_config.items():
+        io_configs = platform_config.get("io_configs", platform_config)
+        for io_port, io_config in io_configs.items():
             if isinstance(io_config, dict):
                 # 数据类型能力
                 if "data_type" in io_config:
@@ -1166,20 +1260,20 @@ class ScatteredMappingProxy:
             return default
 
 
-# 创建代理实例（向后兼容）
+# 创建分散映射代理实例
 scattered_mappings = ScatteredMappingProxy()
 
 
-# 兼容性别名 - 向后兼容device_specs.py中的常量访问
+# 常量代理 - 支持 device_specs.py 中集中声明的映射访问
 # 这些将自动代理到DeviceSpecRegistry中的数据
 DEVICE_SPECS_DATA = get_device_spec_registry()  # 替换原有的别名
 
 
-# Phase 1.2: 向后兼容常量 - 通过代理提供直接访问
-# 这些将让现有代码无需修改，同时使用新的统一存储
+# Phase 1.2: 常量代理 - 通过代理提供直接访问
+# 这些名称直接映射到统一存储中的显式配置。
 def __getattr__(name: str) -> Any:
     """
-    模块级别的动态属性访问，实现向后兼容
+    模块级别的动态属性访问，代理显式映射常量
 
     支持的访问模式：
     - from device_spec_registry import NON_POSITIONAL_COVER_CONFIG

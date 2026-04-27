@@ -107,33 +107,41 @@ def mock_config_data_fixture():
 def mock_light_devices_only():
     """
     创建仅包含灯光设备的模拟数据列表。
-    使用create_devices_by_category来测试分类功能。
+    使用create_gen2_devices来测试分类功能。
     """
-    from .utils.typed_factories import create_devices_by_category
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_devices_by_category(
+    devices = create_gen2_devices(
         [
-            "dimmer_light",
-            "brightness_light",
-            "rgb_light",
-            "rgbw_light",
-            "spot_light",
-            "quantum_light",
-            "outdoor_light",
+            "SL_LI_WW",
+            "SL_LI_WW",
+            "SL_CT_RGBW",
+            "SL_SC_RGB",
+            "SL_SPOT_RGB",
+            "MSL_IRCTL",
+            "OD_WE_QUAN",
+            "SL_LI_GD1",
+            "SL_LI_UG1",
+            "SL_LI_RGBW",
         ]
     )
+    # Keep current Gen2 devtypes/IO shapes while preserving stable fixture names
+    # used by the light focused tests.
+    devices[0]["name"] = "White Light Bulb"
+    devices[1]["name"] = "Smart Bulb Cool Warm"
+    return devices
 
 
 @pytest.fixture
 def mock_sensor_devices_only():
     """
     创建仅包含数值传感器设备的模拟数据列表。
-    使用create_devices_by_category来测试传感器分类功能。
+    使用create_gen2_devices来测试传感器分类功能。
     """
-    from .utils.typed_factories import create_devices_by_category
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_devices_by_category(
-        ["environment_sensor", "gas_sensor", "specialized_sensor"]
+    return create_gen2_devices(
+        ["SL_SC_THL", "SL_SC_THL", "SL_SC_THL"]
     )
 
 
@@ -141,47 +149,54 @@ def mock_sensor_devices_only():
 def mock_binary_sensor_devices_only():
     """
     创建仅包含二元传感器设备的模拟数据列表。
-    使用create_devices_by_category来专门测试binary_sensor平台功能。
+    使用create_gen2_devices来专门测试binary_sensor平台功能。
     """
-    from .utils.typed_factories import create_devices_by_category
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_devices_by_category(["binary_sensor"])
+    return create_gen2_devices(["SL_SC_G"])
 
 
 @pytest.fixture
 def mock_climate_devices_only():
     """
     创建仅包含气候控制设备的模拟数据列表。
-    使用create_devices_by_category来优化气候平台测试的数据加载。
+    使用create_gen2_devices来优化气候平台测试的数据加载。
     """
-    from .utils.typed_factories import create_devices_by_category
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_devices_by_category(["climate"])
+    return create_gen2_devices(["SL_NATURE", "SL_CP_DN", "SL_CP_AIR"])
 
 
 @pytest.fixture
 def mock_switch_devices_only():
     """
     创建仅包含开关设备的模拟数据列表。
-    使用create_devices_by_category来优化开关平台测试的数据加载。
+    使用create_gen2_devices来优化开关平台测试的数据加载。
     包含传统开关、高级开关和插座设备（插座在switch平台中）。
     """
-    from .utils.typed_factories import create_devices_by_category
+    from .utils.typed_factories import create_gen2_devices, create_nature_switch_panel
 
-    return create_devices_by_category(
-        ["traditional_switch", "advanced_switch", "smart_plug", "power_meter_plug"]
-    )
+    return create_gen2_devices(
+        [
+            "SL_SW_IF3",
+            "SL_SW_IF3",
+            "SL_OL",
+            "SL_OE_3C",
+            "SL_P",
+            "SL_P_SW",
+        ]
+    ) + [create_nature_switch_panel()]
 
 
 @pytest.fixture
 def mock_cover_devices_only():
     """
     创建仅包含窗帘/遮盖设备的模拟数据列表。
-    使用create_devices_by_category来优化窗帘平台测试的数据加载。
+    使用create_gen2_devices来优化窗帘平台测试的数据加载。
     """
-    from .utils.typed_factories import create_devices_by_category
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_devices_by_category(["cover"])
+    return create_gen2_devices(["SL_DOOYA"])
 
 
 @pytest.fixture(autouse=True)
@@ -311,9 +326,7 @@ def mock_hub_class():
     这允许我们验证其方法（如 `async_setup`, `async_unload`）是否在集成的生命周期中
     （设置、卸载、重载）被正确调用。
     """
-    with patch(
-        "custom_components.lifesmart.core.hub.LifeSmartHub", autospec=True
-    ) as mock_class:
+    with patch("custom_components.lifesmart.LifeSmartHub", autospec=True) as mock_class:
         # 获取实例的 mock，以便我们可以配置和断言它的方法
         instance = mock_class.return_value
         instance.async_setup = AsyncMock(return_value=True)
@@ -415,7 +428,7 @@ def mock_hub_for_testing():
 # 平台级别的测试。通过只加载特定平台需要的设备类型，减少了测试的
 # 加载开销，提高了测试执行效率。
 #
-# 每个 fixture 使用 `create_devices_by_category` 函数来精确控制
+# 每个 fixture 使用 `create_gen2_devices` 函数来精确控制
 # 加载的设备类型，从而实现精细化的测试数据管理。
 #
 # 重构说明 (Phase 1):
@@ -499,6 +512,12 @@ async def setup_integration_light_only(
 
 
 @pytest.fixture
+async def setup_integration(setup_integration_light_only):
+    """Backward-compatible light platform setup fixture alias."""
+    yield setup_integration_light_only
+
+
+@pytest.fixture
 async def setup_integration_climate_only(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
@@ -518,7 +537,7 @@ async def setup_integration_climate_only(
         mock_client,
         mock_hub_class,
         mock_climate_devices_only,
-        "climate",
+        "SL_NATURE",
     ):
         yield result
 
@@ -568,7 +587,7 @@ async def setup_integration_binary_sensor_only(
         mock_client,
         mock_hub_class,
         mock_binary_sensor_devices_only,
-        "binary_sensor",
+        "SL_SC_G",
     ):
         yield result
 
@@ -618,7 +637,7 @@ async def setup_integration_cover_only(
         mock_client,
         mock_hub_class,
         mock_cover_devices_only,
-        "cover",
+        "SL_DOOYA",
     ):
         yield result
 
@@ -751,7 +770,7 @@ def mock_device_dual_io_rgbw_light():
 
 
 # ============================================================================
-# === Phase 1: 强类型设备测试基础设施 Fixtures ===
+# === Gen2 device dictionary test fixtures ===
 # ============================================================================
 
 
@@ -769,141 +788,141 @@ def typed_core_devices():
 
 @pytest.fixture
 def typed_smart_plug():
-    """提供强类型智慧插座设备实例 (SL_OL)"""
-    from .utils.typed_factories import create_typed_smart_plug
+    """提供 Gen2 智慧插座设备字典 (SL_OL)。"""
+    from .utils.typed_factories import create_smart_plug
 
-    return create_typed_smart_plug()
+    return create_smart_plug()
 
 
 @pytest.fixture
 def typed_power_meter_plug():
-    """提供强类型计量插座设备实例 (SL_OE_3C)"""
-    from .utils.typed_factories import create_typed_power_meter_plug
+    """提供 Gen2 计量插座设备字典 (SL_OE_3C)。"""
+    from .utils.typed_factories import create_power_meter_plug
 
-    return create_typed_power_meter_plug()
+    return create_power_meter_plug()
 
 
 @pytest.fixture
 def typed_switch_if3():
-    """提供强类型三联开关设备实例 (SL_SW_IF3)"""
-    from .utils.typed_factories import create_typed_switch_if3
+    """提供 Gen2 三联开关设备字典 (SL_SW_IF3)。"""
+    from .utils.typed_factories import create_switch_if3
 
-    return create_typed_switch_if3()
+    return create_switch_if3()
 
 
 @pytest.fixture
 def typed_dimmer_light():
-    """提供强类型调光灯泡设备实例 (SL_LI_WW)"""
-    from .utils.typed_factories import create_typed_dimmer_light
+    """提供 Gen2 调光灯泡设备字典 (SL_LI_WW)。"""
+    from .utils.typed_factories import create_dimmer_light
 
-    return create_typed_dimmer_light()
+    return create_dimmer_light()
 
 
 @pytest.fixture
 def typed_rgbw_light():
-    """提供强类型RGBW灯带设备实例 (SL_CT_RGBW)"""
-    from .utils.typed_factories import create_typed_rgbw_light
+    """提供 Gen2 RGBW灯带设备字典 (SL_CT_RGBW)。"""
+    from .utils.typed_factories import create_rgbw_light
 
-    return create_typed_rgbw_light()
+    return create_rgbw_light()
 
 
 @pytest.fixture
 def typed_environment_sensor():
-    """提供强类型环境传感器设备实例 (SL_SC_THL)"""
-    from .utils.typed_factories import create_typed_environment_sensor
+    """提供 Gen2 环境传感器设备字典 (SL_SC_THL)。"""
+    from .utils.typed_factories import create_environment_sensor
 
-    return create_typed_environment_sensor()
+    return create_environment_sensor()
 
 
 @pytest.fixture
 def typed_door_sensor():
-    """提供强类型门窗传感器设备实例 (SL_SC_G)"""
-    from .utils.typed_factories import create_typed_door_sensor
+    """提供 Gen2 门窗传感器设备字典 (SL_SC_G)。"""
+    from .utils.typed_factories import create_door_sensor
 
-    return create_typed_door_sensor()
+    return create_door_sensor()
 
 
 @pytest.fixture
 def typed_curtain_motor():
-    """提供强类型窗帘电机设备实例 (SL_DOOYA)"""
-    from .utils.typed_factories import create_typed_curtain_motor
+    """提供 Gen2 窗帘电机设备字典 (SL_DOOYA)。"""
+    from .utils.typed_factories import create_curtain_motor
 
-    return create_typed_curtain_motor()
+    return create_curtain_motor()
 
 
 @pytest.fixture
 def typed_thermostat_panel():
-    """提供强类型温控面板设备实例 (SL_NATURE)"""
-    from .utils.typed_factories import create_typed_thermostat_panel
+    """提供 Gen2 温控面板设备字典 (SL_NATURE)。"""
+    from .utils.typed_factories import create_thermostat_panel
 
-    return create_typed_thermostat_panel()
+    return create_thermostat_panel()
 
 
 @pytest.fixture
 def typed_smart_lock():
-    """提供强类型智能门锁设备实例 (SL_LK_LS)"""
-    from .utils.typed_factories import create_typed_smart_lock
+    """提供 Gen2 智能门锁设备字典 (SL_LK_LS)。"""
+    from .utils.typed_factories import create_smart_lock
 
-    return create_typed_smart_lock()
+    return create_smart_lock()
 
 
 @pytest.fixture
 def typed_switch_devices():
-    """提供所有强类型开关设备实例列表"""
-    from .utils.typed_factories import create_typed_devices_by_platform
+    """提供所有 Gen2 开关设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_typed_devices_by_platform("switch")
+    return create_gen2_devices(["SL_OL", "SL_SW_IF3"])
 
 
 @pytest.fixture
 def typed_sensor_devices():
-    """提供所有强类型传感器设备实例列表"""
-    from .utils.typed_factories import create_typed_devices_by_platform
+    """提供所有 Gen2 传感器设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_typed_devices_by_platform("sensor")
+    return create_gen2_devices(["SL_OE_3C", "SL_SC_THL"])
 
 
 @pytest.fixture
 def typed_light_devices():
-    """提供所有强类型灯光设备实例列表"""
-    from .utils.typed_factories import create_typed_devices_by_platform
+    """提供所有 Gen2 灯光设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_typed_devices_by_platform("light")
+    return create_gen2_devices(["SL_LI_WW", "SL_CT_RGBW"])
 
 
 @pytest.fixture
 def typed_binary_sensor_devices():
-    """提供所有强类型二进制传感器设备实例列表"""
-    from .utils.typed_factories import create_typed_devices_by_platform
+    """提供所有 Gen2 二进制传感器设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_typed_devices_by_platform("binary_sensor")
+    return create_gen2_devices(["SL_SC_G"])
 
 
 @pytest.fixture
 def typed_cover_devices():
-    """提供所有强类型窗帘设备实例列表"""
-    from .utils.typed_factories import create_typed_devices_by_platform
+    """提供所有 Gen2 窗帘设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_typed_devices_by_platform("cover")
+    return create_gen2_devices(["SL_DOOYA"])
 
 
 @pytest.fixture
 def typed_climate_devices():
-    """提供所有强类型气候控制设备实例列表"""
-    from .utils.typed_factories import create_typed_devices_by_platform
+    """提供所有 Gen2 气候控制设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_typed_devices_by_platform("climate")
+    return create_gen2_devices(["SL_NATURE", "SL_CP_DN", "SL_CP_AIR"])
 
 
 @pytest.fixture
 def typed_lock_devices():
-    """提供所有强类型门锁设备实例列表"""
-    from .utils.typed_factories import create_typed_devices_by_platform
+    """提供所有 Gen2 门锁设备字典列表。"""
+    from .utils.typed_factories import create_gen2_devices
 
-    return create_typed_devices_by_platform("lock")
+    return create_gen2_devices(["SL_LK_LS"])
 
 
-# === 保留的基础验证器 (无需强类型依赖) ===
+# === Gen2 dictionary validation fixtures ===
 
 
 @pytest.fixture
@@ -927,13 +946,11 @@ async def setup_integration_typed_devices_only(
     typed_devices_as_dicts: list,
 ):
     """
-    专用的setup fixture，使用强类型设备转换的字典数据。
-
-    这个fixture展示了强类型设备如何与现有测试基础设施无缝集成。
+    专用的setup fixture，使用 Gen2 设备字典数据。
     """
     mock_config_entry.add_to_hass(hass)
 
-    # 使用强类型设备转换的字典数据
+    # 使用 Gen2 设备字典数据
     hub_instance = create_mock_hub(typed_devices_as_dicts, mock_client)
     hub_instance.get_exclude_config.return_value = (set(), set())
 

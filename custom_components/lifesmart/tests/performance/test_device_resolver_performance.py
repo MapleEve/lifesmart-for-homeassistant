@@ -30,13 +30,13 @@ from custom_components.lifesmart.core.config.device_spec_registry import (
 )
 
 # 从强类型工厂导入测试数据
-from ...utils.typed_factories import (
-    create_typed_core_devices,
-    create_typed_smart_plug,
-    create_typed_thermostat_panel,
-    create_typed_power_meter_plug,
-    create_typed_rgbw_light,
-    create_typed_environment_sensor,
+from custom_components.lifesmart.tests.utils.typed_factories import (
+    create_core_devices,
+    create_smart_plug,
+    create_thermostat_panel,
+    create_power_meter_plug,
+    create_rgbw_light,
+    create_environment_sensor,
 )
 
 
@@ -63,7 +63,7 @@ def performance_resolver():
 @pytest.fixture
 def test_devices_batch():
     """提供一批用于性能测试的设备。"""
-    return create_typed_core_devices()
+    return create_core_devices()
 
 
 class TestDeviceResolverCachePerformance:
@@ -75,7 +75,7 @@ class TestDeviceResolverCachePerformance:
         Hypothesis: 缓存命中应该显著快于首次解析。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         # Act - 首次解析(缓存未命中)
         with patch("time.time", side_effect=[1000.0, 1000.02]):  # 20ms
@@ -89,8 +89,8 @@ class TestDeviceResolverCachePerformance:
         assert result1.success and result2.success
         assert result1.cache_hit is False
         assert result2.cache_hit is True
-        assert result1.resolution_time_ms == 20.0
-        assert result2.resolution_time_ms == 1.0
+        assert result1.resolution_time_ms == pytest.approx(20.0)
+        assert result2.resolution_time_ms == pytest.approx(1.0)
 
         # 验证缓存命中比未命中快
         assert result2.resolution_time_ms < result1.resolution_time_ms
@@ -102,11 +102,11 @@ class TestDeviceResolverCachePerformance:
         """
         # Arrange
         devices = [
-            create_typed_smart_plug().to_dict(),
-            create_typed_thermostat_panel().to_dict(),
-            create_typed_power_meter_plug().to_dict(),
-            create_typed_rgbw_light().to_dict(),
-            create_typed_environment_sensor().to_dict(),
+            create_smart_plug(),
+            create_thermostat_panel(),
+            create_power_meter_plug(),
+            create_rgbw_light(),
+            create_environment_sensor(),
         ]
 
         # 修改设备ID确保它们不同
@@ -139,8 +139,8 @@ class TestDeviceResolverCachePerformance:
         """
         # Arrange
         devices = [
-            create_typed_smart_plug().to_dict(),
-            create_typed_thermostat_panel().to_dict(),
+            create_smart_plug(),
+            create_thermostat_panel(),
         ]
 
         # 修改设备ID确保它们不同
@@ -170,7 +170,7 @@ class TestDeviceResolverCachePerformance:
         Hypothesis: 缓存应该能处理大量设备而不出现内存问题。
         """
         # Arrange - 创建大量不同的设备
-        base_device = create_typed_smart_plug().to_dict()
+        base_device = create_smart_plug()
         device_count = 100
 
         # Act
@@ -194,7 +194,7 @@ class TestDeviceResolverCachePerformance:
         Hypothesis: 缓存清理应该是快速和彻底的。
         """
         # Arrange - 填充缓存
-        devices = [create_typed_smart_plug().to_dict() for i in range(10)]
+        devices = [create_smart_plug() for i in range(10)]
         for i, device in enumerate(devices):
             device["me"] = f"clear_device_{i}"
             performance_resolver.resolve_device_config(device)
@@ -228,7 +228,7 @@ class TestDeviceResolverBatchPerformance:
         Hypothesis: 批量解析应该在合理时间内完成。
         """
         # Arrange
-        devices_dict = [device.to_dict() for device in test_devices_batch]
+        devices_dict = [device for device in test_devices_batch]
 
         # Act
         start_time = time.time()
@@ -255,7 +255,7 @@ class TestDeviceResolverBatchPerformance:
         Hypothesis: 重复批量解析应该因缓存而显著加速。
         """
         # Arrange
-        devices_dict = [device.to_dict() for device in test_devices_batch]
+        devices_dict = [device for device in test_devices_batch]
 
         # Act - 首次批量解析
         start_time1 = time.time()
@@ -297,13 +297,13 @@ class TestDeviceResolverBatchPerformance:
 
         # 50%新设备
         for i in range(5):
-            device = create_typed_smart_plug().to_dict()
+            device = create_smart_plug()
             device["me"] = f"concurrent_new_{i}"
             devices.append(device)
 
         # 50%重复设备
         for i in range(5):
-            device = create_typed_smart_plug().to_dict()
+            device = create_smart_plug()
             device["me"] = f"concurrent_repeat_{i % 2}"  # 只有2个不同的设备
             devices.append(device)
 
@@ -358,7 +358,7 @@ class TestDeviceResolverStrategyPerformance:
             enable_cache=True,
         )
 
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         # Act - 测量包含策略选择的总时间
         start_time = time.time()
@@ -380,7 +380,7 @@ class TestDeviceResolverStrategyPerformance:
         Hypothesis: 缓存命中应该比策略执行显著更快。
         """
         # Arrange
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
 
         # Act - 首次解析(策略执行)
         result1 = performance_resolver.resolve_device_config(device_data)
@@ -467,7 +467,7 @@ class TestDeviceResolverMemoryManagement:
 
         # 填充缓存
         for i in range(10):
-            device = create_typed_smart_plug().to_dict()
+            device = create_smart_plug()
             device["me"] = f"cleanup_test_{i}"
             resolver.resolve_device_config(device)
 

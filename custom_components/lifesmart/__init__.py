@@ -50,12 +50,26 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .core import compatibility  # 导出版本差异处理功能
 from .core.const import DOMAIN, SUPPORTED_PLATFORMS, UPDATE_LISTENER
+from .core.helpers import get_supported_platforms
 from .core.hub import LifeSmartHub
 from .services import LifeSmartServiceManager
 
 # 日志记录器 - 使用模块名作为日志标识符，便于调试和监控
 # 日志级别遵循Home Assistant标准：DEBUG < INFO < WARNING < ERROR
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_active_platforms(devices: list[dict]) -> list:
+    """Return HA platforms required by the current Gen2 device set."""
+    active_platforms = set()
+
+    for device in devices:
+        active_platforms.update(get_supported_platforms(device))
+
+    return sorted(
+        active_platforms & SUPPORTED_PLATFORMS,
+        key=lambda platform: platform.value,
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -143,9 +157,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
         # 2. 构建集成数据结构并存储到Home Assistant数据存储
         # 使用config_entry.entry_id作为key，支持同一用户的多个LifeSmart账户
+        devices = hub.get_devices()
+        active_platforms = _get_active_platforms(devices)
+
         hass.data[DOMAIN][config_entry.entry_id] = {
             "hub": hub,  # 中央协调器实例，提供设备管理和数据访问接口
-            "devices": hub.get_devices(),  # 设备字典缓存，格式：{device_id: device_info}
+            "devices": devices,  # 设备字典缓存，格式：{device_id: device_info}
             "client": hub.get_client(),  # 活跃客户端实例（TCP/OpenAPI）
             # 配置更新监听器：当用户修改集成选项时自动重新加载
             UPDATE_LISTENER: config_entry.add_update_listener(_async_update_listener),
@@ -158,9 +175,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         # - 创建对应的Home Assistant实体
         # - 注册到实体注册表
         # - 开始状态同步
-        await hass.config_entries.async_forward_entry_setups(
-            config_entry, SUPPORTED_PLATFORMS
-        )
+        if active_platforms:
+            await hass.config_entries.async_forward_entry_setups(
+                config_entry, active_platforms
+            )
 
         # 4. 注册LifeSmart专用服务
         # 服务包括：
@@ -175,7 +193,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.info(
             "LifeSmart integration setup completed for entry %s with %d devices",
             config_entry.entry_id,
-            len(hub.get_devices()),
+            len(devices),
         )
 
         return True

@@ -24,14 +24,39 @@ from homeassistant.components.climate.const import (
     FAN_MEDIUM,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+try:
+    from homeassistant.const import (
+        UnitOfTemperature,
+        UnitOfEnergy,
+        UnitOfPower,
+        UnitOfElectricCurrent,
+        UnitOfElectricPotential,
+        UnitOfSoundPressure,
+        UnitOfTime,
+    )
+except ImportError:
+    class UnitOfTemperature:
+        CELSIUS = "°C"
+
+    class UnitOfEnergy:
+        KILO_WATT_HOUR = "kWh"
+
+    class UnitOfPower:
+        WATT = "W"
+
+    class UnitOfElectricCurrent:
+        AMPERE = "A"
+
+    class UnitOfElectricPotential:
+        VOLT = "V"
+
+    class UnitOfSoundPressure:
+        DECIBEL = "dB"
+
+    class UnitOfTime:
+        HOURS = "h"
+
 from homeassistant.const import (
-    UnitOfTemperature,
-    UnitOfEnergy,
-    UnitOfPower,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
-    UnitOfSoundPressure,
-    UnitOfTime,
     PERCENTAGE,
     CONCENTRATION_PARTS_PER_MILLION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -90,7 +115,9 @@ class HAConstantStrategy(BaseDeviceStrategy):
                 "opening": BinarySensorDeviceClass.OPENING,
                 "problem": BinarySensorDeviceClass.PROBLEM,
                 "moving": BinarySensorDeviceClass.MOVING,
-                "volatile_organic_compounds": SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+                "volatile_organic_compounds": (
+                    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+                ),
                 "sound_pressure": SensorDeviceClass.SOUND_PRESSURE,
                 "power_factor": SensorDeviceClass.POWER_FACTOR,
                 "frequency": SensorDeviceClass.FREQUENCY,

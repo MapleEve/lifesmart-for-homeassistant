@@ -38,12 +38,13 @@ from custom_components.lifesmart.core.resolver.types import DeviceData
 from ..utils.constants import (
     FRIENDLY_DEVICE_NAMES,
 )
-from ..utils.typed_factories import create_devices_by_category
+from ..utils.typed_factories import create_gen2_devices
 from ..utils.typed_factories import (
     create_traditional_switch_devices,
     create_advanced_switch_devices,
     create_smart_plug_devices,
     create_power_meter_plug_devices,
+    create_nature_switch_panel,
 )
 from ..utils.helpers import (
     get_entity_unique_id,
@@ -63,7 +64,10 @@ class TestSwitchSetup:
 
     @pytest.mark.asyncio
     async def test_setup_all_switches(
-        self, hass: HomeAssistant, setup_integration_switch_only: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        setup_integration_switch_only: ConfigEntry,
+        mock_switch_devices_only: list,
     ):
         """测试从conftest中成功设置所有开关实体。
 
@@ -78,16 +82,8 @@ class TestSwitchSetup:
         # Phase 3: 使用DeviceResolver现代化API验证设备支持
         resolver = get_device_resolver()
 
-        # 使用专用开关工厂函数创建设备
-        traditional_switches = create_traditional_switch_devices()
-        advanced_switches = create_advanced_switch_devices()
-        smart_plugs = create_smart_plug_devices()
-        power_meter_plugs = create_power_meter_plug_devices()
-
-        # 合并所有开关设备
-        devices_list = (
-            traditional_switches + advanced_switches + smart_plugs + power_meter_plugs
-        )
+        # 使用与switch-only集成fixture相同的当前Gen2设备覆盖集合。
+        devices_list = mock_switch_devices_only
 
         # 验证设备数据完整性
         for device in devices_list:
@@ -123,7 +119,7 @@ class TestSwitchSetup:
             hass, SWITCH_DOMAIN, switch_supported_devices
         )
 
-        assert hass.states.get("switch.9_way_controller_p4") is not None
+        assert hass.states.get("switch.nine_switch_p4") is not None
 
     @pytest.mark.asyncio
     async def test_setup_with_exclusions(
@@ -155,20 +151,17 @@ class TestSwitchSetup:
         # Phase 3: 使用DeviceResolver现代化API创建和验证设备
         resolver = get_device_resolver()
 
-        # 创建所有类型的开关设备进行测试
-        traditional_switches = create_traditional_switch_devices()
-        advanced_switches = create_advanced_switch_devices()
-        smart_plugs = create_smart_plug_devices()
-
-        # 合并设备并使用DeviceResolver验证支持
-        all_devices = traditional_switches + advanced_switches + smart_plugs
+        # 使用当前Gen2 switch覆盖集合，并验证排除逻辑。
+        all_devices = create_gen2_devices(
+            ["SL_SW_IF3", "SL_SW_IF3", "SL_OL", "SL_P", "SL_P_SW"]
+        ) + [create_nature_switch_panel()]
         mock_lifesmart_devices = []
         for device in all_devices:
             if validate_device_support(device, "switch"):
                 mock_lifesmart_devices.append(device)
         mock_hub = create_mock_hub(mock_lifesmart_devices, mock_client)
         mock_hub.get_exclude_config.return_value = (
-            {"sw_ol", "sw_p9"},  # exclude_devices
+            {"sw_ol", "SL_P_SW"},  # exclude_devices
             {"excluded_hub"},  # exclude_hubs
         )
 
@@ -185,13 +178,13 @@ class TestSwitchSetup:
         await async_setup_entry(hass, entry_with_exclusions, async_add_entities)
 
         # 4. 断言
-        # 预期: 3 (sw_if3) + 3 (sw_nature) + 3 (generic_p_switch_mode) = 9
+        # 预期: 6 (two SL_SW_IF3) + 3 (SL_P switch mode) + 3 (SL_NATURE switch mode)
         created_entities = async_add_entities.call_args[0][0]
-        assert len(created_entities) == 9
+        assert len(created_entities) == 12
 
         entity_ids = {entity.unique_id for entity in created_entities}
         assert not any("sw_ol" in eid for eid in entity_ids)
-        assert not any("sw_p9" in eid for eid in entity_ids)
+        assert not any("SL_P_SW" in eid for eid in entity_ids)
         assert not any("excluded_hub" in eid for eid in entity_ids)
 
 
@@ -233,7 +226,11 @@ class TestStandardSwitch:
         assert platform_config is not None, "DeviceResolver应该能解析switch平台配置"
 
         # 构建实体ID（基于设备实际数据）
-        entity_id = f"switch.{switch_device['name'].lower().replace(' ', '_')}_l1"
+        sub_name = switch_device["data"]["L1"].get("name", "L1")
+        entity_id = (
+            f"switch.{switch_device['name'].lower().replace(' ', '_')}_"
+            f"{sub_name.lower().replace(' ', '_')}"
+        )
 
         # 测试初始属性
         state = hass.states.get(entity_id)
@@ -369,7 +366,7 @@ class TestGenericControllerAsSwitch:
         """
         # Phase 3: 使用DeviceResolver现代化API查找和验证通用控制器设备
         resolver = get_device_resolver()
-        devices = create_devices_by_category(["generic_p_switch_mode"])
+        devices = create_gen2_devices(["SL_P"])
 
         # 使用DeviceResolver查找支持switch平台的SL_P设备
         controller_device = None
@@ -442,7 +439,7 @@ class TestNineWayController:
         """
         # Phase 3: 使用DeviceResolver现代化API查找和验证九路控制器设备
         resolver = get_device_resolver()
-        devices = create_devices_by_category(["sw_p9"])
+        devices = create_gen2_devices(["SL_P_SW"])
 
         # 使用DeviceResolver查找支持switch平台的SL_P_SW设备
         controller_device = None

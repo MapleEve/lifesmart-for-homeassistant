@@ -287,17 +287,18 @@ async def async_setup_entry(
                             )
                         )
             else:
-                # 非通配符模式，正常处理
+                # 非通配符模式，只有存在实际数据时才创建实体
                 sub_device_data = safe_get(device, DEVICE_DATA_KEY, sub_key, default={})
-                sensors.append(
-                    LifeSmartSensor(
-                        raw_device=device,
-                        client=hub.get_client(),
-                        entry_id=config_entry.entry_id,
-                        sub_device_key=sub_key,
-                        sub_device_data=sub_device_data,
+                if sub_device_data:
+                    sensors.append(
+                        LifeSmartSensor(
+                            raw_device=device,
+                            client=hub.get_client(),
+                            entry_id=config_entry.entry_id,
+                            sub_device_key=sub_key,
+                            sub_device_data=sub_device_data,
+                        )
                     )
-                )
 
     async_add_entities(sensors)
 
@@ -805,7 +806,8 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
         # 严格遵循三层架构：没有映射配置时抛出明确错误
         raise HomeAssistantError(
-            f"No sensor configuration found for device {self._raw_device.get('me', 'unknown')} "
+            "No sensor configuration found for device "
+            f"{self._raw_device.get('me', 'unknown')} "
             f"IO port {self._sub_key}. All sensor entities must be properly configured "
             f"in the mapping engine to ensure architectural consistency."
         )
@@ -1109,23 +1111,21 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             (
                 d
                 for d in devices
-                if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
+                if d.get(HUB_ID_KEY) == self.agt and d.get(DEVICE_ID_KEY) == self.me
             ),
             None,
         )
         if current_device is None:
-            if self.available:
-                log_device_unavailable(self.unique_id, "global refresh")
-                self._attr_available = False
-                self.async_write_ha_state()
+            log_device_unavailable(self.unique_id, "global refresh")
+            self._attr_available = False
+            self.async_write_ha_state()
             return
 
         new_sub_data = safe_get(current_device, DEVICE_DATA_KEY, self._sub_key)
         if new_sub_data is None:
-            if self.available:
-                log_subdevice_unavailable(self.unique_id, self._sub_key)
-                self._attr_available = False
-                self.async_write_ha_state()
+            log_subdevice_unavailable(self.unique_id, self._sub_key)
+            self._attr_available = False
+            self.async_write_ha_state()
             return
 
         if not self.available:

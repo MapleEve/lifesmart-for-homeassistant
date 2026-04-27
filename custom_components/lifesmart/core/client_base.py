@@ -144,7 +144,9 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.exceptions import HomeAssistantError
 
+from . import const as lifesmart_const
 from .const import (
     # --- 命令类型常量 ---
     CMD_TYPE_ON,
@@ -154,6 +156,11 @@ from .const import (
     CMD_TYPE_SET_CONFIG,
 )
 from .const import HTTP_TIMEOUT
+from .config.device_specs import (
+    REVERSE_F_HVAC_MODE_MAP,
+    REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
+    REVERSE_LIFESMART_HVAC_MODE_MAP,
+)
 from .platform.platform_detection import (
     safe_get,
     is_cover,
@@ -165,6 +172,29 @@ _LOGGER = logging.getLogger(__name__)
 
 # 常量定义
 COVER_PLATFORM_NOT_SUPPORTED = "设备不支持cover平台操作"
+
+
+def _iter_typed_platform_ios(platform_config: Any):
+    """Iterate Gen2 typed PlatformConfig IO entries; no legacy dict fallback."""
+    if platform_config is None:
+        return iter(())
+    return platform_config.ios.items()
+
+
+def _typed_io_commands(io_config: Any) -> dict[str, Any]:
+    """Return commands from a Gen2 typed IOConfig; no legacy dict fallback."""
+    return io_config.commands
+
+
+def _resolve_command_type(command_type: Any) -> int:
+    """Resolve Gen2 command type constants from strict typed configs."""
+    if isinstance(command_type, int):
+        return command_type
+    if isinstance(command_type, str) and command_type.startswith("CMD_TYPE_"):
+        resolved = getattr(lifesmart_const, command_type, None)
+        if isinstance(resolved, int):
+            return resolved
+    raise ValueError(f"Invalid Gen2 command type: {command_type!r}")
 
 
 class LifeSmartClientBase(ABC):
@@ -1219,21 +1249,16 @@ class LifeSmartClientBase(ABC):
 
         🔧 智能映射机制 (Intelligent Mapping Mechanism)
         -------------------------------------------------------------------
-        该方法采用三层映射策略来适配不同的设备：
+        该方法使用解析器返回的显式 Generation 2 cover 命令配置：
 
-        **1. 新版映射系统 (映射引擎)**:
+        **1. 映射系统 (映射引擎)**:
         - 从 mapping_engine 获取设备特定的配置
         - 支持复杂的命令配置和参数映射
         - 优先使用 commands.open 配置
 
-        **2. 传统描述判断**:
-        - 基于 IO 口描述字符串的模糊匹配
-        - 支持 "position" 和 "open" 关键词识别
-        - 向后兼容老版本的设备配置
-
-        **3. 设备类型回退**:
-        - 使用 NON_POSITIONAL_COVER_CONFIG 静态配置
-        - 为不支持位置控制的设备提供基础开关控制
+        **2. 非定位窗帘配置**:
+        - 非定位窗帘必须在 Gen2 设备规格中声明 commands.open/close/stop
+        - 缺少明确命令配置时操作返回不支持，不再按设备类型推断
 
         🎛️ 操作模式详解 (Operation Modes)
         -------------------------------------------------------------------
@@ -1302,9 +1327,9 @@ class LifeSmartClientBase(ABC):
             - 某些设备支持防夹保护，遇阻时会自动停止
             - 可以随时发送停止命令中断开启过程
 
-        Compatibility Notes:
-            该方法向后兼容旧版本的设备配置，但新设备建议使用
-            映射引擎的 commands 配置以获得更好的控制精度。
+        Gen2 Notes:
+            该方法仅执行解析器提供的明确 commands 配置，不从旧格式或设备类型
+            生成隐式控制命令。
         """
         if not is_cover(device):
             device_type = get_device_effective_type(device)
@@ -1327,29 +1352,16 @@ class LifeSmartClientBase(ABC):
 
         # 查找合适的IO口进行操作
         for io_port, io_config in cover_config.items():
-            if isinstance(io_config, dict):
-                # 检查是否有commands配置
-                commands = io_config.get("commands", {})
-                if "open" in commands:
-                    open_cmd = commands["open"]
-                    return await self._async_send_single_command(
-                        agt,
-                        me,
-                        io_port,
-                        open_cmd.get("type", CMD_TYPE_SET_VAL),
-                        open_cmd.get("val", 100),
-                    )
-
-                # 旧的逻辑:通过描述判断
-                description = io_config.get("description", "").lower()
-                if "position" in description:
-                    return await self._async_send_single_command(
-                        agt, me, io_port, CMD_TYPE_SET_VAL, 100
-                    )
-                elif "open" in description:
-                    return await self._async_send_single_command(
-                        agt, me, io_port, CMD_TYPE_ON, 1
-                    )
+            commands = _typed_io_commands(io_config)
+            if "open" in commands:
+                open_cmd = commands["open"]
+                return await self._async_send_single_command(
+                    agt,
+                    me,
+                    io_port,
+                    _resolve_command_type(open_cmd.get("type", CMD_TYPE_SET_VAL)),
+                    open_cmd.get("val", 100),
+                )
 
         _LOGGER.warning("设备类型 %s 的 'open_cover' 操作未被支持。", device_type)
         return -1
@@ -1365,42 +1377,22 @@ class LifeSmartClientBase(ABC):
         # 获取设备映射配置
         resolver = get_device_resolver()
         cover_config = resolver.get_platform_config(device, "cover")
+        if not cover_config:
+            _LOGGER.warning("设备不支持cover平台: %s", device)
+            return -1
 
         # 查找合适的IO口进行操作
-        for io_port, io_config in cover_config.items():
-            if isinstance(io_config, dict):
-                # 检查是否有commands配置
-                commands = io_config.get("commands", {})
-                if "close" in commands:
-                    close_cmd = commands["close"]
-                    return await self._async_send_single_command(
-                        agt,
-                        me,
-                        io_port,
-                        close_cmd.get("type", CMD_TYPE_SET_VAL),
-                        close_cmd.get("val", 0),
-                    )
-
-                # 旧的逻辑:通过描述判断
-                description = io_config.get("description", "").lower()
-                if "position" in description:
-                    return await self._async_send_single_command(
-                        agt, me, io_port, CMD_TYPE_SET_VAL, 0
-                    )
-                elif "close" in description:
-                    return await self._async_send_single_command(
-                        agt, me, io_port, CMD_TYPE_ON, 1
-                    )
-
-        # 回退到NON_POSITIONAL_COVER_CONFIG
-        if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = safe_get(NON_POSITIONAL_COVER_CONFIG, device_type, "close")
-            if cmd_idx is None:
-                _LOGGER.warning("设备类型 %s 缺少 'close' 配置", device_type)
-                return -1
-            return await self._async_send_single_command(
-                agt, me, cmd_idx, CMD_TYPE_ON, 1
-            )
+        for io_port, io_config in _iter_typed_platform_ios(cover_config):
+            commands = _typed_io_commands(io_config)
+            if "close" in commands:
+                close_cmd = commands["close"]
+                return await self._async_send_single_command(
+                    agt,
+                    me,
+                    io_port,
+                    _resolve_command_type(close_cmd.get("type", CMD_TYPE_SET_VAL)),
+                    close_cmd.get("val", 0),
+                )
 
         _LOGGER.warning("设备类型 %s 的 'close_cover' 操作未被支持。", device_type)
         return -1
@@ -1416,42 +1408,22 @@ class LifeSmartClientBase(ABC):
         # 获取设备映射配置
         resolver = get_device_resolver()
         cover_config = resolver.get_platform_config(device, "cover")
+        if not cover_config:
+            _LOGGER.warning("设备不支持cover平台: %s", device)
+            return -1
 
         # 查找合适的IO口进行操作
-        for io_port, io_config in cover_config.items():
-            if isinstance(io_config, dict):
-                # 检查是否有commands配置
-                commands = io_config.get("commands", {})
-                if "stop" in commands:
-                    stop_cmd = commands["stop"]
-                    return await self._async_send_single_command(
-                        agt,
-                        me,
-                        io_port,
-                        stop_cmd.get("type", CMD_TYPE_SET_CONFIG),
-                        stop_cmd.get("val", CMD_TYPE_OFF),
-                    )
-
-                # 旧的逻辑:通过描述判断
-                description = io_config.get("description", "").lower()
-                if "position" in description:
-                    return await self._async_send_single_command(
-                        agt, me, io_port, CMD_TYPE_SET_CONFIG, CMD_TYPE_OFF
-                    )
-                elif "stop" in description:
-                    return await self._async_send_single_command(
-                        agt, me, io_port, CMD_TYPE_ON, 1
-                    )
-
-        # 回退到NON_POSITIONAL_COVER_CONFIG
-        if device_type in NON_POSITIONAL_COVER_CONFIG:
-            cmd_idx = safe_get(NON_POSITIONAL_COVER_CONFIG, device_type, "stop")
-            if cmd_idx is None:
-                _LOGGER.warning("设备类型 %s 缺少 'stop' 配置", device_type)
-                return -1
-            return await self._async_send_single_command(
-                agt, me, cmd_idx, CMD_TYPE_ON, 1
-            )
+        for io_port, io_config in _iter_typed_platform_ios(cover_config):
+            commands = _typed_io_commands(io_config)
+            if "stop" in commands:
+                stop_cmd = commands["stop"]
+                return await self._async_send_single_command(
+                    agt,
+                    me,
+                    io_port,
+                    _resolve_command_type(stop_cmd.get("type", CMD_TYPE_SET_CONFIG)),
+                    stop_cmd.get("val", CMD_TYPE_OFF),
+                )
 
         _LOGGER.warning("设备类型 %s 的 'stop_cover' 操作未被支持。", device_type)
         return -1
@@ -1469,28 +1441,22 @@ class LifeSmartClientBase(ABC):
         # 获取设备映射配置
         resolver = get_device_resolver()
         cover_config = resolver.get_platform_config(device, "cover")
+        if not cover_config:
+            _LOGGER.warning("设备不支持cover平台: %s", device)
+            return -1
 
         # 查找位置控制IO口
-        for io_port, io_config in cover_config.items():
-            if isinstance(io_config, dict):
-                # 检查是否有commands配置
-                commands = io_config.get("commands", {})
-                if "set_position" in commands:
-                    set_pos_cmd = commands["set_position"]
-                    return await self._async_send_single_command(
-                        agt,
-                        me,
-                        io_port,
-                        set_pos_cmd.get("type", CMD_TYPE_SET_VAL),
-                        position,
-                    )
-
-                # 旧的逻辑:通过描述判断
-                description = io_config.get("description", "").lower()
-                if "position" in description:
-                    return await self._async_send_single_command(
-                        agt, me, io_port, CMD_TYPE_SET_VAL, position
-                    )
+        for io_port, io_config in _iter_typed_platform_ios(cover_config):
+            commands = _typed_io_commands(io_config)
+            if "set_position" in commands:
+                set_pos_cmd = commands["set_position"]
+                return await self._async_send_single_command(
+                    agt,
+                    me,
+                    io_port,
+                    _resolve_command_type(set_pos_cmd.get("type", CMD_TYPE_SET_VAL)),
+                    position,
+                )
 
         _LOGGER.warning("设备类型 %s 不支持设置位置。", device_type)
         return -1
@@ -1648,96 +1614,96 @@ class LifeSmartClientBase(ABC):
         """
         device_type = get_device_effective_type(device)
 
-        # 获取设备映射配置
+        # 获取设备映射配置；strict Gen2 不为未知/不支持设备生成隐式命令。
         resolver = get_device_resolver()
         climate_config = resolver.get_platform_config(device, "climate")
+        if not climate_config:
+            raise HomeAssistantError(
+                f"Device type {device_type} does not support climate platform"
+            )
 
         if hvac_mode == HVACMode.OFF:
             # 查找开关IO口
-            for io_port, io_config in climate_config.items():
-                if isinstance(io_config, dict):
-                    commands = io_config.get("commands", {})
-                    if "off" in commands:
-                        off_cmd = commands["off"]
-                        return await self._async_send_single_command(
-                            agt,
-                            me,
-                            io_port,
-                            off_cmd.get("type", CMD_TYPE_OFF),
-                            off_cmd.get("val", 0),
-                        )
-            # 默认使用P1口关闭
-            return await self._async_send_single_command(agt, me, "P1", CMD_TYPE_OFF, 0)
-
-        # 先打开设备
-        for io_port, io_config in climate_config.items():
-            if isinstance(io_config, dict):
-                commands = io_config.get("commands", {})
-                if "on" in commands:
-                    on_cmd = commands["on"]
-                    await self._async_send_single_command(
-                        agt,
-                        me,
-                        io_port,
-                        on_cmd.get("type", CMD_TYPE_ON),
-                        on_cmd.get("val", 1),
-                    )
-                    break
-        else:
-            # 默认使用P1口打开
-            await self._async_send_single_command(agt, me, "P1", CMD_TYPE_ON, 1)
-
-        # 查找HVAC模式控制IO口
-        for io_port, io_config in climate_config.items():
-            if isinstance(io_config, dict):
-                # description = io_config.get("description", "").lower()  # Unused
-                commands = io_config.get("commands", {})
-
-                # 优先使用commands配置
-                if "set_mode" in commands or "set_config" in commands:
-                    # 优先使用set_mode，如果没有则使用set_config
-                    mode_cmd = commands.get("set_mode") or commands.get("set_config")
-
-                    # 优先从命令配置中获取HVAC模式映射
-                    mode_val = None
-                    if "hvac_modes" in mode_cmd:
-                        # 使用设备特定的HVAC模式映射
-                        hvac_modes_mapping = mode_cmd["hvac_modes"]
-                        mode_val = hvac_modes_mapping.get(hvac_mode)
-
-                    # 如果没有设备特定映射，从设备类型推断使用相应的全局映射
-                    if mode_val is None:
-                        # 根据设备类型选择合适的HVAC映射
-                        if device_type == "SL_CP_AIR":
-                            from .config.device_specs import (
-                                REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP,
-                            )
-
-                            mode_val = REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP.get(
-                                hvac_mode
-                            )
-                        elif device_type.startswith(("V_AIR_P", "SL_TR_ACIPM")):
-                            from .config.device_specs import REVERSE_F_HVAC_MODE_MAP
-
-                            mode_val = REVERSE_F_HVAC_MODE_MAP.get(hvac_mode)
-                        else:
-                            # 默认使用扩展HVAC映射
-                            mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
-
-                    # 最终回退到默认值
-                    if mode_val is None:
-                        mode_val = 1
-
+            for io_port, io_config in _iter_typed_platform_ios(climate_config):
+                commands = _typed_io_commands(io_config)
+                if "off" in commands:
+                    off_cmd = commands["off"]
                     return await self._async_send_single_command(
                         agt,
                         me,
                         io_port,
-                        mode_cmd.get("type", CMD_TYPE_SET_CONFIG),
-                        mode_val,
+                        _resolve_command_type(off_cmd.get("type", CMD_TYPE_OFF)),
+                        off_cmd.get("val", 0),
+                    )
+            raise HomeAssistantError(
+                f"Device type {device_type} has no Gen2 off command"
+            )
+
+        # 先打开设备
+        for io_port, io_config in _iter_typed_platform_ios(climate_config):
+            commands = _typed_io_commands(io_config)
+            if "on" in commands:
+                on_cmd = commands["on"]
+                await self._async_send_single_command(
+                    agt,
+                    me,
+                    io_port,
+                    _resolve_command_type(on_cmd.get("type", CMD_TYPE_ON)),
+                    on_cmd.get("val", 1),
+                )
+                break
+        else:
+            raise HomeAssistantError(
+                f"Device type {device_type} has no Gen2 on command"
+            )
+
+        # 查找HVAC模式控制IO口
+        for io_port, io_config in _iter_typed_platform_ios(climate_config):
+            commands = _typed_io_commands(io_config)
+
+            # 优先使用commands配置
+            if "set_mode" in commands or "set_config" in commands:
+                # 优先使用set_mode，如果没有则使用set_config
+                mode_cmd = commands.get("set_mode") or commands.get("set_config")
+
+                # 优先从命令配置中获取HVAC模式映射
+                mode_val = None
+                if "hvac_modes" in mode_cmd:
+                    # 使用设备特定的HVAC模式映射
+                    hvac_modes_mapping = mode_cmd["hvac_modes"]
+                    mode_val = hvac_modes_mapping.get(hvac_mode)
+
+                # 如果没有设备特定映射，从设备类型推断使用相应的全局映射
+                if mode_val is None:
+                    # 根据设备类型选择合适的HVAC映射
+                    if device_type == "SL_CP_AIR":
+                        mode_val = REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP.get(
+                            hvac_mode
+                        )
+                    elif device_type.startswith(("V_AIR_P", "SL_TR_ACIPM")):
+                        mode_val = REVERSE_F_HVAC_MODE_MAP.get(hvac_mode)
+                    else:
+                        # 默认使用扩展HVAC映射
+                        mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(hvac_mode)
+
+                if mode_val is None:
+                    raise HomeAssistantError(
+                        f"Device type {device_type} does not support HVAC mode "
+                        f"{hvac_mode}"
                     )
 
+                return await self._async_send_single_command(
+                    agt,
+                    me,
+                    io_port,
+                    _resolve_command_type(mode_cmd.get("type", CMD_TYPE_SET_CONFIG)),
+                    mode_val,
+                )
+
         _LOGGER.warning("设备类型 %s 不支持HVAC模式设置", device_type)
-        return -1
+        raise HomeAssistantError(
+            f"Device type {device_type} has no Gen2 HVAC mode command"
+        )
 
     async def async_set_climate_temperature(
         self, agt: str, me: str, device: dict, temp: float
@@ -1789,29 +1755,33 @@ class LifeSmartClientBase(ABC):
         temp_val = int(temp * 10)
         device_type = get_device_effective_type(device)
 
-        # 获取设备映射配置
+        # 获取设备映射配置；strict Gen2 不为未知/不支持设备生成隐式命令。
         resolver = get_device_resolver()
         climate_config = resolver.get_platform_config(device, "climate")
+        if not climate_config:
+            raise HomeAssistantError(
+                f"Device type {device_type} does not support climate platform"
+            )
 
         # 查找温度设置IO口
-        for io_port, io_config in climate_config.items():
-            if isinstance(io_config, dict):
-                # description = io_config.get("description", "").lower()  # Unused
-                commands = io_config.get("commands", {})
+        for io_port, io_config in _iter_typed_platform_ios(climate_config):
+            commands = _typed_io_commands(io_config)
 
-                # 优先使用commands配置
-                if "set_temperature" in commands:
-                    temp_cmd = commands["set_temperature"]
-                    return await self._async_send_single_command(
-                        agt,
-                        me,
-                        io_port,
-                        temp_cmd.get("type", CMD_TYPE_SET_VAL),
-                        temp_val,
-                    )
+            # 优先使用commands配置
+            if "set_temperature" in commands:
+                temp_cmd = commands["set_temperature"]
+                return await self._async_send_single_command(
+                    agt,
+                    me,
+                    io_port,
+                    _resolve_command_type(temp_cmd.get("type", CMD_TYPE_SET_VAL)),
+                    temp_val,
+                )
 
         _LOGGER.warning("设备类型 %s 不支持温度设置", device_type)
-        return -1
+        raise HomeAssistantError(
+            f"Device type {device_type} has no Gen2 temperature command"
+        )
 
     async def async_set_climate_fan_mode(
         self, agt: str, me: str, device: dict, fan_mode: str, current_val: int = 0
@@ -1858,54 +1828,66 @@ class LifeSmartClientBase(ABC):
         """
         device_type = get_device_effective_type(device)
 
-        # 获取设备映射配置
+        # 获取设备映射配置；strict Gen2 不为未知/不支持设备生成隐式命令。
         resolver = get_device_resolver()
         climate_config = resolver.get_platform_config(device, "climate")
+        if not climate_config:
+            raise HomeAssistantError(
+                f"Device type {device_type} does not support climate platform"
+            )
+
+        unsupported_fan_mode = False
 
         # 查找风扇模式控制IO口
-        for io_port, io_config in climate_config.items():
+        for io_port, io_config in _iter_typed_platform_ios(climate_config):
             # 检查IO口是否在实际设备数据中存在
             if io_port not in device.get("data", {}):
                 continue
 
-            if isinstance(io_config, dict):
-                # description = io_config.get("description", "").lower()  # Unused
-                commands = io_config.get("commands", {})
+            commands = _typed_io_commands(io_config)
 
-                # 优先使用commands配置，回退到set_config
-                if "set_fan_speed" in commands:
-                    fan_cmd = commands["set_fan_speed"]
-                    # 从 fan_modes 中获取值
-                    fan_modes = fan_cmd.get("fan_modes", {})
-                    fan_val = fan_modes.get(fan_mode)
+            # 优先使用commands配置，回退到set_config
+            if "set_fan_speed" in commands:
+                fan_cmd = commands["set_fan_speed"]
+                # 从 fan_modes 中获取值
+                fan_modes = fan_cmd.get("fan_modes", {})
+                fan_val = fan_modes.get(fan_mode)
 
-                    if fan_val is None:
-                        _LOGGER.warning(
-                            "设备类型 %s 不支持风扇模式 %s", device_type, fan_mode
-                        )
-                        continue
-                elif "set_config" in commands:
-                    # 如果没有set_fan_speed，回退到set_config
-                    fan_cmd = commands["set_config"]
-                    # 从映射配置中获取风扇模式的值
-                    fan_mappings = fan_cmd.get("fan_modes", {})
-                    fan_val = fan_mappings.get(fan_mode)
-
-                    if fan_val is None:
-                        _LOGGER.warning(
-                            "设备类型 %s 不支持风扇模式 %s", device_type, fan_mode
-                        )
-                        continue
-                else:
+                if fan_val is None:
+                    _LOGGER.warning(
+                        "设备类型 %s 不支持风扇模式 %s", device_type, fan_mode
+                    )
+                    unsupported_fan_mode = True
                     continue
+            elif "set_config" in commands:
+                # 如果没有set_fan_speed，回退到set_config
+                fan_cmd = commands["set_config"]
+                # 从映射配置中获取风扇模式的值
+                fan_mappings = fan_cmd.get("fan_modes", {})
+                fan_val = fan_mappings.get(fan_mode)
 
-                return await self._async_send_single_command(
-                    agt,
-                    me,
-                    io_port,
-                    fan_cmd.get("type", CMD_TYPE_SET_CONFIG),
-                    fan_val,
-                )
+                if fan_val is None:
+                    _LOGGER.warning(
+                        "设备类型 %s 不支持风扇模式 %s", device_type, fan_mode
+                    )
+                    unsupported_fan_mode = True
+                    continue
+            else:
+                continue
+
+            return await self._async_send_single_command(
+                agt,
+                me,
+                io_port,
+                _resolve_command_type(fan_cmd.get("type", CMD_TYPE_SET_CONFIG)),
+                fan_val,
+            )
 
         _LOGGER.warning("设备类型 %s 不支持风扇模式设置", device_type)
-        return -1
+        if unsupported_fan_mode:
+            raise HomeAssistantError(
+                f"Device type {device_type} does not support fan mode {fan_mode}"
+            )
+        raise HomeAssistantError(
+            f"Device type {device_type} has no Gen2 fan mode command"
+        )

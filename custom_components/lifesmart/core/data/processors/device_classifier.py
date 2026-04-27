@@ -578,6 +578,11 @@ class DeviceClassifier:
         if "control_modes" in raw_config:
             return self._classify_control_device(raw_config, variables)
 
+        # 方法3：当前Gen2 SL_P将控制模式嵌入cover_features.control_modes。
+        cover_features = raw_config.get("cover_features")
+        if isinstance(cover_features, dict) and "control_modes" in cover_features:
+            return self._classify_control_device(cover_features, variables)
+
         _LOGGER.warning(f"Unknown dynamic device structure: {list(raw_config.keys())}")
         return None
 

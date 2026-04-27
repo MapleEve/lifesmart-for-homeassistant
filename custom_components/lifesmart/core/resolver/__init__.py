@@ -1,68 +1,239 @@
 """
-DeviceResolver模块 - Phase 2统一设备解析接口
+Gen2-only device resolver package exports.
 
-这个模块提供了统一的设备解析接口，简化19个平台文件的调用复杂性。
-基于Facade + Strategy模式设计，提供：
-
-- 统一的设备配置解析接口
-- 强类型安全和错误处理
-- 简化平台文件调用复杂度75%
-- 为Phase 3-4 mapping_engine重构奠定基础
-
-由 @MapleEve 创建，基于ZEN专家深度分析结果
+The package-level facade exposes the current static Gen2 resolver functions only.
+The legacy dynamic resolver and compatibility bridge resolver are intentionally not
+exported here, so production callers cannot select fallback-capable paths through
+this facade.
 """
 
+import time
+from typing import Any, Dict, Optional
+
+from homeassistant.exceptions import HomeAssistantError
+
+from ..config.device_specs import _RAW_DEVICE_DATA
+from ..config.extended_static_config_preprocessor import (
+    ExtendedStaticConfigPreprocessor,
+)
+from ..config.static_config_validator import StaticConfigValidator
+from .static_device_resolver import (
+    StaticDeviceResolver,
+    ResolutionResult as StaticResolutionResult,
+    ResolutionStatus,
+)
+
 from .types import (
-    # 核心数据类型
     DeviceConfig,
     PlatformConfig,
     IOConfig,
     ResolutionResult,
-    # 枚举类型
     SupportLevel,
     ValidationStatus,
-    # 类型别名
     DeviceData,
     MappingData,
     PlatformName,
     IOKey,
 )
 
-from .device_resolver import (
-    DeviceResolver,
-    get_device_resolver,
-    resolve_device_config,
-    get_platform_config,
-    validate_device_support,
-)
 
-# Phase 3: 静态兼容解析器
-from .static_compatible_resolver import (
-    StaticCompatibleResolver,
-    get_static_compatible_resolver,
-    resolve_device_config_static,
-    get_platform_config_static,
-    validate_device_support_static,
-)
+class Gen2StaticDeviceResolver:
+    """Production Gen2-only resolver facade over the strict static resolver."""
 
-# 静态解析器作为唯一生产选择 (no-legacy policy)
-# LIFESMART_USE_DYNAMIC_RESOLVER 曾允许切回旧动态策略解析器；该旧路径仍保留给
-# 直接单元测试导入，但不得由生产 resolver facade 通过环境变量启用，避免旧策略的
-# default/first-version fallback 或 catch-all fallback 静默通过。
-USE_STATIC_RESOLVER = True
+    def __init__(self) -> None:
+        preprocessor = ExtendedStaticConfigPreprocessor(_RAW_DEVICE_DATA)
+        self._static_configs = preprocessor.generate_static_configs()
 
-if USE_STATIC_RESOLVER:
-    # 使用静态解析器作为默认实现
-    get_device_resolver = get_static_compatible_resolver
-    resolve_device_config = resolve_device_config_static
-    get_platform_config = get_platform_config_static
-    validate_device_support = validate_device_support_static
+        validation_result = StaticConfigValidator().validate_all_configs(
+            self._static_configs
+        )
+        if not validation_result.valid:
+            raise RuntimeError(
+                "Gen2 static configuration validation failed: "
+                f"{validation_result.errors}"
+            )
 
-    # 将StaticCompatibleResolver作为DeviceResolver的别名
-    DeviceResolver = StaticCompatibleResolver
+        self._static_resolver = StaticDeviceResolver(self._static_configs)
+        self._cache_stats = {"hits": 0, "misses": 0, "errors": 0}
+
+    def resolve_device_config(self, device: DeviceData) -> ResolutionResult:
+        start_time = time.time()
+        try:
+            if not device or not isinstance(device, dict):
+                return ResolutionResult.error_result(
+                    "Invalid device data: must be non-empty dict"
+                )
+
+            static_result = self._static_resolver.resolve_device_config(device)
+            result = self._convert_static_result(static_result, device)
+            result.resolution_time_ms = (time.time() - start_time) * 1000
+            if result.success:
+                self._cache_stats["hits"] += 1
+            else:
+                self._cache_stats["misses"] += 1
+            return result
+        except Exception as err:  # pragma: no cover - defensive strict error path
+            self._cache_stats["errors"] += 1
+            result = ResolutionResult.error_result(
+                f"Failed to resolve device {device.get('me', 'unknown')}: {err}"
+            )
+            result.resolution_time_ms = (time.time() - start_time) * 1000
+            return result
+
+    def get_platform_config(
+        self, device: DeviceData, platform: PlatformName
+    ) -> Optional[PlatformConfig]:
+        result = self.resolve_device_config(device)
+        if not result.success:
+            raise HomeAssistantError(
+                result.error_message
+                or f"Failed to resolve device {device.get('me', 'unknown')}"
+            )
+        if result.device_config:
+            return result.device_config.get_platform_config(platform)
+        return None
+
+    def validate_device_support(
+        self, device: DeviceData, platform: PlatformName
+    ) -> bool:
+        try:
+            platform_config = self.get_platform_config(device, platform)
+            return platform_config is not None and platform_config.supported
+        except Exception:
+            return False
+
+    def get_io_config(
+        self, device: DeviceData, platform: PlatformName, io_key: IOKey
+    ) -> Optional[IOConfig]:
+        platform_config = self.get_platform_config(device, platform)
+        if platform_config:
+            return platform_config.ios.get(io_key)
+        return None
+
+    def get_supported_platforms(self, device: DeviceData) -> list[PlatformName]:
+        result = self.resolve_device_config(device)
+        if result.success and result.device_config:
+            return result.device_config.supported_platforms
+        return []
+
+    def get_cache_stats(self) -> Dict[str, Any]:
+        return self._cache_stats.copy()
+
+    def clear_cache(self) -> None:
+        self._cache_stats = {"hits": 0, "misses": 0, "errors": 0}
+
+    def get_static_resolver_stats(self) -> Dict[str, Any]:
+        return self._static_resolver.get_resolver_stats()
+
+    def _convert_static_result(
+        self, static_result: StaticResolutionResult, device: DeviceData
+    ) -> ResolutionResult:
+        if static_result.status == ResolutionStatus.ERROR:
+            return ResolutionResult.error_result(
+                static_result.error_message or "Unknown resolution error"
+            )
+
+        static_config = static_result.device_config
+        if not static_config:
+            return ResolutionResult.error_result("No device configuration")
+
+        source_mapping = self._static_configs.get(static_config.device_type, {})
+        features = source_mapping.get("_features", {})
+
+        compatible_config = DeviceConfig(
+            device_type=static_config.device_type,
+            name=static_config.name,
+            category=features.get("category"),
+            manufacturer=features.get("manufacturer"),
+            model=features.get("model"),
+            raw_device=device,
+            source_mapping=source_mapping,
+        )
+        compatible_config.platforms = {
+            platform_name: platform_config
+            for platform_name, platform_config in (
+                (
+                    platform_name,
+                    self._convert_static_platform(platform_name, platform_data),
+                )
+                for platform_name, platform_data in static_config.platforms.items()
+            )
+            if platform_config is not None
+        }
+        compatible_config.__post_init__()
+
+        if static_result.status == ResolutionStatus.WARNING:
+            return ResolutionResult.warning_result(
+                compatible_config,
+                static_result.warnings[0] if static_result.warnings else "Warning",
+            )
+        return ResolutionResult.success_result(compatible_config)
+
+    def _convert_static_platform(
+        self, platform_name: str, platform_data: Dict[str, Any]
+    ) -> Optional[PlatformConfig]:
+        if not isinstance(platform_data, dict):
+            return None
+
+        platform_config = PlatformConfig(platform_type=platform_name, supported=True)
+        platform_config.ios = {
+            io_key: io_config
+            for io_key, io_config in (
+                (io_key, self._convert_static_io(io_data))
+                for io_key, io_data in platform_data.items()
+            )
+            if io_config is not None
+        }
+        platform_config.__post_init__()
+        return platform_config
+
+    def _convert_static_io(self, io_data: Dict[str, Any]) -> Optional[IOConfig]:
+        if not isinstance(io_data, dict) or not io_data.get("description"):
+            return None
+        return IOConfig(
+            description=io_data["description"],
+            data_type=io_data.get("data_type"),
+            cmd_type=io_data.get("cmd_type"),
+            idx=io_data.get("idx"),
+            device_class=io_data.get("device_class"),
+            state_class=io_data.get("state_class"),
+            unit_of_measurement=io_data.get("unit_of_measurement"),
+            conversion=io_data.get("conversion"),
+            processor_type=io_data.get("processor_type"),
+            attribute_generator=io_data.get("attribute_generator"),
+            icon=io_data.get("icon"),
+            entity_category=io_data.get("entity_category"),
+            value_template=io_data.get("value_template"),
+            state_mapping=io_data.get("state_mapping"),
+            commands=io_data.get("commands", {}),
+        )
+
+
+_global_device_resolver: Optional[Gen2StaticDeviceResolver] = None
+
+
+def get_device_resolver() -> Gen2StaticDeviceResolver:
+    global _global_device_resolver
+    if _global_device_resolver is None:
+        _global_device_resolver = Gen2StaticDeviceResolver()
+    return _global_device_resolver
+
+
+def resolve_device_config(device: DeviceData) -> ResolutionResult:
+    return get_device_resolver().resolve_device_config(device)
+
+
+def get_platform_config(
+    device: DeviceData, platform: PlatformName
+) -> Optional[PlatformConfig]:
+    return get_device_resolver().get_platform_config(device, platform)
+
+
+def validate_device_support(device: DeviceData, platform: PlatformName) -> bool:
+    return get_device_resolver().validate_device_support(device, platform)
+
 
 __all__ = [
-    # 类型系统
     "DeviceConfig",
     "PlatformConfig",
     "IOConfig",
@@ -73,19 +244,9 @@ __all__ = [
     "MappingData",
     "PlatformName",
     "IOKey",
-    # 核心接口 (自动选择动态或静态实现)
-    "DeviceResolver",
+    "Gen2StaticDeviceResolver",
     "get_device_resolver",
-    # 便捷函数 (自动选择动态或静态实现)
     "resolve_device_config",
     "get_platform_config",
     "validate_device_support",
-    # 静态解析器专用接口 (Phase 3)
-    "StaticCompatibleResolver",
-    "get_static_compatible_resolver",
-    "resolve_device_config_static",
-    "get_platform_config_static",
-    "validate_device_support_static",
-    # 配置开关
-    "USE_STATIC_RESOLVER",
 ]

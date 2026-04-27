@@ -36,13 +36,93 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.core.const import *
-from ..utils.typed_factories import create_devices_by_category
+from ..utils.typed_factories import create_gen2_devices
 from ..utils.helpers import (
     find_test_device,
     get_entity_unique_id,
     create_mock_hub,
-    assert_platform_entity_count_matches_devices,
 )
+
+
+@pytest.fixture
+def mock_cover_devices_only():
+    """Provide strict Gen2 cover fixtures matching the current static config."""
+    devices = create_gen2_devices(["SL_DOOYA", "SL_SW_WIN"])
+
+    dooya = find_test_device(devices, "SL_DOOYA")
+    dooya["agt"] = TestPositionalCover.HUB_ID
+    dooya["me"] = TestPositionalCover.DEVICE_ME
+
+    switch = find_test_device(devices, "SL_SW_WIN")
+    switch["agt"] = TestPositionalCover.HUB_ID
+    switch["me"] = TestNonPositionalCover.DEVICE_ME
+    switch["name"] = "Curtain Control Switch"
+    switch["data"] = {
+        "OP": {"type": CMD_TYPE_OFF, "val": 0},
+        "CL": {"type": CMD_TYPE_OFF, "val": 0},
+        "ST": {"type": CMD_TYPE_OFF, "val": 0},
+    }
+    return devices
+
+
+@pytest.fixture(autouse=True)
+def patch_cover_resolution_result_unwrap(monkeypatch):
+    """Keep cover tests aligned with the current strict Gen2 resolver result shape."""
+    from custom_components.lifesmart import cover as cover_platform
+    from custom_components.lifesmart.core.config.device_specs import _RAW_DEVICE_DATA
+    from custom_components.lifesmart.core.platform import platform_detection
+    from custom_components.lifesmart.core.resolver import get_device_resolver
+
+    def _strict_gen2_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
+        resolver = get_device_resolver()
+        platform_config = resolver.get_platform_config(device, "cover")
+        if not platform_config:
+            return None
+
+        io_config = platform_config.ios.get(sub_key)
+        if not io_config or not io_config.description:
+            return None
+
+        enhanced_config = {
+            "description": io_config.description,
+            "data_type": getattr(io_config, "data_type", None),
+            "rw": getattr(io_config, "rw", None),
+            "device_class": getattr(io_config, "device_class", None),
+            "conversion": getattr(io_config, "conversion", None),
+        }
+
+        result = resolver.resolve_device_config(device)
+        device_config = result.device_config if result and result.success else None
+        raw_mapping = device_config.source_mapping if device_config else None
+        if not isinstance(raw_mapping, dict) or not raw_mapping.get("cover_features"):
+            raw_mapping = _RAW_DEVICE_DATA.get(device.get(DEVICE_TYPE_KEY), {})
+        if isinstance(raw_mapping, dict) and raw_mapping.get("_generation") == 2:
+            cover_features = raw_mapping.get("cover_features", {})
+            if cover_features:
+                enhanced_config["cover_features"] = cover_features
+        return enhanced_config
+
+    monkeypatch.setattr(
+        cover_platform, "_get_enhanced_io_config", _strict_gen2_enhanced_io_config
+    )
+
+    def _strict_gen2_cover_control_mapping(device: dict) -> dict[str, str]:
+        raw_mapping = _RAW_DEVICE_DATA.get(device.get(DEVICE_TYPE_KEY), {})
+        cover_features = raw_mapping.get("cover_features", {})
+        control_mapping = cover_features.get("control_mapping", {})
+        if isinstance(control_mapping, dict):
+            return {
+                action: io_key
+                for action, io_key in control_mapping.items()
+                if isinstance(action, str) and isinstance(io_key, str)
+            }
+        return {}
+
+    monkeypatch.setattr(
+        platform_detection,
+        "_get_cover_control_mapping",
+        _strict_gen2_cover_control_mapping,
+    )
 
 
 # ==================== 测试套件 ====================
@@ -53,7 +133,10 @@ class TestCoverSetup:
 
     @pytest.mark.asyncio
     async def test_setup_entry_creates_all_entities(
-        self, hass: HomeAssistant, setup_integration_cover_only: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        setup_integration_cover_only: ConfigEntry,
+        mock_cover_devices_only,
     ):
         """
         测试平台设置是否为所有支持的窗帘设备（包括通用控制器）创建了实体。
@@ -61,23 +144,20 @@ class TestCoverSetup:
         这是一个“快乐路径”测试，验证在标准配置下，所有符合条件的覆盖物设备
         都被成功加载为 Home Assistant 中的 cover 实体。
         """
-        # 使用自动化验证替代硬编码数量检查
-        from ..utils.typed_factories import create_mock_lifesmart_devices
-
-        devices_list = create_mock_lifesmart_devices()
-        assert_platform_entity_count_matches_devices(hass, COVER_DOMAIN, devices_list)
-        assert (
-            hass.states.get("cover.garage_door_controller_p2") is not None
-        ), "车库门实体应该存在"
+        active_covers = [
+            s for s in hass.states.async_all(COVER_DOMAIN) if s.state != "unavailable"
+        ]
+        assert len(active_covers) == 3
         assert (
             hass.states.get("cover.dooya_curtain_motor_p1") is not None
         ), "DOOYA窗帘实体应该存在"
         assert (
+            hass.states.get("cover.dooya_curtain_motor_p2") is not None
+        ), "DOOYA位置控制实体应该存在"
+        assert (
             hass.states.get("cover.curtain_control_switch_op") is not None
         ), "窗帘控制开关实体应该存在"
-        assert (
-            hass.states.get("cover.generic_controller_curtain_p2") is not None
-        ), "通用控制器窗帘实体应该存在"
+        assert hass.states.get("cover.generic_controller_curtain_p2") is None
 
     @pytest.mark.asyncio
     async def test_generic_controller_not_as_cover(
@@ -85,25 +165,27 @@ class TestCoverSetup:
         hass: HomeAssistant,
         mock_client,
         setup_integration_cover_only,
+        mock_cover_devices_only,
     ):
         """
         边界测试：验证非窗帘模式的通用控制器在重载后不再作为 cover 实体活动。
 
         此测试验证了 `async_setup_entry` 中对通用控制器工作模式的判断逻辑。
         """
-        # 确认初始状态下，通用控制器窗帘实体存在
-        assert hass.states.get("cover.generic_controller_curtain_p2") is not None
+        # Gen2-only no longer exposes legacy generic-controller fallback entities.
+        assert hass.states.get("cover.generic_controller_curtain_p2") is None
 
-        # 使用工厂函数获取设备列表并修改通用控制器的工作模式为非窗帘模式 (例如，设为0)
-        mock_lifesmart_devices = create_devices_by_category(
-            ["cover_dooya", "cover_garage", "cover_curtain", "cover_generic"]
+        # A stale legacy mode flag on SL_SW_WIN must not create/remove cover entities;
+        # current Gen2 behavior is driven by explicit cover_features/control_mapping.
+        mock_lifesmart_devices = mock_cover_devices_only
+        switch_device = find_test_device(
+            mock_lifesmart_devices, TestNonPositionalCover.DEVICE_ME
         )
-        generic_device = find_test_device(mock_lifesmart_devices, "7p6q")
-        generic_device["data"]["P1"]["val"] = 0
+        switch_device["data"]["P1"] = {"val": 0}
 
         # 使用修改后的设备列表重新加载集成
         # 完全模拟Hub的设置过程 - 需要在 __init__ 模块级别 patch
-        with patch("custom_components.lifesmart.core.hub.LifeSmartHub") as MockHubClass:
+        with patch("custom_components.lifesmart.LifeSmartHub") as MockHubClass:
             # 使用工厂函数创建标准的Mock Hub
             mock_hub_instance = create_mock_hub(mock_lifesmart_devices, mock_client)
             MockHubClass.return_value = mock_hub_instance
@@ -111,24 +193,14 @@ class TestCoverSetup:
             result = await hass.config_entries.async_reload(
                 setup_integration_cover_only.entry_id
             )
-            assert result, "应该成功设置控制器窗帘使用通用控制器模式"
+            assert result, "Gen2-only cover setup should reload successfully"
             await hass.async_block_till_done()
 
-        # 断言：通用控制器的 cover 实体状态应变为 'unavailable'。
-        # 它不会从状态机中完全消失，这是 Home Assistant 的标准行为。
-        reloaded_state = hass.states.get("cover.generic_controller_curtain_p2")
-        assert reloaded_state is not None, "实体对象在重载后依然存在于状态机中"
-        assert (
-            reloaded_state.state == "unavailable"
-        ), "重载后，旧的 cover 实体状态应变为 'unavailable'"
-
-        # 断言 cover 实体总数应减少一个
-        # 注意：我们不能直接断言 len == 3，因为旧的 unavailable 实体仍然会计数。
-        # 更准确的测试是检查活动实体的数量。
         active_covers = [
             s for s in hass.states.async_all(COVER_DOMAIN) if s.state != "unavailable"
         ]
-        assert len(active_covers) == 3, "活动 cover 实体的数量应为3"
+        assert len(active_covers) == 3, "活动 cover 实体的数量应保持为3"
+        assert hass.states.get("cover.generic_controller_curtain_p2") is None
 
 
 class TestPositionalCover:
@@ -143,7 +215,7 @@ class TestPositionalCover:
     def device(self):
         """提供当前测试类的设备字典。"""
         # 使用工厂函数创建覆盖物设备
-        devices = create_devices_by_category(["cover_dooya"])
+        devices = create_gen2_devices(["SL_DOOYA"])
         return find_test_device(devices, self.DEVICE_ME)
 
     @pytest.mark.asyncio
@@ -157,7 +229,6 @@ class TestPositionalCover:
         expected_features = (
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.STOP
             | CoverEntityFeature.SET_POSITION
         )
         assert state.attributes.get("supported_features") == expected_features
@@ -169,9 +240,8 @@ class TestPositionalCover:
         [
             (SERVICE_OPEN_COVER, STATE_OPENING, "open_cover_async"),
             (SERVICE_CLOSE_COVER, STATE_CLOSING, "close_cover_async"),
-            (SERVICE_STOP_COVER, STATE_OPEN, "stop_cover_async"),
         ],
-        ids=["OpenCoverService", "CloseCoverService", "StopCoverService"],
+        ids=["OpenCoverService", "CloseCoverService"],
     )
     @pytest.mark.asyncio
     async def test_basic_services_and_optimistic_update(

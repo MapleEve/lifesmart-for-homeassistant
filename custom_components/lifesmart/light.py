@@ -336,12 +336,31 @@ async def async_setup_entry(
             continue
 
         # 使用工具函数获取设备的light子设备列表
-        light_subdevices = get_light_subdevices(device)
+        try:
+            light_subdevices = get_light_subdevices(device)
+        except Exception as err:
+            _LOGGER.debug(
+                "Skipping light device %s (%s): unable to resolve subdevices: %s",
+                device.get(DEVICE_ID_KEY, "unknown"),
+                device.get("devtype", "unknown"),
+                err,
+            )
+            continue
 
         # 为每个light子设备创建实体
         for sub_key in light_subdevices:
             # 使用工具函数获取IO配置
-            io_config = _get_enhanced_io_config(device, sub_key)
+            try:
+                io_config = _get_enhanced_io_config(device, sub_key)
+            except Exception as err:
+                _LOGGER.debug(
+                    "Skipping light IO %s on device %s (%s): %s",
+                    sub_key,
+                    device.get(DEVICE_ID_KEY, "unknown"),
+                    device.get("devtype", "unknown"),
+                    err,
+                )
+                continue
             if not io_config:
                 continue
 
@@ -356,7 +375,7 @@ async def async_setup_entry(
 
 
 def _create_light_entity_from_mapping(
-    device: dict, client, entry_id: str, sub_key: str, io_config: dict
+    device: dict, client, entry_id: str, sub_key: str, io_config: dict | None = None
 ):
     """
     灯光实体工厂函数 - 根据映射配置智能创建对应的灯光实体类
@@ -406,8 +425,19 @@ def _create_light_entity_from_mapping(
         - 策略模式: 每种实体类型实现不同的控制策略
         - 模板模式: 所有实体继承统一的基类模板
     """
+    if io_config is None:
+        from .core.resolver import get_device_resolver
+
+        resolver = get_device_resolver()
+        io_config = resolver.get_io_config(device, "light", sub_key)
+        if io_config is None:
+            return LifeSmartLight(device, client, entry_id, sub_key)
+
     # 统一处理逻辑：从data_type映射到对应的灯光实体类
-    data_type = io_config.get("data_type", "")
+    data_type = getattr(io_config, "data_type", None)
+    if data_type is None and isinstance(io_config, dict):
+        data_type = io_config.get("data_type", "")
+    data_type = data_type or ""
 
     # 数据类型到实体类的统一映射
     if data_type == "brightness_light":
@@ -820,7 +850,10 @@ class LifeSmartBaseLight(LifeSmartEntity, LightEntity, OptimisticUpdateMixin):
                 # IO级更新
                 {"type": CMD_TYPE_ON, "val": 255, "v": 1}
                 # 设备级更新
-                {"P1": {"type": CMD_TYPE_ON, "val": 255}, "P2": {"type": DATA_TYPE_STATE_ON, "val": 0}}
+                {
+                    "P1": {"type": CMD_TYPE_ON, "val": 255},
+                    "P2": {"type": DATA_TYPE_STATE_ON, "val": 0},
+                }
 
         技术细节:
         ├── @callback装饰器: 确保在HA主线程中同步执行
@@ -2124,7 +2157,11 @@ class LifeSmartSingleIORGBWLight(LifeSmartBaseLight):
 
             # 将亮度转换为白光值 (W通道)。SL_LI_UG1官方白光范围是0-100；
             # 其它共享单IO RGBW设备保留既有0-255编码行为。
-            w = round(brightness / 255 * 100) if self.devtype == "SL_LI_UG1" else brightness
+            w = (
+                round(brightness / 255 * 100)
+                if self.devtype == "SL_LI_UG1"
+                else brightness
+            )
             r, g, b = 0, 0, 0
             self._attr_rgbw_color = (r, g, b, brightness)
 

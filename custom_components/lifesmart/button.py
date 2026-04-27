@@ -200,9 +200,9 @@ class LifeSmartButton(LifeSmartEntity, ButtonEntity):
         self._attr_device_class = ButtonDeviceClass.GENERIC
 
         # Get device class from resolved IO configuration first, then runtime data
-        raw_device_class = self._button_config.get("device_class") or sub_device_data.get(
+        raw_device_class = self._button_config.get(
             "device_class"
-        )
+        ) or sub_device_data.get("device_class")
         if raw_device_class:
             compat_identify_class = get_button_device_class()
             if raw_device_class == "identify" and compat_identify_class is not None:

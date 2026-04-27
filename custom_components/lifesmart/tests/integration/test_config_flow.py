@@ -25,7 +25,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+)
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.core.const import (
@@ -522,15 +526,23 @@ class TestReauthFlow:
 
     @pytest.mark.asyncio
     async def test_reauth_missing_entry_id(self, hass: HomeAssistant):
-        """测试缺少 entry_id 时的处理。"""
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_REAUTH},
-            data={},
-        )
-
-        assert result["type"] == FlowResultType.ABORT, "应该中止流程"
-        assert result["reason"] == "reauth_entry_not_found", "原因应该是找不到条目"
+        """测试缺少 entry_id 时的跨版本处理。"""
+        try:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_REAUTH},
+                data={},
+            )
+        except HomeAssistantError as err:
+            assert (
+                "Cannot initialize a reauth flow without a link to the config entry"
+                in str(err)
+            )
+        else:
+            assert result["type"] == FlowResultType.ABORT, "应该中止流程"
+            assert (
+                result["reason"] == "reauth_entry_not_found"
+            ), "原因应该是找不到条目"
 
     @pytest.mark.asyncio
     async def test_reauth_invalid_entry_id(self, hass: HomeAssistant):

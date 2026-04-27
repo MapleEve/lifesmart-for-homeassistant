@@ -148,6 +148,8 @@ class TestDeviceSpecRegistry:
         assert isinstance(sensor_devices, list)
         assert len(switch_devices) > 0
         assert len(sensor_devices) > 0
+        assert "cam" not in switch_devices
+        assert "cam" not in sensor_devices
 
         # 测试缓存
         switch_devices_cached = registry.find_by_platform("switch")
@@ -160,7 +162,17 @@ class TestDeviceSpecRegistry:
         temperature_devices = registry.find_by_capability("temperature")
 
         assert isinstance(temperature_devices, list)
-        # 根据实际数据结构，可能有温度传感器
+        assert "cam" not in temperature_devices
+        assert "SL_SC_B1" in temperature_devices
+        assert "SL_SC_THL" in temperature_devices
+
+        for capability, expected_device in (
+            ("power", "SL_OE_3C"),
+            ("battery", "SL_SW_ND1"),
+        ):
+            devices = registry.find_by_capability(capability)
+            assert expected_device in devices
+            assert "cam" not in devices
 
         # 测试缓存
         temperature_devices_cached = registry.find_by_capability("temperature")
@@ -402,6 +414,7 @@ class TestPerformance:
         start_time = time.time()
         spec = registry.get_device_spec("SL_OL")
         query_time = time.time() - start_time
+        assert spec
 
         # 单次查询应该很快（<10ms）
         assert query_time < 0.01

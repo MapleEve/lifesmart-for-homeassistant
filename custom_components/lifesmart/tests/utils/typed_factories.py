@@ -1,14 +1,11 @@
-""" "
-简化的设备工厂函数 - 消除双轨制架构的重构版本
-基于typed_factories.py重构，回归简单而有效的字典工厂模式。
+"""Gen2-only LifeSmart test device dictionary factories.
 
-此文件是双轨制架构彻底重构的结果：
-- 消除TypedDevice和IOConfig的过度抽象
-- 移除convert_typed_devices_to_dict()转换调用
-- 统一到单一字典API
-- 从1194行精简到约400行，复杂性降低70%
+All helpers in this module return current Gen2 device dictionaries directly.
+The factory layer intentionally has no category wrappers and no object conversion
+path.
 """
 
+from copy import deepcopy
 from typing import List, Dict, Any
 
 from custom_components.lifesmart.core.const import (
@@ -53,8 +50,8 @@ def create_power_meter_plug() -> Dict[str, Any]:
         "name": "Washing Machine Plug",
         "data": {
             "P1": {"type": CMD_TYPE_ON, "val": 1},  # 开关状态
-            "P2": {"v": 1.5, "val": 1084227584},  # 累计用电量 IEEE754
-            "P3": {"v": 1200.0, "val": 1149239296},  # 当前功率 IEEE754
+            "P2": {"v": 1.5, "val": 1069547520},  # 累计用电量 IEEE754
+            "P3": {"v": 1200.0, "val": 1150681088},  # 当前功率 IEEE754
             "P4": {"type": CMD_TYPE_OFF, "val": 3000},  # 功率门限
         },
         "stat": 1,
@@ -70,7 +67,7 @@ def create_switch_if3() -> Dict[str, Any]:
     """
     return {
         "agt": get_hub_id(1),
-        "me": "sw_if3",
+        "me": "SL_SW_IF3",
         "devtype": "SL_SW_IF3",
         "fullCls": "SL_SW_IF3_V2",  # 指定版本信息
         "name": "smart Switch",
@@ -133,7 +130,7 @@ def create_environment_sensor() -> Dict[str, Any]:
     """
     return {
         "agt": get_hub_id(5),
-        "me": "sensor_env",
+        "me": "SL_SC_THL",
         "devtype": "SL_SC_THL",
         "name": "Living Room Env",
         "data": {
@@ -155,7 +152,7 @@ def create_door_sensor() -> Dict[str, Any]:
     """
     return {
         "agt": get_hub_id(6),
-        "me": "bs_door",
+        "me": "SL_SC_G",
         "devtype": "SL_SC_G",
         "name": "Door Sensor",
         "data": {
@@ -175,7 +172,7 @@ def create_curtain_motor() -> Dict[str, Any]:
     """
     return {
         "agt": get_hub_id(7),
-        "me": "cover_dooya",
+        "me": "SL_DOOYA",
         "devtype": "SL_DOOYA",
         "name": "DOOYA Curtain Motor",
         "data": {
@@ -216,6 +213,25 @@ def create_thermostat_panel() -> Dict[str, Any]:
     }
 
 
+def create_nature_switch_panel() -> Dict[str, Any]:
+    """Create an SL_NATURE fixture in its current Gen2 switch-panel mode."""
+    return {
+        "agt": get_hub_id(8),
+        "me": "nature_switch_panel",
+        "devtype": "SL_NATURE",
+        "name": "Nature Panel Switch",
+        "data": {
+            "P1": {"type": CMD_TYPE_ON, "val": 1},
+            "P2": {"type": CMD_TYPE_OFF, "val": 0},
+            "P3": {"type": CMD_TYPE_ON, "val": 1},
+            "P4": {"v": 22.5, "val": 225},
+            "P5": {"val": 1},
+        },
+        "stat": 1,
+        "ver": "0.0.0.7",
+    }
+
+
 # 10. SL_LK_LS - 智能门锁 (Lock平台，安全设备)
 def create_smart_lock() -> Dict[str, Any]:
     """
@@ -224,7 +240,7 @@ def create_smart_lock() -> Dict[str, Any]:
     """
     return {
         "agt": get_hub_id(6),
-        "me": "bs_lock",
+        "me": "SL_LK_LS",
         "devtype": "SL_LK_LS",
         "name": "Main Lock",
         "data": {
@@ -261,46 +277,6 @@ def create_core_devices() -> List[Dict[str, Any]]:
         create_thermostat_panel(),
         create_smart_lock(),
     ]
-
-
-def create_devices_by_platform(platform: str) -> List[Dict[str, Any]]:
-    """
-    根据平台类型创建相应的设备列表。
-
-    Args:
-        platform: 平台类型 ('switch', 'sensor', 'light', etc.)
-
-    Returns:
-        指定平台的设备列表
-    """
-    platform_device_map = {
-        "switch": [
-            create_smart_plug(),
-            create_switch_if3(),
-        ],
-        "sensor": [
-            create_power_meter_plug(),
-            create_environment_sensor(),
-        ],
-        "light": [
-            create_dimmer_light(),
-            create_rgbw_light(),
-        ],
-        "binary_sensor": [
-            create_door_sensor(),
-        ],
-        "cover": [
-            create_curtain_motor(),
-        ],
-        "climate": [
-            create_thermostat_panel(),
-        ],
-        "lock": [
-            create_smart_lock(),
-        ],
-    }
-
-    return platform_device_map.get(platform, [])
 
 
 # ============================================================================
@@ -370,7 +346,7 @@ def create_additional_test_devices() -> List[Dict[str, Any]]:
     additional_devices.append(
         {
             "agt": get_hub_id(6),
-            "me": "bs_motion",
+            "me": "SL_SC_MHW",
             "devtype": "SL_SC_MHW",
             "name": "Motion Sensor",
             "data": {
@@ -386,7 +362,7 @@ def create_additional_test_devices() -> List[Dict[str, Any]]:
     additional_devices.append(
         {
             "agt": get_hub_id(6),
-            "me": "bs_water",
+            "me": "SL_SC_WA",
             "devtype": "SL_SC_WA",
             "name": "Water Leak Sensor",
             "data": {
@@ -464,7 +440,7 @@ def create_mock_device_dual_io_rgbw_light() -> Dict[str, Any]:
 
 
 # ============================================================================
-# === Mock对象工厂函数 (保持向后兼容接口) ===
+# === Mock object factory helpers ===
 # ============================================================================
 
 
@@ -557,3 +533,232 @@ def create_mock_failed_oapi_client():
     mock_client.async_get_all_devices.side_effect = Exception("Connection failed")
 
     return mock_client
+
+
+# ============================================================================
+# === Gen2-only explicit test device helpers ===
+# ============================================================================
+
+
+def _device(me: str, devtype: str, name: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a deterministic Gen2 test device payload."""
+    return {
+        "agt": get_hub_id(0),
+        "me": me,
+        "devtype": devtype,
+        "name": name,
+        "data": data,
+        "stat": 1,
+        "ver": "0.0.0.7",
+    }
+
+
+GEN2_DEVICE_FACTORIES = {
+    "SL_OL": create_smart_plug,
+    "SL_OE_3C": create_power_meter_plug,
+    "SL_SW_IF3": create_switch_if3,
+    "SL_LI_WW": create_dimmer_light,
+    "SL_CT_RGBW": create_rgbw_light,
+    "SL_LI_RGBW": lambda: _device(
+        "single_io_rgbw_single_test",
+        "SL_LI_RGBW",
+        "Single IO RGBW Single Test",
+        {"RGBW": {"type": CMD_TYPE_ON, "val": 0x00FF0080}, "DYN": {"type": CMD_TYPE_OFF, "val": 0}},
+    ),
+    "SL_SC_RGB": create_mock_device_single_io_rgb_light,
+    "SL_SPOT_RGB": create_mock_device_spot_rgb_light,
+    "OD_WE_QUAN": lambda: _device(
+        "quantum_light",
+        "OD_WE_QUAN",
+        "Quantum Light",
+        {"P1": {"type": CMD_TYPE_ON, "val": 100}, "P2": {"type": CMD_TYPE_ON, "val": 0x00FF0000}},
+    ),
+    "SL_LI_GD1": lambda: _device(
+        "wall_dimmer_light",
+        "SL_LI_GD1",
+        "Wall Dimmer Light",
+        {"P1": {"type": CMD_TYPE_ON, "val": 100}, "P2": {"val": 0}, "P3": {"val": 100}},
+    ),
+    "SL_LI_UG1": lambda: _device(
+        "outdoor_light",
+        "SL_LI_UG1",
+        "Outdoor Light",
+        {"P1": {"type": CMD_TYPE_ON, "val": 100 << 24}, "P2": {"val": 100}, "P3": {"val": 0}, "P4": {"v": 100, "val": 100}},
+    ),
+    "MSL_IRCTL": lambda: _device(
+        "spot_rgbw_light",
+        "MSL_IRCTL",
+        "Spot RGBW Light",
+        {"RGBW": {"type": CMD_TYPE_ON, "val": 0x00FF0080}, "DYN": {"type": CMD_TYPE_OFF, "val": 0}},
+    ),
+    "SL_SC_THL": create_environment_sensor,
+    "SL_SC_G": create_door_sensor,
+    "SL_SC_MHW": lambda: _device(
+        "SL_SC_MHW", "SL_SC_MHW", "Motion Sensor", {"M": {"val": 1}, "V": {"val": 82}}
+    ),
+    "SL_SC_WA": lambda: _device(
+        "SL_SC_WA", "SL_SC_WA", "Water Leak Sensor", {"WA": {"val": 1}, "V": {"val": 78}}
+    ),
+    "SL_LK_LS": create_smart_lock,
+    "SL_SC_BB": lambda: _device(
+        "SL_SC_BB", "SL_SC_BB", "Button Switch", {"B": {"val": 1}, "V": {"val": 95}}
+    ),
+    "SL_P_B": lambda: _device(
+        "SL_P_B", "SL_P_B", "Button", {"B": {"val": 1}, "V": {"val": 95}}
+    ),
+    "SL_DOOYA": create_curtain_motor,
+    "SL_ETDOOR": lambda: _device("SL_ETDOOR", "SL_ETDOOR", "Garage Door", {"P1": {"val": 0}}),
+    "SL_SW_WIN": lambda: _device("SL_SW_WIN", "SL_SW_WIN", "Generic Cover", {"P1": {"val": 50}}),
+    "SL_NATURE": create_thermostat_panel,
+    "V_AIR_P": lambda: _device(
+        "V_AIR_P",
+        "V_AIR_P",
+        "Central Air Board",
+        {
+            "O": {"type": CMD_TYPE_ON, "val": 1},
+            "MODE": {"val": 4},
+            "F": {"val": 45},
+            "T": {"v": 23.5, "val": 235},
+            "tT": {"v": 24.0, "val": 240},
+        },
+    ),
+    "SL_CP_DN": lambda: _device(
+        "SL_CP_DN",
+        "SL_CP_DN",
+        "Floor Heat",
+        {
+            "P1": {"type": CMD_TYPE_ON, "val": (1 << 31) | 1},
+            "P2": {"val": 1},
+            "P3": {"v": 23.0, "val": 230},
+            "P4": {"v": 21.5, "val": 215},
+        },
+    ),
+    "SL_CP_AIR": lambda: create_mock_device_climate_fancoil(),
+    "SL_P": lambda: _device(
+        "SL_P",
+        "SL_P",
+        "Generic P Switch",
+        {
+            # Gen2 SL_P mode selector: (P1 >> 24) & 0xe in [8, 10] means switch mode.
+            "P1": {"type": CMD_TYPE_ON, "val": 8 << 24},
+            "P2": {"type": CMD_TYPE_ON, "val": 1},
+            "P3": {"type": CMD_TYPE_OFF, "val": 0},
+            "P4": {"type": CMD_TYPE_ON, "val": 1},
+        },
+    ),
+    "SL_P_SW": lambda: _device(
+        "SL_P_SW",
+        "SL_P_SW",
+        "Nine Switch",
+        {
+            "P1": {"type": CMD_TYPE_ON, "val": 1},
+            "P2": {"type": CMD_TYPE_OFF, "val": 0},
+            "P3": {"type": CMD_TYPE_ON, "val": 1},
+            "P4": {"type": CMD_TYPE_OFF, "val": 0},
+            "P5": {"type": CMD_TYPE_ON, "val": 1},
+            "P6": {"type": CMD_TYPE_OFF, "val": 0},
+            "P7": {"type": CMD_TYPE_ON, "val": 1},
+            "P8": {"type": CMD_TYPE_OFF, "val": 0},
+            "P9": {"type": CMD_TYPE_ON, "val": 1},
+        },
+    ),
+}
+
+
+def create_gen2_devices(gen2_keys: List[str]) -> List[Dict[str, Any]]:
+    """Create direct Gen2/current device dicts for explicit test devtype keys."""
+    seen: Dict[str, int] = {}
+    devices: List[Dict[str, Any]] = []
+    for gen2_key in gen2_keys:
+        occurrence = seen.get(gen2_key, 0)
+        seen[gen2_key] = occurrence + 1
+        device = GEN2_DEVICE_FACTORIES[gen2_key]()
+        if occurrence:
+            device = _with_distinct_identity(device, occurrence + 1)
+        devices.append(device)
+    return devices
+
+
+def _with_distinct_identity(device: Dict[str, Any], ordinal: int) -> Dict[str, Any]:
+    """Return a current-spec Gen2 fixture instance with distinct HA identity.
+
+    The first fixture instance remains byte-for-byte as defined by its factory.
+    Repeated instances keep the same official devtype/fullCls and IO payload, but
+    receive a unique current device id/name so Home Assistant does not collapse
+    them as duplicate entities during focused platform tests.
+    """
+    distinct = deepcopy(device)
+    base_me = distinct.get("me", distinct.get("devtype", "device"))
+    base_name = distinct.get("name", distinct.get("devtype", "Device"))
+    distinct["me"] = f"{base_me}_{ordinal}"
+    distinct["name"] = f"{base_name} {ordinal}"
+    return distinct
+
+
+def create_mock_device_climate_fancoil() -> Dict[str, Any]:
+    from .constants import SPECIALIZED_TEST_DEVICE_IDS
+
+    device_ids = SPECIALIZED_TEST_DEVICE_IDS["climate_fancoil"]
+    return _device(
+        device_ids["me"],
+        "SL_CP_AIR",
+        "Fan Coil Thermostat",
+        {
+            "P1": {"type": CMD_TYPE_ON, "val": (1 << 15) | (1 << 13)},
+            "P4": {"v": 25.0, "val": 250},
+            "P5": {"v": 23.5, "val": 235},
+        },
+    )
+
+
+def create_traditional_switch_devices() -> List[Dict[str, Any]]:
+    return [create_switch_if3()]
+
+
+def create_advanced_switch_devices() -> List[Dict[str, Any]]:
+    return [_with_distinct_identity(create_switch_if3(), 2)]
+
+
+def create_smart_plug_devices() -> List[Dict[str, Any]]:
+    return [create_smart_plug()]
+
+
+def create_power_meter_plug_devices() -> List[Dict[str, Any]]:
+    return [create_power_meter_plug()]
+
+
+def create_dimmer_light_devices() -> List[Dict[str, Any]]:
+    return [create_dimmer_light()]
+
+
+def create_rgbw_light_devices() -> List[Dict[str, Any]]:
+    return [create_rgbw_light()]
+
+
+def create_quantum_light_devices() -> List[Dict[str, Any]]:
+    return [create_rgbw_light()]
+
+
+def create_environment_sensor_devices() -> List[Dict[str, Any]]:
+    return [create_environment_sensor()]
+
+
+def create_gas_sensor_devices() -> List[Dict[str, Any]]:
+    return [create_environment_sensor()]
+
+
+def create_specialized_sensor_devices() -> List[Dict[str, Any]]:
+    return [create_environment_sensor()]
+
+
+def create_air_purifier_devices() -> List[Dict[str, Any]]:
+    return [_device("air_purifier", "SL_P_A", "Air Purifier", {"P1": {"val": 1}})]
+
+
+def create_virtual_test_devices() -> List[Dict[str, Any]]:
+    return [_device("virtual_test", "SL_SCENE", "Virtual Test Device", {})]
+
+
+def create_mock_config_data_with_validation() -> Dict[str, Any]:
+    """Return the standard mock config data used by integration tests."""
+    return create_mock_config_data()

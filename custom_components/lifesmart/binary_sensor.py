@@ -258,7 +258,9 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
     @callback
     def _is_momentary_button_device(self) -> bool:
         """从DEVICE_MAPPING判断是否为瞬时按钮设备。"""
-        return is_momentary_button_device(self.devtype, self._sub_key)
+        return is_momentary_button_device(
+            self.devtype, self._sub_key, self._raw_device.get(DEVICE_DATA_KEY, {})
+        )
 
     @callback
     def _parse_state(self) -> bool:
@@ -341,8 +343,6 @@ class LifeSmartBinarySensor(LifeSmartEntity, BinarySensorEntity):
         if io_config:
             try:
                 return process_io_attributes(
-                    self.devtype,
-                    self._sub_key,
                     io_config,
                     self._sub_data,
                     self._attr_is_on,

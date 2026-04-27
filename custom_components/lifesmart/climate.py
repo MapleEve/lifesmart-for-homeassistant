@@ -511,9 +511,7 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         if self._try_init_from_climate_features():
             return
 
-        # Generation 1: 使用传统的动态分派方法（向后兼容）
-        init_method = getattr(self, f"_init_{self.devtype.lower()}", self._init_default)
-        init_method()
+        raise ValueError(f"Missing Gen2 climate configuration for {self.devtype}")
 
     def _try_init_from_climate_features(self) -> bool:
         """
@@ -636,7 +634,8 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         self._attr_max_temp = temp_range.get("max", 40)
 
         _LOGGER.debug(
-            "Initialized Generation 2 climate features for %s: hvac_modes=%s, fan_modes=%s",
+            "Initialized Generation 2 climate features for %s: "
+            "hvac_modes=%s, fan_modes=%s",
             self._attr_name,
             [mode.value for mode in hvac_modes],
             getattr(self, "_attr_fan_modes", []),
@@ -652,11 +651,9 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         与 _initialize_features 类似，此方法使用 getattr 动态调用
         特定于设备类型的 `_update_*` 方法来处理状态更新。
         """
-        update_method = getattr(
-            self,
-            f"_update_{self.devtype.lower()}",
-            self._update_default,
-        )
+        update_method = getattr(self, f"_update_{self.devtype.lower()}", None)
+        if update_method is None:
+            raise ValueError(f"Missing Gen2 climate state updater for {self.devtype}")
         update_method(data)
 
     # --- 设备专属初始化方法 ---

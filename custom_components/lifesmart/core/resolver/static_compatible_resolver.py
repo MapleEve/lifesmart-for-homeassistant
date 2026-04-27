@@ -401,6 +401,7 @@ class StaticCompatibleResolver:
             entity_category=io_data.get("entity_category"),
             value_template=io_data.get("value_template"),
             state_mapping=io_data.get("state_mapping"),
+            commands=io_data.get("commands", {}),
         )
 
     def get_static_resolver_stats(self) -> Dict[str, Any]:

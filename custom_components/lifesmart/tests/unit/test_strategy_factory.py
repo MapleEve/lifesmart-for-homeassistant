@@ -20,9 +20,9 @@ from custom_components.lifesmart.core.strategies.strategy_factory import (
 from custom_components.lifesmart.core.strategies.base_strategy import BaseDeviceStrategy
 
 # 从强类型工厂导入测试数据
-from ...utils.typed_factories import (
-    create_typed_smart_plug,
-    create_typed_thermostat_panel,
+from ..utils.typed_factories import (
+    create_smart_plug,
+    create_thermostat_panel,
 )
 
 
@@ -200,7 +200,7 @@ class TestDeviceStrategyFactoryMapping:
         mock_strategies[0].can_handle.return_value = True
         mock_strategies[0].resolve_device_mapping.return_value = expected_mapping
 
-        device_data = create_typed_smart_plug().to_dict()
+        device_data = create_smart_plug()
         raw_config = {"name": "Test Config"}
 
         # Act
@@ -275,7 +275,7 @@ class TestDeviceStrategyFactoryMapping:
         mock_strategies[2].can_handle.return_value = True  # 使用第三个策略
         mock_strategies[2].resolve_device_mapping.return_value = expected_mapping
 
-        device_data = create_typed_thermostat_panel().to_dict()
+        device_data = create_thermostat_panel()
         raw_config = {"name": "Thermostat Config", "dynamic": True}
 
         # Act

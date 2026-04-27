@@ -123,6 +123,7 @@ class DeviceResolver:
                 cached_config = self._resolution_cache[cache_key]
                 result = ResolutionResult.success_result(cached_config)
                 result.cache_hit = True
+                result.resolution_time_ms = (time.time() - start_time) * 1000
                 return result
 
             self._cache_stats["misses"] += 1
@@ -130,7 +131,10 @@ class DeviceResolver:
             # Phase 2.5: 获取原始设备配置并使用策略工厂解析
             raw_config = self._spec_registry.get_device_spec(device_type)
             if not raw_config:
-                error_msg = f"Device specification not found for {device_me} (type: {device_type})"
+                error_msg = (
+                    f"Device specification not found for {device_me} "
+                    f"(type: {device_type})"
+                )
                 _LOGGER.error("设备规格未找到: %s", device)
                 return ResolutionResult.error_result(error_msg)
 
@@ -147,7 +151,10 @@ class DeviceResolver:
                         f"Strategy failed for {device_me}: {raw_mapping['_error']}"
                     )
                 else:
-                    error_msg = f"Device configuration not found for {device_me} (type: {device_type})"
+                    error_msg = (
+                        f"Device configuration not found for {device_me} "
+                        f"(type: {device_type})"
+                    )
                 _LOGGER.error("策略工厂无法解析设备配置: %s", device)
                 return ResolutionResult.error_result(error_msg)
 
@@ -303,6 +310,11 @@ class DeviceResolver:
         self._cache_stats = {"hits": 0, "misses": 0, "errors": 0}
         _LOGGER.debug("DeviceResolver cache cleared")
 
+    @property
+    def device_registry(self) -> DeviceSpecRegistry:
+        """Read-only access to the Gen2 device specification registry."""
+        return self._spec_registry
+
     def _generate_cache_key(self, device: DeviceData) -> str:
         """
         生成设备缓存键
@@ -356,9 +368,33 @@ class DeviceResolver:
             source_mapping=raw_mapping,
         )
 
-        # 转换平台配置
+        # 转换平台配置。Gen2 canonical specs keep platform data under
+        # {"platforms": {platform: {"io_configs": {...}}}}; strategy output may
+        # also include already-flattened top-level platform mappings. Normalize
+        # both shapes without treating metadata as bogus platforms.
+        metadata_keys = {
+            "name",
+            "category",
+            "manufacturer",
+            "model",
+            "platforms",
+            "features",
+            "constraints",
+        }
         platforms = {}
+        canonical_platforms = raw_mapping.get("platforms")
+        if isinstance(canonical_platforms, dict):
+            for platform_name, platform_data in canonical_platforms.items():
+                if isinstance(platform_data, dict):
+                    platform_config = self._convert_to_platform_config(
+                        platform_name, platform_data
+                    )
+                    if platform_config:
+                        platforms[platform_name] = platform_config
+
         for platform_name, platform_data in raw_mapping.items():
+            if platform_name in metadata_keys or platform_name.startswith("_"):
+                continue
             if isinstance(platform_data, dict):
                 platform_config = self._convert_to_platform_config(
                     platform_name, platform_data
@@ -394,7 +430,11 @@ class DeviceResolver:
 
         # 转换IO配置
         ios = {}
-        for io_key, io_data in platform_data.items():
+        io_source = platform_data.get("io_configs", platform_data)
+        if not isinstance(io_source, dict):
+            io_source = {}
+
+        for io_key, io_data in io_source.items():
             if isinstance(io_data, dict) and "description" in io_data:
                 io_config = self._convert_to_io_config(io_data)
                 if io_config:
@@ -435,6 +475,7 @@ class DeviceResolver:
             attribute_generator=io_data.get("attribute_generator"),
             value_template=io_data.get("value_template"),
             state_mapping=io_data.get("state_mapping"),
+            commands=io_data.get("commands", {}),
         )
 
 

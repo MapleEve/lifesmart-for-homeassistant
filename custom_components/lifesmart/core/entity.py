@@ -382,60 +382,45 @@ class LifeSmartEntity(Entity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """
-        返回设备信息 - 合并自device_info.py的get_generation2_device_info功能
-
-        使用Generation Gates系统进行智能fallback，而非硬性错误。
-        对Generation 2设备使用enhanced info，对Legacy设备使用基础info。
-
-        Returns:
-            DeviceInfo: Home Assistant标准设备信息对象
-        """
-        # 检查是否支持enhanced device info
+        """Return Home Assistant device info from explicit Gen2 resolver data only."""
         try:
-            from .compatibility import check_feature_gate
+            from .resolver import get_device_resolver
 
-            if check_feature_gate(self._raw_device, "enhanced_device_info"):
-                # Generation 2设备：使用DeviceResolver获取增强信息
-                from .resolver import get_device_resolver
-
-                resolver = get_device_resolver()
-                result = resolver.resolve_device_config(self._raw_device)
-
-                if result.success and result.device_config:
-                    device_config = result.device_config
-
-                    # 验证Generation 2必需字段
-                    if device_config.manufacturer and device_config.model:
-                        return DeviceInfo(
-                            identifiers={(DOMAIN, self._agt, self._me)},
-                            name=self._device_name,
-                            manufacturer=device_config.manufacturer,  # ✅ 来自Generation 2规格
-                            model=device_config.model,  # ✅ 来自Generation 2规格
-                            sw_version=self._raw_device.get(
-                                DEVICE_VERSION_KEY, "unknown"
-                            ),
-                            via_device=(DOMAIN, self._agt),
-                        )
-                    else:
-                        _LOGGER.warning(
-                            f"Device {self._me} missing manufacturer/model in Generation 2 specs, "
-                            f"falling back to legacy mode"
-                        )
+            resolver = get_device_resolver()
+            result = resolver.resolve_device_config(self._raw_device)
+            if result.success and result.device_config:
+                device_config = result.device_config
+                if device_config.manufacturer and device_config.model:
+                    return DeviceInfo(
+                        identifiers={(DOMAIN, self._agt, self._me)},
+                        name=self._device_name,
+                        manufacturer=device_config.manufacturer,
+                        model=device_config.model,
+                        sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
+                        via_device=(DOMAIN, self._agt),
+                    )
+                _LOGGER.error(
+                    "Device %s resolved as Gen2 but missing manufacturer/model",
+                    self._me,
+                )
+            else:
+                _LOGGER.error(
+                    "Device %s failed strict Gen2 resolution for device_info: %s",
+                    self._me,
+                    result.error_message if result else "unknown error",
+                )
         except ImportError:
-            _LOGGER.debug("Generation gates not available, using legacy device info")
-        except Exception as e:
-            _LOGGER.debug(f"Failed to get enhanced device info for {self._me}: {e}")
+            _LOGGER.exception("Gen2 resolver not available for device_info")
+        except Exception as err:
+            _LOGGER.exception(
+                "Failed strict Gen2 device_info resolution for %s: %s",
+                self._me,
+                err,
+            )
 
-        # Legacy设备或Generation 2字段不完整时的fallback
-        _LOGGER.debug(f"Using legacy device info for device {self._me}")
         return DeviceInfo(
             identifiers={(DOMAIN, self._agt, self._me)},
             name=self._device_name,
-            manufacturer=MANUFACTURER,  # ✅ Legacy常量fallback
-            model=self._raw_device.get(
-                DEVICE_TYPE_KEY, "Unknown Device"
-            ),  # ✅ devtype fallback
             sw_version=self._raw_device.get(DEVICE_VERSION_KEY, "unknown"),
             via_device=(DOMAIN, self._agt),
         )

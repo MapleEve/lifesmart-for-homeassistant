@@ -167,10 +167,12 @@ def _get_enhanced_io_config(device: dict, sub_key: str) -> dict | None:
         "data_type": getattr(io_config, "data_type", None),
         "rw": getattr(io_config, "rw", None),
         "device_class": getattr(io_config, "device_class", None),
+        "conversion": getattr(io_config, "conversion", None),
     }
 
     # **GENERATION 2 ENHANCEMENT**: 读取并添加cover_features配置
-    device_config = resolver.resolve_device_config(device)
+    result = resolver.resolve_device_config(device)
+    device_config = result.device_config if result and result.success else None
     if device_config and device_config.source_mapping:
         raw_mapping = device_config.source_mapping
         generation = raw_mapping.get("_generation")
@@ -554,47 +556,41 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
     def _configure_features(self) -> None:
         """
         根据cover_features配置支持的特性。
-        Generation 2设备使用动态特性配置，Generation 1设备使用默认配置。
+        Generation 2设备必须提供动态特性配置。
         """
         # 获取增强IO配置，可能包含cover_features
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         cover_features = io_config.get("cover_features", {}) if io_config else {}
 
-        if cover_features:
-            # Generation 2: 基于cover_features动态配置
-            features = (
-                CoverEntityFeature.OPEN
-                | CoverEntityFeature.CLOSE
-                | CoverEntityFeature.STOP
+        if not cover_features:
+            raise ValueError(
+                f"Missing Gen2 cover_features for positional cover {self.devtype}"
             )
 
-            # 检查是否支持位置控制
-            if cover_features.get("position_feedback", True):  # 默认支持位置反馈
-                features |= CoverEntityFeature.SET_POSITION
+        # Generation 2: 基于cover_features动态配置
+        features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-            # 检查是否支持倾斜控制
-            if cover_features.get("tilt_control", False):
-                features |= CoverEntityFeature.SET_TILT_POSITION
-                features |= CoverEntityFeature.OPEN_TILT
-                features |= CoverEntityFeature.CLOSE_TILT
-                features |= CoverEntityFeature.STOP_TILT
+        if "stop" in cover_features.get("control_mapping", {}):
+            features |= CoverEntityFeature.STOP
 
-            self._attr_supported_features = features
+        if cover_features.get("position_feedback") is True:
+            features |= CoverEntityFeature.SET_POSITION
 
-            _LOGGER.debug(
-                "Configured Generation 2 features for %s: position_feedback=%s, tilt_control=%s",
-                self._attr_name,
-                cover_features.get("position_feedback", True),
-                cover_features.get("tilt_control", False),
-            )
-        else:
-            # Generation 1: 使用默认配置（向后兼容）
-            self._attr_supported_features = (
-                CoverEntityFeature.OPEN
-                | CoverEntityFeature.CLOSE
-                | CoverEntityFeature.STOP
-                | CoverEntityFeature.SET_POSITION
-            )
+        if cover_features.get("tilt_control") is True:
+            features |= CoverEntityFeature.SET_TILT_POSITION
+            features |= CoverEntityFeature.OPEN_TILT
+            features |= CoverEntityFeature.CLOSE_TILT
+            features |= CoverEntityFeature.STOP_TILT
+
+        self._attr_supported_features = features
+
+        _LOGGER.debug(
+            "Configured Generation 2 features for %s: "
+            "position_feedback=%s, tilt_control=%s",
+            self._attr_name,
+            cover_features.get("position_feedback"),
+            cover_features.get("tilt_control"),
+        )
 
     @callback
     def _determine_device_class(self) -> CoverDeviceClass:
@@ -615,6 +611,11 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
         使用新的业务逻辑处理器解析设备状态。
         **ENHANCED FOR GENERATION 2**: 现在支持使用cover_features配置。
         """
+        self._attr_current_cover_position = None
+        self._attr_is_opening = False
+        self._attr_is_closing = False
+        self._attr_is_closed = True
+
         status_data = safe_get(
             self._raw_device, DEVICE_DATA_KEY, self._sub_key, default={}
         )
@@ -626,9 +627,16 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
         if not io_config:
             return
 
-        # 处理器类型直接来自conversion字段
+        # Gen2 cover position IO encodes direction in the high bit and physical
+        # position in the low 7 bits. Some strict specs still mark this as
+        # direct_value because commands are direct, so select the cover_position
+        # runtime processor from the cover data_type as well as explicit conversion.
         conversion = io_config.get("conversion")
-        if conversion == "cover_position":
+        data_type = io_config.get("data_type")
+        if conversion == "cover_position" or data_type in {
+            "position_status",
+            "position_control",
+        }:
             # 构建处理器配置
             processor_config = {"processor_type": "cover_position"}
             processed_value = process_io_value(processor_config, status_data)
@@ -637,6 +645,10 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
                 self._attr_current_cover_position = processed_value.get("position")
                 self._attr_is_opening = processed_value.get("is_opening", False)
                 self._attr_is_closing = processed_value.get("is_closing", False)
+                self._attr_is_closed = (
+                    self.current_cover_position is not None
+                    and self.current_cover_position <= 0
+                )
             return
 
         # 对于其他情况，使用单独的处理器
@@ -711,34 +723,28 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
         cover_features = io_config.get("cover_features", {}) if io_config else {}
 
-        if cover_features:
-            # Generation 2: 基于cover_features动态配置
-            features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-
-            # 检查是否支持停止功能
-            control_mapping = cover_features.get("control_mapping", {})
-            if "stop" in control_mapping:
-                features |= CoverEntityFeature.STOP
-
-            self._attr_supported_features = features
-
-            # 存储cover_features供状态处理使用
-            self._cover_features = cover_features
-
-            _LOGGER.debug(
-                "Configured Generation 2 non-positional features for %s: optimistic=%s, stop_support=%s",
-                self._attr_name,
-                cover_features.get("optimistic_mode", True),
-                "stop" in control_mapping,
+        if not cover_features:
+            raise ValueError(
+                f"Missing Gen2 cover_features for non-positional cover {self.devtype}"
             )
-        else:
-            # Generation 1: 使用默认配置（向后兼容）
-            self._attr_supported_features = (
-                CoverEntityFeature.OPEN
-                | CoverEntityFeature.CLOSE
-                | CoverEntityFeature.STOP
-            )
-            self._cover_features = {}
+
+        # Generation 2: 基于cover_features动态配置
+        features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+
+        control_mapping = cover_features.get("control_mapping", {})
+        if "stop" in control_mapping:
+            features |= CoverEntityFeature.STOP
+
+        self._attr_supported_features = features
+        self._cover_features = cover_features
+
+        _LOGGER.debug(
+            "Configured Generation 2 non-positional features for %s: "
+            "optimistic=%s, stop_support=%s",
+            self._attr_name,
+            cover_features.get("optimistic_mode"),
+            "stop" in control_mapping,
+        )
 
     def _determine_device_class_non_positional(self) -> CoverDeviceClass:
         """确定非定位覆盖物的设备类别。"""
@@ -759,6 +765,9 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
         **ENHANCED FOR GENERATION 2**: 现在支持使用cover_features配置。
         """
         self._attr_current_cover_position = None
+        self._attr_is_opening = False
+        self._attr_is_closing = False
+        self._attr_is_closed = True
 
         # 使用映射驱动方式获取cover配置
         io_config = _get_enhanced_io_config(self._raw_device, self._sub_key)
@@ -772,24 +781,28 @@ class LifeSmartNonPositionalCover(LifeSmartBaseCover):
             return
 
         # **GENERATION 2 ENHANCEMENT**: 使用cover_features中的control_mapping
-        cover_features = getattr(self, "_cover_features", {})
+        io_config_cover_features = (
+            io_config.get("cover_features", {}) if io_config else {}
+        )
+        cover_features = getattr(self, "_cover_features", io_config_cover_features)
+        if not cover_features:
+            cover_features = io_config_cover_features
         control_mapping = cover_features.get("control_mapping", {})
 
-        if control_mapping:
-            # Generation 2: 使用动态控制映射
-            open_io = control_mapping.get("open", "P1")
-            close_io = control_mapping.get("close", "P2")
-
-            _LOGGER.debug(
-                "Using Generation 2 control mapping for %s: open=%s, close=%s",
-                self._attr_name,
-                open_io,
-                close_io,
+        open_io = control_mapping.get("open")
+        close_io = control_mapping.get("close")
+        if not open_io or not close_io:
+            _LOGGER.warning(
+                "Missing Gen2 open/close control_mapping for %s", self._attr_name
             )
-        else:
-            # Generation 1: 使用默认映射（向后兼容）
-            open_io = "P2"  # 默认开启IO口
-            close_io = "P3"  # 默认关闭IO口
+            return
+
+        _LOGGER.debug(
+            "Using Generation 2 control mapping for %s: open=%s, close=%s",
+            self._attr_name,
+            open_io,
+            close_io,
+        )
 
         # 使用业务逻辑处理器处理开启状态
         open_data = data.get(open_io, {})

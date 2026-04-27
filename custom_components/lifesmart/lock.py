@@ -21,6 +21,7 @@ LifeSmart 门锁平台支持模块
 """
 
 import logging
+from dataclasses import asdict, is_dataclass
 from typing import Any
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
@@ -52,8 +53,47 @@ from .core.data.processors import process_io_data
 from .core.entity import LifeSmartEntity
 from .core.helpers import generate_unique_id
 from .core.platform.platform_detection import get_device_platform_mapping
+from .core.resolver.device_resolver import get_device_resolver
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _io_config_to_dict(io_config: Any) -> dict[str, Any]:
+    """Return a process_io_data-compatible dict from resolver IO config."""
+    if isinstance(io_config, dict):
+        return io_config.copy()
+    if is_dataclass(io_config):
+        return asdict(io_config)
+    return {}
+
+
+def _get_lock_items(
+    device: dict[str, Any], platform_mapping: dict[str, list[str]]
+) -> list[tuple[str, dict[str, Any]]]:
+    """Resolve actual lock IO configs; never synthesize empty configs from lists."""
+    if "lock" not in platform_mapping:
+        return []
+
+    try:
+        platform_config = get_device_resolver().get_platform_config(device, "lock")
+    except Exception as err:  # pragma: no cover - setup should continue per-device
+        _LOGGER.warning("Failed to resolve lock config for %s: %s", device, err)
+        return []
+
+    if not platform_config:
+        return []
+
+    lock_keys = platform_mapping.get("lock", [])
+    if isinstance(lock_keys, dict):
+        lock_keys = list(lock_keys)
+
+    items: list[tuple[str, dict[str, Any]]] = []
+    for lock_key in lock_keys:
+        io_config = platform_config.ios.get(lock_key)
+        lock_cfg = _io_config_to_dict(io_config)
+        if lock_cfg:
+            items.append((lock_key, lock_cfg))
+    return items
 
 
 async def async_setup_entry(
@@ -84,11 +124,11 @@ async def async_setup_entry(
         if "lock" not in platform_mapping:
             continue
 
-        lock_config = platform_mapping.get("lock", {})
+        lock_items = _get_lock_items(device, platform_mapping)
 
         # 为每个支持的门锁子设备创建实体
-        for lock_key, lock_cfg in lock_config.items():
-            if isinstance(lock_cfg, dict) and lock_cfg.get("enabled", True):
+        for lock_key, lock_cfg in lock_items:
+            if lock_cfg.get("enabled", True):
                 lock = LifeSmartLock(
                     device,
                     lock_key,
@@ -122,7 +162,10 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
         """
         初始化门锁设备。
         """
-        super().__init__(device, sub_key, hub)
+        super().__init__(device, hub.get_client())
+        self._device = device
+        self._sub_key = sub_key
+        self._hub = hub
         self._lock_config = lock_config
         self._attr_supported_features = LockEntityFeature.OPEN
 
@@ -275,7 +318,7 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
             return
 
         # 处理IO数据
-        processed_value = process_io_data(lock_data, self._lock_config)
+        processed_value = process_io_data(self._lock_config, lock_data)
 
         if isinstance(processed_value, dict):
             # 复杂状态数据
@@ -290,14 +333,14 @@ class LifeSmartLock(LifeSmartEntity, LockEntity):
         # 检查电池电量数据
         battery_data = device_data.get("BAT")
         if battery_data:
-            battery_processed = process_io_data(battery_data, {"type": "percentage"})
+            battery_processed = process_io_data({"type": "percentage"}, battery_data)
             if isinstance(battery_processed, (int, float)):
                 self._battery_level = int(battery_processed)
 
         # 检查解锁方式数据 (部分门锁提供)
         unlock_data = device_data.get("UMD")
         if unlock_data:
-            unlock_processed = process_io_data(unlock_data, {"type": "unlock_method"})
+            unlock_processed = process_io_data({"type": "unlock_method"}, unlock_data)
             if isinstance(unlock_processed, int):
                 self._unlock_method = unlock_processed
 

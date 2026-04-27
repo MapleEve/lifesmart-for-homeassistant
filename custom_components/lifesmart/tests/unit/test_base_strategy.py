@@ -18,9 +18,9 @@ import pytest
 from custom_components.lifesmart.core.strategies.base_strategy import BaseDeviceStrategy
 
 # 从强类型工厂导入测试数据
-from ...utils.typed_factories import (
-    create_typed_smart_plug,
-    create_typed_thermostat_panel,
+from ..utils.typed_factories import (
+    create_smart_plug,
+    create_thermostat_panel,
 )
 
 
@@ -117,7 +117,7 @@ class TestBaseDeviceStrategyValidationMethods:
         Hypothesis: 包含所有必需字段的有效设备数据应该通过验证。
         """
         # Arrange
-        valid_device = create_typed_smart_plug().to_dict()
+        valid_device = create_smart_plug()
 
         # Act
         is_valid = strategy.validate_device_data(valid_device)
@@ -243,7 +243,7 @@ class TestBaseDeviceStrategyHelperMethods:
         Hypothesis: 真实的强类型设备数据应该能正确提取data部分。
         """
         # Arrange
-        device = create_typed_thermostat_panel().to_dict()
+        device = create_thermostat_panel()
 
         # Act
         device_data = strategy.get_device_data(device)
@@ -374,7 +374,7 @@ class TestBaseDeviceStrategyIntegration:
         Hypothesis: 真实设备数据应该通过完整的验证工作流。
         """
         # Arrange
-        device = create_typed_smart_plug().to_dict()
+        device = create_smart_plug()
         raw_config = {"name": "Smart Plug Config", "dynamic": False}
 
         # Act & Assert - 步骤1: 验证设备数据

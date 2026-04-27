@@ -19,6 +19,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.components.climate import HVACMode, FAN_LOW
+from homeassistant.exceptions import HomeAssistantError
 
 from custom_components.lifesmart.core.client.local_tcp_client import LifeSmartTCPClient
 from custom_components.lifesmart.core.client.protocol import (
@@ -887,16 +888,16 @@ class TestDeviceControlMethods:
     ):
         """测试窗帘控制方法。"""
         # 使用工厂函数创建真实的设备对象
-        from ..utils.typed_factories import create_devices_by_category
+        from ..utils.typed_factories import create_gen2_devices
 
-        cover_devices = create_devices_by_category(["cover"])
+        cover_devices = create_gen2_devices(["SL_ETDOOR", "SL_DOOYA", "SL_SW_WIN"])
         test_device = next(
             (d for d in cover_devices if d["devtype"] == device_type), None
         )
 
-        if not test_device:
-            # 如果找不到对应的设备，跳过测试
-            pytest.skip(f"Device type {device_type} not found in factory devices")
+        assert test_device is not None, (
+            f"Device type {device_type} must exist in Gen2 cover fixtures"
+        )
 
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
@@ -922,9 +923,9 @@ class TestDeviceControlMethods:
     ):
         """测试窗帘位置控制。"""
         # 使用工厂函数创建正确的设备对象
-        from ..utils.typed_factories import create_devices_by_category
+        from ..utils.typed_factories import create_gen2_devices
 
-        cover_devices = create_devices_by_category(["cover"])
+        cover_devices = create_gen2_devices(["SL_DOOYA"])
         test_device = next(
             (d for d in cover_devices if d["devtype"] == device_type), None
         )
@@ -1020,8 +1021,9 @@ class TestDeviceControlMethods:
                     TCP_CLIENT_TEST_VALUES["test_temp_decimal"],
                 ),
             ),
+            ("UNSUPPORTED", 20.0, None),
         ],
-        ids=["DecimalTemp"],
+        ids=["DecimalTemp", "UnsupportedDevice"],
     )
     async def test_climate_temperature_control(
         self, mocked_client, device_type, temperature, expected_call
@@ -1040,19 +1042,26 @@ class TestDeviceControlMethods:
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.async_set_climate_temperature(
-                "agt", "dev1", test_device, temperature
-            )
-
-            mock_build.assert_called_once_with(*expected_call)
+            if expected_call is None:
+                with pytest.raises(HomeAssistantError):
+                    await mocked_client.async_set_climate_temperature(
+                        "agt", "dev1", test_device, temperature
+                    )
+                mock_build.assert_not_called()
+            else:
+                await mocked_client.async_set_climate_temperature(
+                    "agt", "dev1", test_device, temperature
+                )
+                mock_build.assert_called_once_with(*expected_call)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "device_type, fan_mode, current_val, expected_call",
         [
             ("V_AIR_P", FAN_LOW, 0, ("dev1", "F", CMD_TYPE_SET_CONFIG, 15)),
+            ("UNSUPPORTED", FAN_LOW, 0, None),
         ],
-        ids=["VAirPLow"],
+        ids=["VAirPLow", "UnsupportedDevice"],
     )
     async def test_climate_fan_mode_control(
         self, mocked_client, device_type, fan_mode, current_val, expected_call
@@ -1077,11 +1086,17 @@ class TestDeviceControlMethods:
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.async_set_climate_fan_mode(
-                "agt", "dev1", test_device, fan_mode, current_val
-            )
-
-            mock_build.assert_called_once_with(*expected_call)
+            if expected_call is None:
+                with pytest.raises(HomeAssistantError):
+                    await mocked_client.async_set_climate_fan_mode(
+                        "agt", "dev1", test_device, fan_mode, current_val
+                    )
+                mock_build.assert_not_called()
+            else:
+                await mocked_client.async_set_climate_fan_mode(
+                    "agt", "dev1", test_device, fan_mode, current_val
+                )
+                mock_build.assert_called_once_with(*expected_call)
 
 
 # ==================== 场景和红外控制测试类 ====================
@@ -1095,7 +1110,7 @@ class TestSceneAndIRControl:
         """测试场景控制功能。"""
         # 现在场景控制不再使用包构建，而是直接返回成功状态
         result = await mocked_client._async_set_scene(
-            PROTOCOL_TEST_VALUES["test_agt"], TEST_SCENARIOS["scene_123"]
+            PROTOCOL_TEST_VALUES["test_agt"], PROTOCOL_TEST_VALUES["scene_123"]
         )
 
         # 验证返回成功状态
@@ -1187,9 +1202,9 @@ class TestAdvancedFeatures:
         with patch.object(
             mocked_client._factory, "build_multi_epset_packet", return_value=b"packet"
         ) as mock_build:
-            await mocked_client.async_send_multi_command("agt", "rgb_light", io_list)
+            await mocked_client.async_send_multi_command("agt", "SL_CT_RGBW", io_list)
 
-            mock_build.assert_called_once_with("rgb_light", io_list)
+            mock_build.assert_called_once_with("SL_CT_RGBW", io_list)
             mocked_client._send_packet.assert_awaited_once()
 
     @pytest.mark.asyncio
@@ -1312,18 +1327,17 @@ class TestErrorHandlingAndEdgeCases:
                 "data": {},
                 "stat": 1,
             }
-            result = await mocked_client.async_set_climate_temperature(
-                PROTOCOL_TEST_VALUES["test_agt"],
-                "dev1",
-                unsupported_device,
-                TCP_CLIENT_TEST_VALUES["test_temp_25c"],
-            )
-
-            assert result == -1, "不支持的设备应该返回-1"
+            with pytest.raises(HomeAssistantError):
+                await mocked_client.async_set_climate_temperature(
+                    PROTOCOL_TEST_VALUES["test_agt"],
+                    "dev1",
+                    unsupported_device,
+                    TCP_CLIENT_TEST_VALUES["test_temp_25c"],
+                )
             mock_build.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_invalid_fan_mode_handling(self, mocked_client, caplog):
+    async def test_invalid_fan_mode_handling(self, mocked_client):
         """测试无效风扇模式的处理。"""
         with patch.object(
             mocked_client._factory, "build_epset_packet", return_value=b"packet"
@@ -1336,12 +1350,10 @@ class TestErrorHandlingAndEdgeCases:
                 "data": {},
                 "stat": 1,
             }
-            result = await mocked_client.async_set_climate_fan_mode(
-                "agt", "dev1", unsupported_device, FAN_LOW
-            )
-
-            assert result == -1, "不支持的设备类型应该返回-1"
-            assert "不支持风扇模式" in caplog.text, "应该记录不支持的错误信息"
+            with pytest.raises(HomeAssistantError):
+                await mocked_client.async_set_climate_fan_mode(
+                    "agt", "dev1", unsupported_device, FAN_LOW
+                )
             mock_build.assert_not_called()
 
     @pytest.mark.asyncio

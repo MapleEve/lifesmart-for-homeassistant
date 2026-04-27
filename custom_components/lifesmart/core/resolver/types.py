@@ -57,6 +57,7 @@ class IOConfig:
     attribute_generator: Optional[str] = None
     value_template: Optional[str] = None
     state_mapping: Optional[Dict[str, Any]] = None
+    commands: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     # 验证状态
     validation_status: ValidationStatus = ValidationStatus.VALID
@@ -193,6 +194,13 @@ class ResolutionResult:
     # 性能指标
     resolution_time_ms: Optional[float] = None
     cache_hit: bool = False
+
+    @property
+    def source_mapping(self) -> Optional[Dict[str, Any]]:
+        """Return the resolved Gen2 source mapping from the typed device config."""
+        if self.device_config is None:
+            return None
+        return self.device_config.source_mapping
 
     @classmethod
     def success_result(cls, device_config: DeviceConfig) -> "ResolutionResult":

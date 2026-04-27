@@ -51,6 +51,13 @@ class DeviceStrategyFactory:
         # 按优先级排序策略
         self.strategies.sort(key=lambda s: s.priority)
 
+        # Cache per object identity so callers that explicitly probe
+        # get_strategy() and then resolve the same raw config do not re-run
+        # strategy.can_handle(). None is cached too.
+        self._selection_cache: Dict[
+            tuple[str, int, int], Optional[BaseDeviceStrategy]
+        ] = {}
+
         _LOGGER.debug(
             "DeviceStrategyFactory initialized with %d strategies", len(self.strategies)
         )
@@ -69,6 +76,12 @@ class DeviceStrategyFactory:
         Returns:
             BaseDeviceStrategy: 选中的策略或None
         """
+        cache_key = (device_type, id(device), id(raw_config))
+        if not hasattr(self, "_selection_cache"):
+            self._selection_cache = {}
+        if cache_key in self._selection_cache:
+            return self._selection_cache[cache_key]
+
         # 按优先级顺序尝试各个策略
         for strategy in self.strategies:
             try:
@@ -79,6 +92,7 @@ class DeviceStrategyFactory:
                         device.get("me", "unknown"),
                         device_type,
                     )
+                    self._selection_cache[cache_key] = strategy
                     return strategy
             except Exception as e:
                 _LOGGER.warning(
@@ -94,6 +108,7 @@ class DeviceStrategyFactory:
             device.get("me", "unknown"),
             device_type,
         )
+        self._selection_cache[cache_key] = None
         return None
 
     def resolve_device_mapping(

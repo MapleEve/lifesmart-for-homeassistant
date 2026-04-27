@@ -11,7 +11,15 @@ LifeSmart 设备规格纯数据层 - (125 个设备)
 
 from typing import Dict, Any
 
-from custom_components.lifesmart.core.const import (
+from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    HVACMode,
+)
+
+from ..const import (
     CMD_TYPE_ON,
     CMD_TYPE_OFF,
     CMD_TYPE_PRESS,
@@ -3142,7 +3150,7 @@ _RAW_DEVICE_DATA = {
                     "H": {
                         "description": "humidity",
                         "data_type": "humidity",
-                        "conversion": "v_field",
+                        "conversion": "val_div_10",
                         "device_class": "humidity",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -3181,6 +3189,37 @@ _RAW_DEVICE_DATA = {
         "category": "button",
         "manufacturer": "lifesmart",
         "model": "SL_SC_BB",
+        "_generation": 2,
+        "platforms": {
+            "button": {
+                "io_configs": {
+                    "B": {
+                        "description": "button",
+                        "data_type": "button_state",
+                        "conversion": "direct_value",
+                        "device_class": "identify",
+                    },
+                },
+            },
+            "sensor": {
+                "io_configs": {
+                    "V": {
+                        "description": "battery",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
+                },
+            },
+        },
+    },
+    "SL_P_B": {
+        "name": "随心按键",
+        "category": "button",
+        "manufacturer": "lifesmart",
+        "model": "SL_P_B",
         "_generation": 2,
         "platforms": {
             "button": {
@@ -3396,7 +3435,7 @@ _RAW_DEVICE_DATA = {
                         "io_configs": {
                             "P1": {
                                 "description": "brightness",
-                                "data_type": "generic",
+                                "data_type": "dimmer_light",
                                 "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
@@ -3415,7 +3454,7 @@ _RAW_DEVICE_DATA = {
                             },
                             "P2": {
                                 "description": "color_temp",
-                                "data_type": "generic",
+                                "data_type": "color_temperature",
                                 "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
@@ -3438,7 +3477,7 @@ _RAW_DEVICE_DATA = {
                         "io_configs": {
                             "P1": {
                                 "description": "brightness",
-                                "data_type": "generic",
+                                "data_type": "dimmer_light",
                                 "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
@@ -3457,7 +3496,7 @@ _RAW_DEVICE_DATA = {
                             },
                             "P2": {
                                 "description": "color_temp",
-                                "data_type": "generic",
+                                "data_type": "color_temperature",
                                 "conversion": "direct_value",
                                 "range": [0, 255],
                                 "commands": {
@@ -4466,7 +4505,7 @@ _RAW_DEVICE_DATA = {
         "manufacturer": "lifesmart",
         "model": "SL_CN_IF",
         "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
-        # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+        # 显式Gen2非定位窗帘控制配置
         "cover_features": {
             "position_feedback": False,  # 无位置反馈
             "optimistic_mode": True,  # 乐观判断状态
@@ -4586,7 +4625,7 @@ _RAW_DEVICE_DATA = {
         "manufacturer": "lifesmart",
         "model": "SL_CN_FE",
         "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
-        # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+        # 显式Gen2非定位窗帘控制配置
         "cover_features": {
             "position_feedback": False,  # 无位置反馈
             "optimistic_mode": True,  # 乐观判断状态
@@ -4690,7 +4729,7 @@ _RAW_DEVICE_DATA = {
         "manufacturer": "lifesmart",
         "model": "SL_P_V2",
         "_generation": 2,  # DEVICE_CENTRIC_CONFIG格式标识
-        # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+        # 显式Gen2非定位窗帘控制配置
         "cover_features": {
             "position_feedback": False,  # 无位置反馈
             "optimistic_mode": True,  # 乐观判断状态
@@ -5439,7 +5478,7 @@ _RAW_DEVICE_DATA = {
                         "description": "humidity",
                         "rw": "R",
                         "data_type": "humidity",
-                        "conversion": "v_field",
+                        "conversion": "val_div_10",
                         "device_class": "humidity",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -5486,7 +5525,7 @@ _RAW_DEVICE_DATA = {
                     "H": {
                         "description": "humidity",
                         "data_type": "humidity",
-                        "conversion": "v_field",
+                        "conversion": "val_div_10",
                         "device_class": "humidity",
                         "unit_of_measurement": "%",
                         "state_class": "measurement",
@@ -5809,7 +5848,7 @@ _RAW_DEVICE_DATA = {
                     "P3": {
                         "description": "co2_concentration",
                         "data_type": "co2_concentration",
-                        "conversion": "v_field",
+                        "conversion": "co2_scaled",
                         "device_class": "carbon_dioxide",
                         "unit_of_measurement": "ppm",
                         "state_class": "measurement",
@@ -8291,6 +8330,15 @@ _RAW_DEVICE_DATA = {
         "manufacturer": "lifesmart",
         "model": "SL_CP_DN",
         "_generation": 2,
+        "climate_features": {
+            "hvac_modes": {
+                1: "heat",
+            },
+            "temperature_range": {
+                "min": 5,
+                "max": 40,
+            },
+        },
         "platforms": {
             "climate": {
                 "io_configs": {
@@ -8687,7 +8735,7 @@ _RAW_DEVICE_DATA = {
         "cover_features": {
             "position_feedback": False,
             "optimistic_mode": True,
-            # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+            # 显式Gen2非定位窗帘控制配置
             "control_mapping": {"open": "P2", "close": "P3", "stop": "P4"},
             "control_modes": {
                 "free_mode": {
@@ -8940,7 +8988,7 @@ _RAW_DEVICE_DATA = {
         "cover_features": {
             "position_feedback": False,
             "optimistic_mode": True,
-            # 集成的窗帘控制配置（原NON_POSITIONAL_COVER_CONFIG）
+            # 显式Gen2非定位窗帘控制配置
             "control_mapping": {"open": "P2", "close": "P3", "stop": "P4"},
             "control_modes": {
                 "free_mode": {
@@ -9621,231 +9669,231 @@ _RAW_DEVICE_DATA = {
         "platforms": {
             "switch": {
                 "io_configs": {
-            "O": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "O": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "L*": {
+                        "description": "switch",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                },
-            },
-            "L*": {
-                "description": "switch",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
                 }
             },
             "sensor": {
                 "io_configs": {
-            "P1": {
-                "description": "v_ind_s",
-                "data_type": "generic_value",
-                "conversion": "ieee754_or_friendly",
-            },
-            "EE": {
-                "description": "energy",
-                "data_type": "energy_consumption",
-                "conversion": "ieee754_or_friendly",
-                "unit_of_measurement": "kWh",
-                "device_class": "energy",
-                "state_class": "total_increasing",
-            },
-            "EE*": {
-                "description": "electric",
-                "data_type": "energy_consumption",
-                "conversion": "ieee754_or_friendly",
-                "unit_of_measurement": "kWh",
-                "device_class": "energy",
-                "state_class": "total_increasing",
-            },
-            "EP": {
-                "description": "power",
-                "data_type": "power",
-                "conversion": "ieee754_or_friendly",
-                "unit_of_measurement": "W",
-                "device_class": "power",
-                "state_class": "measurement",
-            },
-            "EPF": {
-                "description": "power_factor",
-                "data_type": "power_factor",
-                "conversion": "friendly_value",
-                "device_class": "power_factor",
-                "state_class": "measurement",
-            },
-            "EPF*": {
-                "description": "power",
-                "data_type": "power_factor",
-                "conversion": "friendly_value",
-                "device_class": "power_factor",
-                "state_class": "measurement",
-            },
-            "EF": {
-                "description": "electric",
-                "data_type": "frequency",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "Hz",
-                "device_class": "frequency",
-                "state_class": "measurement",
-            },
-            "EF*": {
-                "description": "electric",
-                "data_type": "frequency",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "Hz",
-                "device_class": "frequency",
-                "state_class": "measurement",
-            },
-            "EI": {
-                "description": "current",
-                "data_type": "current",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "A",
-                "device_class": "current",
-                "state_class": "measurement",
-            },
-            "EI*": {
-                "description": "electric",
-                "data_type": "current",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "A",
-                "device_class": "current",
-                "state_class": "measurement",
-            },
-            "EV": {
-                "description": "voltage",
-                "data_type": "voltage",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "V",
-                "device_class": "voltage",
-                "state_class": "measurement",
-            },
-            "EV*": {
-                "description": "electric",
-                "data_type": "voltage",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "V",
-                "device_class": "voltage",
-                "state_class": "measurement",
-            },
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "°C",
-                "device_class": "temperature",
-                "state_class": "measurement",
-            },
-            "H": {
-                "description": "humidity",
-                "data_type": "humidity",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "%",
-                "device_class": "humidity",
-                "state_class": "measurement",
-            },
-            "PM": {
-                "description": "PM2.5",
-                "data_type": "pm25",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "µg/m³",
-                "device_class": "pm25",
-                "state_class": "measurement",
-            },
-            "PMx": {
-                "description": "PM10",
-                "data_type": "pm10",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "µg/m³",
-                "device_class": "pm10",
-                "state_class": "measurement",
-            },
-            "COPPM": {
-                "description": "coppm",
-                "data_type": "co_concentration",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "ppm",
-                "device_class": "carbon_monoxide",
-                "state_class": "measurement",
-            },
-            "CO2PPM": {
-                "description": "coppm",
-                "data_type": "co2_concentration",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "ppm",
-                "device_class": "carbon_dioxide",
-                "state_class": "measurement",
-            },
-            "CH20PPM": {
-                "description": "coppm",
-                "data_type": "formaldehyde_concentration",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "ppm",
-                "device_class": "volatile_organic_compounds",
-                "state_class": "measurement",
-            },
-            "O2VOL": {
-                "description": "coppm",
-                "data_type": "oxygen_concentration",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "vol%",
-                "state_class": "measurement",
-            },
-            "NH3PPM": {
-                "description": "coppm",
-                "data_type": "ammonia_concentration",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "ppm",
-                "state_class": "measurement",
-            },
-            "H2SPPM": {
-                "description": "coppm",
-                "data_type": "h2s_concentration",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "ppm",
-                "state_class": "measurement",
-            },
-            "TVOC": {
-                "description": "TVOC",
-                "data_type": "tvoc_concentration",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "mg/m³",
-                "device_class": "volatile_organic_compounds",
-                "state_class": "measurement",
-            },
-            "PHM": {
-                "description": "co2ppm",
-                "data_type": "noise_level",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "dB",
-                "device_class": "sound_pressure",
-                "state_class": "measurement",
-            },
-            "SMOKE": {
-                "description": "ch20ppm",
-                "data_type": "smoke_concentration",
-                "conversion": "friendly_value",
-                "unit_of_measurement": "ppm",
-                "state_class": "measurement",
-            },
+                    "P1": {
+                        "description": "v_ind_s",
+                        "data_type": "generic_value",
+                        "conversion": "ieee754_or_friendly",
+                    },
+                    "EE": {
+                        "description": "energy",
+                        "data_type": "energy_consumption",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "kWh",
+                        "device_class": "energy",
+                        "state_class": "total_increasing",
+                    },
+                    "EE*": {
+                        "description": "electric",
+                        "data_type": "energy_consumption",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "kWh",
+                        "device_class": "energy",
+                        "state_class": "total_increasing",
+                    },
+                    "EP": {
+                        "description": "power",
+                        "data_type": "power",
+                        "conversion": "ieee754_or_friendly",
+                        "unit_of_measurement": "W",
+                        "device_class": "power",
+                        "state_class": "measurement",
+                    },
+                    "EPF": {
+                        "description": "power_factor",
+                        "data_type": "power_factor",
+                        "conversion": "friendly_value",
+                        "device_class": "power_factor",
+                        "state_class": "measurement",
+                    },
+                    "EPF*": {
+                        "description": "power",
+                        "data_type": "power_factor",
+                        "conversion": "friendly_value",
+                        "device_class": "power_factor",
+                        "state_class": "measurement",
+                    },
+                    "EF": {
+                        "description": "electric",
+                        "data_type": "frequency",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "Hz",
+                        "device_class": "frequency",
+                        "state_class": "measurement",
+                    },
+                    "EF*": {
+                        "description": "electric",
+                        "data_type": "frequency",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "Hz",
+                        "device_class": "frequency",
+                        "state_class": "measurement",
+                    },
+                    "EI": {
+                        "description": "current",
+                        "data_type": "current",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "A",
+                        "device_class": "current",
+                        "state_class": "measurement",
+                    },
+                    "EI*": {
+                        "description": "electric",
+                        "data_type": "current",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "A",
+                        "device_class": "current",
+                        "state_class": "measurement",
+                    },
+                    "EV": {
+                        "description": "voltage",
+                        "data_type": "voltage",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "V",
+                        "device_class": "voltage",
+                        "state_class": "measurement",
+                    },
+                    "EV*": {
+                        "description": "electric",
+                        "data_type": "voltage",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "V",
+                        "device_class": "voltage",
+                        "state_class": "measurement",
+                    },
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "°C",
+                        "device_class": "temperature",
+                        "state_class": "measurement",
+                    },
+                    "H": {
+                        "description": "humidity",
+                        "data_type": "humidity",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "%",
+                        "device_class": "humidity",
+                        "state_class": "measurement",
+                    },
+                    "PM": {
+                        "description": "PM2.5",
+                        "data_type": "pm25",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "µg/m³",
+                        "device_class": "pm25",
+                        "state_class": "measurement",
+                    },
+                    "PMx": {
+                        "description": "PM10",
+                        "data_type": "pm10",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "µg/m³",
+                        "device_class": "pm10",
+                        "state_class": "measurement",
+                    },
+                    "COPPM": {
+                        "description": "coppm",
+                        "data_type": "co_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "device_class": "carbon_monoxide",
+                        "state_class": "measurement",
+                    },
+                    "CO2PPM": {
+                        "description": "coppm",
+                        "data_type": "co2_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "device_class": "carbon_dioxide",
+                        "state_class": "measurement",
+                    },
+                    "CH20PPM": {
+                        "description": "coppm",
+                        "data_type": "formaldehyde_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "device_class": "volatile_organic_compounds",
+                        "state_class": "measurement",
+                    },
+                    "O2VOL": {
+                        "description": "coppm",
+                        "data_type": "oxygen_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "vol%",
+                        "state_class": "measurement",
+                    },
+                    "NH3PPM": {
+                        "description": "coppm",
+                        "data_type": "ammonia_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "H2SPPM": {
+                        "description": "coppm",
+                        "data_type": "h2s_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
+                    "TVOC": {
+                        "description": "TVOC",
+                        "data_type": "tvoc_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "mg/m³",
+                        "device_class": "volatile_organic_compounds",
+                        "state_class": "measurement",
+                    },
+                    "PHM": {
+                        "description": "co2ppm",
+                        "data_type": "noise_level",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "dB",
+                        "device_class": "sound_pressure",
+                        "state_class": "measurement",
+                    },
+                    "SMOKE": {
+                        "description": "ch20ppm",
+                        "data_type": "smoke_concentration",
+                        "conversion": "friendly_value",
+                        "unit_of_measurement": "ppm",
+                        "state_class": "measurement",
+                    },
                 }
             },
         },
@@ -9863,51 +9911,51 @@ _RAW_DEVICE_DATA = {
         "platforms": {
             "light": {
                 "io_configs": {
-            "P1": {
-                "description": "control",
-                "data_type": "infrared_light",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "P1": {
+                        "description": "control",
+                        "data_type": "infrared_light",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
                 }
             },
             "binary_sensor": {
                 "io_configs": {
-            "P2": {
-                "description": "motion",
-                "data_type": "motion_status",
-                "conversion": "direct_value",
-                "device_class": "motion",
-            },
+                    "P2": {
+                        "description": "motion",
+                        "data_type": "motion_status",
+                        "conversion": "direct_value",
+                        "device_class": "motion",
+                    },
                 }
             },
             "sensor": {
                 "io_configs": {
-            "P3": {
-                "description": "illuminance",
-                "data_type": "illuminance",
-                "conversion": "v_field",
-                "device_class": "illuminance",
-                "unit_of_measurement": "lx",
-                "state_class": "measurement",
-            },
-            "P4": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
+                    "P3": {
+                        "description": "illuminance",
+                        "data_type": "illuminance",
+                        "conversion": "v_field",
+                        "device_class": "illuminance",
+                        "unit_of_measurement": "lx",
+                        "state_class": "measurement",
+                    },
+                    "P4": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
                 }
             },
         },
@@ -9922,38 +9970,38 @@ _RAW_DEVICE_DATA = {
         "platforms": {
             "binary_sensor": {
                 "io_configs": {
-            "KY": {
-                "description": "button",
-                "data_type": "keypad_status",
-                "conversion": "direct_value",
-                "device_class": "moving",
-            },
-            "TR": {
-                "description": "tamper",
-                "data_type": "tamper_status",
-                "conversion": "type_bit_0",
-                "device_class": "tamper",
-            },
+                    "KY": {
+                        "description": "button",
+                        "data_type": "keypad_status",
+                        "conversion": "direct_value",
+                        "device_class": "moving",
+                    },
+                    "TR": {
+                        "description": "tamper",
+                        "data_type": "tamper_status",
+                        "conversion": "type_bit_0",
+                        "device_class": "tamper",
+                    },
                 }
             },
             "sensor": {
                 "io_configs": {
-            "T": {
-                "description": "temperature",
-                "data_type": "temperature",
-                "conversion": "v_field",
-                "device_class": "temperature",
-                "unit_of_measurement": "°C",
-                "state_class": "measurement",
-            },
-            "V": {
-                "description": "energy",
-                "data_type": "battery",
-                "conversion": "v_field",
-                "device_class": "battery",
-                "unit_of_measurement": "%",
-                "state_class": "measurement",
-            },
+                    "T": {
+                        "description": "temperature",
+                        "data_type": "temperature",
+                        "conversion": "v_field",
+                        "device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                        "state_class": "measurement",
+                    },
+                    "V": {
+                        "description": "energy",
+                        "data_type": "battery",
+                        "conversion": "v_field",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "state_class": "measurement",
+                    },
                 }
             },
         },
@@ -10032,52 +10080,52 @@ _RAW_DEVICE_DATA = {
         "platforms": {
             "light": {
                 "io_configs": {
-            "P1": {
-                "description": "control",
-                "data_type": "binary_switch",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "P1": {
+                        "description": "control",
+                        "data_type": "binary_switch",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                },
-            },
                 }
             },
             "cover": {
                 "io_configs": {
-            "P2": {
-                "description": "status",
-                "data_type": "garage_door_status",
-                "conversion": "direct_value",
-            },
-            "P3": {
-                "description": "control",
-                "data_type": "garage_door_control",
-                "conversion": "direct_value",
-                "commands": {
-                    "open": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 100,
+                    "P2": {
+                        "description": "status",
+                        "data_type": "garage_door_status",
+                        "conversion": "direct_value",
                     },
-                    "close": {
-                        "type": CMD_TYPE_SET_VAL,
-                        "val": 0,
+                    "P3": {
+                        "description": "control",
+                        "data_type": "garage_door_control",
+                        "conversion": "direct_value",
+                        "commands": {
+                            "open": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 100,
+                            },
+                            "close": {
+                                "type": CMD_TYPE_SET_VAL,
+                                "val": 0,
+                            },
+                            "stop": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                                "val": 128,
+                            },
+                            "set_position": {
+                                "type": CMD_TYPE_SET_VAL,
+                            },
+                        },
                     },
-                    "stop": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                        "val": 128,
-                    },
-                    "set_position": {
-                        "type": CMD_TYPE_SET_VAL,
-                    },
-                },
-            },
                 }
             },
         },
@@ -10094,45 +10142,45 @@ _RAW_DEVICE_DATA = {
         "platforms": {
             "switch": {
                 "io_configs": {
-            "P1": {
-                "description": "control",
-                "data_type": "alarm_playback",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "on": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
+                    "P1": {
+                        "description": "control",
+                        "data_type": "alarm_playback",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "on": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "off": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_config_on": {
+                                "type": CMD_TYPE_SET_RAW_ON,
+                            },
+                            "set_config_off": {
+                                "type": CMD_TYPE_SET_RAW_OFF,
+                            },
+                        },
                     },
-                    "off": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
+                    "P2": {
+                        "description": "control",
+                        "data_type": "volume_control",
+                        "conversion": "type_bit_0",
+                        "commands": {
+                            "unmute": {
+                                "type": CMD_TYPE_ON,
+                                "val": 1,
+                            },
+                            "mute": {
+                                "type": CMD_TYPE_OFF,
+                                "val": 0,
+                            },
+                            "set_volume": {
+                                "type": CMD_TYPE_SET_CONFIG,
+                            },
+                        },
                     },
-                    "set_config_on": {
-                        "type": CMD_TYPE_SET_RAW_ON,
-                    },
-                    "set_config_off": {
-                        "type": CMD_TYPE_SET_RAW_OFF,
-                    },
-                },
-            },
-            "P2": {
-                "description": "control",
-                "data_type": "volume_control",
-                "conversion": "type_bit_0",
-                "commands": {
-                    "unmute": {
-                        "type": CMD_TYPE_ON,
-                        "val": 1,
-                    },
-                    "mute": {
-                        "type": CMD_TYPE_OFF,
-                        "val": 0,
-                    },
-                    "set_volume": {
-                        "type": CMD_TYPE_SET_CONFIG,
-                    },
-                },
-            },
                 }
             },
         },
@@ -10147,12 +10195,90 @@ _RAW_DEVICE_DATA = {
         "manufacturer": "lifesmart",
         "model": "SL_NATURE",
         "_generation": 2,
+        "climate_features": {
+            "hvac_modes": {
+                0: "auto",
+                3: "cool",
+                4: "heat",
+                5: "fan_only",
+            },
+            "fan_speeds": {
+                15: "low",
+                45: "medium",
+                75: "high",
+                101: "auto",
+            },
+            "temperature_range": {
+                "min": 5,
+                "max": 35,
+            },
+        },
         "platforms": {},
         "dynamic": True,
         "switch_mode": {
             "condition": "P5&0xFF==1",
-            "io": ["P1", "P2", "P3"],
-            "sensor_io": ["P4", "P5"],
+            "switch": {
+                "P1": {
+                    "description": "switch",
+                    "data_type": "binary_switch",
+                    "conversion": "type_bit_0",
+                    "commands": {
+                        "on": {
+                            "type": CMD_TYPE_ON,
+                            "val": 1,
+                        },
+                        "off": {
+                            "type": CMD_TYPE_OFF,
+                            "val": 0,
+                        },
+                    },
+                },
+                "P2": {
+                    "description": "switch",
+                    "data_type": "binary_switch",
+                    "conversion": "type_bit_0",
+                    "commands": {
+                        "on": {
+                            "type": CMD_TYPE_ON,
+                            "val": 1,
+                        },
+                        "off": {
+                            "type": CMD_TYPE_OFF,
+                            "val": 0,
+                        },
+                    },
+                },
+                "P3": {
+                    "description": "switch",
+                    "data_type": "binary_switch",
+                    "conversion": "type_bit_0",
+                    "commands": {
+                        "on": {
+                            "type": CMD_TYPE_ON,
+                            "val": 1,
+                        },
+                        "off": {
+                            "type": CMD_TYPE_OFF,
+                            "val": 0,
+                        },
+                    },
+                },
+            },
+            "sensor": {
+                "P4": {
+                    "description": "temperature",
+                    "data_type": "temperature",
+                    "conversion": "v_field",
+                    "device_class": "temperature",
+                    "unit_of_measurement": "°C",
+                    "state_class": "measurement",
+                },
+                "P5": {
+                    "description": "switch",
+                    "data_type": "device_type",
+                    "conversion": "direct_value",
+                },
+            },
         },
         "climate_mode": {
             "condition": "P5&0xFF in [3,6]",
@@ -10640,16 +10766,84 @@ def get_device_count() -> int:
     return len(_RAW_DEVICE_DATA)
 
 
-# [MIGRATION COMPLETED 2025-08-17]
-# All external mappings have been integrated directly into device configurations
-# following DEVICE_CENTRIC_CONFIG architecture. External mappings removed to
-# eliminate redundancy and achieve "全部集成进入最大的设备字典，而不在外面"
+# [GEN2 CONFIG NOTE]
+# Device-centric Generation 2 specs carry their own platform command mappings.
+# The constants below are retained only as explicit shared mapping tables for
+# tests and focused helpers that still need direct keyed access.
 #
-# Integrated mappings:
-# - NON_POSITIONAL_COVER_CONFIG → 5 cover devices (SL_P_V2, SL_CN_IF, SL_CN_FE, SL_P, SL_JEMA)
+# Explicit non-position cover command table:
+# - NON_POSITIONAL_COVER_CONFIG → declared cover command ports
+#   (SL_SW_WIN, SL_P_V2, SL_CN_IF, SL_CN_FE, SL_P, SL_JEMA)
 # - HVAC mode mappings → 2 climate devices (SL_TR_ACIPM, SL_CP_AIR)
 # - Fan speed mappings → 2 devices (SL_TR_ACIPM, SL_CP_AIR)
 # - Bitmask configurations → 10 lock devices (all ALM and EVTLO configs)
+
+LIFESMART_F_HVAC_MODE_MAP = {
+    1: HVACMode.AUTO,
+    2: HVACMode.FAN_ONLY,
+    3: HVACMode.COOL,
+    4: HVACMode.HEAT,
+}
+REVERSE_F_HVAC_MODE_MAP = {v: k for k, v in LIFESMART_F_HVAC_MODE_MAP.items()}
+
+LIFESMART_HVAC_MODE_MAP = {
+    1: HVACMode.AUTO,
+    2: HVACMode.FAN_ONLY,
+    3: HVACMode.COOL,
+    4: HVACMode.HEAT,
+    5: HVACMode.DRY,
+    7: HVACMode.HEAT,
+    8: HVACMode.HEAT_COOL,
+}
+REVERSE_LIFESMART_HVAC_MODE_MAP = {
+    HVACMode.AUTO: 1,
+    HVACMode.FAN_ONLY: 2,
+    HVACMode.COOL: 3,
+    HVACMode.HEAT: 4,
+    HVACMode.DRY: 5,
+    HVACMode.HEAT_COOL: 8,
+}
+
+LIFESMART_CP_AIR_HVAC_MODE_MAP = {
+    0: HVACMode.COOL,
+    1: HVACMode.HEAT,
+    2: HVACMode.FAN_ONLY,
+}
+REVERSE_LIFESMART_CP_AIR_HVAC_MODE_MAP = {
+    v: k for k, v in LIFESMART_CP_AIR_HVAC_MODE_MAP.items()
+}
+
+LIFESMART_ACIPM_FAN_MAP = {
+    FAN_LOW: 1,
+    FAN_MEDIUM: 2,
+    FAN_HIGH: 3,
+}
+
+LIFESMART_CP_AIR_FAN_MAP = {
+    FAN_AUTO: 0,
+    FAN_LOW: 1,
+    FAN_MEDIUM: 2,
+    FAN_HIGH: 3,
+}
+REVERSE_LIFESMART_CP_AIR_FAN_MAP = {
+    v: k for k, v in LIFESMART_CP_AIR_FAN_MAP.items()
+}
+
+LIFESMART_TF_FAN_MAP = {
+    FAN_AUTO: 101,
+    FAN_LOW: 15,
+    FAN_MEDIUM: 45,
+    FAN_HIGH: 75,
+}
+
+NON_POSITIONAL_COVER_CONFIG = {
+    "SL_SW_WIN": {"open": "OP", "close": "CL", "stop": "ST"},
+    "SL_P_V2": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_CN_IF": {"open": "P1", "close": "P2", "stop": "P3"},
+    "SL_CN_FE": {"open": "P1", "close": "P2", "stop": "P3"},
+    "SL_P": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_JEMA": {"open": "P2", "close": "P3", "stop": "P4"},
+}
 
 # 导出设备数据和配置供外部使用
 DEVICE_SPECS_DATA = _RAW_DEVICE_DATA

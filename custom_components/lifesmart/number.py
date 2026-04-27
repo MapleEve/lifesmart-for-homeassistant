@@ -97,7 +97,9 @@ async def async_setup_entry(
             )
             continue
 
-        number_mapping = resolution_result.device_config.source_mapping.get("number", {})
+        number_mapping = resolution_result.device_config.source_mapping.get(
+            "number", {}
+        )
 
         # 为每个支持的数值控制器创建实体
         for number_key in number_subdevices:
