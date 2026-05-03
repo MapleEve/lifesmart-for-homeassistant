@@ -183,11 +183,12 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
 
         # --- 步骤 2: /auth.do_auth ---
         url_step2 = f"{self._get_api_url()}/auth.do_auth"
+        auth_region = response1.get("rgn") or self._region
         body_step2 = {
             "userid": response1["userid"],
             "token": response1["token"],
             "appkey": self._appkey,
-            "rgn": self._region,
+            "rgn": auth_region,
         }
         _LOGGER.debug("认证请求 (步骤2) -> %s", body_step2)
         response2 = await self._post_and_parse(url_step2, body_step2, header)
@@ -195,7 +196,7 @@ class LifeSmartOAPIClient(LifeSmartClientBase):
 
         if response2.get("code") == "success" and "usertoken" in response2:
             self._usertoken = response2["usertoken"]
-            self._region = response2["rgn"]
+            self._region = response2.get("rgn") or auth_region
             if self._userid != response2["userid"]:
                 self._userid = response2["userid"]
             _LOGGER.info("成功登录并获取用户令牌。")

@@ -732,6 +732,36 @@ class TestEdgeCases:
     """测试边界条件和异常情况。"""
 
     @pytest.mark.asyncio
+    async def test_validate_input_persists_login_rgn(self, hass: HomeAssistant):
+        """密码登录成功后应持久化官方返回的 rgn 字段。"""
+        from custom_components.lifesmart.config_flow import validate_input
+
+        test_data = {
+            CONF_LIFESMART_APPKEY: "test_key",
+            CONF_LIFESMART_APPTOKEN: "test_token",
+            CONF_LIFESMART_USERID: "test_user",
+            CONF_LIFESMART_USERPASSWORD: "test_password",
+            CONF_REGION: "cn2",
+        }
+
+        with patch("custom_components.lifesmart.config_flow.LifeSmartOAPIClient") as client_cls:
+            mock_client = client_cls.return_value
+            mock_client.login_async = AsyncMock(
+                return_value={
+                    "code": "success",
+                    "usertoken": "new_token",
+                    "userid": "test_user",
+                    "rgn": "cn1",
+                }
+            )
+            mock_client.async_get_all_devices = AsyncMock(return_value=[])
+
+            result = await validate_input(hass, test_data)
+
+        assert result["data"][CONF_REGION] == "cn1"
+        assert result["data"][CONF_LIFESMART_USERTOKEN] == "new_token"
+
+    @pytest.mark.asyncio
     async def test_validate_input_invalid_device_response(self, hass: HomeAssistant):
         """测试 validate_input 中 API 返回非列表设备数据的情况。"""
         test_data = {

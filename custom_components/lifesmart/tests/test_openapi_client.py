@@ -348,8 +348,9 @@ class TestAuthenticationFlow:
         # 模拟两步认证响应
         step1_response = {
             "code": "success",
-            "token": "temp_token",
+            "token": "***",
             "userid": "new_user_id",
+            "rgn": "cn1",
         }
         step2_response = {
             "code": "success",
@@ -362,6 +363,12 @@ class TestAuthenticationFlow:
             mock_post.side_effect = [step1_response, step2_response]
 
             result = await client.login_async()
+
+            sent_step2_payload = mock_post.call_args_list[1].args[1]
+            assert sent_step2_payload["rgn"] == "cn1", (
+                "auth.do_auth 应使用 auth.login 返回的 rgn，避免跨区导致 "
+                "login token mismatch"
+            )
 
             assert client._usertoken == "new_user_token", "客户端应更新为新的用户令牌"
             assert client._region == "cn1", "客户端应更新为新的区域"
