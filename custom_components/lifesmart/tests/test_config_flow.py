@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.lifesmart.const import (
@@ -490,11 +490,17 @@ class TestReauthFlow:
     @pytest.mark.asyncio
     async def test_reauth_missing_entry_id(self, hass: HomeAssistant):
         """测试缺少 entry_id 时的处理。"""
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_REAUTH},
-            data={},
-        )
+        try:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_REAUTH},
+                data={},
+            )
+        except HomeAssistantError as err:
+            # HA 2026.2+ rejects reauth/reconfigure flows without entry_id in
+            # core before the integration's async_step_reauth is called.
+            assert "without a link to the config entry" in str(err)
+            return
 
         assert result["type"] == FlowResultType.ABORT, "应该中止流程"
         assert result["reason"] == "reauth_entry_not_found", "原因应该是找不到条目"

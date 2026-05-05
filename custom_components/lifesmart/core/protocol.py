@@ -276,7 +276,9 @@ class LifeSmartProtocol:
                     and all(isinstance(k, int) for k in keys)
                     and keys == list(range(count))
                 )
-                return [v for _, v in items] if is_list else dict(items)
+                if is_list:
+                    return [v for _, v in items]
+                return {self._normalize_key(k): v for k, v in items}
             if data_type == 0x13:
                 if stream.tell() + 1 > len(stream.getvalue()):
                     raise EOFError("数据意外结束")

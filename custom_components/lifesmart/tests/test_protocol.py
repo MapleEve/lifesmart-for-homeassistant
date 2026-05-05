@@ -131,6 +131,30 @@ class TestProtocolDataTypeEncoding:
 
         assert decoded_data == complex_data, "复杂嵌套结构应该正确编解码"
 
+    def test_decode_0x12_dict_with_nested_dict_key(self, protocol: LifeSmartProtocol):
+        """回归测试：0x12结构中的dict键不应触发unhashable TypeError。"""
+        # LifeSmart本地协议的0x12结构既用于数组也用于字典。issue #92中
+        # SL_P_A烟雾传感器配对时，设备上报了一个嵌套0x12对象作为键。
+        # Python dict不能直接使用dict作为键，因此解析器必须在构造dict前规范化键。
+        nested_dict_key = protocol._pack_value({"idx": "A"})
+        packet_data = (
+            b"\x01"  # 顶层dict包含1个键值对；decode会隐式按0x12解析顶层块
+            + protocol._pack_value("outer")
+            + b"\x12\x01"  # outer的值是一个dict，包含1个键值对
+            + nested_dict_key
+            + protocol._pack_value(1)
+        )
+        encoded_packet = (
+            b"GL00\x00\x00"
+            + len(packet_data).to_bytes(4, "big")
+            + packet_data
+        )
+
+        remaining_data, decoded_data = protocol.decode(encoded_packet)
+
+        assert not remaining_data, "解码后不应有剩余数据"
+        assert decoded_data == [{"outer": {"{'idx': 'A'}": 1}}]
+
     def test_large_data_structures(self, protocol: LifeSmartProtocol):
         """测试大数据结构的处理。"""
         large_list = [{"item": i, "data": "X" * 100} for i in range(100)]

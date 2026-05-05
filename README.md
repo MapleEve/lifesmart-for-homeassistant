@@ -33,9 +33,9 @@ Installation and updates are available via HACS.
 - **Robust Testing**: 704+ comprehensive tests ensuring reliability
 - **Version Compatibility**: Home Assistant 2023.6.3+ with automated compatibility layers
 
-### Recent Major Improvements (August 2025)
+### Recent Major Improvements (May 2026)
 
-- **🔧 Compatibility Layer**: Added comprehensive compatibility support for Home Assistant versions 2023.6.3 to 2025.1.4+
+- **🔧 Compatibility Layer**: Added comprehensive compatibility support for Home Assistant versions 2023.6.3 to 2026.05+
 - **🧪 Enhanced Testing**: Completely rewritten compatibility tests with 14 dedicated test cases
 - **🏗️ Code Architecture**: Major refactoring - unified client interfaces, split local/OAPI
   clients ([#66](https://github.com/MapleEve/lifesmart-HACS-for-hass/pull/66))
@@ -157,7 +157,7 @@ This integration is thoroughly tested across multiple Home Assistant versions us
 | **Environment 1** | 3.11.13 | **2023.6.0**   | 7.3.1  | 0.13.36          | 3.8.4   | ✅ **704/704 tests** |
 | **Environment 2** | 3.12.11 | **2024.2.0**   | 7.4.4  | 0.13.99          | 3.9.3   | ✅ **704/704 tests** |
 | **Environment 3** | 3.13.5  | **2024.12.0**  | 8.3.3  | 0.13.190         | 3.11.9  | ✅ **704/704 tests** |
-| **Current**       | 3.13.5  | **2025.8.0b1** | 8.4.1  | 0.13.266         | 3.12.15 | ✅ **704/704 tests** |
+| **Current**       | 3.13.5  | **2026.05** | 8.4.1  | 0.13.266         | 3.12.15 | ✅ **704/704 tests** |
 
 ### Test Infrastructure
 
