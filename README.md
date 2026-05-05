@@ -35,6 +35,13 @@ Installation and updates are available via HACS.
 
 ### Recent Major Improvements (May 2026)
 
+For detailed release notes and issue handling notes, see [CHANGELOG.md](./CHANGELOG.md).
+
+- **📦 2026.05 main/current patch preparation**: Documentation is prepared for the pending `v2026.05.1` patch candidate. `v2026.05.0` remains the manifest version until the separate release/version bump.
+- **☁️ Cloud Authentication**: Improved password-login handling by using the region returned by the LifeSmart auth flow and preserving returned token/user/region data.
+- **🏠 Local Protocol Robustness**: Hardened local protocol decoding for nested packets that previously could raise `TypeError: unhashable type: 'dict'`.
+- **💡 Device Feedback Fixes**: Added runtime aliases for `SL_SC_BG_V1` and `SL_P_V1`, restored single-IO RGBW light creation, improved SPOT light state mapping, corrected DOOYA curtain direction/position updates, and improved climate partial-state merging.
+- **⚠️ Scope Note**: Gen2 / `v25.08.1` architecture work is not included in this main/current release line.
 - **🔧 Compatibility Layer**: Added comprehensive compatibility support for Home Assistant versions 2023.6.3 to 2026.05+
 - **🧪 Enhanced Testing**: Completely rewritten compatibility tests with 14 dedicated test cases
 - **🏗️ Code Architecture**: Major refactoring - unified client interfaces, split local/OAPI
