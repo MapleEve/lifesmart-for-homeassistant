@@ -157,9 +157,9 @@ send_ackeys:
         select:
           options:
             - label: "开机"
-              value: 1
+              value: "1"
             - label: "关机"
-              value: 0
+              value: "0"
     mode:
       name: "运行模式"
       description: "空调运行模式设置。0=自动, 1=制冷, 2=除湿, 3=送风, 4=制热。"
@@ -169,15 +169,15 @@ send_ackeys:
         select:
           options:
             - label: "自动模式"
-              value: 0
+              value: "0"
             - label: "制冷模式"
-              value: 1
+              value: "1"
             - label: "除湿模式"
-              value: 2
+              value: "2"
             - label: "送风模式"
-              value: 3
+              value: "3"
             - label: "制热模式"
-              value: 4
+              value: "4"
     temp:
       name: "目标温度"
       description: "设置目标温度 (16-30°C)。根据空调型号不同，支持的温度范围可能有所差异。"
@@ -198,13 +198,13 @@ send_ackeys:
         select:
           options:
             - label: "自动风速"
-              value: 0
+              value: "0"
             - label: "低风速"
-              value: 1
+              value: "1"
             - label: "中风速"
-              value: 2
+              value: "2"
             - label: "高风速"
-              value: 3
+              value: "3"
     swing:
       name: "摆风模式"
       description: "摆风/叶片方向控制。0=自动摆风, 1=风向1, 2=风向2, 3=风向3, 4=风向4。具体风向含义因空调型号而异。"
@@ -214,15 +214,15 @@ send_ackeys:
         select:
           options:
             - label: "自动摆风"
-              value: 0
+              value: "0"
             - label: "风向1"
-              value: 1
+              value: "1"
             - label: "风向2"
-              value: 2
+              value: "2"
             - label: "风向3"
-              value: 3
+              value: "3"
             - label: "风向4"
-              value: 4
+              value: "4"
 
 trigger_scene:
   name: "触发场景"
