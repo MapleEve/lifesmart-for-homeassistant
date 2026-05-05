@@ -609,5 +609,5 @@ LIFESMART_REGION_OPTIONS = [
     "eur",
     "jp",
     "apz",
-    "AUTO",
+    "auto",
 ]

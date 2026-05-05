@@ -235,7 +235,7 @@
         "eur": "Europe (EUROPE)",
         "jp": "Japan (JAPAN)",
         "apz": "Asia Pacific (APAC)",
-        "AUTO": "Global Auto"
+        "auto": "Global Auto"
       }
     }
   }
