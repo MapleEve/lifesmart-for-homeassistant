@@ -358,9 +358,6 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                     self.writer = None
                 if not self.disconnected:
                     await asyncio.sleep(5.0)
-                else:
-                    # 如果已请求断开，则跳出主循环
-                    break
 
     async def _send_packet(self, packet: bytes):
         if self.writer and not self.writer.is_closing():
