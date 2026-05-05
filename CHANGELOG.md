@@ -5,8 +5,8 @@
 Release branch context:
 - Prepared on `fix/main-doc-backed-issue-patch` after `664c07f7605547cb434a0abbee6b938653f2832a`.
 - This is a main/current patch release candidate. Gen2 / `v25.08.1` architecture work is not part of this release line.
-- `custom_components/lifesmart/manifest.json` still reports `v2026.05.0` and was intentionally not changed in this documentation-only commit.
-- Local tag `v2026.05.0` points at `4fd1d1c`, before the later main feedback fixes in `664c07f`; if `v2026.05.0` has already been published, publish these notes as the next patch (`v2026.05.1`) after bumping the manifest in a separate release/version commit.
+- `custom_components/lifesmart/manifest.json` now reports `v2026.05.1` for the main/current patch release candidate.
+- Local tag `v2026.05.0` points at `4fd1d1c`, before the later main feedback fixes in `664c07f`; publish these notes as the next patch (`v2026.05.1`).
 
 ### Highlights
 
