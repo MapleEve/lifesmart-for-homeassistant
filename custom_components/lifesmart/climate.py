@@ -56,6 +56,15 @@ ClimateEntityFeature = get_climate_entity_features()
 _LOGGER = logging.getLogger(__name__)
 
 
+def _temperature_from_io(data: dict, io_key: str) -> float | int | None:
+    """Return LifeSmart temperature from v, or raw val/10 when v is absent."""
+    if (temp := safe_get(data, io_key, "v")) is not None:
+        return temp
+    if (raw_temp := safe_get(data, io_key, "val")) is not None:
+        return raw_temp / 10
+    return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -163,7 +172,29 @@ class LifeSmartBaseClimate(LifeSmartEntity, ClimateEntity):
         它会调用 _update_state 方法来解析新数据，并请求 HA 更新前端状态。
         """
         if new_data:
-            self._update_state(new_data)
+            device_data = safe_get(self._raw_device, DEVICE_DATA_KEY, default={}).copy()
+            first_key = next(iter(new_data), None)
+            is_raw_io_update = first_key in ("type", "val", "v")
+
+            if is_raw_io_update:
+                _LOGGER.debug(
+                    "Ignoring raw climate IO update without idx for %s",
+                    self._attr_unique_id,
+                )
+                return
+
+            for sub_key, sub_data in new_data.items():
+                if isinstance(sub_data, dict) and isinstance(
+                    device_data.get(sub_key), dict
+                ):
+                    merged = device_data[sub_key].copy()
+                    merged.update(sub_data)
+                    device_data[sub_key] = merged
+                else:
+                    device_data[sub_key] = sub_data
+
+            self._raw_device[DEVICE_DATA_KEY] = device_data
+            self._update_state(device_data)
             self.async_write_ha_state()
 
     @callback
@@ -178,7 +209,12 @@ class LifeSmartBaseClimate(LifeSmartEntity, ClimateEntity):
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
+                (
+                    d
+                    for d in devices
+                    if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
+                ),
+                None,
             )
             if current_device:
                 self._raw_device = current_device
@@ -304,7 +340,9 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         p6_cfg = safe_get(self._raw_device, DEVICE_DATA_KEY, "P6", "val", default=0)
         cfg_mode = (p6_cfg >> 6) & 0x7
         modes_map = {
+            0: [HVACMode.FAN_ONLY],
             1: [HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT],
+            2: [HVACMode.HEAT],
             3: [HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT, HVACMode.HEAT_COOL],
             4: [HVACMode.AUTO, HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT],
             5: [HVACMode.FAN_ONLY, HVACMode.HEAT_COOL],
@@ -454,11 +492,13 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         else:
             self._attr_hvac_mode = HVACMode.OFF
 
-        if (temp := safe_get(data, "P4", "v")) is not None:
+        if (temp := _temperature_from_io(data, "P4")) is not None:
             self._attr_current_temperature = temp
-        if (target_temp := safe_get(data, "P8", "v")) is not None:
+        if (target_temp := _temperature_from_io(data, "P8")) is not None:
             self._attr_target_temperature = target_temp
-        if (fan_val := safe_get(data, "P10", "val", default=0)) is not None:
+        if (fan_val := safe_get(data, "P10", "val")) is None:
+            fan_val = safe_get(data, "P9", "val", default=0)
+        if fan_val is not None:
             self._attr_fan_mode = get_tf_fan_mode(fan_val)
 
     def _update_sl_fcu(self, data: dict):

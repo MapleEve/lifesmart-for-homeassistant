@@ -209,15 +209,15 @@ class TestPositionalCover:
             ({"val": 0, "type": 128}, 0, STATE_CLOSED),
             ({"val": 100, "type": 128}, 100, STATE_OPEN),
             ({"val": 50, "type": 128}, 50, STATE_OPEN),
-            ({"val": 50 | 0x80, "type": 129}, 50, STATE_CLOSING),  # 正在关闭
-            ({"val": 50, "type": 129}, 50, STATE_OPENING),  # 正在打开
+            ({"val": 50 | 0x80, "type": 129}, 50, STATE_OPENING),  # 正在打开
+            ({"val": 50, "type": 129}, 50, STATE_CLOSING),  # 正在关闭
         ],
         ids=[
             "CoverFullyClosed",
             "CoverFullyOpen",
             "CoverStoppedAtMidpoint",
-            "CoverClosingInProgress",
             "CoverOpeningInProgress",
+            "CoverClosingInProgress",
         ],
     )
     @pytest.mark.asyncio

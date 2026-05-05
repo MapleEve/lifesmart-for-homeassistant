@@ -53,6 +53,7 @@ from .const import (
     LIFESMART_SIGNAL_UPDATE_ENTITY,
     MANUFACTURER,
     RGB_LIGHT_TYPES,
+    RGBW_LIGHT_TYPES,
     OUTDOOR_LIGHT_TYPES,
     BRIGHTNESS_LIGHT_TYPES,
     GARAGE_DOOR_TYPES,
@@ -135,6 +136,8 @@ def _create_light_entity(device: dict, client, entry_id: str, sub_key: str):
         return LifeSmartSPOTRGBWLight(device, client, entry_id)
     elif sub_key == "RGB" and device_type in {"OD_WE_IRCTL", "SL_SPOT"}:
         return LifeSmartSPOTRGBLight(device, client, entry_id)
+    elif sub_key == "RGBW" and device_type in RGBW_LIGHT_TYPES:
+        return LifeSmartSingleIORGBWLight(device, client, entry_id, sub_key)
     elif sub_key == "RGB" and device_type in RGB_LIGHT_TYPES:
         return LifeSmartSingleIORGBWLight(device, client, entry_id, sub_key)
     elif sub_key == "P1" and device_type in GARAGE_DOOR_TYPES:
@@ -272,7 +275,12 @@ class LifeSmartBaseLight(LifeSmartEntity, LightEntity):
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
+                (
+                    d
+                    for d in devices
+                    if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
+                ),
+                None,
             )
             if current_device:
                 self._raw_device = current_device
@@ -525,6 +533,9 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
 class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
     """SPOT灯 (RGB模式)。"""
 
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+
     def __init__(self, raw_device: dict, client: Any, entry_id: str):
         super().__init__(raw_device, client, entry_id, "RGB")
         self._attr_supported_features = LightEntityFeature.EFFECT
@@ -533,11 +544,21 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
     def _initialize_state(self) -> None:
         """初始化SPOT RGB灯状态。"""
         sub_data = self._sub_data
+        device_data = safe_get(self._raw_device, DEVICE_DATA_KEY, default={})
+        brightness_data = safe_get(device_data, "P1", default={})
+        color_temp_data = safe_get(device_data, "P2", default={})
         self._attr_is_on = safe_get(sub_data, "type", default=0) % 2 == 1
         self._attr_color_mode = ColorMode.RGB
-        self._attr_supported_color_modes = {ColorMode.RGB}
+        self._attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
         self._attr_effect_list = DYN_EFFECT_LIST
-        self._attr_brightness = 255 if self._attr_is_on else 0
+        self._attr_brightness = safe_get(
+            brightness_data, "val", default=(255 if self._attr_is_on else 0)
+        )
+        if (temp_val := safe_get(color_temp_data, "val")) is not None:
+            ratio = temp_val / 255.0
+            self._attr_color_temp_kelvin = self._attr_min_color_temp_kelvin + ratio * (
+                self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin
+            )
 
         if (val := safe_get(sub_data, "val")) is not None:
             if (val >> 24) & 0xFF > 0:
@@ -563,6 +584,15 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
         if ATTR_RGB_COLOR in kwargs:
             self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
             self._attr_effect = None
+            self._attr_color_mode = ColorMode.RGB
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            min_k = self._attr_min_color_temp_kelvin
+            max_k = self._attr_max_color_temp_kelvin
+            self._attr_color_temp_kelvin = max(
+                min_k, min(kwargs[ATTR_COLOR_TEMP_KELVIN], max_k)
+            )
+            self._attr_effect = None
+            self._attr_color_mode = ColorMode.COLOR_TEMP
         if ATTR_EFFECT in kwargs:
             self._attr_effect = kwargs[ATTR_EFFECT]
             self._attr_rgb_color = None
@@ -580,7 +610,9 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
                 else:
                     # 效果不存在时，重置cmd_val为None以调用父类方法
                     cmd_val = None
-            elif ATTR_RGB_COLOR in kwargs or ATTR_BRIGHTNESS in kwargs:
+            elif ATTR_RGB_COLOR in kwargs or (
+                ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP_KELVIN not in kwargs
+            ):
                 # 使用乐观更新后的状态来计算最终颜色
                 rgb = self._attr_rgb_color if self._attr_rgb_color else (255, 255, 255)
                 brightness = (
@@ -592,6 +624,25 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
 
                 r, g, b = final_rgb
                 cmd_type, cmd_val = CMD_TYPE_SET_RAW, (r << 16) | (g << 8) | b
+
+            device_data = safe_get(self._raw_device, DEVICE_DATA_KEY, default={})
+            if ATTR_BRIGHTNESS in kwargs and "P1" in device_data:
+                await self._client.async_send_single_command(
+                    self.agt, self.me, "P1", CMD_TYPE_SET_VAL, self._attr_brightness
+                )
+
+            if ATTR_COLOR_TEMP_KELVIN in kwargs and "P2" in device_data:
+                min_k = self._attr_min_color_temp_kelvin
+                max_k = self._attr_max_color_temp_kelvin
+                ratio = (
+                    (self._attr_color_temp_kelvin - min_k) / (max_k - min_k)
+                    if max_k != min_k
+                    else 0
+                )
+                temp_val = round(ratio * 255)
+                await self._client.async_send_single_command(
+                    self.agt, self.me, "P2", CMD_TYPE_SET_VAL, temp_val
+                )
 
             if cmd_val is not None:
                 await self._client.async_send_single_command(

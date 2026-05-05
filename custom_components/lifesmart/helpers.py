@@ -288,7 +288,7 @@ def is_climate(device: dict) -> bool:
         # 温控版 SL_NATURE 必须存在 P5 且值为 3
         # 使用位与操作 `& 0xFF` 确保只比较低8位，增加代码健壮性
         p5_val = safe_get(device, DEVICE_DATA_KEY, "P5", "val", default=0) & 0xFF
-        return p5_val == 3  # 3 代表温控版
+        return p5_val in {3, 6}  # 3 代表温控版
 
     return True
 
@@ -376,12 +376,14 @@ def get_cover_subdevices(device: dict) -> list[str]:
                 # 对于非定位窗帘，只为"开"操作的IO口创建实体
                 from .const import NON_POSITIONAL_COVER_CONFIG
 
-                config = NON_POSITIONAL_COVER_CONFIG.get("SL_P", {})
+                config = NON_POSITIONAL_COVER_CONFIG.get(
+                    device_type
+                ) or NON_POSITIONAL_COVER_CONFIG.get("SL_P", {})
                 rep_key = config.get("open")
                 if rep_key and sub_key == rep_key:
                     subdevices.append(sub_key)
                 # 对于定位窗帘，都添加
-                elif not NON_POSITIONAL_COVER_CONFIG.get("SL_P"):
+                elif not config:
                     subdevices.append(sub_key)
     else:
         # 其他设备使用子设备判断逻辑
@@ -498,6 +500,10 @@ def get_light_subdevices(device: dict) -> list[str]:
         subdevices.append("_DUAL_RGBW")  # 特殊标记，表示需要创建双IO RGBW灯
         return subdevices
 
+    if device_type in RGBW_LIGHT_TYPES and "RGBW" in device_data:
+        subdevices.append("RGBW")  # 单IO RGBW灯（部分设备/固件不提供DYN口）
+        return subdevices
+
     if device_type in RGB_LIGHT_TYPES and "RGB" in device_data:
         subdevices.append("RGB")  # 使用实际的子设备键
         return subdevices
@@ -538,7 +544,7 @@ def is_sensor(device: dict) -> bool:
     # 温控版的超能面板会产生一个温度传感器
     if device_type == "SL_NATURE":
         p5_val = safe_get(device, DEVICE_DATA_KEY, "P5", "val", default=0) & 0xFF
-        return p5_val == 3  # 3 代表温控版
+        return p5_val in {3, 6}  # 3 代表温控版
 
     return device_type in ALL_SENSOR_TYPES
 

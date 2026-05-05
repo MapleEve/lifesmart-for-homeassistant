@@ -75,6 +75,7 @@ SPOT_TYPES = {
 # --- 通用控制器 ---
 GENERIC_CONTROLLER_TYPES = {
     "SL_P",  # 通用控制器
+    "SL_P_V1",  # 通用控制器 V1（运行时上报别名，按 SL_P 规格处理）
     "SL_JEMA",  # 通用控制器
 }
 # --- 摄像头 ---
@@ -223,6 +224,7 @@ GARAGE_DOOR_TYPES = {
 GUARD_SENSOR_TYPES = {  # TODO: 电压传感器电量暂不支持
     "SL_SC_G",  # 门禁感应器
     "SL_SC_BG",  # 多功能(CUBE)门禁感应器
+    "SL_SC_BG_V1",  # 多功能(CUBE)门禁感应器 V1（运行时上报别名）
     "SL_SC_GS",  # 门窗感应器
 }
 
@@ -594,6 +596,7 @@ NON_POSITIONAL_COVER_CONFIG = {
     "SL_CN_FE": {"open": "P1", "close": "P2", "stop": "P3"},
     # 通用控制器
     "SL_P": {"open": "P2", "close": "P3", "stop": "P4"},
+    "SL_P_V1": {"open": "P2", "close": "P3", "stop": "P4"},
     "SL_JEMA": {"open": "P2", "close": "P3", "stop": "P4"},
 }
 

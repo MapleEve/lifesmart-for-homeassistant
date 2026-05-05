@@ -185,7 +185,26 @@ class LifeSmartBaseCover(LifeSmartEntity, CoverEntity):
     def _handle_update(self, new_data: dict) -> None:
         """处理来自 WebSocket 的实时状态更新。"""
         if new_data:
-            self._raw_device[DEVICE_DATA_KEY] = new_data
+            device_data = safe_get(self._raw_device, DEVICE_DATA_KEY, default={}).copy()
+            first_key = next(iter(new_data), None)
+            is_raw_io_update = first_key in ("type", "val", "v")
+
+            if is_raw_io_update:
+                sub_data = safe_get(device_data, self._sub_key, default={}).copy()
+                sub_data.update(new_data)
+                device_data[self._sub_key] = sub_data
+            else:
+                for sub_key, sub_data in new_data.items():
+                    if isinstance(sub_data, dict) and isinstance(
+                        device_data.get(sub_key), dict
+                    ):
+                        merged = device_data[sub_key].copy()
+                        merged.update(sub_data)
+                        device_data[sub_key] = merged
+                    else:
+                        device_data[sub_key] = sub_data
+
+            self._raw_device[DEVICE_DATA_KEY] = device_data
             self._initialize_state()
             self.async_write_ha_state()
 
@@ -195,7 +214,12 @@ class LifeSmartBaseCover(LifeSmartEntity, CoverEntity):
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
+                (
+                    d
+                    for d in devices
+                    if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
+                ),
+                None,
             )
             if current_device:
                 self._raw_device = current_device
@@ -283,7 +307,12 @@ class LifeSmartPositionalCover(LifeSmartBaseCover):
         val = status_data.get("val", 0)
         self._attr_current_cover_position = val & 0x7F
         is_moving = status_data.get("type", 0) % 2 == 1
-        is_opening_direction = (val & 0x80) == 0
+        if self.devtype in DOOYA_TYPES:
+            # SL_DOOYA 文档定义：移动中 val 的 0x80 方向位为 1 表示正在开，否则正在关。
+            is_opening_direction = (val & 0x80) == 0x80
+        else:
+            # 其他既有定位覆盖物沿用原运行时约定：0 表示正在开，1 表示正在关。
+            is_opening_direction = (val & 0x80) == 0
 
         self._attr_is_opening = is_moving and is_opening_direction
         self._attr_is_closing = is_moving and not is_opening_direction
