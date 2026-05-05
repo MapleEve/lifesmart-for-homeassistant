@@ -21,13 +21,13 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature, PRECISION_TENTHS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .compatibility import get_climate_entity_features
+from .compatibility import UnitOfTemperature, get_climate_entity_features
 from .const import (
     DOMAIN,
     MANUFACTURER,

@@ -27,7 +27,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
-    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -62,6 +61,7 @@ from .const import (
     ALL_EFFECT_LIST,
     ALL_EFFECT_MAP,
 )
+from .compatibility import ATTR_COLOR_TEMP_KELVIN, HAS_COLOR_TEMP_KELVIN
 from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, get_light_subdevices, safe_get
 
@@ -439,6 +439,8 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
             self._attr_color_temp_kelvin = self._attr_min_color_temp_kelvin + ratio * (
                 self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin
             )
+            if not HAS_COLOR_TEMP_KELVIN:
+                self._attr_color_temp = self._attr_color_temp_kelvin
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light with robust optimistic update."""
@@ -457,6 +459,8 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
             self._attr_color_temp_kelvin = max(
                 min_k, min(kwargs[ATTR_COLOR_TEMP_KELVIN], max_k)
             )
+            if not HAS_COLOR_TEMP_KELVIN:
+                self._attr_color_temp = self._attr_color_temp_kelvin
         self.async_write_ha_state()
 
         try:
@@ -509,6 +513,8 @@ class LifeSmartDimmerLight(LifeSmartBaseLight):
             self._attr_is_on = original_is_on
             self._attr_brightness = original_brightness
             self._attr_color_temp_kelvin = original_color_temp
+            if not HAS_COLOR_TEMP_KELVIN:
+                self._attr_color_temp = original_color_temp
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -559,6 +565,8 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
             self._attr_color_temp_kelvin = self._attr_min_color_temp_kelvin + ratio * (
                 self._attr_max_color_temp_kelvin - self._attr_min_color_temp_kelvin
             )
+            if not HAS_COLOR_TEMP_KELVIN:
+                self._attr_color_temp = self._attr_color_temp_kelvin
 
         if (val := safe_get(sub_data, "val")) is not None:
             if (val >> 24) & 0xFF > 0:
@@ -591,6 +599,8 @@ class LifeSmartSPOTRGBLight(LifeSmartBaseLight):
             self._attr_color_temp_kelvin = max(
                 min_k, min(kwargs[ATTR_COLOR_TEMP_KELVIN], max_k)
             )
+            if not HAS_COLOR_TEMP_KELVIN:
+                self._attr_color_temp = self._attr_color_temp_kelvin
             self._attr_effect = None
             self._attr_color_mode = ColorMode.COLOR_TEMP
         if ATTR_EFFECT in kwargs:

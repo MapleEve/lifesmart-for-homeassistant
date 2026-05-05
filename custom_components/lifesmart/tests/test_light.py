@@ -18,7 +18,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
-    ATTR_COLOR_TEMP_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_ON,
     SERVICE_TURN_OFF,
@@ -30,6 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.const import *
+from custom_components.lifesmart.compatibility import ATTR_COLOR_TEMP_KELVIN
 from custom_components.lifesmart.light import (
     _parse_color_value,
     DEFAULT_MIN_KELVIN,

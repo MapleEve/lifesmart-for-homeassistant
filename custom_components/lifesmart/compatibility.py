@@ -8,6 +8,115 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 
+try:
+    from homeassistant.components.light import ATTR_COLOR_TEMP_KELVIN
+
+    HAS_COLOR_TEMP_KELVIN = True
+except ImportError:
+    # HA 2022.x exposes/validates the legacy mired attribute name only. Reuse
+    # that accepted service key while LifeSmart keeps converting values using
+    # its modern Kelvin-oriented code path.
+    from homeassistant.components.light import ATTR_COLOR_TEMP as ATTR_COLOR_TEMP_KELVIN
+
+    HAS_COLOR_TEMP_KELVIN = False
+
+
+class _CompatUnit(str):
+    """String unit value with a readable repr for old HA constant fallbacks."""
+
+    def __new__(cls, value: str):
+        return str.__new__(cls, value)
+
+    @property
+    def value(self) -> str:
+        """Match the value attribute provided by HA's StrEnum units."""
+
+        return str(self)
+
+
+try:
+    from homeassistant.const import UnitOfElectricPotential
+except ImportError:
+
+    class UnitOfElectricPotential:
+        """Subset of HA unit enum used by LifeSmart on HA 2022.x."""
+
+        VOLT = _CompatUnit("V")
+
+
+try:
+    from homeassistant.const import UnitOfEnergy
+except ImportError:
+
+    class UnitOfEnergy:
+        """Subset of HA unit enum used by LifeSmart on HA 2022.x."""
+
+        KILO_WATT_HOUR = _CompatUnit("kWh")
+
+
+try:
+    from homeassistant.const import UnitOfPower
+except ImportError:
+
+    class UnitOfPower:
+        """Subset of HA unit enum used by LifeSmart on HA 2022.x."""
+
+        WATT = _CompatUnit("W")
+
+
+try:
+    from homeassistant.const import UnitOfTemperature
+except ImportError:
+
+    class UnitOfTemperature:
+        """Subset of HA unit enum used by LifeSmart on HA 2022.x."""
+
+        CELSIUS = _CompatUnit("°C")
+
+
+try:
+    from homeassistant.const import UnitOfSoundPressure
+except ImportError:
+
+    class UnitOfSoundPressure:
+        """Subset of HA unit enum used by LifeSmart on HA 2022.x."""
+
+        DECIBEL = _CompatUnit("dB")
+
+
+try:
+    from homeassistant.const import UnitOfElectricCurrent
+except ImportError:
+
+    class UnitOfElectricCurrent:
+        """Subset of HA unit enum used by LifeSmart on HA 2022.x."""
+
+        AMPERE = _CompatUnit("A")
+
+
+def create_select_selector(options, mode, translation_key: str | None = None):
+    """Create a SelectSelector across HA versions.
+
+    HA 2022's selector schema rejects ``translation_key``. Newer HA uses it for
+    selector option localization. Try the modern config first, then fall back to
+    a schema that old HA accepts.
+    """
+
+    from homeassistant.helpers import selector
+
+    config = {"options": options, "mode": mode}
+    if translation_key is not None:
+        config["translation_key"] = translation_key
+
+    try:
+        return selector.SelectSelector(selector.SelectSelectorConfig(**config))
+    except Exception:
+        if translation_key is None:
+            raise
+        config.pop("translation_key", None)
+        return selector.SelectSelector(selector.SelectSelectorConfig(**config))
+
+
 def get_ws_timeout(timeout_seconds: float):
     """
     获取兼容的WebSocket超时参数

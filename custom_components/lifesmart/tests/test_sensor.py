@@ -24,16 +24,18 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfPower,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from custom_components.lifesmart.const import *
+from custom_components.lifesmart.compatibility import (
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from custom_components.lifesmart.helpers import (
     generate_unique_id,
 )

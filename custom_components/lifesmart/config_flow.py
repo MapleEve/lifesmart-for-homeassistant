@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.selector import SelectSelectorMode
 
-import custom_components.lifesmart.core.local_tcp_client
+from .core.local_tcp_client import LifeSmartLocalTCPClient
 from .const import (
     CONF_AI_INCLUDE_AGTS,
     CONF_AI_INCLUDE_ITEMS,
@@ -34,6 +34,7 @@ from .const import (
     LIFESMART_REGION_OPTIONS,
 )
 from .core.openapi_client import LifeSmartOAPIClient
+from .compatibility import create_select_selector
 from .diagnostics import get_error_advice
 from .exceptions import LifeSmartAuthError
 from .helpers import safe_get
@@ -100,7 +101,7 @@ async def validate_local_input(
 ) -> dict[str, Any]:
     """Validate the user input for local connection."""
     try:
-        dev = custom_components.lifesmart.core.local_tcp_client.LifeSmartLocalTCPClient(
+        dev = LifeSmartLocalTCPClient(
             data[CONF_HOST],
             data[CONF_PORT],
             data[CONF_USERNAME],
@@ -175,15 +176,13 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_TYPE, default=config_entries.CONN_CLASS_CLOUD_PUSH
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[
-                            config_entries.CONN_CLASS_LOCAL_PUSH,
-                            config_entries.CONN_CLASS_CLOUD_PUSH,
-                        ],
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="connection_type",
-                    )
+                ): create_select_selector(
+                    options=[
+                        config_entries.CONN_CLASS_LOCAL_PUSH,
+                        config_entries.CONN_CLASS_CLOUD_PUSH,
+                    ],
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key="connection_type",
                 )
             }
         )
@@ -260,24 +259,20 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                     vol.Required(
                         CONF_REGION, default=self.config_data.get(CONF_REGION, "cn2")
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=LIFESMART_REGION_OPTIONS,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="region",
-                        )
+                    ): create_select_selector(
+                        options=LIFESMART_REGION_OPTIONS,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="region",
                     ),
                     vol.Required(
                         CONF_LIFESMART_AUTH_METHOD,
                         default=self.config_data.get(
                             CONF_LIFESMART_AUTH_METHOD, "token"
                         ),
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=["token", "password"],
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="auth_method",
-                        )
+                    ): create_select_selector(
+                        options=["token", "password"],
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="auth_method",
                     ),
                 }
             )
@@ -492,12 +487,10 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_LIFESMART_AUTH_METHOD,
                     default=self.temp_data.get(CONF_LIFESMART_AUTH_METHOD, "token"),
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=["token", "password"],
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="auth_method",
-                    )
+                ): create_select_selector(
+                    options=["token", "password"],
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key="auth_method",
                 )
             }
         )

@@ -14,12 +14,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
     PERCENTAGE,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfPower,
-    UnitOfTemperature,
-    UnitOfSoundPressure,
-    UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -51,10 +45,21 @@ from .const import (
     SUPPORTED_SWITCH_TYPES,
     CLIMATE_TYPES,
 )
+from .compatibility import (
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfSoundPressure,
+    UnitOfTemperature,
+)
 from .entity import LifeSmartEntity
 from .helpers import generate_unique_id, get_sensor_subdevices, safe_get
 
 _LOGGER = logging.getLogger(__name__)
+SOUND_PRESSURE_DEVICE_CLASS = getattr(
+    SensorDeviceClass, "SOUND_PRESSURE", "sound_pressure"
+)
 
 
 async def async_setup_entry(
@@ -200,7 +205,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
 
         # 噪音感应器
         if device_type in NOISE_SENSOR_TYPES and sub_key == "P1":
-            return SensorDeviceClass.SOUND_PRESSURE  # 噪音等级
+            return SOUND_PRESSURE_DEVICE_CLASS  # 噪音等级
 
         # 电量计量器
         if device_type in POWER_METER_TYPES:
@@ -269,7 +274,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             return CONCENTRATION_PARTS_PER_MILLION
         if self.device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
             return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-        if self.device_class == SensorDeviceClass.SOUND_PRESSURE:
+        if self.device_class == SOUND_PRESSURE_DEVICE_CLASS:
             return UnitOfSoundPressure.DECIBEL
 
         # 燃气浓度单位
@@ -290,7 +295,7 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             SensorDeviceClass.CO2,
             SensorDeviceClass.PM25,
             SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
-            SensorDeviceClass.SOUND_PRESSURE,
+            SOUND_PRESSURE_DEVICE_CLASS,
             SensorDeviceClass.BATTERY,
             SensorDeviceClass.VOLTAGE,
         }:

@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, call
 import pytest
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.cover import CoverEntityFeature
-from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP_KELVIN
+from homeassistant.components.light import ATTR_BRIGHTNESS
 
+from custom_components.lifesmart.compatibility import ATTR_COLOR_TEMP_KELVIN
 from custom_components.lifesmart.const import CMD_TYPE_SET_VAL
 from custom_components.lifesmart.cover import LifeSmartPositionalCover
 from custom_components.lifesmart.climate import LifeSmartClimate
