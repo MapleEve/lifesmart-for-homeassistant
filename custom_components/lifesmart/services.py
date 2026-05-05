@@ -106,11 +106,11 @@ class LifeSmartServiceManager:
                 "brand": call.data["brand"],
                 "key": call.data.get("key")
                 or call.data.get("keys"),  # 支持key和keys参数
-                "power": call.data["power"],
-                "mode": call.data["mode"],
+                "power": int(call.data["power"]),
+                "mode": int(call.data["mode"]),
                 "temp": call.data["temp"],
-                "wind": call.data["wind"],
-                "swing": call.data["swing"],
+                "wind": int(call.data["wind"]),
+                "swing": int(call.data["swing"]),
             }
 
             # 只在有值时才添加ai和idx参数

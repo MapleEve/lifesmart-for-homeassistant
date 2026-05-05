@@ -13,6 +13,20 @@
       }
     }
   },
+  "selector": {
+    "region": {
+      "options": {
+        "cn0": "China VIP (cn0)",
+        "cn1": "China Backup (cn1)",
+        "cn2": "China Main (cn2)",
+        "us": "North America (US/NA)",
+        "eur": "Europe (EUROPE)",
+        "jp": "Japan (JAPAN)",
+        "apz": "Asia Pacific (APAC)",
+        "auto": "Global Auto"
+      }
+    }
+  },
   "entity": {
     "io": {
       "switch": "Switch",

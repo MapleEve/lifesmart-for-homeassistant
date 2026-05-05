@@ -237,7 +237,7 @@
         "eur": "欧洲服务器 (EUROPE)",
         "jp": "日本服务器 (JAPAN)",
         "apz": "其他亚太区服务器 (APAC)",
-        "AUTO": "自动选择服务器 Global"
+        "auto": "自动选择服务器 Global"
       }
     },
     "unlock_method": {

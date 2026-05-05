@@ -81,7 +81,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
                 "usertoken", data.get(CONF_LIFESMART_USERTOKEN, "")
             )
             data[CONF_REGION] = login_response.get(
-                "region", data.get(CONF_REGION, "cn2")
+                "rgn", login_response.get("region", data.get(CONF_REGION, "cn2"))
             )
             # Also update userid in case API returns normalized userid
             if "userid" in login_response:

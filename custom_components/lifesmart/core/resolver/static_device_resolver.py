@@ -99,7 +99,13 @@ class StaticDeviceResolver:
         Args:
             static_configs: 由StaticConfigPreprocessor生成的静态配置
         """
-        self.configs = static_configs
+        self.configs = dict(static_configs)
+        for alias, target in {
+            "SL_P_V1": "SL_P",
+            "SL_SC_BG_V1": "SL_SC_BG",
+        }.items():
+            if alias not in self.configs and target in self.configs:
+                self.configs[alias] = self.configs[target]
         self._stats = {
             "total_requests": 0,
             "successful_resolutions": 0,

@@ -201,7 +201,7 @@ ATTR_AZ = "az"  # 区域属性（用于部分第三方设备）
 
 # ================= 认证配置常量 (Authentication Configuration Constants) =================
 # 默认配置值
-DEFAULT_REGION = "AUTO"
+DEFAULT_REGION = "auto"
 DEFAULT_AUTH_METHOD = "password"
 DEFAULT_LOCAL_PORT = 8888
 DEFAULT_LOCAL_TIMEOUT = 30
@@ -399,5 +399,5 @@ LIFESMART_REGION_OPTIONS = [
     "eur",
     "jp",
     "apz",
-    "AUTO",
+    "auto",
 ]

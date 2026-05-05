@@ -481,7 +481,25 @@ class LifeSmartBaseCover(LifeSmartEntity, CoverEntity):
     def _handle_update(self, new_data: dict) -> None:
         """处理来自 WebSocket 的实时状态更新。"""
         if new_data:
-            self._raw_device[DEVICE_DATA_KEY] = new_data
+            device_data = safe_get(self._raw_device, DEVICE_DATA_KEY, default={}).copy()
+            first_key = next(iter(new_data), None)
+
+            if first_key in ("type", "val", "v"):
+                sub_data = device_data.get(self._sub_key, {}).copy()
+                sub_data.update(new_data)
+                device_data[self._sub_key] = sub_data
+            else:
+                for sub_key, sub_data in new_data.items():
+                    if isinstance(sub_data, dict) and isinstance(
+                        device_data.get(sub_key), dict
+                    ):
+                        merged = device_data[sub_key].copy()
+                        merged.update(sub_data)
+                        device_data[sub_key] = merged
+                    else:
+                        device_data[sub_key] = sub_data
+
+            self._raw_device[DEVICE_DATA_KEY] = device_data
             self._initialize_state()
             self.async_write_ha_state()
 
@@ -491,7 +509,12 @@ class LifeSmartBaseCover(LifeSmartEntity, CoverEntity):
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
+                (
+                    d
+                    for d in devices
+                    if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
+                ),
+                None,
             )
             if current_device:
                 self._raw_device = current_device

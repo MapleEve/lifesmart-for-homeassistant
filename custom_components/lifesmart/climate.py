@@ -348,7 +348,29 @@ class LifeSmartBaseClimate(LifeSmartEntity, ClimateEntity):
         它会调用 _update_state 方法来解析新数据，并请求 HA 更新前端状态。
         """
         if new_data:
-            self._update_state(new_data)
+            device_data = safe_get(self._raw_device, DEVICE_DATA_KEY, default={}).copy()
+            first_key = next(iter(new_data), None)
+            is_raw_io_update = first_key in ("type", "val", "v")
+
+            if is_raw_io_update:
+                _LOGGER.debug(
+                    "Ignoring raw climate IO update without idx for %s",
+                    self._attr_unique_id,
+                )
+                return
+
+            for sub_key, sub_data in new_data.items():
+                if isinstance(sub_data, dict) and isinstance(
+                    device_data.get(sub_key), dict
+                ):
+                    merged = device_data[sub_key].copy()
+                    merged.update(sub_data)
+                    device_data[sub_key] = merged
+                else:
+                    device_data[sub_key] = sub_data
+
+            self._raw_device[DEVICE_DATA_KEY] = device_data
+            self._update_state(device_data)
             self.async_write_ha_state()
 
     @callback
@@ -363,7 +385,12 @@ class LifeSmartBaseClimate(LifeSmartEntity, ClimateEntity):
         try:
             devices = self.hass.data[DOMAIN][self._entry_id]["devices"]
             current_device = next(
-                (d for d in devices if d[DEVICE_ID_KEY] == self.me), None
+                (
+                    d
+                    for d in devices
+                    if d[HUB_ID_KEY] == self.agt and d[DEVICE_ID_KEY] == self.me
+                ),
+                None,
             )
             if current_device:
                 self._raw_device = current_device
