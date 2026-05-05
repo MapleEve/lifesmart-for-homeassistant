@@ -37,7 +37,7 @@ Installation and updates are available via HACS.
 
 For detailed release notes and issue handling notes, see [CHANGELOG.md](./CHANGELOG.md).
 
-- **📦 2026.05 main/current patch preparation**: Documentation is prepared for the pending `v2026.05.1` patch candidate, and the manifest version has been bumped to `v2026.05.1` for the next main/current release.
+- **📦 2026.05 main/current patch preparation**: Documentation is prepared for the pending `v2026.05.2` patch candidate, and the manifest version has been bumped to `v2026.05.2` for the next main/current release. This non-destructive patch supersedes failed `v2026.05.1`, which did not produce usable assets because the release workflow was blocked by HassFest.
 - **☁️ Cloud Authentication**: Improved password-login handling by using the region returned by the LifeSmart auth flow and preserving returned token/user/region data.
 - **🏠 Local Protocol Robustness**: Hardened local protocol decoding for nested packets that previously could raise `TypeError: unhashable type: 'dict'`.
 - **💡 Device Feedback Fixes**: Added runtime aliases for `SL_SC_BG_V1` and `SL_P_V1`, restored single-IO RGBW light creation, improved SPOT light state mapping, corrected DOOYA curtain direction/position updates, and improved climate partial-state merging.

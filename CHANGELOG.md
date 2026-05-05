@@ -1,12 +1,13 @@
 # Changelog
 
-## Unreleased - v2026.05.1 (main/current patch release candidate)
+## Unreleased - v2026.05.2 (main/current patch release candidate)
 
 Release branch context:
 - Prepared on `fix/main-doc-backed-issue-patch` after `664c07f7605547cb434a0abbee6b938653f2832a`.
 - This is a main/current patch release candidate. Gen2 / `v25.08.1` architecture work is not part of this release line.
-- `custom_components/lifesmart/manifest.json` now reports `v2026.05.1` for the main/current patch release candidate.
-- Local tag `v2026.05.0` points at `4fd1d1c`, before the later main feedback fixes in `664c07f`; publish these notes as the next patch (`v2026.05.1`).
+- `custom_components/lifesmart/manifest.json` now reports `v2026.05.2` for the main/current patch release candidate.
+- `v2026.05.2` non-destructively supersedes failed `v2026.05.1`, which did not produce usable assets because the release workflow was blocked by HassFest.
+- Local tag `v2026.05.0` points at `4fd1d1c`, before the later main feedback fixes in `664c07f`; publish these notes as the next patch (`v2026.05.2`).
 
 ### Highlights
 

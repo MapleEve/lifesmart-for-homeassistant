@@ -34,7 +34,7 @@ Assistant。支持云端与本地两种模式，自动发现设备，并通过 H
 
 详细发布说明与 issue 处理建议见 [CHANGELOG.md](./CHANGELOG.md)。
 
-- **📦 2026.05 main/current patch 发布准备**：文档已按待发布 `v2026.05.1` patch candidate 准备，manifest 版本已提升到 `v2026.05.1`，用于下一次 main/current 发布。
+- **📦 2026.05 main/current patch 发布准备**：文档已按待发布 `v2026.05.2` patch candidate 准备，manifest 版本已提升到 `v2026.05.2`，用于下一次 main/current 发布。该非破坏性 patch 取代失败的 `v2026.05.1`；后者因 release workflow 被 HassFest 阻塞，未产出可用 assets。
 - **☁️ 云端认证**：密码登录流程会使用 LifeSmart 认证第一步返回的区域，并保存返回的 token/user/region 数据。
 - **🏠 本地协议稳健性**：增强本地协议嵌套包解析，避免异常数据键触发 `TypeError: unhashable type: 'dict'`。
 - **💡 设备反馈修复**：补充 `SL_SC_BG_V1`、`SL_P_V1` 运行时别名，恢复单 IO RGBW 灯创建，改善 SPOT 亮度/色温状态映射，修正杜亚窗帘方向/位置更新，并改善 climate 局部状态合并。
