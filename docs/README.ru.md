@@ -16,7 +16,7 @@
 <br>
 <br>
 
-<img src="./assets/ru/overview.png" alt="LifeSmart IoT Интеграция для Home Assistant" width="100%" />
+<img src="./assets/ru/hero.png" alt="LifeSmart IoT Интеграция для Home Assistant" width="100%" />
 
 <br>
 
