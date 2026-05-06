@@ -2,6 +2,7 @@ name: Claude Code Review
 
 env:
   ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+  CLAUDE_MODEL: claude-sonnet-4-6
 
 on:
   pull_request:
@@ -36,15 +37,15 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
-          # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4.1)
-          # model: "claude-opus-4-1-20250805"
+          claude_args: |
+            --model ${{ env.CLAUDE_MODEL }}
 
           # Direct prompt for automated review (no @claude mention needed)
-          direct_prompt: |
+          prompt: |
             Please review this pull request and provide feedback on:
             - Code quality and best practices
             - Potential bugs or issues
@@ -78,4 +79,3 @@ jobs:
           # if: |
           #   !contains(github.event.pull_request.title, '[skip-review]') &&
           #   !contains(github.event.pull_request.title, '[WIP]')
-

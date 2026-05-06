@@ -1,7 +1,8 @@
 name: Claude Code
 
 env:
- ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+  ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+  CLAUDE_MODEL: claude-sonnet-4-6
 
 on:
   issue_comment:
@@ -35,16 +36,16 @@ jobs:
 
       - name: Run Claude Code
         id: claude
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
             actions: read
-          
-          # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4.1)
-          # model: "claude-opus-4-1-20250805"
+
+          claude_args: |
+            --model ${{ env.CLAUDE_MODEL }}
           
           # Optional: Customize the trigger phrase (default: @claude)
           # trigger_phrase: "/claude"
@@ -64,4 +65,3 @@ jobs:
           # Optional: Custom environment variables for Claude
           # claude_env: |
           #   NODE_ENV: test
-
