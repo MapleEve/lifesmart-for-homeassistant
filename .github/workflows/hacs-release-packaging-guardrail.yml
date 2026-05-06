@@ -1,0 +1,34 @@
+name: HACS Release Packaging Guardrail
+
+on:
+  pull_request:
+    paths:
+      - "hacs.json"
+      - "custom_components/lifesmart/manifest.json"
+      - ".github/workflows/**"
+      - "scripts/check_hacs_release_packaging.py"
+  push:
+    branches:
+      - main
+    paths:
+      - "hacs.json"
+      - "custom_components/lifesmart/manifest.json"
+      - ".github/workflows/**"
+      - "scripts/check_hacs_release_packaging.py"
+  workflow_dispatch:
+
+jobs:
+  hacs-release-packaging-guardrail:
+    name: Prevent nested HACS release packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate HACS release packaging settings
+        run: python scripts/check_hacs_release_packaging.py
