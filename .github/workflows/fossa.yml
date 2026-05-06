@@ -1,0 +1,41 @@
+name: FOSSA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fossa:
+    name: fossa
+    runs-on: ubuntu-latest
+    env:
+      FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
+    steps:
+      - name: Skip when FOSSA_API_KEY is not configured
+        if: ${{ env.FOSSA_API_KEY == '' }}
+        run: echo "FOSSA_API_KEY is not configured; skipping FOSSA scan."
+
+      - name: Checkout repository
+        if: ${{ env.FOSSA_API_KEY != '' }}
+        uses: actions/checkout@v5
+
+      - name: Run FOSSA scan
+        if: ${{ env.FOSSA_API_KEY != '' }}
+        uses: fossas/fossa-action@v1.9.0
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          pinned-cli-version: v3.17.1
+
+      - name: Run FOSSA policy test
+        if: ${{ env.FOSSA_API_KEY != '' }}
+        uses: fossas/fossa-action@v1.9.0
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          pinned-cli-version: v3.17.1
+          run-tests: true
