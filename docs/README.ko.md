@@ -16,7 +16,7 @@
 <br>
 <br>
 
-<img src="./assets/ko/overview.png" alt="LifeSmart IoT Home Assistant 통합" width="100%" />
+<img src="./assets/ko/hero.png" alt="LifeSmart IoT Home Assistant 통합" width="100%" />
 
 <br>
 

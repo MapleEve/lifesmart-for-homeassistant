@@ -16,7 +16,7 @@
 <br>
 <br>
 
-<img src="./assets/zh-CN/overview.png" alt="LifeSmart 智能家居 Home Assistant 集成" width="100%" />
+<img src="./assets/zh-CN/hero.png" alt="LifeSmart 智能家居 Home Assistant 集成" width="100%" />
 
 <br>
 
