@@ -7,8 +7,10 @@ coverage:
     project:
       default:
         informational: false
-        target: 70%           # 目标覆盖率
+        target: 90%           # 目标覆盖率
+        threshold: 0%
     patch:
       default:
         informational: false
-        target: 60%
+        target: 80%
+        threshold: 0%
