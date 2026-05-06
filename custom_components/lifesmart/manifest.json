@@ -11,5 +11,5 @@
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/MapleEve/lifesmart-for-homeassistant/issues",
   "requirements": [],
-  "version": "v2026.05.2"
+  "version": "v2026.05.3"
 }

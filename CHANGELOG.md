@@ -1,5 +1,15 @@
 # Changelog
 
+## v2026.05.3 - HACS release packaging repair
+
+Release scope:
+- Restore the historical HACS repository/source-archive release mode.
+- Remove the unintended `zip_release` / `filename` configuration from `hacs.json`.
+- Disable the legacy `release: published` uploader so releases do not attach `lifesmart.zip` or `RELEASE_NOTES.md` after publication.
+- Keep the integration in the standard repository path `custom_components/lifesmart`.
+
+No feature changes are included in this release.
+
 ## Unreleased - v2026.05.2 (main/current patch release candidate)
 
 Release branch context:

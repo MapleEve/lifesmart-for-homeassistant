@@ -1,106 +1,16 @@
-name: "Upload Release Asset"
+name: "Legacy Release Asset Uploader (disabled)"
 
 on:
-  release:
-    types: [ published ]
+  workflow_dispatch:
 
 jobs:
-  validate:
+  disabled:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Validate version consistency
+      - name: Stop legacy custom asset publishing
         run: |
-          MANIFEST_VERSION=$(grep '"version"' custom_components/lifesmart/manifest.json | cut -d'"' -f4)
-          TAG_VERSION=${GITHUB_REF#refs/tags/}
-          echo "Manifest version: $MANIFEST_VERSION"
-          echo "Tag version: $TAG_VERSION"
-          if [ "$MANIFEST_VERSION" != "$TAG_VERSION" ]; then
-            echo "❌ Version mismatch: manifest=$MANIFEST_VERSION, tag=$TAG_VERSION"
-            exit 1
-          fi
-          echo "✅ Version consistency validated"
-          
-      - name: Run HACS validation
-        uses: hacs/action@main
-        with:
-          category: integration
-          
-      - name: Run HassFest validation
-        uses: home-assistant/actions/hassfest@master
-
-  build:
-    needs: validate
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Create optimized release package
-        run: |
-          echo "🏗️ Creating optimized release package..."
-          mkdir -p release/custom_components
-          cp -r custom_components/lifesmart release/custom_components/
-          
-          # 清理不需要的文件和目录
-          echo "🧹 Cleaning up unnecessary files..."
-          cd release/custom_components/lifesmart
-          
-          # 删除测试相关文件和目录
-          rm -rf tests/
-          rm -rf __pycache__/
-          find . -name "*.pyc" -delete
-          find . -name "__pycache__" -type d -exec rm -rf {} + || true
-          find . -name "*.pytest_cache" -type d -exec rm -rf {} + || true
-          
-          # 删除开发工具文件
-          rm -f .coverage
-          rm -f coverage.xml
-          rm -f junit-*.xml
-          
-          echo "📦 Package contents:"
-          find . -type f | sort
-          
-          # 创建zip包
-          cd ../../
-          zip -r lifesmart.zip custom_components/lifesmart
-          
-          echo "✅ Release package created successfully"
-          
-      - name: Generate release notes
-        run: |
-          echo "## 📋 版本更新说明" > RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-          echo "### 🔧 兼容性支持" >> RELEASE_NOTES.md
-          echo "- **Home Assistant**: 2023.6.0+" >> RELEASE_NOTES.md
-          echo "- **Python**: 3.11 - 3.13" >> RELEASE_NOTES.md
-          echo "- **测试覆盖**: 4个CI环境全面验证" >> RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-          echo "### 📦 安装说明" >> RELEASE_NOTES.md
-          echo "1. 下载 \`lifesmart.zip\`" >> RELEASE_NOTES.md
-          echo "2. 解压到 Home Assistant 的 \`custom_components\` 目录" >> RELEASE_NOTES.md
-          echo "3. 重启 Home Assistant" >> RELEASE_NOTES.md
-          echo "4. 在集成页面添加 LifeSmart IoT 集成" >> RELEASE_NOTES.md
-
-      - name: Upload zip to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: release/lifesmart.zip
-          asset_name: lifesmart.zip
-          tag: ${{ github.ref }}
-          overwrite: true
-          
-      - name: Upload release notes
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: RELEASE_NOTES.md
-          asset_name: RELEASE_NOTES.md
-          tag: ${{ github.ref }}
-          overwrite: true
+          echo "This legacy release asset uploader is intentionally disabled."
+          echo "Main-line HACS releases use the historical repository source archive mode."
+          echo "Do not publish custom release assets from a release-published workflow."
+          echo "If a future custom asset release is explicitly approved, implement it as a separate manual pre-publication gate with zip-root validation."
+          exit 1
