@@ -1,0 +1,1 @@
+Claude app smoke check.
