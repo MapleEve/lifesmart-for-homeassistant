@@ -24,14 +24,35 @@ jobs:
         if: ${{ env.ANTHROPIC_API_KEY == '' || env.ANTHROPIC_BASE_URL == '' }}
         run: echo "Claude Code review secrets are not configured; skipping Claude Code Review."
 
-      - name: Checkout repository
+      - name: Detect Claude review workflow changes
+        id: claude-workflow-change
         if: ${{ env.ANTHROPIC_API_KEY != '' && env.ANTHROPIC_BASE_URL != '' }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+            const selfChanged = files.some(
+              (file) => file.filename === ".github/workflows/claude-code-review.yml",
+            );
+            core.setOutput("self_changed", selfChanged ? "true" : "false");
+
+      - name: Skip Claude review for workflow self-change
+        if: ${{ steps.claude-workflow-change.outputs.self_changed == 'true' }}
+        run: echo "Skipping Claude Code Review because this PR changes the review workflow itself."
+
+      - name: Checkout repository
+        if: ${{ env.ANTHROPIC_API_KEY != '' && env.ANTHROPIC_BASE_URL != '' && steps.claude-workflow-change.outputs.self_changed != 'true' }}
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Run Claude Code Review
-        if: ${{ env.ANTHROPIC_API_KEY != '' && env.ANTHROPIC_BASE_URL != '' }}
+        if: ${{ env.ANTHROPIC_API_KEY != '' && env.ANTHROPIC_BASE_URL != '' && steps.claude-workflow-change.outputs.self_changed != 'true' }}
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
