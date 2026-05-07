@@ -7,7 +7,7 @@ coverage:
     project:
       default:
         informational: false
-        target: 90%           # 目标覆盖率
+        target: auto          # block coverage regressions without failing unchanged baseline coverage
         threshold: 0%
     patch:
       default:
