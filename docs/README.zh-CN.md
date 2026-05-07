@@ -16,7 +16,7 @@
 <br>
 <br>
 
-<img src="./assets/zh-CN/hero.png" alt="LifeSmart 智能家居 Home Assistant 集成" width="100%" />
+<img src="./assets/zh-CN/hero.gif" alt="LifeSmart 智能家居 Home Assistant 集成" width="100%" />
 
 <br>
 
@@ -34,7 +34,7 @@
 
 ## 概述
 
-<img src="./assets/zh-CN/overview.png" alt="LifeSmart 集成概述" width="100%" />
+<img src="./assets/zh-CN/overview.gif" alt="LifeSmart 集成概述" width="100%" />
 
 LifeSmart for Home Assistant 将 LifeSmart 智能家居设备与 Home Assistant 无缝集成。支持云端和本地两种连接模式、自动设备发现，以及通过 Home Assistant 服务实现高级自动化。集成支持广泛的 LifeSmart 设备，包括开关、传感器、门锁、控制器、SPOT 设备和摄像头。可通过 HACS 进行安装和更新。
 
@@ -42,7 +42,7 @@ LifeSmart for Home Assistant 将 LifeSmart 智能家居设备与 Home Assistant 
 
 ## 功能特性
 
-<img src="./assets/zh-CN/features.png" alt="功能特性" width="100%" />
+<img src="./assets/zh-CN/features.gif" alt="功能特性" width="100%" />
 
 - **双重连接模式**：云端和本地模式（选择 LifeSmart API 或本地 Hub）
 - **全面设备支持**：开关、传感器、门锁、控制器、插座、窗帘电机、灯光、SPOT、摄像头
@@ -67,7 +67,7 @@ LifeSmart for Home Assistant 将 LifeSmart 智能家居设备与 Home Assistant 
 
 ## 安装方法
 
-<img src="./assets/zh-CN/installation.png" alt="通过 HACS 安装" width="100%" />
+<img src="./assets/zh-CN/installation.gif" alt="通过 HACS 安装" width="100%" />
 
 ### 通过 HACS 安装
 
@@ -82,7 +82,7 @@ LifeSmart for Home Assistant 将 LifeSmart 智能家居设备与 Home Assistant 
 
 ## 初始化配置
 
-<img src="./assets/zh-CN/initialization.png" alt="初始化配置" width="100%" />
+<img src="./assets/zh-CN/initialization.gif" alt="初始化配置" width="100%" />
 
 ### 前提条件
 
@@ -106,7 +106,7 @@ LifeSmart for Home Assistant 将 LifeSmart 智能家居设备与 Home Assistant 
 
 ## 使用说明
 
-<img src="./assets/zh-CN/usage.png" alt="Home Assistant 服务" width="100%" />
+<img src="./assets/zh-CN/usage.gif" alt="Home Assistant 服务" width="100%" />
 
 ### Home Assistant 服务
 
@@ -132,7 +132,7 @@ data:
 
 ## 支持的设备
 
-<img src="./assets/zh-CN/devices.png" alt="支持的设备" width="100%" />
+<img src="./assets/zh-CN/devices.gif" alt="支持的设备" width="100%" />
 
 支持多种 LifeSmart 设备，包括但不限于：
 
@@ -154,7 +154,7 @@ data:
 
 ## 兼容性与测试
 
-<img src="./assets/zh-CN/compatibility.png" alt="兼容性与测试" width="100%" />
+<img src="./assets/zh-CN/compatibility.gif" alt="兼容性与测试" width="100%" />
 
 ### Home Assistant 版本支持
 
@@ -182,7 +182,7 @@ data:
 
 ## 开发与贡献
 
-<img src="./assets/zh-CN/contributing.png" alt="开发与贡献" width="100%" />
+<img src="./assets/zh-CN/contributing.gif" alt="开发与贡献" width="100%" />
 
 ### 开发环境搭建
 

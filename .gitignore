@@ -83,3 +83,11 @@ Thumbs.db
 /.claude/
 /htmlcov/
 /CLAUDE.md
+
+# README Remotion animation workflow
+/docs/readme-animation/node_modules/
+/docs/readme-animation/.cache/
+/docs/readme-animation/out/
+/docs/readme-animation/render/
+/docs/readme-animation/stills/
+/docs/readme-animation/tmp/

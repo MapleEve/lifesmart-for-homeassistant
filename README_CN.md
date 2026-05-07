@@ -249,10 +249,14 @@ flake8 custom_components/lifesmart/
 
 ## 图例
 
-**配置示例截图**
+**README 动态图例**
 
-![配置示例](./docs/example-configuration.png)
-![示例图片](./docs/example-image.png)
-![示例图片2](./docs/example-image-2.png)
-![示例图片3](./docs/example-image-3.png)
-![示例图片4](./docs/example-image-4.png)
+<img src="./docs/assets/zh-CN/hero.gif" alt="LifeSmart 智能家居 Home Assistant 集成" width="100%" />
+<img src="./docs/assets/zh-CN/overview.gif" alt="LifeSmart 集成概述" width="100%" />
+<img src="./docs/assets/zh-CN/features.gif" alt="功能特性" width="100%" />
+<img src="./docs/assets/zh-CN/installation.gif" alt="通过 HACS 安装" width="100%" />
+<img src="./docs/assets/zh-CN/initialization.gif" alt="初始化配置" width="100%" />
+<img src="./docs/assets/zh-CN/usage.gif" alt="Home Assistant 服务" width="100%" />
+<img src="./docs/assets/zh-CN/devices.gif" alt="支持的设备" width="100%" />
+<img src="./docs/assets/zh-CN/compatibility.gif" alt="兼容性与测试" width="100%" />
+<img src="./docs/assets/zh-CN/contributing.gif" alt="开发与贡献" width="100%" />
