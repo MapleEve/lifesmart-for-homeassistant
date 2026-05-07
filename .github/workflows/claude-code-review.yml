@@ -40,6 +40,8 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
           track_progress: true
+          use_sticky_comment: true
+          exclude_comments_by_actor: MapleEve,github-actions,codecov,sourcery-ai,copilot-pull-request-reviewer
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
@@ -52,6 +54,8 @@ jobs:
             - Test coverage for changed behavior
 
             The PR branch is already checked out in the current working directory.
+            This workflow intentionally passes `github_token: secrets.GH_TOKEN` and exports `GH_TOKEN` because the official Claude GitHub App is not installed for this repository yet.
+            Do not treat `GH_TOKEN_VALUE`, `github_token: secrets.GH_TOKEN`, or `GH_TOKEN` as a migration bug unless the official Claude GitHub App has been installed and verified.
             Always post one top-level review summary with `gh pr comment`, even when there are no actionable findings.
             If there are no actionable findings, say that explicitly in the top-level comment.
             Use `mcp__github_inline_comment__create_inline_comment` with `confirmed: true` for specific changed-line issues.
