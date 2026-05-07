@@ -1,7 +1,9 @@
 name: Claude Code Review
 
 env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
   ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+  GH_TOKEN_VALUE: ${{ secrets.GH_TOKEN }}
   CLAUDE_MODEL: claude-sonnet-4-6
 
 on:
@@ -25,18 +27,25 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write
+      issues: write
       id-token: write
     
     steps:
+      - name: Skip when Claude secrets are not configured
+        if: ${{ env.ANTHROPIC_API_KEY == '' || env.ANTHROPIC_BASE_URL == '' || env.GH_TOKEN_VALUE == '' }}
+        run: echo "Claude Code review secrets are not configured; skipping Claude Code Review."
+
       - name: Checkout repository
+        if: ${{ env.ANTHROPIC_API_KEY != '' && env.ANTHROPIC_BASE_URL != '' && env.GH_TOKEN_VALUE != '' }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Run Claude Code Review
         id: claude-review
+        if: ${{ env.ANTHROPIC_API_KEY != '' && env.ANTHROPIC_BASE_URL != '' && env.GH_TOKEN_VALUE != '' }}
+        continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -80,3 +89,37 @@ jobs:
           # if: |
           #   !contains(github.event.pull_request.title, '[skip-review]') &&
           #   !contains(github.event.pull_request.title, '[WIP]')
+
+      - name: Post Claude Code Review summary
+        if: ${{ always() && github.event_name == 'pull_request' && env.ANTHROPIC_API_KEY != '' && env.ANTHROPIC_BASE_URL != '' && env.GH_TOKEN_VALUE != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CLAUDE_OUTCOME: ${{ steps.claude-review.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          MARKER: "<!-- claude-code-review-summary -->"
+        run: |
+          set -euo pipefail
+          short_sha="${HEAD_SHA:0:7}"
+          if [ "$CLAUDE_OUTCOME" = "success" ]; then
+            body="$(printf '%s\n### Claude Code Review\n\nClaude Code Review completed for `%s`.\n\nThis summary is posted even when Claude has no line-level findings. If no separate Claude inline comments are visible, there were no actionable line-level findings for this run.\n\nRun: %s' "$MARKER" "$short_sha" "$RUN_URL")"
+          else
+            body="$(printf '%s\n### Claude Code Review\n\nClaude Code Review did not complete successfully for `%s`.\n\nCheck the workflow run before merging. The check will remain failed so this cannot be missed.\n\nRun: %s' "$MARKER" "$short_sha" "$RUN_URL")"
+          fi
+
+          comment_id="$(
+            gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+              --jq ".[] | select(.body | contains(\"$MARKER\")) | .id" | tail -n 1
+          )"
+          if [ -n "$comment_id" ]; then
+            jq -n --arg body "$body" '{body: $body}' \
+              | gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment_id" --input -
+          else
+            jq -n --arg body "$body" '{body: $body}' \
+              | gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --input -
+          fi
+
+      - name: Fail when Claude Code Review failed
+        if: ${{ steps.claude-review.outcome == 'failure' }}
+        run: exit 1
