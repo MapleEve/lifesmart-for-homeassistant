@@ -16,7 +16,7 @@
 <br>
 <br>
 
-<img src="./assets/ru/hero.png" alt="LifeSmart IoT Интеграция для Home Assistant" width="100%" />
+<img src="./assets/ru/hero.gif" alt="LifeSmart IoT Интеграция для Home Assistant" width="100%" />
 
 <br>
 
@@ -34,7 +34,7 @@
 
 ## Обзор
 
-<img src="./assets/ru/overview.png" alt="Обзор интеграции LifeSmart" width="100%" />
+<img src="./assets/ru/overview.gif" alt="Обзор интеграции LifeSmart" width="100%" />
 
 LifeSmart для Home Assistant интегрирует устройства LifeSmart Smart Home с Home Assistant. Поддерживаются как облачный, так и локальный режимы работы, автоматическое обнаружение устройств и расширенная автоматизация через сервисы Home Assistant. Интеграция поддерживает широкий спектр устройств LifeSmart, включая выключатели, датчики, замки, контроллеры, устройства SPOT и камеры. Установка и обновление доступны через HACS.
 
@@ -42,7 +42,7 @@ LifeSmart для Home Assistant интегрирует устройства Life
 
 ## Функции
 
-<img src="./assets/ru/features.png" alt="Функции" width="100%" />
+<img src="./assets/ru/features.gif" alt="Функции" width="100%" />
 
 - **Двойной режим подключения**: Облачный и локальный режимы (выбор между LifeSmart API или локальным хабом)
 - **Комплексная поддержка устройств**: Выключатели, датчики, замки, контроллеры, розетки, двигатели штор, светильники, SPOT, камеры
@@ -66,7 +66,7 @@ LifeSmart для Home Assistant интегрирует устройства Life
 
 ## Установка
 
-<img src="./assets/ru/installation.png" alt="Установка через HACS" width="100%" />
+<img src="./assets/ru/installation.gif" alt="Установка через HACS" width="100%" />
 
 ### Установка через HACS
 
@@ -81,7 +81,7 @@ LifeSmart для Home Assistant интегрирует устройства Life
 
 ## Инициализация
 
-<img src="./assets/ru/initialization.png" alt="Инициализация и настройка" width="100%" />
+<img src="./assets/ru/initialization.gif" alt="Инициализация и настройка" width="100%" />
 
 ### Предварительные требования
 
@@ -105,7 +105,7 @@ LifeSmart для Home Assistant интегрирует устройства Life
 
 ## Использование
 
-<img src="./assets/ru/usage.png" alt="Сервисы Home Assistant" width="100%" />
+<img src="./assets/ru/usage.gif" alt="Сервисы Home Assistant" width="100%" />
 
 ### Сервисы Home Assistant
 
@@ -131,7 +131,7 @@ data:
 
 ## Поддерживаемые устройства
 
-<img src="./assets/ru/devices.png" alt="Поддерживаемые устройства" width="100%" />
+<img src="./assets/ru/devices.gif" alt="Поддерживаемые устройства" width="100%" />
 
 Поддерживает широкий спектр устройств LifeSmart, включая, но не ограничиваясь:
 
@@ -153,7 +153,7 @@ data:
 
 ## Совместимость и тестирование
 
-<img src="./assets/ru/compatibility.png" alt="Совместимость и тестирование" width="100%" />
+<img src="./assets/ru/compatibility.gif" alt="Совместимость и тестирование" width="100%" />
 
 ### Поддержка версий Home Assistant
 
@@ -175,7 +175,7 @@ data:
 
 ## Разработка и вклад
 
-<img src="./assets/ru/contributing.png" alt="Разработка и вклад" width="100%" />
+<img src="./assets/ru/contributing.gif" alt="Разработка и вклад" width="100%" />
 
 ### Настройка среды разработки
 

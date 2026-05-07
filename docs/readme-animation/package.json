@@ -1,0 +1,25 @@
+{
+  "name": "lifesmart-readme-animation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.tsx",
+    "render:all": "node scripts/render-all.mjs",
+    "validate": "node scripts/validate-assets.mjs",
+    "still:locales": "node scripts/render-locale-stills.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.457",
+    "@remotion/renderer": "4.0.457",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.457",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "typescript": "5.8.3"
+  }
+}

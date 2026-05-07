@@ -16,7 +16,7 @@
 <br>
 <br>
 
-<img src="./docs/assets/en/hero.png" alt="LifeSmart IoT Integration for Home Assistant" width="100%" />
+<img src="./docs/assets/en/hero.gif" alt="LifeSmart IoT Integration for Home Assistant" width="100%" />
 
 <br>
 
@@ -34,7 +34,7 @@ Supports 704+ comprehensive tests across Home Assistant 2023.6.3+.
 
 ## Overview
 
-<img src="./docs/assets/en/overview.png" alt="LifeSmart Integration Overview" width="100%" />
+<img src="./docs/assets/en/overview.gif" alt="LifeSmart Integration Overview" width="100%" />
 
 LifeSmart for Home Assistant integrates LifeSmart smart home devices with Home Assistant. It supports both Cloud and Local modes, automatic device discovery, and advanced automation via Home Assistant services. The integration supports a wide range of LifeSmart devices, including switches, sensors, locks, controllers, SPOT devices, and cameras. Installation and updates are available via HACS.
 
@@ -42,7 +42,7 @@ LifeSmart for Home Assistant integrates LifeSmart smart home devices with Home A
 
 ## Features
 
-<img src="./docs/assets/en/features.png" alt="Features" width="100%" />
+<img src="./docs/assets/en/features.gif" alt="Features" width="100%" />
 
 - **Dual Connection Modes**: Cloud and Local modes (choose between LifeSmart API or local Hub)
 - **Comprehensive Device Support**: Switches, sensors, locks, controllers, sockets, curtain motors, lights, SPOT, cameras
@@ -67,7 +67,7 @@ For detailed release notes, see [CHANGELOG.md](./CHANGELOG.md).
 
 ## Installation
 
-<img src="./docs/assets/en/installation.png" alt="Installation via HACS" width="100%" />
+<img src="./docs/assets/en/installation.gif" alt="Installation via HACS" width="100%" />
 
 ### Install via HACS
 
@@ -82,7 +82,7 @@ For detailed release notes, see [CHANGELOG.md](./CHANGELOG.md).
 
 ## Initialization
 
-<img src="./docs/assets/en/initialization.png" alt="Initialization and Setup" width="100%" />
+<img src="./docs/assets/en/initialization.gif" alt="Initialization and Setup" width="100%" />
 
 ### Prerequisites
 
@@ -106,7 +106,7 @@ For detailed release notes, see [CHANGELOG.md](./CHANGELOG.md).
 
 ## Usage
 
-<img src="./docs/assets/en/usage.png" alt="Home Assistant Services" width="100%" />
+<img src="./docs/assets/en/usage.gif" alt="Home Assistant Services" width="100%" />
 
 ### Home Assistant Services
 
@@ -132,7 +132,7 @@ data:
 
 ## Supported Devices
 
-<img src="./docs/assets/en/devices.png" alt="Supported Devices" width="100%" />
+<img src="./docs/assets/en/devices.gif" alt="Supported Devices" width="100%" />
 
 Supports a wide range of LifeSmart devices, including but not limited to:
 
@@ -154,7 +154,7 @@ For the full list, see [const.py](https://github.com/MapleEve/lifesmart-for-home
 
 ## Compatibility & Testing
 
-<img src="./docs/assets/en/compatibility.png" alt="Compatibility and Testing" width="100%" />
+<img src="./docs/assets/en/compatibility.gif" alt="Compatibility and Testing" width="100%" />
 
 ### Home Assistant Version Support
 
@@ -182,7 +182,7 @@ For the full list, see [const.py](https://github.com/MapleEve/lifesmart-for-home
 
 ## Development & Contributing
 
-<img src="./docs/assets/en/contributing.png" alt="Development and Contributing" width="100%" />
+<img src="./docs/assets/en/contributing.gif" alt="Development and Contributing" width="100%" />
 
 ### Development Setup
 
