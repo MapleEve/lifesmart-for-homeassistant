@@ -19,9 +19,3 @@ export const CONSTELLATION_RIGHT = 28;
 export const CONSTELLATION_BOTTOM = 30;
 export const CONSTELLATION_WIDTH = 260;
 export const CONSTELLATION_HEIGHT = 170;
-
-export const FOOTER_RIGHT = 48;
-export const FOOTER_BOTTOM = 42;
-export const FOOTER_WIDTH = 306;
-export const FOOTER_HEIGHT = 50;
-export const FOOTER_ENTER_Y = 10;

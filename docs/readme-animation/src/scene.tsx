@@ -11,11 +11,6 @@ import {getLocale, getSection, SectionSlug} from './data';
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
-  FOOTER_BOTTOM,
-  FOOTER_ENTER_Y,
-  FOOTER_HEIGHT,
-  FOOTER_RIGHT,
-  FOOTER_WIDTH,
   FRAME_INSET,
   LEFT_PANEL_BOTTOM,
   LEFT_PANEL_ENTER_Y,
@@ -46,7 +41,19 @@ const clamp = (
     extrapolateRight: 'clamp',
   });
 
+const hasDenseScript = (text: string) =>
+  /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/.test(text);
+
 const titleSize = (text: string) => {
+  if (hasDenseScript(text)) {
+    if (text.length > 20) {
+      return 27;
+    }
+    if (text.length > 15) {
+      return 30;
+    }
+    return 32;
+  }
   if (text.length > 42) {
     return 26;
   }
@@ -60,6 +67,9 @@ const titleSize = (text: string) => {
 };
 
 const bodySize = (text: string) => {
+  if (hasDenseScript(text)) {
+    return text.length > 84 ? 14 : 15;
+  }
   if (text.length > 126) {
     return 15;
   }
@@ -70,7 +80,7 @@ const bodySize = (text: string) => {
 };
 
 const brandFont =
-  '"Avenir Next", "SF Pro Display", "Noto Sans CJK SC", "Noto Sans JP", "Noto Sans KR", "Arial", sans-serif';
+  '"Avenir Next", "SF Pro Display", "PingFang SC", "Hiragino Sans", "Apple SD Gothic Neo", "Noto Sans CJK SC", "Noto Sans JP", "Noto Sans KR", "Arial", sans-serif';
 
 const monoFont = '"SF Mono", "JetBrains Mono", "Menlo", monospace';
 
@@ -82,6 +92,8 @@ export const ReadmeAnimation = ({
   const locale = getLocale(localeId);
   const section = getSection(sectionSlug);
   const copy = locale.sections[sectionSlug];
+  const denseTitle = hasDenseScript(copy.title);
+  const denseBody = hasDenseScript(copy.body);
   const enter = clamp(frame, [0, 18], [0, 1]);
   const second = clamp(frame, [8, 26], [0, 1]);
   const shimmer = clamp(frame, [12, 34], [0, 1]);
@@ -189,12 +201,7 @@ export const ReadmeAnimation = ({
           >
             {section.icon}
           </div>
-          <div>
-            <div style={{fontSize: 12, letterSpacing: 1.7, opacity: 0.68}}>
-              {locale.language}
-            </div>
-            <div style={{fontSize: 15, fontWeight: 750}}>{locale.brandLine}</div>
-          </div>
+          <div style={{fontSize: 15, fontWeight: 750}}>{locale.brandLine}</div>
         </div>
 
         <div
@@ -212,10 +219,13 @@ export const ReadmeAnimation = ({
         <div
           style={{
             fontSize: titleSize(copy.title),
-            lineHeight: 1.02,
-            letterSpacing: -1.2,
+            lineHeight: denseTitle ? 1.14 : 1.02,
+            letterSpacing: denseTitle ? -0.45 : -1.2,
             fontWeight: 900,
             marginBottom: 12,
+            maxWidth: 286,
+            wordBreak: denseTitle ? 'keep-all' : 'normal',
+            overflowWrap: denseTitle ? 'normal' : 'break-word',
           }}
         >
           {copy.title}
@@ -223,10 +233,12 @@ export const ReadmeAnimation = ({
         <div
           style={{
             fontSize: bodySize(copy.body),
-            lineHeight: 1.3,
+            lineHeight: denseBody ? 1.42 : 1.3,
             color: 'rgba(247,255,251,0.78)',
             fontWeight: 520,
-            maxWidth: 292,
+            maxWidth: 286,
+            wordBreak: denseBody ? 'keep-all' : 'normal',
+            overflowWrap: 'break-word',
           }}
         >
           {copy.body}
@@ -330,19 +342,6 @@ export const ReadmeAnimation = ({
         <div
           style={{
             position: 'absolute',
-            right: 17,
-            top: 15,
-            fontSize: 10,
-            fontFamily: monoFont,
-            letterSpacing: 1.2,
-            color: 'rgba(247,255,251,0.7)',
-          }}
-        >
-          {section.slug.toUpperCase()}
-        </div>
-        <div
-          style={{
-            position: 'absolute',
             left: 18,
             bottom: 18,
             right: 18,
@@ -380,39 +379,6 @@ export const ReadmeAnimation = ({
               }}
             />
           </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          right: FOOTER_RIGHT,
-          bottom: FOOTER_BOTTOM,
-          width: FOOTER_WIDTH,
-          height: FOOTER_HEIGHT,
-          borderRadius: 22,
-          padding: '0 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'rgba(255,255,255,0.08)',
-          outline: '1px solid rgba(255,255,255,0.13)',
-          opacity: second,
-          transform: `translateY(${(1 - second) * FOOTER_ENTER_Y}px)`,
-        }}
-      >
-        <div style={{fontSize: 12, color: 'rgba(247,255,251,0.68)'}}>
-          README asset
-        </div>
-        <div
-          style={{
-            color: section.accent,
-            fontFamily: monoFont,
-            fontSize: 12,
-            fontWeight: 850,
-          }}
-        >
-          {locale.id}/{section.slug}.gif
         </div>
       </div>
     </AbsoluteFill>
