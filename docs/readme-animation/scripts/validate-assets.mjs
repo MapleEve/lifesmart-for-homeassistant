@@ -64,9 +64,6 @@ const layout = Object.fromEntries(
     'PREVIEW_TOP',
     'PREVIEW_HEIGHT',
     'CONSTELLATION_BOTTOM',
-    'FOOTER_BOTTOM',
-    'FOOTER_ENTER_Y',
-    'FOOTER_HEIGHT',
   ].map((name) => [name, numberConstant(layoutText, name)]),
 );
 
@@ -75,9 +72,6 @@ if (layout.CANVAS_WIDTH !== 720 || layout.CANVAS_HEIGHT !== 404) {
 }
 if (layout.LEFT_PANEL_BOTTOM - layout.LEFT_PANEL_ENTER_Y < layout.CONTENT_SAFE_MARGIN) {
   failures.push('left chip row can animate below the bottom safe margin');
-}
-if (layout.FOOTER_BOTTOM - layout.FOOTER_ENTER_Y < layout.CONTENT_SAFE_MARGIN) {
-  failures.push('footer path badge can animate below the bottom safe margin');
 }
 if (
   layout.PREVIEW_TOP + layout.PREVIEW_HEIGHT >
