@@ -35,7 +35,7 @@ jobs:
         if: ${{ env.ANTHROPIC_API_KEY != '' && env.ANTHROPIC_BASE_URL != '' && env.GH_TOKEN_VALUE != '' }}
         uses: anthropics/claude-code-action@v1
         env:
-          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
