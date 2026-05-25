@@ -153,6 +153,13 @@ class LifeSmartProtocol:
                 enum_id = self.REVERSE_KEY_MAPPING.get(key)
                 if enum_id is not None:
                     return struct.pack("BB", 0x13, enum_id)
+                # 数字 enum id (例如 "enum:91")：直接打包为 int，避免 get-config
+                # 等动作中数字字段（act="enum:91" 等）被错误地按字符串编码后被网关
+                # 以 ENADF1 拒绝。仅当 key 是合法整数时生效。
+                try:
+                    return struct.pack("BB", 0x13, int(key))
+                except (ValueError, struct.error):
+                    pass
                 # 如果没有找到对应的enum_id，则作为普通字符串处理
                 return self._string_to_bin(value)
             if isKey and self.REVERSE_KEY_MAPPING.get(value):

@@ -245,6 +245,28 @@ class TestProtocolSpecialTypes:
 
         assert decoded_message == normal_message, "不含enum前缀的字典应该保持不变"
 
+    def test_enum_numeric_id_packing(self, protocol: LifeSmartProtocol):
+        """回归测试：数字 enum id（例如 "enum:91"）必须被打包为 0x13 + 单字节 int。
+
+        get-config 等本地动作使用 act="enum:91"、嵌套字段使用 "enum:14"/"enum:98"
+        等数字 id。这些 id 不在 REVERSE_KEY_MAPPING 中，若被退化为
+        _string_to_bin("enum:91")，本地网关会返回 ENADF1 拒绝并使集成在
+        ConfigEntryNotReady 处启动失败（参见 issues #117 / #119）。
+        """
+        # 单字节范围内的数字 enum id 应打包为 0x13 + 单字节
+        assert protocol._pack_value("enum:91") == b"\x13\x5b"
+        assert protocol._pack_value("enum:14") == b"\x13\x0e"
+        assert protocol._pack_value("enum:0") == b"\x13\x00"
+        assert protocol._pack_value("enum:255") == b"\x13\xff"
+
+        # 在 REVERSE_KEY_MAPPING 中的命名 enum 仍走映射路径，行为不变
+        # 例：'val' -> 41 (0x29)
+        assert protocol._pack_value("enum:val") == b"\x13\x29"
+
+        # 非数字、未映射的 enum 字符串不应抛出异常，应退化为普通字符串编码
+        bogus = protocol._pack_value("enum:notanumber")
+        assert bogus[0] == 0x11  # _string_to_bin 类型头
+
     def test_special_null_handling(self, protocol: LifeSmartProtocol):
         """测试特殊NULL值的处理。"""
         test_cases = [
