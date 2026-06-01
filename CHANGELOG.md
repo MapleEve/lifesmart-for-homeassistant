@@ -1,5 +1,16 @@
 # Changelog
 
+## v2026.05.4 - Local mode numeric enum fix
+
+Release scope:
+- Fix local mode get-config numeric enum packing so values such as `enum:91` are encoded as protocol numeric enum bytes instead of raw string payloads.
+- Keep non-numeric enum values on the existing string-safe path.
+- Refs #117 and #119.
+- No custom release asset is uploaded for this release; HACS should use the repository/source archive mode.
+
+Known CI note:
+- PR #120 had a non-code `Issue Auto Comment` setup failure: `Repository access blocked`.
+
 ## v2026.05.3 - HACS release packaging repair
 
 Release scope:
