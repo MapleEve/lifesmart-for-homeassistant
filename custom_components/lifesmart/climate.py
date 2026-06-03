@@ -43,6 +43,7 @@ from .const import (
     LIFESMART_F_HVAC_MODE_MAP,
     LIFESMART_TF_FAN_MAP,
     REVERSE_LIFESMART_CP_AIR_FAN_MAP,
+    REVERSE_LIFESMART_HVAC_MODE_MAP,
     get_f_fan_mode,
     get_tf_fan_mode,
 )
@@ -54,6 +55,26 @@ ClimateEntityFeature = get_climate_entity_features()
 
 # 初始化模块级日志记录器
 _LOGGER = logging.getLogger(__name__)
+
+# 各 devtype 目标温度对应的 IO 口，与 client_base.async_set_climate_temperature
+# 的 idx_map 保持一致。乐观更新时把新值写回该 IO 的 "v" 字段（所有 _update_* 都按
+# "v" 解析目标温度），使后续局部推送重新解析时不会用旧缓存覆盖刚设置的温度。
+_CLIMATE_TARGET_TEMP_IO = {
+    "V_AIR_P": "tT",
+    "SL_UACCB": "P3",
+    "SL_CP_DN": "P3",
+    "SL_CP_AIR": "P4",
+    "SL_NATURE": "P8",
+    "SL_FCU": "P8",
+    "SL_CP_VL": "P3",
+}
+
+# 乐观更新时，每种写入对应的实体属性名。
+_OPTIMISTIC_ATTR = {
+    "hvac_mode": "_attr_hvac_mode",
+    "fan_mode": "_attr_fan_mode",
+    "temperature": "_attr_target_temperature",
+}
 
 
 def _temperature_from_io(data: dict, io_key: str) -> float | int | None:
@@ -572,13 +593,19 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         # 正确的做法是使用 `_p1_val`，这个值在 `_update_*` 方法中被正确地缓存了。
         # 对于不使用位掩码的设备，此值为0，不影响 client 侧的逻辑。
         current_val = getattr(self, "_p1_val", 0)
-        await self._client.async_set_climate_hvac_mode(
+        result = await self._client.async_set_climate_hvac_mode(
             self.agt,
             self.me,
             self.devtype,
             hvac_mode,
             current_val,
         )
+        # 乐观更新：本地网关写入成功后只回送不含 `chg` 的 `_schg`（仅 `{ts:...}`），
+        # `_update_state` 因此拿不到新值；若不主动写状态，前端温控卡片会在等待确认
+        # 超时后回退到旧值（与 switch / light / cover 平台一致）。同时把新值写回缓存中
+        # 对应的 IO，避免随后来自其它 IO（如当前温度）的局部推送用旧缓存重新解析时
+        # 覆盖刚设置的值。
+        self._optimistic_update("hvac_mode", hvac_mode, result)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """
@@ -588,9 +615,11 @@ class LifeSmartClimate(LifeSmartBaseClimate):
         给 client，以便进行正确的位掩码计算。
         """
         current_val = getattr(self, "_p1_val", 0)
-        await self._client.async_set_climate_fan_mode(
+        result = await self._client.async_set_climate_fan_mode(
             self.agt, self.me, self.devtype, fan_mode, current_val
         )
+        # 乐观更新（含缓存回写），原因同 async_set_hvac_mode。
+        self._optimistic_update("fan_mode", fan_mode, result)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """设置新的目标温度。"""
@@ -600,6 +629,75 @@ class LifeSmartClimate(LifeSmartBaseClimate):
             max_temp = getattr(self, "max_temp", 40)
             clamped_temp = max(min_temp, min(max_temp, temp))
 
-            await self._client.async_set_climate_temperature(
+            result = await self._client.async_set_climate_temperature(
                 self.agt, self.me, self.devtype, clamped_temp
             )
+            # 乐观更新（含缓存回写），原因同 async_set_hvac_mode。
+            self._optimistic_update("temperature", clamped_temp, result)
+
+    @callback
+    def _optimistic_update(self, kind: str, value: Any, result: int) -> None:
+        """命令成功下发后乐观地更新实体状态。
+
+        `result` 为底层 client 的返回码（0 = 成功）。失败时记录一条警告并跳过，
+        避免在写入失败时仍把界面停留在“看似成功”的旧/新状态。成功时：
+        1. 调用 `_apply_optimistic_io` 把新值写回 `_raw_device` 缓存中对应的 IO，
+           使随后来自其它 IO 的局部推送在 `_update_state` 重新解析时读到新值，
+           而不是用旧缓存把它覆盖回去；
+        2. 直接设置对应的 `_attr_*` 以立即反映到前端（不触发整体重解析，避免覆盖
+           其它刚通过回退路径乐观设置的属性）。
+        """
+        if result != 0:
+            _LOGGER.warning(
+                "向 %s 下发 %s 失败 (result=%s)，跳过乐观状态更新。",
+                self._attr_unique_id,
+                kind,
+                result,
+            )
+            return
+        self._apply_optimistic_io(kind, value)
+        setattr(self, _OPTIMISTIC_ATTR[kind], value)
+        self.async_write_ha_state()
+
+    @callback
+    def _apply_optimistic_io(self, kind: str, value: Any) -> bool:
+        """把刚写入的值回写到 `_raw_device` 缓存中对应的 IO，保持与 `_update_*` 的
+        解析方式一致。返回 True 表示已写回缓存（该值可抵抗后续重解析）；返回 False
+        表示当前 (devtype, kind) 暂无对应编码，调用方仅做直接的 `_attr_*` 乐观更新。
+        """
+        data = self._raw_device.setdefault(DEVICE_DATA_KEY, {})
+
+        def io(idx: str) -> dict:
+            return data.setdefault(idx, {})
+
+        if kind == "temperature":
+            idx = _CLIMATE_TARGET_TEMP_IO.get(self.devtype)
+            if idx is None:
+                return False
+            # 所有 _update_* 都按 "v"（已换算的浮点温度）解析目标温度。
+            io(idx)["v"] = value
+            return True
+
+        if self.devtype in ("SL_NATURE", "SL_FCU"):
+            if kind == "hvac_mode":
+                p1 = io("P1")
+                cur_type = p1.get("type", 0)
+                if value == HVACMode.OFF:
+                    p1["type"] = cur_type & ~1  # 偶数 type = 关
+                    return True
+                p1["type"] = cur_type | 1  # 奇数 type = 开
+                mode_val = REVERSE_LIFESMART_HVAC_MODE_MAP.get(value)
+                if mode_val is None:
+                    return False
+                io("P7")["val"] = mode_val
+                return True
+            if kind == "fan_mode":
+                fan_val = LIFESMART_TF_FAN_MAP.get(value)
+                if fan_val is None:
+                    return False
+                io("P9")["val"] = fan_val
+                if "P10" in data:  # 解析时 P10 优先于 P9
+                    data["P10"]["val"] = fan_val
+                return True
+
+        return False
