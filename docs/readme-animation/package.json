@@ -10,7 +10,7 @@
     "still:locales": "node scripts/render-locale-stills.mjs"
   },
   "dependencies": {
-    "@remotion/cli": "4.0.457",
+    "@remotion/cli": "4.0.503",
     "@remotion/renderer": "4.0.457",
     "react": "19.1.0",
     "react-dom": "19.1.0",
