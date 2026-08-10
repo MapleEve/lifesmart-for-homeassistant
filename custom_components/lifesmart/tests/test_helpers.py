@@ -353,6 +353,34 @@ class TestSwitchSubdeviceAndGetters:
         assert is_switch_subdevice("SL_OE_3C", "P4") is True
         assert is_switch_subdevice("SL_OE_3C", "P2") is False
 
+        # ZG#TS011F LifeSmart 插座：on/off 口为 'O1' (也兼容 'O'/'P1')
+        assert is_switch_subdevice("ZG#TS011F", "O1") is True
+        assert is_switch_subdevice("ZG#TS011F", "O") is True
+        assert is_switch_subdevice("ZG#TS011F", "P1") is True
+        assert is_switch_subdevice("ZG#TS011F", "o1") is True  # 大小写不敏感
+        # 计量口不应被识别为开关控制点
+        assert is_switch_subdevice("ZG#TS011F", "EP") is False
+        assert is_switch_subdevice("ZG#TS011F", "EE1") is False
+
+    def test_zigbee_plug_ee1_is_energy_sensor(self):
+        """ZG#TS011F 的 EE1 应为电量传感器口，O1 不是。"""
+        from custom_components.lifesmart.helpers import is_sensor_subdevice
+
+        assert is_sensor_subdevice("ZG#TS011F", "EE1") is True
+        assert is_sensor_subdevice("ZG#TS011F", "O1") is False
+
+    def test_zigbee_plug_is_classified_as_plug(self):
+        """ZG#TS011F 应被并入 SMART_PLUG_TYPES，从而按智慧插座处理。"""
+        from custom_components.lifesmart.const import (
+            SMART_PLUG_TYPES,
+            ALL_SWITCH_TYPES,
+            ALL_SENSOR_TYPES,
+        )
+
+        assert "ZG#TS011F" in SMART_PLUG_TYPES
+        assert "ZG#TS011F" in ALL_SWITCH_TYPES  # 生成开关实体
+        assert "ZG#TS011F" in ALL_SENSOR_TYPES  # 生成计量传感器实体
+
     def test_get_switch_subdevices_with_real_devices(self, mock_lifesmart_devices):
         """使用真实设备数据测试获取开关子设备。"""
         devices = mock_lifesmart_devices
