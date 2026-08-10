@@ -145,6 +145,13 @@ BUTTON_SWITCH_TYPES = {
 }
 
 # ================= 插座系列 (Outlet/Plug Series) =================
+# --- Zigbee 第三方插座 (通过 LifeSmart Zigbee 网关接入) ---
+# LifeSmart 支持 Zigbee 的智慧中心可以接入第三方 Zigbee 设备，
+# 其 devtype 采用 "ZG#<Zigbee型号>" 的形式上报。
+ZIGBEE_PLUG_TYPES = {
+    "ZG#TS011F",  # ZG#TS011F LifeSmart 计量插座 (通过 LifeSmart Zigbee 网关接入)
+}
+
 SMART_PLUG_TYPES = {
     "SL_OL",  # 智慧插座
     "SL_OL_3C",  # 智慧插座 (国标3C)
@@ -153,7 +160,7 @@ SMART_PLUG_TYPES = {
     "SL_OL_UL",  # 智慧插座 (美标)
     "SL_OL_W",  # 入墙插座 (从灯光开关移动过来，应该是插座)
     "OD_WE_OT1",  # Wi-Fi插座
-}
+} | ZIGBEE_PLUG_TYPES  # 第三方 Zigbee 插座按智慧插座处理 (开关 + 计量传感器)
 
 # --- 计量插座 ---
 POWER_METER_PLUG_TYPES = {
@@ -504,6 +511,7 @@ ALL_SENSOR_TYPES = (
     | BUTTON_SWITCH_TYPES  # 按钮开关也可能提供电量等数值
     | SMOKE_SENSOR_TYPES
     | POWER_METER_PLUG_TYPES  # 计量插座也可能提供电量等数值
+    | ZIGBEE_PLUG_TYPES  # ZG#TS011F LifeSmart 计量插座的功率/电量传感器
 )
 
 # --- 总窗帘/覆盖物列表 ---

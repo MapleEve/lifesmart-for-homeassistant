@@ -1,6 +1,7 @@
 """Support for LifeSmart sensors by @MapleEve"""
 
 import logging
+import struct
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -38,6 +39,7 @@ from .const import (
     NOISE_SENSOR_TYPES,
     POWER_METER_PLUG_TYPES,
     SMART_PLUG_TYPES,
+    ZIGBEE_PLUG_TYPES,
     POWER_METER_TYPES,
     DEFED_SENSOR_TYPES,
     SMOKE_SENSOR_TYPES,
@@ -203,6 +205,10 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
             if sub_key == "EPA":
                 return SensorDeviceClass.ENERGY
 
+        # ZG#TS011F LifeSmart 插座的累计电量口 (kWh)
+        if device_type in ZIGBEE_PLUG_TYPES and sub_key == "EE1":
+            return SensorDeviceClass.ENERGY
+
         # 噪音感应器
         if device_type in NOISE_SENSOR_TYPES and sub_key == "P1":
             return SOUND_PRESSURE_DEVICE_CLASS  # 噪音等级
@@ -333,6 +339,23 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
         if raw_value is None:
             return None
 
+        device_type = self._raw_device[DEVICE_TYPE_KEY]
+
+        # ZG#TS011F LifeSmart 插座的 EE1 累计电量口:
+        # 其 'val' 以 IEEE-754 32位浮点的位形式存放于整数中 (type=2)，
+        # 需按小端浮点重新解释后才是真实的 kWh 读数。
+        if device_type in ZIGBEE_PLUG_TYPES and self._sub_key == "EE1":
+            try:
+                bits = int(raw_value) & 0xFFFFFFFF
+                return round(struct.unpack("<f", struct.pack("<I", bits))[0], 3)
+            except (ValueError, TypeError, struct.error):
+                _LOGGER.warning(
+                    "Invalid EE1 energy value for %s: %s",
+                    self.unique_id,
+                    raw_value,
+                )
+                return None
+
         numeric_raw_value: float | int
         try:
             numeric_raw_value = float(raw_value)
@@ -343,8 +366,6 @@ class LifeSmartSensor(LifeSmartEntity, SensorEntity):
                 raw_value,
             )
             return None
-
-        device_type = self._raw_device[DEVICE_TYPE_KEY]
 
         # 仅当设备类别是温度或湿度时，才应用此启发式规则
         if self.device_class in {

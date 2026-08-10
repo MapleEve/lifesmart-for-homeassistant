@@ -20,6 +20,7 @@ from .const import (
     GARAGE_DOOR_TYPES,
     SUPPORTED_SWITCH_TYPES,
     SMART_PLUG_TYPES,
+    ZIGBEE_PLUG_TYPES,
     POWER_METER_PLUG_TYPES,
 )
 
@@ -568,6 +569,7 @@ def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
         NOISE_SENSOR_TYPES,
         POWER_METER_PLUG_TYPES,
         SMART_PLUG_TYPES,
+        ZIGBEE_PLUG_TYPES,
         POWER_METER_TYPES,
         LOCK_TYPES,
         COVER_TYPES,
@@ -623,6 +625,10 @@ def is_sensor_subdevice(device_type: str, sub_key: str) -> bool:
 
     # 智能插座 (非计量版，但也可能带计量功能)
     if device_type in SMART_PLUG_TYPES and sub_key in {"EV", "EI", "EP", "EPA"}:
+        return True
+
+    # ZG#TS011F LifeSmart 插座: EE1 为累计电量 (kWh) 传感器口
+    if device_type in ZIGBEE_PLUG_TYPES and sub_key == "EE1":
         return True
 
     # 噪音感应器
@@ -743,6 +749,14 @@ def is_switch_subdevice(device_type: str, sub_key: str) -> bool:
         return False
     if device_type in SUPPORTED_SWITCH_TYPES and sub_key_upper == "P4":
         return False
+
+    # ZG#TS011F LifeSmart 插座为单路继电器，
+    # 通过 LifeSmart Zigbee 网关接入时，开关状态上报在 'O1' 口。
+    # (部分固件也可能使用 'O' 或 'P1'，一并兼容。)
+    # 注意: 此判断必须位于 SMART_PLUG_TYPES 分支之前，
+    # 因为 ZIGBEE_PLUG_TYPES 已并入 SMART_PLUG_TYPES，而后者仅接受 'O' 口。
+    if device_type in ZIGBEE_PLUG_TYPES:
+        return sub_key_upper in {"O1", "O", "P1"}
 
     if device_type in SMART_PLUG_TYPES:
         return sub_key_upper == "O"
