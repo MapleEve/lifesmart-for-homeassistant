@@ -11,9 +11,39 @@ from typing import Callable, Any
 
 from .client_base import LifeSmartClientBase
 from .protocol import LifeSmartPacketFactory, LifeSmartProtocol
+from ..const import COVER_TYPES, GENERIC_CONTROLLER_TYPES
 from ..helpers import safe_get, normalize_device_names
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _resolve_devtype(cls_value: str) -> str:
+    """将中枢上报的 ``cls`` 归一化为内部 devtype。
+
+    中枢会为同一规格的设备上报带版本后缀的别名（``SL_SW_IF3_V2``、
+    ``SL_LI_WW_V2`` 等），因此默认剥离 ``_Vn`` 后缀。
+
+    但有一类后缀是**不能**剥离的：当剥离后的名称落入
+    :data:`GENERIC_CONTROLLER_TYPES`（通用控制器）而完整名称本身属于
+    :data:`COVER_TYPES`（窗帘）时，剥离会把一个真正的窗帘控制器降级成通用
+    控制器。后果是 P5/P6/P7 被硬编码成只读 binary_sensor，而真正的控制口
+    P2/P3/P4 被 “工作模式必须为 2 或 4” 的判断挡掉，窗帘实体永远不会创建。
+
+    实测案例：``SL_P_V2``（智界窗帘电机智控器）被剥离成 ``SL_P``。该设备
+    P1=0x01080000，即 work_mode 0（自由模式），于是只生成 3 个只读
+    binary_sensor。直连中枢读取其 IO 表可见 P2/P3/P4 均存在，且经物理验证
+    P2=开、P3=关，与 ``NON_POSITIONAL_COVER_CONFIG["SL_P_V2"]`` 完全一致。
+
+    因此仅在上述冲突场景下保留完整名称，其余行为保持不变。
+    """
+    stripped = (
+        cls_value[:-3]
+        if len(cls_value) >= 3 and cls_value[-3:-1] == "_V"
+        else cls_value
+    )
+    if cls_value in COVER_TYPES and stripped in GENERIC_CONTROLLER_TYPES:
+        return cls_value
+    return stripped
 
 
 class LifeSmartLocalTCPClient(LifeSmartClientBase):
@@ -232,12 +262,7 @@ class LifeSmartLocalTCPClient(LifeSmartClientBase):
                                     cls_value = safe_get(dev, "cls", default="")
                                     dev_meta = {
                                         "me": devid,
-                                        "devtype": (
-                                            cls_value[:-3]
-                                            if len(cls_value) >= 3
-                                            and cls_value[-3:-1] == "_V"
-                                            else cls_value
-                                        ),
+                                        "devtype": _resolve_devtype(cls_value),
                                         "agt": self.node_agt,
                                         "name": dev["name"],
                                         "data": safe_get(
