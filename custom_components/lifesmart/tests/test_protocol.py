@@ -90,6 +90,9 @@ class TestProtocolDataTypeEncoding:
             ("ListMixed", [1, True, "test", None]),
             ("DictEmpty", {}),
             ("DictSimple", {"key": "value", "number": 42}),
+            ("FloatPositive", 71.8),
+            ("FloatNegative", -2.5),
+            ("FloatZero", 0.0),
             ("SpecialNull", "::NULL::"),
         ],
     )
@@ -467,13 +470,13 @@ class TestProtocolErrorHandling:
         with pytest.raises(EOFError, match="字符串数据不足"):
             protocol._parse_value(BytesIO(incomplete_string_data), 0x11)  # 字符串类型码
 
-    def test_incomplete_hex_data(self, protocol: LifeSmartProtocol):
-        """测试十六进制数据不完整的情况。"""
-        # 模拟HEX数据不完整（需要8字节但只有4字节）
-        incomplete_hex_data = b"\x01\x11\x22\x33"
+    def test_incomplete_float_data(self, protocol: LifeSmartProtocol):
+        """测试浮点数数据不完整的情况。"""
+        # 模拟Float数据不完整（需要8字节但只有4字节）
+        incomplete_float_data = b"\x01\x11\x22\x33"
 
-        with pytest.raises(EOFError, match="HEX 数据不完整"):
-            protocol._parse_value(BytesIO(incomplete_hex_data), 0x05)  # HEX类型码
+        with pytest.raises(EOFError, match="Float 数据不完整"):
+            protocol._parse_value(BytesIO(incomplete_float_data), 0x05)  # 浮点数类型码
 
     def test_incomplete_timestamp_data(self, protocol: LifeSmartProtocol):
         """测试时间戳数据不完整的情况。"""
