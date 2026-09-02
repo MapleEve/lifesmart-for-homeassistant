@@ -235,8 +235,9 @@ class LifeSmartHub:
             )
 
             # 创建连接任务
-            self._local_task = self.hass.async_create_task(
-                self.client.async_connect(self._local_update_callback)
+            self._local_task = self.hass.async_create_background_task(
+                self.client.async_connect(self._local_update_callback),
+                "lifesmart_local_tcp",
             )
 
             # 获取设备列表

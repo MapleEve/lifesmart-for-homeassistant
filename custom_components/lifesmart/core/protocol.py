@@ -139,6 +139,9 @@ class LifeSmartProtocol:
         if isinstance(value, bool):  # 处理布尔值
             return b"\x02" if value else b"\x03"
 
+        if isinstance(value, float):  # 处理浮点数 (64位 IEEE 754 Double)
+            return b"\x05" + struct.pack(">d", value)
+
         if isinstance(value, int):  # 处理整数
             if not -0x80000000 <= value <= 0x7FFFFFFF:
                 raise ValueError(f"int 超出 32-bit 有符号范围: {value}")
@@ -230,17 +233,11 @@ class LifeSmartProtocol:
                 zz = self._decode_varint(stream)
                 return (zz >> 1) ^ -(zz & 1)  # 反 ZigZag
 
-            if data_type == 0x05:  # HEX类型处理
-                index = stream.read(1)[0]
-                hex_data = stream.read(8)
-                if len(hex_data) < 8:
-                    raise EOFError("HEX 数据不完整")
-                return {
-                    "type": "HEX",
-                    "index": index,
-                    "value": hex_data.hex(),
-                    "raw": hex_data,
-                }
+            elif data_type == 0x05:  # 64位浮点数 (Double IEEE 754)
+                raw_bytes = stream.read(8)
+                if len(raw_bytes) < 8:
+                    raise EOFError("Float 数据不完整")
+                return struct.unpack(">d", raw_bytes)[0]
 
             elif data_type == 0x06:  # 时间戳类型处理
                 index = stream.read(1)[0]

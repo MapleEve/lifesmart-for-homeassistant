@@ -431,7 +431,9 @@ class TestLifeSmartHub:
                 await asyncio.sleep(100)  # 永不结束的任务
 
             real_task = asyncio.create_task(dummy_task())
-            with patch.object(hass, "async_create_task", return_value=real_task):
+            with patch.object(
+                hass, "async_create_background_task", return_value=real_task
+            ):
                 result = await hub.async_setup()
 
                 assert result is True, "本地模式设置应该成功"
